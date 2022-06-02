@@ -19,17 +19,3 @@ interface Identity {
     login(options?: LoginOptions): Promise<VerifiableCredential<LoginResponseCredentialSubject>>
     logout(): Promise<VerifiableCredential<LogoutResponseCredentialSubject>>
 }
-
-interface Transactions {
-    signTrx(): any
-}
-
-interface Credentials {
-    create(): any
-    share(): any
-    store(): any
-}
-
-interface Communictaion {
-    send(): any
-}

@@ -1,27 +1,7 @@
-type did = string
+type UnsignedVerifiableCredential<S> = Omit<VerifiableCredential<S>, "proof">
 
-type JWSProof = {
-    typ: string
-    alg: string
-    iss: string
-    exp: Date
-}
-
-type Proof = {
-    type: did
-    created: Date
-    verificationMethod: string,
-    proofPurpose: string,
-    proofValue: JWSProof
-}
-
-interface VerifiableCredential<S> {
-    "@context": string[]
-    id: did
-    issuer: did
-    issuanceDate: Date
-    subject: string
-    type: string[]
-    credentialSubject: S
-    proof: Proof[] | Proof
+interface Credentials {
+    sign(unsignedCredential: UnsignedVerifiableCredential<any>): Promise<VerifiableCredential<any>>
+    share(credential: VerifiableCredential<any>, to: did): Promise<boolean>
+    store(credential: VerifiableCredential<any>): Promise<boolean>
 }
