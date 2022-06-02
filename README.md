@@ -1,16 +1,18 @@
-# TSDX React User Guide
+# Tonomy ID SDK
 
-Congrats! You just saved yourself hours of work by bootstrapping this project with TSDX. Let’s get you oriented with what’s here and how to use it.
+This Software Development Kit is used in Tonomy ID to interact and call with the EOSIO blockchain and services. It is also used as the public API for integration by applications to do single sign-on, share credentials and sign transactions.
 
-> This TSDX setup is meant for developing React component libraries (not apps!) that can be published to NPM. If you’re looking to build a React-based app, you should use `create-react-app`, `razzle`, `nextjs`, `gatsby`, or `react-static`.
+The SDK is written in typescript with jest to run tests.
 
-> If you’re new to TypeScript and React, checkout [this handy cheatsheet](https://github.com/sw-yx/react-typescript-cheatsheet/)
+SDK library exists in `/src`
+[Parcel-based](https://parceljs.org) playground for it in `/example`.
 
-## Commands
+## Dependancies
 
-TSDX scaffolds your new library inside `/src`, and also sets up a [Parcel-based](https://parceljs.org) playground for it inside `/example`.
+- Linux debian distribution (Ubuntu 20.0.4 LTS used)
+- [Nodejs](https://nodejs.org) v16.4.1+ suggested installed with [nvm](https://github.com/nvm-sh/nvm)
 
-The recommended workflow is to run TSDX in one terminal:
+## Run
 
 ```bash
 npm start # or yarn start
