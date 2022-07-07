@@ -4,24 +4,24 @@ pipeline {
         stage('install') {
             steps {
                 //cd /var/repo
-                npm install
+               sh 'npm install'
             }
         }
         stage('build') {
             steps {
-                npm run build
+               sh 'npm run build'
             }
         }
 
         stage('test') {
             steps {
-                npm run test
+               sh 'npm run test'
             }
         }
 
         stage('start') {
             steps {
-                npm run start
+               sh 'npm run start'
             }
         }
     }
