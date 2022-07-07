@@ -1,10 +1,5 @@
 pipeline {
-    agent {
-        docker {
-            image 'node:16.4.1'
-            args '-v ./:/var/repo'
-        }
-    }
+    agent none
     stages {
         stage('Build') {
             steps {
