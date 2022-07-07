@@ -3,13 +3,13 @@ pipeline {
     stages {
         stage('Build') {
             steps {
-                cd /var/repo
+                //cd /var/repo
                 npm i
             }
         }
         stage('Lint') {
             steps {
-                npm run lint
+               // npm run lint
             }
         }
         stage('Test') {
