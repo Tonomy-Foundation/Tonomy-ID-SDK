@@ -1,20 +1,27 @@
 pipeline {
     agent none
     stages {
-        stage('Build') {
+        stage('install') {
             steps {
                 //cd /var/repo
-                npm i
+                npm install
             }
         }
-        stage('Lint') {
+        stage('build') {
             steps {
-               // npm run lint
+                npm run build
             }
         }
-        stage('Test') {
+
+        stage('test') {
             steps {
-                npm test
+                npm run test
+            }
+        }
+
+        stage('start') {
+            steps {
+                npm run start
             }
         }
     }
