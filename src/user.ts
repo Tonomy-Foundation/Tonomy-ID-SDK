@@ -1,9 +1,3 @@
-enum AuthenticatorLevel { Password, PIN, Fingerprint, Local };
-
-interface Authenticator {
-    // creates a new secure key and returns the public key
-    createPermission(level: AuthenticatorLevel, privateKey: string, challenge: string): string
-}
 
 class User {
     authenticator: Authenticator;
@@ -31,14 +25,4 @@ class User {
     }
 }
 
-// wrapper class that has js interface to call the smart contract
-class IDSmartContract {
-    // calls the ID smart contract create() function to create the account
-    create(accountName: string, passwordPublicKey: string, salt: string) {
-        // creates the new account with the public key and account name,
-        // and stores the salt on chain for later user to re-derive the private key with the password
-    }
-}
-
-export default User;
-export { Authenticator, AuthenticatorLevel };
+export { User };

@@ -15,7 +15,7 @@
     "build": "tsdx build",
     "test": "tsdx test",
     "lint": "tsdx lint",
-    "prepare": "tsdx build",
+    "prepare": "tsdx build --transpileOnly",
     "size": "size-limit",
     "analyze": "size-limit --why"
   },
@@ -51,5 +51,8 @@
     "tsdx": "^0.14.1",
     "tslib": "^2.4.0",
     "typescript": "^4.7.4"
+  },
+  "dependencies": {
+    "@greymass/eosio": "^0.6.2"
   }
 }
