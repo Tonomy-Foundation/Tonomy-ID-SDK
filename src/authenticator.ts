@@ -60,9 +60,31 @@ interface Authenticator {
     getKey(options: GetKeyOptions): PublicKey
 }
 
+type KeyStorage = {
+    privateKey: PrivateKey;
+    publicKey: PublicKey;
+    hashedSaltedChallenge?: string;
+    salt?: string;
+}
+
 class JsAuthenticator implements Authenticator {
+    // TODO: use localStorage or sessionStorage in browser if available instead of keyStorage
+    keyStorage: {
+        [key in AuthenticatorLevel]: KeyStorage;
+    }
+
     storeKey(options: StoreKeyOptions): PublicKey {
-        return PublicKey.from("");
+        const keyStore: KeyStorage = {
+            privateKey: options.privateKey,
+            publicKey: options.privateKey.toPublic()
+        }
+
+        if (options.level === AuthenticatorLevel.Password || options.level === AuthenticatorLevel.PIN) {
+            // create salt and hash of challenge
+        }
+
+        this.keyStorage[options.level] = keyStore;
+        return keyStore.publicKey;
     }
 
     signData(options: SignDataOptions): string {
