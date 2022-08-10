@@ -1,4 +1,4 @@
-import { PrivateKey, PublicKey } from '@greymass/eosio';
+import { PrivateKey, PublicKey, Checksum256, Signature } from '@greymass/eosio';
 import crypto from 'crypto';
 
 enum AuthenticatorLevel { Password, PIN, Fingerprint, Local };
@@ -49,14 +49,18 @@ interface Authenticator {
      *
      * @param options - Options for signing data
      * @returns A digital signature of the SHA256 hashed data
+     * 
+     * @throws if a key does not exist for the level the challenge is incorrect
      */
-    signData(options: SignDataOptions): Promise<string>
+    signData(options: SignDataOptions): Promise<string | Signature>
 
     /**
      * Returns the public key of a stored private key
      *
      * @param options - Options for retreiving the key
      * @returns The PublicKey
+     * 
+     * @throws if a key does not exist for the level
      */
     getKey(options: GetKeyOptions): PublicKey
 }
@@ -82,26 +86,41 @@ class JsAuthenticator implements Authenticator {
         }
 
         if (options.level === AuthenticatorLevel.Password || options.level === AuthenticatorLevel.PIN) {
-            keyStore.salt = crypto.randomBytes(20).toString('hex');
+            if (!options.challenge) throw new Error("Challenge missing");
 
-            const textDecoder = new TextDecoder("utf-8");
-            const textEncoder = new TextEncoder();
-            const data = textEncoder.encode(options.challenge + keyStore.salt);
-
-            const hash = await crypto.subtle.digest('SHA-256', data);
-            keyStore.hashedSaltedChallenge = textDecoder.decode(hash);
+            keyStore.salt = crypto.randomBytes(32).toString('hex');
+            keyStore.hashedSaltedChallenge = Checksum256.hash(options.challenge + keyStore.salt).toString();
         }
 
         this.keyStorage[options.level] = keyStore;
         return keyStore.publicKey;
     }
 
-    async signData(options: SignDataOptions): Promise<string> {
-        return "";
+    async signData(options: SignDataOptions): Promise<string | Signature> {
+        if (options.level in this.keyStorage) throw new Error("No key for this level");
+
+        const keyStore = this.keyStorage[options.level];
+
+        if (options.level === AuthenticatorLevel.Password || options.level === AuthenticatorLevel.PIN) {
+            if (!options.challenge) throw new Error("Challenge missing");
+
+            const hashedSaltedChallenge = Checksum256.hash(options.challenge + keyStore.salt).toString();
+
+            if (keyStore.hashedSaltedChallenge !== hashedSaltedChallenge) throw new Error("Challenge does not match");
+        }
+
+        const privateKey = keyStore.privateKey;
+        const hash = Checksum256.hash(options.data);
+        const signature = privateKey.signDigest(hash)
+
+        return signature;
     }
 
     getKey(options: GetKeyOptions): PublicKey {
-        return PublicKey.from("");
+        if (options.level in this.keyStorage) throw new Error("No key for this level");
+
+        const keyStore = this.keyStorage[options.level];
+        return keyStore.publicKey;
     }
 }
 
