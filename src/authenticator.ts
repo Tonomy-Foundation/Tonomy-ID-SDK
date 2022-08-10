@@ -3,6 +3,8 @@ import { PrivateKey, PublicKey } from '@greymass/eosio';
 enum AuthenticatorLevel { Password, PIN, Fingerprint, Local };
 
 interface Authenticator {
+    // TODO: turn each of the inputs into objects...
+
     /**
      * Stores a private key that can be used later for signing.
      *
@@ -15,11 +17,37 @@ interface Authenticator {
      * @returns The PublicKey
      */
     storeKey(level: AuthenticatorLevel, privateKey: PrivateKey, challenge?: string): PublicKey
+
+    /**
+     * Signs the hash of data with a stored private key
+     *
+     * @param level - The security level of the key
+     * @param data - The data that will be used to create a digital signature
+     * @param [challenge] - A challenge that needs to be presented in order for the key to be used
+     * @returns A digital signature of the SHA256 hashed data
+     */
+    signData(level: AuthenticatorLevel, data: string | Uint8Array, challenge?: string): string
+
+    /**
+     * Returns the public key of a stored private key
+     *
+     * @param level - The security level of the key
+     * @returns The PublicKey
+     */
+    getKey(level: AuthenticatorLevel): PublicKey
 }
 
 class JsAuthenticator implements Authenticator {
     storeKey(level: AuthenticatorLevel, privateKey: PrivateKey, challenge: string): PublicKey {
-        return "string";
+        return PublicKey.from("");
+    }
+
+    signData(level: AuthenticatorLevel, data: string | Uint8Array, challenge?: string): string {
+        return "";
+    }
+
+    getKey(level: AuthenticatorLevel): PublicKey {
+        return PublicKey.from("");
     }
 }
 
