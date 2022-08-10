@@ -1,10 +1,5 @@
-import User, { Authenticator } from './user';
+export * from './authenticator';
 
-export const sum = (a: number, b: number) => {
-  if ('development' === process.env.NODE_ENV) {
-    console.log('boop');
-  }
-  return a + b;
-};
+export * from './user';
 
-export { User, Authenticator }
+export * as Services from './services/IDContract';

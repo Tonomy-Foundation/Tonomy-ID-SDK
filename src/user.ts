@@ -1,23 +1,24 @@
-enum AuthenticatorLevel { Password, PIN, Fingerprint, Local };
-
-interface Authenticator {
-    // creates a new secure key and returns the public key
-    createPermission(level: AuthenticatorLevel, privateKey: string, challenge: string): string
-}
+import { Authenticator, AuthenticatorLevel } from './authenticator';
+import { IDContract } from './services/IDContract';
+import { Name } from '@greymass/eosio';
 
 class User {
     authenticator: Authenticator;
-    id: IDSmartContract;
+    id: IDContract; // TODO: turn into a singleton
+
+    salt: string;
+    username: string;
+    accountName: Name;
 
     constructor(_authenticator: Authenticator) {
         this.authenticator = _authenticator;
-        this.id = new IDSmartContract();
+        this.id = new IDContract();
     }
 
     createAccount(accountName: string, masterPassword: string) {
         const { privateKey, salt } = this.generatePrivateKeyFromPassword(masterPassword);
 
-        const passwordPublicKey = this.authenticator.createPermission(AuthenticatorLevel.Password, privateKey, masterPassword);
+        const passwordPublicKey = this.authenticator.storeKey(AuthenticatorLevel.Password, privateKey, masterPassword);
 
         this.id.create(accountName, passwordPublicKey, salt);
     }
@@ -31,14 +32,4 @@ class User {
     }
 }
 
-// wrapper class that has js interface to call the smart contract
-class IDSmartContract {
-    // calls the ID smart contract create() function to create the account
-    create(accountName: string, passwordPublicKey: string, salt: string) {
-        // creates the new account with the public key and account name,
-        // and stores the salt on chain for later user to re-derive the private key with the password
-    }
-}
-
-export default User;
-export { Authenticator, AuthenticatorLevel };
+export { User };
