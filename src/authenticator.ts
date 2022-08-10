@@ -64,6 +64,7 @@ interface Authenticator {
 type KeyStorage = {
     privateKey: PrivateKey;
     publicKey: PublicKey;
+    // TODO: check that this complies with the eosio checksum256 format
     hashedSaltedChallenge?: string;
     salt?: string;
 }
@@ -82,14 +83,20 @@ class JsAuthenticator implements Authenticator {
 
         if (options.level === AuthenticatorLevel.Password || options.level === AuthenticatorLevel.PIN) {
             keyStore.salt = crypto.randomBytes(20).toString('hex');
-            keyStore.saltedHashedChallenge = await crypto.subtle.digest('SHA-256', options.challenge + keyStore.salt);
+
+            const textDecoder = new TextDecoder("utf-8");
+            const textEncoder = new TextEncoder();
+            const data = textEncoder.encode(options.challenge + keyStore.salt);
+
+            const hash = await crypto.subtle.digest('SHA-256', data);
+            keyStore.hashedSaltedChallenge = textDecoder.decode(hash);
         }
 
         this.keyStorage[options.level] = keyStore;
         return keyStore.publicKey;
     }
 
-    signData(options: SignDataOptions): string {
+    async signData(options: SignDataOptions): Promise<string> {
         return "";
     }
 
