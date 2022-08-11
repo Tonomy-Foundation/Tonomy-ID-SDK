@@ -79,6 +79,10 @@ class JsAuthenticator implements Authenticator {
         [key in AuthenticatorLevel]: KeyStorage;
     }
 
+
+
+
+    // creates a new secure key and returns the public key
     async storeKey(options: StoreKeyOptions): Promise<PublicKey> {
         const keyStore: KeyStorage = {
             privateKey: options.privateKey,
