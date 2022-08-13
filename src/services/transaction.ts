@@ -8,12 +8,16 @@ type ActionData = {
             permission: string;
         },
     ],
-    account: string,
+    account?: string,
     name: string,
     data: any,
 }
 
-async function transact(contract: Name, actions: ActionData[], signer: (data: Checksum256) => Signature): Promise<any> {
+interface Signer {
+    sign(digest: Checksum256): Signature;
+}
+
+async function transact(contract: Name, actions: ActionData[], signer: Signer): Promise<any> {
     const abi = await api.v1.chain.get_abi(contract);
     const actionData: Action[] = [];
     actions.forEach((data) => {
@@ -26,8 +30,10 @@ async function transact(contract: Name, actions: ActionData[], signer: (data: Ch
         ...header,
         actions: actionData,
     });
-
-    const signature = signer(transaction.signingDigest(info.chain_id));
+    const signDigest = transaction.signingDigest(info.chain_id)
+    console.log(signDigest);
+    console.log(signer);
+    const signature = signer.sign(signDigest);
     const signedTransaction = SignedTransaction.from({
         ...transaction,
         signatures: [signature],

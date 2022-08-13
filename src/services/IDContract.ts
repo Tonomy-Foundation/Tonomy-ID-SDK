@@ -34,7 +34,12 @@ class IDContract {
             },
         }
 
-        const res = await transact(Name.from("id.tonomy"), [newpersonAction], privateKey.signDigest,)
+        const signer = {
+            sign(digest: Checksum256) {
+                return privateKey.signDigest(digest);
+            }
+        }
+        const res = await transact(Name.from("id.tonomy"), [newpersonAction], signer,)
         console.log(JSON.stringify(res, null, 2));
         // calls transaction with id::newperson and 2x id::updatekey
         // creates the new account with the public key and account name,
