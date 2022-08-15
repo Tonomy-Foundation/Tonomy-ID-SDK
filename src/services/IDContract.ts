@@ -2,6 +2,13 @@ import { Checksum256, Name } from "@greymass/eosio"
 import { api, privateKey, createKeyAuthoriy } from './eosio';
 import { transact } from "./transaction";
 
+const signer = {
+    sign(digest: Checksum256) {
+        return privateKey.signDigest(digest);
+    }
+}
+
+
 // wrapper class that has js interface to call the smart contract
 class IDContract {
     private static _instance: IDContract;
@@ -33,11 +40,6 @@ class IDContract {
             },
         }
 
-        const signer = {
-            sign(digest: Checksum256) {
-                return privateKey.signDigest(digest);
-            }
-        }
         const res = await transact(Name.from("id.tonomy"), [action], signer,)
         console.log(JSON.stringify(res, null, 2));
         return res;
@@ -66,11 +68,6 @@ class IDContract {
             },
         }
 
-        const signer = {
-            sign(digest: Checksum256) {
-                return privateKey.signDigest(digest);
-            }
-        }
         const res = await transact(Name.from("id.tonomy"), [action], signer,)
         console.log(JSON.stringify(res, null, 2));
         return res;
@@ -101,11 +98,6 @@ class IDContract {
             },
         }
 
-        const signer = {
-            sign(digest: Checksum256) {
-                return privateKey.signDigest(digest);
-            }
-        }
         const res = await transact(Name.from("eosio"), [action], signer,)
         console.log(JSON.stringify(res, null, 2));
         return res;

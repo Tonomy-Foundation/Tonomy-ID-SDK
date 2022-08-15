@@ -2,12 +2,10 @@ import { Action, Transaction, SignedTransaction, Signature, Checksum256, Name } 
 import { api } from "./eosio";
 
 type ActionData = {
-    authorization: [
-        {
-            actor: string;
-            permission: string;
-        },
-    ],
+    authorization: {
+        actor: string;
+        permission: string;
+    }[],
     account?: string,
     name: string,
     data: any,
