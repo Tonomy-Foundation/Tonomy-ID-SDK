@@ -1,7 +1,7 @@
 import { Name } from "@greymass/eosio"
-import { signer } from './eosio/eosio';
-import { createKeyAuthoriy } from './eosio/authority';
-import { transact } from "./eosio/transaction";
+import { signer } from '../eosio/eosio';
+import { createKeyAuthoriy } from '../eosio/authority';
+import { transact } from "../eosio/transaction";
 
 class IDContract {
     static _singleton_instance: IDContract;

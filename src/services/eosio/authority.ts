@@ -1,5 +1,20 @@
+import { copyObject } from "../../util/objets";
 
-function createKeyAuthoriy(key: string) {
+type Authority = {
+    threshold: number;
+    keys: { key: string, weight: number }[];
+    accounts: {
+        permission: {
+            actor: string, permission: string
+        },
+        weight: number
+    }[];
+    waits: { wait_sec: number, weight: number }[];
+
+    // TODO add functions as methods of Authority here instead of global functions
+}
+
+function createKeyAuthoriy(key: string): Authority {
     return {
         threshold: 1,
         keys: [{
@@ -11,7 +26,7 @@ function createKeyAuthoriy(key: string) {
     }
 }
 
-function createDelegatedAuthority(permission: { actor: string, permission: string }) {
+function createDelegatedAuthority(permission: { actor: string, permission: string }): Authority {
     return {
         threshold: 1,
         keys: [],
@@ -23,16 +38,16 @@ function createDelegatedAuthority(permission: { actor: string, permission: strin
     }
 }
 
-function addCodePermission(authority: any, account: string) {
-    // TODO this modifies the argument. need to create copy and return a new object
-    authority.accounts.push({
+function addCodePermission(authority: any, account: string): Authority {
+    const newAuth = copyObject(authority);
+    newAuth.accounts.push({
         permission: {
             actor: account,
             permission: "eosio.code"
         },
         weight: 1
     })
-    return authority;
+    return newAuth;
 }
 
-export { createDelegatedAuthority, createKeyAuthoriy, addCodePermission };
+export { createDelegatedAuthority, createKeyAuthoriy, addCodePermission, Authority };

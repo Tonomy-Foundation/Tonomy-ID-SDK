@@ -1,5 +1,5 @@
 import { Authenticator } from './authenticator';
-import { IDContract } from './services/IDContract';
+import { IDContract } from './services/contracts/IDContract';
 import { Name } from '@greymass/eosio';
 import { publicKey } from './services/eosio/eosio';
 

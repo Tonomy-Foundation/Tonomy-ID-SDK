@@ -1,6 +1,7 @@
 import { ABI, Name, Serializer } from "@greymass/eosio"
-import { signer } from './eosio/eosio';
-import { transact } from "./eosio/transaction";
+import { Authority } from "../eosio/authority";
+import { signer } from '../eosio/eosio';
+import { transact } from "../eosio/transaction";
 
 class EosioContract {
     static _singleton_instance: EosioContract;
@@ -61,6 +62,31 @@ class EosioContract {
             },
         ]
         await transact(Name.from("eosio"), actions, signer);
+    }
+
+    async newaccount(creator: string, account: string, owner: Authority, active: Authority) {
+        console.log("EosioContract.newaccount()");
+
+        const action = {
+            authorization: [
+                {
+                    actor: creator,
+                    permission: "active",
+                },
+            ],
+            account: 'eosio',
+            name: 'newaccount',
+            data: {
+                creator,
+                name: account,
+                owner,
+                active,
+            },
+        }
+
+        const res = await transact(Name.from("eosio"), [action], signer,)
+        console.log(JSON.stringify(res, null, 2));
+        return res;
     }
 
     async updateauth(account: string,
