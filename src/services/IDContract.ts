@@ -1,5 +1,5 @@
-import { Action, Checksum256, Name, PublicKey } from "@greymass/eosio"
-import { api, privateKey } from './eosio';
+import { Checksum256, Name } from "@greymass/eosio"
+import { api, privateKey, createKeyAuthoriy } from './eosio';
 import { transact } from "./transaction";
 
 // wrapper class that has js interface to call the smart contract
@@ -53,7 +53,7 @@ class IDContract {
             authorization: [
                 {
                     actor: account,
-                    permission: "owner",
+                    permission: parent,
                 },
             ],
             account: 'id.tonomy',
@@ -75,6 +75,42 @@ class IDContract {
         console.log(JSON.stringify(res, null, 2));
         return res;
     }
+
+    async updateauth(account: string,
+        permission: string,
+        parent: string,
+        key: string
+    ) {
+        console.log("IDContract.updateauth()");
+        console.log(account, permission, parent, key);
+
+        const action = {
+            authorization: [
+                {
+                    actor: account,
+                    permission: parent,
+                },
+            ],
+            account: 'eosio',
+            name: 'updateauth',
+            data: {
+                account,
+                permission,
+                parent,
+                auth: createKeyAuthoriy(key),
+            },
+        }
+
+        const signer = {
+            sign(digest: Checksum256) {
+                return privateKey.signDigest(digest);
+            }
+        }
+        const res = await transact(Name.from("eosio"), [action], signer,)
+        console.log(JSON.stringify(res, null, 2));
+        return res;
+    }
+
     public static get Instance() {
         return this._instance || (this._instance = new this());
     }
