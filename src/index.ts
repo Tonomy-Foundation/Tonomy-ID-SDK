@@ -8,4 +8,5 @@ import * as Transaction from './services/eosio/transaction';
 const EosioUtil = { ...Authority, ...Eosio, ...Transaction };
 export { EosioUtil };
 
-export * as Services from './services/IDContract';
+export * from './services/IDContract';
+export * from './services/EosioContract';

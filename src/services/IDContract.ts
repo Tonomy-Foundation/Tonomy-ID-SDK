@@ -1,18 +1,14 @@
-import { Checksum256, Name } from "@greymass/eosio"
-import { api, privateKey } from './eosio/eosio';
+import { Name } from "@greymass/eosio"
+import { signer } from './eosio/eosio';
 import { createKeyAuthoriy } from './eosio/authority';
 import { transact } from "./eosio/transaction";
 
-const signer = {
-    sign(digest: Checksum256) {
-        return privateKey.signDigest(digest);
-    }
-}
-
-
-// wrapper class that has js interface to call the smart contract
 class IDContract {
-    private static _instance: IDContract;
+    static _singleton_instance: IDContract;
+
+    public static get Instance() {
+        return this._singleton_instance || (this._singleton_instance = new this());
+    }
 
     async newperson(creator: string,
         username_hash: string,
@@ -115,10 +111,6 @@ class IDContract {
         console.log(JSON.stringify(res, null, 2));
         return res;
     }
-
-    public static get Instance() {
-        return this._instance || (this._instance = new this());
-    }
 }
 
-export { IDContract }
+export { IDContract };

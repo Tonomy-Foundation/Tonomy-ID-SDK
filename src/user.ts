@@ -1,4 +1,4 @@
-import { Authenticator, AuthenticatorLevel } from './authenticator';
+import { Authenticator } from './authenticator';
 import { IDContract } from './services/IDContract';
 import { Name } from '@greymass/eosio';
 import { publicKey } from './services/eosio/eosio';

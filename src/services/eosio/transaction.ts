@@ -38,4 +38,4 @@ async function transact(contract: Name, actions: ActionData[], signer: Signer): 
     return await api.v1.chain.push_transaction(signedTransaction);
 }
 
-export { transact };
+export { transact, Signer };
