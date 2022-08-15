@@ -1,6 +1,7 @@
 import { Authenticator, AuthenticatorLevel } from './authenticator';
 import { IDContract } from './services/IDContract';
 import { Name, PrivateKey } from '@greymass/eosio';
+import { publicKey } from './services/eosio';
 
 const idContract = IDContract.Instance;
 
@@ -15,17 +16,21 @@ class User {
         this.authenticator = _authenticator;
     }
 
-    async createPerson(userName: string) {
+    async createPerson(username: string) {
         // TODO
         // hash the username
         // retreive public key for password, pin and fingerprint from the Authenticator
 
-        const res = await idContract.newperson("id.tonomy", "7d32c90f59b2131f86132a30172a8adbb3e839110e38874901afc61d971d7d0e",
-            "PUB_K1_6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5BoDq63", "b9776d7ddf459c9ad5b0e1d6ac61e27befb5e99fd62446677600d7cacef544d0",
-            "PUB_K1_6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5BoDq63", "PUB_K1_6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5BoDq63");
+        let res = await idContract.newperson("id.tonomy", "7d32c90f59b2131f86132a30172a8adbb3e839110e38874901afc61d971d7d0e",
+            publicKey.toString(), "b9776d7ddf459c9ad5b0e1d6ac61e27befb5e99fd62446677600d7cacef544d0",
+            publicKey.toString(), publicKey.toString());
 
-        // add the username to the object
-        // add the account name to the object
+        const newAccountAction = res.processed.action_traces[0].inline_traces[0].act;
+        if (newAccountAction.name !== "newaccount") throw new Error("Expected newaccount action to be called");
+
+        this.accountName = Name.from(newAccountAction.data.name);
+        this.username = username;
+        res = await idContract.updateperson(this.accountName.toString(), "pin", "owner", publicKey.toString());
     }
 
     generatePrivateKeyFromPassword(password: string) {

@@ -6,7 +6,6 @@ import { transact } from "./transaction";
 class IDContract {
     private static _instance: IDContract;
 
-    // calls the ID smart contract create() function to create the account
     async newperson(creator: string,
         username_hash: string,
         password: string,
@@ -15,7 +14,7 @@ class IDContract {
         fingerprint: string
     ) {
         console.log("IDContract.newperson()");
-        const newpersonAction = {
+        const action = {
             authorization: [
                 {
                     actor: 'id.tonomy',
@@ -39,13 +38,43 @@ class IDContract {
                 return privateKey.signDigest(digest);
             }
         }
-        const res = await transact(Name.from("id.tonomy"), [newpersonAction], signer,)
+        const res = await transact(Name.from("id.tonomy"), [action], signer,)
         console.log(JSON.stringify(res, null, 2));
-        // calls transaction with id::newperson and 2x id::updatekey
-        // creates the new account with the public key and account name,
-        // and stores the salt on chain for later user to re-derive the private key with the password
+        return res;
     }
 
+    async updateperson(account: string,
+        permission: string,
+        parent: string,
+        key: string
+    ) {
+        console.log("IDContract.updateperson()");
+        const action = {
+            authorization: [
+                {
+                    actor: account,
+                    permission: "owner",
+                },
+            ],
+            account: 'id.tonomy',
+            name: 'updateperson',
+            data: {
+                account,
+                permission,
+                parent,
+                key,
+            },
+        }
+
+        const signer = {
+            sign(digest: Checksum256) {
+                return privateKey.signDigest(digest);
+            }
+        }
+        const res = await transact(Name.from("id.tonomy"), [action], signer,)
+        console.log(JSON.stringify(res, null, 2));
+        return res;
+    }
     public static get Instance() {
         return this._instance || (this._instance = new this());
     }

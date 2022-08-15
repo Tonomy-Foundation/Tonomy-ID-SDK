@@ -31,8 +31,6 @@ async function transact(contract: Name, actions: ActionData[], signer: Signer): 
         actions: actionData,
     });
     const signDigest = transaction.signingDigest(info.chain_id)
-    console.log(signDigest);
-    console.log(signer);
     const signature = signer.sign(signDigest);
     const signedTransaction = SignedTransaction.from({
         ...transaction,
@@ -40,7 +38,6 @@ async function transact(contract: Name, actions: ActionData[], signer: Signer): 
     });
 
     return await api.v1.chain.push_transaction(signedTransaction);
-
 }
 
 export { transact };
