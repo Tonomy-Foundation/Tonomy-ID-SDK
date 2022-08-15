@@ -1,6 +1,7 @@
 import { Checksum256, Name } from "@greymass/eosio"
-import { api, privateKey, createKeyAuthoriy } from './eosio';
-import { transact } from "./transaction";
+import { api, privateKey } from './eosio/eosio';
+import { createKeyAuthoriy } from './eosio/authority';
+import { transact } from "./eosio/transaction";
 
 const signer = {
     sign(digest: Checksum256) {
@@ -53,6 +54,18 @@ class IDContract {
         console.log("IDContract.updateperson()");
         const action = {
             authorization: [
+                // {
+                //     actor: account,
+                //     permission: permission,
+                // },
+                // {
+                //     actor: "id.tonomy",
+                //     permission: permission,
+                // },
+                // {
+                //     actor: "id.tonomy",
+                //     permission: permission,
+                // },
                 {
                     actor: account,
                     permission: parent,
@@ -107,45 +120,5 @@ class IDContract {
         return this._instance || (this._instance = new this());
     }
 }
-
-async function callnewperson() {
-    console.log(`Calling id.tonomy::newperson`)
-
-    try {
-        const result = await api.v1.chain.push_transaction(
-            {
-                actions: [
-                    {
-                        account: "id.tonomy",
-                        name: "newperson",
-                        authorization: [
-                            {
-                                actor: "id.tonomy",
-                                permission: 'active',
-                            },
-                        ],
-                        data: {
-                            creator: "id.tonomy",
-                            username_hash: "7d32c90f59b2131f86132a30172a8adbb3e839110e38874901afc61d971d7d0e",
-                            password: publicKey.toString(),
-                            salt: "b9776d7ddf459c9ad5b0e1d6ac61e27befb5e99fd62446677600d7cacef544d0",
-                            pin: publicKey.toString(),
-                            fingerprint: publicKey.toString()
-                        },
-                    }
-                ],
-            },
-            {
-                blocksBehind: 3,
-                expireSeconds: 30,
-            }
-        )
-        return result;
-    } catch (error) {
-        console.log(JSON.stringify(error, null, 2))
-        throw error;
-    }
-}
-
 
 export { IDContract }
