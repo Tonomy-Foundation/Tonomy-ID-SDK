@@ -43,7 +43,14 @@ async function transact(contract: Name, actions: ActionData[], signer: Signer): 
     });
 
     // Send to the node
-    return await api.v1.chain.push_transaction(signedTransaction);
+    let res;
+    try {
+        res = await api.v1.chain.push_transaction(signedTransaction);
+    } catch (e) {
+        console.error(JSON.stringify(e, null, 2));
+        throw e;
+    }
+    return res;
 }
 
 export { transact, Signer };

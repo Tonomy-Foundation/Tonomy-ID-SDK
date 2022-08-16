@@ -42,13 +42,6 @@ class User {
         // may need to do this in separate action, or perhaps separate transaction... need to test
         // may need to use status to lock the account till finished craeating
 
-        const activeAuthWithCode = Authority.fromKey(publicKey.toString());
-        activeAuthWithCode.addCodePermission("id.tonomy");
-        console.log("adding eosio.code to active authority");
-        await eosioContract.updateauth(this.accountName.toString(), "active", "owner", activeAuthWithCode);
-        console.log("adding eosio.code to owner authority");
-        await eosioContract.updateauth(this.accountName.toString(), "owner", "", activeAuthWithCode);
-
         console.log("updating with updateperson");
         await idContract.updateperson(this.accountName.toString(), "active", "owner", publicKey.toString());
     }
