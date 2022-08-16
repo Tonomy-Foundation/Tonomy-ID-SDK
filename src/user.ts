@@ -40,8 +40,8 @@ class User {
         // may need to use status to lock the account till finished craeating
 
         console.log("calling eosio::updateauth()")
-        // res = await idContract.updateperson(this.accountName.toString(), "active", "owner", publicKey.toString());
-        await eosioContract.updateauth(this.accountName.toString(), "active", "owner", Authority.fromKey(publicKey.toString()));
+        await idContract.updateperson(this.accountName.toString(), "active", "owner", publicKey.toString());
+        // await eosioContract.updateauth(this.accountName.toString(), "active", "owner", Authority.fromKey(publicKey.toString()));
     }
 
     generatePrivateKeyFromPassword(password: string) {

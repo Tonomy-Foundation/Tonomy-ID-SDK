@@ -22,7 +22,7 @@ class IDContract {
         const action = {
             authorization: [
                 {
-                    actor: 'id.tonomy',
+                    actor: creator,
                     permission: 'active',
                 },
             ],
