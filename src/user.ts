@@ -1,6 +1,6 @@
-import { Authenticator } from './authenticator';
+import { Authenticator, AuthenticatorLevel } from './authenticator';
 import { IDContract } from './services/contracts/IDContract';
-import { Name } from '@greymass/eosio';
+import { Checksum256, Name } from '@greymass/eosio';
 import { publicKey } from './services/eosio/eosio';
 import { Authority } from './services/eosio/authority';
 import { EosioContract } from './services/contracts/EosioContract';
@@ -20,17 +20,20 @@ class User {
     }
 
     async createPerson(username: string) {
-        // TODO
-        // hash the username
-        // retreive public key for password, pin and fingerprint from the Authenticator
+        // const usernameHash = Checksum256.hash(username);
 
-        let res = await idContract.newperson("id.tonomy", "7d32c90f59b2131f86132a30172a8adbb3e839110e38874901afc61d971d7d0e",
+        // const passwordKey = this.authenticator.getKey({ level: AuthenticatorLevel.Password });
+        // const pinKey = this.authenticator.getKey({ level: AuthenticatorLevel.PIN });
+        // const fingerprintKey = this.authenticator.getKey({ level: AuthenticatorLevel.Fingerprint });
+
+        const res = await idContract.newperson("id.tonomy", "7d32c90f59b2131f86132a30172a8adbb3e839110e38874901afc61d971d7d0e",
             publicKey.toString(), "b9776d7ddf459c9ad5b0e1d6ac61e27befb5e99fd62446677600d7cacef544d0",
             publicKey.toString(), publicKey.toString());
+        // const res = await idContract.newperson("id.tonomy", usernameHash.toString(),
+        //     passwordKey.toString(), this.salt,
+        //     pinKey.toString(), fingerprintKey.toString());
 
         const newAccountAction = res.processed.action_traces[0].inline_traces[0].act;
-        if (newAccountAction.name !== "newaccount") throw new Error("Expected newaccount action to be called");
-
         this.accountName = Name.from(newAccountAction.data.name);
         this.username = username;
 
@@ -39,9 +42,15 @@ class User {
         // may need to do this in separate action, or perhaps separate transaction... need to test
         // may need to use status to lock the account till finished craeating
 
-        console.log("calling eosio::updateauth()")
+        const activeAuthWithCode = Authority.fromKey(publicKey.toString());
+        activeAuthWithCode.addCodePermission("id.tonomy");
+        console.log("adding eosio.code to active authority");
+        await eosioContract.updateauth(this.accountName.toString(), "active", "owner", activeAuthWithCode);
+        console.log("adding eosio.code to owner authority");
+        await eosioContract.updateauth(this.accountName.toString(), "owner", "", activeAuthWithCode);
+
+        console.log("updating with updateperson");
         await idContract.updateperson(this.accountName.toString(), "active", "owner", publicKey.toString());
-        // await eosioContract.updateauth(this.accountName.toString(), "active", "owner", Authority.fromKey(publicKey.toString()));
     }
 
     generatePrivateKeyFromPassword(password: string) {

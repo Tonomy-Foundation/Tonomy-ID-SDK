@@ -49,22 +49,10 @@ class IDContract {
         console.log("IDContract.updateperson()");
         const action = {
             authorization: [
-                // {
-                //     actor: account,
-                //     permission: permission,
-                // },
-                // {
-                //     actor: "id.tonomy",
-                //     permission: permission,
-                // },
-                // {
-                //     actor: "id.tonomy",
-                //     permission: permission,
-                // },
                 {
                     actor: account,
                     permission: permission,
-                },
+                }
             ],
             account: 'id.tonomy',
             name: 'updateperson',
