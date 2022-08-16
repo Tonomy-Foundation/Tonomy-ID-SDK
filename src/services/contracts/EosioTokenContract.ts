@@ -29,9 +29,7 @@ class EosioTokenContract {
             }
         ]
 
-        const res = await transact(Name.from("eosio.token"), actions, signer)
-        console.log(JSON.stringify(res, null, 2));
-        return res;
+        return await transact(Name.from("eosio.token"), actions, signer);
     }
 
     async issue(quantity: string) {
@@ -54,9 +52,7 @@ class EosioTokenContract {
         }
         ]
 
-        const res = await transact(Name.from("eosio.token"), actions, signer)
-        console.log(JSON.stringify(res, null, 2));
-        return res;
+        return await transact(Name.from("eosio.token"), actions, signer);
     }
 }
 

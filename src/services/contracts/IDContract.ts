@@ -18,6 +18,7 @@ class IDContract {
         fingerprint: string
     ) {
         console.log("IDContract.newperson()");
+
         const action = {
             authorization: [
                 {
@@ -34,12 +35,10 @@ class IDContract {
                 salt,
                 pin,
                 fingerprint
-            },
+            }
         }
 
-        const res = await transact(Name.from("id.tonomy"), [action], signer,)
-        console.log(JSON.stringify(res, null, 2));
-        return res;
+        return await transact(Name.from("id.tonomy"), [action], signer);
     }
 
     async updateperson(account: string,
@@ -64,7 +63,7 @@ class IDContract {
                 // },
                 {
                     actor: account,
-                    permission: parent,
+                    permission: permission,
                 },
             ],
             account: 'id.tonomy',
@@ -77,9 +76,7 @@ class IDContract {
             },
         }
 
-        const res = await transact(Name.from("id.tonomy"), [action], signer,)
-        console.log(JSON.stringify(res, null, 2));
-        return res;
+        return await transact(Name.from("id.tonomy"), [action], signer);
     }
 
     async updateauth(account: string,
@@ -107,9 +104,7 @@ class IDContract {
             },
         }
 
-        const res = await transact(Name.from("eosio"), [action], signer,)
-        console.log(JSON.stringify(res, null, 2));
-        return res;
+        return await transact(Name.from("eosio"), [action], signer);
     }
 }
 

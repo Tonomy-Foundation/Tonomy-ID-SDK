@@ -3,8 +3,10 @@ import { IDContract } from './services/contracts/IDContract';
 import { Name } from '@greymass/eosio';
 import { publicKey } from './services/eosio/eosio';
 import { Authority } from './services/eosio/authority';
+import { EosioContract } from './services/contracts/EosioContract';
 
 const idContract = IDContract.Instance;
+const eosioContract = EosioContract.Instance;
 
 class User {
     authenticator: Authenticator;
@@ -31,8 +33,15 @@ class User {
 
         this.accountName = Name.from(newAccountAction.data.name);
         this.username = username;
+
+        // TODO:
+        // update key with fingerprint
+        // may need to do this in separate action, or perhaps separate transaction... need to test
+        // may need to use status to lock the account till finished craeating
+
+        console.log("calling eosio::updateauth()")
         // res = await idContract.updateperson(this.accountName.toString(), "active", "owner", publicKey.toString());
-        res = await idContract.updateauth(this.accountName.toString(), "active", "owner", Authority.fromKey(publicKey.toString()));
+        await eosioContract.updateauth(this.accountName.toString(), "active", "owner", Authority.fromKey(publicKey.toString()));
     }
 
     generatePrivateKeyFromPassword(password: string) {

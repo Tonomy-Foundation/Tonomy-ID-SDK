@@ -84,15 +84,13 @@ class EosioContract {
             },
         }
 
-        const res = await transact(Name.from("eosio"), [action], signer,)
-        console.log(JSON.stringify(res, null, 2));
-        return res;
+        return await transact(Name.from("eosio"), [action], signer);
     }
 
     async updateauth(account: string,
         permission: string,
         parent: string,
-        auth: any
+        auth: Authority
     ) {
         console.log("EosioContract.updateauth()");
 
@@ -113,9 +111,7 @@ class EosioContract {
             },
         }
 
-        const res = await transact(Name.from("eosio"), [action], signer,)
-        console.log(JSON.stringify(res, null, 2));
-        return res;
+        return await transact(Name.from("eosio"), [action], signer);
     }
 }
 
