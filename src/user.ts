@@ -2,6 +2,7 @@ import { Authenticator } from './authenticator';
 import { IDContract } from './services/contracts/IDContract';
 import { Name } from '@greymass/eosio';
 import { publicKey } from './services/eosio/eosio';
+import { Authority } from './services/eosio/authority';
 
 const idContract = IDContract.Instance;
 
@@ -30,8 +31,8 @@ class User {
 
         this.accountName = Name.from(newAccountAction.data.name);
         this.username = username;
-        res = await idContract.updateperson(this.accountName.toString(), "active", "owner", publicKey.toString());
-        // res = await idContract.updateauth(this.accountName.toString(), "active", "owner", publicKey.toString());
+        // res = await idContract.updateperson(this.accountName.toString(), "active", "owner", publicKey.toString());
+        res = await idContract.updateauth(this.accountName.toString(), "active", "owner", Authority.fromKey(publicKey.toString()));
     }
 
     generatePrivateKeyFromPassword(password: string) {

@@ -1,53 +1,53 @@
-import { copyObject } from "../../util/objets";
+type KeyWeight = { key: string, weight: number };
+type PermissionWeight = {
+    permission: {
+        actor: string, permission: string
+    },
+    weight: number
+};
+type WaitWeight = { wait_sec: number, weight: number }
 
-type Authority = {
+class Authority {
     threshold: number;
-    keys: { key: string, weight: number }[];
-    accounts: {
-        permission: {
-            actor: string, permission: string
-        },
-        weight: number
-    }[];
-    waits: { wait_sec: number, weight: number }[];
+    keys: KeyWeight[];
+    accounts: PermissionWeight[];
+    waits: WaitWeight[];
 
-    // TODO add functions as methods of Authority here instead of global functions
-}
+    constructor(threshold: number, keys: KeyWeight[], accounts: PermissionWeight[], waits: WaitWeight[]) {
+        this.threshold = threshold;
+        this.keys = keys;
+        this.accounts = accounts;
+        this.waits = waits;
+    }
 
-function createKeyAuthoriy(key: string): Authority {
-    return {
-        threshold: 1,
-        keys: [{
+    static fromKey(key: string) {
+        const keys = [{
             key,
             weight: 1
-        }],
-        accounts: [],
-        waits: []
+        }]
+        return new this(1, keys, [], []);
     }
-}
 
-function createDelegatedAuthority(permission: { actor: string, permission: string }): Authority {
-    return {
-        threshold: 1,
-        keys: [],
-        accounts: [{
+    static fromAccount(permission: { actor: string, permission: string }) {
+        const accounts = [{
             permission,
             weight: 1
-        }],
-        waits: []
+        }]
+        return new this(1, [], accounts, []);
+    }
+
+    // to add the eosio.code authority for smart contracts
+    // https://developers.eos.io/welcome/v2.1/smart-contract-guides/adding-inline-actions#step-1-adding-eosiocode-to-permissions
+    addCodePermission(account: string) {
+        this.accounts.push({
+            permission: {
+                actor: account,
+                permission: "eosio.code"
+            },
+            weight: 1
+        })
     }
 }
 
-function addCodePermission(authority: any, account: string): Authority {
-    const newAuth = copyObject(authority);
-    newAuth.accounts.push({
-        permission: {
-            actor: account,
-            permission: "eosio.code"
-        },
-        weight: 1
-    })
-    return newAuth;
-}
 
-export { createDelegatedAuthority, createKeyAuthoriy, addCodePermission, Authority };
+export { Authority };

@@ -1,6 +1,6 @@
 import { Name } from "@greymass/eosio"
 import { signer } from '../eosio/eosio';
-import { createKeyAuthoriy } from '../eosio/authority';
+import { Authority } from '../eosio/authority';
 import { transact } from "../eosio/transaction";
 
 class IDContract {
@@ -85,10 +85,10 @@ class IDContract {
     async updateauth(account: string,
         permission: string,
         parent: string,
-        key: string
+        auth: Authority,
     ) {
         console.log("IDContract.updateauth()");
-        console.log(account, permission, parent, key);
+        console.log(account, permission, parent, auth);
 
         const action = {
             authorization: [
@@ -103,7 +103,7 @@ class IDContract {
                 account,
                 permission,
                 parent,
-                auth: createKeyAuthoriy(key),
+                auth,
             },
         }
 
