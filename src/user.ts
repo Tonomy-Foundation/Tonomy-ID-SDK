@@ -40,8 +40,6 @@ interface UserI {
     transaction: TransactionI;
     credentials: CredentialsI;
 
-    // #### Creating account flow ####
-
     // Creates or updates the private key protected by the master password in the Authenticator
     // Probably needs to prompt user for the current password to do this
     putMasterPasswordKey(masterPassword: string): Promise<void>;
@@ -63,8 +61,6 @@ interface UserI {
     // with a random account name and salt
     // throws if no master password key exists in the authenticator
     createPerson(username: string): Promise<void>;
-
-    // #### Login and logout flow ####
 
     // Checks that master password is correct and if so loads any account details
     login(username: string, masterPassword: string): Promise<void>;
