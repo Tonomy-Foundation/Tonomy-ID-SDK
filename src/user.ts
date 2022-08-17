@@ -1,32 +1,60 @@
 import { Authenticator, AuthenticatorLevel } from './authenticator';
 import { IDContract } from './services/contracts/IDContract';
-import { Checksum256, Name, PrivateKey } from '@greymass/eosio';
+import { Name, PrivateKey } from '@greymass/eosio';
 import { publicKey } from './services/eosio/eosio';
-import { Authority } from './services/eosio/authority';
-import { EosioContract } from './services/contracts/EosioContract';
+import { ActionData, PushTransactionResponse } from './services/eosio/transaction';
 
 const idContract = IDContract.Instance;
-const eosioContract = EosioContract.Instance;
 
 interface TransactionI {
-    sign().send();
-    // NOTE: need to use public SDK to send transaction to wallet        
+    // Signs a transaction with the appropriate key, and sends it to the blockchain
+    // NOTE: to get the transaction to the wallet, use the Public SDK
+    signAndBroadcast(contract: Name, actions: ActionData[], level: AuthenticatorLevel): Promise<PushTransactionResponse>;
 }
 
 interface CredentialsI {
-    sign().send();
-    verify();
+    // Creates a new Verifiable Credential signed with the appropriate key
+    sign(credential: VerifiableCredential<any>, level: AuthenticatorLevel): Promise<VerifiableCredentialSigned<any>>;
+
+    // Verifies a Verifiable Credential has a valid proof
+    verify(credential: VerifiableCredentialSigned<any>): Promise<boolean>;
+
+    // Verifies a Verifiable Credential has a valid proof from the provided DID's verification method
+    hasProofOf(didUrl: string, credential: VerifiableCredentialSigned<any>): Promise<boolean>;
+}
+
+type BuddyType = { account?: Name, username?: string };
+type Buddies = {
+    threshsold: number;
+    buddies: [BuddyType];
 }
 
 interface RecoveryI {
-    initialize({ username: string }[]): Promise<void>;
-    putRecoveryBuddies({ username: string }[]): Promise<void>;
-    recoveryBuddyNotification({ account: Name, username: string }): Promise<void>;
-    getRecoveryBuddies(username: string): Promise<{ account: Name }[]>;
-    // Sends transaction to recover, and message to the new app to notify them
-    recoverBuddy(account: Name);
-    recoveryNotification(from: Name);
+    myBuddies: Buddies;
+    buddyOf: [BuddyType];
 
+    // Initialize the object, if the account is found to already have recovery setup
+    initialize(buddies: Buddies): Promise<void>;
+
+    // Sets up the account to be able to recovery their account with the given buddies
+    // sends a notification to each buddy that they are a buddy
+    putRecoveryBuddies(buddies: Buddies): Promise<void>;
+
+    // retreives the recovery buddies of a provided account
+    getRecoveryBuddies(buddy: BuddyType): Promise<Buddies>;
+
+    // caled to inform the account that they are the recovery buddy of another account
+    recoveryBuddyNotification(from: BuddyType): Promise<void>;
+
+    // retreives the accounts that a provided account is able to recover
+    getBuddiesOf(account: BuddyType): Promise<[BuddyType]>;
+
+    // Sends transaction to confirm recovery
+    // sends a notification to recovering account
+    recoverBuddy(buddyToRecover: BuddyType): Promise<void>;
+
+    // called to inform the account that a recovery confirmation is made
+    recoveryNotification(from: BuddyType): Promise<void>;
 }
 
 interface UserI {
@@ -69,13 +97,19 @@ interface UserI {
     logout(): Promise<void>;
 };
 
-interface PublicSdk {
-    login(): Promise<void>;
-    signTransaction(): Promise<void>;
-    // NOTE: need to use public SDK to send transaction to wallet
+interface PublicUserI {
+    authenticator: Authenticator;
 
-    signCredential(): Promise<void>;
-    signAndSendCredential(): Promise<void>;
+    // Logs into the web app
+    // Redirects to the domain for login where user scans a QR code from Tonomy ID to sign in
+    // promise resolves when they are redirected back
+    login(fallbackPath: string): Promise<void>;
+
+    // Sends a transaction to the wallet, which will sign and broadcast it
+    signTransaction(contract: Name, actions: ActionData[], level: AuthenticatorLevel): Promise<void>;
+
+    // Sends a credential to the wallet which will sign and return it
+    signCredential(credential: VerifiableCredential<any>, level: AuthenticatorLevel): Promise<VerifiableCredentialSigned<any>>;
 }
 
 class User {

@@ -15,7 +15,27 @@ interface Signer {
     sign(digest: Checksum256): Signature;
 }
 
-async function transact(contract: Name, actions: ActionData[], signer: Signer): Promise<any> {
+// Copied from @greymass/eosio/src/chain/transaction.ts
+interface PushTransactionResponse {
+    transaction_id: string;
+    processed: {
+        id: string;
+        block_num: number;
+        block_time: string;
+        receipt: {
+            status: string;
+            cpu_usage_us: number;
+            net_usage_words: number;
+        };
+        elapsed: number;
+        net_usage: number;
+        scheduled: boolean;
+        action_traces: any[];
+        account_ram_delta: any;
+    };
+}
+
+async function transact(contract: Name, actions: ActionData[], signer: Signer): Promise<PushTransactionResponse> {
     // Get the ABI
     const abi = await api.v1.chain.get_abi(contract);
 
@@ -53,4 +73,4 @@ async function transact(contract: Name, actions: ActionData[], signer: Signer): 
     return res;
 }
 
-export { transact, Signer };
+export { transact, Signer, ActionData, PushTransactionResponse };

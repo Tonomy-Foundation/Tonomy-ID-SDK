@@ -23,5 +23,8 @@ interface VerifiableCredential<S> {
     subject: string
     type: string[]
     credentialSubject: S | S[]
+}
+
+interface VerifiableCredentialSigned<S> extends VerifiableCredential<S> {
     proof: Proof | Proof[]
 }

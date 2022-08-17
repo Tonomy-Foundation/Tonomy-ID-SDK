@@ -1,7 +1,7 @@
 import { PrivateKey, PublicKey, Checksum256, Signature } from '@greymass/eosio';
 import crypto from 'crypto';
 
-enum AuthenticatorLevel { Password, PIN, Fingerprint, Local };
+enum AuthenticatorLevel { Password, PIN, Fingerprint, Local, WebSessionStorage, WebLocalStorage };
 
 /**
  * @param level - The security level of the key
