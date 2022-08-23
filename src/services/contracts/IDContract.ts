@@ -9,12 +9,9 @@ class IDContract {
         return this._singleton_instance || (this._singleton_instance = new this());
     }
 
-    async newperson(creator: string,
-        username_hash: string,
-        password: string,
-        salt: string,
-        pin: string,
-        fingerprint: string,
+    async newperson(username_hash: string,
+        password_key: string,
+        password_salt: string,
         signer: Signer
     ) {
         console.log("IDContract.newperson()");
@@ -22,19 +19,16 @@ class IDContract {
         const action = {
             authorization: [
                 {
-                    actor: creator,
+                    actor: "id.tonomy",
                     permission: 'active',
                 },
             ],
             account: 'id.tonomy',
             name: 'newperson',
             data: {
-                creator,
                 username_hash,
-                password,
-                salt,
-                pin,
-                fingerprint
+                password_key,
+                password_salt,
             }
         }
 

@@ -1,5 +1,5 @@
 import { PrivateKey, PublicKey, Checksum256, Signature } from '@greymass/eosio';
-import crypto from 'crypto';
+import { randomString, sha256 } from './util/crypto';
 
 enum AuthenticatorLevel { Password, PIN, Fingerprint, Local };
 
@@ -88,8 +88,8 @@ class JsAuthenticator implements Authenticator {
         if (options.level === AuthenticatorLevel.Password || options.level === AuthenticatorLevel.PIN) {
             if (!options.challenge) throw new Error("Challenge missing");
 
-            keyStore.salt = crypto.randomBytes(32).toString('hex');
-            keyStore.hashedSaltedChallenge = Checksum256.hash(options.challenge + keyStore.salt).toString();
+            keyStore.salt = randomString(32);
+            keyStore.hashedSaltedChallenge = sha256(options.challenge + keyStore.salt);
         }
 
         this.keyStorage[options.level] = keyStore;

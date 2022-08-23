@@ -1,9 +1,10 @@
 import { Authenticator } from './authenticator';
 import { IDContract } from './services/contracts/IDContract';
 import { Name, PrivateKey, KeyType } from '@greymass/eosio';
-import { publicKey, privateKey } from './services/eosio/eosio';
+import { privateKey } from './services/eosio/eosio';
 import { EosioContract } from './services/contracts/EosioContract';
 import { createSigner } from './services/eosio/transaction';
+import { randomString, sha256 } from './util/crypto';
 
 const idContract = IDContract.Instance;
 const eosioContract = EosioContract.Instance;
@@ -89,30 +90,25 @@ class User {
     }
 
     async createPerson(username: string) {
-        // const usernameHash = Checksum256.hash(username);
+        const usernameHash = sha256(username);
 
         // const passwordKey = this.authenticator.getKey({ level: AuthenticatorLevel.Password });
         // const pinKey = this.authenticator.getKey({ level: AuthenticatorLevel.PIN });
         // const fingerprintKey = this.authenticator.getKey({ level: AuthenticatorLevel.Fingerprint });
         const passwordKey = PrivateKey.generate(KeyType.K1);
+        const passwordSalt = randomString(32);
         const pinKey = PrivateKey.generate(KeyType.K1);
         const fingerprintKey = PrivateKey.generate(KeyType.K1);
+        const localKey = PrivateKey.generate(KeyType.K1);
 
-        const res = await idContract.newperson("id.tonomy", "7d32c90f59b2131f86132a30172a8adbb3e839110e38874901afc61d971d7d0e",
-            passwordKey.toPublic().toString(), "b9776d7ddf459c9ad5b0e1d6ac61e27befb5e99fd62446677600d7cacef544d0",
-            pinKey.toPublic().toString(), fingerprintKey.toPublic().toString(), createSigner(privateKey));
-        // const res = await idContract.newperson("id.tonomy", usernameHash.toString(),
-        //     passwordKey.toString(), this.salt,
-        //     pinKey.toString(), fingerprintKey.toString());
+        const res = await idContract.newperson(usernameHash.toString(), passwordKey.toPublic().toString(), passwordSalt.toString(), createSigner(privateKey));
 
         const newAccountAction = res.processed.action_traces[0].inline_traces[0].act;
         this.accountName = Name.from(newAccountAction.data.name);
         this.username = username;
 
         // TODO:
-        // update key with fingerprint
-        // may need to do this in separate action, or perhaps separate transaction... need to test
-        // may need to use status to lock the account till finished craeating
+        // use status to lock the account till finished craeating
 
         console.log("updating with updateperson");
         await idContract.updateperson(this.accountName.toString(), "pin", "owner", pinKey.toPublic().toString(), createSigner(passwordKey));
