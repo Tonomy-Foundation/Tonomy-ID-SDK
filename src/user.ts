@@ -1,6 +1,6 @@
 import { Authenticator, AuthenticatorLevel } from './authenticator';
 import { IDContract } from './services/contracts/IDContract';
-import { Name, PrivateKey } from '@greymass/eosio';
+import { Name, PrivateKey, PublicKey } from '@greymass/eosio';
 import { publicKey } from './services/eosio/eosio';
 import { ActionData, PushTransactionResponse } from './services/eosio/transaction';
 
@@ -51,10 +51,13 @@ interface RecoveryI {
 
     // Sends transaction to confirm recovery
     // sends a notification to recovering account
-    recoverBuddy(buddyToRecover: BuddyType): Promise<void>;
+    recoverBuddy(buddyToRecover: BuddyType, newMasterPasswordKey: PublicKey): Promise<void>;
 
     // called to inform the account that a recovery confirmation is made
     recoveryNotification(from: BuddyType): Promise<void>;
+
+    // Sign in to your recovering account with your new password
+    recoverAccount(username: string): Promise<void>;
 }
 
 interface UserI {
@@ -166,4 +169,4 @@ class User {
     }
 }
 
-export { User };
+export { User, UserI };
