@@ -1,7 +1,6 @@
 import { Name } from "@greymass/eosio"
-import { signer } from '../eosio/eosio';
 import { Authority } from '../eosio/authority';
-import { transact } from "../eosio/transaction";
+import { Signer, transact } from "../eosio/transaction";
 
 class IDContract {
     static _singleton_instance: IDContract;
@@ -15,7 +14,8 @@ class IDContract {
         password: string,
         salt: string,
         pin: string,
-        fingerprint: string
+        fingerprint: string,
+        signer: Signer
     ) {
         console.log("IDContract.newperson()");
 
@@ -44,7 +44,8 @@ class IDContract {
     async updateperson(account: string,
         permission: string,
         parent: string,
-        key: string
+        key: string,
+        signer: Signer
     ) {
         console.log("IDContract.updateperson()");
         const action = {
@@ -71,6 +72,7 @@ class IDContract {
         permission: string,
         parent: string,
         auth: Authority,
+        signer: Signer
     ) {
         console.log("IDContract.updateauth()");
         console.log(account, permission, parent, auth);

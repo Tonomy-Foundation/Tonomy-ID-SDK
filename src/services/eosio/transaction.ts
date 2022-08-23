@@ -1,4 +1,4 @@
-import { Action, Transaction, SignedTransaction, Signature, Checksum256, Name } from "@greymass/eosio";
+import { Action, Transaction, SignedTransaction, Signature, Checksum256, Name, PrivateKey } from "@greymass/eosio";
 import { api } from "./eosio";
 
 type ActionData = {
@@ -13,6 +13,14 @@ type ActionData = {
 
 interface Signer {
     sign(digest: Checksum256): Signature;
+}
+
+function createSigner(privateKey: PrivateKey): Signer {
+    return {
+        sign(digest: Checksum256): Signature {
+            return privateKey.signDigest(digest);
+        }
+    }
 }
 
 async function transact(contract: Name, actions: ActionData[], signer: Signer): Promise<any> {
@@ -53,4 +61,4 @@ async function transact(contract: Name, actions: ActionData[], signer: Signer): 
     return res;
 }
 
-export { transact, Signer };
+export { transact, Signer, createSigner };

@@ -1,9 +1,9 @@
-import { Authenticator, AuthenticatorLevel } from './authenticator';
+import { Authenticator } from './authenticator';
 import { IDContract } from './services/contracts/IDContract';
-import { Checksum256, Name, PrivateKey, KeyType } from '@greymass/eosio';
-import { publicKey } from './services/eosio/eosio';
-import { Authority } from './services/eosio/authority';
+import { Name, PrivateKey, KeyType } from '@greymass/eosio';
+import { publicKey, privateKey } from './services/eosio/eosio';
 import { EosioContract } from './services/contracts/EosioContract';
+import { createSigner } from './services/eosio/transaction';
 
 const idContract = IDContract.Instance;
 const eosioContract = EosioContract.Instance;
@@ -100,7 +100,7 @@ class User {
 
         const res = await idContract.newperson("id.tonomy", "7d32c90f59b2131f86132a30172a8adbb3e839110e38874901afc61d971d7d0e",
             passwordKey.toPublic().toString(), "b9776d7ddf459c9ad5b0e1d6ac61e27befb5e99fd62446677600d7cacef544d0",
-            pinKey.toPublic().toString(), fingerprintKey.toPublic().toString());
+            pinKey.toPublic().toString(), fingerprintKey.toPublic().toString(), createSigner(privateKey));
         // const res = await idContract.newperson("id.tonomy", usernameHash.toString(),
         //     passwordKey.toString(), this.salt,
         //     pinKey.toString(), fingerprintKey.toString());
@@ -115,7 +115,7 @@ class User {
         // may need to use status to lock the account till finished craeating
 
         console.log("updating with updateperson");
-        await idContract.updateperson(this.accountName.toString(), "active", "owner", publicKey.toString());
+        await idContract.updateperson(this.accountName.toString(), "active", "owner", pinKey.toPublic().toString(), createSigner(passwordKey));
     }
 
     generatePrivateKeyFromPassword(password: string) {
