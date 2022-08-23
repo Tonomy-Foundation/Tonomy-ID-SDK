@@ -1,6 +1,6 @@
 import { Authenticator, AuthenticatorLevel } from './authenticator';
 import { IDContract } from './services/contracts/IDContract';
-import { Checksum256, Name, PrivateKey } from '@greymass/eosio';
+import { Checksum256, Name, PrivateKey, KeyType } from '@greymass/eosio';
 import { publicKey } from './services/eosio/eosio';
 import { Authority } from './services/eosio/authority';
 import { EosioContract } from './services/contracts/EosioContract';
@@ -72,7 +72,6 @@ interface UserI {
 interface PublicSdk {
     login(): Promise<void>;
     signTransaction(): Promise<void>;
-    // NOTE: need to use public SDK to send transaction to wallet
 
     signCredential(): Promise<void>;
     signAndSendCredential(): Promise<void>;
@@ -95,9 +94,9 @@ class User {
         // const passwordKey = this.authenticator.getKey({ level: AuthenticatorLevel.Password });
         // const pinKey = this.authenticator.getKey({ level: AuthenticatorLevel.PIN });
         // const fingerprintKey = this.authenticator.getKey({ level: AuthenticatorLevel.Fingerprint });
-        const passwordKey = PrivateKey.generate("random1");
-        const pinKey = PrivateKey.generate("random2");
-        const fingerprintKey = PrivateKey.generate("random2");
+        const passwordKey = PrivateKey.generate(KeyType.K1);
+        const pinKey = PrivateKey.generate(KeyType.K1);
+        const fingerprintKey = PrivateKey.generate(KeyType.K1);
 
         const res = await idContract.newperson("id.tonomy", "7d32c90f59b2131f86132a30172a8adbb3e839110e38874901afc61d971d7d0e",
             passwordKey.toPublic().toString(), "b9776d7ddf459c9ad5b0e1d6ac61e27befb5e99fd62446677600d7cacef544d0",
@@ -118,10 +117,6 @@ class User {
         console.log("updating with updateperson");
         await idContract.updateperson(this.accountName.toString(), "active", "owner", publicKey.toString());
     }
-
-    // Updates the existing password in the Authenticator
-    // Probably needs to prompt user for the current password to do this
-    async updatePassword(newMasterPassword: string)
 
     generatePrivateKeyFromPassword(password: string) {
         // creates a key based on secure (hashing) key generation algorithm like Argon2 or Scrypt
