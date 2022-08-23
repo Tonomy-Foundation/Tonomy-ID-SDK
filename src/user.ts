@@ -115,7 +115,7 @@ class User {
         // may need to use status to lock the account till finished craeating
 
         console.log("updating with updateperson");
-        await idContract.updateperson(this.accountName.toString(), "active", "owner", pinKey.toPublic().toString(), createSigner(passwordKey));
+        await idContract.updateperson(this.accountName.toString(), "pin", "owner", pinKey.toPublic().toString(), createSigner(passwordKey));
     }
 
     generatePrivateKeyFromPassword(password: string) {

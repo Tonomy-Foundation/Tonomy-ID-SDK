@@ -52,7 +52,7 @@ class IDContract {
             authorization: [
                 {
                     actor: account,
-                    permission: permission,
+                    permission: parent,
                 }
             ],
             account: 'id.tonomy',
