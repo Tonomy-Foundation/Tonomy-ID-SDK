@@ -95,6 +95,7 @@ class User {
         // const passwordKey = this.authenticator.getKey({ level: AuthenticatorLevel.Password });
         // const pinKey = this.authenticator.getKey({ level: AuthenticatorLevel.PIN });
         // const fingerprintKey = this.authenticator.getKey({ level: AuthenticatorLevel.Fingerprint });
+        // const localKey = this.authenticator.getKey({ level: AuthenticatorLevel.Local });
         const passwordKey = PrivateKey.generate(KeyType.K1);
         const passwordSalt = randomString(32);
         const pinKey = PrivateKey.generate(KeyType.K1);
@@ -111,7 +112,11 @@ class User {
         // use status to lock the account till finished craeating
 
         console.log("updating with updateperson");
-        await idContract.updateperson(this.accountName.toString(), "pin", "owner", pinKey.toPublic().toString(), createSigner(passwordKey));
+        await idContract.updatekeys(this.accountName.toString(), {
+            pin: pinKey.toPublic().toString(),
+            fingerprint: fingerprintKey.toPublic().toString(),
+            local: localKey.toPublic().toString()
+        }, createSigner(passwordKey));
     }
 
     generatePrivateKeyFromPassword(password: string) {

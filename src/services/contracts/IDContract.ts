@@ -2,6 +2,15 @@ import { Name } from "@greymass/eosio"
 import { Authority } from '../eosio/authority';
 import { Signer, transact } from "../eosio/transaction";
 
+enum enum_permission_level {
+    Owner,
+    Active,
+    Password,
+    Pin,
+    Fingerprint,
+    Local
+}
+
 class IDContract {
     static _singleton_instance: IDContract;
 
@@ -35,31 +44,49 @@ class IDContract {
         return await transact(Name.from("id.tonomy"), [action], signer);
     }
 
-    async updateperson(account: string,
-        permission: string,
-        parent: string,
-        key: string,
+    async updatekeys(account: string,
+        keys: {
+            fingerprint?: string,
+            pin?: string,
+            local?: string,
+        },
         signer: Signer
     ) {
-        console.log("IDContract.updateperson()");
-        const action = {
-            authorization: [
-                {
-                    actor: account,
-                    permission: parent,
-                }
-            ],
-            account: 'id.tonomy',
-            name: 'updateperson',
-            data: {
-                account,
-                permission,
-                parent,
-                key,
-            },
+        console.log("IDContract.updatekeys()");
+        const actions = [];
+        for (const key in keys) {
+            let permission;
+            switch (key) {
+                case "fingerprint":
+                    permission = enum_permission_level.Fingerprint;
+                    break;
+                case "pin":
+                    permission = enum_permission_level.Pin;
+                    break;
+                case "local":
+                    permission = enum_permission_level.Local;
+                    break;
+                default:
+                    throw new Error("Invalid key");
+            }
+            actions.push({
+                authorization: [
+                    {
+                        actor: account,
+                        permission: "owner",
+                    }
+                ],
+                account: 'id.tonomy',
+                name: 'updatekey',
+                data: {
+                    account,
+                    permission,
+                    key: keys[key],
+                },
+            });
         }
 
-        return await transact(Name.from("id.tonomy"), [action], signer);
+        return await transact(Name.from("id.tonomy"), actions, signer);
     }
 
     async updateauth(account: string,
