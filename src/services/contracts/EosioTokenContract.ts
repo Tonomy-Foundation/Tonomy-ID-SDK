@@ -1,6 +1,5 @@
 import { Name } from "@greymass/eosio"
-import { signer } from '../eosio/eosio';
-import { transact } from "../eosio/transaction";
+import { Signer, transact } from "../eosio/transaction";
 
 class EosioTokenContract {
     static _singleton_instance: EosioTokenContract;
@@ -9,7 +8,7 @@ class EosioTokenContract {
         return this._singleton_instance || (this._singleton_instance = new this());
     }
 
-    async create(supply: string) {
+    async create(supply: string, signer: Signer): Promise<void> {
         console.log("EosioTokenContract.create()");
 
         const actions = [
@@ -32,7 +31,7 @@ class EosioTokenContract {
         return await transact(Name.from("eosio.token"), actions, signer);
     }
 
-    async issue(quantity: string) {
+    async issue(quantity: string, signer: Signer): Promise<void> {
         console.log("EosioTokenContract.issue()");
 
         const actions = [{

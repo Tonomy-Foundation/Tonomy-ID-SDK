@@ -1,13 +1,10 @@
 import { Authenticator } from './authenticator';
 import { IDContract } from './services/contracts/IDContract';
 import { Name, PrivateKey, KeyType } from '@greymass/eosio';
-import { privateKey } from './services/eosio/eosio';
-import { EosioContract } from './services/contracts/EosioContract';
 import { createSigner } from './services/eosio/transaction';
 import { randomString, sha256 } from './util/crypto';
 
 const idContract = IDContract.Instance;
-const eosioContract = EosioContract.Instance;
 
 interface TransactionI {
     sign().send();
@@ -27,7 +24,6 @@ interface RecoveryI {
     // Sends transaction to recover, and message to the new app to notify them
     recoverBuddy(account: Name);
     recoveryNotification(from: Name);
-
 }
 
 interface UserI {
@@ -102,7 +98,10 @@ class User {
         const fingerprintKey = PrivateKey.generate(KeyType.K1);
         const localKey = PrivateKey.generate(KeyType.K1);
 
-        const res = await idContract.newperson(usernameHash.toString(), passwordKey.toPublic().toString(), passwordSalt.toString(), createSigner(privateKey));
+        // TODO this needs to change to the actual key used, from settings
+        const idTonomyActiveKey = PrivateKey.from("PVT_K1_2bfGi9rYsXQSXXTvJbDAPhHLQUojjaNLomdm3cEJ1XTzMqUt3V");
+
+        const res = await idContract.newperson(usernameHash.toString(), passwordKey.toPublic().toString(), passwordSalt.toString(), createSigner(idTonomyActiveKey));
 
         const newAccountAction = res.processed.action_traces[0].inline_traces[0].act;
         this.accountName = Name.from(newAccountAction.data.name);
@@ -111,7 +110,6 @@ class User {
         // TODO:
         // use status to lock the account till finished craeating
 
-        console.log("updating with updateperson");
         await idContract.updatekeys(this.accountName.toString(), {
             pin: pinKey.toPublic().toString(),
             fingerprint: fingerprintKey.toPublic().toString(),
