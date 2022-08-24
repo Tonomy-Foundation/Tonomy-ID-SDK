@@ -1,7 +1,7 @@
 
 import { PrivateKey } from '@greymass/eosio';
 import { User, JsAuthenticator } from '../src/index';
-// import * as argon2 from "argon2";
+import * as argon2 from "argon2";
 
 
 describe('saving a password', () => {
@@ -22,11 +22,11 @@ describe('saving a password', () => {
 
 
   test('password can be verfied', async () => {
-    const { privateKey } = await user.generatePrivateKeyFromPassword('123');
-    console.log(privateKey.data)
-    // console.log(privateKey.sharedSecret(privateKey.toPublic()))
-    // const result = argon2.verify(privateKey.toString(), '123', { salt })
-    // expect(result).toBe(true);
+    const password = '123'
+    const { privateKey, salt } = await user.generatePrivateKeyFromPassword(password);
+    const data = Buffer.from(privateKey.data.array).toString('utf-8');
+    const result = await argon2.verify(data, password, { salt })
+    expect(result).toBe(true);
   })
 
   test('function is defined', () => {

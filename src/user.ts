@@ -27,7 +27,8 @@ class User {
         const randomString = crypto.randomBytes(32).toString('hex')
         const salt = Buffer.from(randomString)
         const hash = await argon2.hash(password, { salt })
-        const privateKey = new PrivateKey(KeyType.K1, new Bytes(Buffer.from(hash, 'hex')));
+        const newBytes = Buffer.from(hash)
+        const privateKey = new PrivateKey(KeyType.K1, new Bytes(newBytes));
 
         return {
             privateKey: privateKey,
