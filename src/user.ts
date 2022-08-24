@@ -44,7 +44,7 @@ class User {
     }
 
     // Creates a cryptographically secure Private key
-    async generateRandoPrivateKey(): Promise<{ privateKey: PrivateKey, salt: Buffer }> {
+    async generateRandomPrivateKey(): Promise<{ privateKey: PrivateKey, salt: Buffer }> {
         const randomString = crypto.randomBytes(32).toString('hex')
         const { privateKey, salt } = await this.generatePrivateKeyFromPassword(randomString)
         return { privateKey, salt };

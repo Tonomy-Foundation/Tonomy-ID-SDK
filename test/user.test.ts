@@ -3,10 +3,11 @@ import { PrivateKey } from '@greymass/eosio';
 import { User, JsAuthenticator } from '../src/index';
 import * as argon2 from "argon2";
 
+const auth = new JsAuthenticator();
+const user = new User(auth);
 
 describe('saving a password', () => {
-  const auth = new JsAuthenticator();
-  const user = new User(auth);
+
 
   test('function savePassword is defined', () => {
 
@@ -29,11 +30,26 @@ describe('saving a password', () => {
     expect(result).toBe(true);
   })
 
-  test('function is defined', () => {
-    expect(user.generateRandoPrivateKey).toBeDefined();
+
+
+
+
+
+
+})
+
+describe('generates random keys', () => {
+  test('function generateRandomPrivateKey is defined', () => {
+    expect(user.generateRandomPrivateKey).toBeDefined();
   })
 
+  test('generate random key', async () => {
+    const { privateKey, salt } = await user.generateRandomPrivateKey();
+    expect(privateKey).toBeInstanceOf(PrivateKey);
+    expect(salt).toBeInstanceOf(Buffer);
 
-
+    const result2 = await user.generateRandomPrivateKey();
+    expect(privateKey).not.toBe(result2.privateKey);
+  })
 })
 
