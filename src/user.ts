@@ -24,8 +24,7 @@ class User {
 
     async generatePrivateKeyFromPassword(password: string): Promise<{ privateKey: PrivateKey, salt: Buffer }> {
         // creates a key based on secure (hashing) key generation algorithm like Argon2 or Scrypt
-        const randomString = crypto.randomBytes(32).toString('hex')
-        const salt = Buffer.from(randomString)
+        const salt = crypto.randomBytes(32)
         const hash = await argon2.hash(password, { salt })
         const newBytes = Buffer.from(hash)
         const privateKey = new PrivateKey(KeyType.K1, new Bytes(newBytes));
