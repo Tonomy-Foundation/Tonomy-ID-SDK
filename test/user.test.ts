@@ -44,12 +44,11 @@ describe('generates random keys', () => {
   })
 
   test('generate random key', async () => {
-    const { privateKey, salt } = await user.generateRandomPrivateKey();
-    expect(privateKey).toBeInstanceOf(PrivateKey);
-    expect(salt).toBeInstanceOf(Buffer);
+    const r1 = user.generateRandomPrivateKey();
+    expect(r1).toBeInstanceOf(PrivateKey);
 
-    const result2 = await user.generateRandomPrivateKey();
-    expect(privateKey).not.toBe(result2.privateKey);
+    const r2 = user.generateRandomPrivateKey();
+    expect(r1).not.toBe(r2);
   })
 })
 
