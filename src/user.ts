@@ -16,12 +16,9 @@ class User {
         this.authenticator = _authenticator;
         this.id = new IDContract();
     }
-
     createAccount(accountName: string, masterPassword: string) {
         console.log(accountName, masterPassword);
     }
-
-
     async generatePrivateKeyFromPassword(password: string): Promise<{ privateKey: PrivateKey, salt: Buffer }> {
         // creates a key based on secure (hashing) key generation algorithm like Argon2 or Scrypt
         const salt = crypto.randomBytes(32)
@@ -34,14 +31,12 @@ class User {
             salt
         }
     }
-
     async savePassword(masterPassword: string) {
         const { privateKey, salt } = await this.generatePrivateKeyFromPassword(masterPassword);
         this.salt = salt;
         const level = AuthenticatorLevel.Password;
         this.authenticator.storeKey({ level, privateKey, challenge: masterPassword });
     }
-
     // Creates a cryptographically secure Private key
     generateRandomPrivateKey(): PrivateKey {
         const randomString = crypto.randomBytes(32)

@@ -8,7 +8,6 @@ const user = new User(auth);
 
 describe('saving a password', () => {
 
-
   test('function savePassword is defined', () => {
 
     expect(user.savePassword).toBeDefined();
@@ -16,11 +15,11 @@ describe('saving a password', () => {
 
   test('generate private key returns privatekey', async () => {
 
-    const { privateKey } = await user.generatePrivateKeyFromPassword('123')
+    const { privateKey, salt } = await user.generatePrivateKeyFromPassword('123')
 
     expect(privateKey).toBeInstanceOf(PrivateKey);
+    expect(salt).toBeDefined();
   })
-
 
   test('password can be verfied', async () => {
     const password = '123'
@@ -29,14 +28,8 @@ describe('saving a password', () => {
     const result = await argon2.verify(data, password, { salt })
     expect(result).toBe(true);
   })
-
-
-
-
-
-
-
 })
+
 
 describe('generates random keys', () => {
   test('function generateRandomPrivateKey is defined', () => {
@@ -48,7 +41,7 @@ describe('generates random keys', () => {
     expect(r1).toBeInstanceOf(PrivateKey);
 
     const r2 = user.generateRandomPrivateKey();
-    expect(r1).not.toBe(r2);
+    expect(r1).not.toEqual(r2);
   })
 })
 
