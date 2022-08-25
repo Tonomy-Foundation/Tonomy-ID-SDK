@@ -44,4 +44,3 @@ describe('generates random keys', () => {
     expect(r1).not.toEqual(r2);
   })
 })
-
