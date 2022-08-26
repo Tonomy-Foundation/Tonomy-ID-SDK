@@ -1,5 +1,6 @@
-import { Name } from "@greymass/eosio"
-import { Authority } from '../eosio/authority';
+import { API, Checksum256, Name } from "@greymass/eosio"
+import { sha256 } from "../../util/crypto";
+import { api } from "../eosio/eosio";
 import { Signer, transact } from "../eosio/transaction";
 
 enum enum_permission_level {
@@ -10,6 +11,14 @@ enum enum_permission_level {
     Fingerprint,
     Local
 }
+
+type GetAccountTonomyIDInfoResponse = {
+    account_name: Name,
+    account_type: Number,
+    account_status: Number,
+    username_hash: Checksum256,
+    password_salt: Checksum256
+};
 
 class IDContract {
     static _singleton_instance: IDContract;
@@ -22,7 +31,7 @@ class IDContract {
         password_key: string,
         password_salt: string,
         signer: Signer
-    ) {
+    ): Promise<API.v1.PushTransactionResponse> {
         console.log("IDContract.newperson()");
 
         const action = {
@@ -51,7 +60,7 @@ class IDContract {
             local?: string,
         },
         signer: Signer
-    ) {
+    ): Promise<API.v1.PushTransactionResponse> {
         console.log("IDContract.updatekeys()");
         const actions = [];
         for (const key in keys) {
@@ -89,34 +98,28 @@ class IDContract {
         return await transact(Name.from("id.tonomy"), actions, signer);
     }
 
-    async updateauth(account: string,
-        permission: string,
-        parent: string,
-        auth: Authority,
-        signer: Signer
-    ) {
-        console.log("IDContract.updateauth()");
-        console.log(account, permission, parent, auth);
+    async getAccountTonomyIDInfo(account: string | Name): Promise<GetAccountTonomyIDInfoResponse> {
+        let data;
+        if (typeof account === 'string') {
+            // this is a username
+            const accountName = sha256(account);
 
-        const action = {
-            authorization: [
-                {
-                    actor: account,
-                    permission: parent,
-                },
-            ],
-            account: 'eosio',
-            name: 'updateauth',
-            data: {
-                account,
-                permission,
-                parent,
-                auth,
-            },
+            data = await api.v1.chain.get_table_rows({
+                code: "id.tonomy",
+                table: "accounts",
+                lower_bound: Name.from(accountName),
+                index_position: "secondary"
+            });
+        } else {
+            // use the account name directly
+            data = await api.v1.chain.get_table_rows({
+                code: "id.tonomy",
+                table: "accounts",
+                lower_bound: Name.from(account)
+            });
         }
-
-        return await transact(Name.from("eosio"), [action], signer);
+        return data.rows[0];
     }
 }
 
-export { IDContract };
+export { IDContract, GetAccountTonomyIDInfoResponse };
