@@ -1,6 +1,6 @@
 import { Authenticator } from './authenticator';
 import { IDContract } from './services/contracts/IDContract';
-import { Name, PrivateKey, KeyType } from '@greymass/eosio';
+import { Name, PrivateKey, KeyType, Checksum256 } from '@greymass/eosio';
 import { createSigner } from './services/eosio/transaction';
 import { randomString, sha256 } from './util/crypto';
 import { api } from './services/eosio/eosio';
@@ -76,6 +76,14 @@ interface PublicSdk {
     signAndSendCredential(): Promise<void>;
 }
 
+type GetAccountTonomyIDInfoResponse = {
+    account_name: Name,
+    account_type: Number,
+    account_status: Number,
+    username_hash: Checksum256,
+    password_salt: Checksum256
+};
+
 class User {
     authenticator: Authenticator;
 
@@ -130,12 +138,35 @@ class User {
     static async getAccountInfo(account: string | Name): Promise<API.v1.AccountObject> {
         if (typeof account === 'string') {
             // this is a username
-            const accountName = sha256(account);
-            return await api.v1.chain.get_account(accountName);
+            const idData = await this.getAccountTonomyIDInfo(account)
+            return await api.v1.chain.get_account(idData.account_name);
         } else {
             // use the account name directly
             return await api.v1.chain.get_account(account);
         }
+    }
+
+    static async getAccountTonomyIDInfo(account: string | Name): Promise<GetAccountTonomyIDInfoResponse> {
+        let data;
+        if (typeof account === 'string') {
+            // this is a username
+            const accountName = sha256(account);
+
+            data = await api.v1.chain.get_table_rows({
+                code: "id.tonomy",
+                table: "accounts",
+                lower_bound: Name.from(accountName),
+                index_position: "secondary"
+            });
+        } else {
+            // use the account name directly
+            data = await api.v1.chain.get_table_rows({
+                code: "id.tonomy",
+                table: "accounts",
+                lower_bound: Name.from(account)
+            });
+        }
+        return data.rows[0];
     }
 }
 
