@@ -4,6 +4,7 @@ import { Name, PrivateKey, KeyType } from '@greymass/eosio';
 import { createSigner } from './services/eosio/transaction';
 import { randomString, sha256 } from './util/crypto';
 import { api } from './services/eosio/eosio';
+import { API } from '@greymass/eosio';
 
 const idContract = IDContract.Instance;
 
@@ -126,7 +127,7 @@ class User {
         }
     }
 
-    static async getAccountInfo(account: string | Name): Promise<any> {
+    static async getAccountInfo(account: string | Name): Promise<API.v1.AccountObject> {
         if (typeof account === 'string') {
             // this is a username
             const accountName = sha256(account);
