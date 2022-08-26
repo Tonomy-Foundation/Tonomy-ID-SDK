@@ -1,4 +1,4 @@
-import { ABI, Name, Serializer } from "@greymass/eosio"
+import { ABI, API, Name, Serializer } from "@greymass/eosio"
 import { Authority } from "../eosio/authority";
 import { Signer, transact } from "../eosio/transaction";
 
@@ -16,7 +16,7 @@ class EosioContract {
      * @param wasmFileContents - wasmFile after reading with fs.readFileSync(path) or equivalent
      * @param abiFileContents - abiFile after reading with fs.readFileSync(path, `utf8`) or equivalent
      */
-    async deployContract(account: Name, wasmFileContent: any, abiFileContent: any, signer: Signer): Promise<void> {
+    async deployContract(account: Name, wasmFileContent: any, abiFileContent: any, signer: Signer): Promise<API.v1.PushTransactionResponse> {
         // 1. Prepare SETCODE
         // read the file and make a hex string out of it
         const wasm = wasmFileContent.toString(`hex`);
@@ -60,10 +60,10 @@ class EosioContract {
                 },
             },
         ]
-        await transact(Name.from("eosio"), actions, signer);
+        return await transact(Name.from("eosio"), actions, signer);
     }
 
-    async newaccount(creator: string, account: string, owner: Authority, active: Authority, signer: Signer): Promise<void> {
+    async newaccount(creator: string, account: string, owner: Authority, active: Authority, signer: Signer): Promise<API.v1.PushTransactionResponse> {
         console.log("EosioContract.newaccount()");
 
         const action = {
@@ -91,7 +91,7 @@ class EosioContract {
         parent: string,
         auth: Authority,
         signer: Signer
-    ): Promise<void> {
+    ): Promise<API.v1.PushTransactionResponse> {
         console.log("EosioContract.updateauth()");
 
         const action = {
