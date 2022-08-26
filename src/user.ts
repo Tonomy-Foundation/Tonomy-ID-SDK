@@ -3,6 +3,7 @@ import { IDContract } from './services/contracts/IDContract';
 import { Name, PrivateKey, KeyType } from '@greymass/eosio';
 import { createSigner } from './services/eosio/transaction';
 import { randomString, sha256 } from './util/crypto';
+import { api } from './services/eosio/eosio';
 
 const idContract = IDContract.Instance;
 
@@ -122,6 +123,17 @@ class User {
         return {
             privateKey: 'xxxx',
             salt: 'yyyy'
+        }
+    }
+
+    static async getAccountInfo(account: string | Name): Promise<any> {
+        if (typeof account === 'string') {
+            // this is a username
+            const accountName = sha256(account);
+            return await api.v1.chain.get_account(accountName);
+        } else {
+            // use the account name directly
+            return await api.v1.chain.get_account(account);
         }
     }
 }
