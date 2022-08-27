@@ -63,7 +63,6 @@ class User {
         if (typeof account === 'string') {
             // this is a username
             const idData = await idContract.getAccountTonomyIDInfo(account);
-            console.log(idData);
             return await api.v1.chain.get_account(idData.account_name);
         } else {
             // use the account name directly
