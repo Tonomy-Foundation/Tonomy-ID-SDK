@@ -1,83 +1,17 @@
-import { Authenticator } from './authenticator';
+import { Authenticator, AuthenticatorLevel } from './authenticator';
 import { IDContract } from './services/contracts/IDContract';
-import { Name, PrivateKey, KeyType } from '@greymass/eosio';
+import { Name, KeyType, PrivateKey } from '@greymass/eosio';
+import * as argon2 from "argon2";
+import crypto from 'crypto';
 import { createSigner } from './services/eosio/transaction';
 import { randomString, sha256 } from './util/crypto';
 
 const idContract = IDContract.Instance;
 
-interface TransactionI {
-    sign().send();
-    // NOTE: need to use public SDK to send transaction to wallet        
-}
-
-interface CredentialsI {
-    sign().send();
-    verify();
-}
-
-interface RecoveryI {
-    initialize({ username: string }[]): Promise<void>;
-    putRecoveryBuddies({ username: string }[]): Promise<void>;
-    recoveryBuddyNotification({ account: Name, username: string }): Promise<void>;
-    getRecoveryBuddies(username: string): Promise<{ account: Name }[]>;
-    // Sends transaction to recover, and message to the new app to notify them
-    recoverBuddy(account: Name);
-    recoveryNotification(from: Name);
-}
-
-interface UserI {
-    authenticator: Authenticator;
-
-    salt: string;
-    username: string;
-    accountName: Name;
-
-    recovery: RecoveryI;
-    transaction: TransactionI;
-    credentials: CredentialsI;
-
-    // Creates or updates the private key protected by the master password in the Authenticator
-    // Probably needs to prompt user for the current password to do this
-    putMasterPasswordKey(masterPassword: string): Promise<void>;
-
-    // Creates or updates the private key protected by the PIN in the Authenticator
-    // If key already exists then prompt for master password
-    putPINKey(pin: string): Promise<void>;
-
-    // Creates or updates the private key protected by the fingerprint in the Authenticator
-    // If key already exists then prompt for master password
-    putFingerprintKey(): Promise<void>;
-
-    // Creates or updates the local private key in the Authenticator
-    // If key already exists then prompt for master password
-    putLocalKey(): Promise<void>;
-
-    // Creates the new account with the provided username,
-    // and the keys that are stored in the authenticator
-    // with a random account name and salt
-    // throws if no master password key exists in the authenticator
-    createPerson(username: string): Promise<void>;
-
-    // Checks that master password is correct and if so loads any account details
-    login(username: string, masterPassword: string): Promise<void>;
-
-    // Removes any keys from the authenticator and any instance variables of User
-    logout(): Promise<void>;
-};
-
-interface PublicSdk {
-    login(): Promise<void>;
-    signTransaction(): Promise<void>;
-
-    signCredential(): Promise<void>;
-    signAndSendCredential(): Promise<void>;
-}
-
 class User {
     authenticator: Authenticator;
 
-    salt: string;
+    salt: Buffer;
     username: string;
     accountName: Name;
 
@@ -117,13 +51,30 @@ class User {
         }, createSigner(passwordKey));
     }
 
-    generatePrivateKeyFromPassword(password: string) {
+    async generatePrivateKeyFromPassword(password: string): Promise<{ privateKey: PrivateKey, salt: Buffer }> {
         // creates a key based on secure (hashing) key generation algorithm like Argon2 or Scrypt
+        const salt = crypto.randomBytes(32)
+        const hash = await argon2.hash(password, { salt })
+        const newBytes = Buffer.from(hash)
+        const privateKey = new PrivateKey(KeyType.K1, new Bytes(newBytes));
+
         return {
-            privateKey: 'xxxx',
-            salt: 'yyyy'
+            privateKey: privateKey,
+            salt
         }
     }
+    async savePassword(masterPassword: string) {
+        const { privateKey, salt } = await this.generatePrivateKeyFromPassword(masterPassword);
+        this.salt = salt;
+        const level = AuthenticatorLevel.Password;
+        this.authenticator.storeKey({ level, privateKey, challenge: masterPassword });
+    }
+    // Creates a cryptographically secure Private key
+    generateRandomPrivateKey(): PrivateKey {
+        const randomString = crypto.randomBytes(32)
+        return new PrivateKey(KeyType.K1, new Bytes(randomString));
+    };
 }
+
 
 export { User };
