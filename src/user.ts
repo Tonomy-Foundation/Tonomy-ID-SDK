@@ -8,74 +8,6 @@ import { API } from '@greymass/eosio';
 
 const idContract = IDContract.Instance;
 
-interface TransactionI {
-    sign().send();
-    // NOTE: need to use public SDK to send transaction to wallet        
-}
-
-interface CredentialsI {
-    sign().send();
-    verify();
-}
-
-interface RecoveryI {
-    initialize({ username: string }[]): Promise<void>;
-    putRecoveryBuddies({ username: string }[]): Promise<void>;
-    recoveryBuddyNotification({ account: Name, username: string }): Promise<void>;
-    getRecoveryBuddies(username: string): Promise<{ account: Name }[]>;
-    // Sends transaction to recover, and message to the new app to notify them
-    recoverBuddy(account: Name);
-    recoveryNotification(from: Name);
-}
-
-interface UserI {
-    authenticator: Authenticator;
-
-    salt: string;
-    username: string;
-    accountName: Name;
-
-    recovery: RecoveryI;
-    transaction: TransactionI;
-    credentials: CredentialsI;
-
-    // Creates or updates the private key protected by the master password in the Authenticator
-    // Probably needs to prompt user for the current password to do this
-    putMasterPasswordKey(masterPassword: string): Promise<void>;
-
-    // Creates or updates the private key protected by the PIN in the Authenticator
-    // If key already exists then prompt for master password
-    putPINKey(pin: string): Promise<void>;
-
-    // Creates or updates the private key protected by the fingerprint in the Authenticator
-    // If key already exists then prompt for master password
-    putFingerprintKey(): Promise<void>;
-
-    // Creates or updates the local private key in the Authenticator
-    // If key already exists then prompt for master password
-    putLocalKey(): Promise<void>;
-
-    // Creates the new account with the provided username,
-    // and the keys that are stored in the authenticator
-    // with a random account name and salt
-    // throws if no master password key exists in the authenticator
-    createPerson(username: string): Promise<void>;
-
-    // Checks that master password is correct and if so loads any account details
-    login(username: string, masterPassword: string): Promise<void>;
-
-    // Removes any keys from the authenticator and any instance variables of User
-    logout(): Promise<void>;
-};
-
-interface PublicSdk {
-    login(): Promise<void>;
-    signTransaction(): Promise<void>;
-
-    signCredential(): Promise<void>;
-    signAndSendCredential(): Promise<void>;
-}
-
 class User {
     authenticator: Authenticator;
 
@@ -130,7 +62,8 @@ class User {
     static async getAccountInfo(account: string | Name): Promise<API.v1.AccountObject> {
         if (typeof account === 'string') {
             // this is a username
-            const idData = await idContract.getAccountTonomyIDInfo(account)
+            const idData = await idContract.getAccountTonomyIDInfo(account);
+            console.log(idData);
             return await api.v1.chain.get_account(idData.account_name);
         } else {
             // use the account name directly
