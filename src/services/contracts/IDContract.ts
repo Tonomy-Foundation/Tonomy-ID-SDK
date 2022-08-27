@@ -14,8 +14,8 @@ enum enum_permission_level {
 
 type GetAccountTonomyIDInfoResponse = {
     account_name: Name,
-    account_type: Number,
-    account_status: Number,
+    type: Number,
+    status: Number,
     username_hash: Checksum256,
     password_salt: Checksum256
 };
