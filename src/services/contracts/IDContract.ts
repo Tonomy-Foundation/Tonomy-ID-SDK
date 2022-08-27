@@ -102,12 +102,12 @@ class IDContract {
         let data;
         if (typeof account === 'string') {
             // this is a username
-            const accountName = sha256(account);
+            const usernameHash = Checksum256.from(sha256(account));
 
             data = await api.v1.chain.get_table_rows({
                 code: "id.tonomy",
                 table: "accounts",
-                lower_bound: Name.from(accountName),
+                lower_bound: usernameHash,
                 index_position: "secondary"
             });
         } else {
