@@ -28,38 +28,37 @@ class EosioContract {
 
         // 3. Send transaction with both setcode and setabi actions
         console.log(`Deploying contract to ${account}`);
-        const actions = [
-            {
-                account: 'eosio',
-                name: 'setcode',
-                authorization: [
-                    {
-                        actor: account,
-                        permission: 'active',
-                    },
-                ],
-                data: {
-                    account: account,
-                    vmtype: 0,
-                    vmversion: 0,
-                    code: wasm,
+        const setcodeAction = {
+            account: 'eosio',
+            name: 'setcode',
+            authorization: [
+                {
+                    actor: account.toString(),
+                    permission: 'active',
                 },
+            ],
+            data: {
+                account: account.toString(),
+                vmtype: 0,
+                vmversion: 0,
+                code: wasm,
             },
-            {
-                account: 'eosio',
-                name: 'setabi',
-                authorization: [
-                    {
-                        actor: account,
-                        permission: 'active',
-                    },
-                ],
-                data: {
-                    account: account,
-                    abi: abiSerializedHex,
+        };
+        const setabiAction = {
+            account: 'eosio',
+            name: 'setabi',
+            authorization: [
+                {
+                    actor: account.toString(),
+                    permission: 'active',
                 },
+            ],
+            data: {
+                account: account,
+                abi: abiSerializedHex,
             },
-        ]
+        };
+        const actions = [setcodeAction, setabiAction]
         await transact(Name.from("eosio"), actions, signer);
     }
 

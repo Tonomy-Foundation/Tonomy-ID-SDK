@@ -108,7 +108,7 @@ class JsAuthenticator implements Authenticator {
         if (options.level === AuthenticatorLevel.Password || options.level === AuthenticatorLevel.PIN) {
             if (!options.challenge) throw new Error("Challenge missing");
 
-            const hashedSaltedChallenge = Checksum256.hash(options.challenge + keyStore.salt).toString();
+            const hashedSaltedChallenge = sha256(options.challenge + keyStore.salt);
 
             if (keyStore.hashedSaltedChallenge !== hashedSaltedChallenge) throw new Error("Challenge does not match");
         }
