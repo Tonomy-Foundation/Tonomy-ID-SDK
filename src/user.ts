@@ -1,8 +1,8 @@
 import { Authenticator, AuthenticatorLevel } from './authenticator';
 import { IDContract } from './services/contracts/IDContract';
-import { Bytes, KeyType, Name, PrivateKey } from '@greymass/eosio';
-import { randomBytes, randomString, sha256 } from './util/crypto';
-import { createSigner } from './services/eosio/transaction';
+import { Bytes, Checksum256, KeyType, Name, PrivateKey, Signature } from '@greymass/eosio';
+import { randomBytes, sha256 } from './util/crypto';
+import { createAuthenticatorSigner, createSigner } from './services/eosio/transaction';
 import argon2 from 'argon2';
 
 const idContract = IDContract.Instance;
@@ -19,22 +19,19 @@ class User {
     }
 
     async createPerson(username: string) {
+        const authenticator = this.authenticator;
+
         const usernameHash = sha256(username);
 
-        // const passwordKey = this.authenticator.getKey({ level: AuthenticatorLevel.PASSWORD });
-        // const pinKey = this.authenticator.getKey({ level: AuthenticatorLevel.PIN });
-        // const fingerprintKey = this.authenticator.getKey({ level: AuthenticatorLevel.FINGERPRINT });
-        // const localKey = this.authenticator.getKey({ level: AuthenticatorLevel.LOLAL });
-        const passwordKey = PrivateKey.generate(KeyType.K1);
-        const passwordSalt = randomString(32);
-        const pinKey = PrivateKey.generate(KeyType.K1);
-        const fingerprintKey = PrivateKey.generate(KeyType.K1);
-        const localKey = PrivateKey.generate(KeyType.K1);
+        const passwordKey = authenticator.getKey({ level: AuthenticatorLevel.PASSWORD });
+        const pinKey = authenticator.getKey({ level: AuthenticatorLevel.PIN });
+        const fingerprintKey = authenticator.getKey({ level: AuthenticatorLevel.FINGERPRINT });
+        const localKey = authenticator.getKey({ level: AuthenticatorLevel.LOCAL });
 
         // TODO this needs to change to the actual key used, from settings
         const idTonomyActiveKey = PrivateKey.from("PVT_K1_2bfGi9rYsXQSXXTvJbDAPhHLQUojjaNLomdm3cEJ1XTzMqUt3V");
 
-        const res = await idContract.newperson(usernameHash.toString(), passwordKey.toPublic().toString(), passwordSalt.toString(), createSigner(idTonomyActiveKey));
+        const res = await idContract.newperson(usernameHash.toString(), passwordKey.toString(), passwordSalt.toString(), createSigner(idTonomyActiveKey));
 
         const newAccountAction = res.processed.action_traces[0].inline_traces[0].act;
         this.accountName = Name.from(newAccountAction.data.name);
@@ -44,10 +41,10 @@ class User {
         // use status to lock the account till finished craeating
 
         await idContract.updatekeys(this.accountName.toString(), {
-            PIN: pinKey.toPublic().toString(),
-            FINGERPRINT: fingerprintKey.toPublic().toString(),
-            LOCAL: localKey.toPublic().toString()
-        }, createSigner(passwordKey));
+            PIN: pinKey.toString(),
+            FINGERPRINT: fingerprintKey.toString(),
+            LOCAL: localKey.toString()
+        }, createAuthenticatorSigner(authenticator, AuthenticatorLevel.PASSWORD));
     }
 
     async generatePrivateKeyFromPassword(password: string): Promise<{ privateKey: PrivateKey, salt: Buffer }> {
@@ -68,6 +65,21 @@ class User {
         this.salt = salt;
         const level = AuthenticatorLevel.PASSWORD;
         this.authenticator.storeKey({ level, privateKey, challenge: masterPassword });
+    }
+
+    async savePIN(pin: string) {
+        const privateKey = this.generateRandomPrivateKey();
+        this.authenticator.storeKey({ level: AuthenticatorLevel.PIN, privateKey, challenge: pin });
+    }
+
+    async saveFingerprint() {
+        const privateKey = this.generateRandomPrivateKey();
+        this.authenticator.storeKey({ level: AuthenticatorLevel.FINGERPRINT, privateKey });
+    }
+
+    async saveLocal() {
+        const privateKey = this.generateRandomPrivateKey();
+        this.authenticator.storeKey({ level: AuthenticatorLevel.LOCAL, privateKey });
     }
 
     // Creates a cryptographically secure Private key
