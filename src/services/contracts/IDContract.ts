@@ -84,6 +84,7 @@ class IDContract {
         const actions = [];
         for (const key in keys) {
             let permission = PermissionLevel.from(key);
+
             // "keys as any" fixes typescript issue see https://stackoverflow.com/a/57192972
             const publicKey = (keys as any)[key];
 
@@ -105,35 +106,6 @@ class IDContract {
         }
 
         return await transact(Name.from("id.tonomy"), actions, signer);
-    }
-
-    async updateauth(account: string,
-        permission: string,
-        parent: string,
-        auth: Authority,
-        signer: Signer
-    ) {
-        console.log("IDContract.updateauth()");
-        console.log(account, permission, parent, auth);
-
-        const action = {
-            authorization: [
-                {
-                    actor: account,
-                    permission: parent,
-                },
-            ],
-            account: 'eosio',
-            name: 'updateauth',
-            data: {
-                account,
-                permission,
-                parent,
-                auth,
-            },
-        }
-
-        return await transact(Name.from("eosio"), [action], signer);
     }
 }
 
