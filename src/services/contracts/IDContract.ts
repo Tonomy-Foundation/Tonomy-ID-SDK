@@ -84,6 +84,7 @@ class IDContract {
         const actions = [];
         for (const key in keys) {
             let permission = PermissionLevel.from(key);
+            // "keys as any" fixes typescript issue see https://stackoverflow.com/a/57192972
             const publicKey = (keys as any)[key];
 
             actions.push({
