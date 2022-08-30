@@ -80,6 +80,7 @@ class IDContract {
         signer: Signer
     ) {
         console.log("IDContract.updatekeys()");
+
         const actions = [];
         for (const key in keys) {
             let permission = PermissionLevel.from(key);
