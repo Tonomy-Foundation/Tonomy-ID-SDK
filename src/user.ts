@@ -3,7 +3,7 @@ import { IDContract } from './services/contracts/IDContract';
 import { Bytes, KeyType, Name, PrivateKey } from '@greymass/eosio';
 import { randomBytes, randomString, sha256 } from './util/crypto';
 import { createSigner } from './services/eosio/transaction';
-import argon2 from 'argon2';
+import scrypt from "scrypt-js";
 
 const idContract = IDContract.Instance;
 
@@ -21,10 +21,10 @@ class User {
     async createPerson(username: string) {
         const usernameHash = sha256(username);
 
-        // const passwordKey = this.authenticator.getKey({ level: AuthenticatorLevel.PASSWORD });
+        // const passwordKey = this.authenticator.getKey({ level: AuthenticatorLevel.Password });
         // const pinKey = this.authenticator.getKey({ level: AuthenticatorLevel.PIN });
-        // const fingerprintKey = this.authenticator.getKey({ level: AuthenticatorLevel.FINGERPRINT });
-        // const localKey = this.authenticator.getKey({ level: AuthenticatorLevel.LOLAL });
+        // const fingerprintKey = this.authenticator.getKey({ level: AuthenticatorLevel.Fingerprint });
+        // const localKey = this.authenticator.getKey({ level: AuthenticatorLevel.Local });
         const passwordKey = PrivateKey.generate(KeyType.K1);
         const passwordSalt = randomString(32);
         const pinKey = PrivateKey.generate(KeyType.K1);
@@ -53,7 +53,8 @@ class User {
     async generatePrivateKeyFromPassword(password: string): Promise<{ privateKey: PrivateKey, salt: Buffer }> {
         // creates a key based on secure (hashing) key generation algorithm like Argon2 or Scrypt
         const salt = randomBytes(32);
-        const hash = await argon2.hash(password, { salt })
+        const passwordBuffer = Buffer.from(password);
+        const hash = await scrypt.scrypt(passwordBuffer, salt, 16384, 8, 1, 64)
         const newBytes = Buffer.from(hash)
         const privateKey = new PrivateKey(KeyType.K1, new Bytes(newBytes));
 

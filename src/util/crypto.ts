@@ -1,10 +1,9 @@
 import { Checksum256 } from '@greymass/eosio';
-import crypto from 'crypto';
+import * as rb from "randombytes";
 
 function randomBytes(bytes: number): Buffer {
-    return crypto.randomBytes(bytes);
+    return rb.default(bytes);
 }
-
 function randomString(bytes: number): string {
     return randomBytes(bytes).toString('hex');
 }
