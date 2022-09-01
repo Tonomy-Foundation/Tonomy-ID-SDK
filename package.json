@@ -56,6 +56,6 @@
     "@greymass/eosio": "^0.6.2",
     "cross-fetch": "^3.1.5",
     "randombytes": "^2.1.0",
-    "scrypt-js": "^3.0.1",
+    "scrypt-js": "^3.0.1"
   }
 }
