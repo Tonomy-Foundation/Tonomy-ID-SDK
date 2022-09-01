@@ -1,9 +1,10 @@
 import { Authenticator, AuthenticatorLevel } from './authenticator';
 import { IDContract } from './services/contracts/IDContract';
-import { Bytes, KeyType, Name, PrivateKey } from '@greymass/eosio';
-import { randomBytes, randomString, sha256 } from './util/crypto';
+import { Name, PrivateKey, KeyType, Bytes, API } from '@greymass/eosio';
 import { createSigner } from './services/eosio/transaction';
+import { randomBytes, randomString, sha256 } from './util/crypto';
 import argon2 from 'argon2';
+import { api } from './services/eosio/eosio';
 
 const idContract = IDContract.Instance;
 
@@ -58,24 +59,21 @@ class User {
         const privateKey = new PrivateKey(KeyType.K1, new Bytes(newBytes));
 
         return {
-            privateKey: privateKey,
+            privateKey,
             salt
         }
     }
 
-    async savePassword(masterPassword: string) {
-        const { privateKey, salt } = await this.generatePrivateKeyFromPassword(masterPassword);
-        this.salt = salt;
-        const level = AuthenticatorLevel.PASSWORD;
-        this.authenticator.storeKey({ level, privateKey, challenge: masterPassword });
+    static async getAccountInfo(account: string | Name): Promise<API.v1.AccountObject> {
+        if (typeof account === 'string') {
+            // this is a username
+            const idData = await idContract.getAccountTonomyIDInfo(account);
+            return await api.v1.chain.get_account(idData.account_name);
+        } else {
+            // use the account name directly
+            return await api.v1.chain.get_account(account);
+        }
     }
-
-    // Creates a cryptographically secure Private key
-    generateRandomPrivateKey(): PrivateKey {
-        const randomString = randomBytes(32);
-        return new PrivateKey(KeyType.K1, new Bytes(randomString));
-    };
-
 }
 
 export { User };
