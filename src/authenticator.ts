@@ -1,7 +1,38 @@
 import { PrivateKey, PublicKey, Checksum256, Signature } from '@greymass/eosio';
 import { randomString, sha256 } from './util/crypto';
 
-enum AuthenticatorLevel { Password, PIN, Fingerprint, Local };
+enum AuthenticatorLevel {
+    PASSWORD = 'PASSWORD',
+    PIN = 'PIN',
+    FINGERPRINT = 'FINGERPRINT',
+    LOCAL = 'LOCAL',
+};
+
+namespace AuthenticatorLevel {
+    /* 
+     * Returns the index of the enum value
+     * 
+     * @param value The level to get the index of
+     */
+    export function indexFor(value: AuthenticatorLevel): number {
+        return Object.keys(AuthenticatorLevel).indexOf(value);
+    }
+
+    /* 
+     * Creates an AuthenticatorLevel from a string or index of the level
+     * 
+     * @param value The string or index
+     */
+    export function from(value: number | string): AuthenticatorLevel {
+        let index: number
+        if (typeof value !== 'number') {
+            index = AuthenticatorLevel.indexFor(value as AuthenticatorLevel)
+        } else {
+            index = value
+        }
+        return Object.values(AuthenticatorLevel)[index] as AuthenticatorLevel;
+    }
+}
 
 /**
  * @param level - The security level of the key
@@ -79,13 +110,17 @@ class JsAuthenticator implements Authenticator {
         [key in AuthenticatorLevel]: KeyStorage;
     }
 
+
+
+
+    // creates a new secure key and returns the public key
     async storeKey(options: StoreKeyOptions): Promise<PublicKey> {
         const keyStore: KeyStorage = {
             privateKey: options.privateKey,
             publicKey: options.privateKey.toPublic()
         }
 
-        if (options.level === AuthenticatorLevel.Password || options.level === AuthenticatorLevel.PIN) {
+        if (options.level === AuthenticatorLevel.PASSWORD || options.level === AuthenticatorLevel.PIN) {
             if (!options.challenge) throw new Error("Challenge missing");
 
             keyStore.salt = randomString(32);
@@ -101,10 +136,10 @@ class JsAuthenticator implements Authenticator {
 
         const keyStore = this.keyStorage[options.level];
 
-        if (options.level === AuthenticatorLevel.Password || options.level === AuthenticatorLevel.PIN) {
+        if (options.level === AuthenticatorLevel.PASSWORD || options.level === AuthenticatorLevel.PIN) {
             if (!options.challenge) throw new Error("Challenge missing");
 
-            const hashedSaltedChallenge = Checksum256.hash(options.challenge + keyStore.salt).toString();
+            const hashedSaltedChallenge = sha256(options.challenge + keyStore.salt);
 
             if (keyStore.hashedSaltedChallenge !== hashedSaltedChallenge) throw new Error("Challenge does not match");
         }

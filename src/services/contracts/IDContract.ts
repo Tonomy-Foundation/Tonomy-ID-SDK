@@ -3,13 +3,39 @@ import { sha256 } from "../../util/crypto";
 import { api } from "../eosio/eosio";
 import { Signer, transact } from "../eosio/transaction";
 
-enum enum_permission_level {
-    Owner,
-    Active,
-    Password,
-    Pin,
-    Fingerprint,
-    Local
+enum PermissionLevel {
+    OWNER = 'OWNER',
+    ACTIVE = 'ACTIVE',
+    PASSWORD = 'PASSWORD',
+    PIN = 'PIN',
+    FINGERPRINT = 'FINGERPRINT',
+    LOCAL = 'LOCAL',
+}
+
+namespace PermissionLevel {
+    /* 
+     * Returns the index of the enum value
+     * 
+     * @param value The value to get the index of
+     */
+    export function indexFor(value: PermissionLevel): number {
+        return Object.keys(PermissionLevel).indexOf(value);
+    }
+
+    /* 
+     * Creates an PermissionLevel from a string or index of the level
+     * 
+     * @param value The string or index
+     */
+    export function from(value: number | string): PermissionLevel {
+        let index: number
+        if (typeof value !== 'number') {
+            index = PermissionLevel.indexFor(value as PermissionLevel)
+        } else {
+            index = value
+        }
+        return Object.values(PermissionLevel)[index] as PermissionLevel;
+    }
 }
 
 type GetAccountTonomyIDInfoResponse = {
@@ -55,29 +81,21 @@ class IDContract {
 
     async updatekeys(account: string,
         keys: {
-            fingerprint?: string,
-            pin?: string,
-            local?: string,
+            FINGERPRINT?: string,
+            PIN?: string,
+            LOCAL?: string,
         },
         signer: Signer
     ): Promise<API.v1.PushTransactionResponse> {
         console.log("IDContract.updatekeys()");
+
         const actions = [];
         for (const key in keys) {
-            let permission;
-            switch (key) {
-                case "fingerprint":
-                    permission = enum_permission_level.Fingerprint;
-                    break;
-                case "pin":
-                    permission = enum_permission_level.Pin;
-                    break;
-                case "local":
-                    permission = enum_permission_level.Local;
-                    break;
-                default:
-                    throw new Error("Invalid key");
-            }
+            let permission = PermissionLevel.from(key);
+
+            // "keys as any" fixes typescript issue see https://stackoverflow.com/a/57192972
+            const publicKey = (keys as any)[key];
+
             actions.push({
                 authorization: [
                     {
@@ -89,8 +107,8 @@ class IDContract {
                 name: 'updatekey',
                 data: {
                     account,
-                    permission,
-                    key: keys[key],
+                    permission: PermissionLevel.indexFor(permission),
+                    key: publicKey,
                 },
             });
         }
