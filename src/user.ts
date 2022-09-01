@@ -1,9 +1,10 @@
 import { Authenticator, AuthenticatorLevel } from './authenticator';
 import { IDContract } from './services/contracts/IDContract';
-import { Name, PrivateKey, KeyType, Bytes } from '@greymass/eosio';
+import { Name, PrivateKey, KeyType, Bytes, API } from '@greymass/eosio';
 import { createSigner } from './services/eosio/transaction';
 import { randomBytes, randomString, sha256 } from './util/crypto';
 import argon2 from 'argon2';
+import { api } from './services/eosio/eosio';
 
 const idContract = IDContract.Instance;
 
@@ -60,6 +61,17 @@ class User {
         return {
             privateKey,
             salt
+        }
+    }
+
+    static async getAccountInfo(account: string | Name): Promise<API.v1.AccountObject> {
+        if (typeof account === 'string') {
+            // this is a username
+            const idData = await idContract.getAccountTonomyIDInfo(account);
+            return await api.v1.chain.get_account(idData.account_name);
+        } else {
+            // use the account name directly
+            return await api.v1.chain.get_account(account);
         }
     }
 }
