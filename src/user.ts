@@ -21,10 +21,10 @@ class User {
     async createPerson(username: string) {
         const usernameHash = sha256(username);
 
-        // const passwordKey = this.authenticator.getKey({ level: AuthenticatorLevel.Password });
+        // const passwordKey = this.authenticator.getKey({ level: AuthenticatorLevel.PASSWORD });
         // const pinKey = this.authenticator.getKey({ level: AuthenticatorLevel.PIN });
-        // const fingerprintKey = this.authenticator.getKey({ level: AuthenticatorLevel.Fingerprint });
-        // const localKey = this.authenticator.getKey({ level: AuthenticatorLevel.Local });
+        // const fingerprintKey = this.authenticator.getKey({ level: AuthenticatorLevel.FINGERPRINT });
+        // const localKey = this.authenticator.getKey({ level: AuthenticatorLevel.LOLAL });
         const passwordKey = PrivateKey.generate(KeyType.K1);
         const passwordSalt = randomString(32);
         const pinKey = PrivateKey.generate(KeyType.K1);
@@ -44,9 +44,9 @@ class User {
         // use status to lock the account till finished craeating
 
         await idContract.updatekeys(this.accountName.toString(), {
-            pin: pinKey.toPublic().toString(),
-            fingerprint: fingerprintKey.toPublic().toString(),
-            local: localKey.toPublic().toString()
+            PIN: pinKey.toPublic().toString(),
+            FINGERPRINT: fingerprintKey.toPublic().toString(),
+            LOCAL: localKey.toPublic().toString()
         }, createSigner(passwordKey));
     }
 
@@ -66,7 +66,7 @@ class User {
     async savePassword(masterPassword: string) {
         const { privateKey, salt } = await this.generatePrivateKeyFromPassword(masterPassword);
         this.salt = salt;
-        const level = AuthenticatorLevel.Password;
+        const level = AuthenticatorLevel.PASSWORD;
         this.authenticator.storeKey({ level, privateKey, challenge: masterPassword });
     }
 
