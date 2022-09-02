@@ -1,5 +1,6 @@
 import { Action, Transaction, SignedTransaction, Signature, Checksum256, Name, PrivateKey } from "@greymass/eosio";
 import { api } from "./eosio";
+import { API } from "@greymass/eosio";
 
 type ActionData = {
     authorization: {
@@ -23,7 +24,7 @@ function createSigner(privateKey: PrivateKey): Signer {
     }
 }
 
-async function transact(contract: Name, actions: ActionData[], signer: Signer): Promise<any> {
+async function transact(contract: Name, actions: ActionData[], signer: Signer): Promise<API.v1.PushTransactionResponse> {
     // Get the ABI
     const abi = await api.v1.chain.get_abi(contract);
 

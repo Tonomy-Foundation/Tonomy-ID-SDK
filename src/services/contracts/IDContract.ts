@@ -1,5 +1,7 @@
-import { Name } from "@greymass/eosio"
-// import { Authority } from '../eosio/authority';
+
+import { API, Checksum256, Name } from "@greymass/eosio"
+import { sha256 } from "../../util/crypto";
+import { api } from "../eosio/eosio";
 import { Signer, transact } from "../eosio/transaction";
 
 enum PermissionLevel {
@@ -37,6 +39,13 @@ namespace PermissionLevel {
     }
 }
 
+type GetAccountTonomyIDInfoResponse = {
+    account_name: Name,
+    type: Number,
+    status: Number,
+    username_hash: Checksum256,
+    password_salt: Checksum256
+};
 
 class IDContract {
     static _singleton_instance: IDContract;
@@ -49,7 +58,7 @@ class IDContract {
         password_key: string,
         password_salt: string,
         signer: Signer
-    ) {
+    ): Promise<API.v1.PushTransactionResponse> {
         console.log("IDContract.newperson()");
 
         const action = {
@@ -78,7 +87,7 @@ class IDContract {
             LOCAL?: string,
         },
         signer: Signer
-    ) {
+    ): Promise<API.v1.PushTransactionResponse> {
         console.log("IDContract.updatekeys()");
 
         const actions = [];
@@ -107,6 +116,30 @@ class IDContract {
 
         return await transact(Name.from("id.tonomy"), actions, signer);
     }
+
+    async getAccountTonomyIDInfo(account: string | Name): Promise<GetAccountTonomyIDInfoResponse> {
+        let data;
+        if (typeof account === 'string') {
+            // this is a username
+            const usernameHash = Checksum256.from(sha256(account));
+
+            data = await api.v1.chain.get_table_rows({
+                code: "id.tonomy",
+                table: "accounts",
+                lower_bound: usernameHash,
+                index_position: "secondary"
+            });
+        } else {
+            // use the account name directly
+            data = await api.v1.chain.get_table_rows({
+                code: "id.tonomy",
+                table: "accounts",
+                lower_bound: Name.from(account)
+            });
+        }
+        if (data.rows.length === 0) throw new Error("Account not found");
+        return data.rows[0];
+    }
 }
 
-export { IDContract };
+export { IDContract, GetAccountTonomyIDInfoResponse };
