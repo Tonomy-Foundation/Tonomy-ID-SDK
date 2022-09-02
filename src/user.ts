@@ -53,8 +53,8 @@ class User {
     async generatePrivateKeyFromPassword(password: string): Promise<{ privateKey: PrivateKey, salt: Buffer }> {
         // creates a key based on secure (hashing) key generation algorithm like Argon2 or Scrypt
         const salt = randomBytes(32);
-        const passwordBuffer = Buffer.from(password);
-        const hash = await scrypt.scrypt(passwordBuffer, salt, 16384, 8, 1, 64)
+
+        const hash = await this.scryptHash(password, salt);
         const newBytes = Buffer.from(hash)
         const privateKey = new PrivateKey(KeyType.K1, new Bytes(newBytes));
 
@@ -62,6 +62,24 @@ class User {
             privateKey: privateKey,
             salt
         }
+    }
+
+    private scryptHash(password: string, salt: Buffer): Promise<Uint8Array> {
+
+        const passwordBuffer = Buffer.from(password);
+        return scrypt.scrypt(passwordBuffer, salt, 16384, 8, 1, 64);
+    }
+    /**
+     * 
+     * @param password password to verify
+     * @param salt   salt to use for verification
+     * @param hash  hash to use for verification
+     * @returns true if password is correct
+     */
+    public async scryptVerify(password: string, salt: Buffer, hash: Uint8Array): Promise<boolean> {
+
+        const hashedPassword = await this.scryptHash(password, salt);
+        return Buffer.compare(hashedPassword, hash) === 0;
     }
 
     async savePassword(masterPassword: string) {

@@ -1,5 +1,5 @@
 import { Name } from "@greymass/eosio"
-import { Authority } from '../eosio/authority';
+// import { Authority } from '../eosio/authority';
 import { Signer, transact } from "../eosio/transaction";
 
 enum PermissionLevel {

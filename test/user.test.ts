@@ -1,7 +1,6 @@
 
 import { PrivateKey } from '@greymass/eosio';
 import { User, JsAuthenticator } from '../src/index';
-import * as argon2 from "argon2";
 
 const auth = new JsAuthenticator();
 const user = new User(auth);
@@ -24,8 +23,9 @@ describe('saving a password', () => {
   test('password can be verfied', async () => {
     const password = '123'
     const { privateKey, salt } = await user.generatePrivateKeyFromPassword(password);
-    const data = Buffer.from(privateKey.data.array).toString('utf-8');
-    const result = await argon2.verify(data, password, { salt })
+    const data = Buffer.from(privateKey.data.array)
+    const result = await user.scryptVerify(password
+      , salt, data)
     expect(result).toBe(true);
   })
 })
