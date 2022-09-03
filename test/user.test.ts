@@ -1,8 +1,8 @@
 
 import { PrivateKey } from '@greymass/eosio';
-import { User, JsAuthenticator } from '../src/index';
+import { User, JsKeyManager } from '../src/index';
 
-const auth = new JsAuthenticator();
+const auth = new JsKeyManager();
 const user = new User(auth);
 
 describe('saving a password', () => {

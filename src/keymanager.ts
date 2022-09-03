@@ -1,21 +1,21 @@
 import { PrivateKey, PublicKey, Checksum256, Signature } from '@greymass/eosio';
 import { randomString, sha256 } from './util/crypto';
 
-enum AuthenticatorLevel {
+enum KeyManagerLevel {
     PASSWORD = 'PASSWORD',
     PIN = 'PIN',
     FINGERPRINT = 'FINGERPRINT',
     LOCAL = 'LOCAL',
 };
 
-namespace AuthenticatorLevel {
+namespace KeyManagerLevel {
     /* 
      * Returns the index of the enum value
      * 
      * @param value The level to get the index of
      */
-    export function indexFor(value: AuthenticatorLevel): number {
-        return Object.keys(AuthenticatorLevel).indexOf(value);
+    export function indexFor(value: KeyManagerLevel): number {
+        return Object.keys(KeyManagerLevel).indexOf(value);
     }
 
     /* 
@@ -23,14 +23,14 @@ namespace AuthenticatorLevel {
      * 
      * @param value The string or index
      */
-    export function from(value: number | string): AuthenticatorLevel {
+    export function from(value: number | string): KeyManagerLevel {
         let index: number
         if (typeof value !== 'number') {
-            index = AuthenticatorLevel.indexFor(value as AuthenticatorLevel)
+            index = KeyManagerLevel.indexFor(value as KeyManagerLevel)
         } else {
             index = value
         }
-        return Object.values(AuthenticatorLevel)[index] as AuthenticatorLevel;
+        return Object.values(KeyManagerLevel)[index] as KeyManagerLevel;
     }
 }
 
@@ -40,7 +40,7 @@ namespace AuthenticatorLevel {
  * @param [challenge] - A challenge that needs to be presented in order for the key to be used
  */
 type StoreKeyOptions = {
-    level: AuthenticatorLevel;
+    level: KeyManagerLevel;
     privateKey: PrivateKey;
     challenge?: string;
 }
@@ -51,7 +51,7 @@ type StoreKeyOptions = {
  * @param [challenge] - A challenge that needs to be presented in order for the key to be used
  */
 type SignDataOptions = {
-    level: AuthenticatorLevel;
+    level: KeyManagerLevel;
     data: string | Uint8Array;
     challenge?: string
 }
@@ -60,10 +60,10 @@ type SignDataOptions = {
  * @param level - The security level of the key
  */
 type GetKeyOptions = {
-    level: AuthenticatorLevel;
+    level: KeyManagerLevel;
 }
 
-interface Authenticator {
+interface KeyManager {
     /**
      * Stores a private key that can be used later for signing.
      *
@@ -104,10 +104,10 @@ type KeyStorage = {
     salt?: string;
 }
 
-class JsAuthenticator implements Authenticator {
+class JsKeyManager implements KeyManager {
     // TODO: use localStorage or sessionStorage in browser if available instead of keyStorage
     keyStorage: {
-        [key in AuthenticatorLevel]: KeyStorage;
+        [key in KeyManagerLevel]: KeyStorage;
     }
 
 
@@ -120,7 +120,7 @@ class JsAuthenticator implements Authenticator {
             publicKey: options.privateKey.toPublic()
         }
 
-        if (options.level === AuthenticatorLevel.PASSWORD || options.level === AuthenticatorLevel.PIN) {
+        if (options.level === KeyManagerLevel.PASSWORD || options.level === KeyManagerLevel.PIN) {
             if (!options.challenge) throw new Error("Challenge missing");
 
             keyStore.salt = randomString(32);
@@ -136,7 +136,7 @@ class JsAuthenticator implements Authenticator {
 
         const keyStore = this.keyStorage[options.level];
 
-        if (options.level === AuthenticatorLevel.PASSWORD || options.level === AuthenticatorLevel.PIN) {
+        if (options.level === KeyManagerLevel.PASSWORD || options.level === KeyManagerLevel.PIN) {
             if (!options.challenge) throw new Error("Challenge missing");
 
             const hashedSaltedChallenge = sha256(options.challenge + keyStore.salt);
@@ -159,4 +159,4 @@ class JsAuthenticator implements Authenticator {
     }
 }
 
-export { Authenticator, AuthenticatorLevel, JsAuthenticator }
+export { KeyManager, KeyManagerLevel, JsKeyManager }

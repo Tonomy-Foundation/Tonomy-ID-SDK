@@ -1,4 +1,4 @@
-import { Authenticator, AuthenticatorLevel } from './authenticator';
+import { KeyManager, KeyManagerLevel } from './keymanager';
 import { IDContract } from './services/contracts/IDContract';
 import { Name, PrivateKey, KeyType, Bytes, API } from '@greymass/eosio';
 import { createSigner } from './services/eosio/transaction';
@@ -11,14 +11,14 @@ import { api } from './services/eosio/eosio';
 const idContract = IDContract.Instance;
 
 class User {
-    authenticator: Authenticator;
+    keyManager: KeyManager;
 
     salt: Buffer;
     username: string;
     accountName: Name;
 
-    constructor(_authenticator: Authenticator) {
-        this.authenticator = _authenticator;
+    constructor(_keyManager: KeyManager) {
+        this.keyManager = _keyManager;
     }
 
     async createPerson(username: string) {
@@ -88,8 +88,8 @@ class User {
     async savePassword(masterPassword: string) {
         const { privateKey, salt } = await this.generatePrivateKeyFromPassword(masterPassword);
         this.salt = salt;
-        const level = AuthenticatorLevel.PASSWORD;
-        this.authenticator.storeKey({ level, privateKey, challenge: masterPassword });
+        const level = KeyManagerLevel.PASSWORD;
+        this.keyManager.storeKey({ level, privateKey, challenge: masterPassword });
     }
     static async getAccountInfo(account: string | Name): Promise<API.v1.AccountObject> {
         if (typeof account === 'string') {
