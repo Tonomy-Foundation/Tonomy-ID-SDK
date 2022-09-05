@@ -108,10 +108,7 @@ class JsAuthenticator implements Authenticator {
     // TODO: use localStorage or sessionStorage in browser if available instead of keyStorage
     keyStorage: {
         [key in AuthenticatorLevel]: KeyStorage;
-    }
-
-
-
+    } = {} as any;
 
     // creates a new secure key and returns the public key
     async storeKey(options: StoreKeyOptions): Promise<PublicKey> {
@@ -152,7 +149,8 @@ class JsAuthenticator implements Authenticator {
     }
 
     getKey(options: GetKeyOptions): PublicKey {
-        if (options.level in this.keyStorage) throw new Error("No key for this level");
+        if (typeof this.keyStorage === 'undefined') throw new Error("No key for this level");
+        if (!(options.level in this.keyStorage)) throw new Error("No key for this level");
 
         const keyStore = this.keyStorage[options.level];
         return keyStore.publicKey;

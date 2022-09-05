@@ -1,42 +1,62 @@
-
 import { PrivateKey } from '@greymass/eosio';
-import { User, JsAuthenticator } from '../src/index';
+import { User, JsAuthenticator, AuthenticatorLevel } from '../src/index';
 import * as argon2 from "argon2";
 
-const auth = new JsAuthenticator();
-const user = new User(auth);
+let auth: JsAuthenticator;
+let user: User;
 
-describe('saving a password', () => {
+describe('User class', () => {
 
-  test('function savePassword is defined', () => {
-
-    expect(user.savePassword).toBeDefined();
+  beforeEach(() => {
+    auth = new JsAuthenticator();
+    user = new User(auth);
   });
 
-  test('generate private key returns privatekey', async () => {
+  test("savePassword()", async () => {
+    expect(user.savePassword).toBeDefined();
 
+    expect(() => user.authenticator.getKey({ level: AuthenticatorLevel.PASSWORD })).toThrowError(Error);
+    expect(user.salt).not.toBeDefined();
+    await user.savePassword("myPassword123!");
+    expect(user.authenticator.getKey({ level: AuthenticatorLevel.PASSWORD })).toBeDefined();
+  });
+
+  test("savePIN()", async () => {
+    expect(() => user.authenticator.getKey({ level: AuthenticatorLevel.PIN })).toThrowError(Error);
+    await user.savePIN("4568");
+    expect(user.authenticator.getKey({ level: AuthenticatorLevel.PIN })).toBeDefined();
+  });
+
+  test("saveFingerprint()", async () => {
+    expect(() => user.authenticator.getKey({ level: AuthenticatorLevel.FINGERPRINT })).toThrowError(Error);
+    await user.saveFingerprint();
+    expect(user.authenticator.getKey({ level: AuthenticatorLevel.FINGERPRINT })).toBeDefined();
+  });
+
+  test("saveLocal()", async () => {
+    expect(() => user.authenticator.getKey({ level: AuthenticatorLevel.LOCAL })).toThrowError(Error);
+    await user.saveLocal();
+    expect(user.authenticator.getKey({ level: AuthenticatorLevel.LOCAL })).toBeDefined();
+  });
+
+  test('generatePrivateKeyFromPassword() returns privatekey', async () => {
     const { privateKey, salt } = await user.generatePrivateKeyFromPassword('123')
 
     expect(privateKey).toBeInstanceOf(PrivateKey);
     expect(salt).toBeDefined();
   })
 
-  test('password can be verfied', async () => {
+  test('generatePrivateKeyFromPassword() password can be verfied', async () => {
     const password = '123'
     const { privateKey, salt } = await user.generatePrivateKeyFromPassword(password);
     const data = Buffer.from(privateKey.data.array).toString('utf-8');
     const result = await argon2.verify(data, password, { salt })
     expect(result).toBe(true);
   })
-})
 
-
-describe('generates random keys', () => {
-  test('function generateRandomPrivateKey is defined', () => {
+  test('generateRandomPrivateKey()', () => {
     expect(user.generateRandomPrivateKey).toBeDefined();
-  })
 
-  test('generate random key', async () => {
     const r1 = user.generateRandomPrivateKey();
     expect(r1).toBeInstanceOf(PrivateKey);
 
