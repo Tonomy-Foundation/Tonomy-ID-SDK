@@ -31,7 +31,7 @@ class User {
         // TODO this needs to change to the actual key used, from settings
         const idTonomyActiveKey = PrivateKey.from("PVT_K1_2bfGi9rYsXQSXXTvJbDAPhHLQUojjaNLomdm3cEJ1XTzMqUt3V");
 
-        const res = await idContract.newperson(usernameHash.toString(), passwordKey.toString(), passwordSalt.toString(), createSigner(idTonomyActiveKey));
+        const res = await idContract.newperson(usernameHash.toString(), passwordKey.toString(), this.salt.toString(), createSigner(idTonomyActiveKey));
 
         const newAccountAction = res.processed.action_traces[0].inline_traces[0].act;
         this.accountName = Name.from(newAccountAction.data.name);
@@ -40,11 +40,12 @@ class User {
         // TODO:
         // use status to lock the account till finished craeating
 
-        await idContract.updatekeys(this.accountName.toString(), {
-            PIN: pinKey.toString(),
-            FINGERPRINT: fingerprintKey.toString(),
-            LOCAL: localKey.toString()
-        }, createAuthenticatorSigner(authenticator, AuthenticatorLevel.PASSWORD));
+        const keys: any = {};
+        if (pinKey) keys.PIN = pinKey.toString();
+        if (fingerprintKey) keys.FINGERPRINT = fingerprintKey.toString();
+        if (localKey) keys.LOCAL = localKey.toString();
+
+        await idContract.updatekeys(this.accountName.toString(), keys, createAuthenticatorSigner(authenticator, AuthenticatorLevel.PASSWORD));
     }
 
     async generatePrivateKeyFromPassword(password: string): Promise<{ privateKey: PrivateKey, salt: Buffer }> {
@@ -63,8 +64,7 @@ class User {
     async savePassword(masterPassword: string) {
         const { privateKey, salt } = await this.generatePrivateKeyFromPassword(masterPassword);
         this.salt = salt;
-        const level = AuthenticatorLevel.PASSWORD;
-        this.authenticator.storeKey({ level, privateKey, challenge: masterPassword });
+        this.authenticator.storeKey({ level: AuthenticatorLevel.PASSWORD, privateKey, challenge: masterPassword });
     }
 
     async savePIN(pin: string) {
