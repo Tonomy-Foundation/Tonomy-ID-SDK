@@ -1,4 +1,4 @@
-import { Action, Transaction, SignedTransaction, Signature, Checksum256, Name, PrivateKey } from "@greymass/eosio";
+import { Action, API, Transaction, SignedTransaction, Signature, Checksum256, Name, PrivateKey } from "@greymass/eosio";
 import { Authenticator, AuthenticatorLevel } from "../../authenticator";
 import { api } from "./eosio";
 
@@ -32,7 +32,7 @@ function createAuthenticatorSigner(authenticator: Authenticator, level: Authenti
     }
 }
 
-async function transact(contract: Name, actions: ActionData[], signer: Signer): Promise<any> {
+async function transact(contract: Name, actions: ActionData[], signer: Signer): Promise<API.v1.PushTransactionResponse> {
     // Get the ABI
     const abi = await api.v1.chain.get_abi(contract);
 

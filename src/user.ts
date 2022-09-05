@@ -1,9 +1,10 @@
 import { Authenticator, AuthenticatorLevel } from './authenticator';
 import { IDContract } from './services/contracts/IDContract';
-import { Bytes, Checksum256, KeyType, Name, PrivateKey, Signature } from '@greymass/eosio';
+import { Bytes, KeyType, Name, PrivateKey, API } from '@greymass/eosio';
 import { randomBytes, sha256 } from './util/crypto';
 import { createAuthenticatorSigner, createSigner } from './services/eosio/transaction';
 import argon2 from 'argon2';
+import { api } from './services/eosio/eosio';
 
 const idContract = IDContract.Instance;
 
@@ -17,6 +18,27 @@ class User {
     constructor(_authenticator: Authenticator) {
         this.authenticator = _authenticator;
     }
+
+    async savePassword(masterPassword: string) {
+        const { privateKey, salt } = await this.generatePrivateKeyFromPassword(masterPassword);
+        this.salt = salt;
+        this.authenticator.storeKey({ level: AuthenticatorLevel.PASSWORD, privateKey, challenge: masterPassword });
+    }
+
+    async savePIN(pin: string) {
+        const privateKey = this.generateRandomPrivateKey();
+        this.authenticator.storeKey({ level: AuthenticatorLevel.PIN, privateKey, challenge: pin });
+    }
+
+    async saveFingerprint() {
+        const privateKey = this.generateRandomPrivateKey();
+        this.authenticator.storeKey({ level: AuthenticatorLevel.FINGERPRINT, privateKey });
+    }
+
+    async saveLocal() {
+        const privateKey = this.generateRandomPrivateKey();
+        this.authenticator.storeKey({ level: AuthenticatorLevel.LOCAL, privateKey });
+    };
 
     async createPerson(username: string) {
         const authenticator = this.authenticator;
@@ -56,30 +78,9 @@ class User {
         const privateKey = new PrivateKey(KeyType.K1, new Bytes(newBytes));
 
         return {
-            privateKey: privateKey,
+            privateKey,
             salt
         }
-    }
-
-    async savePassword(masterPassword: string) {
-        const { privateKey, salt } = await this.generatePrivateKeyFromPassword(masterPassword);
-        this.salt = salt;
-        this.authenticator.storeKey({ level: AuthenticatorLevel.PASSWORD, privateKey, challenge: masterPassword });
-    }
-
-    async savePIN(pin: string) {
-        const privateKey = this.generateRandomPrivateKey();
-        this.authenticator.storeKey({ level: AuthenticatorLevel.PIN, privateKey, challenge: pin });
-    }
-
-    async saveFingerprint() {
-        const privateKey = this.generateRandomPrivateKey();
-        this.authenticator.storeKey({ level: AuthenticatorLevel.FINGERPRINT, privateKey });
-    }
-
-    async saveLocal() {
-        const privateKey = this.generateRandomPrivateKey();
-        this.authenticator.storeKey({ level: AuthenticatorLevel.LOCAL, privateKey });
     }
 
     // Creates a cryptographically secure Private key
@@ -88,6 +89,17 @@ class User {
         return new PrivateKey(KeyType.K1, new Bytes(randomString));
     };
 
+
+    static async getAccountInfo(account: string | Name): Promise<API.v1.AccountObject> {
+        if (typeof account === 'string') {
+            // this is a username
+            const idData = await idContract.getAccountTonomyIDInfo(account);
+            return await api.v1.chain.get_account(idData.account_name);
+        } else {
+            // use the account name directly
+            return await api.v1.chain.get_account(account);
+        }
+    }
 }
 
 export { User };
