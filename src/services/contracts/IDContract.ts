@@ -43,7 +43,8 @@ type GetAccountTonomyIDInfoResponse = {
     type: Number,
     status: Number,
     username_hash: Checksum256,
-    password_salt: Checksum256
+    password_salt: Checksum256,
+    version: Number,
 };
 
 class IDContract {
