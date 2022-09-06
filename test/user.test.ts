@@ -1,9 +1,10 @@
 
 import { PrivateKey } from '@greymass/eosio';
-import { User, JsKeyManager } from '../src/index';
-
-const auth = new JsKeyManager();
-const user = new User(auth);
+import { User } from '../src/index';
+import JsKeyManager from './util/jskeymanager';
+import argon2 from 'argon2';
+const keyManager = new JsKeyManager();
+const user = new User(keyManager);
 
 describe('saving a password', () => {
 
@@ -14,7 +15,7 @@ describe('saving a password', () => {
 
   test('generate private key returns privatekey', async () => {
 
-    const { privateKey, salt } = await user.generatePrivateKeyFromPassword('123')
+    const { privateKey, salt } = await keyManager.generatePrivateKeyFromPassword('123')
 
     expect(privateKey).toBeInstanceOf(PrivateKey);
     expect(salt).toBeDefined();
@@ -22,10 +23,9 @@ describe('saving a password', () => {
 
   test('password can be verfied', async () => {
     const password = '123'
-    const { privateKey, salt } = await user.generatePrivateKeyFromPassword(password);
+    const { privateKey, salt } = await keyManager.generatePrivateKeyFromPassword(password);
     const data = Buffer.from(privateKey.data.array)
-    const result = await user.scryptVerify(password
-      , salt, data)
+    const result = await argon2.verify(data.toString(), password, { salt });
     expect(result).toBe(true);
   })
 })
@@ -33,14 +33,14 @@ describe('saving a password', () => {
 
 describe('generates random keys', () => {
   test('function generateRandomPrivateKey is defined', () => {
-    expect(user.generateRandomPrivateKey).toBeDefined();
+    expect(keyManager.generateRandomPrivateKey).toBeDefined();
   })
 
   test('generate random key', async () => {
-    const r1 = user.generateRandomPrivateKey();
+    const r1 = keyManager.generateRandomPrivateKey();
     expect(r1).toBeInstanceOf(PrivateKey);
 
-    const r2 = user.generateRandomPrivateKey();
+    const r2 = keyManager.generateRandomPrivateKey();
     expect(r1).not.toEqual(r2);
   })
 })

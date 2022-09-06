@@ -1,10 +1,10 @@
 import { KeyManager, KeyManagerLevel } from './keymanager';
 import { IDContract } from './services/contracts/IDContract';
-import { Name, PrivateKey, KeyType, Bytes, API } from '@greymass/eosio';
+import { Name, PrivateKey, KeyType, API } from '@greymass/eosio';
 import { createSigner } from './services/eosio/transaction';
 
-import { randomBytes, randomString, sha256 } from './util/crypto';
-import scrypt from "scrypt-js";
+import { randomString, sha256 } from './util/crypto';
+
 import { api } from './services/eosio/eosio';
 
 
@@ -53,40 +53,10 @@ class User {
         }, createSigner(passwordKey));
     }
 
-    async generatePrivateKeyFromPassword(password: string): Promise<{ privateKey: PrivateKey, salt: Buffer }> {
-        // creates a key based on secure (hashing) key generation algorithm like Argon2 or Scrypt
-        const salt = randomBytes(32);
 
-        const hash = await this.scryptHash(password, salt);
-        const newBytes = Buffer.from(hash)
-        const privateKey = new PrivateKey(KeyType.K1, new Bytes(newBytes));
-
-        return {
-            privateKey,
-            salt
-        }
-    }
-
-    private scryptHash(password: string, salt: Buffer): Promise<Uint8Array> {
-
-        const passwordBuffer = Buffer.from(password);
-        return scrypt.scrypt(passwordBuffer, salt, 16384, 8, 1, 64);
-    }
-    /**
-     * 
-     * @param password password to verify
-     * @param salt   salt to use for verification
-     * @param hash  hash to use for verification
-     * @returns true if password is correct
-     */
-    public async scryptVerify(password: string, salt: Buffer, hash: Uint8Array): Promise<boolean> {
-
-        const hashedPassword = await this.scryptHash(password, salt);
-        return Buffer.compare(hashedPassword, hash) === 0;
-    }
 
     async savePassword(masterPassword: string) {
-        const { privateKey, salt } = await this.generatePrivateKeyFromPassword(masterPassword);
+        const { privateKey, salt } = await this.keyManager.generatePrivateKeyFromPassword(masterPassword);
         this.salt = salt;
         const level = KeyManagerLevel.PASSWORD;
         this.keyManager.storeKey({ level, privateKey, challenge: masterPassword });
@@ -101,11 +71,7 @@ class User {
             return await api.v1.chain.get_account(account);
         }
     }
-    // Creates a cryptographically secure Private key
-    generateRandomPrivateKey(): PrivateKey {
-        const randomString = randomBytes(32);
-        return new PrivateKey(KeyType.K1, new Bytes(randomString));
-    };
+
 }
 
 export { User };
