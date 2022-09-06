@@ -111,14 +111,8 @@ interface KeyManager {
 
 }
 
-type KeyStorage = {
-    privateKey: PrivateKey;
-    publicKey: PublicKey;
-    // TODO: check that this complies with the eosio checksum256 format
-    hashedSaltedChallenge?: string;
-    salt?: string;
-}
 
 
 
-export { KeyManager, KeyManagerLevel, KeyStorage, StoreKeyOptions, SignDataOptions, GetKeyOptions };
+
+export { KeyManager, KeyManagerLevel, StoreKeyOptions, SignDataOptions, GetKeyOptions };

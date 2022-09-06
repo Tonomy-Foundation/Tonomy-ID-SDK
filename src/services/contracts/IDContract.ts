@@ -59,8 +59,6 @@ class IDContract {
         password_salt: string,
         signer: Signer
     ): Promise<API.v1.PushTransactionResponse> {
-        console.log("IDContract.newperson()");
-
         const action = {
             authorization: [
                 {

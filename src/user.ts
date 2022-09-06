@@ -2,15 +2,11 @@ import { KeyManager, KeyManagerLevel } from './keymanager';
 import { IDContract } from './services/contracts/IDContract';
 import { Name, PrivateKey, KeyType, API } from '@greymass/eosio';
 import { createSigner } from './services/eosio/transaction';
-
 import { randomString, sha256 } from './util/crypto';
-
 import { api } from './services/eosio/eosio';
 
-
 const idContract = IDContract.Instance;
-
-class User {
+export class User {
     keyManager: KeyManager;
 
     salt: Buffer;
@@ -53,14 +49,13 @@ class User {
         }, createSigner(passwordKey));
     }
 
-
-
     async savePassword(masterPassword: string) {
         const { privateKey, salt } = await this.keyManager.generatePrivateKeyFromPassword(masterPassword);
         this.salt = salt;
         const level = KeyManagerLevel.PASSWORD;
         this.keyManager.storeKey({ level, privateKey, challenge: masterPassword });
     }
+
     static async getAccountInfo(account: string | Name): Promise<API.v1.AccountObject> {
         if (typeof account === 'string') {
             // this is a username
@@ -71,7 +66,4 @@ class User {
             return await api.v1.chain.get_account(account);
         }
     }
-
 }
-
-export { User };
