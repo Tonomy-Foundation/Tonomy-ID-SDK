@@ -24,10 +24,10 @@ function createSigner(privateKey: PrivateKey): Signer {
     }
 }
 
-function createAuthenticatorSigner(authenticator: Authenticator, level: AuthenticatorLevel): Signer {
+function createAuthenticatorSigner(authenticator: Authenticator, level: AuthenticatorLevel, password: string): Signer {
     return {
         async sign(digest: Checksum256): Promise<Signature> {
-            return await authenticator.signData({ level, data: digest.toString(), challenge: "THIS DOESNT WORK" }) as Signature;
+            return await authenticator.signData({ level, data: digest, challenge: password }) as Signature;
         }
     }
 }

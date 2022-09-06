@@ -52,7 +52,7 @@ type StoreKeyOptions = {
  */
 type SignDataOptions = {
     level: AuthenticatorLevel;
-    data: string | Uint8Array;
+    data: string | Checksum256;
     challenge?: string
 }
 
@@ -129,7 +129,7 @@ class JsAuthenticator implements Authenticator {
     }
 
     async signData(options: SignDataOptions): Promise<string | Signature> {
-        if (options.level in this.keyStorage) throw new Error("No key for this level");
+        if (!(options.level in this.keyStorage)) throw new Error("No key for this level");
 
         const keyStore = this.keyStorage[options.level];
 
@@ -142,14 +142,16 @@ class JsAuthenticator implements Authenticator {
         }
 
         const privateKey = keyStore.privateKey;
-        const hash = Checksum256.hash(options.data);
-        const signature = privateKey.signDigest(hash)
+        let digest = options.data;
+        if (options.data instanceof String) {
+            digest = Checksum256.hash(Buffer.from(options.data));
+        }
+        const signature = privateKey.signDigest(digest)
 
         return signature;
     }
 
     getKey(options: GetKeyOptions): PublicKey {
-        if (typeof this.keyStorage === 'undefined') throw new Error("No key for this level");
         if (!(options.level in this.keyStorage)) throw new Error("No key for this level");
 
         const keyStore = this.keyStorage[options.level];
