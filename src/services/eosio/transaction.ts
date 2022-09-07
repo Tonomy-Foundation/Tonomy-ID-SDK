@@ -1,5 +1,5 @@
 import { Action, API, Transaction, SignedTransaction, Signature, Checksum256, Name, PrivateKey } from "@greymass/eosio";
-import { Authenticator, AuthenticatorLevel } from "../../authenticator";
+import { KeyManager, KeyManagerLevel } from "../../keymanager";
 import { api } from "./eosio";
 
 type ActionData = {
@@ -24,10 +24,10 @@ function createSigner(privateKey: PrivateKey): Signer {
     }
 }
 
-function createAuthenticatorSigner(authenticator: Authenticator, level: AuthenticatorLevel, password: string): Signer {
+function createAuthenticatorSigner(keyManager: KeyManager, level: KeyManagerLevel, password: string): Signer {
     return {
         async sign(digest: Checksum256): Promise<Signature> {
-            return await authenticator.signData({ level, data: digest, challenge: password }) as Signature;
+            return await keyManager.signData({ level, data: digest, challenge: password }) as Signature;
         }
     }
 }

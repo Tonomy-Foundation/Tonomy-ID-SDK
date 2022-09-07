@@ -1,3 +1,4 @@
+
 import { API, Checksum256, Name } from "@greymass/eosio"
 import { sha256 } from "../../util/crypto";
 import { api } from "../eosio/eosio";
@@ -43,7 +44,8 @@ type GetAccountTonomyIDInfoResponse = {
     type: Number,
     status: Number,
     username_hash: Checksum256,
-    password_salt: Checksum256
+    password_salt: Checksum256,
+    version: Number,
 };
 
 class IDContract {
@@ -58,8 +60,6 @@ class IDContract {
         password_salt: string,
         signer: Signer
     ): Promise<API.v1.PushTransactionResponse> {
-        console.log("IDContract.newperson()");
-
         const action = {
             authorization: [
                 {
