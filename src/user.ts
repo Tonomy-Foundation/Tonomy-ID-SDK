@@ -1,5 +1,5 @@
 import { KeyManager, KeyManagerLevel } from './keymanager';
-import { IDContract } from './services/contracts/IDContract';
+import { IDContract, GetAccountTonomyIDInfoResponse } from './services/contracts/IDContract';
 import { Name, PrivateKey, API, Checksum256 } from '@greymass/eosio';
 import { sha256 } from './util/crypto';
 import { createAuthenticatorSigner, createSigner } from './services/eosio/transaction';
@@ -17,9 +17,21 @@ export class User {
         this.keyManager = _keyManager;
     }
 
-    async savePassword(masterPassword: string) {
-        const { privateKey, salt } = await this.keyManager.generatePrivateKeyFromPassword(masterPassword);
+    async savePassword(masterPassword: string, options?: { salt?: Checksum256 }) {
+        let privateKey: PrivateKey
+        let salt: Checksum256;
+        if (options && options.salt) {
+            salt = options.salt;
+            const res = await this.keyManager.generatePrivateKeyFromPassword(masterPassword, salt);
+            privateKey = res.privateKey;
+        } else {
+            const res = await this.keyManager.generatePrivateKeyFromPassword(masterPassword);
+            privateKey = res.privateKey;
+            salt = res.salt;
+        }
+
         this.salt = salt;
+
         this.keyManager.storeKey({ level: KeyManagerLevel.PASSWORD, privateKey, challenge: masterPassword });
     }
 
@@ -71,6 +83,25 @@ export class User {
         await idContract.updatekeys(this.accountName.toString(), keys, signer);
     }
 
+    async login(username: string, password: string): Promise<GetAccountTonomyIDInfoResponse> {
+        const keyManager = this.keyManager;
+
+        const idData = await idContract.getAccountTonomyIDInfo(username);
+        const salt = idData.password_salt;
+
+        await this.savePassword(password, { salt });
+        const passwordKey = keyManager.getKey({ level: KeyManagerLevel.PASSWORD });
+
+        const accountData = await User.getAccountInfo(idData.account_name);
+        const onchainKey = accountData.getPermission('owner').required_auth.keys[0].key; // TODO change to active/other permissions when we make the change
+
+        if (!passwordKey.equals(onchainKey)) throw new Error("Password is incorrect");
+
+        this.accountName = Name.from(idData.account_name);
+        this.username = username;
+        return idData;
+    }
+
     static async getAccountInfo(account: string | Name): Promise<API.v1.AccountObject> {
         if (typeof account === 'string') {
             // this is a username
@@ -78,6 +109,7 @@ export class User {
             return await api.v1.chain.get_account(idData.account_name);
         } else {
             // use the account name directly
+
             return await api.v1.chain.get_account(account);
         }
     }

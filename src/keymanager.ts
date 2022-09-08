@@ -107,7 +107,7 @@ interface KeyManager {
      * @returns encrypted private key and salt
      * 
      */
-    generatePrivateKeyFromPassword(password: string): Promise<{ privateKey: PrivateKey, salt: Checksum256 }>;
+    generatePrivateKeyFromPassword(password: string, salt?: Checksum256): Promise<{ privateKey: PrivateKey, salt: Checksum256 }>;
 
 }
 

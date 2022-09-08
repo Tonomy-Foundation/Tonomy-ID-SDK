@@ -126,20 +126,37 @@ class IDContract {
 
             data = await api.v1.chain.get_table_rows({
                 code: "id.tonomy",
+                scope: "id.tonomy",
                 table: "accounts",
                 lower_bound: usernameHash,
-                index_position: "secondary"
+                limit: 1,
+                index_position: "secondary",
             });
+            if (!data || !data.rows) throw new Error("No data found");
+            if (data.rows.length === 0 || data.rows[0].username_hash !== usernameHash.toString()) throw new Error("Account not found");
         } else {
             // use the account name directly
+            console.log("getAccountTonomyIDInfo() name", account instanceof Name, account.toString());
             data = await api.v1.chain.get_table_rows({
                 code: "id.tonomy",
+                scope: "id.tonomy",
                 table: "accounts",
-                lower_bound: Name.from(account)
+                lower_bound: account,
+                limit: 1
             });
+            if (!data || !data.rows) throw new Error("No data found");
+            if (data.rows.length === 0 || data.rows[0].account_name !== account.toString()) throw new Error("Account not found");
         }
-        if (data.rows.length === 0) throw new Error("Account not found");
-        return data.rows[0];
+
+        const idData = data.rows[0];
+        return {
+            account_name: Name.from(idData.account_name),
+            type: idData.type,
+            status: idData.status,
+            username_hash: Checksum256.from(idData.username_hash),
+            password_salt: Checksum256.from(idData.password_salt),
+            version: idData.version
+        }
     }
 }
 
