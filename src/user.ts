@@ -1,15 +1,15 @@
 import { KeyManager, KeyManagerLevel } from './keymanager';
 import { IDContract } from './services/contracts/IDContract';
-import { Name, PrivateKey, KeyType, API } from '@greymass/eosio';
-import { createSigner } from './services/eosio/transaction';
-import { randomString, sha256 } from './util/crypto';
+import { Name, PrivateKey, API, Checksum256 } from '@greymass/eosio';
+import { sha256 } from './util/crypto';
+import { createKeyManagerSigner, createSigner } from './services/eosio/transaction';
 import { api } from './services/eosio/eosio';
 
 const idContract = IDContract.Instance;
 export class User {
     keyManager: KeyManager;
 
-    salt: Buffer;
+    salt: Checksum256;
     username: string;
     accountName: Name;
 
@@ -17,23 +17,43 @@ export class User {
         this.keyManager = _keyManager;
     }
 
-    async createPerson(username: string) {
+    async savePassword(masterPassword: string) {
+        const { privateKey, salt } = await this.keyManager.generatePrivateKeyFromPassword(masterPassword);
+        this.salt = salt;
+        this.keyManager.storeKey({ level: KeyManagerLevel.PASSWORD, privateKey, challenge: masterPassword });
+    }
+
+    async savePIN(pin: string) {
+        const privateKey = this.keyManager.generateRandomPrivateKey();
+        this.keyManager.storeKey({ level: KeyManagerLevel.PIN, privateKey, challenge: pin });
+    }
+
+    async saveFingerprint() {
+        const privateKey = this.keyManager.generateRandomPrivateKey();
+        this.keyManager.storeKey({ level: KeyManagerLevel.FINGERPRINT, privateKey });
+    }
+
+    async saveLocal() {
+        const privateKey = this.keyManager.generateRandomPrivateKey();
+        this.keyManager.storeKey({ level: KeyManagerLevel.LOCAL, privateKey });
+    };
+
+    async createPerson(username: string, password: string) {
+        const keyManager = this.keyManager;
+
         const usernameHash = sha256(username);
 
-        // const passwordKey = this.authenticator.getKey({ level: AuthenticatorLevel.Password });
-        // const pinKey = this.authenticator.getKey({ level: AuthenticatorLevel.PIN });
-        // const fingerprintKey = this.authenticator.getKey({ level: AuthenticatorLevel.Fingerprint });
-        // const localKey = this.authenticator.getKey({ level: AuthenticatorLevel.Local });
-        const passwordKey = PrivateKey.generate(KeyType.K1);
-        const passwordSalt = randomString(32);
-        const pinKey = PrivateKey.generate(KeyType.K1);
-        const fingerprintKey = PrivateKey.generate(KeyType.K1);
-        const localKey = PrivateKey.generate(KeyType.K1);
+        // TODO check password is correct?
+        const passwordKey = keyManager.getKey({ level: KeyManagerLevel.PASSWORD });
+        const pinKey = keyManager.getKey({ level: KeyManagerLevel.PIN });
+        const fingerprintKey = keyManager.getKey({ level: KeyManagerLevel.FINGERPRINT });
+        const localKey = keyManager.getKey({ level: KeyManagerLevel.LOCAL });
 
         // TODO this needs to change to the actual key used, from settings
         const idTonomyActiveKey = PrivateKey.from("PVT_K1_2bfGi9rYsXQSXXTvJbDAPhHLQUojjaNLomdm3cEJ1XTzMqUt3V");
 
-        const res = await idContract.newperson(usernameHash.toString(), passwordKey.toPublic().toString(), passwordSalt.toString(), createSigner(idTonomyActiveKey));
+        // TODO need to remove sha256 from this.salt
+        const res = await idContract.newperson(usernameHash.toString(), passwordKey.toString(), this.salt.toString(), createSigner(idTonomyActiveKey));
 
         const newAccountAction = res.processed.action_traces[0].inline_traces[0].act;
         this.accountName = Name.from(newAccountAction.data.name);
@@ -42,18 +62,13 @@ export class User {
         // TODO:
         // use status to lock the account till finished craeating
 
-        await idContract.updatekeys(this.accountName.toString(), {
-            PIN: pinKey.toPublic().toString(),
-            FINGERPRINT: fingerprintKey.toPublic().toString(),
-            LOCAL: localKey.toPublic().toString()
-        }, createSigner(passwordKey));
-    }
+        const keys: any = {};
+        if (pinKey) keys.PIN = pinKey.toString();
+        if (fingerprintKey) keys.FINGERPRINT = fingerprintKey.toString();
+        if (localKey) keys.LOCAL = localKey.toString();
 
-    async savePassword(masterPassword: string) {
-        const { privateKey, salt } = await this.keyManager.generatePrivateKeyFromPassword(masterPassword);
-        this.salt = salt;
-        const level = KeyManagerLevel.PASSWORD;
-        this.keyManager.storeKey({ level, privateKey, challenge: masterPassword });
+        const signer = createKeyManagerSigner(keyManager, KeyManagerLevel.PASSWORD, password);
+        await idContract.updatekeys(this.accountName.toString(), keys, signer);
     }
 
     static async getAccountInfo(account: string | Name): Promise<API.v1.AccountObject> {

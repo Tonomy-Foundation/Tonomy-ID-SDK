@@ -1,4 +1,4 @@
-import { PrivateKey, PublicKey, Signature } from '@greymass/eosio';
+import { Checksum256, PrivateKey, PublicKey, Signature } from '@greymass/eosio';
 
 enum KeyManagerLevel {
     PASSWORD = 'PASSWORD',
@@ -51,7 +51,7 @@ type StoreKeyOptions = {
  */
 type SignDataOptions = {
     level: KeyManagerLevel;
-    data: string | Uint8Array;
+    data: string | Checksum256;
     challenge?: string
 }
 
@@ -107,7 +107,7 @@ interface KeyManager {
      * @returns encrypted private key and salt
      * 
      */
-    generatePrivateKeyFromPassword(password: string): Promise<{ privateKey: PrivateKey, salt: Buffer }>;
+    generatePrivateKeyFromPassword(password: string): Promise<{ privateKey: PrivateKey, salt: Checksum256 }>;
 
 }
 

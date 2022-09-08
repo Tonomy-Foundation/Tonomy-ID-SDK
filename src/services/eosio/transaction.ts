@@ -1,6 +1,6 @@
-import { Action, Transaction, SignedTransaction, Signature, Checksum256, Name, PrivateKey } from "@greymass/eosio";
+import { Action, API, Transaction, SignedTransaction, Signature, Checksum256, Name, PrivateKey } from "@greymass/eosio";
+import { KeyManager, KeyManagerLevel } from "../../keymanager";
 import { api } from "./eosio";
-import { API } from "@greymass/eosio";
 
 type ActionData = {
     authorization: {
@@ -13,13 +13,21 @@ type ActionData = {
 }
 
 interface Signer {
-    sign(digest: Checksum256): Signature;
+    sign(digest: Checksum256): Promise<Signature>;
 }
 
 function createSigner(privateKey: PrivateKey): Signer {
     return {
-        sign(digest: Checksum256): Signature {
+        async sign(digest: Checksum256): Promise<Signature> {
             return privateKey.signDigest(digest);
+        }
+    }
+}
+
+function createKeyManagerSigner(keyManager: KeyManager, level: KeyManagerLevel, password: string): Signer {
+    return {
+        async sign(digest: Checksum256): Promise<Signature> {
+            return await keyManager.signData({ level, data: digest, challenge: password }) as Signature;
         }
     }
 }
@@ -44,7 +52,7 @@ async function transact(contract: Name, actions: ActionData[], signer: Signer): 
 
     // Create signature
     const signDigest = transaction.signingDigest(info.chain_id);
-    const signature = signer.sign(signDigest);
+    const signature = await signer.sign(signDigest);
     // console.log(JSON.stringify({ actions, transaction, signature }, null, 2));
     const signedTransaction = SignedTransaction.from({
         ...transaction,
@@ -62,4 +70,4 @@ async function transact(contract: Name, actions: ActionData[], signer: Signer): 
     return res;
 }
 
-export { transact, Signer, createSigner };
+export { transact, Signer, createSigner, createKeyManagerSigner };

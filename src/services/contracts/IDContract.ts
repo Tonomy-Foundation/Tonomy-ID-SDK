@@ -90,6 +90,8 @@ class IDContract {
         console.log("IDContract.updatekeys()");
 
         const actions = [];
+        if (Object.keys(keys).length === 0) throw Error("At least one key must be provided");
+
         for (const key in keys) {
             let permission = PermissionLevel.from(key);
 
