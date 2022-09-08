@@ -2,7 +2,7 @@ import { KeyManager, KeyManagerLevel } from './keymanager';
 import { IDContract } from './services/contracts/IDContract';
 import { Name, PrivateKey, API, Checksum256 } from '@greymass/eosio';
 import { sha256 } from './util/crypto';
-import { createAuthenticatorSigner, createSigner } from './services/eosio/transaction';
+import { createKeyManagerSigner, createSigner } from './services/eosio/transaction';
 import { api } from './services/eosio/eosio';
 
 const idContract = IDContract.Instance;
@@ -67,7 +67,7 @@ export class User {
         if (fingerprintKey) keys.FINGERPRINT = fingerprintKey.toString();
         if (localKey) keys.LOCAL = localKey.toString();
 
-        const signer = createAuthenticatorSigner(keyManager, KeyManagerLevel.PASSWORD, password);
+        const signer = createKeyManagerSigner(keyManager, KeyManagerLevel.PASSWORD, password);
         await idContract.updatekeys(this.accountName.toString(), keys, signer);
     }
 
