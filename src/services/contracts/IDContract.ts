@@ -1,3 +1,4 @@
+
 import { API, Checksum256, Name } from "@greymass/eosio"
 import { sha256 } from "../../util/crypto";
 import { api } from "../eosio/eosio";
@@ -59,8 +60,6 @@ class IDContract {
         password_salt: string,
         signer: Signer
     ): Promise<API.v1.PushTransactionResponse> {
-        console.log("IDContract.newperson()");
-
         const action = {
             authorization: [
                 {

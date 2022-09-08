@@ -1,31 +1,29 @@
-import { Authenticator, AuthenticatorLevel } from './authenticator';
+import { KeyManager, KeyManagerLevel } from './keymanager';
 import { IDContract } from './services/contracts/IDContract';
-import { Name, PrivateKey, KeyType, Bytes, API } from '@greymass/eosio';
+import { Name, PrivateKey, KeyType, API } from '@greymass/eosio';
 import { createSigner } from './services/eosio/transaction';
-import { randomBytes, randomString, sha256 } from './util/crypto';
-import argon2 from 'argon2';
+import { randomString, sha256 } from './util/crypto';
 import { api } from './services/eosio/eosio';
 
 const idContract = IDContract.Instance;
-
-class User {
-    authenticator: Authenticator;
+export class User {
+    keyManager: KeyManager;
 
     salt: Buffer;
     username: string;
     accountName: Name;
 
-    constructor(_authenticator: Authenticator) {
-        this.authenticator = _authenticator;
+    constructor(_keyManager: KeyManager) {
+        this.keyManager = _keyManager;
     }
 
     async createPerson(username: string) {
         const usernameHash = sha256(username);
 
-        // const passwordKey = this.authenticator.getKey({ level: AuthenticatorLevel.PASSWORD });
+        // const passwordKey = this.authenticator.getKey({ level: AuthenticatorLevel.Password });
         // const pinKey = this.authenticator.getKey({ level: AuthenticatorLevel.PIN });
-        // const fingerprintKey = this.authenticator.getKey({ level: AuthenticatorLevel.FINGERPRINT });
-        // const localKey = this.authenticator.getKey({ level: AuthenticatorLevel.LOLAL });
+        // const fingerprintKey = this.authenticator.getKey({ level: AuthenticatorLevel.Fingerprint });
+        // const localKey = this.authenticator.getKey({ level: AuthenticatorLevel.Local });
         const passwordKey = PrivateKey.generate(KeyType.K1);
         const passwordSalt = randomString(32);
         const pinKey = PrivateKey.generate(KeyType.K1);
@@ -51,17 +49,11 @@ class User {
         }, createSigner(passwordKey));
     }
 
-    async generatePrivateKeyFromPassword(password: string): Promise<{ privateKey: PrivateKey, salt: Buffer }> {
-        // creates a key based on secure (hashing) key generation algorithm like Argon2 or Scrypt
-        const salt = randomBytes(32);
-        const hash = await argon2.hash(password, { salt })
-        const newBytes = Buffer.from(hash)
-        const privateKey = new PrivateKey(KeyType.K1, new Bytes(newBytes));
-
-        return {
-            privateKey,
-            salt
-        }
+    async savePassword(masterPassword: string) {
+        const { privateKey, salt } = await this.keyManager.generatePrivateKeyFromPassword(masterPassword);
+        this.salt = salt;
+        const level = KeyManagerLevel.PASSWORD;
+        this.keyManager.storeKey({ level, privateKey, challenge: masterPassword });
     }
 
     static async getAccountInfo(account: string | Name): Promise<API.v1.AccountObject> {
@@ -75,5 +67,3 @@ class User {
         }
     }
 }
-
-export { User };

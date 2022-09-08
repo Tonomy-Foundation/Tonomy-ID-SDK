@@ -1,4 +1,4 @@
-export * from './authenticator';
+export * from './keymanager';
 
 export * from './user';
 
