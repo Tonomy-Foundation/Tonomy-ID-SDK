@@ -1,9 +1,42 @@
 import { KeyManager, KeyManagerLevel } from './keymanager';
-import { IDContract } from './services/contracts/IDContract';
+import { IDContract, GetAccountTonomyIDInfoResponse } from './services/contracts/IDContract';
 import { Name, PrivateKey, API, Checksum256 } from '@greymass/eosio';
 import { sha256 } from './util/crypto';
 import { createKeyManagerSigner, createSigner } from './services/eosio/transaction';
 import { api } from './services/eosio/eosio';
+
+enum UserStatus {
+    CREATING = 'CREATING',
+    READY = 'READY',
+    DEACTIVATED = 'DEACTIVATED'
+};
+
+namespace UserStatus {
+    /* 
+     * Returns the index of the enum value
+     * 
+     * @param value The level to get the index of
+     */
+    export function indexFor(value: UserStatus): number {
+        return Object.keys(UserStatus).indexOf(value);
+    }
+
+    /* 
+     * Creates an AuthenticatorLevel from a string or index of the level
+     * 
+     * @param value The string or index
+     */
+    export function from(value: number | string): UserStatus {
+        let index: number
+        if (typeof value !== 'number') {
+            index = UserStatus.indexFor(value as UserStatus)
+        } else {
+            index = value
+        }
+        return Object.values(UserStatus)[index] as UserStatus;
+    }
+}
+
 
 const idContract = IDContract.Instance;
 export class User {
@@ -12,14 +45,27 @@ export class User {
     salt: Checksum256;
     username: string;
     accountName: Name;
+    status: UserStatus;
 
     constructor(_keyManager: KeyManager) {
         this.keyManager = _keyManager;
     }
 
-    async savePassword(masterPassword: string) {
-        const { privateKey, salt } = await this.keyManager.generatePrivateKeyFromPassword(masterPassword);
+    async savePassword(masterPassword: string, options?: { salt?: Checksum256 }) {
+        let privateKey: PrivateKey
+        let salt: Checksum256;
+        if (options && options.salt) {
+            salt = options.salt;
+            const res = await this.keyManager.generatePrivateKeyFromPassword(masterPassword, salt);
+            privateKey = res.privateKey;
+        } else {
+            const res = await this.keyManager.generatePrivateKeyFromPassword(masterPassword);
+            privateKey = res.privateKey;
+            salt = res.salt;
+        }
+
         this.salt = salt;
+
         this.keyManager.storeKey({ level: KeyManagerLevel.PASSWORD, privateKey, challenge: masterPassword });
     }
 
@@ -58,6 +104,7 @@ export class User {
         const newAccountAction = res.processed.action_traces[0].inline_traces[0].act;
         this.accountName = Name.from(newAccountAction.data.name);
         this.username = username;
+        this.status = UserStatus.CREATING;
 
         // TODO:
         // use status to lock the account till finished craeating
@@ -69,6 +116,32 @@ export class User {
 
         const signer = createKeyManagerSigner(keyManager, KeyManagerLevel.PASSWORD, password);
         await idContract.updatekeys(this.accountName.toString(), keys, signer);
+        this.status = UserStatus.READY;
+    }
+
+    async login(username: string, password: string): Promise<GetAccountTonomyIDInfoResponse> {
+        const keyManager = this.keyManager;
+
+        const idData = await idContract.getAccountTonomyIDInfo(username);
+        const salt = idData.password_salt;
+
+        await this.savePassword(password, { salt });
+        const passwordKey = keyManager.getKey({ level: KeyManagerLevel.PASSWORD });
+
+        const accountData = await User.getAccountInfo(idData.account_name);
+        const onchainKey = accountData.getPermission('owner').required_auth.keys[0].key; // TODO change to active/other permissions when we make the change
+
+        if (!passwordKey.equals(onchainKey)) throw new Error("Password is incorrect");
+
+        this.accountName = Name.from(idData.account_name);
+        this.username = username;
+        this.status = UserStatus.READY;
+
+        return idData;
+    }
+
+    isLoggedIn(): boolean {
+        return !!this.status
     }
 
     static async getAccountInfo(account: string | Name): Promise<API.v1.AccountObject> {
@@ -78,6 +151,7 @@ export class User {
             return await api.v1.chain.get_account(idData.account_name);
         } else {
             // use the account name directly
+
             return await api.v1.chain.get_account(account);
         }
     }
