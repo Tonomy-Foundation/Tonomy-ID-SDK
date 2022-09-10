@@ -4,6 +4,7 @@ import { Name, PrivateKey, API, Checksum256 } from '@greymass/eosio';
 import { sha256 } from './util/crypto';
 import { createKeyManagerSigner, createSigner } from './services/eosio/transaction';
 import { api } from './services/eosio/eosio';
+import { PersistantStorage, storageProxyHandler } from './storage';
 
 enum UserStatus {
     CREATING = 'CREATING',
@@ -41,14 +42,11 @@ namespace UserStatus {
 const idContract = IDContract.Instance;
 export class User {
     keyManager: KeyManager;
+    storage: PersistantStorage;
 
-    salt: Checksum256;
-    username: string;
-    accountName: Name;
-    status: UserStatus;
-
-    constructor(_keyManager: KeyManager) {
+    constructor(_keyManager: KeyManager, _storage: PersistantStorage) {
         this.keyManager = _keyManager;
+        this.storage = new Proxy(_storage, storageProxyHandler);
     }
 
     async savePassword(masterPassword: string, options?: { salt?: Checksum256 }) {
@@ -64,7 +62,7 @@ export class User {
             salt = res.salt;
         }
 
-        this.salt = salt;
+        this.storage.salt = salt;
 
         this.keyManager.storeKey({ level: KeyManagerLevel.PASSWORD, privateKey, challenge: masterPassword });
     }
@@ -99,12 +97,12 @@ export class User {
         const idTonomyActiveKey = PrivateKey.from("PVT_K1_2bfGi9rYsXQSXXTvJbDAPhHLQUojjaNLomdm3cEJ1XTzMqUt3V");
 
         // TODO need to remove sha256 from this.salt
-        const res = await idContract.newperson(usernameHash.toString(), passwordKey.toString(), this.salt.toString(), createSigner(idTonomyActiveKey));
+        const res = await idContract.newperson(usernameHash.toString(), passwordKey.toString(), this.storage.salt.toString(), createSigner(idTonomyActiveKey));
 
         const newAccountAction = res.processed.action_traces[0].inline_traces[0].act;
-        this.accountName = Name.from(newAccountAction.data.name);
-        this.username = username;
-        this.status = UserStatus.CREATING;
+        this.storage.accountName = Name.from(newAccountAction.data.name);
+        this.storage.username = username;
+        this.storage.status = UserStatus.CREATING;
 
         // TODO:
         // use status to lock the account till finished craeating
@@ -115,8 +113,8 @@ export class User {
         if (localKey) keys.LOCAL = localKey.toString();
 
         const signer = createKeyManagerSigner(keyManager, KeyManagerLevel.PASSWORD, password);
-        await idContract.updatekeys(this.accountName.toString(), keys, signer);
-        this.status = UserStatus.READY;
+        await idContract.updatekeys(this.storage.accountName.toString(), keys, signer);
+        this.storage.status = UserStatus.READY;
     }
 
     async login(username: string, password: string): Promise<GetAccountTonomyIDInfoResponse> {
@@ -133,15 +131,15 @@ export class User {
 
         if (!passwordKey.equals(onchainKey)) throw new Error("Password is incorrect");
 
-        this.accountName = Name.from(idData.account_name);
-        this.username = username;
-        this.status = UserStatus.READY;
+        this.storage.accountName = Name.from(idData.account_name);
+        this.storage.username = username;
+        this.storage.status = UserStatus.READY;
 
         return idData;
     }
 
     isLoggedIn(): boolean {
-        return !!this.status
+        return !!this.storage.status
     }
 
     static async getAccountInfo(account: string | Name): Promise<API.v1.AccountObject> {
