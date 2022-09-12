@@ -138,7 +138,16 @@ export class User {
         return idData;
     }
 
+    logout(): void {
+        // generating a random key to replace the current key
+        this.keyManager.storeKey({ level: KeyManagerLevel.PASSWORD, privateKey: this.keyManager.generateRandomPrivateKey(), challenge: ' ' });
+        this.storage.accountName = null;
+        this.storage.username = null;
+        this.storage.status = null;
+    }
+
     isLoggedIn(): boolean {
+        console.log(this.storage.status)
         return !!this.storage.status
     }
 
