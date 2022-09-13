@@ -1,7 +1,8 @@
 export * from './keymanager';
-
+export * from './storage';
 export * from './user';
 
+export * from './initialize';
 export * from './services/eosio/authority';
 export * from './util/crypto';
 
