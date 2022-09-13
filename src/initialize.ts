@@ -10,15 +10,9 @@ import { User } from "./user";
  * @returns the user object
  */
 function initialize(keyManager: KeyManager, storage: PersistantStorage): User {
-  var _storage, _keyManager;
-  if (!_keyManager) {
-    _keyManager = keyManager;
-  }
-  if (!_storage) {
-    storage.cache = {}; // adding cache property to save cache data inside
-    _storage = new Proxy(storage, storageProxyHandler);;
-  }
-  return new User(_keyManager, _storage);
+  storage.cache = {}; // adding cache property to save cache data inside
+  const _storage = new Proxy(storage, storageProxyHandler);;
+  return new User(keyManager, _storage);
 }
 
 export { initialize };
