@@ -4,7 +4,7 @@ import { Name, PrivateKey, API, Checksum256 } from '@greymass/eosio';
 import { sha256 } from './util/crypto';
 import { createKeyManagerSigner, createSigner } from './services/eosio/transaction';
 import { api } from './services/eosio/eosio';
-import { PersistantStorage, storageProxyHandler } from './storage';
+import { PersistantStorage } from './storage';
 
 enum UserStatus {
     CREATING = 'CREATING',
@@ -46,7 +46,7 @@ export class User {
 
     constructor(_keyManager: KeyManager, _storage: PersistantStorage) {
         this.keyManager = _keyManager;
-        this.storage = new Proxy(_storage, storageProxyHandler);
+        this.storage = _storage;
     }
 
     async savePassword(masterPassword: string, options?: { salt?: Checksum256 }) {
@@ -139,11 +139,13 @@ export class User {
     }
 
     logout(): void {
-        // generating a random key to replace the current key
-        this.keyManager.storeKey({ level: KeyManagerLevel.PASSWORD, privateKey: this.keyManager.generateRandomPrivateKey(), challenge: ' ' });
-        this.storage.accountName = null;
-        this.storage.username = null;
-        this.storage.status = null;
+        // remove all keys
+        this.keyManager.removeKey({ level: KeyManagerLevel.PASSWORD });
+        this.keyManager.removeKey({ level: KeyManagerLevel.PIN });
+        this.keyManager.removeKey({ level: KeyManagerLevel.FINGERPRINT });
+        this.keyManager.removeKey({ level: KeyManagerLevel.LOCAL });
+        // clear storage data
+        this.storage.clear();
     }
 
     isLoggedIn(): boolean {

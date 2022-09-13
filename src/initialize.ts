@@ -1,5 +1,5 @@
 import { KeyManager } from "./keymanager";
-import { PersistantStorage } from "./storage";
+import { PersistantStorage, storageProxyHandler } from "./storage";
 import { User } from "./user";
 
 
@@ -15,7 +15,8 @@ function initialize(keyManager: KeyManager, storage: PersistantStorage): User {
     _keyManager = keyManager;
   }
   if (!_storage) {
-    _storage = storage;
+    storage.cache = {}; // adding cache property to save cache data inside
+    _storage = new Proxy(storage, storageProxyHandler);;
   }
   return new User(_keyManager, _storage);
 }

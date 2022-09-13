@@ -95,6 +95,12 @@ interface KeyManager {
     getKey(options: GetKeyOptions): PublicKey
 
     /**
+     * @param options - Options for removing a key
+     * @throws if a key does not exist for the level
+     */
+    removeKey(options: GetKeyOptions): void
+
+    /**
      * generates a random private key
      *  
      * @returns The PrivateKey

@@ -14,12 +14,19 @@ interface PersistantStorage {
    * @throws {Error} If the data could not be retrieved
    */
   retrieve(key: string): any;
+
+  /**
+   * clear all the data stored in the storage
+   */
+  clear(): void;
+
 }
 
 /**
  * A proxy handler that will create magic getters and setters for the storage
  */
 const storageProxyHandler: ProxyHandler<PersistantStorage> = {
+
   /**
    * return the called property from the storage if it exists 
    * @param target - The target object
@@ -28,10 +35,11 @@ const storageProxyHandler: ProxyHandler<PersistantStorage> = {
    * @throws {Error} If the data could not be retrieved
    */
   get(target: PersistantStorage, propKey: string) {
-    if (target['_' + propKey]) return target['_' + propKey];
+
+    if (target.cache[propKey]) return target.cache[propKey];
     try {
       const data = target.retrieve(propKey);
-      target['_' + propKey] = data; // cache the data
+      target.cache[propKey] = data; // cache the data
       return data
     } catch (e: any) {
       throw new Error(`Could not get ${propKey} from storage - ${e}`);
@@ -49,7 +57,7 @@ const storageProxyHandler: ProxyHandler<PersistantStorage> = {
   set(target: PersistantStorage, p: string, newValue: any) {
     try {
       target.store(p, newValue);
-      delete target['_' + p]; // delete the cached value
+      if (target.cache[p]) delete target.cache[p]; // delete the cached value
     } catch (e: any) {
       throw new Error(`Could not store data - ${e}`);
     }
