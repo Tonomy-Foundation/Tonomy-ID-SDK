@@ -35,7 +35,11 @@ const storageProxyHandler: ProxyHandler<PersistantStorage> = {
    * @throws {Error} If the data could not be retrieved
    */
   get(target: PersistantStorage, propKey: string) {
-
+    if (propKey in target && propKey !== 'cache') {
+      return function () {
+        target[propKey]();
+      }
+    }
     if (target.cache[propKey]) return target.cache[propKey];
     try {
       const data = target.retrieve(propKey);
