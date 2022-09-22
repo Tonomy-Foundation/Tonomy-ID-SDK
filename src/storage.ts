@@ -45,7 +45,7 @@ const storageProxyHandler: ProxyHandler<PersistantStorage> = {
       const data = target.retrieve(propKey);
       target.cache[propKey] = data; // cache the data
       return data
-    } catch (e: any) {
+    } catch (e) {
       throw new Error(`Could not get ${propKey} from storage - ${e}`);
     }
   },
@@ -62,7 +62,7 @@ const storageProxyHandler: ProxyHandler<PersistantStorage> = {
     try {
       target.store(p, newValue);
       if (target.cache[p]) delete target.cache[p]; // delete the cached value
-    } catch (e: any) {
+    } catch (e) {
       throw new Error(`Could not store data - ${e}`);
     }
     return true;
