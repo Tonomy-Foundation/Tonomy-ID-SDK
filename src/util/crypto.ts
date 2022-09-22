@@ -10,7 +10,7 @@ function randomString(bytes: number): string {
 }
 
 function sha256(digest: string): string {
-    return Checksum256.hash(Bytes.from(digest)).toString();
+    return Checksum256.hash(Bytes.from(digest, "utf8")).toString();
 }
 
 export { randomString, randomBytes, sha256 };
