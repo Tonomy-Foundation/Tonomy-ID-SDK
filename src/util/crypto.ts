@@ -1,4 +1,4 @@
-import { Checksum256 } from '@greymass/eosio';
+import { Bytes, Checksum256 } from '@greymass/eosio';
 import rb from "@consento/sync-randombytes";
 
 function randomBytes(bytes: number): Uint8Array {
@@ -10,7 +10,7 @@ function randomString(bytes: number): string {
 }
 
 function sha256(digest: string): string {
-    return Checksum256.hash(Buffer.from(digest)).toString();
+    return Checksum256.hash(Bytes.from(digest)).toString();
 }
 
 export { randomString, randomBytes, sha256 };
