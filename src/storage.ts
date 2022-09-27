@@ -6,19 +6,19 @@ interface PersistantStorage {
    * @param data - The data to store
    * @throws {Error} If the data could not be stored
    */
-  store(key: string, value: any): void;
+  store(key: string, value: any): Promise<void>;
 
   /**
    * @param key - The key to retrieve the data from
    * @returns The data stored under the key
    * @throws {Error} If the data could not be retrieved
    */
-  retrieve(key: string): any;
+  retrieve(key: string): Promise<any>;
 
   /**
    * clear all the data stored in the storage
    */
-  clear(): void;
+  clear(): Promise<void>;
 
 }
 
@@ -41,13 +41,12 @@ const storageProxyHandler: ProxyHandler<PersistantStorage> = {
       }
     }
     if (target.cache[propKey]) return target.cache[propKey];
-    try {
-      const data = target.retrieve(propKey);
+    return target.retrieve(propKey).then((data) => {
       target.cache[propKey] = data; // cache the data
       return data
-    } catch (e: any) {
+    }).catch((e: any) => {
       throw new Error(`Could not get ${propKey} from storage - ${e}`);
-    }
+    })
   },
 
   /**
@@ -59,12 +58,11 @@ const storageProxyHandler: ProxyHandler<PersistantStorage> = {
    * @throws {Error} If the data could not be stored
    */
   set(target: PersistantStorage, p: string, newValue: any) {
-    try {
-      target.store(p, newValue);
-      if (target.cache[p]) delete target.cache[p]; // delete the cached value
-    } catch (e: any) {
+    target.store(p, newValue).then(() => {
+      target.cache[p] = newValue;
+    }).catch((e: any) => {
       throw new Error(`Could not store data - ${e}`);
-    }
+    })
     return true;
   },
 };
