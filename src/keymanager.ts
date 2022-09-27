@@ -98,7 +98,7 @@ interface KeyManager {
      * @param options - Options for removing a key
      * @throws if a key does not exist for the level
      */
-    removeKey(options: GetKeyOptions): void
+    removeKey(options: GetKeyOptions): Promise<void>
 
     /**
      * generates a random private key

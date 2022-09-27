@@ -36,6 +36,9 @@ const storageProxyHandler: ProxyHandler<PersistantStorage> = {
    */
   get(target: PersistantStorage, propKey: string) {
     if (propKey in target && propKey !== 'cache') {
+      if (propKey === 'clear') {
+        target.cache = {};
+      }
       return function () {
         target[propKey]();
       }
