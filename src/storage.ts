@@ -38,7 +38,7 @@ const storageProxyHandler: Storage = {
    * @returns The value of the property from the storage or cached value
    * @throws {Error} If the data could not be retrieved
    */
-  get: async (target: PersistantStorage, propKey: string) => {
+  get: (target: PersistantStorage, propKey: string) => {
     if (propKey in target && propKey !== 'cache') {
       if (propKey === 'clear') {
         target.cache = {};
@@ -48,13 +48,13 @@ const storageProxyHandler: Storage = {
       }
     }
     if (target.cache[propKey]) return target.cache[propKey];
-    try {
-      const data = await target.retrieve(propKey);
+
+    return target.retrieve(propKey).then((data) => {
       target.cache[propKey] = data; // cache the data
       return data
-    } catch (e) {
+    }).catch((e) => {
       console.log(`Could not get ${propKey} from storage - ${e}`);
-    }
+    });
   },
 
   /**
