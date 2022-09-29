@@ -92,13 +92,13 @@ interface KeyManager {
      * 
      * @throws if a key does not exist for the level
      */
-    getKey(options: GetKeyOptions): PublicKey
+    getKey(options: GetKeyOptions): Promise<PublicKey>
 
     /**
      * @param options - Options for removing a key
      * @throws if a key does not exist for the level
      */
-    removeKey(options: GetKeyOptions): void
+    removeKey(options: GetKeyOptions): Promise<void>
 
     /**
      * generates a random private key

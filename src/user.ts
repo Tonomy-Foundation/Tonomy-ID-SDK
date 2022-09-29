@@ -64,22 +64,22 @@ export class User {
 
         this.storage.salt = salt;
 
-        this.keyManager.storeKey({ level: KeyManagerLevel.PASSWORD, privateKey, challenge: masterPassword });
+        await this.keyManager.storeKey({ level: KeyManagerLevel.PASSWORD, privateKey, challenge: masterPassword });
     }
 
     async savePIN(pin: string) {
         const privateKey = this.keyManager.generateRandomPrivateKey();
-        this.keyManager.storeKey({ level: KeyManagerLevel.PIN, privateKey, challenge: pin });
+        await this.keyManager.storeKey({ level: KeyManagerLevel.PIN, privateKey, challenge: pin });
     }
 
     async saveFingerprint() {
         const privateKey = this.keyManager.generateRandomPrivateKey();
-        this.keyManager.storeKey({ level: KeyManagerLevel.FINGERPRINT, privateKey });
+        await this.keyManager.storeKey({ level: KeyManagerLevel.FINGERPRINT, privateKey });
     }
 
     async saveLocal() {
         const privateKey = this.keyManager.generateRandomPrivateKey();
-        this.keyManager.storeKey({ level: KeyManagerLevel.LOCAL, privateKey });
+        await this.keyManager.storeKey({ level: KeyManagerLevel.LOCAL, privateKey });
     };
 
     async createPerson(username: string, password: string) {
@@ -88,10 +88,10 @@ export class User {
         const usernameHash = sha256(username);
 
         // TODO check password is correct?
-        const passwordKey = keyManager.getKey({ level: KeyManagerLevel.PASSWORD });
-        const pinKey = keyManager.getKey({ level: KeyManagerLevel.PIN });
-        const fingerprintKey = keyManager.getKey({ level: KeyManagerLevel.FINGERPRINT });
-        const localKey = keyManager.getKey({ level: KeyManagerLevel.LOCAL });
+        const passwordKey = await keyManager.getKey({ level: KeyManagerLevel.PASSWORD });
+        const pinKey = await keyManager.getKey({ level: KeyManagerLevel.PIN });
+        const fingerprintKey = await keyManager.getKey({ level: KeyManagerLevel.FINGERPRINT });
+        const localKey = await keyManager.getKey({ level: KeyManagerLevel.LOCAL });
 
         // TODO this needs to change to the actual key used, from settings
         const idTonomyActiveKey = PrivateKey.from("PVT_K1_2bfGi9rYsXQSXXTvJbDAPhHLQUojjaNLomdm3cEJ1XTzMqUt3V");
@@ -124,7 +124,7 @@ export class User {
         const salt = idData.password_salt;
 
         await this.savePassword(password, { salt });
-        const passwordKey = keyManager.getKey({ level: KeyManagerLevel.PASSWORD });
+        const passwordKey = await keyManager.getKey({ level: KeyManagerLevel.PASSWORD });
 
         const accountData = await User.getAccountInfo(idData.account_name);
         const onchainKey = accountData.getPermission('owner').required_auth.keys[0].key; // TODO change to active/other permissions when we make the change
@@ -138,12 +138,12 @@ export class User {
         return idData;
     }
 
-    logout(): void {
+    async logout(): Promise<void> {
         // remove all keys
-        this.keyManager.removeKey({ level: KeyManagerLevel.PASSWORD });
-        this.keyManager.removeKey({ level: KeyManagerLevel.PIN });
-        this.keyManager.removeKey({ level: KeyManagerLevel.FINGERPRINT });
-        this.keyManager.removeKey({ level: KeyManagerLevel.LOCAL });
+        await this.keyManager.removeKey({ level: KeyManagerLevel.PASSWORD });
+        await this.keyManager.removeKey({ level: KeyManagerLevel.PIN });
+        await this.keyManager.removeKey({ level: KeyManagerLevel.FINGERPRINT });
+        await this.keyManager.removeKey({ level: KeyManagerLevel.LOCAL });
         // clear storage data
         this.storage.clear();
     }
