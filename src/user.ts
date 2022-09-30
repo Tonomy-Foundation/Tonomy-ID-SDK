@@ -1,6 +1,6 @@
+import { Name, PrivateKey, API, Checksum256 } from '@greymass/eosio';
 import { KeyManager, KeyManagerLevel } from './keymanager';
 import { IDContract, GetAccountTonomyIDInfoResponse } from './services/contracts/IDContract';
-import { Name, PrivateKey, API, Checksum256 } from '@greymass/eosio';
 import { sha256 } from './util/crypto';
 import { createKeyManagerSigner, createSigner } from './services/eosio/transaction';
 import { api } from './services/eosio/eosio';
@@ -42,6 +42,7 @@ namespace UserStatus {
 const idContract = IDContract.Instance;
 export class User {
     keyManager: KeyManager;
+
     storage: PersistantStorage;
 
     constructor(_keyManager: KeyManager, _storage: PersistantStorage) {
@@ -83,7 +84,7 @@ export class User {
     };
 
     async createPerson(username: string, password: string) {
-        const keyManager = this.keyManager;
+        const {keyManager} = this;
 
         const usernameHash = sha256(username);
 
@@ -118,7 +119,7 @@ export class User {
     }
 
     async login(username: string, password: string): Promise<GetAccountTonomyIDInfoResponse> {
-        const keyManager = this.keyManager;
+        const {keyManager} = this;
 
         const idData = await idContract.getAccountTonomyIDInfo(username);
         const salt = idData.password_salt;
@@ -158,10 +159,10 @@ export class User {
             // this is a username
             const idData = await idContract.getAccountTonomyIDInfo(account);
             return await api.v1.chain.get_account(idData.account_name);
-        } else {
+        } 
             // use the account name directly
 
             return await api.v1.chain.get_account(account);
-        }
+        
     }
 }

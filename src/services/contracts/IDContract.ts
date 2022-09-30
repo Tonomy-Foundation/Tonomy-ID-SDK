@@ -93,7 +93,7 @@ class IDContract {
         if (Object.keys(keys).length === 0) throw Error("At least one key must be provided");
 
         for (const key in keys) {
-            let permission = PermissionLevel.from(key);
+            const permission = PermissionLevel.from(key);
 
             // "keys as any" fixes typescript issue see https://stackoverflow.com/a/57192972
             const publicKey = (keys as any)[key];
