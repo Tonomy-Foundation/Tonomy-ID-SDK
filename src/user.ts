@@ -11,6 +11,12 @@ enum UserStatus {
     READY = 'READY',
     DEACTIVATED = 'DEACTIVATED'
 };
+type UserSorage = {
+    status: UserStatus;
+    accountName: Name;
+    username: string;
+    salt: Checksum256;
+}
 
 namespace UserStatus {
     /* 
@@ -42,11 +48,11 @@ namespace UserStatus {
 const idContract = IDContract.Instance;
 export class User {
     keyManager: KeyManager;
-    storage: PersistantStorage;
+    storage: PersistantStorage & UserSorage;
 
     constructor(_keyManager: KeyManager, _storage: PersistantStorage) {
         this.keyManager = _keyManager;
-        this.storage = _storage;
+        this.storage = _storage as PersistantStorage & UserSorage;
     }
 
     async savePassword(masterPassword: string, options?: { salt?: Checksum256 }) {
@@ -97,7 +103,8 @@ export class User {
         const idTonomyActiveKey = PrivateKey.from("PVT_K1_2bfGi9rYsXQSXXTvJbDAPhHLQUojjaNLomdm3cEJ1XTzMqUt3V");
 
         // TODO need to remove sha256 from this.salt
-        const res = await idContract.newperson(usernameHash.toString(), passwordKey.toString(), this.storage.salt.toString(), createSigner(idTonomyActiveKey));
+        const salt = await this.storage.salt;
+        const res = await idContract.newperson(usernameHash.toString(), passwordKey.toString(), salt.toString(), createSigner(idTonomyActiveKey));
 
         const newAccountAction = res.processed.action_traces[0].inline_traces[0].act;
         this.storage.accountName = Name.from(newAccountAction.data.name);
@@ -113,7 +120,8 @@ export class User {
         if (localKey) keys.LOCAL = localKey.toString();
 
         const signer = createKeyManagerSigner(keyManager, KeyManagerLevel.PASSWORD, password);
-        await idContract.updatekeys(this.storage.accountName.toString(), keys, signer);
+        const accountName = await this.storage.accountName;
+        await idContract.updatekeys(accountName.toString(), keys, signer);
         this.storage.status = UserStatus.READY;
     }
 
@@ -148,9 +156,9 @@ export class User {
         this.storage.clear();
     }
 
-    isLoggedIn(): boolean {
-        console.log(this.storage.status)
-        return !!this.storage.status
+    async isLoggedIn(): Promise<boolean> {
+        console.log(await this.storage.status)
+        return !! await this.storage.status
     }
 
     static async getAccountInfo(account: string | Name): Promise<API.v1.AccountObject> {
