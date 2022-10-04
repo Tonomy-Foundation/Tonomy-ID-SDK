@@ -53,7 +53,7 @@ const storageProxyHandler: Storage = {
       target.cache[propKey] = data; // cache the data
       return data
     }).catch((e) => {
-      console.log(`Could not get ${propKey} from storage - ${e}`);
+      throw new Error(`Could not get ${propKey} from storage - ${e}`);
     });
   },
 

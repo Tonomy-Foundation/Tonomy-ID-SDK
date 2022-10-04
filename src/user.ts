@@ -11,6 +11,12 @@ enum UserStatus {
     READY = 'READY',
     DEACTIVATED = 'DEACTIVATED'
 };
+type UserSorage = {
+    status: UserStatus;
+    accountName: Name;
+    username: string;
+    salt: Checksum256;
+}
 
 namespace UserStatus {
     /* 
@@ -42,11 +48,11 @@ namespace UserStatus {
 const idContract = IDContract.Instance;
 export class User {
     keyManager: KeyManager;
-    storage: PersistantStorage;
+    storage: PersistantStorage & UserSorage;
 
     constructor(_keyManager: KeyManager, _storage: PersistantStorage) {
         this.keyManager = _keyManager;
-        this.storage = _storage;
+        this.storage = _storage as PersistantStorage & UserSorage;
     }
 
     async savePassword(masterPassword: string, options?: { salt?: Checksum256 }) {

@@ -11,7 +11,7 @@ import { User } from "./user";
  */
 function initialize(keyManager: KeyManager, storage: PersistantStorage): User {
   storage.cache = {}; // adding cache property to save cache data inside
-  const _storage = new Proxy(storage, storageProxyHandler);;
+  const _storage = new Proxy(storage, storageProxyHandler as any); // used any to avoid typed error
   return new User(keyManager, _storage);
 }
 
