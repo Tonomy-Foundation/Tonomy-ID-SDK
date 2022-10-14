@@ -3,7 +3,7 @@ import { IDContract, GetAccountTonomyIDInfoResponse } from './services/contracts
 import { Name, PrivateKey, API, Checksum256 } from '@greymass/eosio';
 import { sha256 } from './util/crypto';
 import { createKeyManagerSigner, createSigner } from './services/eosio/transaction';
-import { api } from './services/eosio/eosio';
+import { getApi } from './services/eosio/eosio';
 import { PersistantStorage } from './storage';
 
 enum UserStatus {
@@ -162,6 +162,7 @@ export class User {
     }
 
     static async getAccountInfo(account: string | Name): Promise<API.v1.AccountObject> {
+        const api = await getApi();
         if (typeof account === 'string') {
             // this is a username
             const idData = await idContract.getAccountTonomyIDInfo(account);

@@ -2,11 +2,15 @@ import { APIClient, FetchProvider } from "@greymass/eosio";
 import fetch from 'cross-fetch';
 import { getSettings } from "../../settings";
 
-const settings = getSettings();
+let api: APIClient;
 
-const api = new APIClient({
-    url: settings.blockchainUrl,
-    provider: new FetchProvider(settings.blockchainUrl, { fetch })
-})
+export async function getApi(): Promise<APIClient> {
+    if (api) return api;
 
-export { api };
+    const settings = await getSettings();
+    api = new APIClient({
+        url: settings.blockchainUrl,
+        provider: new FetchProvider(settings.blockchainUrl, { fetch })
+    })
+    return api;
+}

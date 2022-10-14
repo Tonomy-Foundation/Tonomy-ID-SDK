@@ -1,7 +1,7 @@
 
 import { API, Checksum256, Name } from "@greymass/eosio"
 import { sha256 } from "../../util/crypto";
-import { api } from "../eosio/eosio";
+import { getApi } from "../eosio/eosio";
 import { Signer, transact } from "../eosio/transaction";
 
 enum PermissionLevel {
@@ -120,6 +120,7 @@ class IDContract {
 
     async getAccountTonomyIDInfo(account: string | Name): Promise<GetAccountTonomyIDInfoResponse> {
         let data;
+        const api = await getApi()
         if (typeof account === 'string') {
             // this is a username
             const usernameHash = Checksum256.from(sha256(account));

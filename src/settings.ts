@@ -2,36 +2,18 @@ export type SettingsType = {
     blockchainUrl: string;
 }
 
-const defaultSettings: SettingsType = {
-    blockchainUrl: "http://localhost:8888"
-}
-
-// singleton object approach
-export class Settings {
-    static _singleton_instance: Settings;
-    settings: SettingsType;
-    initialized = false;
-
-    constructor(settings: SettingsType) {
-        this.settings = settings;
-    }
-
-    public static get Instance() {
-        return this._singleton_instance || (this._singleton_instance = new this(defaultSettings));
-    }
-
-    public getSettings(): SettingsType {
-        return this.settings;
-    }
-}
-
-// global variable approach
-let settings: SettingsType = defaultSettings;
+let settings: SettingsType;
+let initialized = false;
 
 export function setSettings(newSettings: SettingsType) {
     settings = newSettings;
+    initialized = true;
 }
 
-export function getSettings(): SettingsType {
+export async function getSettings(): Promise<SettingsType> {
+    while (!initialized) {
+        "Waiting for settings to be initialized";
+        await sleep(1000);
+    }
     return settings;
 }
