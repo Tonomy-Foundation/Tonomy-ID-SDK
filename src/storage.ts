@@ -6,26 +6,30 @@ interface PersistantStorage {
    * @param data - The data to store
    * @throws {Error} If the data could not be stored
    */
-  store(key: string, value: any): void;
+  store(key: string, value: any): Promise<void>;
 
   /**
    * @param key - The key to retrieve the data from
    * @returns The data stored under the key
    * @throws {Error} If the data could not be retrieved
    */
-  retrieve(key: string): any;
+  retrieve(key: string): Promise<any>;
 
   /**
    * clear all the data stored in the storage
    */
-  clear(): void;
+  clear(): Promise<void>;
 
+}
+
+interface Storage extends Omit<ProxyHandler<PersistantStorage>, 'set'> {
+  set(target: PersistantStorage, key: string, value: any): Promise<boolean>;
 }
 
 /**
  * A proxy handler that will create magic getters and setters for the storage
  */
-const storageProxyHandler: ProxyHandler<PersistantStorage> = {
+const storageProxyHandler: Storage = {
 
   /**
    * return the called property from the storage if it exists 
@@ -34,7 +38,7 @@ const storageProxyHandler: ProxyHandler<PersistantStorage> = {
    * @returns The value of the property from the storage or cached value
    * @throws {Error} If the data could not be retrieved
    */
-  get(target: PersistantStorage, propKey: string) {
+  get: (target: PersistantStorage, propKey: string) => {
     if (propKey in target && propKey !== 'cache') {
       if (propKey === 'clear') {
         target.cache = {};
@@ -44,13 +48,13 @@ const storageProxyHandler: ProxyHandler<PersistantStorage> = {
       }
     }
     if (target.cache[propKey]) return target.cache[propKey];
-    try {
-      const data = target.retrieve(propKey);
+
+    return target.retrieve(propKey).then((data) => {
       target.cache[propKey] = data; // cache the data
       return data
-    } catch (e) {
+    }).catch((e) => {
       throw new Error(`Could not get ${propKey} from storage - ${e}`);
-    }
+    });
   },
 
   /**
@@ -61,14 +65,17 @@ const storageProxyHandler: ProxyHandler<PersistantStorage> = {
    * @returns true if the value was stored
    * @throws {Error} If the data could not be stored
    */
-  set(target: PersistantStorage, p: string, newValue: any) {
-    try {
-      target.store(p, newValue);
-      if (target.cache[p]) delete target.cache[p]; // delete the cached value
-    } catch (e) {
-      throw new Error(`Could not store data - ${e}`);
-    }
-    return true;
+  set: async function (target: PersistantStorage, p: string, newValue: any) {
+    return target.store(p, newValue).then(() => {
+      target.cache[p] = newValue;
+      return true;
+    }).catch((e: any) => {
+      console.log(e)
+
+      return false;
+      // throw new Error(`Could not store data - ${e}`);
+    })
+
   },
 };
 

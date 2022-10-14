@@ -6,6 +6,7 @@ export * from './storage';
 export * from './user';
 
 export * from './initialize';
+export * from './settings';
 export * from './services/eosio/authority';
 export * from './util/crypto';
 const EosioUtil = { ...Eosio, ...Transaction };
