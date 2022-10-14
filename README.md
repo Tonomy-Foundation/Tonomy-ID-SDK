@@ -28,3 +28,7 @@ To run tests, use `npm test`.
 ## Linting
 
 Linting is done with `eslint`. Install the recommended VS Code plugin to see markers in your code.
+
+```bash
+npm run lint
+```
