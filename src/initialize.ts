@@ -1,5 +1,5 @@
 import { KeyManager } from "./keymanager";
-import { SettingsType, getSettings, setSettings } from "./settings";
+import { SettingsType, setSettings } from "./settings";
 import { PersistantStorage, storageProxyHandler } from "./storage";
 import { User } from "./user";
 
