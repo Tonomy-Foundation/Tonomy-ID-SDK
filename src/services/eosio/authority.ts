@@ -9,8 +9,11 @@ type WaitWeight = { wait_sec: number, weight: number }
 
 class Authority {
     threshold: number;
+
     keys: KeyWeight[];
+
     accounts: PermissionWeight[];
+
     waits: WaitWeight[];
 
     constructor(threshold: number, keys: KeyWeight[], accounts: PermissionWeight[], waits: WaitWeight[]) {

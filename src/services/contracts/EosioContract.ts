@@ -54,7 +54,7 @@ class EosioContract {
                 },
             ],
             data: {
-                account: account,
+                account,
                 abi: abiSerializedHex,
             },
         };
@@ -97,7 +97,7 @@ class EosioContract {
             authorization: [
                 {
                     actor: account,
-                    permission: permission,
+                    permission,
                     // permission: parent, // both parent and permission work as authorization. though permission is supposed to be the authorization that works
                 },
             ],
