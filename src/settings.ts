@@ -11,9 +11,8 @@ export function setSettings(newSettings: SettingsType) {
 }
 
 export async function getSettings(): Promise<SettingsType> {
-    while (!initialized) {
-        "Waiting for settings to be initialized";
-        await sleep(1000);
+    if (!initialized) {
+        throw new Error("settings not yet intialized")
     }
     return settings;
 }
