@@ -1,16 +1,25 @@
-import { Action, API, Transaction, SignedTransaction, Signature, Checksum256, Name, PrivateKey } from "@greymass/eosio";
-import { KeyManager, KeyManagerLevel } from "../../keymanager";
-import { getApi } from "./eosio";
+import {
+    Action,
+    API,
+    Transaction,
+    SignedTransaction,
+    Signature,
+    Checksum256,
+    Name,
+    PrivateKey,
+} from '@greymass/eosio';
+import { KeyManager, KeyManagerLevel } from '../../keymanager';
+import { getApi } from './eosio';
 
 type ActionData = {
     authorization: {
         actor: string;
         permission: string;
-    }[],
-    account?: string,
-    name: string,
-    data: any,
-}
+    }[];
+    account?: string;
+    name: string;
+    data: any;
+};
 
 interface Signer {
     sign(digest: Checksum256): Promise<Signature>;
@@ -20,19 +29,31 @@ function createSigner(privateKey: PrivateKey): Signer {
     return {
         async sign(digest: Checksum256): Promise<Signature> {
             return privateKey.signDigest(digest);
-        }
-    }
+        },
+    };
 }
 
-function createKeyManagerSigner(keyManager: KeyManager, level: KeyManagerLevel, password: string): Signer {
+function createKeyManagerSigner(
+    keyManager: KeyManager,
+    level: KeyManagerLevel,
+    password: string
+): Signer {
     return {
         async sign(digest: Checksum256): Promise<Signature> {
-            return await keyManager.signData({ level, data: digest, challenge: password }) as Signature;
-        }
-    }
+            return (await keyManager.signData({
+                level,
+                data: digest,
+                challenge: password,
+            })) as Signature;
+        },
+    };
 }
 
-async function transact(contract: Name, actions: ActionData[], signer: Signer): Promise<API.v1.PushTransactionResponse> {
+async function transact(
+    contract: Name,
+    actions: ActionData[],
+    signer: Signer
+): Promise<API.v1.PushTransactionResponse> {
     // Get the ABI
     const api = await getApi();
     const abi = await api.v1.chain.get_abi(contract);
@@ -41,7 +62,7 @@ async function transact(contract: Name, actions: ActionData[], signer: Signer): 
     const actionData: Action[] = [];
     actions.forEach((data) => {
         actionData.push(Action.from({ ...data, account: contract }, abi.abi));
-    })
+    });
 
     // Construct the transaction
     const info = await api.v1.chain.get_info();
