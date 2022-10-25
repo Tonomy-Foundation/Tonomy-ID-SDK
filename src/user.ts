@@ -64,7 +64,7 @@ export class User {
         this.storage = _storage as PersistantStorage & UserSorage;
     }
 
-    async saveUsername(username: string) {
+    async saveUsername(username: string, suffix: string) {
         let user: any;
         try {
             user = await User.getAccountInfo(username); // Throws error if username is taken
@@ -73,7 +73,7 @@ export class User {
         }
         if (user) throw new Error('Username is taken');
 
-        this.storage.username = username;
+        this.storage.username = username + suffix;
         await this.storage.username;
     }
 
