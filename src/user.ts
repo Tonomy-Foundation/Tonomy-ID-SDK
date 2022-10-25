@@ -13,44 +13,44 @@ import { getApi } from './services/eosio/eosio';
 import { PersistantStorage } from './storage';
 
 enum UserStatus {
-  CREATING = 'CREATING',
-  READY = 'READY',
-  DEACTIVATED = 'DEACTIVATED',
+    CREATING = 'CREATING',
+    READY = 'READY',
+    DEACTIVATED = 'DEACTIVATED',
 }
 
 namespace UserStatus {
-  /*
-   * Returns the index of the enum value
-   *
-   * @param value The level to get the index of
-   */
-  export function indexFor(value: UserStatus): number {
-      return Object.keys(UserStatus).indexOf(value);
-  }
+    /*
+     * Returns the index of the enum value
+     *
+     * @param value The level to get the index of
+     */
+    export function indexFor(value: UserStatus): number {
+        return Object.keys(UserStatus).indexOf(value);
+    }
 
-  /*
-   * Creates an AuthenticatorLevel from a string or index of the level
-   *
-   * @param value The string or index
-   */
-  export function from(value: number | string): UserStatus {
-      let index: number;
-      if (typeof value !== 'number') {
-          index = UserStatus.indexFor(value as UserStatus);
-      } else {
-          index = value;
-      }
-      return Object.values(UserStatus)[index] as UserStatus;
-  }
+    /*
+     * Creates an AuthenticatorLevel from a string or index of the level
+     *
+     * @param value The string or index
+     */
+    export function from(value: number | string): UserStatus {
+        let index: number;
+        if (typeof value !== 'number') {
+            index = UserStatus.indexFor(value as UserStatus);
+        } else {
+            index = value;
+        }
+        return Object.values(UserStatus)[index] as UserStatus;
+    }
 }
 
 export { UserStatus };
 
 type UserSorage = {
-  status: UserStatus;
-  accountName: Name;
-  username: string;
-  salt: Checksum256;
+    status: UserStatus;
+    accountName: Name;
+    username: string;
+    salt: Checksum256;
 };
 
 const idContract = IDContract.Instance;
@@ -73,7 +73,8 @@ export class User {
         }
         if (user) throw new Error('Username is taken');
 
-        await (this.storage.username = username);
+        this.storage.username = username;
+        await this.storage.username;
     }
 
     async savePassword(masterPassword: string, options?: { salt?: Checksum256 }) {
@@ -94,7 +95,9 @@ export class User {
             salt = res.salt;
         }
 
-        await (this.storage.salt = salt);
+        this.storage.salt = salt;
+        await this.storage.salt;
+        // const newsalt = Checksum256.from(await this.storage.salt);
 
         await this.keyManager.storeKey({
             level: KeyManagerLevel.PASSWORD,
@@ -154,9 +157,12 @@ export class User {
         );
 
         const newAccountAction =
-      res.processed.action_traces[0].inline_traces[0].act;
-        await (this.storage.accountName = Name.from(newAccountAction.data.name));
-        await (this.storage.status = UserStatus.CREATING);
+            res.processed.action_traces[0].inline_traces[0].act;
+        this.storage.accountName = Name.from(newAccountAction.data.name);
+        // await this.storage.store('accountName', Name.from(newAccountAction.data.name));
+        await this.storage.accountName;
+        this.storage.status = UserStatus.CREATING;
+        await this.storage.status;
     }
 
     async updateKeys(password: string) {
@@ -186,7 +192,8 @@ export class User {
         );
         const accountName = await this.storage.accountName;
         await idContract.updatekeys(accountName.toString(), keys, signer);
-        await (this.storage.status = UserStatus.READY);
+        this.storage.status = UserStatus.READY;
+        await this.storage.status;
     }
 
     async login(
@@ -205,7 +212,7 @@ export class User {
 
         const accountData = await User.getAccountInfo(idData.account_name);
         const onchainKey =
-      accountData.getPermission('owner').required_auth.keys[0].key; // TODO change to active/other permissions when we make the change
+            accountData.getPermission('owner').required_auth.keys[0].key; // TODO change to active/other permissions when we make the change
 
         if (!passwordKey.equals(onchainKey))
             throw new Error('Password is incorrect');
@@ -218,7 +225,7 @@ export class User {
     }
 
     async logout(): Promise<void> {
-    // remove all keys
+        // remove all keys
         await this.keyManager.removeKey({ level: KeyManagerLevel.PASSWORD });
         await this.keyManager.removeKey({ level: KeyManagerLevel.PIN });
         await this.keyManager.removeKey({ level: KeyManagerLevel.FINGERPRINT });

@@ -7,14 +7,14 @@ function randomBytes(bytes: number): Uint8Array {
 
 function randomString(bytes: number): string {
     const random = rb(new Uint8Array(bytes));
-    return Array.from(random).map(i2hex).join('');
+    return Array.from(random).map(int2hex).join('');
 }
 
 function sha256(digest: string): string {
     return Checksum256.hash(Bytes.from(encodeHex(digest), 'hex')).toString();
 }
 
-function i2hex(i: any) {
+function int2hex(i: number) {
     return ('0' + i.toString(16)).slice(-2);
 }
 
