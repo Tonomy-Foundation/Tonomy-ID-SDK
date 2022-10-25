@@ -96,8 +96,7 @@ export class User {
         }
 
         this.storage.salt = salt;
-        await this.storage.salt;
-        // const newsalt = Checksum256.from(await this.storage.salt);
+        await this.storage.salt; // wait for magic setter on storage
 
         await this.keyManager.storeKey({
             level: KeyManagerLevel.PASSWORD,
