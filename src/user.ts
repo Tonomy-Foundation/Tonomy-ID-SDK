@@ -65,7 +65,7 @@ export class User {
     let user: any;
     try {
       user = await User.getAccountInfo(username); // Throws error if username is taken
-    } catch (e: any) {
+    } catch (e) {
       if (e.message !== 'Account not found') throw e;
     }
     if (user) throw new Error('Username is taken');
