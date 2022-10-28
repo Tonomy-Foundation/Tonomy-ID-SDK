@@ -13,7 +13,7 @@ import {
 } from './services/eosio/transaction';
 import { getApi } from './services/eosio/eosio';
 import { PersistantStorage } from './storage';
-import { HttpError, throwExpectedError } from './services/errors';
+import { throwExpectedError } from './services/errors';
 
 enum UserStatus {
     CREATING = 'CREATING',
