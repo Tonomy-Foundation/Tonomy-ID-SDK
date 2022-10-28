@@ -1,4 +1,5 @@
 import { Name, PrivateKey, API, Checksum256 } from '@greymass/eosio';
+import { PushTransactionResponse } from '@greymass/eosio/src/api/v1/types';
 import { KeyManager, KeyManagerLevel } from './keymanager';
 import {
     GetAccountTonomyIDInfoResponse,
@@ -6,12 +7,13 @@ import {
 } from './services/contracts/IDContract';
 import { sha256 } from './util/crypto';
 import {
+    AntelopePushTransactionError,
     createKeyManagerSigner,
     createSigner,
 } from './services/eosio/transaction';
 import { getApi } from './services/eosio/eosio';
 import { PersistantStorage } from './storage';
-import { throwExpectedError } from './services/errors';
+import { HttpError, throwExpectedError } from './services/errors';
 
 enum UserStatus {
     CREATING = 'CREATING',
@@ -149,12 +151,30 @@ export class User {
 
         // TODO need to remove sha256 from this.salt
         const salt = await this.storage.salt;
-        const res = await idContract.newperson(
-            usernameHash.toString(),
-            passwordKey.toString(),
-            salt.toString(),
-            createSigner(idTonomyActiveKey)
-        );
+        let res: PushTransactionResponse;
+        try {
+            res = await idContract.newperson(
+                usernameHash.toString(),
+                passwordKey.toString(),
+                salt.toString(),
+                createSigner(idTonomyActiveKey)
+            );
+        } catch (e) {
+            console.log('createPerson() errror', e);
+            if (e instanceof AntelopePushTransactionError) {
+                console.log('createPerson(0 AntelopePushTransactionError');
+                if (e.error.code === 3050003) {
+                    const message = e.error.details[0].message;
+                    const position = message.search('TCON1000');
+                    if (position > 0) {
+                        throw throwExpectedError('TSDK1001', 'Username is taken');
+                    }
+                }
+            } else if (e instanceof HttpError) {
+                console.log('HttpError');
+            }
+            throw e;
+        }
 
         const newAccountAction =
             res.processed.action_traces[0].inline_traces[0].act;

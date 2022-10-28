@@ -9,6 +9,7 @@ import {
     PrivateKey,
 } from '@greymass/eosio';
 import { KeyManager, KeyManagerLevel } from '../../keymanager';
+import { HttpError } from '../errors';
 import { getApi } from './eosio';
 
 type ActionData = {
@@ -49,6 +50,39 @@ function createKeyManagerSigner(
     };
 }
 
+export class AntelopePushTransactionError extends Error {
+    code: number; // HTTP error code
+    message: string; // HTTP error message
+    error: {
+        code: number; // Antelope error code
+        name: string;
+        what: string;
+        details: [
+            {
+                message: string;
+                file: string;
+                line_number: number;
+                method: string;
+            }
+        ];
+    };
+
+    constructor(err: any) {
+        super('AntelopePushTransactionError');
+
+        this.code = err.code;
+        this.message = err.message;
+        this.error = err.error;
+
+        // Ensure the name of this error is the same as the class name
+        this.name = this.constructor.name;
+        // This clips the constructor invocation from the stack trace.
+        // It's not absolutely essential, but it does make the stack trace a little nicer.
+        //  @see Node.js reference (bottom)
+        Error.captureStackTrace(this, this.constructor);
+    }
+}
+
 async function transact(
     contract: Name,
     actions: ActionData[],
@@ -75,7 +109,6 @@ async function transact(
     // Create signature
     const signDigest = transaction.signingDigest(info.chain_id);
     const signature = await signer.sign(signDigest);
-    // console.log(JSON.stringify({ actions, transaction, signature }, null, 2));
     const signedTransaction = SignedTransaction.from({
         ...transaction,
         signatures: [signature],
@@ -87,6 +120,19 @@ async function transact(
         res = await api.v1.chain.push_transaction(signedTransaction);
     } catch (e) {
         console.error(JSON.stringify(e, null, 2));
+        if (e.response && e.response.headers) {
+            if (e.response.json) {
+                console.log('pushTransaction() AntelopePushTransactionError');
+                const err = new AntelopePushTransactionError(e.response.json);
+                console.log(
+                    'pushTransaction() AntelopePushTransactionError',
+                    err instanceof AntelopePushTransactionError,
+                    err
+                );
+                throw err;
+            }
+            throw new HttpError(e);
+        }
         throw e;
     }
     return res;
