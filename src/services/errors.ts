@@ -1,4 +1,4 @@
-class ApplicationError extends Error {
+class SdkError extends Error {
     code: string;
 
     constructor(message: string) {
@@ -12,7 +12,7 @@ class ApplicationError extends Error {
     }
 }
 
-export class ExpectedSdkError extends ApplicationError {
+export class ExpectedSdkError extends SdkError {
     constructor(message: string) {
         super(message);
         // Ensure the name of this error is the same as the class name
@@ -24,7 +24,7 @@ export class ExpectedSdkError extends ApplicationError {
     }
 }
 
-export class UnexpectedSdkError extends ApplicationError {
+export class UnexpectedSdkError extends SdkError {
     constructor(message: string) {
         super(message);
         // Ensure the name of this error is the same as the class name
@@ -36,7 +36,7 @@ export class UnexpectedSdkError extends ApplicationError {
     }
 }
 
-export function throwExpectedError(message: string, code: string) {
+export function throwExpectedError(message: string, code?: string) {
     const error = new ExpectedSdkError(message);
     if (code) {
         error.code = code;
@@ -44,7 +44,7 @@ export function throwExpectedError(message: string, code: string) {
     throw error;
 }
 
-export function throwUnexpectedError(message: string, code: string) {
+export function throwUnexpectedError(message: string, code?: string) {
     const error = new UnexpectedSdkError(message);
     if (code) {
         error.code = code;
