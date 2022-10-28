@@ -11,6 +11,7 @@ import {
 } from './services/eosio/transaction';
 import { getApi } from './services/eosio/eosio';
 import { PersistantStorage } from './storage';
+import { throwExpectedError } from './services/errors';
 
 enum UserStatus {
     CREATING = 'CREATING',
@@ -71,7 +72,7 @@ export class User {
         } catch (e) {
             if (e.message !== 'Account not found') throw e;
         }
-        if (user) throw new Error('Username is taken');
+        if (user) throwExpectedError('TSDK1000', 'Username is taken');
 
         this.storage.username = username + suffix;
         await this.storage.username;
