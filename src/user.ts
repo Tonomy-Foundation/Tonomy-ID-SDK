@@ -160,23 +160,10 @@ export class User {
                 createSigner(idTonomyActiveKey)
             );
         } catch (e) {
-            console.log('createPerson() errror', e);
             if (e instanceof AntelopePushTransactionError) {
-                console.log(
-                    'createPerson() AntelopePushTransactionError',
-                    e.error.code
-                );
-                if (e.error.code === 3050003) {
-                    console.log('createPerson() 3050003');
-                    const message = e.error.details[0].message;
-                    const position = message.search('TCON1000');
-                    console.log('createPerson() position', position);
-                    if (position > 0) {
-                        throw throwExpectedError('Username is taken', 'TSDK1001');
-                    }
+                if (e.hasErrorCode(3050003) && e.hasTonomyErrorCode('TCON1000')) {
+                    throw throwExpectedError('Username is taken', 'TSDK1001');
                 }
-            } else if (e instanceof HttpError) {
-                console.log('HttpError');
             }
             throw e;
         }
@@ -184,8 +171,8 @@ export class User {
         const newAccountAction =
             res.processed.action_traces[0].inline_traces[0].act;
         this.storage.accountName = Name.from(newAccountAction.data.name);
-        // await this.storage.store('accountName', Name.from(newAccountAction.data.name));
         await this.storage.accountName;
+
         this.storage.status = UserStatus.CREATING;
         await this.storage.status;
     }

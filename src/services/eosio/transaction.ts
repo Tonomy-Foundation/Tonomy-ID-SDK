@@ -84,6 +84,15 @@ export class AntelopePushTransactionError extends Error {
         // TypeError: Error.captureStackTrace is not a function
         // Error.captureStackTrace(this, this.constructor);
     }
+
+    hasErrorCode(code: number): boolean {
+        return this.error.code === code;
+    }
+
+    hasTonomyErrorCode(code: string): boolean {
+        // TODO iterate over deatils array instead of only looking at first element
+        return this.error.details[0].message.search(code) > 0;
+    }
 }
 
 async function transact(
@@ -125,14 +134,7 @@ async function transact(
         // console.error(JSON.stringify(e, null, 2));
         if (e.response && e.response.headers) {
             if (e.response.json) {
-                console.log('pushTransaction() AntelopePushTransactionError');
-                const err = new AntelopePushTransactionError(e.response.json);
-                console.log(
-                    'pushTransaction() AntelopePushTransactionError',
-                    err instanceof AntelopePushTransactionError,
-                    err
-                );
-                throw err;
+                throw new AntelopePushTransactionError(e.response.json);
             }
             throw new HttpError(e);
         }
