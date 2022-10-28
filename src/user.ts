@@ -74,7 +74,7 @@ export class User {
         } catch (e) {
             if (e.message !== 'Account not found') throw e;
         }
-        if (user) throwExpectedError('TSDK1000', 'Username is taken');
+        if (user) throwExpectedError('Username is taken', 'TSDK1000');
 
         this.storage.username = username + suffix;
         await this.storage.username;
@@ -162,12 +162,17 @@ export class User {
         } catch (e) {
             console.log('createPerson() errror', e);
             if (e instanceof AntelopePushTransactionError) {
-                console.log('createPerson(0 AntelopePushTransactionError');
+                console.log(
+                    'createPerson() AntelopePushTransactionError',
+                    e.error.code
+                );
                 if (e.error.code === 3050003) {
+                    console.log('createPerson() 3050003');
                     const message = e.error.details[0].message;
                     const position = message.search('TCON1000');
+                    console.log('createPerson() position', position);
                     if (position > 0) {
-                        throw throwExpectedError('TSDK1001', 'Username is taken');
+                        throw throwExpectedError('Username is taken', 'TSDK1001');
                     }
                 }
             } else if (e instanceof HttpError) {

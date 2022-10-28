@@ -79,7 +79,10 @@ export class AntelopePushTransactionError extends Error {
         // This clips the constructor invocation from the stack trace.
         // It's not absolutely essential, but it does make the stack trace a little nicer.
         //  @see Node.js reference (bottom)
-        Error.captureStackTrace(this, this.constructor);
+
+        // TODO fix this. The following line should be uncommented. It is commented out because it is causing a TS error:
+        // TypeError: Error.captureStackTrace is not a function
+        // Error.captureStackTrace(this, this.constructor);
     }
 }
 
@@ -119,7 +122,7 @@ async function transact(
     try {
         res = await api.v1.chain.push_transaction(signedTransaction);
     } catch (e) {
-        console.error(JSON.stringify(e, null, 2));
+        // console.error(JSON.stringify(e, null, 2));
         if (e.response && e.response.headers) {
             if (e.response.json) {
                 console.log('pushTransaction() AntelopePushTransactionError');

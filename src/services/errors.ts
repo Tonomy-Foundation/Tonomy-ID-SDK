@@ -38,7 +38,7 @@ class SdkError extends Error {
         // This clips the constructor invocation from the stack trace.
         // It's not absolutely essential, but it does make the stack trace a little nicer.
         //  @see Node.js reference (bottom)
-        Error.captureStackTrace(this, this.constructor);
+        // Error.captureStackTrace(this, this.constructor);
     }
 }
 
@@ -50,7 +50,7 @@ export class ExpectedSdkError extends SdkError {
         // This clips the constructor invocation from the stack trace.
         // It's not absolutely essential, but it does make the stack trace a little nicer.
         //  @see Node.js reference (bottom)
-        Error.captureStackTrace(this, this.constructor);
+        // Error.captureStackTrace(this, this.constructor);
     }
 }
 
@@ -62,7 +62,7 @@ export class UnexpectedSdkError extends SdkError {
         // This clips the constructor invocation from the stack trace.
         // It's not absolutely essential, but it does make the stack trace a little nicer.
         //  @see Node.js reference (bottom)
-        Error.captureStackTrace(this, this.constructor);
+        // Error.captureStackTrace(this, this.constructor);
     }
 }
 
