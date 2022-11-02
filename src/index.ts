@@ -15,3 +15,5 @@ export { EosioUtil };
 export * from './services/contracts/IDContract';
 export * from './services/contracts/EosioContract';
 export * from './services/contracts/EosioTokenContract';
+
+export * from './services/errors';

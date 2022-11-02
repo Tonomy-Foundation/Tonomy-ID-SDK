@@ -32,3 +32,7 @@ Linting is done with `eslint`. Install the recommended VS Code plugin to see mar
 ```bash
 npm run lint
 ```
+
+## Error handling
+
+See [errors.ts](./src/services/errors.ts). All errors have a registered unique code. All errors are either expected or unexpected, depending on weather the user will create the error, or somethig has gone wrong nothing to do with the user. This helps us distinguish errors that we should fix as developers. Please maintain the list of files and their error code numeration in [errors.ts](./src/services/errors.ts).

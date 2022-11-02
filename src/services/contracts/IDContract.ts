@@ -2,49 +2,50 @@ import { API, Checksum256, Name } from '@greymass/eosio';
 import { sha256 } from '../../util/crypto';
 import { getApi } from '../eosio/eosio';
 import { Signer, transact } from '../eosio/transaction';
+import { throwUnexpectedError } from '../errors';
 
 enum PermissionLevel {
-  OWNER = 'OWNER',
-  ACTIVE = 'ACTIVE',
-  PASSWORD = 'PASSWORD',
-  PIN = 'PIN',
-  FINGERPRINT = 'FINGERPRINT',
-  LOCAL = 'LOCAL',
+    OWNER = 'OWNER',
+    ACTIVE = 'ACTIVE',
+    PASSWORD = 'PASSWORD',
+    PIN = 'PIN',
+    FINGERPRINT = 'FINGERPRINT',
+    LOCAL = 'LOCAL',
 }
 
 namespace PermissionLevel {
-  /*
-   * Returns the index of the enum value
-   *
-   * @param value The value to get the index of
-   */
-  export function indexFor(value: PermissionLevel): number {
-      return Object.keys(PermissionLevel).indexOf(value);
-  }
+    /*
+     * Returns the index of the enum value
+     *
+     * @param value The value to get the index of
+     */
+    export function indexFor(value: PermissionLevel): number {
+        return Object.keys(PermissionLevel).indexOf(value);
+    }
 
-  /*
-   * Creates an PermissionLevel from a string or index of the level
-   *
-   * @param value The string or index
-   */
-  export function from(value: number | string): PermissionLevel {
-      let index: number;
-      if (typeof value !== 'number') {
-          index = PermissionLevel.indexFor(value as PermissionLevel);
-      } else {
-          index = value;
-      }
-      return Object.values(PermissionLevel)[index] as PermissionLevel;
-  }
+    /*
+     * Creates an PermissionLevel from a string or index of the level
+     *
+     * @param value The string or index
+     */
+    export function from(value: number | string): PermissionLevel {
+        let index: number;
+        if (typeof value !== 'number') {
+            index = PermissionLevel.indexFor(value as PermissionLevel);
+        } else {
+            index = value;
+        }
+        return Object.values(PermissionLevel)[index] as PermissionLevel;
+    }
 }
 
 type GetAccountTonomyIDInfoResponse = {
-  account_name: Name;
-  type: number;
-  status: number;
-  username_hash: Checksum256;
-  password_salt: Checksum256;
-  version: number;
+    account_name: Name;
+    type: number;
+    status: number;
+    username_hash: Checksum256;
+    password_salt: Checksum256;
+    version: number;
 };
 
 class IDContract {
@@ -82,17 +83,17 @@ class IDContract {
     async updatekeys(
         account: string,
         keys: {
-      FINGERPRINT?: string;
-      PIN?: string;
-      LOCAL?: string;
-    },
+            FINGERPRINT?: string;
+            PIN?: string;
+            LOCAL?: string;
+        },
         signer: Signer
     ): Promise<API.v1.PushTransactionResponse> {
         console.log('IDContract.updatekeys()');
 
         const actions = [];
         if (Object.keys(keys).length === 0)
-            throw Error('At least one key must be provided');
+            throwUnexpectedError('TSDK1100', 'At least one key must be provided');
 
         for (const key in keys) {
             const permission = PermissionLevel.from(key);
@@ -140,7 +141,7 @@ class IDContract {
             if (!data || !data.rows) throw new Error('No data found');
             if (
                 data.rows.length === 0 ||
-        data.rows[0].username_hash !== usernameHash.toString()
+                data.rows[0].username_hash !== usernameHash.toString()
             )
                 throw new Error('Account not found');
         } else {
@@ -160,7 +161,7 @@ class IDContract {
             if (!data || !data.rows) throw new Error('No data found');
             if (
                 data.rows.length === 0 ||
-        data.rows[0].account_name !== account.toString()
+                data.rows[0].account_name !== account.toString()
             )
                 throw new Error('Account not found');
         }

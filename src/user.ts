@@ -1,4 +1,5 @@
 import { Name, PrivateKey, API, Checksum256 } from '@greymass/eosio';
+import { PushTransactionResponse } from '@greymass/eosio/src/api/v1/types';
 import { KeyManager, KeyManagerLevel } from './keymanager';
 import {
     GetAccountTonomyIDInfoResponse,
@@ -6,11 +7,13 @@ import {
 } from './services/contracts/IDContract';
 import { sha256 } from './util/crypto';
 import {
+    AntelopePushTransactionError,
     createKeyManagerSigner,
     createSigner,
 } from './services/eosio/transaction';
 import { getApi } from './services/eosio/eosio';
 import { PersistantStorage } from './storage';
+import { throwExpectedError } from './services/errors';
 
 enum UserStatus {
     CREATING = 'CREATING',
@@ -71,7 +74,7 @@ export class User {
         } catch (e) {
             if (e.message !== 'Account not found') throw e;
         }
-        if (user) throw new Error('Username is taken');
+        if (user) throwExpectedError('Username is taken', 'TSDK1000');
 
         this.storage.username = username + suffix;
         await this.storage.username;
@@ -148,18 +151,28 @@ export class User {
 
         // TODO need to remove sha256 from this.salt
         const salt = await this.storage.salt;
-        const res = await idContract.newperson(
-            usernameHash.toString(),
-            passwordKey.toString(),
-            salt.toString(),
-            createSigner(idTonomyActiveKey)
-        );
+        let res: PushTransactionResponse;
+        try {
+            res = await idContract.newperson(
+                usernameHash.toString(),
+                passwordKey.toString(),
+                salt.toString(),
+                createSigner(idTonomyActiveKey)
+            );
+        } catch (e) {
+            if (e instanceof AntelopePushTransactionError) {
+                if (e.hasErrorCode(3050003) && e.hasTonomyErrorCode('TCON1000')) {
+                    throw throwExpectedError('Username is taken', 'TSDK1001');
+                }
+            }
+            throw e;
+        }
 
         const newAccountAction =
             res.processed.action_traces[0].inline_traces[0].act;
         this.storage.accountName = Name.from(newAccountAction.data.name);
-        // await this.storage.store('accountName', Name.from(newAccountAction.data.name));
         await this.storage.accountName;
+
         this.storage.status = UserStatus.CREATING;
         await this.storage.status;
     }
