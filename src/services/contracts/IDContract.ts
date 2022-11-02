@@ -89,8 +89,6 @@ class IDContract {
         },
         signer: Signer
     ): Promise<API.v1.PushTransactionResponse> {
-        console.log('IDContract.updatekeys()');
-
         const actions = [];
         if (Object.keys(keys).length === 0)
             throwUnexpectedError('TSDK1100', 'At least one key must be provided');

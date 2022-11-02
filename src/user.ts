@@ -249,7 +249,6 @@ export class User {
     }
 
     async isLoggedIn(): Promise<boolean> {
-        console.log(await this.storage.status);
         return !!(await this.storage.status);
     }
 
