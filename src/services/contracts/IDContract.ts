@@ -2,7 +2,7 @@ import { API, Checksum256, Name } from '@greymass/eosio';
 import { sha256 } from '../../util/crypto';
 import { getApi } from '../eosio/eosio';
 import { Signer, transact } from '../eosio/transaction';
-import { throwUnexpectedError } from '../errors';
+import { throwExpectedError, throwUnexpectedError } from '../errors';
 
 enum PermissionLevel {
     OWNER = 'OWNER',
@@ -134,36 +134,44 @@ class IDContract {
                 code: 'id.tonomy',
                 scope: 'id.tonomy',
                 table: 'accounts',
+                // eslint-disable-next-line camelcase
                 lower_bound: usernameHash,
                 limit: 1,
+                // eslint-disable-next-line camelcase
                 index_position: 'secondary',
             });
-            if (!data || !data.rows) throw new Error('No data found');
+            if (!data || !data.rows)
+                throwUnexpectedError('No data found', 'TSDK1104');
             if (
                 data.rows.length === 0 ||
                 data.rows[0].username_hash !== usernameHash.toString()
-            )
-                throw new Error('Account not found');
+            ) {
+                throwExpectedError(
+                    'Account with username "' + account + '" not found',
+                    'TSDK1101'
+                );
+            }
         } else {
             // use the account name directly
-            console.log(
-                'getAccountTonomyIDInfo() name',
-                account instanceof Name,
-                account.toString()
-            );
             data = await api.v1.chain.get_table_rows({
                 code: 'id.tonomy',
                 scope: 'id.tonomy',
                 table: 'accounts',
+                // eslint-disable-next-line camelcase
                 lower_bound: account,
                 limit: 1,
             });
-            if (!data || !data.rows) throw new Error('No data found');
+            if (!data || !data.rows)
+                throwUnexpectedError('No data found', 'TSDK1102');
             if (
                 data.rows.length === 0 ||
                 data.rows[0].account_name !== account.toString()
-            )
-                throw new Error('Account not found');
+            ) {
+                throwExpectedError(
+                    'TSDK1103',
+                    'Account "' + account.toString() + '" not found'
+                );
+            }
         }
 
         const idData = data.rows[0];

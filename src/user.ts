@@ -13,7 +13,7 @@ import {
 } from './services/eosio/transaction';
 import { getApi } from './services/eosio/eosio';
 import { PersistantStorage } from './storage';
-import { throwExpectedError } from './services/errors';
+import { ExpectedSdkError, throwExpectedError } from './services/errors';
 
 enum UserStatus {
     CREATING = 'CREATING',
@@ -70,9 +70,11 @@ export class User {
     async saveUsername(username: string, suffix: string) {
         let user: any;
         try {
-            user = await User.getAccountInfo(username); // Throws error if username is taken
+            user = await User.getAccountInfo(username + suffix); // Throws error if username is taken
         } catch (e) {
-            if (e.message !== 'Account not found') throw e;
+            if (!(e instanceof ExpectedSdkError && e.code === 'TSDK1101')) {
+                throw e;
+            }
         }
         if (user) throwExpectedError('Username is taken', 'TSDK1000');
 
@@ -255,13 +257,25 @@ export class User {
         account: string | Name
     ): Promise<API.v1.AccountObject> {
         const api = await getApi();
+        let accountName: Name;
         if (typeof account === 'string') {
             // this is a username
             const idData = await idContract.getAccountTonomyIDInfo(account);
-            return await api.v1.chain.get_account(idData.account_name);
+            accountName = idData.account_name;
+        } else {
+            accountName = account;
         }
-        // use the account name directly
-
-        return await api.v1.chain.get_account(account);
+        try {
+            return await api.v1.chain.get_account(accountName);
+        } catch (e) {
+            if (e.message === 'Account not found at /v1/chain/get_account') {
+                throwExpectedError(
+                    'Account "' + accountName.toString() + '" not found',
+                    'TSDK1002'
+                );
+            } else {
+                throw e;
+            }
+        }
     }
 }
