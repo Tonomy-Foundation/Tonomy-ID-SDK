@@ -1,6 +1,7 @@
-import { APIClient, FetchProvider } from "@greymass/eosio";
+import { APIClient, FetchProvider } from '@greymass/eosio';
 import fetch from 'cross-fetch';
-import { getSettings } from "../../settings";
+import { getSettings } from '../../settings';
+import { throwUnexpectedError } from '../errors';
 
 let api: APIClient;
 
@@ -10,7 +11,8 @@ export async function getApi(): Promise<APIClient> {
     const settings = await getSettings();
     api = new APIClient({
         url: settings.blockchainUrl,
-        provider: new FetchProvider(settings.blockchainUrl, { fetch })
-    })
+        provider: new FetchProvider(settings.blockchainUrl, { fetch }),
+    });
+    if (!api) throwUnexpectedError('Could not create API client');
     return api;
 }

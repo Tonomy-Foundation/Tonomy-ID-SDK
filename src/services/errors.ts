@@ -65,8 +65,8 @@ export class UnexpectedSdkError extends SdkError {
         // Error.captureStackTrace(this, this.constructor);
     }
 }
-
-export function throwExpectedError(message: string, code?: string) {
+// using never to suppress error https://bobbyhadz.com/blog/typescript-function-that-throws-error#:~:text=To%20declare%20a%20function%20that,terminate%20execution%20of%20the%20program.
+export function throwExpectedError(message: string, code?: string): never {
     const error = new ExpectedSdkError(message);
     if (code) {
         error.code = code;
@@ -74,7 +74,7 @@ export function throwExpectedError(message: string, code?: string) {
     throw error;
 }
 
-export function throwUnexpectedError(message: string, code?: string) {
+export function throwUnexpectedError(message: string, code?: string): never {
     const error = new UnexpectedSdkError(message);
     if (code) {
         error.code = code;

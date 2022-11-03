@@ -228,11 +228,10 @@ export class User {
     }
 
     //todo fix the undefined return type
-    static async getAccountInfo(account: string | Name): Promise<API.v1.AccountObject | undefined> {
+    static async getAccountInfo(account: string | Name): Promise<API.v1.AccountObject> {
         try {
             let accountName: Name;
             const api = await getApi();
-
             if (typeof account === 'string') {
                 // this is a username
                 const idData = await idContract.getAccountTonomyIDInfo(account);
