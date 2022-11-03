@@ -1,16 +1,9 @@
 import { Name, PrivateKey, API, Checksum256 } from '@greymass/eosio';
 import { PushTransactionResponse } from '@greymass/eosio/src/api/v1/types';
 import { KeyManager, KeyManagerLevel } from './keymanager';
-import {
-    GetAccountTonomyIDInfoResponse,
-    IDContract,
-} from './services/contracts/IDContract';
+import { GetAccountTonomyIDInfoResponse, IDContract } from './services/contracts/IDContract';
 import { sha256 } from './util/crypto';
-import {
-    AntelopePushTransactionError,
-    createKeyManagerSigner,
-    createSigner,
-} from './services/eosio/transaction';
+import { AntelopePushTransactionError, createKeyManagerSigner, createSigner } from './services/eosio/transaction';
 import { getApi } from './services/eosio/eosio';
 import { PersistantStorage } from './storage';
 import { ExpectedSdkError, throwExpectedError } from './services/errors';
@@ -87,15 +80,10 @@ export class User {
         let salt: Checksum256;
         if (options && options.salt) {
             salt = options.salt;
-            const res = await this.keyManager.generatePrivateKeyFromPassword(
-                masterPassword,
-                salt
-            );
+            const res = await this.keyManager.generatePrivateKeyFromPassword(masterPassword, salt);
             privateKey = res.privateKey;
         } else {
-            const res = await this.keyManager.generatePrivateKeyFromPassword(
-                masterPassword
-            );
+            const res = await this.keyManager.generatePrivateKeyFromPassword(masterPassword);
             privateKey = res.privateKey;
             salt = res.salt;
         }
@@ -147,9 +135,7 @@ export class User {
         });
 
         // TODO this needs to change to the actual key used, from settings
-        const idTonomyActiveKey = PrivateKey.from(
-            'PVT_K1_2bfGi9rYsXQSXXTvJbDAPhHLQUojjaNLomdm3cEJ1XTzMqUt3V'
-        );
+        const idTonomyActiveKey = PrivateKey.from('PVT_K1_2bfGi9rYsXQSXXTvJbDAPhHLQUojjaNLomdm3cEJ1XTzMqUt3V');
 
         // TODO need to remove sha256 from this.salt
         const salt = await this.storage.salt;
@@ -170,8 +156,7 @@ export class User {
             throw e;
         }
 
-        const newAccountAction =
-            res.processed.action_traces[0].inline_traces[0].act;
+        const newAccountAction = res.processed.action_traces[0].inline_traces[0].act;
         this.storage.accountName = Name.from(newAccountAction.data.name);
         await this.storage.accountName;
 
@@ -180,8 +165,7 @@ export class User {
     }
 
     async updateKeys(password: string) {
-        if ((await this.storage.status) !== UserStatus.CREATING)
-            throw new Error("Can't update keys if not creating");
+        if ((await this.storage.status) !== UserStatus.CREATING) throw new Error("Can't update keys if not creating");
 
         const { keyManager } = this;
 
@@ -199,21 +183,14 @@ export class User {
         if (fingerprintKey) keys.FINGERPRINT = fingerprintKey.toString();
         if (localKey) keys.LOCAL = localKey.toString();
 
-        const signer = createKeyManagerSigner(
-            keyManager,
-            KeyManagerLevel.PASSWORD,
-            password
-        );
+        const signer = createKeyManagerSigner(keyManager, KeyManagerLevel.PASSWORD, password);
         const accountName = await this.storage.accountName;
         await idContract.updatekeys(accountName.toString(), keys, signer);
         this.storage.status = UserStatus.READY;
         await this.storage.status;
     }
 
-    async login(
-        username: string,
-        password: string
-    ): Promise<GetAccountTonomyIDInfoResponse> {
+    async login(username: string, password: string): Promise<GetAccountTonomyIDInfoResponse> {
         const { keyManager } = this;
 
         const idData = await idContract.getAccountTonomyIDInfo(username);
@@ -225,11 +202,9 @@ export class User {
         });
 
         const accountData = await User.getAccountInfo(idData.account_name);
-        const onchainKey =
-            accountData.getPermission('owner').required_auth.keys[0].key; // TODO change to active/other permissions when we make the change
+        const onchainKey = accountData.getPermission('owner').required_auth.keys[0].key; // TODO change to active/other permissions when we make the change
 
-        if (!passwordKey.equals(onchainKey))
-            throw new Error('Password is incorrect');
+        if (!passwordKey.equals(onchainKey)) throw new Error('Password is incorrect');
 
         this.storage.accountName = Name.from(idData.account_name);
         this.storage.username = username;
@@ -252,26 +227,24 @@ export class User {
         return !!(await this.storage.status);
     }
 
-    static async getAccountInfo(
-        account: string | Name
-    ): Promise<API.v1.AccountObject> {
-        const api = await getApi();
-        let accountName: Name;
-        if (typeof account === 'string') {
-            // this is a username
-            const idData = await idContract.getAccountTonomyIDInfo(account);
-            accountName = idData.account_name;
-        } else {
-            accountName = account;
-        }
+    //todo fix the undefined return type
+    static async getAccountInfo(account: string | Name): Promise<API.v1.AccountObject> {
         try {
+            let accountName: Name;
+            const api = await getApi();
+            if (typeof account === 'string') {
+                // this is a username
+                const idData = await idContract.getAccountTonomyIDInfo(account);
+                accountName = idData.account_name;
+            } else {
+                accountName = account;
+            }
+
             return await api.v1.chain.get_account(accountName);
         } catch (e) {
-            if (e.message === 'Account not found at /v1/chain/get_account') {
-                throwExpectedError(
-                    'Account "' + accountName.toString() + '" not found',
-                    'TSDK1002'
-                );
+            const error = e as Error;
+            if (error.message === 'Account not found at /v1/chain/get_account') {
+                throwExpectedError('Account "' + account.toString() + '" not found', 'TSDK1002');
             } else {
                 throw e;
             }

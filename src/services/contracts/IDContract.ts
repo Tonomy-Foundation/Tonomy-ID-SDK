@@ -90,8 +90,7 @@ class IDContract {
         signer: Signer
     ): Promise<API.v1.PushTransactionResponse> {
         const actions = [];
-        if (Object.keys(keys).length === 0)
-            throwUnexpectedError('TSDK1100', 'At least one key must be provided');
+        if (Object.keys(keys).length === 0) throwUnexpectedError('TSDK1100', 'At least one key must be provided');
 
         for (const key in keys) {
             const permission = PermissionLevel.from(key);
@@ -119,9 +118,7 @@ class IDContract {
         return await transact(Name.from('id.tonomy'), actions, signer);
     }
 
-    async getAccountTonomyIDInfo(
-        account: string | Name
-    ): Promise<GetAccountTonomyIDInfoResponse> {
+    async getAccountTonomyIDInfo(account: string | Name): Promise<GetAccountTonomyIDInfoResponse> {
         let data;
         const api = await getApi();
         if (typeof account === 'string') {
@@ -138,16 +135,9 @@ class IDContract {
                 // eslint-disable-next-line camelcase
                 index_position: 'secondary',
             });
-            if (!data || !data.rows)
-                throwUnexpectedError('No data found', 'TSDK1104');
-            if (
-                data.rows.length === 0 ||
-                data.rows[0].username_hash !== usernameHash.toString()
-            ) {
-                throwExpectedError(
-                    'Account with username "' + account + '" not found',
-                    'TSDK1101'
-                );
+            if (!data || !data.rows) throwUnexpectedError('No data found', 'TSDK1104');
+            if (data.rows.length === 0 || data.rows[0].username_hash !== usernameHash.toString()) {
+                throwExpectedError('Account with username "' + account + '" not found', 'TSDK1101');
             }
         } else {
             // use the account name directly
@@ -159,16 +149,9 @@ class IDContract {
                 lower_bound: account,
                 limit: 1,
             });
-            if (!data || !data.rows)
-                throwUnexpectedError('No data found', 'TSDK1102');
-            if (
-                data.rows.length === 0 ||
-                data.rows[0].account_name !== account.toString()
-            ) {
-                throwExpectedError(
-                    'TSDK1103',
-                    'Account "' + account.toString() + '" not found'
-                );
+            if (!data || !data.rows) throwUnexpectedError('No data found', 'TSDK1102');
+            if (data.rows.length === 0 || data.rows[0].account_name !== account.toString()) {
+                throwExpectedError('TSDK1103', 'Account "' + account.toString() + '" not found');
             }
         }
 
