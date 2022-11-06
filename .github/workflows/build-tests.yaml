@@ -1,6 +1,6 @@
 name: Run Tonomy-SDK Tests
 
-on: [push, pull_request]
+on: pull_request
 
 jobs:
   build:
@@ -10,9 +10,9 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Use Node.js ${{ matrix.node-version }}
+      - name: Use Node.js 16.14.1
         uses: actions/setup-node@v3
         with:
-          node-version: 10.x
+          node-version: 16.14.1
       - run: npm install
       - run: npm test
