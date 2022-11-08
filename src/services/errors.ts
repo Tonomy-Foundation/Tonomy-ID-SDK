@@ -29,7 +29,7 @@ export class HttpError extends Error {
 }
 
 class SdkError extends Error {
-    code: string;
+    code: SdkErrors;
 
     constructor(message: string) {
         super(message);
