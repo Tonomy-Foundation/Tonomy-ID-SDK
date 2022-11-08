@@ -2,7 +2,7 @@ import { API, Checksum256, Name } from '@greymass/eosio';
 import { sha256 } from '../../util/crypto';
 import { getApi } from '../eosio/eosio';
 import { Signer, transact } from '../eosio/transaction';
-import { throwExpectedError, throwUnexpectedError } from '../errors';
+import { SdkErrors, throwError } from '../errors';
 
 enum PermissionLevel {
     OWNER = 'OWNER',
@@ -13,6 +13,7 @@ enum PermissionLevel {
     LOCAL = 'LOCAL',
 }
 
+// eslint-disable-next-line @typescript-eslint/no-namespace
 namespace PermissionLevel {
     /*
      * Returns the index of the enum value
@@ -90,7 +91,8 @@ class IDContract {
         signer: Signer
     ): Promise<API.v1.PushTransactionResponse> {
         const actions = [];
-        if (Object.keys(keys).length === 0) throwUnexpectedError('TSDK1100', 'At least one key must be provided');
+        if (Object.keys(keys).length === 0)
+            throwError('At least one key must be provided', SdkErrors.UpdateKeysTransactionNoKeys);
 
         for (const key in keys) {
             const permission = PermissionLevel.from(key);
@@ -135,9 +137,9 @@ class IDContract {
                 // eslint-disable-next-line camelcase
                 index_position: 'secondary',
             });
-            if (!data || !data.rows) throwUnexpectedError('No data found', 'TSDK1104');
+            if (!data || !data.rows) throwError('No data found', SdkErrors.DataQueryNoRowDataFound);
             if (data.rows.length === 0 || data.rows[0].username_hash !== usernameHash.toString()) {
-                throwExpectedError('Account with username "' + account + '" not found', 'TSDK1101');
+                throwError('Account with username "' + account + '" not found', SdkErrors.UsernameNotFound);
             }
         } else {
             // use the account name directly
@@ -149,9 +151,9 @@ class IDContract {
                 lower_bound: account,
                 limit: 1,
             });
-            if (!data || !data.rows) throwUnexpectedError('No data found', 'TSDK1102');
+            if (!data || !data.rows) throwError('No data found', SdkErrors.DataQueryNoRowDataFound);
             if (data.rows.length === 0 || data.rows[0].account_name !== account.toString()) {
-                throwExpectedError('TSDK1103', 'Account "' + account.toString() + '" not found');
+                throwError('Account "' + account.toString() + '" not found', SdkErrors.AccountDoesntExist);
             }
         }
 
