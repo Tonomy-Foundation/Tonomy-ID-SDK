@@ -28,8 +28,8 @@ export class HttpError extends Error {
     }
 }
 
-class SdkError extends Error {
-    code: string;
+export class SdkError extends Error {
+    code: SdkErrors;
 
     constructor(message: string) {
         super(message);
@@ -42,49 +42,49 @@ class SdkError extends Error {
     }
 }
 
-export class ExpectedSdkError extends SdkError {
-    constructor(message: string) {
-        super(message);
-        // Ensure the name of this error is the same as the class name
-        this.name = this.constructor.name;
-        // This clips the constructor invocation from the stack trace.
-        // It's not absolutely essential, but it does make the stack trace a little nicer.
-        //  @see Node.js reference (bottom)
-        // Error.captureStackTrace(this, this.constructor);
-    }
-}
-
-export class UnexpectedSdkError extends SdkError {
-    constructor(message: string) {
-        super(message);
-        // Ensure the name of this error is the same as the class name
-        this.name = this.constructor.name;
-        // This clips the constructor invocation from the stack trace.
-        // It's not absolutely essential, but it does make the stack trace a little nicer.
-        //  @see Node.js reference (bottom)
-        // Error.captureStackTrace(this, this.constructor);
-    }
-}
 // using never to suppress error https://bobbyhadz.com/blog/typescript-function-that-throws-error#:~:text=To%20declare%20a%20function%20that,terminate%20execution%20of%20the%20program.
-export function throwExpectedError(message: string, code?: string): never {
-    const error = new ExpectedSdkError(message);
+export function throwError(message: string, code?: SdkErrors): never {
+    const error = new SdkError(message);
     if (code) {
         error.code = code;
     }
     throw error;
 }
 
-export function throwUnexpectedError(message: string, code?: string): never {
-    const error = new UnexpectedSdkError(message);
-    if (code) {
-        error.code = code;
-    }
-    throw error;
+enum SdkErrors {
+    UsernameTaken = 'UsernameTaken',
+    AccountDoesntExist = 'AccountDoesntExist',
+    UsernameNotFound = 'UsernameNotFound',
+    DataQueryNoRowDataFound = 'DataQueryNoRowDataFound',
+    UpdateKeysTransactionNoKeys = 'UpdateKeysTransactionNoKeys',
+    CouldntCreateApi = 'CouldntCreateApi',
 }
 
-/*
-List of which files have which error codes, to avoide duplicates:export function throwExpectedError(message: string, code: string) {
+// eslint-disable-next-line @typescript-eslint/no-namespace
+namespace SdkErrors {
+    /*
+     * Returns the index of the enum value
+     *
+     * @param value The value to get the index of
+     */
+    export function indexFor(value: SdkErrors): number {
+        return Object.keys(SdkErrors).indexOf(value);
+    }
 
-TSDK10## = users.ts
-TSDK11## = IDContracts.ts
-*/
+    /*
+     * Creates an SdkErrors from a string or index of the level
+     *
+     * @param value The string or index
+     */
+    export function from(value: number | string): SdkErrors {
+        let index: number;
+        if (typeof value !== 'number') {
+            index = SdkErrors.indexFor(value as SdkErrors);
+        } else {
+            index = value;
+        }
+        return Object.values(SdkErrors)[index] as SdkErrors;
+    }
+}
+
+export { SdkErrors };

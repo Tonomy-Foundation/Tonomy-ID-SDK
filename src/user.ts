@@ -6,7 +6,7 @@ import { sha256 } from './util/crypto';
 import { AntelopePushTransactionError, createKeyManagerSigner, createSigner } from './services/eosio/transaction';
 import { getApi } from './services/eosio/eosio';
 import { PersistantStorage } from './storage';
-import { ExpectedSdkError, throwExpectedError } from './services/errors';
+import { SdkErrors, throwError, SdkError } from './services/errors';
 
 enum UserStatus {
     CREATING = 'CREATING',
@@ -14,6 +14,7 @@ enum UserStatus {
     DEACTIVATED = 'DEACTIVATED',
 }
 
+// eslint-disable-next-line @typescript-eslint/no-namespace
 namespace UserStatus {
     /*
      * Returns the index of the enum value
@@ -65,11 +66,11 @@ export class User {
         try {
             user = await User.getAccountInfo(username + suffix); // Throws error if username is taken
         } catch (e) {
-            if (!(e instanceof ExpectedSdkError && e.code === 'TSDK1101')) {
+            if (!(e instanceof SdkError && e.code === SdkErrors.UsernameNotFound)) {
                 throw e;
             }
         }
-        if (user) throwExpectedError('Username is taken', 'TSDK1000');
+        if (user) throwError('Username is taken', SdkErrors.UsernameTaken);
 
         this.storage.username = username + suffix;
         await this.storage.username;
@@ -123,7 +124,7 @@ export class User {
         });
     }
 
-    async createPerson() {
+    async createPerson(): Promise<PushTransactionResponse> {
         const { keyManager } = this;
         const username = await this.storage.username;
 
@@ -150,7 +151,7 @@ export class User {
         } catch (e) {
             if (e instanceof AntelopePushTransactionError) {
                 if (e.hasErrorCode(3050003) && e.hasTonomyErrorCode('TCON1000')) {
-                    throw throwExpectedError('Username is taken', 'TSDK1001');
+                    throw throwError('Username is taken', SdkErrors.UsernameTaken);
                 }
             }
             throw e;
@@ -162,6 +163,8 @@ export class User {
 
         this.storage.status = UserStatus.CREATING;
         await this.storage.status;
+
+        return res;
     }
 
     async updateKeys(password: string) {
@@ -227,7 +230,6 @@ export class User {
         return !!(await this.storage.status);
     }
 
-    //todo fix the undefined return type
     static async getAccountInfo(account: string | Name): Promise<API.v1.AccountObject> {
         try {
             let accountName: Name;
@@ -244,7 +246,7 @@ export class User {
         } catch (e) {
             const error = e as Error;
             if (error.message === 'Account not found at /v1/chain/get_account') {
-                throwExpectedError('Account "' + account.toString() + '" not found', 'TSDK1002');
+                throwError('Account "' + account.toString() + '" not found', SdkErrors.AccountDoesntExist);
             } else {
                 throw e;
             }
