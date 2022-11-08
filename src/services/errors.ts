@@ -28,7 +28,7 @@ export class HttpError extends Error {
     }
 }
 
-class SdkError extends Error {
+export class SdkError extends Error {
     code: SdkErrors;
 
     constructor(message: string) {
