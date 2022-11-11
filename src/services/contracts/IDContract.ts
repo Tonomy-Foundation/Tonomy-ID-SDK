@@ -1,4 +1,5 @@
 import { API, Checksum256, Name } from '@greymass/eosio';
+import { TonomyUsername } from '../../username';
 import { sha256 } from '../../util/crypto';
 import { getApi } from '../eosio/eosio';
 import { Signer, transact } from '../eosio/transaction';
@@ -42,7 +43,6 @@ namespace PermissionLevel {
 
 type GetAccountTonomyIDInfoResponse = {
     account_name: Name;
-    type: number;
     status: number;
     username_hash: Checksum256;
     password_salt: Checksum256;
@@ -81,7 +81,7 @@ class IDContract {
         return await transact(Name.from('id.tonomy'), [action], signer);
     }
 
-    async updatekeys(
+    async updatekeysper(
         account: string,
         keys: {
             FINGERPRINT?: string;
@@ -108,7 +108,7 @@ class IDContract {
                     },
                 ],
                 account: 'id.tonomy',
-                name: 'updatekey',
+                name: 'updatekeyper',
                 data: {
                     account,
                     permission: PermissionLevel.indexFor(permission),
@@ -120,33 +120,35 @@ class IDContract {
         return await transact(Name.from('id.tonomy'), actions, signer);
     }
 
-    async getAccountTonomyIDInfo(account: string | Name): Promise<GetAccountTonomyIDInfoResponse> {
+    // TODO rename to getPersonInfo
+    // TODO create getAppInfo
+    async getAccountTonomyIDInfo(account: TonomyUsername | Name): Promise<GetAccountTonomyIDInfoResponse> {
         let data;
         const api = await getApi();
-        if (typeof account === 'string') {
+        if (account instanceof TonomyUsername) {
             // this is a username
-            const usernameHash = Checksum256.from(sha256(account));
+            const usernameHash = account.usernameHash;
 
             data = await api.v1.chain.get_table_rows({
                 code: 'id.tonomy',
                 scope: 'id.tonomy',
-                table: 'accounts',
+                table: 'people',
                 // eslint-disable-next-line camelcase
-                lower_bound: usernameHash,
+                lower_bound: Checksum256.from(usernameHash),
                 limit: 1,
                 // eslint-disable-next-line camelcase
                 index_position: 'secondary',
             });
             if (!data || !data.rows) throwError('No data found', SdkErrors.DataQueryNoRowDataFound);
-            if (data.rows.length === 0 || data.rows[0].username_hash !== usernameHash.toString()) {
-                throwError('Account with username "' + account + '" not found', SdkErrors.UsernameNotFound);
+            if (data.rows.length === 0 || data.rows[0].username_hash.toString() !== usernameHash) {
+                throwError('Account with username "' + account.username + '" not found', SdkErrors.UsernameNotFound);
             }
         } else {
             // use the account name directly
             data = await api.v1.chain.get_table_rows({
                 code: 'id.tonomy',
                 scope: 'id.tonomy',
-                table: 'accounts',
+                table: 'people',
                 // eslint-disable-next-line camelcase
                 lower_bound: account,
                 limit: 1,
@@ -159,10 +161,12 @@ class IDContract {
 
         const idData = data.rows[0];
         return {
+            // eslint-disable-next-line camelcase
             account_name: Name.from(idData.account_name),
-            type: idData.type,
             status: idData.status,
+            // eslint-disable-next-line camelcase
             username_hash: Checksum256.from(idData.username_hash),
+            // eslint-disable-next-line camelcase
             password_salt: Checksum256.from(idData.password_salt),
             version: idData.version,
         };

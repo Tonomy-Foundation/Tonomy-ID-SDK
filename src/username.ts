@@ -40,13 +40,12 @@ namespace AccountType {
 
 export { AccountType };
 
-export class TonommyUsername {
+export class TonomyUsername {
     username: string;
     usernameHash: string;
 
     constructor(username: string, type: AccountType, suffix: string) {
         this.username = username + '.' + AccountType.getPreSuffix(type) + suffix;
-
         this.usernameHash = sha256(this.username);
     }
 }
