@@ -1,6 +1,5 @@
-import { API, Checksum256, Name } from '@greymass/eosio';
+import { API, Checksum256, Name, PublicKey } from '@greymass/eosio';
 import { TonomyUsername } from '../../username';
-import { sha256 } from '../../util/crypto';
 import { getApi } from '../eosio/eosio';
 import { Signer, transact } from '../eosio/transaction';
 import { SdkErrors, throwError } from '../errors';
@@ -130,7 +129,40 @@ class IDContract {
         return await transact(Name.from('id.tonomy'), actions, signer);
     }
 
-    // TODO create getAppInfo
+    async newapp(
+        name: string,
+        username_hash: string,
+        description: string,
+        logo_url: string,
+        domain: string,
+        key: PublicKey,
+        signer: Signer
+    ): Promise<API.v1.PushTransactionResponse> {
+        /^(((http:\/\/)|(https:\/\/))?)(([a-zA-Z0-9.])+)((:{1}[0-9]+)?)$/g.test(domain);
+        /^(((http:\/\/)|(https:\/\/))?)(([a-zA-Z0-9.])+)((:{1}[0-9]+)?)([?#/a-zA-Z0-9.]*)$/g.test(logo_url);
+
+        const action = {
+            authorization: [
+                {
+                    actor: 'id.tonomy',
+                    permission: 'active',
+                },
+            ],
+            account: 'id.tonomy',
+            name: 'newapp',
+            data: {
+                name,
+                description,
+                logo_url,
+                domain,
+                username_hash,
+                key,
+            },
+        };
+
+        return await transact(Name.from('id.tonomy'), [action], signer);
+    }
+
     async gePerson(account: TonomyUsername | Name): Promise<GetPersonResponse> {
         let data;
         const api = await getApi();
