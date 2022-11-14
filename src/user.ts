@@ -1,7 +1,7 @@
 import { Name, PrivateKey, API, Checksum256 } from '@greymass/eosio';
 import { PushTransactionResponse } from '@greymass/eosio/src/api/v1/types';
 import { KeyManager, KeyManagerLevel } from './keymanager';
-import { GetAccountTonomyIDInfoResponse, IDContract } from './services/contracts/IDContract';
+import { GetPersonResponse, IDContract } from './services/contracts/IDContract';
 import { AntelopePushTransactionError, createKeyManagerSigner, createSigner } from './services/eosio/transaction';
 import { getApi } from './services/eosio/eosio';
 import { PersistantStorage } from './storage';
@@ -191,10 +191,10 @@ export class User {
         await this.storage.status;
     }
 
-    async login(username: TonomyUsername, password: string): Promise<GetAccountTonomyIDInfoResponse> {
+    async login(username: TonomyUsername, password: string): Promise<GetPersonResponse> {
         const { keyManager } = this;
 
-        const idData = await idContract.getAccountTonomyIDInfo(username);
+        const idData = await idContract.gePerson(username);
         const salt = idData.password_salt;
 
         await this.savePassword(password, { salt });
@@ -233,7 +233,7 @@ export class User {
             let accountName: Name;
             const api = await getApi();
             if (account instanceof TonomyUsername) {
-                const idData = await idContract.getAccountTonomyIDInfo(account);
+                const idData = await idContract.gePerson(account);
                 accountName = idData.account_name;
             } else {
                 accountName = account;

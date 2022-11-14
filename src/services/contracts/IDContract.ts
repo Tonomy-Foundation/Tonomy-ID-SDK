@@ -41,11 +41,21 @@ namespace PermissionLevel {
     }
 }
 
-type GetAccountTonomyIDInfoResponse = {
+type GetPersonResponse = {
     account_name: Name;
     status: number;
     username_hash: Checksum256;
     password_salt: Checksum256;
+    version: number;
+};
+
+type GetAppResponse = {
+    account_name: Name;
+    app_name: string;
+    username_hash: Checksum256;
+    description: string;
+    logo_url: string;
+    domain: string;
     version: number;
 };
 
@@ -120,9 +130,8 @@ class IDContract {
         return await transact(Name.from('id.tonomy'), actions, signer);
     }
 
-    // TODO rename to getPersonInfo
     // TODO create getAppInfo
-    async getAccountTonomyIDInfo(account: TonomyUsername | Name): Promise<GetAccountTonomyIDInfoResponse> {
+    async gePerson(account: TonomyUsername | Name): Promise<GetPersonResponse> {
         let data;
         const api = await getApi();
         if (account instanceof TonomyUsername) {
@@ -141,7 +150,7 @@ class IDContract {
             });
             if (!data || !data.rows) throwError('No data found', SdkErrors.DataQueryNoRowDataFound);
             if (data.rows.length === 0 || data.rows[0].username_hash.toString() !== usernameHash) {
-                throwError('Account with username "' + account.username + '" not found', SdkErrors.UsernameNotFound);
+                throwError('Person with username "' + account.username + '" not found', SdkErrors.UsernameNotFound);
             }
         } else {
             // use the account name directly
@@ -155,7 +164,10 @@ class IDContract {
             });
             if (!data || !data.rows) throwError('No data found', SdkErrors.DataQueryNoRowDataFound);
             if (data.rows.length === 0 || data.rows[0].account_name !== account.toString()) {
-                throwError('Account "' + account.toString() + '" not found', SdkErrors.AccountDoesntExist);
+                throwError(
+                    'Person with account name "' + account.toString() + '" not found',
+                    SdkErrors.AccountDoesntExist
+                );
             }
         }
 
@@ -171,6 +183,59 @@ class IDContract {
             version: idData.version,
         };
     }
+
+    async geApp(account: TonomyUsername | Name): Promise<GetAppResponse> {
+        let data;
+        const api = await getApi();
+        if (account instanceof TonomyUsername) {
+            // this is a username
+            const usernameHash = account.usernameHash;
+
+            data = await api.v1.chain.get_table_rows({
+                code: 'id.tonomy',
+                scope: 'id.tonomy',
+                table: 'apps',
+                // eslint-disable-next-line camelcase
+                lower_bound: Checksum256.from(usernameHash),
+                limit: 1,
+                // eslint-disable-next-line camelcase
+                index_position: 'secondary',
+            });
+            if (!data || !data.rows) throwError('No data found', SdkErrors.DataQueryNoRowDataFound);
+            if (data.rows.length === 0 || data.rows[0].username_hash.toString() !== usernameHash) {
+                throwError('Account with username "' + account.username + '" not found', SdkErrors.UsernameNotFound);
+            }
+        } else {
+            // use the account name directly
+            data = await api.v1.chain.get_table_rows({
+                code: 'id.tonomy',
+                scope: 'id.tonomy',
+                table: 'apps',
+                // eslint-disable-next-line camelcase
+                lower_bound: account,
+                limit: 1,
+            });
+            if (!data || !data.rows) throwError('No data found', SdkErrors.DataQueryNoRowDataFound);
+            if (data.rows.length === 0 || data.rows[0].account_name !== account.toString()) {
+                throwError('Account "' + account.toString() + '" not found', SdkErrors.AccountDoesntExist);
+            }
+        }
+
+        const idData = data.rows[0];
+        return {
+            // eslint-disable-next-line camelcase
+            app_name: idData.app_name,
+            description: idData.description,
+            // eslint-disable-next-line camelcase
+            logo_url: idData.logo_url,
+            domain: idData.domain,
+            // eslint-disable-next-line camelcase
+            account_name: Name.from(idData.account_name),
+            // eslint-disable-next-line camelcase
+            username_hash: Checksum256.from(idData.username_hash),
+            version: idData.version,
+        };
+    }
 }
 
-export { IDContract, GetAccountTonomyIDInfoResponse };
+export { IDContract, GetPersonResponse };
