@@ -1,5 +1,4 @@
 /* eslint-disable camelcase */
-import 'text-encoding-polyfill';
 import { Bytes, KeyType, PrivateKey, PublicKey } from '@greymass/eosio';
 import randomBytes from 'randombytes';
 import { ES256KSigner, createJWT } from 'did-jwt';
