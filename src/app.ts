@@ -95,7 +95,12 @@ const toDidDocument = (jwk: jose.JWK) => {
 
     return didDocument;
 };
-
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const resolve = (did: any) => {
+    const decoded = jose.base64url.decode(did.split(':').pop().split('#')[0]);
+    const jwk = JSON.parse(decoded.toString());
+    return toDidDocument(jwk);
+};
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function bnToBase64Url(bn: any): string {
     const buffer = bn.toArrayLike(Buffer, 'be');
@@ -103,4 +108,4 @@ function bnToBase64Url(bn: any): string {
     return Buffer.from(buffer).toString('base64');
 }
 
-export { onPressLogin, generateRandomKeyPair, toDidDocument };
+export { onPressLogin, generateRandomKeyPair, resolve };
