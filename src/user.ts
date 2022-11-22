@@ -194,7 +194,7 @@ export class User {
     async login(username: TonomyUsername, password: string): Promise<GetPersonResponse> {
         const { keyManager } = this;
 
-        const idData = await idContract.gePerson(username);
+        const idData = await idContract.getPerson(username);
         const salt = idData.password_salt;
 
         await this.savePassword(password, { salt });
@@ -233,7 +233,7 @@ export class User {
             let accountName: Name;
             const api = await getApi();
             if (account instanceof TonomyUsername) {
-                const idData = await idContract.gePerson(account);
+                const idData = await idContract.getPerson(account);
                 accountName = idData.account_name;
             } else {
                 accountName = account;

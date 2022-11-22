@@ -163,7 +163,7 @@ class IDContract {
         return await transact(Name.from('id.tonomy'), [action], signer);
     }
 
-    async gePerson(account: TonomyUsername | Name): Promise<GetPersonResponse> {
+    async getPerson(account: TonomyUsername | Name): Promise<GetPersonResponse> {
         let data;
         const api = await getApi();
         if (account instanceof TonomyUsername) {
@@ -216,7 +216,7 @@ class IDContract {
         };
     }
 
-    async geApp(account: TonomyUsername | Name): Promise<GetAppResponse> {
+    async getApp(account: TonomyUsername | Name): Promise<GetAppResponse> {
         let data;
         const api = await getApi();
         if (account instanceof TonomyUsername) {
