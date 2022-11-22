@@ -54,7 +54,7 @@ type GetAppResponse = {
     username_hash: Checksum256;
     description: string;
     logo_url: string;
-    domain: string;
+    origin: string;
     version: number;
 };
 
@@ -260,7 +260,7 @@ class IDContract {
             description: idData.description,
             // eslint-disable-next-line camelcase
             logo_url: idData.logo_url,
-            domain: idData.domain,
+            origin: idData.origin,
             // eslint-disable-next-line camelcase
             account_name: Name.from(idData.account_name),
             // eslint-disable-next-line camelcase
