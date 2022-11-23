@@ -1,5 +1,5 @@
-import { API, Checksum256, Name } from '@greymass/eosio';
-import { sha256 } from '../../util/crypto';
+import { API, Checksum256, Name, PublicKey } from '@greymass/eosio';
+import { TonomyUsername } from '../../username';
 import { getApi } from '../eosio/eosio';
 import { Signer, transact } from '../eosio/transaction';
 import { SdkErrors, throwError } from '../errors';
@@ -40,12 +40,21 @@ namespace PermissionLevel {
     }
 }
 
-type GetAccountTonomyIDInfoResponse = {
+type GetPersonResponse = {
     account_name: Name;
-    type: number;
     status: number;
     username_hash: Checksum256;
     password_salt: Checksum256;
+    version: number;
+};
+
+type GetAppResponse = {
+    account_name: Name;
+    app_name: string;
+    username_hash: Checksum256;
+    description: string;
+    logo_url: string;
+    origin: string;
     version: number;
 };
 
@@ -81,7 +90,7 @@ class IDContract {
         return await transact(Name.from('id.tonomy'), [action], signer);
     }
 
-    async updatekeys(
+    async updatekeysper(
         account: string,
         keys: {
             FINGERPRINT?: string;
@@ -108,7 +117,7 @@ class IDContract {
                     },
                 ],
                 account: 'id.tonomy',
-                name: 'updatekey',
+                name: 'updatekeyper',
                 data: {
                     account,
                     permission: PermissionLevel.indexFor(permission),
@@ -120,33 +129,120 @@ class IDContract {
         return await transact(Name.from('id.tonomy'), actions, signer);
     }
 
-    async getAccountTonomyIDInfo(account: string | Name): Promise<GetAccountTonomyIDInfoResponse> {
+    async newapp(
+        name: string,
+        username_hash: string,
+        description: string,
+        logo_url: string,
+        domain: string,
+        key: PublicKey,
+        signer: Signer
+    ): Promise<API.v1.PushTransactionResponse> {
+        /^(((http:\/\/)|(https:\/\/))?)(([a-zA-Z0-9.])+)((:{1}[0-9]+)?)$/g.test(domain);
+        /^(((http:\/\/)|(https:\/\/))?)(([a-zA-Z0-9.])+)((:{1}[0-9]+)?)([?#/a-zA-Z0-9.]*)$/g.test(logo_url);
+
+        const action = {
+            authorization: [
+                {
+                    actor: 'id.tonomy',
+                    permission: 'active',
+                },
+            ],
+            account: 'id.tonomy',
+            name: 'newapp',
+            data: {
+                name,
+                description,
+                logo_url,
+                domain,
+                username_hash,
+                key,
+            },
+        };
+
+        return await transact(Name.from('id.tonomy'), [action], signer);
+    }
+
+    async getPerson(account: TonomyUsername | Name): Promise<GetPersonResponse> {
         let data;
         const api = await getApi();
-        if (typeof account === 'string') {
+        if (account instanceof TonomyUsername) {
             // this is a username
-            const usernameHash = Checksum256.from(sha256(account));
+            const usernameHash = account.usernameHash;
 
             data = await api.v1.chain.get_table_rows({
                 code: 'id.tonomy',
                 scope: 'id.tonomy',
-                table: 'accounts',
+                table: 'people',
                 // eslint-disable-next-line camelcase
-                lower_bound: usernameHash,
+                lower_bound: Checksum256.from(usernameHash),
                 limit: 1,
                 // eslint-disable-next-line camelcase
                 index_position: 'secondary',
             });
             if (!data || !data.rows) throwError('No data found', SdkErrors.DataQueryNoRowDataFound);
-            if (data.rows.length === 0 || data.rows[0].username_hash !== usernameHash.toString()) {
-                throwError('Account with username "' + account + '" not found', SdkErrors.UsernameNotFound);
+            if (data.rows.length === 0 || data.rows[0].username_hash.toString() !== usernameHash) {
+                throwError('Person with username "' + account.username + '" not found', SdkErrors.UsernameNotFound);
             }
         } else {
             // use the account name directly
             data = await api.v1.chain.get_table_rows({
                 code: 'id.tonomy',
                 scope: 'id.tonomy',
-                table: 'accounts',
+                table: 'people',
+                // eslint-disable-next-line camelcase
+                lower_bound: account,
+                limit: 1,
+            });
+            if (!data || !data.rows) throwError('No data found', SdkErrors.DataQueryNoRowDataFound);
+            if (data.rows.length === 0 || data.rows[0].account_name !== account.toString()) {
+                throwError(
+                    'Person with account name "' + account.toString() + '" not found',
+                    SdkErrors.AccountDoesntExist
+                );
+            }
+        }
+
+        const idData = data.rows[0];
+        return {
+            // eslint-disable-next-line camelcase
+            account_name: Name.from(idData.account_name),
+            status: idData.status,
+            // eslint-disable-next-line camelcase
+            username_hash: Checksum256.from(idData.username_hash),
+            // eslint-disable-next-line camelcase
+            password_salt: Checksum256.from(idData.password_salt),
+            version: idData.version,
+        };
+    }
+
+    async getApp(account: TonomyUsername | Name): Promise<GetAppResponse> {
+        let data;
+        const api = await getApi();
+        if (account instanceof TonomyUsername) {
+            // this is a username
+            const usernameHash = account.usernameHash;
+
+            data = await api.v1.chain.get_table_rows({
+                code: 'id.tonomy',
+                scope: 'id.tonomy',
+                table: 'apps',
+                // eslint-disable-next-line camelcase
+                lower_bound: Checksum256.from(usernameHash),
+                limit: 1,
+                // eslint-disable-next-line camelcase
+                index_position: 'secondary',
+            });
+            if (!data || !data.rows) throwError('No data found', SdkErrors.DataQueryNoRowDataFound);
+            if (data.rows.length === 0 || data.rows[0].username_hash.toString() !== usernameHash) {
+                throwError('Account with username "' + account.username + '" not found', SdkErrors.UsernameNotFound);
+            }
+        } else {
+            // use the account name directly
+            data = await api.v1.chain.get_table_rows({
+                code: 'id.tonomy',
+                scope: 'id.tonomy',
+                table: 'apps',
                 // eslint-disable-next-line camelcase
                 lower_bound: account,
                 limit: 1,
@@ -159,14 +255,19 @@ class IDContract {
 
         const idData = data.rows[0];
         return {
+            // eslint-disable-next-line camelcase
+            app_name: idData.app_name,
+            description: idData.description,
+            // eslint-disable-next-line camelcase
+            logo_url: idData.logo_url,
+            origin: idData.origin,
+            // eslint-disable-next-line camelcase
             account_name: Name.from(idData.account_name),
-            type: idData.type,
-            status: idData.status,
+            // eslint-disable-next-line camelcase
             username_hash: Checksum256.from(idData.username_hash),
-            password_salt: Checksum256.from(idData.password_salt),
             version: idData.version,
         };
     }
 }
 
-export { IDContract, GetAccountTonomyIDInfoResponse };
+export { IDContract, GetPersonResponse };

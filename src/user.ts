@@ -1,12 +1,12 @@
 import { Name, PrivateKey, API, Checksum256 } from '@greymass/eosio';
 import { PushTransactionResponse } from '@greymass/eosio/src/api/v1/types';
 import { KeyManager, KeyManagerLevel } from './keymanager';
-import { GetAccountTonomyIDInfoResponse, IDContract } from './services/contracts/IDContract';
-import { sha256 } from './util/crypto';
+import { GetPersonResponse, IDContract } from './services/contracts/IDContract';
 import { AntelopePushTransactionError, createKeyManagerSigner, createSigner } from './services/eosio/transaction';
 import { getApi } from './services/eosio/eosio';
 import { PersistantStorage } from './storage';
 import { SdkErrors, throwError, SdkError } from './services/errors';
+import { AccountType, TonomyUsername } from './username';
 
 enum UserStatus {
     CREATING = 'CREATING',
@@ -46,7 +46,7 @@ export { UserStatus };
 type UserSorage = {
     status: UserStatus;
     accountName: Name;
-    username: string;
+    username: TonomyUsername;
     salt: Checksum256;
 };
 
@@ -63,8 +63,9 @@ export class User {
 
     async saveUsername(username: string, suffix: string) {
         let user: any;
+        const fullUsername = new TonomyUsername(username, AccountType.PERSON, suffix);
         try {
-            user = await User.getAccountInfo(username + suffix); // Throws error if username is taken
+            user = await User.getAccountInfo(fullUsername); // Throws error if username is taken
         } catch (e) {
             if (!(e instanceof SdkError && e.code === SdkErrors.UsernameNotFound)) {
                 throw e;
@@ -72,7 +73,7 @@ export class User {
         }
         if (user) throwError('Username is taken', SdkErrors.UsernameTaken);
 
-        this.storage.username = username + suffix;
+        this.storage.username = fullUsername;
         await this.storage.username;
     }
 
@@ -128,7 +129,7 @@ export class User {
         const { keyManager } = this;
         const username = await this.storage.username;
 
-        const usernameHash = sha256(username);
+        const usernameHash = username.usernameHash;
 
         // TODO check password is correct?
         const passwordKey = await keyManager.getKey({
@@ -178,9 +179,6 @@ export class User {
         });
         const localKey = await keyManager.getKey({ level: KeyManagerLevel.LOCAL });
 
-        // TODO:
-        // use status in smart contract to lock the account till finished creating
-
         const keys: any = {};
         if (pinKey) keys.PIN = pinKey.toString();
         if (fingerprintKey) keys.FINGERPRINT = fingerprintKey.toString();
@@ -188,15 +186,15 @@ export class User {
 
         const signer = createKeyManagerSigner(keyManager, KeyManagerLevel.PASSWORD, password);
         const accountName = await this.storage.accountName;
-        await idContract.updatekeys(accountName.toString(), keys, signer);
+        await idContract.updatekeysper(accountName.toString(), keys, signer);
         this.storage.status = UserStatus.READY;
         await this.storage.status;
     }
 
-    async login(username: string, password: string): Promise<GetAccountTonomyIDInfoResponse> {
+    async login(username: TonomyUsername, password: string): Promise<GetPersonResponse> {
         const { keyManager } = this;
 
-        const idData = await idContract.getAccountTonomyIDInfo(username);
+        const idData = await idContract.getPerson(username);
         const salt = idData.password_salt;
 
         await this.savePassword(password, { salt });
@@ -230,13 +228,12 @@ export class User {
         return !!(await this.storage.status);
     }
 
-    static async getAccountInfo(account: string | Name): Promise<API.v1.AccountObject> {
+    static async getAccountInfo(account: TonomyUsername | Name): Promise<API.v1.AccountObject> {
         try {
             let accountName: Name;
             const api = await getApi();
-            if (typeof account === 'string') {
-                // this is a username
-                const idData = await idContract.getAccountTonomyIDInfo(account);
+            if (account instanceof TonomyUsername) {
+                const idData = await idContract.getPerson(account);
                 accountName = idData.account_name;
             } else {
                 accountName = account;
