@@ -1,20 +1,44 @@
-.. TonomyId-SDK documentation master file, created by
-   sphinx-quickstart on Fri Nov 25 13:21:49 2022.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+=================================
+Tonomy-ID-SDK - public API for integration
+=================================
 
-Welcome to TonomyId-SDK's documentation!
-========================================
+This Software Development Kit is used in Tonomy ID to interact and call with the EOSIO blockchain and services. It is also used as the public API for integration by applications to do single sign-on, share credentials and sign transactions.
+
+The SDK is written in typescript with jest to run tests.
+
+
+SDK library exists in ``/src``
+
+The following documentation will guide you through :ref:`installing and running Tonomy-ID-SDK <adding-Tonomy-ID-SDK>` as well as providing an :ref:`API reference documentation <#id1>` with examples.
+
+.. note:: `Tonomy-ID-SDK 1.x <https://github.com/Tonomy-Foundation/Tonomy-ID-SDK>`_ has been released. Checkout 1.x `API documentation and migration guide <https://docs.Tonomy-Foundation.org/>`_ for testing, early feedback and contributions. 
+
+Contents:
+
+:ref:`Keyword Index <genindex>`, :ref:`Search Page <search>`
+
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :caption: API Reference:
+
+   Guidelines/getting-started
+
+    Tonomy-ID-SDK
+    Tonomy-ID-SDK-random1
+    Tonomy-ID-SDK-random2
+    Tonomy-ID-SDK-random3
+    Tonomy-ID-SDK-random4
+    Tonomy-ID-SDK-random5
+    Tonomy-ID-SDK-random6
+    Tonomy-ID-SDK-random7
+    Tonomy-ID-SDK-random8
+    Tonomy-ID-SDK-random9
+    Tonomy-ID-SDK-random10
+    Tonomy-ID-SDK-random11
+    Tonomy-ID-SDK-random12
+    Tonomy-ID-SDK-random13
 
 
 
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+Special thanks to `Netlify <https://www.netlify.com/>`_ for providing build and deploy services for our end-to-end integration tests.
