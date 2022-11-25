@@ -45,7 +45,7 @@ To run tests, use ``npm test``.
 
 .. _Linting:
 
-Testing Tonomy-ID-SDK
+Linting Tonomy-ID-SDK
 ==============
 
 Linting is done with ``eslint``. Install the recommended VS Code plugin to see markers in your code.
@@ -61,3 +61,16 @@ Linting is done with ``eslint``. Install the recommended VS Code plugin to see m
     const _storage = new Proxy(storage, storageProxyHandler as any);
 
 That's it! now you can use the ``Tonomy-ID-SDK`` object.
+
+
+.. _Eror-handling:
+
+Error handling
+==============
+
+
+See [``errors.ts``](``./src/services/errors.ts``). All errors have a registered unique code.
+All errors are either expected or unexpected, depending on weather the user will create the 
+error, or somethig has gone wrong nothing to do with the user. This helps us distinguish errors 
+that we should fix as developers. Please maintain the list of files and their 
+error code numeration in [``errors.ts``](``./src/services/errors.ts``).

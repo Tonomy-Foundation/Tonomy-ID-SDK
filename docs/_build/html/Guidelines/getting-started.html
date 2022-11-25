@@ -44,7 +44,8 @@
 <li class="toctree-l2"><a class="reference internal" href="#dependancies">Dependancies</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#runnig-tonomy-id-sdk">Runnig Tonomy-ID-SDK</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#testing-tonomy-id-sdk">Testing Tonomy-ID-SDK</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#linting">Testing Tonomy-ID-SDK</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#linting-tonomy-id-sdk">Linting Tonomy-ID-SDK</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#error-handling">Error handling</a></li>
 </ul>
 </li>
 </ul>
@@ -98,8 +99,8 @@ so any edits you save inside <code class="docutils literal notranslate"><span cl
 <span id="tests"></span><h2>Testing Tonomy-ID-SDK<a class="headerlink" href="#testing-tonomy-id-sdk" title="Permalink to this heading"></a></h2>
 <p>To run tests, use <code class="docutils literal notranslate"><span class="pre">npm</span> <span class="pre">test</span></code>.</p>
 </section>
-<section id="linting">
-<span id="id2"></span><h2>Testing Tonomy-ID-SDK<a class="headerlink" href="#linting" title="Permalink to this heading"></a></h2>
+<section id="linting-tonomy-id-sdk">
+<span id="linting"></span><h2>Linting Tonomy-ID-SDK<a class="headerlink" href="#linting-tonomy-id-sdk" title="Permalink to this heading"></a></h2>
 <p>Linting is done with <code class="docutils literal notranslate"><span class="pre">eslint</span></code>. Install the recommended VS Code plugin to see markers in your code.</p>
 <p><code class="docutils literal notranslate"><span class="pre">npm</span> <span class="pre">run</span> <span class="pre">lint</span></code></p>
 <div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="c1">// In Typescript use: const _storage = require(&#39;storage&#39;);</span><span class="w"></span>
@@ -108,6 +109,14 @@ so any edits you save inside <code class="docutils literal notranslate"><span cl
 </pre></div>
 </div>
 <p>That’s it! now you can use the <code class="docutils literal notranslate"><span class="pre">Tonomy-ID-SDK</span></code> object.</p>
+</section>
+<section id="error-handling">
+<span id="eror-handling"></span><h2>Error handling<a class="headerlink" href="#error-handling" title="Permalink to this heading"></a></h2>
+<p>See [<code class="docutils literal notranslate"><span class="pre">errors.ts</span></code>](<code class="docutils literal notranslate"><span class="pre">./src/services/errors.ts</span></code>). All errors have a registered unique code.
+All errors are either expected or unexpected, depending on weather the user will create the
+error, or somethig has gone wrong nothing to do with the user. This helps us distinguish errors
+that we should fix as developers. Please maintain the list of files and their
+error code numeration in [<code class="docutils literal notranslate"><span class="pre">errors.ts</span></code>](<code class="docutils literal notranslate"><span class="pre">./src/services/errors.ts</span></code>).</p>
 </section>
 </section>
 
