@@ -7,6 +7,8 @@ import { getApi } from './services/eosio/eosio';
 import { PersistantStorage } from './storage';
 import { SdkErrors, throwError, SdkError } from './services/errors';
 import { AccountType, TonomyUsername } from './username';
+import { top100Passwords } from './util/top100Passwords';
+import { validatePassword } from './util/passwords';
 
 enum UserStatus {
     CREATING = 'CREATING',
@@ -62,8 +64,10 @@ export class User {
     }
 
     async saveUsername(username: string, suffix: string) {
+        const normalizedUsername = username.normalize('NFKC');
+
         let user: any;
-        const fullUsername = new TonomyUsername(username, AccountType.PERSON, suffix);
+        const fullUsername = new TonomyUsername(normalizedUsername, AccountType.PERSON, suffix);
         try {
             user = await User.getAccountInfo(fullUsername); // Throws error if username is taken
         } catch (e) {
@@ -78,14 +82,16 @@ export class User {
     }
 
     async savePassword(masterPassword: string, options?: { salt?: Checksum256 }) {
+        const password = validatePassword(masterPassword);
+
         let privateKey: PrivateKey;
         let salt: Checksum256;
         if (options && options.salt) {
             salt = options.salt;
-            const res = await this.keyManager.generatePrivateKeyFromPassword(masterPassword, salt);
+            const res = await this.keyManager.generatePrivateKeyFromPassword(password, salt);
             privateKey = res.privateKey;
         } else {
-            const res = await this.keyManager.generatePrivateKeyFromPassword(masterPassword);
+            const res = await this.keyManager.generatePrivateKeyFromPassword(password);
             privateKey = res.privateKey;
             salt = res.salt;
         }
@@ -96,7 +102,7 @@ export class User {
         await this.keyManager.storeKey({
             level: KeyManagerLevel.PASSWORD,
             privateKey,
-            challenge: masterPassword,
+            challenge: password,
         });
     }
 

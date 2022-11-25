@@ -44,8 +44,9 @@ export class SdkError extends Error {
 
 // using never to suppress error https://bobbyhadz.com/blog/typescript-function-that-throws-error#:~:text=To%20declare%20a%20function%20that,terminate%20execution%20of%20the%20program.
 export function throwError(message: string, code?: SdkErrors): never {
-    const error = new SdkError(message);
+    let error = new SdkError(message);
     if (code) {
+        error = new SdkError(code + ': ' + message);
         error.code = code;
     }
     throw error;
@@ -58,6 +59,8 @@ enum SdkErrors {
     DataQueryNoRowDataFound = 'DataQueryNoRowDataFound',
     UpdateKeysTransactionNoKeys = 'UpdateKeysTransactionNoKeys',
     CouldntCreateApi = 'CouldntCreateApi',
+    PasswordFormatInvalid = 'PasswordFormatInvalid',
+    PasswordTooCommon = 'PasswordTooCommon',
 }
 
 // eslint-disable-next-line @typescript-eslint/no-namespace
