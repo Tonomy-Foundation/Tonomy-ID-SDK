@@ -22,10 +22,6 @@ describe('validatePassword()', () => {
         expect(() => validatePassword('aabbAABBaabb!!@@')).toThrow(SdkErrors.PasswordFormatInvalid);
     });
 
-    it('it fails without !@#$%^&*', () => {
-        expect(() => validatePassword('aabbAABB0011aabb')).toThrow(SdkErrors.PasswordFormatInvalid);
-    });
-
     it('it fails with common password', () => {
         expect(() => validatePassword('aaPassword011!!@@')).toThrow(SdkErrors.PasswordTooCommon);
     });
