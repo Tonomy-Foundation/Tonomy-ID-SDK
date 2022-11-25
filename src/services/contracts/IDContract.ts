@@ -132,14 +132,14 @@ class IDContract {
 
     async newapp(
         name: string,
-        username_hash: string,
         description: string,
+        username_hash: string,
         logo_url: string,
-        domain: string,
+        origin: string,
         key: PublicKey,
         signer: Signer
     ): Promise<API.v1.PushTransactionResponse> {
-        /^(((http:\/\/)|(https:\/\/))?)(([a-zA-Z0-9.])+)((:{1}[0-9]+)?)$/g.test(domain);
+        /^(((http:\/\/)|(https:\/\/))?)(([a-zA-Z0-9.])+)((:{1}[0-9]+)?)$/g.test(origin);
         /^(((http:\/\/)|(https:\/\/))?)(([a-zA-Z0-9.])+)((:{1}[0-9]+)?)([?#/a-zA-Z0-9.]*)$/g.test(logo_url);
 
         const action = {
@@ -155,7 +155,7 @@ class IDContract {
                 name,
                 description,
                 logo_url,
-                domain,
+                origin: origin,
                 username_hash,
                 key,
             },

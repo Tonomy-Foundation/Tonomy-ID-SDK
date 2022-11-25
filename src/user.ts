@@ -131,7 +131,6 @@ export class User {
 
         const usernameHash = username.usernameHash;
 
-        // TODO check password is correct?
         const passwordKey = await keyManager.getKey({
             level: KeyManagerLevel.PASSWORD,
         });
@@ -139,7 +138,6 @@ export class User {
         // TODO this needs to change to the actual key used, from settings
         const idTonomyActiveKey = PrivateKey.from('PVT_K1_2bfGi9rYsXQSXXTvJbDAPhHLQUojjaNLomdm3cEJ1XTzMqUt3V');
 
-        // TODO need to remove sha256 from this.salt
         const salt = await this.storage.salt;
         let res: PushTransactionResponse;
         try {
