@@ -16,7 +16,7 @@
     "test": "tsdx test",
     "lint": "eslint src test --ext .ts --resolve-plugins-relative-to .",
     "lint:fix": "npm run lint -- --fix",
-    "prepare": "tsdx build --transpileOnly",
+    "prepare": "tsdx build",
     "size": "size-limit",
     "analyze": "size-limit --why"
   },
