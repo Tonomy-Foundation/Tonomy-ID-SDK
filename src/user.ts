@@ -7,7 +7,6 @@ import { getApi } from './services/eosio/eosio';
 import { PersistantStorage } from './storage';
 import { SdkErrors, throwError, SdkError } from './services/errors';
 import { AccountType, TonomyUsername } from './username';
-import { top100Passwords } from './util/top100Passwords';
 import { validatePassword } from './util/passwords';
 
 enum UserStatus {
