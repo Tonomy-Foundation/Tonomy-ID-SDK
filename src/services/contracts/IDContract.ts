@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 import { API, Checksum256, Name, PublicKey } from '@greymass/eosio';
 import { TonomyUsername } from '../../username';
 import { getApi } from '../eosio/eosio';
@@ -59,10 +60,10 @@ type GetAppResponse = {
 };
 
 class IDContract {
-    static _singleton_instance: IDContract;
+    static singletonInstance: IDContract;
 
     public static get Instance() {
-        return this._singleton_instance || (this._singleton_instance = new this());
+        return this.singletonInstance || (this.singletonInstance = new this());
     }
 
     async newperson(

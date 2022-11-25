@@ -1,13 +1,4 @@
-import {
-    Action,
-    API,
-    Transaction,
-    SignedTransaction,
-    Signature,
-    Checksum256,
-    Name,
-    PrivateKey,
-} from '@greymass/eosio';
+import { Action, API, Transaction, SignedTransaction, Signature, Checksum256, Name, PrivateKey } from '@greymass/eosio';
 import { KeyManager, KeyManagerLevel } from '../../keymanager';
 import { HttpError } from '../errors';
 import { getApi } from './eosio';
@@ -34,11 +25,7 @@ function createSigner(privateKey: PrivateKey): Signer {
     };
 }
 
-function createKeyManagerSigner(
-    keyManager: KeyManager,
-    level: KeyManagerLevel,
-    password: string
-): Signer {
+function createKeyManagerSigner(keyManager: KeyManager, level: KeyManagerLevel, password: string): Signer {
     return {
         async sign(digest: Checksum256): Promise<Signature> {
             return (await keyManager.signData({
@@ -131,10 +118,9 @@ async function transact(
     try {
         res = await api.v1.chain.push_transaction(signedTransaction);
     } catch (e) {
-        // console.error(JSON.stringify(e, null, 2));
-        if (e.response && e.response.headers) {
-            if (e.response.json) {
-                throw new AntelopePushTransactionError(e.response.json);
+        if ((e as any)?.response?.headers) {
+            if ((e as any).response?.json) {
+                throw new AntelopePushTransactionError((e as any).response.json);
             }
             throw new HttpError(e);
         }
