@@ -1,32 +1,6 @@
-/* eslint-disable camelcase */
-import { Bytes, KeyType, PrivateKey, PublicKey } from '@greymass/eosio';
-import randomBytes from 'randombytes';
-import { ES256KSigner, createJWT } from 'did-jwt';
 import * as jose from 'jose';
 import { PublicKey as PublicKeyCon } from 'eosjs/dist/eosjs-key-conversions';
-function generateRandomKeyPair(): { privateKey: PrivateKey; publicKey: PublicKey } {
-    const bytes = randomBytes(32);
-    const privateKey = new PrivateKey(KeyType.K1, new Bytes(bytes));
-    const publicKey = privateKey.toPublic();
-    return { privateKey, publicKey };
-}
-
-async function onPressLogin(redirect: string): Promise<string> {
-    const { privateKey, publicKey } = generateRandomKeyPair();
-    const payload = {
-        number: Math.floor(Math.random() * 100),
-        // domain: window.location.hostname,
-        redirect,
-        pubkey: publicKey.toString(),
-    };
-
-    const signer = ES256KSigner(privateKey.data.array, true);
-
-    const jwk = await createJWK(publicKey);
-    const issuer = toDid(jwk);
-    const token = await createJWT(payload, { issuer, signer, alg: 'ES256K-R' });
-    return token;
-}
+import { PublicKey } from '@greymass/eosio';
 
 const createJWK = (publicKey: PublicKey) => {
     const pubKey = PublicKeyCon.fromString(publicKey.toString());
@@ -42,6 +16,7 @@ const createJWK = (publicKey: PublicKey) => {
     };
     return publicKeyJwk;
 };
+// reference https://github.com/OR13/did-jwk/blob/main/src/index.js#L120
 const toDid = (jwk: jose.JWK) => {
     // eslint-disable-next-line no-unused-vars
     const { d, p, q, dp, dq, qi, ...publicKeyJwk } = jwk;
@@ -51,16 +26,17 @@ const toDid = (jwk: jose.JWK) => {
     return did;
 };
 
+// reference https://github.com/OR13/did-jwk/blob/main/src/index.js#L128
 const toDidDocument = (jwk: jose.JWK) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const getPublicOperationsFromPrivate = (key_ops: any) => {
-        if (key_ops.includes('sign')) {
+    const getPublicOperationsFromPrivate = (keyOps: any) => {
+        if (keyOps.includes('sign')) {
             return ['verify'];
         }
-        if (key_ops.includes('verify')) {
+        if (keyOps.includes('verify')) {
             return ['encrypt'];
         }
-        return key_ops;
+        return keyOps;
     };
     const {
         // eslint-disable-next-line no-unused-vars
@@ -95,12 +71,15 @@ const toDidDocument = (jwk: jose.JWK) => {
 
     return didDocument;
 };
+
+// reference https://github.com/OR13/did-jwk/blob/main/src/index.js#L177
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const resolve = (did: any) => {
     const decoded = jose.base64url.decode(did.split(':').pop().split('#')[0]);
     const jwk = JSON.parse(decoded.toString());
     return toDidDocument(jwk);
 };
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function bnToBase64Url(bn: any): string {
     const buffer = bn.toArrayLike(Buffer, 'be');
@@ -108,4 +87,4 @@ function bnToBase64Url(bn: any): string {
     return Buffer.from(buffer).toString('base64');
 }
 
-export { onPressLogin, generateRandomKeyPair, resolve };
+export { createJWK, toDid, toDidDocument, resolve };
