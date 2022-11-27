@@ -1,17 +1,7 @@
 /* eslint-disable camelcase */
-import '@testing-library/jest-dom';
-import { Bytes, KeyType, PrivateKey, PublicKey } from '@greymass/eosio';
-import randomBytes from 'randombytes';
 import { ES256KSigner, createJWT } from 'did-jwt';
-import { randomString } from './util/crypto';
+import { generateRandomKeyPair, randomString } from './util/crypto';
 import { createJWK, toDid } from './util/did-jwk';
-
-function generateRandomKeyPair(): { privateKey: PrivateKey; publicKey: PublicKey } {
-    const bytes = randomBytes(32);
-    const privateKey = new PrivateKey(KeyType.K1, new Bytes(bytes));
-    const publicKey = privateKey.toPublic();
-    return { privateKey, publicKey };
-}
 
 async function onPressLogin(window: Window, redirect = false): Promise<string | void> {
     const { privateKey, publicKey } = generateRandomKeyPair();
@@ -35,4 +25,4 @@ async function onPressLogin(window: Window, redirect = false): Promise<string | 
     return token;
 }
 
-export { onPressLogin, generateRandomKeyPair };
+export { onPressLogin };

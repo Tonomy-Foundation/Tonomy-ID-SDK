@@ -1,4 +1,4 @@
-import { Bytes, Checksum256 } from '@greymass/eosio';
+import { Bytes, Checksum256, KeyType, PrivateKey, PublicKey } from '@greymass/eosio';
 import rb from '@consento/sync-randombytes';
 
 function randomBytes(bytes: number): Uint8Array {
@@ -32,5 +32,10 @@ function decodeHex(hex: string): string {
         .map((c) => String.fromCharCode(parseInt(c, 16)))
         .join('');
 }
-
-export { randomString, randomBytes, sha256, decodeHex, encodeHex };
+function generateRandomKeyPair(): { privateKey: PrivateKey; publicKey: PublicKey } {
+    const bytes = randomBytes(32);
+    const privateKey = new PrivateKey(KeyType.K1, new Bytes(bytes));
+    const publicKey = privateKey.toPublic();
+    return { privateKey, publicKey };
+}
+export { randomString, randomBytes, sha256, decodeHex, encodeHex, generateRandomKeyPair };

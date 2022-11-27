@@ -74,7 +74,8 @@ const toDidDocument = (jwk: jose.JWK) => {
 
 // reference https://github.com/OR13/did-jwk/blob/main/src/index.js#L177
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const resolve = (did: any) => {
+const resolve = (did: any, options = {}) => {
+    if (options) options = {};
     const decoded = jose.base64url.decode(did.split(':').pop().split('#')[0]);
     const jwk = JSON.parse(decoded.toString());
     return toDidDocument(jwk);
