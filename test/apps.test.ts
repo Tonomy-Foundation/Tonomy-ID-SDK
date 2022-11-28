@@ -1,5 +1,6 @@
 import { PrivateKey, PublicKey } from '@greymass/eosio';
-import { generateRandomKeyPair, onPressLogin } from '../src/apps';
+import { onPressLogin } from '../src/apps';
+import { generateRandomKeyPair } from '../src/util/crypto';
 
 describe('logging in', () => {
     it('generates random key pair', () => {
