@@ -1,10 +1,10 @@
 import { Name, PrivateKey, API, Checksum256 } from '@greymass/eosio';
 import { PushTransactionResponse } from '@greymass/eosio/src/api/v1/types';
-import { KeyManager, KeyManagerLevel } from './keymanager';
+import { KeyManager, KeyManagerLevel } from './services/keymanager';
 import { GetPersonResponse, IDContract } from './services/contracts/IDContract';
 import { AntelopePushTransactionError, createKeyManagerSigner, createSigner } from './services/eosio/transaction';
 import { getApi } from './services/eosio/eosio';
-import { PersistantStorage } from './storage';
+import { PersistantStorage } from './services/storage';
 import { SdkErrors, throwError, SdkError } from './services/errors';
 import { AccountType, TonomyUsername } from './username';
 import { validatePassword } from './util/passwords';

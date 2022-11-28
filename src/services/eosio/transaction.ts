@@ -1,5 +1,5 @@
 import { Action, API, Transaction, SignedTransaction, Signature, Checksum256, Name, PrivateKey } from '@greymass/eosio';
-import { KeyManager, KeyManagerLevel } from '../../keymanager';
+import { KeyManager, KeyManagerLevel } from '../keymanager';
 import { HttpError } from '../errors';
 import { getApi } from './eosio';
 
