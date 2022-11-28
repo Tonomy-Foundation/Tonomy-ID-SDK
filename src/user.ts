@@ -4,9 +4,9 @@ import { KeyManager, KeyManagerLevel } from './services/keymanager';
 import { GetPersonResponse, IDContract } from './services/contracts/IDContract';
 import { AntelopePushTransactionError, createKeyManagerSigner, createSigner } from './services/eosio/transaction';
 import { getApi } from './services/eosio/eosio';
-import { PersistantStorage } from './services/storage';
+import { PersistentStorage } from './services/storage';
 import { SdkErrors, throwError, SdkError } from './services/errors';
-import { AccountType, TonomyUsername } from './username';
+import { AccountType, TonomyUsername } from './services/username';
 import { validatePassword } from './util/passwords';
 
 enum UserStatus {
@@ -44,7 +44,7 @@ namespace UserStatus {
 
 export { UserStatus };
 
-type UserSorage = {
+export type UserStorage = {
     status: UserStatus;
     accountName: Name;
     username: TonomyUsername;
@@ -55,11 +55,11 @@ const idContract = IDContract.Instance;
 
 export class User {
     keyManager: KeyManager;
-    storage: PersistantStorage & UserSorage;
+    storage: PersistentStorage & UserStorage;
 
-    constructor(_keyManager: KeyManager, _storage: PersistantStorage) {
+    constructor(_keyManager: KeyManager, _storage: PersistentStorage) {
         this.keyManager = _keyManager;
-        this.storage = _storage as PersistantStorage & UserSorage;
+        this.storage = _storage as PersistentStorage & UserStorage;
     }
 
     async saveUsername(username: string, suffix: string) {

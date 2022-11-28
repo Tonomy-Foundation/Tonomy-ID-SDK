@@ -1,9 +1,16 @@
 /* eslint-disable camelcase */
+import { Name, PublicKey } from '@greymass/eosio';
 import { ES256KSigner, createJWT } from 'did-jwt';
+import { IDContract } from './services/contracts/IDContract';
+import { KeyManager } from './services/keymanager';
+import { PersistentStorage } from './services/storage';
 import { generateRandomKeyPair, randomString } from './util/crypto';
 import { createJWK, toDid } from './util/did-jwk';
+import { UserStorage } from './user';
 
-async function onPressLogin(window: Window, redirect = false): Promise<string | void> {
+const idContract = IDContract.Instance;
+
+export async function onPressLogin(window: Window, redirect = false): Promise<string | void> {
     const { privateKey, publicKey } = generateRandomKeyPair();
     const payload = {
         number: randomString(32),
@@ -25,4 +32,24 @@ async function onPressLogin(window: Window, redirect = false): Promise<string | 
     return token;
 }
 
-export { onPressLogin };
+type UserAppStorage = {
+    apps: {
+        account: string;
+        added: Date;
+    }[];
+};
+
+export default class App {
+    keyManager: KeyManager;
+    storage: PersistentStorage & UserStorage & UserAppStorage;
+
+    constructor(_keyManager: KeyManager, _storage: PersistentStorage) {
+        this.keyManager = _keyManager;
+        this.storage = _storage as PersistentStorage & UserStorage & UserAppStorage;
+    }
+
+    async loginWithApp(account: Name, key: PublicKey): Promise<void> {
+        const myAccount = await this.storage.accountName;
+        await idContract.loginwithapp(myAccount, key, createSigner(privateKey));
+    }
+}
