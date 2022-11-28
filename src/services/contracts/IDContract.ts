@@ -164,6 +164,31 @@ class IDContract {
         return await transact(Name.from('id.tonomy'), [action], signer);
     }
 
+    async loginwithapp(
+        account: string,
+        app: string,
+        public_key: PublicKey,
+        signer: Signer
+    ): Promise<API.v1.PushTransactionResponse> {
+        const action = {
+            authorization: [
+                {
+                    actor: 'id.tonomy',
+                    permission: 'active',
+                },
+            ],
+            account: 'id.tonomy',
+            name: 'loginwithapp',
+            data: {
+                account,
+                app,
+                public_key,
+            },
+        };
+
+        return await transact(Name.from('id.tonomy'), [action], signer);
+    }
+
     async getPerson(account: TonomyUsername | Name): Promise<GetPersonResponse> {
         let data;
         const api = await getApi();
