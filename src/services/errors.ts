@@ -61,6 +61,7 @@ enum SdkErrors {
     CouldntCreateApi = 'CouldntCreateApi',
     PasswordFormatInvalid = 'PasswordFormatInvalid',
     PasswordTooCommon = 'PasswordTooCommon',
+    KeyNotFound = 'KeyNotFound',
 }
 
 // eslint-disable-next-line @typescript-eslint/no-namespace
