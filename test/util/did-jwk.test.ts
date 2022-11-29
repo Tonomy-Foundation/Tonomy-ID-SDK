@@ -1,4 +1,4 @@
-import { decodeJWT } from 'did-jwt';
+import { decodeJWT, verifyJWT } from 'did-jwt';
 import { resolve } from '../../src/util/did-jwk';
 
 describe('did-jwk resolver', () => {
@@ -14,15 +14,15 @@ describe('did-jwk resolver', () => {
         expect(DIDdocument.verificationMethod[0].type).toBe('JsonWebKey2020');
     });
 
-    // it('verifies created jwt', async () => {
-    //     // TODO: add support JsonWebKey2020 for ES256K-R
-    //     // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    it('verifies created jwt', async () => {
+        // TODO: add support JsonWebKey2020 for ES256K-R
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
 
-    //     const resolver: any = {
-    //         resolve,
-    //     };
-    //     const verify = await verifyJWT(jwt, { resolver });
+        const resolver: any = {
+            resolve,
+        };
+        const verify = await verifyJWT(jwt, { resolver });
 
-    //     expect(verify).toBeDefined();
-    // });
+        expect(verify).toBeDefined();
+    });
 });
