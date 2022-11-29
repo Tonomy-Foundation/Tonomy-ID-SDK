@@ -6,8 +6,8 @@ import { KeyManager, KeyManagerLevel } from './services/keymanager';
 import { PersistentStorage } from './services/storage';
 import { generateRandomKeyPair, randomString } from './util/crypto';
 import { createJWK, toDid } from './util/did-jwk';
-import { User, UserStorage } from './user';
-import { createKeyManagerSigner, createSigner } from './services/eosio/transaction';
+import { UserStorage } from './user';
+import { createKeyManagerSigner } from './services/eosio/transaction';
 
 const idContract = IDContract.Instance;
 
