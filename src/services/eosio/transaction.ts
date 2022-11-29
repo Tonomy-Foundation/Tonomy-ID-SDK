@@ -60,7 +60,7 @@ export class AntelopePushTransactionError extends Error {
         this.code = err.code;
         this.message = err.message;
         this.error = err.error;
-
+        this.stack = new Error().stack;
         // Ensure the name of this error is the same as the class name
         this.name = this.constructor.name;
         // This clips the constructor invocation from the stack trace.
@@ -70,6 +70,9 @@ export class AntelopePushTransactionError extends Error {
         // TODO fix this. The following line should be uncommented. It is commented out because it is causing a TS error:
         // TypeError: Error.captureStackTrace is not a function
         // Error.captureStackTrace(this, this.constructor);
+        if (Error.captureStackTrace) {
+            Error.captureStackTrace(this, this.constructor);
+        }
     }
 
     hasErrorCode(code: number): boolean {
