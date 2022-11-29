@@ -1,4 +1,4 @@
-import { AccountType, TonomyUsername } from '../src/username';
+import { AccountType, TonomyUsername } from '../../src/services/username';
 
 describe('TonomyUsername', () => {
     it('creates a username correctly', () => {

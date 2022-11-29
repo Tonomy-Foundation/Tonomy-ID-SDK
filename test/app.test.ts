@@ -1,5 +1,5 @@
 import { PrivateKey, PublicKey } from '@greymass/eosio';
-import { onPressLogin } from '../src/apps';
+import App from '../src/app';
 import { generateRandomKeyPair } from '../src/util/crypto';
 
 describe('logging in', () => {
@@ -10,7 +10,7 @@ describe('logging in', () => {
     });
 
     it('on press button', async () => {
-        const jwt = await onPressLogin(window);
+        const jwt = await App.onPressLogin(window);
         expect(jwt).toBeDefined();
     });
 });

@@ -1,6 +1,6 @@
-import { KeyManager } from './keymanager';
+import { KeyManager } from './services/keymanager';
 import { SettingsType, setSettings } from './settings';
-import { PersistantStorage, storageProxyHandler } from './storage';
+import { PersistantStorage, storageProxyHandler } from './services/storage';
 import { User } from './user';
 
 /**
