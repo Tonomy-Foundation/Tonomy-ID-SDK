@@ -8,6 +8,7 @@ import { PersistentStorage } from './services/storage';
 import { SdkErrors, throwError, SdkError } from './services/errors';
 import { AccountType, TonomyUsername } from './services/username';
 import { validatePassword } from './util/passwords';
+import App from './app';
 
 enum UserStatus {
     CREATING = 'CREATING',
@@ -56,10 +57,12 @@ const idContract = IDContract.Instance;
 export class User {
     keyManager: KeyManager;
     storage: PersistentStorage & UserStorage;
+    app: App;
 
     constructor(_keyManager: KeyManager, _storage: PersistentStorage) {
         this.keyManager = _keyManager;
         this.storage = _storage as PersistentStorage & UserStorage;
+        this.app = new App(_keyManager, _storage);
     }
 
     async saveUsername(username: string, suffix: string) {
