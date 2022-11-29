@@ -9,7 +9,7 @@ export * from './initialize';
 export * from './settings';
 export * from './services/eosio/authority';
 export * from './util/crypto';
-export * from './username';
+export * from './services/username';
 
 const EosioUtil = { ...Eosio, ...Transaction };
 export { EosioUtil };
