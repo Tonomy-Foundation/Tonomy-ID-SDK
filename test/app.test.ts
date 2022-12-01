@@ -25,13 +25,11 @@ describe('logging in', () => {
         // eslint-disable-next-line prettier/prettier
 
         // Object.defineProperty(window.location, 'href', { value: url });
-
+        jest.spyOn(document, 'referrer', 'get').mockReturnValue('localhost');
         jsdom.reconfigure({
             url,
         });
-        console.log(document.referrer);
         const payload = await App.onRedirectLogin();
-
         expect(payload).toBeDefined();
         expect(payload.number).toBe('a92dd5d72d940203d64cf2ec4fcd77ccc42f3dede40b61b6bb436c828e494825');
         expect(payload.pubkey).toBe('PUB_K1_8722egiinaa4n22e6HBcAC9ghzZ9nPkjjC3ptP19kh37x79pCV');
