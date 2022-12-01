@@ -1,6 +1,6 @@
 /* eslint-disable camelcase */
 import { Name, PublicKey } from '@greymass/eosio';
-import { ES256KSigner, createJWT } from 'did-jwt';
+import { ES256KSigner, createJWT, verifyJWT, JWTVerified } from 'did-jwt';
 import { IDContract } from './services/contracts/IDContract';
 import { KeyManager, KeyManagerLevel } from './services/keymanager';
 import { PersistentStorage } from './services/storage';
@@ -8,7 +8,8 @@ import { generateRandomKeyPair, randomString } from './util/crypto';
 import { createJWK, toDid } from './util/did-jwk';
 import { UserStorage } from './user';
 import { createKeyManagerSigner } from './services/eosio/transaction';
-
+import { throwError } from './services/errors';
+import { resolve } from './util/did-jwk';
 const idContract = IDContract.Instance;
 
 enum AppStatus {
@@ -45,8 +46,6 @@ namespace AppStatus {
     }
 }
 
-export { AppStatus as UserStatus };
-
 type AppRecord = {
     account: string;
     added: Date;
@@ -55,6 +54,12 @@ type AppRecord = {
 
 type UserAppStorage = {
     apps: AppRecord[];
+};
+
+type JWTLoginPayload = {
+    number: string;
+    origin: string;
+    pubkey: string;
 };
 
 export default class App {
@@ -93,7 +98,7 @@ export default class App {
 
     static async onPressLogin(window: Window, redirect = false): Promise<string | void> {
         const { privateKey, publicKey } = generateRandomKeyPair();
-        const payload = {
+        const payload: JWTLoginPayload = {
             number: randomString(32),
             origin: window.location.hostname,
             pubkey: publicKey.toString(),
@@ -107,9 +112,31 @@ export default class App {
         if (redirect) {
             // const settings = await getSettings();
             // TODO update settings to redirect to the tonomy id website
-            window.location = `https://id.tonomy.com/login?jwt=${token}`;
+            window.location = `https://localhost:3000/login?jwt=${token}`;
             return;
         }
         return token;
     }
+
+    static async onRedirectLogin(): Promise<JWTLoginPayload> {
+        console.log(window.location.href);
+        console.log(window.location.search);
+        const urlParams = new URLSearchParams(window.location.search);
+        const jwt = urlParams.get('jwt');
+        if (!jwt) throwError('No JWT found in URL');
+        const verified = await this.verifyLoginJWT(jwt);
+        const payload = verified.payload as JWTLoginPayload;
+        if (payload.origin !== document.referrer) throwError('JWT origin does not match referrer');
+        return payload;
+    }
+
+    static async verifyLoginJWT(jwt: string): Promise<JWTVerified> {
+        const resolver: any = {
+            resolve,
+        };
+        const verify = await verifyJWT(jwt, { resolver });
+        return verify;
+    }
 }
+
+export { AppStatus as UserStatus, JWTLoginPayload };
