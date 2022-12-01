@@ -67,9 +67,6 @@ export class AntelopePushTransactionError extends Error {
         // It's not absolutely essential, but it does make the stack trace a little nicer.
         //  @see Node.js reference (bottom)
 
-        // TODO fix this. The following line should be uncommented. It is commented out because it is causing a TS error:
-        // TypeError: Error.captureStackTrace is not a function
-        // Error.captureStackTrace(this, this.constructor);
         if (Error.captureStackTrace) {
             Error.captureStackTrace(this, this.constructor);
         }
