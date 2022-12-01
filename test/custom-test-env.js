@@ -1,5 +1,10 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
-const JSDOMEnvironment = require('jest-environment-jsdom');
+const pkg = require('jest-environment-jsdom');
+
+let JSDOMEnvironment = pkg;
+if (pkg.default) {
+    JSDOMEnvironment = pkg.default;
+}
 
 module.exports = class CustomizedJSDomEnvironment extends JSDOMEnvironment {
     constructor(config, context) {
@@ -17,20 +22,8 @@ module.exports = class CustomizedJSDomEnvironment extends JSDOMEnvironment {
         }
     }
 
-    teardown() {
+    async teardown() {
         this.global.jsdom = null;
-        return super.teardown();
+        await super.teardown();
     }
 };
-
-// module.exports = class CustomTestEnvironment extends JSDOMEnvironment {
-//     async setup() {
-//         await super.setup();
-//         if (typeof this.global.TextEncoder === 'undefined') {
-//             const { TextEncoder, TextDecoder } = require('util');
-
-//             this.global.TextDecoder = TextDecoder;
-//             this.global.TextEncoder = TextEncoder;
-//         }
-//     }
-// };

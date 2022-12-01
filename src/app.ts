@@ -119,14 +119,14 @@ export default class App {
     }
 
     static async onRedirectLogin(): Promise<JWTLoginPayload> {
-        console.log(window.location.href);
-        console.log(window.location.search);
         const urlParams = new URLSearchParams(window.location.search);
         const jwt = urlParams.get('jwt');
         if (!jwt) throwError('No JWT found in URL');
         const verified = await this.verifyLoginJWT(jwt);
         const payload = verified.payload as JWTLoginPayload;
-        if (payload.origin !== document.referrer) throwError('JWT origin does not match referrer');
+
+        if (payload.origin !== document.referrer)
+            throwError(`JWT origin: ${payload.origin} does not match referrer: ${document.referrer}`);
         return payload;
     }
 

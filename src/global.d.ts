@@ -5,5 +5,3 @@ declare global {
         const jsdom: JSDOM;
     }
 }
-
-declare let jsdom: JSDOM;
