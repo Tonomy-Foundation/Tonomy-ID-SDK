@@ -45,7 +45,7 @@ namespace AppStatus {
     }
 }
 
-export { AppStatus as UserStatus };
+export { AppStatus };
 
 type AppRecord = {
     account: string;
