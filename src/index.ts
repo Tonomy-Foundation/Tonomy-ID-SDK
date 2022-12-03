@@ -1,15 +1,15 @@
 import * as Eosio from './services/eosio/eosio';
 import * as Transaction from './services/eosio/transaction';
 
-export * from './keymanager';
-export * from './storage';
+export * from './services/keymanager';
+export * from './services/storage';
 export * from './user';
 
 export * from './initialize';
 export * from './settings';
 export * from './services/eosio/authority';
 export * from './util/crypto';
-export * from './username';
+export * from './services/username';
 
 const EosioUtil = { ...Eosio, ...Transaction };
 export { EosioUtil };

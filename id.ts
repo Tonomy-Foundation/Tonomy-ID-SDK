@@ -2,7 +2,7 @@ import { Name, PrivateKey, PublicKey } from '@greymass/eosio';
 import { IDContract } from './src/services/contracts/IDContract';
 import { createSigner } from './src/services/eosio/transaction';
 import { setSettings } from './src/settings';
-import { AccountType, TonomyUsername } from './src/username';
+import { AccountType, TonomyUsername } from './src/services/username';
 
 const args: string[] = process.argv.slice(2);
 

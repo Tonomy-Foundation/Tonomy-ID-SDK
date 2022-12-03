@@ -1,6 +1,6 @@
 /* eslint-disable camelcase */
 import { API, Checksum256, Name, PublicKey } from '@greymass/eosio';
-import { TonomyUsername } from '../../username';
+import { TonomyUsername } from '../username';
 import { getApi } from '../eosio/eosio';
 import { Signer, transact } from '../eosio/transaction';
 import { SdkErrors, throwError } from '../errors';
@@ -158,6 +158,31 @@ class IDContract {
                 origin: origin,
                 username_hash,
                 key,
+            },
+        };
+
+        return await transact(Name.from('id.tonomy'), [action], signer);
+    }
+
+    async loginwithapp(
+        account: string,
+        app: string,
+        public_key: PublicKey,
+        signer: Signer
+    ): Promise<API.v1.PushTransactionResponse> {
+        const action = {
+            authorization: [
+                {
+                    actor: 'id.tonomy',
+                    permission: 'active',
+                },
+            ],
+            account: 'id.tonomy',
+            name: 'loginwithapp',
+            data: {
+                account,
+                app,
+                public_key,
             },
         };
 
