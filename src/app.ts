@@ -45,8 +45,6 @@ namespace AppStatus {
     }
 }
 
-export { AppStatus as UserStatus };
-
 type AppRecord = {
     account: string;
     added: Date;
@@ -107,9 +105,11 @@ export default class App {
         if (redirect) {
             // const settings = await getSettings();
             // TODO update settings to redirect to the tonomy id website
-            window.location = `https://id.tonomy.com/login?jwt=${token}`;
+            window.location.href = `https://id.tonomy.com/login?jwt=${token}`;
             return;
         }
         return token;
     }
 }
+
+export { App };
