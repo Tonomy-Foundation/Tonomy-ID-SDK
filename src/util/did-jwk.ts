@@ -19,9 +19,7 @@ const createJWK = (publicKey: PublicKey) => {
 const toDid = (jwk: any) => {
     // eslint-disable-next-line no-unused-vars
     const { d, p, q, dp, dq, qi, ...publicKeyJwk } = jwk;
-    console.log('publicKeyJwk', publicKeyJwk);
     // TODO replace with base64url encoder for web
-    console.log(utf8ToB64(publicKeyJwk));
     const id = utf8ToB64(JSON.stringify(publicKeyJwk));
 
     const did = `did:jwk:${id}`;
