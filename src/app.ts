@@ -5,9 +5,9 @@ import { IDContract } from './services/contracts/IDContract';
 import { KeyManager, KeyManagerLevel } from './services/keymanager';
 import { PersistentStorage } from './services/storage';
 import { generateRandomKeyPair, randomString } from './util/crypto';
-import { createJWK, toDid } from './util/did-jwk';
 import { UserStorage } from './user';
 import { createKeyManagerSigner } from './services/eosio/transaction';
+import { createJWK, toDid } from './util/did-jwk';
 
 const idContract = IDContract.Instance;
 
@@ -100,7 +100,9 @@ export default class App {
         const signer = ES256KSigner(privateKey.data.array, true);
 
         const jwk = await createJWK(publicKey);
+
         const issuer = toDid(jwk);
+
         const token = await createJWT(payload, { issuer, signer, alg: 'ES256K-R' });
         if (redirect) {
             // const settings = await getSettings();

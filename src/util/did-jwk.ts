@@ -1,12 +1,11 @@
-import * as jose from 'jose';
 import { PublicKey as PublicKeyCon } from 'eosjs/dist/eosjs-key-conversions';
 import { PublicKey } from '@greymass/eosio';
 
 const createJWK = (publicKey: PublicKey) => {
     const pubKey = PublicKeyCon.fromString(publicKey.toString());
     const ecPubKey = pubKey.toElliptic();
-
     if (!pubKey.isValid()) throw new Error('Key is not valid');
+
     const publicKeyJwk = {
         crv: 'secp256k1',
         kty: 'EC',
@@ -17,17 +16,18 @@ const createJWK = (publicKey: PublicKey) => {
     return publicKeyJwk;
 };
 // reference https://github.com/OR13/did-jwk/blob/main/src/index.js#L120
-const toDid = (jwk: jose.JWK) => {
+const toDid = (jwk: any) => {
     // eslint-disable-next-line no-unused-vars
     const { d, p, q, dp, dq, qi, ...publicKeyJwk } = jwk;
     // TODO replace with base64url encoder for web
-    const id = jose.base64url.encode(JSON.stringify(publicKeyJwk));
+    const id = utf8ToB64(JSON.stringify(publicKeyJwk));
+
     const did = `did:jwk:${id}`;
     return did;
 };
 
 // reference https://github.com/OR13/did-jwk/blob/main/src/index.js#L128
-const toDidDocument = (jwk: jose.JWK) => {
+const toDidDocument = (jwk: any) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const getPublicOperationsFromPrivate = (keyOps: any) => {
         if (keyOps.includes('sign')) {
@@ -76,7 +76,7 @@ const toDidDocument = (jwk: jose.JWK) => {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const resolve = (did: any, options = {}) => {
     if (options) options = {};
-    const decoded = jose.base64url.decode(did.split(':').pop().split('#')[0]);
+    const decoded = b64ToUtf8(did.split(':').pop().split('#')[0]);
     const jwk = JSON.parse(decoded.toString());
     return toDidDocument(jwk);
 };
@@ -88,4 +88,12 @@ function bnToBase64Url(bn: any): string {
     return Buffer.from(buffer).toString('base64');
 }
 
-export { createJWK, toDid, toDidDocument, resolve };
+function utf8ToB64(str: string) {
+    return window.btoa(unescape(encodeURIComponent(str)));
+}
+
+function b64ToUtf8(str: string) {
+    return decodeURIComponent(escape(window.atob(str)));
+}
+
+export { toDid, toDidDocument, resolve, createJWK };
