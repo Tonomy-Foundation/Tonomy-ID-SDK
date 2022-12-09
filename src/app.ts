@@ -45,6 +45,8 @@ namespace AppStatus {
     }
 }
 
+export { AppStatus };
+
 type AppRecord = {
     account: string;
     added: Date;
