@@ -18,7 +18,10 @@ export class HttpError extends Error {
         // This clips the constructor invocation from the stack trace.
         // It's not absolutely essential, but it does make the stack trace a little nicer.
         //  @see Node.js reference (bottom)
-        Error.captureStackTrace(this, this.constructor);
+        if (Error.captureStackTrace) {
+            Error.captureStackTrace(this, this.constructor);
+        }
+        this.stack = new Error().stack;
 
         this.path = httpError.path;
         this.response = httpError.response;
@@ -37,8 +40,10 @@ export class SdkError extends Error {
         this.name = this.constructor.name;
         // This clips the constructor invocation from the stack trace.
         // It's not absolutely essential, but it does make the stack trace a little nicer.
-        //  @see Node.js reference (bottom)
-        // Error.captureStackTrace(this, this.constructor);
+        if (Error.captureStackTrace) {
+            Error.captureStackTrace(this, this.constructor);
+        }
+        this.stack = new Error().stack;
     }
 }
 
@@ -61,6 +66,7 @@ enum SdkErrors {
     CouldntCreateApi = 'CouldntCreateApi',
     PasswordFormatInvalid = 'PasswordFormatInvalid',
     PasswordTooCommon = 'PasswordTooCommon',
+    KeyNotFound = 'KeyNotFound',
 }
 
 // eslint-disable-next-line @typescript-eslint/no-namespace

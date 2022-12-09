@@ -20,3 +20,4 @@ export * from './services/contracts/EosioContract';
 export * from './services/contracts/EosioTokenContract';
 
 export * from './services/errors';
+export * from './app';

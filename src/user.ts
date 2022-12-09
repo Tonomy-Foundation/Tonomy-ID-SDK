@@ -143,6 +143,8 @@ export class User {
             level: KeyManagerLevel.PASSWORD,
         });
 
+        if (!passwordKey) throwError('Password key not found', SdkErrors.KeyNotFound);
+
         // TODO this needs to change to the actual key used, from settings
         const idTonomyActiveKey = PrivateKey.from('PVT_K1_2bfGi9rYsXQSXXTvJbDAPhHLQUojjaNLomdm3cEJ1XTzMqUt3V');
 
@@ -207,10 +209,10 @@ export class User {
         const passwordKey = await keyManager.getKey({
             level: KeyManagerLevel.PASSWORD,
         });
+        if (!passwordKey) throwError('Password key not found', SdkErrors.KeyNotFound);
 
         const accountData = await User.getAccountInfo(idData.account_name);
         const onchainKey = accountData.getPermission('owner').required_auth.keys[0].key; // TODO change to active/other permissions when we make the change
-
         if (!passwordKey.equals(onchainKey)) throw new Error('Password is incorrect');
 
         this.storage.accountName = Name.from(idData.account_name);
