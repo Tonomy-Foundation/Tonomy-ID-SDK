@@ -13,6 +13,5 @@ jobs:
               uses: actions/setup-node@v3
               with:
                   node-version: 16.4.1
-            - run: npm i -g tsdx@0.14.1
             - run: npm install
             - run: npm test
