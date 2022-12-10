@@ -4,6 +4,7 @@ import * as Transaction from './services/eosio/transaction';
 export * from './services/keymanager';
 export * from './services/storage';
 export * from './user';
+export * from './app';
 
 export * from './initialize';
 export * from './settings';
@@ -19,3 +20,4 @@ export * from './services/contracts/EosioContract';
 export * from './services/contracts/EosioTokenContract';
 
 export * from './services/errors';
+export * from './app';

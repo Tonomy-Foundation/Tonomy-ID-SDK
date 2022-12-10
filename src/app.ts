@@ -5,11 +5,10 @@ import { IDContract } from './services/contracts/IDContract';
 import { KeyManager, KeyManagerLevel } from './services/keymanager';
 import { PersistentStorage } from './services/storage';
 import { generateRandomKeyPair, randomString } from './util/crypto';
-import { createJWK, toDid } from './util/did-jwk';
 import { UserStorage } from './user';
 import { createKeyManagerSigner } from './services/eosio/transaction';
-import { throwError } from './services/errors';
-import { resolve } from './util/did-jwk';
+import { SdkErrors, throwError } from './services/errors';
+import { createJWK, resolve, toDid } from './util/did-jwk';
 const idContract = IDContract.Instance;
 
 enum AppStatus {
@@ -107,12 +106,14 @@ export default class App {
         const signer = ES256KSigner(privateKey.data.array, true);
 
         const jwk = await createJWK(publicKey);
+
         const issuer = toDid(jwk);
+
         const token = await createJWT(payload, { issuer, signer, alg: 'ES256K-R' });
         if (redirect) {
             // const settings = await getSettings();
             // TODO update settings to redirect to the tonomy id website
-            window.location = `https://localhost:3000/login?jwt=${token}`;
+            window.location.href = `https://localhost:3000/login?jwt=${token}`;
             return;
         }
         return token;
@@ -121,12 +122,15 @@ export default class App {
     static async onRedirectLogin(): Promise<JWTLoginPayload> {
         const urlParams = new URLSearchParams(window.location.search);
         const jwt = urlParams.get('jwt');
-        if (!jwt) throwError('No JWT found in URL');
+        if (!jwt) throwError('No JWT found in URL', SdkErrors.MISSINGPARAMS);
         const verified = await this.verifyLoginJWT(jwt);
         const payload = verified.payload as JWTLoginPayload;
 
         if (payload.origin !== document.referrer)
-            throwError(`JWT origin: ${payload.origin} does not match referrer: ${document.referrer}`);
+            throwError(
+                `JWT origin: ${payload.origin} does not match referrer: ${document.referrer}`,
+                SdkErrors.WRONGORIGIN
+            );
         return payload;
     }
 
@@ -134,9 +138,8 @@ export default class App {
         const resolver: any = {
             resolve,
         };
-        const verify = await verifyJWT(jwt, { resolver });
-        return verify;
+        return await verifyJWT(jwt, { resolver });
     }
 }
 
-export { AppStatus as UserStatus, JWTLoginPayload };
+export { App, JWTLoginPayload, AppStatus };

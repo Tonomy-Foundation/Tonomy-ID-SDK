@@ -1,6 +1,6 @@
 import { KeyManager } from './services/keymanager';
 import { SettingsType, setSettings } from './settings';
-import { PersistantStorage, storageProxyHandler } from './services/storage';
+import { PersistentStorage, storageProxyHandler } from './services/storage';
 import { User } from './user';
 
 /**
@@ -9,7 +9,7 @@ import { User } from './user';
  * @param storage  the storage
  * @returns the user object
  */
-function initialize(keyManager: KeyManager, storage: PersistantStorage, settings: SettingsType): User {
+function initialize(keyManager: KeyManager, storage: PersistentStorage, settings: SettingsType): User {
     setSettings(settings);
 
     storage.cache = {}; // adding cache property to save cache data inside

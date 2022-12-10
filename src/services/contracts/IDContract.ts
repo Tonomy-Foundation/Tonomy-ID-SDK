@@ -167,13 +167,13 @@ class IDContract {
     async loginwithapp(
         account: string,
         app: string,
-        public_key: PublicKey,
+        key: PublicKey,
         signer: Signer
     ): Promise<API.v1.PushTransactionResponse> {
         const action = {
             authorization: [
                 {
-                    actor: 'id.tonomy',
+                    actor: account,
                     permission: 'active',
                 },
             ],
@@ -182,7 +182,7 @@ class IDContract {
             data: {
                 account,
                 app,
-                public_key,
+                key,
             },
         };
 
