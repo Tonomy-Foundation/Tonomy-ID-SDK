@@ -11,12 +11,12 @@
         "node": ">=10"
     },
     "scripts": {
-        "start": "tsdx watch",
-        "build": "tsdx build",
-        "test": "tsdx test",
+        "start": "npx tsdx watch",
+        "build": "npx tsdx build",
+        "test": "npx tsdx test",
         "lint": "eslint src test --ext .ts --resolve-plugins-relative-to .",
         "lint:fix": "npm run lint -- --fix",
-        "prepare": "tsdx build --transpileOnly",
+        "prepare": "npx tsdx build --transpileOnly",
         "size": "size-limit",
         "analyze": "size-limit --why"
     },

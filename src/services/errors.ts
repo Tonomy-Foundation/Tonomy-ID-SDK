@@ -69,6 +69,7 @@ enum SdkErrors {
     KeyNotFound = 'KeyNotFound',
     JWTNOTValid = 'JWTIsNotValid',
     WRONGORIGIN = 'WrongOrigin',
+    SettingsNotInitialized = 'SettingsNotInitialized',
     MISSINGPARAMS = 'MissingParams',
 }
 
