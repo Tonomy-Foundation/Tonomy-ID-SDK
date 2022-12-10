@@ -56,9 +56,9 @@ type UserAppStorage = {
 };
 
 type JWTLoginPayload = {
-    number: string;
+    randomString: string;
     origin: string;
-    pubkey: string;
+    publicKey: string;
 };
 
 export default class App {
@@ -95,21 +95,24 @@ export default class App {
         await this.storage.apps;
     }
 
-    static async onPressLogin(window: Window, redirect = false): Promise<string | void> {
+    static async onPressLogin(redirect = false): Promise<string | void> {
         const { privateKey, publicKey } = generateRandomKeyPair();
         const payload: JWTLoginPayload = {
-            number: randomString(32),
-            origin: window.location.hostname,
-            pubkey: publicKey.toString(),
+            randomString: randomString(32),
+            origin: window.location.origin,
+            publicKey: publicKey.toString(),
         };
 
+        // TODO store the signer key in localStorage
         const signer = ES256KSigner(privateKey.data.array, true);
 
         const jwk = await createJWK(publicKey);
 
         const issuer = toDid(jwk);
 
+        // TODO use expiresIn to make JWT expire after 5 minutes
         const token = await createJWT(payload, { issuer, signer, alg: 'ES256K-R' });
+
         if (redirect) {
             // const settings = await getSettings();
             // TODO update settings to redirect to the tonomy id website
@@ -119,19 +122,20 @@ export default class App {
         return token;
     }
 
-    static async onRedirectLogin(): Promise<JWTLoginPayload> {
+    static async onRedirectLogin(): Promise<JWTVerified> {
         const urlParams = new URLSearchParams(window.location.search);
         const jwt = urlParams.get('jwt');
         if (!jwt) throwError('No JWT found in URL', SdkErrors.MISSINGPARAMS);
         const verified = await this.verifyLoginJWT(jwt);
         const payload = verified.payload as JWTLoginPayload;
 
-        if (payload.origin !== document.referrer)
+        if (payload.origin !== document.referrer) {
             throwError(
                 `JWT origin: ${payload.origin} does not match referrer: ${document.referrer}`,
                 SdkErrors.WRONGORIGIN
             );
-        return payload;
+        }
+        return verified;
     }
 
     static async verifyLoginJWT(jwt: string): Promise<JWTVerified> {
