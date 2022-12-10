@@ -1,3 +1,5 @@
+import { SdkErrors, throwError } from './services/errors';
+
 export type SettingsType = {
     blockchainUrl: string;
 };
@@ -12,7 +14,7 @@ export function setSettings(newSettings: SettingsType) {
 
 export async function getSettings(): Promise<SettingsType> {
     if (!initialized) {
-        throw new Error('settings not yet intialized');
+        throwError('Settings not yet initialized', SdkErrors.SettingsNotInitialized);
     }
     return settings;
 }
