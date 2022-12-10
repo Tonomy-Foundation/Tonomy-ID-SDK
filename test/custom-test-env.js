@@ -1,16 +1,29 @@
-const Environment = require('jest-environment-jsdom');
+/* eslint-disable @typescript-eslint/no-var-requires */
+const pkg = require('jest-environment-jsdom');
 
-/**
- * A custom environment to set the TextEncoder that is required by TensorFlow.js.
- */
-module.exports = class CustomTestEnvironment extends Environment {
+let JSDOMEnvironment = pkg;
+if (pkg.default) {
+    JSDOMEnvironment = pkg.default;
+}
+
+module.exports = class CustomizedJSDomEnvironment extends JSDOMEnvironment {
+    constructor(config, context) {
+        super(config, context);
+        this.global.jsdom = this.dom;
+    }
     async setup() {
         await super.setup();
+        this.global.jsdom = this.dom;
         if (typeof this.global.TextEncoder === 'undefined') {
             const { TextEncoder, TextDecoder } = require('util');
 
             this.global.TextDecoder = TextDecoder;
             this.global.TextEncoder = TextEncoder;
         }
+    }
+
+    async teardown() {
+        this.global.jsdom = null;
+        await super.teardown();
     }
 };

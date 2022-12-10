@@ -40,7 +40,6 @@
     ],
     "devDependencies": {
         "@size-limit/preset-small-lib": "^8.0.0",
-        "@testing-library/jest-dom": "^5.16.5",
         "@types/randombytes": "^2.0.0",
         "@typescript-eslint/eslint-plugin": "^5.40.0",
         "@typescript-eslint/parser": "^5.40.0",
@@ -48,6 +47,7 @@
         "eslint-config-prettier": "^8.5.0",
         "eslint-plugin-prettier": "^3.4.1",
         "husky": "^8.0.1",
+        "jest-environment-jsdom": "^24.9.0",
         "prettier": "^2.7.1",
         "size-limit": "^8.0.0",
         "tsdx": "^0.14.1",
