@@ -1,10 +1,8 @@
 import { PublicKey } from '@greymass/eosio';
 import { toElliptic } from './crypto';
 
-const createJWK = (publicKey: PublicKey) => {
+export function createJWK(publicKey: PublicKey) {
     const ecPubKey = toElliptic(publicKey);
-
-    if (!ecPubKey.isValid()) throw new Error('Key is not valid');
 
     const publicKeyJwk = {
         crv: 'secp256k1',
@@ -14,9 +12,10 @@ const createJWK = (publicKey: PublicKey) => {
         kid: publicKey.toString(),
     };
     return publicKeyJwk;
-};
+}
+
 // reference https://github.com/OR13/did-jwk/blob/main/src/index.js#L120
-const toDid = (jwk: any) => {
+export function toDid(jwk: any) {
     // eslint-disable-next-line no-unused-vars
     const { d, p, q, dp, dq, qi, ...publicKeyJwk } = jwk;
     // TODO replace with base64url encoder for web
@@ -24,10 +23,10 @@ const toDid = (jwk: any) => {
 
     const did = `did:jwk:${id}`;
     return did;
-};
+}
 
 // reference https://github.com/OR13/did-jwk/blob/main/src/index.js#L128
-const toDidDocument = (jwk: any) => {
+export function toDidDocument(jwk: any) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const getPublicOperationsFromPrivate = (keyOps: any) => {
         if (keyOps.includes('sign')) {
@@ -70,30 +69,29 @@ const toDidDocument = (jwk: any) => {
     };
 
     return didDocument;
-};
+}
 
 // reference https://github.com/OR13/did-jwk/blob/main/src/index.js#L177
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const resolve = (did: any, options = {}) => {
+export function resolve(did: any, options = {}) {
     if (options) options = {};
     const decoded = b64ToUtf8(did.split(':').pop().split('#')[0]);
     const jwk = JSON.parse(decoded.toString());
     return toDidDocument(jwk);
-};
+}
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function bnToBase64Url(bn: any): string {
+export function bnToBase64Url(bn: any): string {
     const buffer = bn.toArrayLike(Buffer, 'be');
     // TODO replace with base64url encoder for web
     return Buffer.from(buffer).toString('base64');
 }
 
-function utf8ToB64(str: string) {
+export function utf8ToB64(str: string) {
+    // TODO dont depend on window
     return window.btoa(unescape(encodeURIComponent(str)));
 }
 
-function b64ToUtf8(str: string) {
+export function b64ToUtf8(str: string) {
     return decodeURIComponent(escape(window.atob(str)));
 }
-
-export { toDid, toDidDocument, resolve, createJWK };
