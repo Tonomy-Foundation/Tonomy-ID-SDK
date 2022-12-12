@@ -9,7 +9,7 @@ describe('logging in', () => {
     });
 
     it('on press button', async () => {
-        const jwt = await App.onPressLogin(window);
+        const jwt = await App.onPressLogin({ window, callbackPath: '/login' });
         expect(jwt).toBeDefined();
     });
 
@@ -25,10 +25,10 @@ describe('logging in', () => {
         jsdom.reconfigure({
             url,
         });
-        const payload = await App.onRedirectLogin();
-        expect(payload).toBeDefined();
-        expect(payload.number).toBe('a92dd5d72d940203d64cf2ec4fcd77ccc42f3dede40b61b6bb436c828e494825');
-        expect(payload.pubkey).toBe('PUB_K1_8722egiinaa4n22e6HBcAC9ghzZ9nPkjjC3ptP19kh37x79pCV');
-        expect(payload.origin).toBe('localhost');
+        const result = await App.onRedirectLogin();
+        expect(result).toBeDefined();
+        expect(result.payload.randomString).toBe('a92dd5d72d940203d64cf2ec4fcd77ccc42f3dede40b61b6bb436c828e494825');
+        expect(result.payload.publicKey).toBe('PUB_K1_8722egiinaa4n22e6HBcAC9ghzZ9nPkjjC3ptP19kh37x79pCV');
+        expect(result.payload.origin).toBe('localhost');
     });
 });

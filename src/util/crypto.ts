@@ -18,7 +18,7 @@ function validateKey(keyPair: elliptic.ec.KeyPair) {
 }
 
 export function toElliptic(key: PrivateKey | PublicKey): elliptic.ec.KeyPair {
-    let ecKeyPair = elliptic.ec.KeyPair;
+    let ecKeyPair: elliptic.ec.KeyPair;
     if (key instanceof PublicKey) {
         ecKeyPair = secp256k1.keyFromPublic(key.data.array);
     } else {
