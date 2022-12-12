@@ -10,19 +10,16 @@ export function randomBytes(bytes: number): Uint8Array {
 }
 
 export function toElliptic(key: PrivateKey | PublicKey): elliptic.ec.KeyPair {
-    const keyBytes: Uint8Array = key.data.array;
-    if (keyBytes.length !== 32) {
-        throw throwError(
-            `Invalid private key format. Expecting 32 bytes, but got ${keyBytes.length}`,
-            SdkErrors.InvalidKey
-        );
+    let ecKeyPair = elliptic.ec.KeyPair;
+    if (key instanceof PublicKey) {
+        ecKeyPair = secp256k1.keyFromPublic(key.data.array).getPublic();
+    } else {
+        ecKeyPair = secp256k1.keyFromPrivate(key.data.array);
     }
 
-    if (key instanceof PublicKey) {
-        return secp256k1.keyFromPublic(keyBytes);
-    } else {
-        return secp256k1.keyFromPrivate(keyBytes);
-    }
+    ecKeyPair.isValid();
+
+    return ecKeyPair;
 }
 
 export function randomString(bytes: number): string {
