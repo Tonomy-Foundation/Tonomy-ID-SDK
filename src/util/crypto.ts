@@ -9,15 +9,22 @@ export function randomBytes(bytes: number): Uint8Array {
     return rb(new Uint8Array(bytes));
 }
 
+function validateKey(keyPair: elliptic.ec.KeyPair) {
+    const result = keyPair.validate();
+
+    if (!result.result) {
+        throwError(`Key not valid with reason ${result.reason}`, SdkErrors.InvalidKey);
+    }
+}
+
 export function toElliptic(key: PrivateKey | PublicKey): elliptic.ec.KeyPair {
     let ecKeyPair = elliptic.ec.KeyPair;
     if (key instanceof PublicKey) {
-        ecKeyPair = secp256k1.keyFromPublic(key.data.array).getPublic();
+        ecKeyPair = secp256k1.keyFromPublic(key.data.array);
     } else {
         ecKeyPair = secp256k1.keyFromPrivate(key.data.array);
     }
-
-    ecKeyPair.isValid();
+    validateKey(ecKeyPair);
 
     return ecKeyPair;
 }
