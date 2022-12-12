@@ -9,7 +9,7 @@ describe('logging in', () => {
     });
 
     it('on press button', async () => {
-        const jwt = await App.onPressLogin({ window, callbackPath: '/login' });
+        const jwt = await App.onPressLogin({ window, callbackPath: '/login', redirect: false });
         expect(jwt).toBeDefined();
     });
 

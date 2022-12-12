@@ -8,8 +8,8 @@ export function createJWK(publicKey: PublicKey) {
     const publicKeyJwk = {
         crv: 'secp256k1',
         kty: 'EC',
-        x: bnToBase64Url(ecPubKey.getPublic().getX()),
-        y: bnToBase64Url(ecPubKey.getPublic().getY()),
+        x: bnToBase64Url(ecPubKey.getPublic().getX() as any),
+        y: bnToBase64Url(ecPubKey.getPublic().getY() as any),
         kid: publicKey.toString(),
     };
     return publicKeyJwk;
@@ -85,18 +85,18 @@ export function resolve(did: any, options = {}) {
 function bnToBase64Url(bn: typeof BN): string {
     if (typeof Buffer === 'undefined') {
         // browser
-        return hexToBase64(bn.toString('hex'));
+        return hexToBase64((bn as any).toString('hex'));
     }
     // nodejs
-    const buffer = bn.toArrayLike(Buffer, 'be');
+    const buffer = (bn as any).toArrayLike(Buffer, 'be');
     return Buffer.from(buffer).toString('base64');
 }
 
 function hexToBase64(hexstring: string) {
     return window.btoa(
-        hexstring
+        (hexstring as any)
             .match(/\w{2}/g)
-            .map(function (a) {
+            .map(function (a: string) {
                 return String.fromCharCode(parseInt(a, 16));
             })
             .join('')

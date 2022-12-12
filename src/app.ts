@@ -155,7 +155,9 @@ export default class App {
             // TODO add Antelope resolver as well
         };
         const res = await verifyJWT(jwt, { resolver });
-        if (!res.verified) throwError('JWT failed verification', SdkErrors.JWTVerificationFailed);
+
+        if (!res.verified) throwError('JWT failed verification', SdkErrors.JwtNotValid);
+        return res;
     }
 }
 
