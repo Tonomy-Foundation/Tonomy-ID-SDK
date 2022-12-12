@@ -55,10 +55,17 @@ type UserAppStorage = {
     apps: AppRecord[];
 };
 
+// TODO change to use VC
 type JWTLoginPayload = {
     randomString: string;
     origin: string;
     publicKey: string;
+    callbackPath?: string;
+};
+
+type OnPressLoginOptions = {
+    callbackPath: string;
+    redirect?: boolean;
 };
 
 export default class App {
@@ -95,12 +102,13 @@ export default class App {
         await this.storage.apps;
     }
 
-    static async onPressLogin(redirect = false): Promise<string | void> {
+    static async onPressLogin({ redirect = true, callbackPath }: OnPressLoginOptions): Promise<string | void> {
         const { privateKey, publicKey } = generateRandomKeyPair();
         const payload: JWTLoginPayload = {
             randomString: randomString(32),
             origin: window.location.origin,
             publicKey: publicKey.toString(),
+            callbackPath,
         };
 
         // TODO store the signer key in localStorage
@@ -116,7 +124,7 @@ export default class App {
         if (redirect) {
             // const settings = await getSettings();
             // TODO update settings to redirect to the tonomy id website
-            window.location.href = `https://localhost:3000/login?jwt=${token}`;
+            window.location.href = `http://localhost:3000/login?jwt=${token}`;
             return;
         }
         return token;
@@ -141,6 +149,7 @@ export default class App {
     static async verifyLoginJWT(jwt: string): Promise<JWTVerified> {
         const resolver: any = {
             resolve,
+            // TODO add Antelope resolver as well
         };
         return await verifyJWT(jwt, { resolver });
     }
