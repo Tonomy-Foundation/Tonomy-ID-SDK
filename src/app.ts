@@ -134,7 +134,7 @@ export default class App {
     static async onRedirectLogin(): Promise<JWTVerified> {
         const urlParams = new URLSearchParams(window.location.search);
         const jwt = urlParams.get('jwt');
-        if (!jwt) throwError('No JWT found in URL', SdkErrors.MISSINGPARAMS);
+        if (!jwt) throwError('No JWT found in URL', SdkErrors.MissingParams);
 
         const verified = await this.verifyLoginJWT(jwt);
         const payload = verified.payload as JWTLoginPayload;
@@ -154,7 +154,8 @@ export default class App {
             resolve,
             // TODO add Antelope resolver as well
         };
-        return await verifyJWT(jwt, { resolver });
+        const res = await verifyJWT(jwt, { resolver });
+        if (!res.verified) throwError('JWT failed verification', SdkErrors.JWTVerificationFailed);
     }
 }
 

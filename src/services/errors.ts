@@ -67,10 +67,10 @@ enum SdkErrors {
     PasswordFormatInvalid = 'PasswordFormatInvalid',
     PasswordTooCommon = 'PasswordTooCommon',
     KeyNotFound = 'KeyNotFound',
-    JWTNOTValid = 'JWTIsNotValid',
+    JwtNotValid = 'JwtNotValid',
     WrongOrigin = 'WrongOrigin',
     SettingsNotInitialized = 'SettingsNotInitialized',
-    MISSINGPARAMS = 'MissingParams',
+    MissingParams = 'MissingParams',
     InvalidKey = 'InvalidKey',
 }
 
