@@ -1,5 +1,6 @@
 import { PublicKey } from '@greymass/eosio';
 import { toElliptic } from './crypto';
+import { BN } from 'bn.js';
 
 export function createJWK(publicKey: PublicKey) {
     const ecPubKey = toElliptic(publicKey);
@@ -81,13 +82,30 @@ export function resolve(did: any, options = {}) {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function bnToBase64Url(bn: any): string {
+function bnToBase64Url(bn: typeof BN): string {
+    console.log('bnToBase64Url', typeof Buffer);
+
+    if (typeof Buffer === 'undefined') {
+        // browser
+        return hexToBase64(bn.toString('hex'));
+    }
+    // nodejs
     const buffer = bn.toArrayLike(Buffer, 'be');
-    // TODO replace with base64url encoder for web
     return Buffer.from(buffer).toString('base64');
 }
 
-export function utf8ToB64(str: string) {
+function hexToBase64(hexstring: string) {
+    return window.btoa(
+        hexstring
+            .match(/\w{2}/g)
+            .map(function (a) {
+                return String.fromCharCode(parseInt(a, 16));
+            })
+            .join('')
+    );
+}
+
+function utf8ToB64(str: string) {
     // TODO dont depend on window
     return window.btoa(unescape(encodeURIComponent(str)));
 }
