@@ -83,8 +83,6 @@ export function resolve(did: any, options = {}) {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function bnToBase64Url(bn: typeof BN): string {
-    console.log('bnToBase64Url', typeof Buffer);
-
     if (typeof Buffer === 'undefined') {
         // browser
         return hexToBase64(bn.toString('hex'));

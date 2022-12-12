@@ -68,7 +68,7 @@ enum SdkErrors {
     PasswordTooCommon = 'PasswordTooCommon',
     KeyNotFound = 'KeyNotFound',
     JWTNOTValid = 'JWTIsNotValid',
-    WRONGORIGIN = 'WrongOrigin',
+    WrongOrigin = 'WrongOrigin',
     SettingsNotInitialized = 'SettingsNotInitialized',
     MISSINGPARAMS = 'MissingParams',
     InvalidKey = 'InvalidKey',

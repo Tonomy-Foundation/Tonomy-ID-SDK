@@ -139,10 +139,11 @@ export default class App {
         const verified = await this.verifyLoginJWT(jwt);
         const payload = verified.payload as JWTLoginPayload;
 
-        if (payload.origin !== document.referrer) {
+        const referrer = new URL(document.referrer);
+        if (payload.origin !== referrer.origin) {
             throwError(
                 `JWT origin: ${payload.origin} does not match referrer: ${document.referrer}`,
-                SdkErrors.WRONGORIGIN
+                SdkErrors.WrongOrigin
             );
         }
         return verified;
