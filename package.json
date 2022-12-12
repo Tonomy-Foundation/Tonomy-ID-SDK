@@ -40,6 +40,7 @@
     ],
     "devDependencies": {
         "@size-limit/preset-small-lib": "^8.0.0",
+        "@types/elliptic": "^6.4.14",
         "@types/randombytes": "^2.0.0",
         "@typescript-eslint/eslint-plugin": "^5.40.0",
         "@typescript-eslint/parser": "^5.40.0",
