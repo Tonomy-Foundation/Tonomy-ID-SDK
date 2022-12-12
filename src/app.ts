@@ -134,6 +134,7 @@ export default class App {
         const urlParams = new URLSearchParams(window.location.search);
         const jwt = urlParams.get('jwt');
         if (!jwt) throwError('No JWT found in URL', SdkErrors.MISSINGPARAMS);
+
         const verified = await this.verifyLoginJWT(jwt);
         const payload = verified.payload as JWTLoginPayload;
 

@@ -1,17 +1,17 @@
-import { PublicKey as PublicKeyCon } from 'eosjs/dist/eosjs-key-conversions';
 import { PublicKey } from '@greymass/eosio';
+import { toElliptic } from './crypto';
 
 const createJWK = (publicKey: PublicKey) => {
-    const pubKey = PublicKeyCon.fromString(publicKey.toString());
-    const ecPubKey = pubKey.toElliptic();
-    if (!pubKey.isValid()) throw new Error('Key is not valid');
+    const ecPubKey = toElliptic(publicKey);
+
+    if (!ecPubKey.isValid()) throw new Error('Key is not valid');
 
     const publicKeyJwk = {
         crv: 'secp256k1',
         kty: 'EC',
         x: bnToBase64Url(ecPubKey.getPublic().getX()),
         y: bnToBase64Url(ecPubKey.getPublic().getY()),
-        kid: pubKey.toString(),
+        kid: publicKey.toString(),
     };
     return publicKeyJwk;
 };

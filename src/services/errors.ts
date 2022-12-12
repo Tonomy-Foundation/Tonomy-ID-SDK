@@ -71,6 +71,7 @@ enum SdkErrors {
     WRONGORIGIN = 'WrongOrigin',
     SettingsNotInitialized = 'SettingsNotInitialized',
     MISSINGPARAMS = 'MissingParams',
+    InvalidKey = 'InvalidKey',
 }
 
 // eslint-disable-next-line @typescript-eslint/no-namespace
