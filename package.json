@@ -49,6 +49,7 @@
         "eslint-plugin-prettier": "^3.4.1",
         "husky": "^8.0.1",
         "jest-environment-jsdom": "^24.9.0",
+        "jsdom-url": "^3.0.1",
         "prettier": "^2.7.1",
         "size-limit": "^8.0.0",
         "tsdx": "^0.14.1",

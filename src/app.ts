@@ -66,7 +66,6 @@ type JWTLoginPayload = {
 type OnPressLoginOptions = {
     callbackPath: string;
     redirect?: boolean;
-    window: any;
 };
 
 export default class App {
@@ -103,7 +102,7 @@ export default class App {
         await this.storage.apps;
     }
 
-    static async onPressLogin({ redirect = true, callbackPath, window }: OnPressLoginOptions): Promise<string | void> {
+    static async onPressLogin({ redirect = true, callbackPath }: OnPressLoginOptions): Promise<string | void> {
         const { privateKey, publicKey } = generateRandomKeyPair();
         const payload: JWTLoginPayload = {
             randomString: randomString(32),
