@@ -8,8 +8,8 @@ export type SettingsType = {
 let settings: SettingsType;
 let initialized = false;
 
-export function setSettings(newSettings: SettingsType) {
-    settings = newSettings;
+export function setSettings(newSettings: Partial<SettingsType>) {
+    settings = newSettings as SettingsType;
     initialized = true;
 }
 
