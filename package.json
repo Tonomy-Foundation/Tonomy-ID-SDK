@@ -16,7 +16,7 @@
         "test": "npx tsdx test",
         "lint": "eslint src test --ext .ts --resolve-plugins-relative-to .",
         "lint:fix": "npm run lint -- --fix",
-        "prepare": "npx tsdx build --transpileOnly",
+        "prepare": "npx tsdx build --transpileOnly --noClean",
         "size": "size-limit",
         "analyze": "size-limit --why"
     },
