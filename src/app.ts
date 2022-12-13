@@ -1,14 +1,16 @@
 /* eslint-disable camelcase */
-import { Name, PublicKey } from '@greymass/eosio';
+import { Name, PrivateKey, PublicKey } from '@greymass/eosio';
 import { ES256KSigner, createJWT, verifyJWT, JWTVerified } from 'did-jwt';
 import { IDContract } from './services/contracts/IDContract';
 import { KeyManager, KeyManagerLevel } from './services/keymanager';
 import { PersistentStorage } from './services/storage';
 import { generateRandomKeyPair, randomString } from './util/crypto';
 import { UserStorage } from './user';
-import { createKeyManagerSigner } from './services/eosio/transaction';
+import { createKeyManagerSigner, createSigner } from './services/eosio/transaction';
 import { SdkErrors, throwError } from './services/errors';
 import { createJWK, resolve, toDid } from './util/did-jwk';
+import { getSettings } from './settings';
+import { AccountType, TonomyUsername } from './services/username';
 const idContract = IDContract.Instance;
 
 enum AppStatus {
@@ -68,6 +70,15 @@ type OnPressLoginOptions = {
     redirect?: boolean;
 };
 
+export type AppCreateOptions = {
+    usernamePrefix: string;
+    appName: string;
+    description: string;
+    logoUrl: string;
+    origin: string;
+    publicKey: PublicKey;
+};
+
 export default class App {
     keyManager: KeyManager;
     storage: PersistentStorage & UserStorage & UserAppStorage;
@@ -75,6 +86,31 @@ export default class App {
     constructor(_keyManager: KeyManager, _storage: PersistentStorage) {
         this.keyManager = _keyManager;
         this.storage = _storage as PersistentStorage & UserStorage & UserAppStorage;
+    }
+
+    static async create(options: AppCreateOptions) {
+        const username = new TonomyUsername(options.usernamePrefix, AccountType.APP, '.test.id');
+
+        // TODO remove this
+        const privateKey = PrivateKey.from('PVT_K1_2bfGi9rYsXQSXXTvJbDAPhHLQUojjaNLomdm3cEJ1XTzMqUt3V');
+
+        // TODO update storage with
+        const res = await idContract.newapp(
+            name: options.appName
+            usernameHash: username.usernameHash,
+            description: options.description,
+            logo_url: options.logoUrl,
+            origin: options.origin,
+            public_key: options.publickey.toString(),
+            createSigner(privateKey)
+        );
+
+        const newAccountAction = res.processed.action_traces[0].inline_traces[0].act;
+        return {
+            accountName: Name.from(newAccountAction.data.name),
+            username: username
+            ...options
+        }
     }
 
     async loginWithApp(account: Name, key: PublicKey, password: string): Promise<void> {
@@ -122,9 +158,7 @@ export default class App {
         const token = await createJWT(payload, { issuer, signer, alg: 'ES256K-R' });
 
         if (redirect) {
-            // const settings = await getSettings();
-            // TODO update settings to redirect to the tonomy id website
-            window.location.href = `http://localhost:3000/login?jwt=${token}`;
+            window.location.href = `${getSettings().ssoWebsiteOrigin}/login?jwt=${token}`;
             return;
         }
         return token;
