@@ -94,18 +94,20 @@ export default class App {
         // TODO remove this
         const privateKey = PrivateKey.from('PVT_K1_2bfGi9rYsXQSXXTvJbDAPhHLQUojjaNLomdm3cEJ1XTzMqUt3V');
 
-        // TODO update storage with
+        // TODO update storage with app in a pending state
         const res = await idContract.newapp(
-            name: options.appName
-            usernameHash: username.usernameHash,
-            description: options.description,
-            logo_url: options.logoUrl,
-            origin: options.origin,
-            public_key: options.publickey.toString(),
+            options.appName,
+            options.description,
+            username.usernameHash,
+            options.logoUrl,
+            options.origin,
+            options.publicKey,
             createSigner(privateKey)
         );
 
         const newAccountAction = res.processed.action_traces[0].inline_traces[0].act;
+
+        // TODO update status of app to READY or something
         return {
             accountName: Name.from(newAccountAction.data.name),
             username: username
