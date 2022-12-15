@@ -110,9 +110,9 @@ export default class App {
         // TODO update status of app to READY or something
         return {
             accountName: Name.from(newAccountAction.data.name),
-            username: username
-            ...options
-        }
+            username: username,
+            ...options,
+        };
     }
 
     async loginWithApp(account: Name, key: PublicKey, password: string): Promise<void> {
