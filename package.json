@@ -11,12 +11,12 @@
         "node": ">=10"
     },
     "scripts": {
-        "start": "npx tsdx watch",
+        "start": "npx tsdx watch --noClean",
         "build": "npx tsdx build",
         "test": "npx tsdx test",
         "lint": "eslint src test --ext .ts --resolve-plugins-relative-to .",
         "lint:fix": "npm run lint -- --fix",
-        "prepare": "npx tsdx build --transpileOnly",
+        "prepare": "npx tsdx build --transpileOnly --noClean",
         "size": "size-limit",
         "analyze": "size-limit --why"
     },
@@ -40,6 +40,7 @@
     ],
     "devDependencies": {
         "@size-limit/preset-small-lib": "^8.0.0",
+        "@types/elliptic": "^6.4.14",
         "@types/randombytes": "^2.0.0",
         "@typescript-eslint/eslint-plugin": "^5.40.0",
         "@typescript-eslint/parser": "^5.40.0",
@@ -48,6 +49,7 @@
         "eslint-plugin-prettier": "^3.4.1",
         "husky": "^8.0.1",
         "jest-environment-jsdom": "^24.9.0",
+        "jsdom-url": "^3.0.1",
         "prettier": "^2.7.1",
         "size-limit": "^8.0.0",
         "tsdx": "^0.14.1",
@@ -59,6 +61,6 @@
         "@greymass/eosio": "^0.6.4",
         "cross-fetch": "^3.1.5",
         "did-jwt": "^6.10.1",
-        "eosjs": "^22.1.0"
+        "elliptic": "^6.5.4"
     }
 }

@@ -67,10 +67,11 @@ enum SdkErrors {
     PasswordFormatInvalid = 'PasswordFormatInvalid',
     PasswordTooCommon = 'PasswordTooCommon',
     KeyNotFound = 'KeyNotFound',
-    JWTNOTValid = 'JWTIsNotValid',
-    WRONGORIGIN = 'WrongOrigin',
+    JwtNotValid = 'JwtNotValid',
+    WrongOrigin = 'WrongOrigin',
     SettingsNotInitialized = 'SettingsNotInitialized',
-    MISSINGPARAMS = 'MissingParams',
+    MissingParams = 'MissingParams',
+    InvalidKey = 'InvalidKey',
 }
 
 // eslint-disable-next-line @typescript-eslint/no-namespace

@@ -1,22 +1,22 @@
-import { PublicKey as PublicKeyCon } from 'eosjs/dist/eosjs-key-conversions';
 import { PublicKey } from '@greymass/eosio';
+import { toElliptic } from './crypto';
+import { BN } from 'bn.js';
 
-const createJWK = (publicKey: PublicKey) => {
-    const pubKey = PublicKeyCon.fromString(publicKey.toString());
-    const ecPubKey = pubKey.toElliptic();
-    if (!pubKey.isValid()) throw new Error('Key is not valid');
+export function createJWK(publicKey: PublicKey) {
+    const ecPubKey = toElliptic(publicKey);
 
     const publicKeyJwk = {
         crv: 'secp256k1',
         kty: 'EC',
-        x: bnToBase64Url(ecPubKey.getPublic().getX()),
-        y: bnToBase64Url(ecPubKey.getPublic().getY()),
-        kid: pubKey.toString(),
+        x: bnToBase64Url(ecPubKey.getPublic().getX() as any),
+        y: bnToBase64Url(ecPubKey.getPublic().getY() as any),
+        kid: publicKey.toString(),
     };
     return publicKeyJwk;
-};
+}
+
 // reference https://github.com/OR13/did-jwk/blob/main/src/index.js#L120
-const toDid = (jwk: any) => {
+export function toDid(jwk: any) {
     // eslint-disable-next-line no-unused-vars
     const { d, p, q, dp, dq, qi, ...publicKeyJwk } = jwk;
     // TODO replace with base64url encoder for web
@@ -24,10 +24,10 @@ const toDid = (jwk: any) => {
 
     const did = `did:jwk:${id}`;
     return did;
-};
+}
 
 // reference https://github.com/OR13/did-jwk/blob/main/src/index.js#L128
-const toDidDocument = (jwk: any) => {
+export function toDidDocument(jwk: any) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const getPublicOperationsFromPrivate = (keyOps: any) => {
         if (keyOps.includes('sign')) {
@@ -70,30 +70,44 @@ const toDidDocument = (jwk: any) => {
     };
 
     return didDocument;
-};
+}
 
 // reference https://github.com/OR13/did-jwk/blob/main/src/index.js#L177
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const resolve = (did: any, options = {}) => {
+export function resolve(did: any, options = {}) {
     if (options) options = {};
     const decoded = b64ToUtf8(did.split(':').pop().split('#')[0]);
     const jwk = JSON.parse(decoded.toString());
     return toDidDocument(jwk);
-};
+}
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function bnToBase64Url(bn: any): string {
-    const buffer = bn.toArrayLike(Buffer, 'be');
-    // TODO replace with base64url encoder for web
+function bnToBase64Url(bn: typeof BN): string {
+    if (typeof Buffer === 'undefined') {
+        // browser
+        return hexToBase64((bn as any).toString('hex'));
+    }
+    // nodejs
+    const buffer = (bn as any).toArrayLike(Buffer, 'be');
     return Buffer.from(buffer).toString('base64');
 }
 
+function hexToBase64(hexstring: string) {
+    return window.btoa(
+        (hexstring as any)
+            .match(/\w{2}/g)
+            .map(function (a: string) {
+                return String.fromCharCode(parseInt(a, 16));
+            })
+            .join('')
+    );
+}
+
 function utf8ToB64(str: string) {
+    // TODO dont depend on window
     return window.btoa(unescape(encodeURIComponent(str)));
 }
 
-function b64ToUtf8(str: string) {
+export function b64ToUtf8(str: string) {
     return decodeURIComponent(escape(window.atob(str)));
 }
-
-export { toDid, toDidDocument, resolve, createJWK };

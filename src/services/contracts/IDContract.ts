@@ -131,7 +131,7 @@ class IDContract {
     }
 
     async newapp(
-        name: string,
+        app_name: string,
         description: string,
         username_hash: string,
         logo_url: string,
@@ -152,7 +152,7 @@ class IDContract {
             account: 'id.tonomy',
             name: 'newapp',
             data: {
-                name,
+                app_name,
                 description,
                 logo_url,
                 origin: origin,

@@ -1,14 +1,16 @@
 /* eslint-disable camelcase */
-import { Name, PublicKey } from '@greymass/eosio';
+import { Name, PrivateKey, PublicKey } from '@greymass/eosio';
 import { ES256KSigner, createJWT, verifyJWT, JWTVerified } from 'did-jwt';
 import { IDContract } from './services/contracts/IDContract';
 import { KeyManager, KeyManagerLevel } from './services/keymanager';
 import { PersistentStorage } from './services/storage';
 import { generateRandomKeyPair, randomString } from './util/crypto';
 import { UserStorage } from './user';
-import { createKeyManagerSigner } from './services/eosio/transaction';
+import { createKeyManagerSigner, createSigner } from './services/eosio/transaction';
 import { SdkErrors, throwError } from './services/errors';
 import { createJWK, resolve, toDid } from './util/did-jwk';
+import { getSettings } from './settings';
+import { AccountType, TonomyUsername } from './services/username';
 const idContract = IDContract.Instance;
 
 enum AppStatus {
@@ -55,10 +57,26 @@ type UserAppStorage = {
     apps: AppRecord[];
 };
 
+// TODO change to use VC
 type JWTLoginPayload = {
-    number: string;
+    randomString: string;
     origin: string;
-    pubkey: string;
+    publicKey: string;
+    callbackPath?: string;
+};
+
+type OnPressLoginOptions = {
+    callbackPath: string;
+    redirect?: boolean;
+};
+
+export type AppCreateOptions = {
+    usernamePrefix: string;
+    appName: string;
+    description: string;
+    logoUrl: string;
+    origin: string;
+    publicKey: PublicKey;
 };
 
 export default class App {
@@ -68,6 +86,33 @@ export default class App {
     constructor(_keyManager: KeyManager, _storage: PersistentStorage) {
         this.keyManager = _keyManager;
         this.storage = _storage as PersistentStorage & UserStorage & UserAppStorage;
+    }
+
+    static async create(options: AppCreateOptions) {
+        const username = new TonomyUsername(options.usernamePrefix, AccountType.APP, '.test.id');
+
+        // TODO remove this
+        const privateKey = PrivateKey.from('PVT_K1_2bfGi9rYsXQSXXTvJbDAPhHLQUojjaNLomdm3cEJ1XTzMqUt3V');
+
+        // TODO update storage with app in a pending state
+        const res = await idContract.newapp(
+            options.appName,
+            options.description,
+            username.usernameHash,
+            options.logoUrl,
+            options.origin,
+            options.publicKey,
+            createSigner(privateKey)
+        );
+
+        const newAccountAction = res.processed.action_traces[0].inline_traces[0].act;
+
+        // TODO update status of app to READY or something
+        return {
+            accountName: Name.from(newAccountAction.data.name),
+            username: username,
+            ...options,
+        };
     }
 
     async loginWithApp(account: Name, key: PublicKey, password: string): Promise<void> {
@@ -95,50 +140,59 @@ export default class App {
         await this.storage.apps;
     }
 
-    static async onPressLogin(window: Window, redirect = false): Promise<string | void> {
+    static async onPressLogin({ redirect = true, callbackPath }: OnPressLoginOptions): Promise<string | void> {
         const { privateKey, publicKey } = generateRandomKeyPair();
         const payload: JWTLoginPayload = {
-            number: randomString(32),
-            origin: window.location.hostname,
-            pubkey: publicKey.toString(),
+            randomString: randomString(32),
+            origin: window.location.origin,
+            publicKey: publicKey.toString(),
+            callbackPath,
         };
 
+        // TODO store the signer key in localStorage
         const signer = ES256KSigner(privateKey.data.array, true);
 
         const jwk = await createJWK(publicKey);
 
         const issuer = toDid(jwk);
 
+        // TODO use expiresIn to make JWT expire after 5 minutes
         const token = await createJWT(payload, { issuer, signer, alg: 'ES256K-R' });
+
         if (redirect) {
-            // const settings = await getSettings();
-            // TODO update settings to redirect to the tonomy id website
-            window.location.href = `https://localhost:3000/login?jwt=${token}`;
+            window.location.href = `${getSettings().ssoWebsiteOrigin}/login?jwt=${token}`;
             return;
         }
         return token;
     }
 
-    static async onRedirectLogin(): Promise<JWTLoginPayload> {
+    static async onRedirectLogin(): Promise<JWTVerified> {
         const urlParams = new URLSearchParams(window.location.search);
         const jwt = urlParams.get('jwt');
-        if (!jwt) throwError('No JWT found in URL', SdkErrors.MISSINGPARAMS);
+        if (!jwt) throwError('No JWT found in URL', SdkErrors.MissingParams);
+
         const verified = await this.verifyLoginJWT(jwt);
         const payload = verified.payload as JWTLoginPayload;
 
-        if (payload.origin !== document.referrer)
+        const referrer = new URL(document.referrer);
+        if (payload.origin !== referrer.origin) {
             throwError(
                 `JWT origin: ${payload.origin} does not match referrer: ${document.referrer}`,
-                SdkErrors.WRONGORIGIN
+                SdkErrors.WrongOrigin
             );
-        return payload;
+        }
+        return verified;
     }
 
     static async verifyLoginJWT(jwt: string): Promise<JWTVerified> {
         const resolver: any = {
             resolve,
+            // TODO add Antelope resolver as well
         };
-        return await verifyJWT(jwt, { resolver });
+        const res = await verifyJWT(jwt, { resolver });
+
+        if (!res.verified) throwError('JWT failed verification', SdkErrors.JwtNotValid);
+        return res;
     }
 }
 
