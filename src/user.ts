@@ -14,6 +14,7 @@ enum UserStatus {
     DEACTIVATED = 'DEACTIVATED',
 }
 
+// eslint-disable-next-line @typescript-eslint/no-namespace
 namespace UserStatus {
     /*
      * Returns the index of the enum value
@@ -61,7 +62,7 @@ export class User {
     }
 
     async saveUsername(username: string, suffix: string) {
-        let user: any;
+        let user: API.v1.AccountObject;
         try {
             user = await User.getAccountInfo(username + suffix); // Throws error if username is taken
         } catch (e) {
@@ -177,8 +178,13 @@ export class User {
 
         // TODO:
         // use status in smart contract to lock the account till finished creating
+        interface KeyInterface {
+            PIN: string;
+            FINGERPRINT: string;
+            LOCAL: string;
+        }
 
-        const keys: any = {};
+        const keys = {} as KeyInterface;
         if (pinKey) keys.PIN = pinKey.toString();
         if (fingerprintKey) keys.FINGERPRINT = fingerprintKey.toString();
         if (localKey) keys.LOCAL = localKey.toString();

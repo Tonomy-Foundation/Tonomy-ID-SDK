@@ -11,7 +11,7 @@ export class HttpError extends Error {
     column?: number;
     sourceURL?: string;
 
-    constructor(httpError: any) {
+    constructor(httpError: HttpError) {
         super('HTTP Error');
         // Ensure the name of this error is the same as the class name
         this.name = this.constructor.name;

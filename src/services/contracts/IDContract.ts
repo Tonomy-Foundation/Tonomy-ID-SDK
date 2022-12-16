@@ -1,3 +1,5 @@
+/* eslint-disable camelcase */
+
 import { API, Checksum256, Name } from '@greymass/eosio';
 import { sha256 } from '../../util/crypto';
 import { getApi } from '../eosio/eosio';
@@ -13,6 +15,7 @@ enum PermissionLevel {
     LOCAL = 'LOCAL',
 }
 
+// eslint-disable-next-line @typescript-eslint/no-namespace
 namespace PermissionLevel {
     /*
      * Returns the index of the enum value

@@ -1,13 +1,4 @@
-import {
-    Action,
-    API,
-    Transaction,
-    SignedTransaction,
-    Signature,
-    Checksum256,
-    Name,
-    PrivateKey,
-} from '@greymass/eosio';
+import { Action, API, Transaction, SignedTransaction, Signature, Checksum256, Name, PrivateKey } from '@greymass/eosio';
 import { KeyManager, KeyManagerLevel } from '../../keymanager';
 import { HttpError } from '../errors';
 import { getApi } from './eosio';
@@ -19,11 +10,28 @@ type ActionData = {
     }[];
     account?: string;
     name: string;
-    data: any;
+    data: object;
 };
 
 interface Signer {
     sign(digest: Checksum256): Promise<Signature>;
+}
+
+interface AntelopePushTransactionErrorConstructor extends Error {
+    code: number;
+    error: {
+        code: number;
+        name: string;
+        what: string;
+        details: [
+            {
+                message: string;
+                file: string;
+                line_number: number;
+                method: string;
+            }
+        ];
+    };
 }
 
 function createSigner(privateKey: PrivateKey): Signer {
@@ -34,11 +42,7 @@ function createSigner(privateKey: PrivateKey): Signer {
     };
 }
 
-function createKeyManagerSigner(
-    keyManager: KeyManager,
-    level: KeyManagerLevel,
-    password: string
-): Signer {
+function createKeyManagerSigner(keyManager: KeyManager, level: KeyManagerLevel, password: string): Signer {
     return {
         async sign(digest: Checksum256): Promise<Signature> {
             return (await keyManager.signData({
@@ -67,7 +71,7 @@ export class AntelopePushTransactionError extends Error {
         ];
     };
 
-    constructor(err: any) {
+    constructor(err: AntelopePushTransactionErrorConstructor) {
         super('AntelopePushTransactionError');
 
         this.code = err.code;
@@ -130,7 +134,7 @@ async function transact(
     let res;
     try {
         res = await api.v1.chain.push_transaction(signedTransaction);
-    } catch (e) {
+    } catch (e: any) {
         // console.error(JSON.stringify(e, null, 2));
         if (e.response && e.response.headers) {
             if (e.response.json) {
