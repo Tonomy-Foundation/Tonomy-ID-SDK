@@ -47,12 +47,15 @@ export function toDidDocument(jwk: any) {
         dq,
         qi,
 
+        // eslint-disable-next-line camelcase
         key_ops,
 
         ...publicKeyJwk
     } = jwk;
 
+    // eslint-disable-next-line camelcase
     if (d && key_ops) {
+        // eslint-disable-next-line camelcase
         publicKeyJwk.key_ops = getPublicOperationsFromPrivate(key_ops);
     }
 
