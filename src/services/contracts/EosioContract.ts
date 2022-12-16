@@ -1,14 +1,13 @@
 /* eslint-disable camelcase */
-
 import { ABI, API, Name, Serializer } from '@greymass/eosio';
 import { Authority } from '../eosio/authority';
 import { Signer, transact } from '../eosio/transaction';
 
 class EosioContract {
-    static _singleton_instance: EosioContract;
+    static singletonInstance: EosioContract;
 
     public static get Instance() {
-        return this._singleton_instance || (this._singleton_instance = new this());
+        return this.singletonInstance || (this.singletonInstance = new this());
     }
 
     /**

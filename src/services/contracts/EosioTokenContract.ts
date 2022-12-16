@@ -1,13 +1,12 @@
 /* eslint-disable camelcase */
-
 import { API, Name } from '@greymass/eosio';
 import { Signer, transact } from '../eosio/transaction';
 
 class EosioTokenContract {
-    static _singleton_instance: EosioTokenContract;
+    static singletonInstande: EosioTokenContract;
 
     public static get Instance() {
-        return this._singleton_instance || (this._singleton_instance = new this());
+        return this.singletonInstande || (this.singletonInstande = new this());
     }
 
     async create(supply: string, signer: Signer): Promise<API.v1.PushTransactionResponse> {

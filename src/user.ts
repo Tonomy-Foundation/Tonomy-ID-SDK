@@ -1,12 +1,14 @@
 import { Name, PrivateKey, API, Checksum256 } from '@greymass/eosio';
 import { PushTransactionResponse } from '@greymass/eosio/src/api/v1/types';
-import { KeyManager, KeyManagerLevel } from './keymanager';
-import { GetAccountTonomyIDInfoResponse, IDContract } from './services/contracts/IDContract';
-import { sha256 } from './util/crypto';
+import { KeyManager, KeyManagerLevel } from './services/keymanager';
+import { GetPersonResponse, IDContract } from './services/contracts/IDContract';
 import { AntelopePushTransactionError, createKeyManagerSigner, createSigner } from './services/eosio/transaction';
 import { getApi } from './services/eosio/eosio';
-import { PersistantStorage } from './storage';
-import { ExpectedSdkError, throwExpectedError } from './services/errors';
+import { PersistentStorage } from './services/storage';
+import { SdkErrors, throwError, SdkError } from './services/errors';
+import { AccountType, TonomyUsername } from './services/username';
+import { validatePassword } from './util/passwords';
+import App from './app';
 
 enum UserStatus {
     CREATING = 'CREATING',
@@ -43,10 +45,10 @@ namespace UserStatus {
 
 export { UserStatus };
 
-type UserSorage = {
+export type UserStorage = {
     status: UserStatus;
     accountName: Name;
-    username: string;
+    username: TonomyUsername;
     salt: Checksum256;
 };
 
@@ -54,37 +56,44 @@ const idContract = IDContract.Instance;
 
 export class User {
     keyManager: KeyManager;
-    storage: PersistantStorage & UserSorage;
+    storage: PersistentStorage & UserStorage;
+    app: App;
 
-    constructor(_keyManager: KeyManager, _storage: PersistantStorage) {
+    constructor(_keyManager: KeyManager, _storage: PersistentStorage) {
         this.keyManager = _keyManager;
-        this.storage = _storage as PersistantStorage & UserSorage;
+        this.storage = _storage as PersistentStorage & UserStorage;
+        this.app = new App(_keyManager, _storage);
     }
 
     async saveUsername(username: string, suffix: string) {
+        const normalizedUsername = username.normalize('NFKC');
+
         let user: API.v1.AccountObject;
+        const fullUsername = new TonomyUsername(normalizedUsername, AccountType.PERSON, suffix);
         try {
-            user = await User.getAccountInfo(username + suffix); // Throws error if username is taken
+            user = await User.getAccountInfo(fullUsername); // Throws error if username is taken
         } catch (e) {
-            if (!(e instanceof ExpectedSdkError && e.code === 'TSDK1101')) {
+            if (!(e instanceof SdkError && e.code === SdkErrors.UsernameNotFound)) {
                 throw e;
             }
         }
-        if (user) throwExpectedError('Username is taken', 'TSDK1000');
+        if (user) throwError('Username is taken', SdkErrors.UsernameTaken);
 
-        this.storage.username = username + suffix;
+        this.storage.username = fullUsername;
         await this.storage.username;
     }
 
     async savePassword(masterPassword: string, options?: { salt?: Checksum256 }) {
+        const password = validatePassword(masterPassword);
+
         let privateKey: PrivateKey;
         let salt: Checksum256;
         if (options && options.salt) {
             salt = options.salt;
-            const res = await this.keyManager.generatePrivateKeyFromPassword(masterPassword, salt);
+            const res = await this.keyManager.generatePrivateKeyFromPassword(password, salt);
             privateKey = res.privateKey;
         } else {
-            const res = await this.keyManager.generatePrivateKeyFromPassword(masterPassword);
+            const res = await this.keyManager.generatePrivateKeyFromPassword(password);
             privateKey = res.privateKey;
             salt = res.salt;
         }
@@ -95,7 +104,7 @@ export class User {
         await this.keyManager.storeKey({
             level: KeyManagerLevel.PASSWORD,
             privateKey,
-            challenge: masterPassword,
+            challenge: password,
         });
     }
 
@@ -124,21 +133,21 @@ export class User {
         });
     }
 
-    async createPerson() {
+    async createPerson(): Promise<PushTransactionResponse> {
         const { keyManager } = this;
         const username = await this.storage.username;
 
-        const usernameHash = sha256(username);
+        const usernameHash = username.usernameHash;
 
-        // TODO check password is correct?
         const passwordKey = await keyManager.getKey({
             level: KeyManagerLevel.PASSWORD,
         });
 
+        if (!passwordKey) throwError('Password key not found', SdkErrors.KeyNotFound);
+
         // TODO this needs to change to the actual key used, from settings
         const idTonomyActiveKey = PrivateKey.from('PVT_K1_2bfGi9rYsXQSXXTvJbDAPhHLQUojjaNLomdm3cEJ1XTzMqUt3V');
 
-        // TODO need to remove sha256 from this.salt
         const salt = await this.storage.salt;
         let res: PushTransactionResponse;
         try {
@@ -151,7 +160,7 @@ export class User {
         } catch (e) {
             if (e instanceof AntelopePushTransactionError) {
                 if (e.hasErrorCode(3050003) && e.hasTonomyErrorCode('TCON1000')) {
-                    throw throwExpectedError('Username is taken', 'TSDK1001');
+                    throw throwError('Username is taken', SdkErrors.UsernameTaken);
                 }
             }
             throw e;
@@ -163,6 +172,8 @@ export class User {
 
         this.storage.status = UserStatus.CREATING;
         await this.storage.status;
+
+        return res;
     }
 
     async updateKeys(password: string) {
@@ -191,25 +202,25 @@ export class User {
 
         const signer = createKeyManagerSigner(keyManager, KeyManagerLevel.PASSWORD, password);
         const accountName = await this.storage.accountName;
-        await idContract.updatekeys(accountName.toString(), keys, signer);
+        await idContract.updatekeysper(accountName.toString(), keys, signer);
         this.storage.status = UserStatus.READY;
         await this.storage.status;
     }
 
-    async login(username: string, password: string): Promise<GetAccountTonomyIDInfoResponse> {
+    async login(username: TonomyUsername, password: string): Promise<GetPersonResponse> {
         const { keyManager } = this;
 
-        const idData = await idContract.getAccountTonomyIDInfo(username);
+        const idData = await idContract.getPerson(username);
         const salt = idData.password_salt;
 
         await this.savePassword(password, { salt });
         const passwordKey = await keyManager.getKey({
             level: KeyManagerLevel.PASSWORD,
         });
+        if (!passwordKey) throwError('Password key not found', SdkErrors.KeyNotFound);
 
         const accountData = await User.getAccountInfo(idData.account_name);
         const onchainKey = accountData.getPermission('owner').required_auth.keys[0].key; // TODO change to active/other permissions when we make the change
-
         if (!passwordKey.equals(onchainKey)) throw new Error('Password is incorrect');
 
         this.storage.accountName = Name.from(idData.account_name);
@@ -233,14 +244,12 @@ export class User {
         return !!(await this.storage.status);
     }
 
-    //todo fix the undefined return type
-    static async getAccountInfo(account: string | Name): Promise<API.v1.AccountObject> {
+    static async getAccountInfo(account: TonomyUsername | Name): Promise<API.v1.AccountObject> {
         try {
             let accountName: Name;
             const api = await getApi();
-            if (typeof account === 'string') {
-                // this is a username
-                const idData = await idContract.getAccountTonomyIDInfo(account);
+            if (account instanceof TonomyUsername) {
+                const idData = await idContract.getPerson(account);
                 accountName = idData.account_name;
             } else {
                 accountName = account;
@@ -250,7 +259,7 @@ export class User {
         } catch (e) {
             const error = e as Error;
             if (error.message === 'Account not found at /v1/chain/get_account') {
-                throwExpectedError('Account "' + account.toString() + '" not found', 'TSDK1002');
+                throwError('Account "' + account.toString() + '" not found', SdkErrors.AccountDoesntExist);
             } else {
                 throw e;
             }

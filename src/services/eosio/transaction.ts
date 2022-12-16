@@ -1,5 +1,5 @@
 import { Action, API, Transaction, SignedTransaction, Signature, Checksum256, Name, PrivateKey } from '@greymass/eosio';
-import { KeyManager, KeyManagerLevel } from '../../keymanager';
+import { KeyManager, KeyManagerLevel } from '../keymanager';
 import { HttpError } from '../errors';
 import { getApi } from './eosio';
 
@@ -77,16 +77,16 @@ export class AntelopePushTransactionError extends Error {
         this.code = err.code;
         this.message = err.message;
         this.error = err.error;
-
+        this.stack = new Error().stack;
         // Ensure the name of this error is the same as the class name
         this.name = this.constructor.name;
         // This clips the constructor invocation from the stack trace.
         // It's not absolutely essential, but it does make the stack trace a little nicer.
         //  @see Node.js reference (bottom)
 
-        // TODO fix this. The following line should be uncommented. It is commented out because it is causing a TS error:
-        // TypeError: Error.captureStackTrace is not a function
-        // Error.captureStackTrace(this, this.constructor);
+        if (Error.captureStackTrace) {
+            Error.captureStackTrace(this, this.constructor);
+        }
     }
 
     hasErrorCode(code: number): boolean {
@@ -135,7 +135,6 @@ async function transact(
     try {
         res = await api.v1.chain.push_transaction(signedTransaction);
     } catch (e: any) {
-        // console.error(JSON.stringify(e, null, 2));
         if (e.response && e.response.headers) {
             if (e.response.json) {
                 throw new AntelopePushTransactionError(e.response.json);

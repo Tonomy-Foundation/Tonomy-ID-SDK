@@ -89,11 +89,9 @@ interface KeyManager {
      * Returns the public key of a stored private key
      *
      * @param options - Options for retreiving the key
-     * @returns The PublicKey
-     *
-     * @throws if a key does not exist for the level
+     * @returns The PublicKey or null if no key exists
      */
-    getKey(options: GetKeyOptions): Promise<PublicKey>;
+    getKey(options: GetKeyOptions): Promise<PublicKey | null>;
 
     /**
      * @param options - Options for removing a key

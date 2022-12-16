@@ -1,4 +1,4 @@
-interface PersistantStorage {
+interface PersistentStorage {
     [x: string]: any; // this makes sure that the storage can be accessed with any key
 
     /**
@@ -21,8 +21,8 @@ interface PersistantStorage {
     clear(): Promise<void>;
 }
 
-interface Storage extends Omit<ProxyHandler<PersistantStorage>, 'set'> {
-    set(target: PersistantStorage, key: string, value: any): Promise<boolean>;
+interface Storage extends Omit<ProxyHandler<PersistentStorage>, 'set'> {
+    set(target: PersistentStorage, key: string, value: any): Promise<boolean>;
 }
 
 /**
@@ -36,7 +36,7 @@ const storageProxyHandler: Storage = {
      * @returns The value of the property from the storage or cached value
      * @throws {Error} If the data could not be retrieved
      */
-    get: (target: PersistantStorage, propKey: string) => {
+    get: (target: PersistentStorage, propKey: string) => {
         if (propKey in target && propKey !== 'cache') {
             if (propKey === 'clear') {
                 target.cache = {};
@@ -66,7 +66,7 @@ const storageProxyHandler: Storage = {
      * @returns true if the value was stored
      * @throws {Error} If the data could not be stored
      */
-    set: async function (target: PersistantStorage, p: string, newValue: any) {
+    set: async function (target: PersistentStorage, p: string, newValue: any) {
         return target
             .store(p, newValue)
             .then(() => {
@@ -80,4 +80,4 @@ const storageProxyHandler: Storage = {
     },
 };
 
-export { PersistantStorage, storageProxyHandler };
+export { PersistentStorage, storageProxyHandler };
