@@ -10,8 +10,6 @@ class EosioTokenContract {
     }
 
     async create(supply: string, signer: Signer): Promise<API.v1.PushTransactionResponse> {
-        console.log('EosioTokenContract.create()');
-
         const actions = [
             {
                 account: 'eosio.token',
@@ -33,8 +31,6 @@ class EosioTokenContract {
     }
 
     async issue(quantity: string, signer: Signer): Promise<API.v1.PushTransactionResponse> {
-        console.log('EosioTokenContract.issue()');
-
         const actions = [
             {
                 account: 'eosio.token',

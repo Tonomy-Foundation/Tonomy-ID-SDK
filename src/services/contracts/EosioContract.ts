@@ -33,7 +33,6 @@ class EosioContract {
         const abiSerializedHex = Serializer.encode({ object: abiDef }).hexString;
 
         // 3. Send transaction with both setcode and setabi actions
-        console.log(`Deploying contract to ${account}`);
         const setcodeAction = {
             account: 'eosio',
             name: 'setcode',
@@ -75,8 +74,6 @@ class EosioContract {
         active: Authority,
         signer: Signer
     ): Promise<API.v1.PushTransactionResponse> {
-        console.log('EosioContract.newaccount()');
-
         const action = {
             authorization: [
                 {
@@ -104,8 +101,6 @@ class EosioContract {
         auth: Authority,
         signer: Signer
     ): Promise<API.v1.PushTransactionResponse> {
-        console.log('EosioContract.updateauth()');
-
         const action = {
             authorization: [
                 {

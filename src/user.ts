@@ -68,7 +68,7 @@ export class User {
     async saveUsername(username: string, suffix: string) {
         const normalizedUsername = username.normalize('NFKC');
 
-        let user: any;
+        let user: API.v1.AccountObject;
         const fullUsername = new TonomyUsername(normalizedUsername, AccountType.PERSON, suffix);
         try {
             user = await User.getAccountInfo(fullUsername); // Throws error if username is taken
@@ -187,7 +187,15 @@ export class User {
         });
         const localKey = await keyManager.getKey({ level: KeyManagerLevel.LOCAL });
 
-        const keys: any = {};
+        // TODO:
+        // use status in smart contract to lock the account till finished creating
+        interface KeyInterface {
+            PIN: string;
+            FINGERPRINT: string;
+            LOCAL: string;
+        }
+
+        const keys = {} as KeyInterface;
         if (pinKey) keys.PIN = pinKey.toString();
         if (fingerprintKey) keys.FINGERPRINT = fingerprintKey.toString();
         if (localKey) keys.LOCAL = localKey.toString();

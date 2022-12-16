@@ -73,9 +73,7 @@ const storageProxyHandler: Storage = {
                 target.cache[p] = newValue;
                 return true;
             })
-            .catch((e: any) => {
-                console.log(e);
-
+            .catch(() => {
                 return false;
                 // throw new Error(`Could not store data - ${e}`);
             });

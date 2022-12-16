@@ -11,7 +11,7 @@ export class HttpError extends Error {
     column?: number;
     sourceURL?: string;
 
-    constructor(httpError: any) {
+    constructor(httpError: HttpError) {
         super('HTTP Error');
         // Ensure the name of this error is the same as the class name
         this.name = this.constructor.name;
@@ -27,7 +27,7 @@ export class HttpError extends Error {
         this.response = httpError.response;
         if (httpError.line) this.line = httpError.line;
         if (httpError.column) this.line = httpError.column;
-        if (httpError.sourceURL) this.line = httpError.sourceURL;
+        if (httpError.sourceURL) this.sourceURL = httpError.sourceURL;
     }
 }
 
