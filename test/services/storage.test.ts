@@ -1,5 +1,5 @@
 import { createStorage } from '../../src/services/storage';
-import storageFactory from './jsstorage';
+import jsStorageFactory from '../../src/services/jsstorage';
 
 type TestStorage = {
     test: string;
@@ -7,14 +7,14 @@ type TestStorage = {
 
 describe('Storage', () => {
     it('creates a storage correctly with type', async () => {
-        const testStorage = createStorage<TestStorage>('tonomy.test.', storageFactory);
+        const testStorage = createStorage<TestStorage>('tonomy.test.', jsStorageFactory);
         testStorage.test = 'test';
         await testStorage.test;
 
         const test = await testStorage.test;
         expect(test).toBe('test');
 
-        const testStorage2 = createStorage<TestStorage>('tonomy.test2.', storageFactory);
+        const testStorage2 = createStorage<TestStorage>('tonomy.test2.', jsStorageFactory);
         testStorage2.test = 'test2';
         await testStorage2.test;
 
@@ -34,7 +34,7 @@ describe('Storage', () => {
     // });
 
     it('creates a storage correctly with type', async () => {
-        const testStorage = createStorage('tonomy.test.', storageFactory) as any;
+        const testStorage = createStorage('tonomy.test.', jsStorageFactory) as any;
         testStorage.test = 'test';
         await testStorage.test;
 

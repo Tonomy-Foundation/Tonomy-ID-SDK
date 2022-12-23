@@ -3,9 +3,9 @@ import { Name, PrivateKey, PublicKey } from '@greymass/eosio';
 import { ES256KSigner, createJWT, verifyJWT, JWTVerified } from 'did-jwt';
 import { IDContract } from './services/contracts/IDContract';
 import { KeyManager, KeyManagerLevel } from './services/keymanager';
-import { PersistentStorage } from './services/storage';
+import { createStorage, StorageFactory } from './services/storage';
 import { generateRandomKeyPair, randomString } from './util/crypto';
-import { UserStorage } from './user';
+import { User } from './user';
 import { createKeyManagerSigner, createSigner } from './services/eosio/transaction';
 import { SdkErrors, throwError } from './services/errors';
 import { createJWK, resolve, toDid } from './util/did-jwk';
@@ -80,12 +80,14 @@ export type AppCreateOptions = {
 };
 
 export default class App {
+    user: User;
     keyManager: KeyManager;
-    storage: PersistentStorage & UserStorage & UserAppStorage;
+    storage: UserAppStorage;
 
-    constructor(_keyManager: KeyManager, _storage: PersistentStorage) {
+    constructor(_user: User, _keyManager: KeyManager, storageFactory: StorageFactory) {
+        this.user = _user;
         this.keyManager = _keyManager;
-        this.storage = _storage as PersistentStorage & UserStorage & UserAppStorage;
+        this.storage = createStorage<UserAppStorage>('tonomy.user.app.', storageFactory);
     }
 
     static async create(options: AppCreateOptions) {
@@ -116,7 +118,7 @@ export default class App {
     }
 
     async loginWithApp(account: Name, key: PublicKey, password: string): Promise<void> {
-        const myAccount = await this.storage.accountName;
+        const myAccount = await this.user.storage.accountName;
 
         const appRecord: AppRecord = {
             account: account.toString(),

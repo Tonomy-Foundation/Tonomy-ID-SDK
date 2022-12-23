@@ -95,7 +95,9 @@ export const storageProxyHandler: Storage = {
     },
 };
 
-export function createStorage<T>(scope: string, storageFactory: (scope: string) => PersistentStorage): T {
+export type StorageFactory = (scope: string) => PersistentStorage;
+
+export function createStorage<T>(scope: string, storageFactory: StorageFactory): T {
     const storage = storageFactory(scope);
     storage.cache = {};
     const proxy = new Proxy(storage, storageProxyHandler as any) as any;
