@@ -22,6 +22,6 @@ export class JsStorage implements PersistentStorage {
     }
 }
 
-export default function jsStorageFactory(scope: string): PersistentStorage {
+export function jsStorageFactory(scope: string): PersistentStorage {
     return new JsStorage(scope);
 }

@@ -55,7 +55,7 @@ export const storageProxyHandler: Storage = {
                 target.cache = {};
             }
             return function () {
-                target[scopedKey]();
+                target[key]();
             };
         }
         if (target.cache[scopedKey]) return target.cache[scopedKey];
