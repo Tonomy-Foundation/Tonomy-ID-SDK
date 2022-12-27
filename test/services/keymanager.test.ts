@@ -1,7 +1,7 @@
 import { Checksum256, PrivateKey } from '@greymass/eosio';
-import { JsKeyManager } from '../../src/services/jskeymanager';
+import { JsKeyManager } from './jskeymanager';
 import argon2 from 'argon2';
-import { jsStorageFactory } from '../../src/services/jsstorage';
+import { jsStorageFactory } from './jsstorage';
 import { createUserObject } from '../../src/user';
 import { KeyManagerLevel } from '../../src/services/keymanager';
 import { randomBytes } from '../../src/util/crypto';

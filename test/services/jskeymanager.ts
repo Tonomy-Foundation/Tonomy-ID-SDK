@@ -1,5 +1,11 @@
-import { sha256, randomString, randomBytes } from '../util/crypto';
-import { KeyManager, KeyManagerLevel, SignDataOptions, GetKeyOptions, StoreKeyOptions } from './keymanager';
+import { sha256, randomString, randomBytes } from '../../src/util/crypto';
+import {
+    KeyManager,
+    KeyManagerLevel,
+    SignDataOptions,
+    GetKeyOptions,
+    StoreKeyOptions,
+} from '../../src/services/keymanager';
 import argon2 from 'argon2';
 import { Bytes, Checksum256, KeyType, PrivateKey, PublicKey, Signature } from '@greymass/eosio';
 
