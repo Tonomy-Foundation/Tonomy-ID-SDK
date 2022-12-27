@@ -20,6 +20,8 @@ describe('logging in', () => {
         const url = 'http://localhost/login?jwt=' + jwt;
 
         jest.spyOn(document, 'referrer', 'get').mockReturnValue('http://localhost');
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
         jsdom.reconfigure({
             url,
         });
