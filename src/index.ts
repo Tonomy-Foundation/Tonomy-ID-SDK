@@ -3,10 +3,10 @@ import * as Transaction from './services/eosio/transaction';
 
 export * from './services/keymanager';
 export * from './services/storage';
+export * from './services/jsstorage';
 export * from './user';
 export * from './app';
 
-export * from './initialize';
 export * from './settings';
 export * from './services/eosio/authority';
 export * from './util/crypto';
