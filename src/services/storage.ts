@@ -1,7 +1,11 @@
 import { throwError } from './errors';
 
+export interface PersistentStorageClean {
+    clear: () => Promise<void>;
+}
+
 // TODO make into abstract class which constructs with cache and scope
-export interface PersistentStorage {
+export interface PersistentStorage extends PersistentStorageClean {
     [x: string]: any; // this makes sure that the storage can be accessed with any key
     scope: string;
 
@@ -97,10 +101,10 @@ export const storageProxyHandler: Storage = {
 
 export type StorageFactory = (scope: string) => PersistentStorage;
 
-export function createStorage<T>(scope: string, storageFactory: StorageFactory): T {
+export function createStorage<T>(scope: string, storageFactory: StorageFactory): T & PersistentStorageClean {
     const storage = storageFactory(scope);
     storage.cache = {};
     const proxy = new Proxy(storage, storageProxyHandler as any) as any;
 
-    return proxy as T;
+    return proxy as T & PersistentStorageClean;
 }

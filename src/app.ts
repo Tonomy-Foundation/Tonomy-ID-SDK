@@ -3,7 +3,7 @@ import { Name, PrivateKey, PublicKey } from '@greymass/eosio';
 import { ES256KSigner, createJWT, verifyJWT, JWTVerified } from 'did-jwt';
 import { IDContract } from './services/contracts/IDContract';
 import { KeyManager, KeyManagerLevel } from './services/keymanager';
-import { createStorage, StorageFactory } from './services/storage';
+import { createStorage, PersistentStorageClean, StorageFactory } from './services/storage';
 import { generateRandomKeyPair, randomString } from './util/crypto';
 import { User } from './user';
 import { createKeyManagerSigner, createSigner } from './services/eosio/transaction';
@@ -82,7 +82,7 @@ export type AppCreateOptions = {
 export default class App {
     user: User;
     keyManager: KeyManager;
-    storage: UserAppStorage;
+    storage: UserAppStorage & PersistentStorageClean;
 
     constructor(_user: User, _keyManager: KeyManager, storageFactory: StorageFactory) {
         this.user = _user;
@@ -91,7 +91,7 @@ export default class App {
     }
 
     static async create(options: AppCreateOptions) {
-        const username = new TonomyUsername(options.usernamePrefix, AccountType.APP, '.test.id');
+        const username = new TonomyUsername(options.usernamePrefix, AccountType.APP, getSettings().accountSuffix);
 
         // TODO remove this
         const privateKey = PrivateKey.from('PVT_K1_2bfGi9rYsXQSXXTvJbDAPhHLQUojjaNLomdm3cEJ1XTzMqUt3V');
