@@ -3,7 +3,6 @@ import * as Transaction from './services/eosio/transaction';
 
 export * from './services/keymanager';
 export * from './services/storage';
-export * from '../test/services/jsstorage';
 export * from './user';
 export * from './app';
 
