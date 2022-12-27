@@ -11,7 +11,7 @@ type KeyStorage = {
     salt?: string;
 };
 
-export default class JsKeyManager implements KeyManager {
+export class JsKeyManager implements KeyManager {
     // TODO: use localStorage or sessionStorage in browser if available instead of keyStorage
     keyStorage: {
         [key in KeyManagerLevel]: KeyStorage;
