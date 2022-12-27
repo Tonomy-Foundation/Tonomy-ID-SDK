@@ -9,6 +9,7 @@ import { SdkErrors, throwError, SdkError } from './services/errors';
 import { AccountType, TonomyUsername } from './services/username';
 import { validatePassword } from './util/passwords';
 import App from './app';
+import { getSettings } from './settings';
 
 enum UserStatus {
     CREATING = 'CREATING',
@@ -66,11 +67,11 @@ export class User {
         this.app = new App(this, _keyManager, storageFactory);
     }
 
-    async saveUsername(username: string, suffix: string) {
+    async saveUsername(username: string) {
         const normalizedUsername = username.normalize('NFKC');
 
         let user: API.v1.AccountObject;
-        const fullUsername = new TonomyUsername(normalizedUsername, AccountType.PERSON, suffix);
+        const fullUsername = new TonomyUsername(normalizedUsername, AccountType.PERSON, getSettings().accountSuffix);
         try {
             user = await User.getAccountInfo(fullUsername); // Throws error if username is taken
         } catch (e) {

@@ -3,6 +3,7 @@ import { SdkErrors, throwError } from './services/errors';
 export type SettingsType = {
     blockchainUrl: string;
     ssoWebsiteOrigin: string;
+    accountSuffix: string;
 };
 
 let settings: SettingsType;

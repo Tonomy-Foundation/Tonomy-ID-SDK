@@ -91,7 +91,7 @@ export default class App {
     }
 
     static async create(options: AppCreateOptions) {
-        const username = new TonomyUsername(options.usernamePrefix, AccountType.APP, '.test.id');
+        const username = new TonomyUsername(options.usernamePrefix, AccountType.APP, getSettings().accountSuffix);
 
         // TODO remove this
         const privateKey = PrivateKey.from('PVT_K1_2bfGi9rYsXQSXXTvJbDAPhHLQUojjaNLomdm3cEJ1XTzMqUt3V');
