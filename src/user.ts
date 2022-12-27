@@ -4,7 +4,7 @@ import { KeyManager, KeyManagerLevel } from './services/keymanager';
 import { GetPersonResponse, IDContract } from './services/contracts/IDContract';
 import { AntelopePushTransactionError, createKeyManagerSigner, createSigner } from './services/eosio/transaction';
 import { getApi } from './services/eosio/eosio';
-import { createStorage, StorageFactory } from './services/storage';
+import { createStorage, PersistentStorageClean, StorageFactory } from './services/storage';
 import { SdkErrors, throwError, SdkError } from './services/errors';
 import { AccountType, TonomyUsername } from './services/username';
 import { validatePassword } from './util/passwords';
@@ -57,7 +57,7 @@ const idContract = IDContract.Instance;
 
 export class User {
     keyManager: KeyManager;
-    storage: UserStorage;
+    storage: UserStorage & PersistentStorageClean;
     app: App;
 
     constructor(_keyManager: KeyManager, storageFactory: StorageFactory) {
@@ -73,13 +73,13 @@ export class User {
         let user: API.v1.AccountObject;
         const fullUsername = new TonomyUsername(normalizedUsername, AccountType.PERSON, getSettings().accountSuffix);
         try {
-            user = await User.getAccountInfo(fullUsername); // Throws error if username is taken
+            user = (await User.getAccountInfo(fullUsername)) as any; // Throws error if username is taken
+            if (user) throwError('Username is taken', SdkErrors.UsernameTaken);
         } catch (e) {
             if (!(e instanceof SdkError && e.code === SdkErrors.UsernameNotFound)) {
                 throw e;
             }
         }
-        if (user) throwError('Username is taken', SdkErrors.UsernameTaken);
 
         this.storage.username = fullUsername;
         await this.storage.username;
