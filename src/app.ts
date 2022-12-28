@@ -84,7 +84,11 @@ export class App implements AppData {
     }
 
     static async create(options: AppCreateOptions): Promise<App> {
-        const username = new TonomyUsername(options.usernamePrefix, AccountType.APP, getSettings().accountSuffix);
+        const username = TonomyUsername.fromUsername(
+            options.usernamePrefix,
+            AccountType.APP,
+            getSettings().accountSuffix
+        );
 
         // TODO remove this
         const privateKey = PrivateKey.from('PVT_K1_2bfGi9rYsXQSXXTvJbDAPhHLQUojjaNLomdm3cEJ1XTzMqUt3V');
@@ -110,7 +114,18 @@ export class App implements AppData {
         });
     }
 
-    // static async from(input: string | Name | TonomyUsername): Promise<App> {
-    //     // TODO
-    // }
+    static async getApp(origin: string): Promise<App> {
+        const contractAppData = await idContract.getApp(origin);
+
+        return new App({
+            accountName: contractAppData.account_name,
+            appName: contractAppData.app_name,
+            username: TonomyUsername.fromHash(contractAppData.username_hash.toString()),
+            description: contractAppData.description,
+            logoUrl: contractAppData.logo_url,
+            origin: contractAppData.origin,
+            version: contractAppData.version,
+            status: AppStatus.READY,
+        });
+    }
 }

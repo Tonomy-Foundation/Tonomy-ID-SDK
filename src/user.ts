@@ -72,7 +72,11 @@ export class User {
         const normalizedUsername = username.normalize('NFKC');
 
         let user: API.v1.AccountObject;
-        const fullUsername = new TonomyUsername(normalizedUsername, AccountType.PERSON, getSettings().accountSuffix);
+        const fullUsername = TonomyUsername.fromUsername(
+            normalizedUsername,
+            AccountType.PERSON,
+            getSettings().accountSuffix
+        );
         try {
             user = (await User.getAccountInfo(fullUsername)) as any; // Throws error if username is taken
             if (user) throwError('Username is taken', SdkErrors.UsernameTaken);

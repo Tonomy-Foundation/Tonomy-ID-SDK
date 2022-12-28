@@ -41,11 +41,28 @@ namespace AccountType {
 export { AccountType };
 
 export class TonomyUsername {
-    username: string;
+    username?: string;
     usernameHash: string;
 
-    constructor(username: string, type: AccountType, suffix: string) {
-        this.username = username + '.' + AccountType.getPreSuffix(type) + suffix;
-        this.usernameHash = sha256(this.username);
+    constructor(username: string, hashed = false) {
+        if (hashed) {
+            this.usernameHash = username;
+        } else {
+            this.username = username;
+            this.usernameHash = sha256(this.username);
+        }
+    }
+
+    static fromHash(usernameHash: string): TonomyUsername {
+        return new TonomyUsername(usernameHash, true);
+    }
+
+    static fromUsername(username: string, type: AccountType, suffix: string) {
+        const fullUsername = username + '.' + AccountType.getPreSuffix(type) + suffix;
+        return new TonomyUsername(fullUsername);
+    }
+
+    static fromFullUsername(username: string): TonomyUsername {
+        return new TonomyUsername(username);
     }
 }
