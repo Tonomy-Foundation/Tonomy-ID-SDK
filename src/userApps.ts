@@ -25,7 +25,7 @@ type UserAppStorage = {
 };
 
 // TODO change to use VC
-type JWTLoginPayload = {
+export type JWTLoginPayload = {
     randomString: string;
     origin: string;
     publicKey: string;
@@ -131,5 +131,3 @@ export default class UserApps {
         return res;
     }
 }
-
-export { UserApps, JWTLoginPayload, AppStatus };
