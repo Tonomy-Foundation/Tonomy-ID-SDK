@@ -1,6 +1,6 @@
 {
     // see https://www.typescriptlang.org/tsconfig to better understand tsconfigs
-    "include": ["src", "types", "test/services/jsstorage.ts"],
+    "include": ["src", "types", "test"],
     "compilerOptions": {
         "target": "es5",
         "module": "esnext",
