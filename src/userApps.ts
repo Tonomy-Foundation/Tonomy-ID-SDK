@@ -92,8 +92,11 @@ export default class UserApps {
         // TODO use expiresIn to make JWT expire after 5 minutes
         const token = await createJWT(payload, { issuer, signer, alg: 'ES256K-R' });
 
+        const requests = [token];
+        const requestsString = JSON.stringify(requests);
+
         if (redirect) {
-            window.location.href = `${getSettings().ssoWebsiteOrigin}/login?jwt=${token}`;
+            window.location.href = `${getSettings().ssoWebsiteOrigin}/login?requests=${requestsString}`;
             return;
         }
         return token;
