@@ -11,7 +11,7 @@
         "node": ">=10"
     },
     "scripts": {
-        "start": "npx tsdx watch --noClean",
+        "start": "npx tsdx watch --transpileOnly --noClean",
         "build": "npx tsdx build",
         "test": "npx tsdx test",
         "lint": "eslint src test --ext .ts --resolve-plugins-relative-to .",
