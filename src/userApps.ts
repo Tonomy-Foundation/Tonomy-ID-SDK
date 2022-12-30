@@ -14,13 +14,13 @@ import { App, AppStatus } from './app';
 
 const idContract = IDContract.Instance;
 
-type UserAppRecord = {
+export type UserAppRecord = {
     app: App;
     added: Date;
     status: AppStatus;
 };
 
-type UserAppStorage = {
+export type UserAppStorage = {
     appRecords: UserAppRecord[];
 };
 
@@ -32,12 +32,12 @@ export type JWTLoginPayload = {
     callbackPath?: string;
 };
 
-type OnPressLoginOptions = {
+export type OnPressLoginOptions = {
     callbackPath: string;
     redirect?: boolean;
 };
 
-export default class UserApps {
+export class UserApps {
     user: User;
     keyManager: KeyManager;
     storage: UserAppStorage & PersistentStorageClean;
@@ -102,22 +102,38 @@ export default class UserApps {
         return token;
     }
 
-    static async onRedirectLogin(): Promise<JWTVerified> {
-        const urlParams = new URLSearchParams(window.location.search);
-        const jwt = urlParams.get('jwt');
-        if (!jwt) throwError('No JWT found in URL', SdkErrors.MissingParams);
+    static async verifyRequests(requests: string | null): Promise<JWTVerified[]> {
+        if (!requests) throwError('No requests found in URL', SdkErrors.MissingParams);
 
-        const verified = await this.verifyLoginJWT(jwt);
-        const payload = verified.payload as JWTLoginPayload;
+        const jwtRequests = JSON.parse(requests);
+        if (!jwtRequests || !Array.isArray(jwtRequests) || jwtRequests.length === 0) {
+            throwError('No JWTs found in URL', SdkErrors.MissingParams);
+        }
 
-        const referrer = new URL(document.referrer);
-        if (payload.origin !== referrer.origin) {
-            throwError(
-                `JWT origin: ${payload.origin} does not match referrer: ${document.referrer}`,
-                SdkErrors.WrongOrigin
-            );
+        const verified: JWTVerified[] = [];
+        for (const jwt of jwtRequests) {
+            console.log('verifying jwt', jwt);
+            verified.push(await this.verifyLoginJWT(jwt));
         }
         return verified;
+    }
+
+    static async onRedirectLogin(): Promise<JWTVerified> {
+        const urlParams = new URLSearchParams(window.location.search);
+        const requests = urlParams.get('requests');
+
+        const verifiedRequests = await this.verifyRequests(requests);
+
+        const referrer = new URL(document.referrer);
+        for (const request of verifiedRequests) {
+            if (request.payload.origin === referrer.origin) {
+                return request;
+            }
+        }
+        throwError(
+            `No origins from: ${verifiedRequests.map((r) => r.payload.origin)} match referrer: ${referrer.origin}`,
+            SdkErrors.WrongOrigin
+        );
     }
 
     static async verifyLoginJWT(jwt: string): Promise<JWTVerified> {

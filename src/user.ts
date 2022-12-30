@@ -8,7 +8,7 @@ import { createStorage, PersistentStorageClean, StorageFactory } from './service
 import { SdkErrors, throwError, SdkError } from './services/errors';
 import { AccountType, TonomyUsername } from './services/username';
 import { validatePassword } from './util/passwords';
-import UserApps from './userApps';
+import { UserApps } from './userApps';
 import { getSettings } from './settings';
 
 enum UserStatus {
