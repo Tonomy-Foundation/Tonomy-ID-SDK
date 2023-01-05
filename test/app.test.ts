@@ -1,7 +1,11 @@
 import { PrivateKey, PublicKey } from '@greymass/eosio';
-import App from '../src/app';
+import { UserApps } from '../src/userApps';
 import { generateRandomKeyPair } from '../src/util/crypto';
 import URL from 'jsdom-url';
+
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+global.URL = URL;
 
 describe('logging in', () => {
     it('generates random key pair', () => {
@@ -11,26 +15,23 @@ describe('logging in', () => {
     });
 
     it('on press button', async () => {
-        const jwt = await App.onPressLogin({ callbackPath: '/login', redirect: false });
+        const jwt = await UserApps.onPressLogin({ callbackPath: '/login', redirect: false });
         expect(jwt).toBeDefined();
     });
 
     it('checks login url', async () => {
-        const jwt = await App.onPressLogin({ callbackPath: '/login', redirect: false });
-        const url = 'http://localhost/login?jwt=' + jwt;
+        const jwt = await UserApps.onPressLogin({ callbackPath: '/login', redirect: false });
+        const url = 'http://localhost/login?requests=' + JSON.stringify([jwt]);
 
         jest.spyOn(document, 'referrer', 'get').mockReturnValue('http://localhost');
+
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         jsdom.reconfigure({
             url,
         });
 
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        global.URL = URL;
-
-        const result = await App.onRedirectLogin();
+        const result = await UserApps.onRedirectLogin();
         expect(result).toBeDefined();
         expect(typeof result.payload.randomString).toBe('string');
         expect(typeof result.payload.publicKey).toBe('string');

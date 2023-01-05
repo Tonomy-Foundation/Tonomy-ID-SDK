@@ -4,6 +4,7 @@ import { TonomyUsername } from '../username';
 import { getApi } from '../eosio/eosio';
 import { Signer, transact } from '../eosio/transaction';
 import { SdkErrors, throwError } from '../errors';
+import { sha256 } from '../../util/crypto';
 
 enum PermissionLevel {
     OWNER = 'OWNER',
@@ -49,7 +50,7 @@ type GetPersonResponse = {
     version: number;
 };
 
-type GetAppResponse = {
+type AppTableRecord = {
     account_name: Name;
     app_name: string;
     username_hash: Checksum256;
@@ -114,7 +115,7 @@ class IDContract {
                 authorization: [
                     {
                         actor: account,
-                        permission: 'owner',
+                        permission: 'active',
                     },
                 ],
                 account: 'id.tonomy',
@@ -167,6 +168,7 @@ class IDContract {
     async loginwithapp(
         account: string,
         app: string,
+        parent: string,
         key: PublicKey,
         signer: Signer
     ): Promise<API.v1.PushTransactionResponse> {
@@ -174,7 +176,7 @@ class IDContract {
             authorization: [
                 {
                     actor: account,
-                    permission: 'active',
+                    permission: parent,
                 },
             ],
             account: 'id.tonomy',
@@ -182,6 +184,7 @@ class IDContract {
             data: {
                 account,
                 app,
+                parent,
                 key,
             },
         };
@@ -242,7 +245,7 @@ class IDContract {
         };
     }
 
-    async getApp(account: TonomyUsername | Name): Promise<GetAppResponse> {
+    async getApp(account: TonomyUsername | Name | string): Promise<AppTableRecord> {
         let data;
         const api = await getApi();
         if (account instanceof TonomyUsername) {
@@ -263,7 +266,7 @@ class IDContract {
             if (data.rows.length === 0 || data.rows[0].username_hash.toString() !== usernameHash) {
                 throwError('Account with username "' + account.username + '" not found', SdkErrors.UsernameNotFound);
             }
-        } else {
+        } else if (account instanceof Name) {
             // use the account name directly
             data = await api.v1.chain.get_table_rows({
                 code: 'id.tonomy',
@@ -276,6 +279,25 @@ class IDContract {
             if (!data || !data.rows) throwError('No data found', SdkErrors.DataQueryNoRowDataFound);
             if (data.rows.length === 0 || data.rows[0].account_name !== account.toString()) {
                 throwError('Account "' + account.toString() + '" not found', SdkErrors.AccountDoesntExist);
+            }
+        } else {
+            // account is the origin
+            const origin = account;
+            const originHash = sha256(origin);
+
+            data = await api.v1.chain.get_table_rows({
+                code: 'id.tonomy',
+                scope: 'id.tonomy',
+                table: 'apps',
+                // eslint-disable-next-line camelcase
+                lower_bound: Checksum256.from(originHash),
+                limit: 1,
+                // eslint-disable-next-line camelcase
+                index_position: 'tertiary',
+            });
+            if (!data || !data.rows) throwError('No data found', SdkErrors.DataQueryNoRowDataFound);
+            if (data.rows.length === 0 || data.rows[0].origin !== origin) {
+                throwError('Account with origin "' + origin + '" not found', SdkErrors.OriginNotFound);
             }
         }
 

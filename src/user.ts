@@ -8,7 +8,7 @@ import { createStorage, PersistentStorageClean, StorageFactory } from './service
 import { SdkErrors, throwError, SdkError } from './services/errors';
 import { AccountType, TonomyUsername } from './services/username';
 import { validatePassword } from './util/passwords';
-import App from './app';
+import { UserApps } from './userApps';
 import { getSettings } from './settings';
 
 enum UserStatus {
@@ -51,6 +51,7 @@ export type UserStorage = {
     accountName: Name;
     username: TonomyUsername;
     salt: Checksum256;
+    // TODO update to have all data from blockchain
 };
 
 const idContract = IDContract.Instance;
@@ -58,20 +59,24 @@ const idContract = IDContract.Instance;
 export class User {
     keyManager: KeyManager;
     storage: UserStorage & PersistentStorageClean;
-    app: App;
+    apps: UserApps;
 
     constructor(_keyManager: KeyManager, storageFactory: StorageFactory) {
         this.keyManager = _keyManager;
         this.storage = createStorage<UserStorage>('tonomy.user.', storageFactory);
 
-        this.app = new App(this, _keyManager, storageFactory);
+        this.apps = new UserApps(this, _keyManager, storageFactory);
     }
 
     async saveUsername(username: string) {
         const normalizedUsername = username.normalize('NFKC');
 
         let user: API.v1.AccountObject;
-        const fullUsername = new TonomyUsername(normalizedUsername, AccountType.PERSON, getSettings().accountSuffix);
+        const fullUsername = TonomyUsername.fromUsername(
+            normalizedUsername,
+            AccountType.PERSON,
+            getSettings().accountSuffix
+        );
         try {
             user = (await User.getAccountInfo(fullUsername)) as any; // Throws error if username is taken
             if (user) throwError('Username is taken', SdkErrors.UsernameTaken);
