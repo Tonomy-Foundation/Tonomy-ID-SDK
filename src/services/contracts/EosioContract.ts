@@ -105,8 +105,7 @@ class EosioContract {
             authorization: [
                 {
                     actor: account,
-                    permission,
-                    // permission: parent, // both parent and permission work as authorization. though permission is supposed to be the authorization that works
+                    permission: parent, // both parent and permission work as authorization. though permission is supposed to be the authorization that works
                 },
             ],
             account: 'eosio',
