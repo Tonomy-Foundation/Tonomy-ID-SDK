@@ -48,7 +48,7 @@ export class UserApps {
         this.storage = createStorage<UserAppStorage>('tonomy.user.apps.', storageFactory);
     }
 
-    async loginWithApp(app: App, key: PublicKey, password: string): Promise<void> {
+    async loginWithApp(app: App, key: PublicKey): Promise<void> {
         const myAccount = await this.user.storage.accountName;
 
         const appRecord: UserAppRecord = {
@@ -65,8 +65,8 @@ export class UserApps {
         this.storage.appRecords = apps;
         await this.storage.appRecords;
 
-        const signer = createKeyManagerSigner(this.keyManager, KeyManagerLevel.PASSWORD, password);
-        await idContract.loginwithapp(myAccount.toString(), app.accountName.toString(), key, signer);
+        const signer = createKeyManagerSigner(this.keyManager, KeyManagerLevel.LOCAL);
+        await idContract.loginwithapp(myAccount.toString(), app.accountName.toString(), 'local', key, signer);
 
         appRecord.status = AppStatus.READY;
         this.storage.appRecords = apps;

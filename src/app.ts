@@ -106,9 +106,9 @@ export class App implements AppData {
         const newAccountAction = res.processed.action_traces[0].inline_traces[0].act;
 
         return new App({
+            ...options,
             accountName: Name.from(newAccountAction.data.name),
             username,
-            ...options,
             version: newAccountAction.data.version,
             status: AppStatus.READY,
         });

@@ -50,7 +50,7 @@ type GetPersonResponse = {
     version: number;
 };
 
-type GetAppResponse = {
+type AppTableRecord = {
     account_name: Name;
     app_name: string;
     username_hash: Checksum256;
@@ -115,7 +115,7 @@ class IDContract {
                 authorization: [
                     {
                         actor: account,
-                        permission: 'owner',
+                        permission: 'active',
                     },
                 ],
                 account: 'id.tonomy',
@@ -168,6 +168,7 @@ class IDContract {
     async loginwithapp(
         account: string,
         app: string,
+        parent: string,
         key: PublicKey,
         signer: Signer
     ): Promise<API.v1.PushTransactionResponse> {
@@ -175,7 +176,7 @@ class IDContract {
             authorization: [
                 {
                     actor: account,
-                    permission: 'active',
+                    permission: parent,
                 },
             ],
             account: 'id.tonomy',
@@ -183,6 +184,7 @@ class IDContract {
             data: {
                 account,
                 app,
+                parent,
                 key,
             },
         };
@@ -243,7 +245,7 @@ class IDContract {
         };
     }
 
-    async getApp(account: TonomyUsername | Name | string): Promise<GetAppResponse> {
+    async getApp(account: TonomyUsername | Name | string): Promise<AppTableRecord> {
         let data;
         const api = await getApi();
         if (account instanceof TonomyUsername) {
