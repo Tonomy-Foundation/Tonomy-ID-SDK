@@ -16,13 +16,12 @@ async function main() {
         origin: args[4],
         publicKey: PublicKey.from(args[5]),
     };
-
-    const res = await App.create(options);
-
     const blockchainUrl = args[6];
     setSettings({
         blockchainUrl,
     });
+
+    const res = await App.create(options);
 
     console.log('New app created with username: ', res.username.username);
     console.log('and account name: ', res.accountName.toString());
