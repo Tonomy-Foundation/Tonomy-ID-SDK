@@ -5,6 +5,7 @@ enum KeyManagerLevel {
     PIN = 'PIN',
     FINGERPRINT = 'FINGERPRINT',
     LOCAL = 'LOCAL',
+    LOCALSTORAGE = 'APP.SSO',
 }
 
 // eslint-disable-next-line @typescript-eslint/no-namespace

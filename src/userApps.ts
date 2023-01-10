@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { PublicKey } from '@greymass/eosio';
+import { Name, PrivateKey, PublicKey } from '@greymass/eosio';
 import { ES256KSigner, createJWT, verifyJWT, JWTVerified } from 'did-jwt';
 import { IDContract } from './services/contracts/IDContract';
 import { KeyManager, KeyManagerLevel } from './services/keymanager';
@@ -73,8 +73,24 @@ export class UserApps {
         await this.storage.appRecords;
     }
 
-    static async onPressLogin({ redirect = true, callbackPath }: OnPressLoginOptions): Promise<string | void> {
+    static async onPressLogin(
+        { redirect = true, callbackPath }: OnPressLoginOptions,
+        keyManager?: KeyManager
+    ): Promise<string | void> {
+        //TODO: dont create new key if it exist
         const { privateKey, publicKey } = generateRandomKeyPair();
+
+        if (keyManager) {
+            await keyManager.storeKey({
+                level: KeyManagerLevel.LOCALSTORAGE,
+                privateKey: privateKey,
+            });
+        } else {
+            if (!localStorage.getItem(KeyManagerLevel.LOCALSTORAGE)) {
+                localStorage.setItem(KeyManagerLevel.LOCALSTORAGE, privateKey.toString());
+            }
+        }
+
         const payload: JWTLoginPayload = {
             randomString: randomString(32),
             origin: window.location.origin,
@@ -145,5 +161,26 @@ export class UserApps {
 
         if (!res.verified) throwError('JWT failed verification', SdkErrors.JwtNotValid);
         return res;
+    }
+
+    static async verifyPrivateKey(accountName: string, keyManager?: KeyManager): Promise<boolean> {
+        let privateKey;
+        if (keyManager) {
+            privateKey = await keyManager.getKey({
+                level: KeyManagerLevel.LOCALSTORAGE,
+            });
+
+            privateKey = privateKey?.toString();
+        } else {
+            privateKey = localStorage.getItem(KeyManagerLevel.LOCALSTORAGE);
+        }
+        const user = await User.getAccountInfo(Name.from(accountName));
+        const app = await App.getApp(window.location.origin);
+        const publickey = user.getPermission(app.accountName).required_auth.keys[0].key;
+
+        if (!privateKey) throwError("Couldn't fetch Key", SdkErrors.KeyNotFound);
+        const pub = PrivateKey.from(privateKey).toPublic();
+
+        return pub.toString() === publickey.toString();
     }
 }
