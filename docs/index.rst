@@ -1,5 +1,5 @@
 =================================
-Tonomy-ID-SDK - public API for integration
+Tonomy ID
 =================================
 
 This Software Development Kit is used in Tonomy ID to interact and call with the EOSIO blockchain and services. It is also used as the public API for integration by applications to do single sign-on, share credentials and sign transactions.
@@ -17,28 +17,8 @@ Contents:
 
 :ref:`Keyword Index <genindex>`, :ref:`Search Page <search>`
 
-
 .. toctree::
    :maxdepth: 2
-   :caption: API Reference:
+   :caption: Contents:
 
    Guidelines/getting-started
-
-    Tonomy-ID-SDK
-    Tonomy-ID-SDK-random1
-    Tonomy-ID-SDK-random2
-    Tonomy-ID-SDK-random3
-    Tonomy-ID-SDK-random4
-    Tonomy-ID-SDK-random5
-    Tonomy-ID-SDK-random6
-    Tonomy-ID-SDK-random7
-    Tonomy-ID-SDK-random8
-    Tonomy-ID-SDK-random9
-    Tonomy-ID-SDK-random10
-    Tonomy-ID-SDK-random11
-    Tonomy-ID-SDK-random12
-    Tonomy-ID-SDK-random13
-
-
-
-Special thanks to `Netlify <https://www.netlify.com/>`_ for providing build and deploy services for our end-to-end integration tests.
