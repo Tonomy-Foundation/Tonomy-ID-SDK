@@ -35,6 +35,12 @@ npm run lint
 
 See [errors.ts](./src/services/errors.ts). All errors have a registered unique enumeration code.
 
+## Documentation
+
+Documentation is in the `./docs` folder and runs with readthedocs.io here
+
+<https://tonomy-id-sdk.readthedocs.io>
+
 ## To create a new App for SSO
 
 Call
