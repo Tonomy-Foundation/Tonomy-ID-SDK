@@ -2,16 +2,11 @@
 Tonomy ID
 =================================
 
-This Software Development Kit is used in Tonomy ID to interact and call with the EOSIO blockchain and services. It is also used as the public API for integration by applications to do single sign-on, share credentials and sign transactions.
+This Software Development Kit is used
+- in the Tonomy ID to manage all business logic, cryptography and interactions with other entities
+- as an SDK for developers to integrate Tonomy ID into their applications (this will likely be a separate package in the future)
 
-The SDK is written in typescript with jest to run tests.
-
-
-SDK library exists in ``/src``
-
-The following documentation will guide you through :ref:`installing and running Tonomy-ID-SDK <adding-Tonomy-ID-SDK>` as well as providing an :ref:`API reference documentation <#id1>` with examples.
-
-.. note:: `Tonomy-ID-SDK 1.x <https://github.com/Tonomy-Foundation/Tonomy-ID-SDK>`_ has been released. Checkout 1.x `API documentation and migration guide <https://docs.Tonomy-Foundation.org/>`_ for testing, early feedback and contributions. 
+The SDK is written in typescript.
 
 Contents:
 
@@ -19,6 +14,14 @@ Contents:
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :caption: Introduction:
 
-   Guidelines/getting-started
+   getting-started
+
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Integrating with Tonomy ID:
+
+   install
+   login
