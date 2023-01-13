@@ -8,7 +8,7 @@ let api: APIClient;
 export async function getApi(): Promise<APIClient> {
     if (api) return api;
 
-    const settings = await getSettings();
+    const settings = getSettings();
     api = new APIClient({
         url: settings.blockchainUrl,
         provider: new FetchProvider(settings.blockchainUrl, { fetch }),

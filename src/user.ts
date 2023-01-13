@@ -1,12 +1,15 @@
 import { Name, PrivateKey, API, Checksum256 } from '@greymass/eosio';
 import { PushTransactionResponse } from '@greymass/eosio/src/api/v1/types';
-import { KeyManager, KeyManagerLevel } from './keymanager';
-import { GetAccountTonomyIDInfoResponse, IDContract } from './services/contracts/IDContract';
-import { sha256 } from './util/crypto';
+import { KeyManager, KeyManagerLevel } from './services/keymanager';
+import { GetPersonResponse, IDContract } from './services/contracts/IDContract';
 import { AntelopePushTransactionError, createKeyManagerSigner, createSigner } from './services/eosio/transaction';
 import { getApi } from './services/eosio/eosio';
-import { PersistantStorage } from './storage';
+import { createStorage, PersistentStorageClean, StorageFactory } from './services/storage';
 import { SdkErrors, throwError, SdkError } from './services/errors';
+import { AccountType, TonomyUsername } from './services/username';
+import { validatePassword } from './util/passwords';
+import { UserApps } from './userApps';
+import { getSettings } from './settings';
 
 enum UserStatus {
     CREATING = 'CREATING',
@@ -43,48 +46,61 @@ namespace UserStatus {
 
 export { UserStatus };
 
-type UserSorage = {
+export type UserStorage = {
     status: UserStatus;
     accountName: Name;
-    username: string;
+    username: TonomyUsername;
     salt: Checksum256;
+    // TODO update to have all data from blockchain
 };
 
 const idContract = IDContract.Instance;
 
 export class User {
     keyManager: KeyManager;
-    storage: PersistantStorage & UserSorage;
+    storage: UserStorage & PersistentStorageClean;
+    apps: UserApps;
 
-    constructor(_keyManager: KeyManager, _storage: PersistantStorage) {
+    constructor(_keyManager: KeyManager, storageFactory: StorageFactory) {
         this.keyManager = _keyManager;
-        this.storage = _storage as PersistantStorage & UserSorage;
+        this.storage = createStorage<UserStorage>('tonomy.user.', storageFactory);
+
+        this.apps = new UserApps(this, _keyManager, storageFactory);
     }
 
-    async saveUsername(username: string, suffix: string) {
-        let user: any;
+    async saveUsername(username: string) {
+        const normalizedUsername = username.normalize('NFKC');
+
+        let user: API.v1.AccountObject;
+        const fullUsername = TonomyUsername.fromUsername(
+            normalizedUsername,
+            AccountType.PERSON,
+            getSettings().accountSuffix
+        );
         try {
-            user = await User.getAccountInfo(username + suffix); // Throws error if username is taken
+            user = (await User.getAccountInfo(fullUsername)) as any; // Throws error if username is taken
+            if (user) throwError('Username is taken', SdkErrors.UsernameTaken);
         } catch (e) {
             if (!(e instanceof SdkError && e.code === SdkErrors.UsernameNotFound)) {
                 throw e;
             }
         }
-        if (user) throwError('Username is taken', SdkErrors.UsernameTaken);
 
-        this.storage.username = username + suffix;
+        this.storage.username = fullUsername;
         await this.storage.username;
     }
 
     async savePassword(masterPassword: string, options?: { salt?: Checksum256 }) {
+        const password = validatePassword(masterPassword);
+
         let privateKey: PrivateKey;
         let salt: Checksum256;
         if (options && options.salt) {
             salt = options.salt;
-            const res = await this.keyManager.generatePrivateKeyFromPassword(masterPassword, salt);
+            const res = await this.keyManager.generatePrivateKeyFromPassword(password, salt);
             privateKey = res.privateKey;
         } else {
-            const res = await this.keyManager.generatePrivateKeyFromPassword(masterPassword);
+            const res = await this.keyManager.generatePrivateKeyFromPassword(password);
             privateKey = res.privateKey;
             salt = res.salt;
         }
@@ -95,7 +111,7 @@ export class User {
         await this.keyManager.storeKey({
             level: KeyManagerLevel.PASSWORD,
             privateKey,
-            challenge: masterPassword,
+            challenge: password,
         });
     }
 
@@ -128,17 +144,17 @@ export class User {
         const { keyManager } = this;
         const username = await this.storage.username;
 
-        const usernameHash = sha256(username);
+        const usernameHash = username.usernameHash;
 
-        // TODO check password is correct?
         const passwordKey = await keyManager.getKey({
             level: KeyManagerLevel.PASSWORD,
         });
 
+        if (!passwordKey) throwError('Password key not found', SdkErrors.KeyNotFound);
+
         // TODO this needs to change to the actual key used, from settings
         const idTonomyActiveKey = PrivateKey.from('PVT_K1_2bfGi9rYsXQSXXTvJbDAPhHLQUojjaNLomdm3cEJ1XTzMqUt3V');
 
-        // TODO need to remove sha256 from this.salt
         const salt = await this.storage.salt;
         let res: PushTransactionResponse;
         try {
@@ -180,33 +196,38 @@ export class User {
 
         // TODO:
         // use status in smart contract to lock the account till finished creating
+        interface KeyInterface {
+            PIN: string;
+            FINGERPRINT: string;
+            LOCAL: string;
+        }
 
-        const keys: any = {};
+        const keys = {} as KeyInterface;
         if (pinKey) keys.PIN = pinKey.toString();
         if (fingerprintKey) keys.FINGERPRINT = fingerprintKey.toString();
         if (localKey) keys.LOCAL = localKey.toString();
 
         const signer = createKeyManagerSigner(keyManager, KeyManagerLevel.PASSWORD, password);
         const accountName = await this.storage.accountName;
-        await idContract.updatekeys(accountName.toString(), keys, signer);
+        await idContract.updatekeysper(accountName.toString(), keys, signer);
         this.storage.status = UserStatus.READY;
         await this.storage.status;
     }
 
-    async login(username: string, password: string): Promise<GetAccountTonomyIDInfoResponse> {
+    async login(username: TonomyUsername, password: string): Promise<GetPersonResponse> {
         const { keyManager } = this;
 
-        const idData = await idContract.getAccountTonomyIDInfo(username);
+        const idData = await idContract.getPerson(username);
         const salt = idData.password_salt;
 
         await this.savePassword(password, { salt });
         const passwordKey = await keyManager.getKey({
             level: KeyManagerLevel.PASSWORD,
         });
+        if (!passwordKey) throwError('Password key not found', SdkErrors.KeyNotFound);
 
         const accountData = await User.getAccountInfo(idData.account_name);
         const onchainKey = accountData.getPermission('owner').required_auth.keys[0].key; // TODO change to active/other permissions when we make the change
-
         if (!passwordKey.equals(onchainKey)) throw new Error('Password is incorrect');
 
         this.storage.accountName = Name.from(idData.account_name);
@@ -230,13 +251,12 @@ export class User {
         return !!(await this.storage.status);
     }
 
-    static async getAccountInfo(account: string | Name): Promise<API.v1.AccountObject> {
+    static async getAccountInfo(account: TonomyUsername | Name): Promise<API.v1.AccountObject> {
         try {
             let accountName: Name;
             const api = await getApi();
-            if (typeof account === 'string') {
-                // this is a username
-                const idData = await idContract.getAccountTonomyIDInfo(account);
+            if (account instanceof TonomyUsername) {
+                const idData = await idContract.getPerson(account);
                 accountName = idData.account_name;
             } else {
                 accountName = account;
@@ -252,4 +272,14 @@ export class User {
             }
         }
     }
+}
+
+/**
+ * Initialize and return the user object
+ * @param keyManager  the key manager
+ * @param storage  the storage
+ * @returns the user object
+ */
+export function createUserObject(keyManager: KeyManager, storageFactory: StorageFactory): User {
+    return new User(keyManager, storageFactory);
 }

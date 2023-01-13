@@ -1,5 +1,4 @@
-
-function copyObject(object: any): any {
+function copyObject(object: object): object {
     return JSON.parse(JSON.stringify(object));
 }
 
