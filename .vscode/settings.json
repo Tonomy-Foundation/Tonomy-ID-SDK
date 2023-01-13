@@ -5,6 +5,5 @@
     ],
     "editor.codeActionsOnSave": {
         "source.fixAll.eslint": true
-    },
-    "esbonio.sphinx.confDir": ""
+    }
 }
