@@ -3,6 +3,10 @@
 Getting Started
 ===============
 
+IGNORE THIS PAGE FOR NOW!!
+
+TODO: update with more relevant information for integrators. Maybe how does it work???
+
 This Software Development Kit is used in Tonomy ID to interact and call with the 
 EOSIO blockchain and services. It is also used as the public API for integration 
 by applications to do single sign-on, share credentials and sign transactions.

@@ -4,9 +4,7 @@ This Software Development Kit is used in Tonomy ID to interact and call with the
 
 The SDK is written in typescript with jest to run tests.
 
-SDK library exists in `/src`
-
-## Dependancies
+## Dependencies
 
 - Linux debian distribution (Ubuntu 20.0.4 LTS used)
 - [Nodejs](https://nodejs.org) v16.4.1+ suggested installed with [nvm](https://github.com/nvm-sh/nvm)
