@@ -5,8 +5,9 @@ Login to your app with Tonomy ID
 
 You can log into your application with Tonomy ID using the Single-sign (SSO) on flow.
 
-See a full example Reactjs website with Tonomy ID login here
-`https://github.com/Tonomy-Foundation/Tonomy-ID-Demo-market.com/tree/development`_https://github.com/Tonomy-Foundation/Tonomy-ID-Demo-market.com/tree/development
+See a full example Reactjs website with Tonomy ID login here:
+
+https://github.com/Tonomy-Foundation/Tonomy-ID-Demo-market.com/tree/development
 
 Login page
 ==============
@@ -16,13 +17,14 @@ Login page
 
 .. code-block:: html
 
+    TODO import the css file
     <button className="tonomy" onClick={onButtonPress}>
         Login with Tonomy ID
     </button>
 
 .. code-block:: typescript
 
-    import { UserApps, setSettings } from 'tonomy-id-sdk';
+    import { UserApps, setSettings } from '@tonomy/tonomy-id-sdk';
 
     ...
 
@@ -37,7 +39,7 @@ Callback page
 
 .. code-block:: typescript
 
-    import { SdkErrors, throwError, UserApps } from 'tonomy-id-sdk';
+    import { SdkError, UserApps } from '@tonomy/tonomy-id-sdk';
 
     ...
 
