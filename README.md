@@ -4,9 +4,7 @@ This Software Development Kit is used in Tonomy ID to interact and call with the
 
 The SDK is written in typescript with jest to run tests.
 
-SDK library exists in `/src`
-
-## Dependancies
+## Dependencies
 
 - Linux debian distribution (Ubuntu 20.0.4 LTS used)
 - [Nodejs](https://nodejs.org) v16.4.1+ suggested installed with [nvm](https://github.com/nvm-sh/nvm)
@@ -36,6 +34,12 @@ npm run lint
 ## Error handling
 
 See [errors.ts](./src/services/errors.ts). All errors have a registered unique enumeration code.
+
+## Documentation
+
+Documentation is in the `./docs` folder and runs with readthedocs.io here
+
+<https://tonomy-id-sdk.readthedocs.io>
 
 ## To create a new App for SSO
 
