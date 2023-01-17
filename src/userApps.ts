@@ -11,6 +11,7 @@ import { SdkErrors, throwError } from './services/errors';
 import { createJWK, resolve, toDid } from './util/did-jwk';
 import { getSettings } from './settings';
 import { App, AppStatus } from './app';
+import { JsKeyManager } from '../test/services/jskeymanager';
 
 const idContract = IDContract.Instance;
 
@@ -75,20 +76,17 @@ export class UserApps {
 
     static async onPressLogin(
         { redirect = true, callbackPath }: OnPressLoginOptions,
-        keyManager?: KeyManager
+        keyManagerLevel: KeyManagerLevel = KeyManagerLevel.BROWSERLOCALSTORAGE,
+        keyManager: KeyManager = new JsKeyManager()
     ): Promise<string | void> {
         //TODO: dont create new key if it exist
         const { privateKey, publicKey } = generateRandomKeyPair();
 
         if (keyManager) {
             await keyManager.storeKey({
-                level: KeyManagerLevel.LOCALSTORAGE,
+                level: keyManagerLevel,
                 privateKey: privateKey,
             });
-        } else {
-            if (!localStorage.getItem(KeyManagerLevel.LOCALSTORAGE)) {
-                localStorage.setItem(KeyManagerLevel.LOCALSTORAGE, privateKey.toString());
-            }
         }
 
         const payload: JWTLoginPayload = {
@@ -163,24 +161,21 @@ export class UserApps {
         return res;
     }
 
-    static async verifyPrivateKey(accountName: string, keyManager?: KeyManager): Promise<boolean> {
-        let privateKey;
-        if (keyManager) {
-            privateKey = await keyManager.getKey({
-                level: KeyManagerLevel.LOCALSTORAGE,
-            });
+    static async verifyKeyExistsForApp(
+        accountName: string,
+        keyManagerLevel: KeyManagerLevel = KeyManagerLevel.BROWSERLOCALSTORAGE,
+        keyManager: KeyManager = new JsKeyManager()
+    ): Promise<boolean> {
+        const pubKey = await keyManager.getKey({
+            level: keyManagerLevel,
+        });
 
-            privateKey = privateKey?.toString();
-        } else {
-            privateKey = localStorage.getItem(KeyManagerLevel.LOCALSTORAGE);
-        }
         const user = await User.getAccountInfo(Name.from(accountName));
         const app = await App.getApp(window.location.origin);
         const publickey = user.getPermission(app.accountName).required_auth.keys[0].key;
 
-        if (!privateKey) throwError("Couldn't fetch Key", SdkErrors.KeyNotFound);
-        const pub = PrivateKey.from(privateKey).toPublic();
+        if (!pubKey) throwError("Couldn't fetch Key", SdkErrors.KeyNotFound);
 
-        return pub.toString() === publickey.toString();
+        return pubKey.toString() === publickey.toString();
     }
 }
