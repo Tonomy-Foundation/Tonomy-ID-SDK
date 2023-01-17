@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { Name, PrivateKey, PublicKey } from '@greymass/eosio';
+import { Name, PublicKey } from '@greymass/eosio';
 import { ES256KSigner, createJWT, verifyJWT, JWTVerified } from 'did-jwt';
 import { IDContract } from './services/contracts/IDContract';
 import { KeyManager, KeyManagerLevel } from './services/keymanager';
@@ -11,7 +11,6 @@ import { SdkErrors, throwError } from './services/errors';
 import { createJWK, resolve, toDid } from './util/did-jwk';
 import { getSettings } from './settings';
 import { App, AppStatus } from './app';
-import { JsKeyManager } from '../test/services/jskeymanager';
 
 const idContract = IDContract.Instance;
 
@@ -76,8 +75,8 @@ export class UserApps {
 
     static async onPressLogin(
         { redirect = true, callbackPath }: OnPressLoginOptions,
-        keyManagerLevel: KeyManagerLevel = KeyManagerLevel.BROWSERLOCALSTORAGE,
-        keyManager: KeyManager = new JsKeyManager()
+        keyManager: KeyManager,
+        keyManagerLevel: KeyManagerLevel = KeyManagerLevel.BROWSERLOCALSTORAGE
     ): Promise<string | void> {
         //TODO: dont create new key if it exist
         const { privateKey, publicKey } = generateRandomKeyPair();
@@ -114,6 +113,24 @@ export class UserApps {
             return;
         }
         return token;
+    }
+
+    /**
+     * gets parameteres from URL and verify the requests coming from the app
+     * @returns the verified results, accountName and username
+     */
+    static async onAppRedirectVerifyRequests() {
+        const params = new URLSearchParams(window.location.search);
+        const requests = params.get('requests');
+
+        if (!requests) throwError("requests parameter doesn't exists", SdkErrors.MissingParams);
+        const username = params.get('username');
+        if (!username) throwError("username parameter doesn't exists", SdkErrors.MissingParams);
+        const accountName = params.get('accountName');
+        if (!accountName) throwError("accountName parameter doesn't exists", SdkErrors.MissingParams);
+        const result = await UserApps.verifyRequests(requests);
+
+        return { result, username, accountName };
     }
 
     static async verifyRequests(requests: string | null): Promise<JWTVerified[]> {
@@ -163,13 +180,12 @@ export class UserApps {
 
     static async verifyKeyExistsForApp(
         accountName: string,
-        keyManagerLevel: KeyManagerLevel = KeyManagerLevel.BROWSERLOCALSTORAGE,
-        keyManager: KeyManager = new JsKeyManager()
+        keyManager: KeyManager,
+        keyManagerLevel: KeyManagerLevel = KeyManagerLevel.BROWSERLOCALSTORAGE
     ): Promise<boolean> {
         const pubKey = await keyManager.getKey({
             level: keyManagerLevel,
         });
-
         const user = await User.getAccountInfo(Name.from(accountName));
         const app = await App.getApp(window.location.origin);
         const publickey = user.getPermission(app.accountName).required_auth.keys[0].key;
