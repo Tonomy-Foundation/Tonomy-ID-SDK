@@ -62,6 +62,10 @@ export class JsKeyManager implements KeyManager {
             keyStore.salt = randomString(32);
             keyStore.hashedSaltedChallenge = sha256(options.challenge + keyStore.salt);
         }
+
+        if (options.level === KeyManagerLevel.BROWSERLOCALSTORAGE) {
+            localStorage.setItem('tonomy.id.' + KeyManagerLevel.BROWSERLOCALSTORAGE, options.privateKey.toString());
+        }
         this.keyStorage[options.level] = keyStore;
         return keyStore.publicKey;
     }
@@ -92,9 +96,18 @@ export class JsKeyManager implements KeyManager {
     }
 
     async getKey(options: GetKeyOptions): Promise<PublicKey> {
-        if (!(options.level in this.keyStorage)) throw new Error('No key for this level');
-        const keyStore = this.keyStorage[options.level];
-        return keyStore.publicKey;
+        if (options.level === KeyManagerLevel.BROWSERLOCALSTORAGE) {
+            const data = localStorage.getItem('tonomy.id.' + KeyManagerLevel.BROWSERLOCALSTORAGE);
+            if (!data) {
+                throw new Error('No key for this level');
+            }
+            return PrivateKey.from(data).toPublic();
+        } else {
+            if (!(options.level in this.keyStorage)) throw new Error('No key for this level');
+
+            const keyStore = this.keyStorage[options.level];
+            return keyStore.publicKey;
+        }
     }
 
     async removeKey(options: GetKeyOptions): Promise<void> {
