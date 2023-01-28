@@ -10,6 +10,7 @@ import { AccountType, TonomyUsername } from './services/username';
 import { validatePassword } from './util/passwords';
 import { UserApps } from './userApps';
 import { getSettings } from './settings';
+import { Communication } from './communication';
 
 enum UserStatus {
     CREATING = 'CREATING',
@@ -60,12 +61,16 @@ export class User {
     keyManager: KeyManager;
     storage: UserStorage & PersistentStorageClean;
     apps: UserApps;
+    communication: Communication;
 
     constructor(_keyManager: KeyManager, storageFactory: StorageFactory) {
         this.keyManager = _keyManager;
         this.storage = createStorage<UserStorage>('tonomy.user.', storageFactory);
 
         this.apps = new UserApps(this, _keyManager, storageFactory);
+
+        //TODO implement dependency inversion
+        this.communication = new Communication();
     }
 
     async saveUsername(username: string) {
