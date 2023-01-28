@@ -5,8 +5,11 @@ export class Communication {
     socketServer: Socket;
 
     constructor() {
-        console.log(`connecting to service ${process.env.COMMUNICATION_URL || 'ws://192.168.68.112:3002'}...`);
-        this.socketServer = io(process.env.COMMUNICATION_URL || '192.168.68.112:3002', { transports: ['websocket'] });
+        const url = process.env.REACT_APP_COMMUNICATION_URL ?? 'ws://ms.tonomy.staging';
+        console.log(`connecting to service ${url}...`);
+        this.socketServer = io(url, {
+            transports: ['websocket'],
+        });
     }
 
     /**
@@ -14,7 +17,6 @@ export class Communication {
      * @param randomSeed the random seed the user need to connect on typically recieved in jwt
      */
     connectTonomy(randomSeed: string) {
-        console.log(this.socketServer.connected);
         this.socketServer.emit('connectTonomy', { randomSeed });
     }
 
