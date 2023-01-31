@@ -4,6 +4,9 @@ Tonomy ID SDK
 
 This Tonomy ID SDK is used in the Tonomy ID to manage all business logic, cryptography and interactions with other entities. It is also used to integrate Tonomy ID into applications (this will likely be a separate package in the future)
 
+
+Testing 
+-------
 Installation
 ------------
 
