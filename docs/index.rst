@@ -33,3 +33,4 @@ Contents
    :maxdepth: 2
 
    usage
+   architecture
