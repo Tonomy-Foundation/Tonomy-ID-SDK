@@ -14,6 +14,7 @@
         "start": "npx tsdx watch --transpileOnly --noClean",
         "build": "npx tsdx build",
         "test": "npx tsdx test",
+        "test:integration": "npx tsdx test integration-test",
         "lint": "eslint src test --ext .ts --resolve-plugins-relative-to .",
         "lint:fix": "npm run lint -- --fix",
         "prepare": "npx tsdx build --transpileOnly --noClean",
