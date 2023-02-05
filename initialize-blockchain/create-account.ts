@@ -1,5 +1,5 @@
 import { publicKey } from './keys';
-import { Authority, EosioContract, App, AppCreateOptions } from 'tonomy-id-sdk';
+import { Authority, EosioContract, App, AppCreateOptions } from '../src/index';
 
 const eosioContract: EosioContract = EosioContract.Instance;
 

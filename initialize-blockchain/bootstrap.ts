@@ -1,11 +1,11 @@
 import deployContract from './deploy-contract';
 import path from 'path';
 import { createAccount, createApp } from './create-account';
-import { EosioTokenContract, setSettings } from 'tonomy-id-sdk';
+import { EosioTokenContract, setSettings } from '../src/index';
 import { signer, publicKey } from './keys';
 import bootstrapSettings from './settings';
-import settings from '../tests/services/settings';
-import { createUser } from '../tests/util/user';
+import settings from '../integration-test/services/settings';
+import { createUser } from '../integration-test/util/user';
 
 setSettings(settings);
 const eosioTokenContract = EosioTokenContract.Instance;

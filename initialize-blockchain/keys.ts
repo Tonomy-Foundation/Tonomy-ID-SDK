@@ -1,5 +1,5 @@
 import { PrivateKey } from '@greymass/eosio';
-import { EosioUtil } from 'tonomy-id-sdk';
+import { EosioUtil } from '../src/index';
 
 const privateKey = PrivateKey.from('PVT_K1_2bfGi9rYsXQSXXTvJbDAPhHLQUojjaNLomdm3cEJ1XTzMqUt3V');
 const publicKey = privateKey.toPublic();

@@ -3,7 +3,7 @@
 import fs from 'fs';
 import path from 'path';
 import { Name } from '@greymass/eosio';
-import { EosioContract } from 'tonomy-id-sdk';
+import { EosioContract } from '../src/index';
 
 const eosioContract: EosioContract = EosioContract.Instance;
 
