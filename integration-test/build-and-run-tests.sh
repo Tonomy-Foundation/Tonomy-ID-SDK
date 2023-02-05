@@ -20,5 +20,8 @@ git pull
 ./build-contracts.sh
 
 # Create docker image
-docker build . -f ./blockchain/Dockerfile --force-rm -t eosiobuild
+docker image build --target nodejs . -f ./blockchain/Dockerfile --force-rm -t tonomytestcontainer
 
+# Run integration tests
+cd ../
+docker run -v ${PARENT_PATH}/..:/var/sdk tonomytestcontainer ./var/sdk/integration-test/run-tests-script.sh
