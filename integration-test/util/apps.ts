@@ -1,5 +1,5 @@
 import { Name } from '@greymass/eosio';
-import { randomString, IDContract, EosioUtil, AccountType, TonomyUsername } from 'tonomy-id-sdk';
+import { randomString, IDContract, EosioUtil, AccountType, TonomyUsername } from '../../src/index';
 import settings from '../services/settings';
 import { privateKey } from './eosio';
 

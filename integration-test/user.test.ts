@@ -1,8 +1,8 @@
 import { api } from './util/eosio';
 import { createRandomID } from './util/user';
-import { KeyManager, KeyManagerLevel, User, createUserObject, setSettings } from 'tonomy-id-sdk';
-import { JsKeyManager } from 'tonomy-id-sdk/test/services/jskeymanager';
-import { jsStorageFactory } from 'tonomy-id-sdk/test/services/jsstorage';
+import { KeyManager, KeyManagerLevel, User, createUserObject, setSettings } from '../src/index';
+import { JsKeyManager } from '../test/services/jskeymanager';
+import { jsStorageFactory } from '../test/services/jsstorage';
 import settings from './services/settings';
 import { catchAndPrintErrors } from './util/errors';
 

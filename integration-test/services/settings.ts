@@ -1,4 +1,4 @@
-import { SettingsType } from 'tonomy-id-sdk';
+import { SettingsType } from '../../src/index';
 
 const settings: Partial<SettingsType> = {
     blockchainUrl: 'http://localhost:8888',

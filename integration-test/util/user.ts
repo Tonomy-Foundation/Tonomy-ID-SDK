@@ -1,6 +1,6 @@
-import { randomString, KeyManager, createUserObject, App } from 'tonomy-id-sdk';
-import { JsKeyManager } from 'tonomy-id-sdk/test/services/jskeymanager';
-import { jsStorageFactory } from 'tonomy-id-sdk/test/services/jsstorage';
+import { randomString, KeyManager, createUserObject, App } from '../../src/index';
+import { JsKeyManager } from '../../test/services/jskeymanager';
+import { jsStorageFactory } from '../../test/services/jsstorage';
 
 import { privateKey } from './eosio';
 
