@@ -9,9 +9,7 @@ SDK_DIR="${PARENT_PATH}/.."
 cd "${SDK_DIR}"
 
 # Setup Tonomy Contracts
-if [ ! -d "Tonomy-Contracts" ]; then
-    git clone https://github.com/Tonomy-Foundation/Tonomy-Contracts.git
-fi
+git submodule init
 cd "${SDK_DIR}/Tonomy-Contracts"
 # TODO update to development
 git checkout feature/96-integration-tests-in-sdk
