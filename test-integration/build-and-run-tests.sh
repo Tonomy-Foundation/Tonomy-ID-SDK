@@ -35,7 +35,6 @@ docker run -p 8888:8888 --name tonomy_blockchain_integration -d tonomy_blockchai
 sleep 5
 
 # Run integration tests
-# TODO maybe this should go inside the docker image? Seems to add a lot of time to the build...
 npm run bootstrap
 npm run test:integration || true
 
