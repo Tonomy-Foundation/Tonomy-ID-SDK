@@ -4,5 +4,9 @@ module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'node',
   roots: ['./'],
-  rootDir: './',
+  globals: {
+    'ts-jest': {
+      tsconfig: './initialize-blockchain/tsconfig.json',
+    },
+  },
 };
