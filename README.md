@@ -13,6 +13,10 @@ Integration tests:
 
 - [Docker](http://docs.docker.com) v20.10+
 
+## Repositories
+
+- [Contracts](https://github.com/Tonomy-Foundation/Tonomy-Contracts) (inside SDK repo) - Smart contracts to run the governance, identity, DAO, token and other ecosystem tools. This is used to run the integration tests
+
 ## Run
 
 ```bash
