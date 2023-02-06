@@ -9,6 +9,7 @@ SDK_DIR="${PARENT_PATH}/.."
 cd "${SDK_DIR}"
 
 # Setup Tonomy Contracts
+# TODO maybe this should go inside the docker image?
 if [ ! -d "Tonomy-Contracts" ]; then
     git clone https://github.com/Tonomy-Foundation/Tonomy-Contracts.git
 fi
@@ -17,21 +18,23 @@ cd Tonomy-Contracts
 git checkout feature/96-integration-tests-in-sdk
 git pull
 
-# Build Tonomy Contracts
-./build-contracts.sh
+# Build Tonomy Blockchain image
+./blockchain/build-docker.sh
 
-# Create docker image
-docker image build --target initialized . -f ./blockchain/Dockerfile --force-rm -t tonomytestimage
+# Install dependencies
+cd "${SDK_DIR}"
+if [ ! -d "node_modules" ]; then
+    npm i
+fi
 
 # Run container
 cd "${SDK_DIR}"
-# docker run -v ${PARENT_PATH}/..:/var/sdk --name tonomytestcontainer tonomytestimage /var/sdk/integration-test/run-tests-script.sh
-docker run --name tonomytestcontainer -d tonomytestimage
+docker run -p 8888:8888 --name tonomy_blockchain_integration -d tonomy_blockchain_initialized
 sleep 10
 
 # Run integration tests
-set +e
-npm run test:integration
+# TODO maybe this should go inside the docker image? Seems to add a lot of time to the build...
+npm run bootstrap
+npm run test:integration || true
 
-docker exec -it tonomytestcontainer ./nodeos.sh stop
-set -e
+docker exec -it tonomy_blockchain_integration ./nodeos.sh stop || true
