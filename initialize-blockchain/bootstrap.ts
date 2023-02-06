@@ -4,8 +4,8 @@ import { createAccount, createApp } from './create-account';
 import { EosioTokenContract, setSettings } from '../src/index';
 import { signer, publicKey } from './keys';
 import bootstrapSettings from './settings';
-import settings from '../integration-test/services/settings';
-import { createUser } from '../integration-test/util/user';
+import settings from '../test-integration/services/settings';
+import { createUser } from '../test-integration/util/user';
 
 setSettings(settings);
 const eosioTokenContract = EosioTokenContract.Instance;

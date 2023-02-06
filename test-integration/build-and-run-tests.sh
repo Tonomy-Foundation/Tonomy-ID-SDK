@@ -13,7 +13,7 @@ cd "${SDK_DIR}"
 if [ ! -d "Tonomy-Contracts" ]; then
     git clone https://github.com/Tonomy-Foundation/Tonomy-Contracts.git
 fi
-cd Tonomy-Contracts
+cd "${SDK_DIR}/Tonomy-Contracts"
 # TODO update to development
 git checkout feature/96-integration-tests-in-sdk
 git pull
@@ -29,7 +29,9 @@ fi
 
 # Run container
 cd "${SDK_DIR}"
+docker rm -f tonomy_blockchain_integration || true
 docker run -p 8888:8888 --name tonomy_blockchain_integration -d tonomy_blockchain_initialized
+# wait for blockchain to start
 sleep 10
 
 # Run integration tests

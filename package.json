@@ -14,7 +14,8 @@
         "start": "npx tsdx watch --transpileOnly --noClean",
         "build": "npx tsdx build",
         "test": "npx tsdx test",
-        "test:integration": "npx tsdx test integration-test",
+        "bootstrap": "npx ts-node --project ./initialize-blockchain/tsconfig.json initialize-blockchain/bootstrap.ts",
+        "test:integration": "npx tsdx test --config ./integration-test/jest.config.js",
         "lint": "eslint src test --ext .ts --resolve-plugins-relative-to .",
         "lint:fix": "npm run lint -- --fix",
         "prepare": "npx tsdx build --transpileOnly --noClean",
@@ -42,6 +43,7 @@
     "devDependencies": {
         "@size-limit/preset-small-lib": "^8.0.0",
         "@types/elliptic": "^6.4.14",
+        "@types/node-fetch": "^2.6.2",
         "@types/randombytes": "^2.0.0",
         "@typescript-eslint/eslint-plugin": "^5.40.0",
         "@typescript-eslint/parser": "^5.40.0",
@@ -52,8 +54,10 @@
         "husky": "^8.0.1",
         "jest-environment-jsdom": "^24.9.0",
         "jsdom-url": "^3.0.1",
+        "node-fetch": "^2.6.7",
         "prettier": "^2.7.1",
         "size-limit": "^8.0.0",
+        "ts-node": "^10.9.1",
         "tsdx": "^0.14.1",
         "tslib": "^2.4.0",
         "typescript": "^4.7.4"
