@@ -31,8 +31,8 @@ fi
 cd "${SDK_DIR}"
 docker rm -f tonomy_blockchain_integration || true
 docker run -p 8888:8888 --name tonomy_blockchain_integration -d tonomy_blockchain_initialized
-# wait for blockchain to start
-sleep 5
+echo "Waiting 8 seconds for blockchain node to start"
+sleep 8
 
 # Run integration tests
 npm run bootstrap

@@ -46,6 +46,7 @@
         "@types/randombytes": "^2.0.0",
         "@typescript-eslint/eslint-plugin": "^5.40.0",
         "@typescript-eslint/parser": "^5.40.0",
+        "address": "^1.2.2",
         "argon2": "^0.30.2",
         "eslint": "^8.25.0",
         "eslint-config-prettier": "^8.5.0",
