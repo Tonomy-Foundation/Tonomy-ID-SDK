@@ -11,8 +11,7 @@ cd "${SDK_DIR}"
 # Setup Tonomy Contracts
 git submodule init
 cd "${SDK_DIR}/Tonomy-Contracts"
-# TODO update to development
-git checkout feature/96-integration-tests-in-sdk
+git checkout development
 git pull
 
 # Build Tonomy Blockchain image
