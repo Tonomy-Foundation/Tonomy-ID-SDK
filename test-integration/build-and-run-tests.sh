@@ -9,7 +9,6 @@ SDK_DIR="${PARENT_PATH}/.."
 cd "${SDK_DIR}"
 
 # Setup Tonomy Contracts
-# TODO maybe this should go inside the docker image?
 if [ ! -d "Tonomy-Contracts" ]; then
     git clone https://github.com/Tonomy-Foundation/Tonomy-Contracts.git
 fi
