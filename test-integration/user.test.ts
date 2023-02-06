@@ -134,7 +134,7 @@ describe('User class', () => {
     test(
         'logout',
         catchAndPrintErrors(async () => {
-            const { user, password } = await createRandomID();
+            const { user } = await createRandomID();
 
             await user.logout();
 

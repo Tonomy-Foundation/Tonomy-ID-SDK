@@ -24,8 +24,8 @@ describe('App class', () => {
             const appPermission = permissions.find((p) => p.perm_name.toString() === app.accountName.toString());
 
             expect(appPermission).toBeDefined();
-            expect(appPermission.parent.toString()).toEqual('local');
-            expect(appPermission.required_auth.keys[0].key.toString()).toEqual(newKey.toPublic().toString());
+            expect(appPermission?.parent.toString()).toEqual('local');
+            expect(appPermission?.required_auth.keys[0].key.toString()).toEqual(newKey.toPublic().toString());
 
             const userApps = await user.apps.storage.appRecords;
             expect(userApps.length).toBe(1);

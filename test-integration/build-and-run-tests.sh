@@ -32,7 +32,7 @@ cd "${SDK_DIR}"
 docker rm -f tonomy_blockchain_integration || true
 docker run -p 8888:8888 --name tonomy_blockchain_integration -d tonomy_blockchain_initialized
 # wait for blockchain to start
-sleep 10
+sleep 5
 
 # Run integration tests
 # TODO maybe this should go inside the docker image? Seems to add a lot of time to the build...
