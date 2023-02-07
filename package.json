@@ -13,7 +13,7 @@
     "scripts": {
         "start": "npx tsdx watch --transpileOnly --noClean",
         "build": "npx tsdx build",
-        "test": "npx tsdx test",
+        "test": "npx tsdx test test/",
         "test:integration": "jest --config ./test-integration/jest.config.js",
         "bootstrap": "npx ts-node --project ./initialize-blockchain/tsconfig.json initialize-blockchain/bootstrap.ts",
         "lint": "eslint src test --ext .ts --resolve-plugins-relative-to .",
