@@ -189,7 +189,10 @@ export class User {
     }
 
     async updateKeys(password: string) {
-        if ((await this.storage.status) !== UserStatus.CREATING) throw new Error("Can't update keys if not creating");
+        const status = await this.storage.status;
+        if (status !== UserStatus.CREATING && status !== UserStatus.READY) {
+            throw new Error("Can't update keys ");
+        }
 
         const { keyManager } = this;
 
