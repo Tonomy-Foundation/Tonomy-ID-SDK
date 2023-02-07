@@ -1,0 +1,4 @@
+[submodule "Tonomy-Contracts"]
+	path = Tonomy-Contracts
+	url = ../Tonomy-Contracts.git
+	branch = development
