@@ -4,6 +4,7 @@ export type SettingsType = {
     blockchainUrl: string;
     ssoWebsiteOrigin: string;
     accountSuffix: string;
+    communicationUrl: string;
 };
 
 let settings: SettingsType;
