@@ -1,12 +1,11 @@
 import { io, Socket } from 'socket.io-client';
-import { randomBytes } from './util/crypto';
+import { getSettings } from './settings';
 
 export class Communication {
     socketServer: Socket;
 
     constructor() {
-        const url = process.env.REACT_APP_COMMUNICATION_URL ?? 'ws://ms.tonomy.staging';
-        console.log(`connecting to service ${url}...`);
+        const url = getSettings().communicationUrl;
         this.socketServer = io(url, {
             transports: ['websocket'],
         });
