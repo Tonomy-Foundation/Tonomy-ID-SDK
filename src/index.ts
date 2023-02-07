@@ -21,3 +21,4 @@ export * from './services/contracts/EosioTokenContract';
 
 export * from './services/errors';
 export * from './userApps';
+export * from './communication';

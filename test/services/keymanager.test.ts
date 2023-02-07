@@ -5,13 +5,17 @@ import { jsStorageFactory } from './jsstorage';
 import { createUserObject } from '../../src/user';
 import { KeyManagerLevel } from '../../src/services/keymanager';
 import { randomBytes } from '../../src/util/crypto';
+import { setSettings } from '../../src';
 
 const keyManager = new JsKeyManager();
+
+setSettings({});
 const user = createUserObject(keyManager, jsStorageFactory);
 
 describe('Keymanager class', () => {
     test('KeyManagerLevel enum helpers', () => {
         const passwordLevel = KeyManagerLevel.PASSWORD;
+
         expect(passwordLevel).toBe('PASSWORD');
         expect(KeyManagerLevel.indexFor(passwordLevel)).toBe(0);
         expect(KeyManagerLevel.from('PASSWORD')).toBe(passwordLevel);
@@ -24,6 +28,7 @@ describe('Keymanager class', () => {
     test('generatePrivateKeyFromPassword() returns privatekey', async () => {
         const password = '123';
         const { privateKey, salt } = await keyManager.generatePrivateKeyFromPassword(password);
+
         expect(privateKey).toBeInstanceOf(PrivateKey);
         expect(salt).toBeDefined();
     });
@@ -42,6 +47,7 @@ describe('Keymanager class', () => {
 
         async function timeArgon2(options: any): Promise<number> {
             const start = new Date();
+
             await argon2.hash(password, options);
             const finish = new Date();
 
@@ -58,6 +64,7 @@ describe('Keymanager class', () => {
             ...options,
             ...{ salt: Buffer.from(randomBytes(32 * 10)), hashLength: 32 * 10 },
         });
+
         console.log(`generatePrivateKeyFromPassword() took time:\n
                      time0: ${time0}ms\n
                      time1: ${time1}ms\n
@@ -73,6 +80,7 @@ describe('Keymanager class', () => {
         const { privateKey, salt } = await keyManager.generatePrivateKeyFromPassword(password);
 
         const { privateKey: privateKey2 } = await keyManager.generatePrivateKeyFromPassword(password, salt);
+
         expect(privateKey).toEqual(privateKey2);
     });
 
@@ -82,9 +90,11 @@ describe('Keymanager class', () => {
 
     test('generateRandomPrivateKey() generates random key', async () => {
         const r1 = keyManager.generateRandomPrivateKey();
+
         expect(r1).toBeInstanceOf(PrivateKey);
 
         const r2 = keyManager.generateRandomPrivateKey();
+
         expect(r1).not.toEqual(r2);
     });
 
