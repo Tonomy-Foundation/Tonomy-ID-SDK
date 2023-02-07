@@ -6,7 +6,7 @@ module.exports = {
   roots: ['./'],
   globals: {
     'ts-jest': {
-      tsconfig: './initialize-blockchain/tsconfig.json',
+      tsconfig: './bootstrap-blockchain/tsconfig.json',
     },
   },
 };

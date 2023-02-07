@@ -52,15 +52,18 @@ async function main() {
 
     // The Apple app needs to have a test user for their review. That is this user.
     await createUser('testuser', '1GjGtP%g5UOp2lQ&U5*p');
-    return;
 }
 
-Promise.resolve(main()).catch((err) => {
-    // this is to ignore websockets errors
-    if (err.message.includes('websocket')) {
-        return;
-    }
+Promise.resolve(main())
+    .then(() => {
+        process.exit(0);
+    })
+    .catch((err) => {
+        // this is to ignore websockets errors
+        if (err.message.includes('websocket')) {
+            return;
+        }
 
-    console.error(err);
-    process.exit(1);
-});
+        console.error(err);
+        process.exit(1);
+    });
