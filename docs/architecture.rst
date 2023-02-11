@@ -19,7 +19,7 @@ The SDK 11 classes.
 10. User
 11. UserApps
 
-.. image:: img/classes.png
+.. image:: https://github.com/deadex-ng/Tonomy-ID-SDK/blob/sdk-docs/docs/img/classes.PNG
   :width: 400
   :alt: TonomyID SDK classes
 
@@ -30,26 +30,34 @@ App
 This class keeps track of applications a TonomyID user is using. 
 
 Blockchain Client
------------
+-----------------
+The blockchain client connects the SDK to our blockchain service that is running two smart contracts,  eosio and id.tonomy. explain these two
 
 crypto
------------
+------
+A utility that contains cryptographic functions. 
+
 
 did:jwk
------------
+-------
+This is a utility that manages ssi djwk
 
 errors
------------
+------
+A utility used for error handling.
 
 KeyManager
------------
+----------
+An abstract class that manages the keys on the client's application. It does not store any data itself, they keys are stored oin the client's storage. This class
+is used with the User,UserApps and Apps to allow access to keys for digital siganatures.
 
 settings
 --------
-The setting class consumes the settings that are set by the user in a client application. 
+The settings class consumes the settings that are set by the user in a client application. 
 
 Storage
------------
+-------
+Storage is an abstract class passed in from the client's application. This allows it to manage the strorage in the client's without stroring any data itself.
 
 Tonomy Communication client
 -----------
