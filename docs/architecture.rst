@@ -26,7 +26,9 @@ This class keeps track of applications a TonomyID user is using.
 Blockchain Client
 -----------------
 The blockchain client connects the SDK to our blockchain service that is running two smart contracts, eosio and id.tonomy. eosio is a system level governance 
-contract that sets who is allowed to run the blockchain and create accounts. Additionally, id.tonomy is a smart contract that manages permissions for users to create and login into accounts. It also provides additional cryptographic information for the SDK logic to work. 
+contract that sets who is allowed to run the blockchain and create accounts. 
+
+Additionally, id.tonomy is a smart contract that manages permissions for users to create and login into accounts. It also provides additional cryptographic information for the SDK logic to work. 
 
 crypto
 ------
