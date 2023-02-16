@@ -1,11 +1,11 @@
-Archicture
+Architecture
 =============
 
 The Tonomy ID SDK is built with `typescript <https://www.typescriptlang.org/>`_.
 
-SDK classes
+SDK components
 -----------
-The SDK has 11 classes.
+The SDK has 11 major compenents.
 
 1. App
 2. Blockchain Client 
@@ -20,26 +20,28 @@ The SDK has 11 classes.
 11. UserApps
 
 App
-----
-This class keeps track of applications a TonomyID user is using. 
+-----
+This class is used by external applications to register their applications in the Tonomy ecosystem to make use of the Tonomy ID for login.
 
 Blockchain Client
------------------
+-----------------------
 The blockchain client connects the SDK to our blockchain service that is running two smart contracts, eosio and id.tonomy. eosio is a system level governance 
 contract that sets who is allowed to run the blockchain and create accounts. 
 
 Additionally, id.tonomy is a smart contract that manages permissions for users to create and login into accounts. It also provides additional cryptographic information for the SDK logic to work. 
 
+We call the getApi() function in this `file <https://github.com/Tonomy-Foundation/Tonomy-ID-SDK/blob/development/src/services/eosio/eosio.ts>`_ to access the Blockchain client.
+
 crypto
-------
-A utility that contains cryptographic functions. 
+--------
+A compatible utility for js and node that contains cryptographic functions. 
 
 did:jwk
--------
-This is a utility that manages ssi djwk
+---------
+This is a utility that manages did:jwk
 
 errors
-------
+-------
 A utility used for error handling.
 
 KeyManager
@@ -56,7 +58,7 @@ Storage is an abstract class passed in from the client's application. This allow
 
 Tonomy Communication client
 ----------------------------------------
-This client connects to the Tonomy Communication server which acts as a broker for web sockets between two Tonomy ID peers.
+This client connects to the Tonomy Communication server which acts as a bridge for web sockets between two Tonomy ID peers. Additionally, it can connect the same user to his/her multiple clients.
 
 User
 ------
@@ -65,3 +67,5 @@ This is the main entry class. It is used to manage each Tonomy ID user. Using th
 UserApps
 -------------
 UserApp is used to manage the relationship between each TonomonyID user and the apps they use.
+
+
