@@ -5,7 +5,7 @@ The Tonomy ID SDK is built with `typescript <https://www.typescriptlang.org/>`_.
 
 SDK components
 -----------
-The SDK has 11 major compenents.
+The SDK has 11 major components.
 
 1. App
 2. Blockchain Client 
