@@ -15,12 +15,14 @@ export class HttpError extends Error {
         super('HTTP Error');
         // Ensure the name of this error is the same as the class name
         this.name = this.constructor.name;
+
         // This clips the constructor invocation from the stack trace.
         // It's not absolutely essential, but it does make the stack trace a little nicer.
         //  @see Node.js reference (bottom)
         if (Error.captureStackTrace) {
             Error.captureStackTrace(this, this.constructor);
         }
+
         this.stack = new Error().stack;
 
         this.path = httpError.path;
@@ -38,11 +40,13 @@ export class SdkError extends Error {
         super(message);
         // Ensure the name of this error is the same as the class name
         this.name = this.constructor.name;
+
         // This clips the constructor invocation from the stack trace.
         // It's not absolutely essential, but it does make the stack trace a little nicer.
         if (Error.captureStackTrace) {
             Error.captureStackTrace(this, this.constructor);
         }
+
         this.stack = new Error().stack;
     }
 }
@@ -50,10 +54,12 @@ export class SdkError extends Error {
 // using never to suppress error https://bobbyhadz.com/blog/typescript-function-that-throws-error#:~:text=To%20declare%20a%20function%20that,terminate%20execution%20of%20the%20program.
 export function throwError(message: string, code?: SdkErrors): never {
     let error = new SdkError(message);
+
     if (code) {
         error = new SdkError(code + ': ' + message);
         error.code = code;
     }
+
     throw error;
 }
 
@@ -66,6 +72,7 @@ enum SdkErrors {
     CouldntCreateApi = 'CouldntCreateApi',
     PasswordFormatInvalid = 'PasswordFormatInvalid',
     PasswordTooCommon = 'PasswordTooCommon',
+    PasswordInValid = 'PasswordInValid',
     KeyNotFound = 'KeyNotFound',
     OriginNotFound = 'OriginNotFound',
     JwtNotValid = 'JwtNotValid',
@@ -93,11 +100,13 @@ namespace SdkErrors {
      */
     export function from(value: number | string): SdkErrors {
         let index: number;
+
         if (typeof value !== 'number') {
             index = SdkErrors.indexFor(value as SdkErrors);
         } else {
             index = value;
         }
+
         return Object.values(SdkErrors)[index] as SdkErrors;
     }
 }

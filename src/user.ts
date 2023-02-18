@@ -253,7 +253,8 @@ export class User {
         const accountData = await User.getAccountInfo(idData.account_name);
         const onchainKey = accountData.getPermission('owner').required_auth.keys[0].key; // TODO change to active/other permissions when we make the change
 
-        if (!passwordKey.equals(onchainKey)) throw new Error('Password is incorrect');
+        if (passwordKey.toString() !== onchainKey.toString())
+            throwError('Password is incorrect', SdkErrors.PasswordInValid);
 
         this.storage.accountName = Name.from(idData.account_name);
         this.storage.username = username;
