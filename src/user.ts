@@ -36,11 +36,13 @@ namespace UserStatus {
      */
     export function from(value: number | string): UserStatus {
         let index: number;
+
         if (typeof value !== 'number') {
             index = UserStatus.indexFor(value as UserStatus);
         } else {
             index = value;
         }
+
         return Object.values(UserStatus)[index] as UserStatus;
     }
 }
@@ -82,6 +84,7 @@ export class User {
             AccountType.PERSON,
             getSettings().accountSuffix
         );
+
         try {
             user = (await User.getAccountInfo(fullUsername)) as any; // Throws error if username is taken
             if (user) throwError('Username is taken', SdkErrors.UsernameTaken);
@@ -100,12 +103,15 @@ export class User {
 
         let privateKey: PrivateKey;
         let salt: Checksum256;
+
         if (options && options.salt) {
             salt = options.salt;
             const res = await this.keyManager.generatePrivateKeyFromPassword(password, salt);
+
             privateKey = res.privateKey;
         } else {
             const res = await this.keyManager.generatePrivateKeyFromPassword(password);
+
             privateKey = res.privateKey;
             salt = res.salt;
         }
@@ -122,6 +128,7 @@ export class User {
 
     async savePIN(pin: string) {
         const privateKey = this.keyManager.generateRandomPrivateKey();
+
         await this.keyManager.storeKey({
             level: KeyManagerLevel.PIN,
             privateKey,
@@ -131,6 +138,7 @@ export class User {
 
     async saveFingerprint() {
         const privateKey = this.keyManager.generateRandomPrivateKey();
+
         await this.keyManager.storeKey({
             level: KeyManagerLevel.FINGERPRINT,
             privateKey,
@@ -139,6 +147,7 @@ export class User {
 
     async saveLocal() {
         const privateKey = this.keyManager.generateRandomPrivateKey();
+
         await this.keyManager.storeKey({
             level: KeyManagerLevel.LOCAL,
             privateKey,
@@ -162,6 +171,7 @@ export class User {
 
         const salt = await this.storage.salt;
         let res: PushTransactionResponse;
+
         try {
             res = await idContract.newperson(
                 usernameHash.toString(),
@@ -175,10 +185,12 @@ export class User {
                     throw throwError('Username is taken', SdkErrors.UsernameTaken);
                 }
             }
+
             throw e;
         }
 
         const newAccountAction = res.processed.action_traces[0].inline_traces[0].act;
+
         this.storage.accountName = Name.from(newAccountAction.data.name);
         await this.storage.accountName;
 
@@ -190,6 +202,7 @@ export class User {
 
     async updateKeys(password: string) {
         const status = await this.storage.status;
+
         if (status !== UserStatus.CREATING && status !== UserStatus.READY) {
             throw new Error("Can't update keys ");
         }
@@ -211,12 +224,14 @@ export class User {
         }
 
         const keys = {} as KeyInterface;
+
         if (pinKey) keys.PIN = pinKey.toString();
         if (fingerprintKey) keys.FINGERPRINT = fingerprintKey.toString();
         if (localKey) keys.LOCAL = localKey.toString();
 
         const signer = createKeyManagerSigner(keyManager, KeyManagerLevel.PASSWORD, password);
         const accountName = await this.storage.accountName;
+
         await idContract.updatekeysper(accountName.toString(), keys, signer);
         this.storage.status = UserStatus.READY;
         await this.storage.status;
@@ -232,10 +247,12 @@ export class User {
         const passwordKey = await keyManager.getKey({
             level: KeyManagerLevel.PASSWORD,
         });
+
         if (!passwordKey) throwError('Password key not found', SdkErrors.KeyNotFound);
 
         const accountData = await User.getAccountInfo(idData.account_name);
         const onchainKey = accountData.getPermission('owner').required_auth.keys[0].key; // TODO change to active/other permissions when we make the change
+
         if (!passwordKey.equals(onchainKey)) throw new Error('Password is incorrect');
 
         this.storage.accountName = Name.from(idData.account_name);
@@ -263,8 +280,10 @@ export class User {
         try {
             let accountName: Name;
             const api = await getApi();
+
             if (account instanceof TonomyUsername) {
                 const idData = await idContract.getPerson(account);
+
                 accountName = idData.account_name;
             } else {
                 accountName = account;
@@ -273,6 +292,7 @@ export class User {
             return await api.v1.chain.get_account(accountName);
         } catch (e) {
             const error = e as Error;
+
             if (error.message === 'Account not found at /v1/chain/get_account') {
                 throwError('Account "' + account.toString() + '" not found', SdkErrors.AccountDoesntExist);
             } else {
