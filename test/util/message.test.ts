@@ -1,7 +1,11 @@
 import { PrivateKey } from '@greymass/eosio';
 import { createSigner } from '@tonomy/antelope-ssi-toolkit';
+import { setSettings } from '../../src';
 import { Message } from '../../src/util/message';
 
+setSettings({
+    blockchainUrl: 'localhost:8888',
+});
 describe('check if message class has correct functions', () => {
     const message = new Message(
         `eyJhbGciOiJFUzI1NksiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJkaWQ6YW50ZWxvcGU6dGVsb3M6dW5pdmVyc2l0eSNwZXJtaXNzaW9uMCIsImp0aSI6Imh0dHBzOi8vZXhhbXBsZS5jb20vaWQvMTIzNDMyNCIsIm5iZiI6MTY3NjcxNDQ2OSwidmMiOnsiQGNvbnRleHQiOlsiaHR0cHM6Ly93d3cudzMub3JnLzIwMTgvY3JlZGVudGlhbHMvdjEiXSwiY3JlZGVudGlhbFN1YmplY3QiOnsiZGVncmVlIjp7Im5hbWUiOiJCYWNjYWxhdXLDqWF0IGVuIG11c2lxdWVzIG51bcOpcmlxdWVzIiwidHlwZSI6IkJhY2hlbG9yRGVncmVlIn19LCJ0eXBlIjpbIlZlcmlmaWFibGVDcmVkZW50aWFsIl19fQ.oc9xx_owlXz8L_fhjXo-mNhWNWl7YoMAr50HAJ5-On2p_RgoJ-E8SWDrHkITQnr9ysSKa1pF7gUWbFdiLSuL3AA`
@@ -62,14 +66,14 @@ describe('message signed with testnetjungle key', () => {
         expect(message.getPayload()).toEqual({ item: { id: 1, name: 'testname' } });
     });
 
-    // it('verifies the jwt', () => {
-    //     expect(message.verify()).toBeTruthy();
-    // });
+    it('verifies the jwt', () => {
+        expect(message.verify()).resolves.toBeTruthy();
+    });
 });
 
 describe('message signed with did:jwt', () => {
     const message = new Message(
-        'eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NkstUiJ9.eyJpYXQiOjE2NzY3MzE3MTUsInJhbmRvbVN0cmluZyI6IjFlMWU0MGI1NTk3MGU5NzE0MWRiYmQ3N2ZhNjFlMjllM2JlYTA0NGQyODcwNDM0ODNmZDU1MmE3Yjk4N2M5MjAiLCJvcmlnaW4iOiJodHRwczovL3Rvbm9teS1pZC1tYXJrZXQtY29tLXN0YWdpbmcudG9ub215LmZvdW5kYXRpb24iLCJwdWJsaWNLZXkiOiJQVUJfSzFfNk5Ba3hjMVRSSm5Ta2h6QkZ2RzJMeXdxUmNTMnNiR2FYamNCSHRqQkxzNkhMamlBZ1giLCJjYWxsYmFja1BhdGgiOiIvY2FsbGJhY2siLCJpc3MiOiJkaWQ6andrOmV5SmpjbllpT2lKelpXTndNalUyYXpFaUxDSnJkSGtpT2lKRlF5SXNJbmdpT2lKM2IzVndaRFlyYWtVeFUwY3ZkRlZITTI5UE1WZFpSekpaVEV0MFNrcEdOVGRyUm1GbWNGaFZlbUZKUFNJc0lua2lPaUowY204emFrSnpjMDVUWTFocFVtcGhXRVowYzFOTGRGZFlSSFJ5UVVoaVZFNUpUM0JGU25oc0syOVpQU0lzSW10cFpDSTZJbEJWUWw5TE1WODJUa0ZyZUdNeFZGSktibE5yYUhwQ1JuWkhNa3g1ZDNGU1kxTXljMkpIWVZocVkwSklkR3BDVEhNMlNFeHFhVUZuV0NKOSJ9.Wn8K8ZrtU2oGTtK1vMFPkvSgO1I_h3nTFeiRl6wyXq1xfNNY3Q0jKrshyGht5W9xHGWPHgr-KmHG3gsrVUA_2AE'
+        'eyJhbGciOiJFUzI1NkstUiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJkaWQ6andrOmV5SmpjbllpT2lKelpXTndNalUyYXpFaUxDSnJkSGtpT2lKRlF5SXNJbmdpT2lJeWFFTkZZbmhoWTFFdldXSmhjRmt5VlRVMlkySXJSME13ZDJwamNVMWtia1JvYzJ0R1ZuRjZiVW8wUFNJc0lua2lPaUpZVVN0SFZtTk9ZVGR5UkhWbVRXWkhVbmszTkRkc1MxZFBaWHBHTUVabWRtaHdVVUZ5ZFRkM1VuUkZQU0lzSW10cFpDSTZJbEJWUWw5TE1WODRWa2RvU2pnemIzQmhTMmw2TkZWaVpGYzRhMmcyZEVkQmJXcHhVM0pSVmtaUWRtNWFlRmRFZWpONGRVaG1iVEpwUkNKOSIsImp0aSI6Imh0dHBzOi8vZXhhbXBsZS5jb20vaWQvMTIzNDMyNCIsIm5iZiI6MTY3NjkwMDAzMSwidmMiOnsiQGNvbnRleHQiOlsiaHR0cHM6Ly93d3cudzMub3JnLzIwMTgvY3JlZGVudGlhbHMvdjEiXSwiY3JlZGVudGlhbFN1YmplY3QiOnsibWVzc2FnZSI6eyJjYWxsYmFja1BhdGgiOiIvY2FsbGJhY2siLCJvcmlnaW4iOiJodHRwOi8vMTkyLjE2OC42OC4xMTI6MzAwMSIsInB1YmxpY0tleSI6IlBVQl9LMV84VkdoSjgzb3BhS2l6NFViZFc4a2g2dEdBbWpxU3JRVkZQdm5aeFdEejN4dUhmbTJpRCIsInJhbmRvbVN0cmluZyI6IjY3YzFiNzg0YmM2NWUwZjQxMTllOWQ5Zjk4NzQ4MjJiNmIxOWQ2OTNlN2MzYWJmMjRiZTFjMTFjNWM1ZWU4YjAifX0sInR5cGUiOlsiVmVyaWZpYWJsZUNyZWRlbnRpYWwiXX19.XNGfvbEx0m6_37zZY9fsghDwUIFq4Fszksi5FY2XfpfC3WvNkPn0uhFm6h8KDKl3QdhC8Kf1hf16jt5ntt8m8QA'
     );
 
     it('verified the jwt', () => {

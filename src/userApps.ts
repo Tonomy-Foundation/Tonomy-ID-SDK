@@ -7,12 +7,11 @@ import { generateRandomKeyPair, randomString } from './util/crypto';
 import { User } from './user';
 import { createKeyManagerSigner } from './services/eosio/transaction';
 import { SdkErrors, throwError } from './services/errors';
-import { createJWK, resolve, toDid } from './util/did-jwk';
+import { createJWK, toDid } from './util/did-jwk';
 import { getSettings } from './settings';
 import { App, AppStatus } from './app';
-import { createJWT, ES256KSigner, JWTVerified, verifyJWT } from '@tonomy/did-jwt';
+import { ES256KSigner } from '@tonomy/did-jwt';
 import { Message } from './util/message';
-import { Issuer } from '@tonomy/did-jwt-vc';
 
 const idContract = IDContract.Instance;
 
@@ -108,7 +107,7 @@ export class UserApps {
         const issuer = toDid(jwk);
 
         // TODO use expiresIn to make JWT expire after 5 minutes
-        const token = (await Message.sign(payload, { issuer, signer, alg: 'ES256K-R' } as any)).jwt;
+        const token = (await Message.sign(payload, { did: issuer, signer, alg: 'ES256K-R' } as any)).jwt;
 
         const requests = [token];
         const requestsString = JSON.stringify(requests);
@@ -141,7 +140,7 @@ export class UserApps {
         return { result, username, accountName };
     }
 
-    static async verifyRequests(requests: string | null): Promise<JWTVerified[]> {
+    static async verifyRequests(requests: string | null): Promise<Message[]> {
         if (!requests) throwError('No requests found in URL', SdkErrors.MissingParams);
 
         const jwtRequests = JSON.parse(requests);
@@ -150,7 +149,7 @@ export class UserApps {
             throwError('No JWTs found in URL', SdkErrors.MissingParams);
         }
 
-        const verified: JWTVerified[] = [];
+        const verified: Message[] = [];
 
         for (const jwt of jwtRequests) {
             verified.push(await this.verifyLoginJWT(jwt));
@@ -159,7 +158,7 @@ export class UserApps {
         return verified;
     }
 
-    static async onRedirectLogin(): Promise<JWTVerified> {
+    static async onRedirectLogin(): Promise<Message> {
         const urlParams = new URLSearchParams(window.location.search);
         const requests = urlParams.get('requests');
 
@@ -167,27 +166,24 @@ export class UserApps {
 
         const referrer = new URL(document.referrer);
 
-        for (const request of verifiedRequests) {
-            if (request.payload.origin === referrer.origin) {
-                return request;
+        for (const message of verifiedRequests) {
+            if (message.getPayload().origin === referrer.origin) {
+                return message;
             }
         }
 
         throwError(
-            `No origins from: ${verifiedRequests.map((r) => r.payload.origin)} match referrer: ${referrer.origin}`,
+            `No origins from: ${verifiedRequests.map((r) => r.getPayload().origin)} match referrer: ${referrer.origin}`,
             SdkErrors.WrongOrigin
         );
     }
 
-    static async verifyLoginJWT(jwt: string): Promise<JWTVerified> {
-        const resolver: any = {
-            resolve,
-            // TODO add Antelope resolver as well
-        };
-        const res = await verifyJWT(jwt, { resolver });
+    static async verifyLoginJWT(jwt: string): Promise<Message> {
+        const message = new Message(jwt);
+        const res = await message.verify();
 
-        if (!res.verified) throwError('JWT failed verification', SdkErrors.JwtNotValid);
-        return res;
+        if (!res) throwError('JWT failed verification', SdkErrors.JwtNotValid);
+        return message;
     }
 
     static async verifyKeyExistsForApp(

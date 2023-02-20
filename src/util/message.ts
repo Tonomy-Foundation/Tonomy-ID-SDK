@@ -2,18 +2,19 @@ import { decodeJWT } from '@tonomy/did-jwt';
 import { issue, OutputType } from '@tonomy/antelope-ssi-toolkit';
 import { Issuer, verifyCredential, W3CCredential } from '@tonomy/did-jwt-vc';
 // import { verifyJWT } from '@tonomy/did-jwt';
-// import { getResolver } from '@tonomy/antelope-did-resolver';
+import { getResolver } from '@tonomy/antelope-did-resolver';
 // import { Resolver } from '@tonomy/did-resolver';
 import { resolve } from './did-jwk';
 import { JWTDecoded } from '@tonomy/did-jwt/lib/JWT';
+import { Resolver } from '@tonomy/did-resolver';
+// import { getSettings } from '../settings';
 
 export class Message {
     private decodedJwt: JWTDecoded;
 
     /**
      * creates a signed message and return message object
-     * @param message the message to sign
-     * @param issuer issuer object with the signer and the did
+     * @param message the messageResolver with the signer and the did
      * @param recipient the recipient id
      * @returns a message objects
      */
@@ -58,7 +59,7 @@ export class Message {
     }
 
     // Returns the original unsigned payload
-    getPayload(): object {
+    getPayload(): any {
         return this.decodedJwt.payload.vc.credentialSubject.message;
     }
 
@@ -69,16 +70,25 @@ export class Message {
      * this is setup to resolve did:antelope and did:jwk DIDs
      */
     async verify(): Promise<boolean> {
-        // return await verify(this.jwt);
-
-        // const didResolver = new Resolver({ ...getResolver(), didKeyResolver });
-        const resolver: any = {
+        // const settings = getSettings();
+        const jwkResolver: any = {
             resolve,
             // TODO add Antelope resolver as well
         };
+        const resolver = new Resolver({
+            ...getResolver(),
+        });
+        // const antelopeResolver = {
+        //     resolve(did: string) {
+        //         getResolver().antelope(did,);
+        //     },
+        // };
 
-        return await (
-            await verifyCredential(this.jwt, resolver)
-        ).verified;
+        const result = await Promise.any([
+            verifyCredential(this.jwt, { resolve: jwkResolver.resolve }),
+            verifyCredential(this.jwt, resolver),
+        ]);
+
+        return result.verified;
     }
 }
