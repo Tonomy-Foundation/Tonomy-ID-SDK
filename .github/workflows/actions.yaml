@@ -46,4 +46,4 @@ jobs:
       - run: npm run test:integration
 
       - name: Stop the blockchain
-        run: ./nodeos.sh stop
+        run: /var/contracts/blockchain/nodeos.sh stop
