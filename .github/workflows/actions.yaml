@@ -3,16 +3,47 @@ name: Run Tonomy-SDK Tests
 on: pull_request
 
 jobs:
-    test:
-        runs-on: ubuntu-latest
+  test:
+    runs-on: ubuntu-latest
 
-        steps:
-            - uses: actions/checkout@v3
+    steps:
+      - uses: actions/checkout@v3
 
-            - name: Run lint and test
-              uses: actions/setup-node@v3
-              with:
-                node-version: 16.4.1
-            - run: npm install
-            - run: npm run lint
-            - run: npm test
+      - name: Run lint and test
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16.4.1
+      - run: npm install
+      - run: npm run lint
+      - run: npm test
+
+  integration-test:
+    runs-on: ubuntu-20.04
+    container: tonomyfoundation/tonomy_blockchain_nodejs:development
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Fetch Tonomy Contracts
+        run: |
+          rm -rf ./Tonomy-Contracts
+          git clone -b feature/123-cd-integration-tests https://github.com/Tonomy-Foundation/Tonomy-Contracts.git
+          ./Tonomy-Contracts/contracts/eosio.token/build.sh local
+          ./Tonomy-Contracts/contracts/eosio.bios.tonomy/build.sh local
+          ./Tonomy-Contracts/contracts/id.tonomy/build.sh local
+
+      - name: Install SDK and Bootstrap blockchain
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16.4.1
+      - run: npm i
+      - run: npm run bootstrap
+
+      - name: Run integration tests
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16.4.1
+      - run: npm run test:integration
+
+      - name: Stop the blockchain
+        run: ./nodeos.sh stop
