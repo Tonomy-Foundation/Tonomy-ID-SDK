@@ -27,7 +27,7 @@ jobs:
       - name: Fetch Tonomy Contracts
         run: |
           rm -rf ./Tonomy-Contracts
-          git clone -b feature/123-cd-integration-tests https://github.com/Tonomy-Foundation/Tonomy-Contracts.git
+          git clone -b development https://github.com/Tonomy-Foundation/Tonomy-Contracts.git
           ./Tonomy-Contracts/contracts/eosio.token/build.sh local
           ./Tonomy-Contracts/contracts/eosio.bios.tonomy/build.sh local
           ./Tonomy-Contracts/contracts/id.tonomy/build.sh local
