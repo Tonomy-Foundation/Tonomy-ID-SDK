@@ -1,12 +1,12 @@
 import { decodeJWT } from '@tonomy/did-jwt';
 import { issue, OutputType } from '@tonomy/antelope-ssi-toolkit';
 import { Issuer, verifyCredential, W3CCredential } from '@tonomy/did-jwt-vc';
-// import { verifyJWT } from '@tonomy/did-jwt';
-import { getResolver } from '@tonomy/antelope-did-resolver';
+
 // import { Resolver } from '@tonomy/did-resolver';
-import { resolve } from './did-jwk';
+import { getSettings } from '../settings';
+import AntelopeDID from '@tonomy/antelope-did';
 import { JWTDecoded } from '@tonomy/did-jwt/lib/JWT';
-import { Resolver } from '@tonomy/did-resolver';
+import fetch from 'cross-fetch';
 // import { getSettings } from '../settings';
 
 export class Message {
@@ -70,24 +70,28 @@ export class Message {
      * this is setup to resolve did:antelope and did:jwk DIDs
      */
     async verify(): Promise<boolean> {
-        // const settings = getSettings();
-        const jwkResolver: any = {
-            resolve,
-            // TODO add Antelope resolver as well
+        const settings = getSettings();
+
+        //TODO: use compatible resolver for the didjwk resolver
+        // const jwkResolver: any = {
+        //     resolve,
+        // };
+        const resolver = {
+            resolve: new AntelopeDID({ fetch: fetch, chain: settings.blockchainUrl }).resolve,
         };
-        const resolver = new Resolver({
-            ...getResolver(),
-        });
+
         // const antelopeResolver = {
         //     resolve(did: string) {
         //         getResolver().antelope(did,);
         //     },
         // };
 
-        const result = await Promise.any([
-            verifyCredential(this.jwt, { resolve: jwkResolver.resolve }),
-            verifyCredential(this.jwt, resolver),
-        ]);
+        // const result = await Promise.any([
+        //     verifyCredential(this.jwt, { resolve: jwkResolver.resolve }),
+        //     verifyCredential(this.jwt, resolver),
+        // ]);
+
+        const result = await verifyCredential(this.jwt, resolver);
 
         return result.verified;
     }

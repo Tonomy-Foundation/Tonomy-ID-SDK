@@ -11,6 +11,8 @@ import { validatePassword } from './util/passwords';
 import { UserApps } from './userApps';
 import { getSettings } from './settings';
 import { Communication } from './communication';
+import { Message } from './util/message';
+import { Issuer } from '@tonomy/did-jwt-vc';
 
 enum UserStatus {
     CREATING = 'CREATING',
@@ -60,6 +62,7 @@ export type UserStorage = {
 const idContract = IDContract.Instance;
 
 export class User {
+    private chainID!: Checksum256;
     keyManager: KeyManager;
     storage: UserStorage & PersistentStorageClean;
     apps: UserApps;
@@ -300,6 +303,27 @@ export class User {
                 throw e;
             }
         }
+    }
+
+    async signMessage(payload: any, recipient?: string): Promise<Message> {
+        const signer = createKeyManagerSigner(this.keyManager, KeyManagerLevel.LOCAL);
+
+        const issuer: Issuer = {
+            did: await this.getDid(),
+            signer: signer.sign as any,
+        };
+
+        return await Message.sign(payload, issuer, recipient);
+    }
+
+    async getDid() {
+        if (!this.chainID) {
+            this.chainID = await idContract.getChainID();
+        }
+
+        const accountName = await this.storage.accountName;
+
+        return `did:antelope:${this.chainID}:${accountName.toString()}#local`;
     }
 }
 

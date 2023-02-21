@@ -33,11 +33,13 @@ namespace PermissionLevel {
      */
     export function from(value: number | string): PermissionLevel {
         let index: number;
+
         if (typeof value !== 'number') {
             index = PermissionLevel.indexFor(value as PermissionLevel);
         } else {
             index = value;
         }
+
         return Object.values(PermissionLevel)[index] as PermissionLevel;
     }
 }
@@ -102,6 +104,7 @@ class IDContract {
         signer: Signer
     ): Promise<API.v1.PushTransactionResponse> {
         const actions = [];
+
         if (Object.keys(keys).length === 0)
             throwError('At least one key must be provided', SdkErrors.UpdateKeysTransactionNoKeys);
 
@@ -195,6 +198,7 @@ class IDContract {
     async getPerson(account: TonomyUsername | Name): Promise<GetPersonResponse> {
         let data;
         const api = await getApi();
+
         if (account instanceof TonomyUsername) {
             // this is a username
             const usernameHash = account.usernameHash;
@@ -210,6 +214,7 @@ class IDContract {
                 index_position: 'secondary',
             });
             if (!data || !data.rows) throwError('No data found', SdkErrors.DataQueryNoRowDataFound);
+
             if (data.rows.length === 0 || data.rows[0].username_hash.toString() !== usernameHash) {
                 throwError('Person with username "' + account.username + '" not found', SdkErrors.UsernameNotFound);
             }
@@ -224,6 +229,7 @@ class IDContract {
                 limit: 1,
             });
             if (!data || !data.rows) throwError('No data found', SdkErrors.DataQueryNoRowDataFound);
+
             if (data.rows.length === 0 || data.rows[0].account_name !== account.toString()) {
                 throwError(
                     'Person with account name "' + account.toString() + '" not found',
@@ -233,6 +239,7 @@ class IDContract {
         }
 
         const idData = data.rows[0];
+
         return {
             // eslint-disable-next-line camelcase
             account_name: Name.from(idData.account_name),
@@ -248,6 +255,7 @@ class IDContract {
     async getApp(account: TonomyUsername | Name | string): Promise<AppTableRecord> {
         let data;
         const api = await getApi();
+
         if (account instanceof TonomyUsername) {
             // this is a username
             const usernameHash = account.usernameHash;
@@ -263,6 +271,7 @@ class IDContract {
                 index_position: 'secondary',
             });
             if (!data || !data.rows) throwError('No data found', SdkErrors.DataQueryNoRowDataFound);
+
             if (data.rows.length === 0 || data.rows[0].username_hash.toString() !== usernameHash) {
                 throwError('Account with username "' + account.username + '" not found', SdkErrors.UsernameNotFound);
             }
@@ -277,6 +286,7 @@ class IDContract {
                 limit: 1,
             });
             if (!data || !data.rows) throwError('No data found', SdkErrors.DataQueryNoRowDataFound);
+
             if (data.rows.length === 0 || data.rows[0].account_name !== account.toString()) {
                 throwError('Account "' + account.toString() + '" not found', SdkErrors.AccountDoesntExist);
             }
@@ -296,12 +306,14 @@ class IDContract {
                 index_position: 'tertiary',
             });
             if (!data || !data.rows) throwError('No data found', SdkErrors.DataQueryNoRowDataFound);
+
             if (data.rows.length === 0 || data.rows[0].origin !== origin) {
                 throwError('Account with origin "' + origin + '" not found', SdkErrors.OriginNotFound);
             }
         }
 
         const idData = data.rows[0];
+
         return {
             // eslint-disable-next-line camelcase
             app_name: idData.app_name,
@@ -315,6 +327,12 @@ class IDContract {
             username_hash: Checksum256.from(idData.username_hash),
             version: idData.version,
         };
+    }
+
+    async getChainID() {
+        const api = await getApi();
+
+        return (await api.v1.chain.get_info()).chain_id;
     }
 }
 
