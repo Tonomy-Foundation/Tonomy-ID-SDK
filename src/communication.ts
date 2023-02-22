@@ -6,6 +6,7 @@ export class Communication {
 
     constructor() {
         const url = getSettings().communicationUrl;
+
         this.socketServer = io(url, {
             transports: ['websocket'],
         });
@@ -60,5 +61,9 @@ export class Communication {
     SSOWebsiteSendToMobile(randomSeed: string, requests: string) {
         this.connectTonomy(randomSeed);
         this.sendJwtToMobile(requests);
+    }
+
+    disconnect() {
+        this.socketServer.disconnect();
     }
 }

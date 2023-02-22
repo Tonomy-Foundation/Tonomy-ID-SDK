@@ -18,6 +18,10 @@ describe('User class', () => {
         user = createUserObject(auth, jsStorageFactory);
     });
 
+    afterEach(async () => {
+        await user.logout();
+    });
+
     test(
         'savePassword() generates and saves new private key',
         catchAndPrintErrors(async () => {
@@ -93,6 +97,9 @@ describe('User class', () => {
             expect(accountInfo.getPermission('active').parent.toString()).toBe('owner');
             expect(accountInfo.getPermission('active').required_auth.threshold.toNumber()).toBe(1);
             expect(accountInfo.getPermission('active').required_auth.keys[0].key).toBeDefined();
+
+            // Close connections
+            await user.logout();
         })
     );
 
@@ -114,6 +121,10 @@ describe('User class', () => {
             expect(await userLogin.storage.accountName).toBeDefined();
             expect(await userLogin.storage.username.username).toBe(username.username);
             expect(userLogin.isLoggedIn()).toBeTruthy();
+
+            // Close connections
+            await user.logout();
+            await userLogin.logout();
         })
     );
 
@@ -128,6 +139,10 @@ describe('User class', () => {
             const userLogin = createUserObject(newKeyManager, jsStorageFactory);
 
             await expect(() => userLogin.login(username, 'differentpassword')).rejects.toThrowError(Error);
+
+            // Close connections
+            await user.logout();
+            await userLogin.logout();
         })
     );
 
@@ -144,6 +159,9 @@ describe('User class', () => {
             expect(() => user.keyManager.getKey({ level: KeyManagerLevel.FINGERPRINT })).rejects.toThrowError(Error);
             expect(() => user.keyManager.getKey({ level: KeyManagerLevel.LOCAL })).rejects.toThrowError(Error);
             expect(user.isLoggedIn()).resolves.toBeFalsy();
+
+            // Close connections
+            await user.logout();
         })
     );
 
@@ -161,6 +179,9 @@ describe('User class', () => {
             userInfo = await User.getAccountInfo(await user.storage.username);
 
             expect(userInfo.account_name).toEqual(await user.storage.accountName);
+
+            // Close connections
+            await user.logout();
         })
     );
 });

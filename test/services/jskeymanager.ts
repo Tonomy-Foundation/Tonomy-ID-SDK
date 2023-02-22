@@ -26,6 +26,7 @@ export class JsKeyManager implements KeyManager {
     // Creates a cryptographically secure Private key
     generateRandomPrivateKey(): PrivateKey {
         const bytes = randomBytes(32);
+
         return new PrivateKey(KeyType.K1, new Bytes(bytes));
     }
 
@@ -57,6 +58,7 @@ export class JsKeyManager implements KeyManager {
             privateKey: options.privateKey,
             publicKey: options.privateKey.toPublic(),
         };
+
         if (options.level === KeyManagerLevel.PASSWORD || options.level === KeyManagerLevel.PIN) {
             if (!options.challenge) throw new Error('Challenge missing');
             keyStore.salt = randomString(32);
@@ -66,6 +68,7 @@ export class JsKeyManager implements KeyManager {
         if (options.level === KeyManagerLevel.BROWSERLOCALSTORAGE) {
             localStorage.setItem('tonomy.id.' + KeyManagerLevel.BROWSERLOCALSTORAGE, options.privateKey.toString());
         }
+
         this.keyStorage[options.level] = keyStore;
         return keyStore.publicKey;
     }
@@ -85,11 +88,13 @@ export class JsKeyManager implements KeyManager {
 
         const privateKey = keyStore.privateKey;
         let digest: Checksum256;
+
         if (options.data instanceof String) {
             digest = Checksum256.hash(Buffer.from(options.data));
         } else {
             digest = options.data as Checksum256;
         }
+
         const signature = privateKey.signDigest(digest);
 
         return signature;
@@ -98,20 +103,22 @@ export class JsKeyManager implements KeyManager {
     async getKey(options: GetKeyOptions): Promise<PublicKey> {
         if (options.level === KeyManagerLevel.BROWSERLOCALSTORAGE) {
             const data = localStorage.getItem('tonomy.id.' + KeyManagerLevel.BROWSERLOCALSTORAGE);
+
             if (!data) {
                 throw new Error('No key for this level');
             }
+
             return PrivateKey.from(data).toPublic();
         } else {
             if (!(options.level in this.keyStorage)) throw new Error('No key for this level');
 
             const keyStore = this.keyStorage[options.level];
+
             return keyStore.publicKey;
         }
     }
 
     async removeKey(options: GetKeyOptions): Promise<void> {
-        if (!(options.level in this.keyStorage)) throw new Error('No key for this level');
         delete this.keyStorage[options.level];
     }
 }

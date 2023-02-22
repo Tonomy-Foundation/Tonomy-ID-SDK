@@ -271,6 +271,8 @@ export class User {
         await this.keyManager.removeKey({ level: KeyManagerLevel.LOCAL });
         // clear storage data
         this.storage.clear();
+
+        this.communication.disconnect();
     }
 
     async isLoggedIn(): Promise<boolean> {

@@ -36,6 +36,9 @@ describe('IDContract class', () => {
             idInfo = await idContract.getPerson(username);
             expect(idInfo.account_name.toString()).toEqual(accountName.toString());
             expect(idInfo.username_hash.toString()).toEqual(username.usernameHash);
+
+            // Close connections
+            await user.logout();
         })
     );
 
