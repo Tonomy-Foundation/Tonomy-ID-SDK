@@ -49,7 +49,7 @@ jobs:
 
     services:
       blockchain:
-        image: tonomy/blockchain:nodejs-development
+        image: tonomy/blockchain:initialized-development
         ports:
           - 8888:8888
 
@@ -69,8 +69,6 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 16.4.1
-      - run: ls ./Tonomy-Contracts/contracts/id.tonomy
-      - run: curl http://localhost:8888/v1/chain/get_info
       - run: npm i
       - run: npm run bootstrap
 
