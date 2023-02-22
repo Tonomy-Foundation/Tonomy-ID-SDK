@@ -28,13 +28,13 @@ jobs:
           path: Tonomy-Contracts
 
       - name: Build eosio.bios.tonomy contract
-        run: ./contracts/eosio.bios.tonomy/build.sh local
+        run: ./Tonomy-Contracts/contracts/eosio.bios.tonomy/build.sh local
 
       - name: Build eosio.token contract
-        run: ./contracts/eosio.token/build.sh local
+        run: ./Tonomy-Contracts/contracts/eosio.token/build.sh local
 
       - name: Build id.tonomy contract
-        run: ./contracts/id.tonomy/build.sh local
+        run: ./Tonomy-Contracts/contracts/id.tonomy/build.sh local
 
       - name: Add Tonomy-Contracts dir to artifacts
         uses: actions/upload-artifact@v3
