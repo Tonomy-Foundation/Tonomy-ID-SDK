@@ -17,26 +17,57 @@ jobs:
       - run: npm run lint
       - run: npm test
 
-  integration-test:
+  compile-contracts:
+    name: Compiles contracts needed for bootstrap script
     runs-on: ubuntu-20.04
-    container: tonomyfoundation/tonomy_blockchain_nodejs:development
+    container: eosio/eosio.cdt:v1.8.1
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          repository: Tonomy-Foundation/Tonomy-Contracts
+          path: Tonomy-Contracts
+
+      - name: Build eosio.bios.tonomy contract
+        run: ./contracts/eosio.bios.tonomy/build.sh local
+
+      - name: Build eosio.token contract
+        run: ./contracts/eosio.token/build.sh local
+
+      - name: Build id.tonomy contract
+        run: ./contracts/id.tonomy/build.sh local
+
+      - name: Add Tonomy-Contracts dir to artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: Tonomy-Contracts
+          path: ./Tonomy-Contracts
+
+  integration-test:
+    needs: compile-contracts
+    runs-on: ubuntu-20.04
+
+    services:
+      blockchain:
+        image: tonomy/blockchain:nodejs-development
 
     steps:
       - uses: actions/checkout@v3
 
-      - name: Fetch Tonomy Contracts
-        run: |
-          rm -rf ./Tonomy-Contracts
-          git clone -b development https://github.com/Tonomy-Foundation/Tonomy-Contracts.git
-          ./Tonomy-Contracts/contracts/eosio.token/build.sh local
-          ./Tonomy-Contracts/contracts/eosio.bios.tonomy/build.sh local
-          ./Tonomy-Contracts/contracts/id.tonomy/build.sh local
+      - name: Delete Tonomy-Contracts directory
+        run: rm -rf ./Tonomy-Contracts
+
+      - name: Get Tonomy-Contracts directory from artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: Tonomy-Contracts
+          path: ./Tonomy-Contracts
 
       - name: Install SDK and Bootstrap blockchain
         uses: actions/setup-node@v3
         with:
           node-version: 16.4.1
       - run: npm i
+      - run: curl http://localhost:8888/v1/chain/get_info
       - run: npm run bootstrap
 
       - name: Run integration tests
@@ -44,6 +75,3 @@ jobs:
         with:
           node-version: 16.4.1
       - run: npm run test:integration
-
-      - name: Stop the blockchain
-        run: /var/contracts/blockchain/nodeos.sh stop
