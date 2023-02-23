@@ -14,7 +14,7 @@
         "start": "npx tsdx watch --transpileOnly --noClean",
         "build": "npx tsdx build",
         "test": "npx tsdx test test/",
-        "test:integration": "jest --config ./test-integration/jest.config.js",
+        "test:integration": "jest --detectOpenHandles --config ./test-integration/jest.config.js",
         "bootstrap": "npx ts-node --project ./bootstrap-blockchain/tsconfig.json bootstrap-blockchain/bootstrap.ts",
         "lint": "eslint src test --ext .ts --resolve-plugins-relative-to .",
         "lint:fix": "npm run lint -- --fix",
