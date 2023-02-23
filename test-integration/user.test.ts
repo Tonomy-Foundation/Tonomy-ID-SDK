@@ -166,11 +166,16 @@ describe('User class', () => {
     test(
         'login() fails with userName does not exists',
         catchAndPrintErrors(async () => {
-            const userName = new TonomyUsername('userName', false);
+            const { user, password } = await createRandomID();
+
+            const username = await user.storage.username;
+
             const newKeyManager = new JsKeyManager();
             const userLogin = createUserObject(newKeyManager, jsStorageFactory);
 
-            await expect(() => userLogin.login(userName, 'differentpassword')).rejects.toThrowError(Error);
+            expect(userLogin.isLoggedIn()).resolves.toBeFalsy();
+
+            await expect(userLogin.login(new TonomyUsername('random'), password)).rejects.toThrowError(Error);
         })
     );
 });
