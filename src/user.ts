@@ -13,7 +13,8 @@ import { getSettings } from './settings';
 import { Communication } from './communication';
 
 enum UserStatus {
-    CREATING = 'CREATING',
+    ACCOUNT_CREATED = 'CREATING',
+    LOGIN_IN = 'LOGGING_IN',
     READY = 'READY',
     DEACTIVATED = 'DEACTIVATED',
 }
@@ -73,6 +74,18 @@ export class User {
 
         //TODO implement dependency inversion
         this.communication = new Communication();
+    }
+
+    async getStatus(): Promise<UserStatus> {
+        return await this.storage.status;
+    }
+
+    async getAccountName(): Promise<Name> {
+        return await this.storage.accountName;
+    }
+
+    async getUsername(): Promise<TonomyUsername> {
+        return await this.storage.username;
     }
 
     async saveUsername(username: string) {
@@ -194,16 +207,16 @@ export class User {
         this.storage.accountName = Name.from(newAccountAction.data.name);
         await this.storage.accountName;
 
-        this.storage.status = UserStatus.CREATING;
+        this.storage.status = UserStatus.ACCOUNT_CREATED;
         await this.storage.status;
 
         return res;
     }
 
     async updateKeys(password: string) {
-        const status = await this.storage.status;
+        const status = await this.getStatus();
 
-        if (status !== UserStatus.CREATING && status !== UserStatus.READY) {
+        if (status === UserStatus.DEACTIVATED) {
             throw new Error("Can't update keys ");
         }
 
@@ -258,7 +271,11 @@ export class User {
 
         this.storage.accountName = Name.from(idData.account_name);
         this.storage.username = username;
-        this.storage.status = UserStatus.READY;
+        this.storage.status = UserStatus.LOGIN_IN;
+
+        await this.storage.accountName;
+        await this.storage.username;
+        await this.storage.status;
 
         return idData;
     }
@@ -351,7 +368,7 @@ export class User {
     }
 
     async isLoggedIn(): Promise<boolean> {
-        return !!(await this.storage.status);
+        return (await this.getStatus()) === UserStatus.READY;
     }
 
     static async getAccountInfo(account: TonomyUsername | Name): Promise<API.v1.AccountObject> {
