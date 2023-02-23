@@ -207,7 +207,7 @@ export class User {
         this.storage.accountName = Name.from(newAccountAction.data.name);
         await this.storage.accountName;
 
-        this.storage.status = UserStatus.ACCOUNT_CREATED;
+        this.storage.status = UserStatus.CREATING_ACCOUNT;
         await this.storage.status;
 
         return res;
