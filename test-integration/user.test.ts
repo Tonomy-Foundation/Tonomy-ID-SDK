@@ -1,6 +1,7 @@
 import { api } from './util/eosio';
 import { createRandomID } from './util/user';
 import { KeyManager, KeyManagerLevel, TonomyUsername, User, createUserObject, setSettings } from '../src/index';
+import { SdkError, SdkErrors } from '../src/index';
 import { JsKeyManager } from '../test/services/jskeymanager';
 import { jsStorageFactory } from '../test/services/jsstorage';
 import settings from './services/settings';
@@ -16,6 +17,10 @@ describe('User class', () => {
         jest.setTimeout(60000);
         auth = new JsKeyManager();
         user = createUserObject(auth, jsStorageFactory);
+    });
+
+    afterEach(async () => {
+        await user.logout();
     });
 
     test(
@@ -93,6 +98,9 @@ describe('User class', () => {
             expect(accountInfo.getPermission('active').parent.toString()).toBe('owner');
             expect(accountInfo.getPermission('active').required_auth.threshold.toNumber()).toBe(1);
             expect(accountInfo.getPermission('active').required_auth.keys[0].key).toBeDefined();
+
+            // Close connections
+            await user.logout();
         })
     );
 
@@ -114,6 +122,10 @@ describe('User class', () => {
             expect(await userLogin.storage.accountName).toBeDefined();
             expect(await userLogin.storage.username.username).toBe(username.username);
             expect(userLogin.isLoggedIn()).toBeTruthy();
+
+            // Close connections
+            await user.logout();
+            await userLogin.logout();
         })
     );
 
@@ -128,6 +140,62 @@ describe('User class', () => {
             const userLogin = createUserObject(newKeyManager, jsStorageFactory);
 
             await expect(() => userLogin.login(username, 'differentpassword')).rejects.toThrowError(Error);
+
+            // Close connections
+            await user.logout();
+            await userLogin.logout();
+        })
+    );
+
+    test(
+        'checkKeysStillValid() keys are still valid after create account',
+        catchAndPrintErrors(async () => {
+            const { user } = await createRandomID();
+
+            await expect(user.checkKeysStillValid()).resolves.toBeTruthy();
+
+            // Close connections
+            await user.logout();
+        })
+    );
+
+    test(
+        'checkKeysStillValid() keys are still valid after create account and login again',
+        catchAndPrintErrors(async () => {
+            const { user, password } = await createRandomID();
+
+            await user.savePIN('1234');
+            await user.saveLocal();
+            await user.updateKeys(password);
+
+            await expect(user.checkKeysStillValid()).resolves.toBeTruthy();
+
+            // Close connections
+            await user.logout();
+        })
+    );
+
+    test(
+        'checkKeysStillValid() keys are not valid after login and change keys but not update yet',
+        catchAndPrintErrors(async () => {
+            const { user } = await createRandomID();
+
+            // Emulate that user updates their keys, but not the blockchain yet
+            await user.saveLocal();
+            await user.savePIN('1234');
+
+            await expect(user.checkKeysStillValid()).rejects.toThrowError(SdkErrors.KeyNotFound);
+
+            // Close connections
+            // TODO if expect fails, then the user.logout() is not called and we dont cleanup. We need to fix this
+            await user.logout();
+        })
+    );
+
+    test(
+        "checkKeysStillValid() throws error if user doesn't exist",
+        catchAndPrintErrors(async () => {
+            await expect(user.checkKeysStillValid()).rejects.toThrowError(SdkErrors.AccountDoesntExist);
         })
     );
 
@@ -144,6 +212,9 @@ describe('User class', () => {
             expect(() => user.keyManager.getKey({ level: KeyManagerLevel.FINGERPRINT })).rejects.toThrowError(Error);
             expect(() => user.keyManager.getKey({ level: KeyManagerLevel.LOCAL })).rejects.toThrowError(Error);
             expect(user.isLoggedIn()).resolves.toBeFalsy();
+
+            // Close connections
+            await user.logout();
         })
     );
 
@@ -161,6 +232,9 @@ describe('User class', () => {
             userInfo = await User.getAccountInfo(await user.storage.username);
 
             expect(userInfo.account_name).toEqual(await user.storage.accountName);
+
+            // Close connections
+            await user.logout();
         })
     );
     test(

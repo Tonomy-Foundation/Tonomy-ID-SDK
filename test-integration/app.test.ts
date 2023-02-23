@@ -28,11 +28,16 @@ describe('App class', () => {
             expect(appPermission?.required_auth.keys[0].key.toString()).toEqual(newKey.toPublic().toString());
 
             const userApps = await user.apps.storage.appRecords;
+
             expect(userApps.length).toBe(1);
             const myApp = userApps[0];
+
             expect(myApp.app.accountName.toString()).toEqual(app.accountName.toString());
             expect(myApp.status).toEqual(AppStatus.READY);
             expect(myApp.added).toBeDefined();
+
+            // Close connections
+            await user.logout();
         })
     );
 });

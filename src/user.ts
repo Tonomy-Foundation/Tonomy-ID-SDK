@@ -263,6 +263,81 @@ export class User {
         return idData;
     }
 
+    async checkKeysStillValid(): Promise<boolean> {
+        // Account been created, or has not finished being created yet
+        if (this.storage.status !== UserStatus.READY) throwError('User is not ready', SdkErrors.AccountDoesntExist);
+
+        const accountInfo = await User.getAccountInfo(await this.storage.accountName);
+
+        const checkPairs = [
+            {
+                level: KeyManagerLevel.PIN,
+                permission: 'pin',
+            },
+            {
+                level: KeyManagerLevel.FINGERPRINT,
+                permission: 'fingerprint',
+            },
+            {
+                level: KeyManagerLevel.LOCAL,
+                permission: 'local',
+            },
+            {
+                level: KeyManagerLevel.PASSWORD,
+                permission: 'active',
+            },
+            {
+                level: KeyManagerLevel.PASSWORD,
+                permission: 'owner',
+            },
+        ];
+
+        for (const pair of checkPairs) {
+            let localKey;
+
+            try {
+                localKey = await this.keyManager.getKey({ level: pair.level });
+            } catch (e) {
+                localKey = null;
+            }
+
+            let blockchainPermission;
+
+            try {
+                blockchainPermission = accountInfo.getPermission(pair.permission);
+            } catch (e) {
+                blockchainPermission = null;
+            }
+
+            if (!localKey && blockchainPermission) {
+                // User probably logged into another device and finished create account flow there
+                throwError(
+                    `${pair.level} key was not found in the keyManager, but was found on the blockchain`,
+                    SdkErrors.KeyNotFound
+                );
+            }
+
+            if (localKey && !blockchainPermission) {
+                // User probably hasn't finished create account flow yet
+                throwError(
+                    `${pair.level} keys was not found on the blockchain, but was found in the keyManager`,
+                    SdkErrors.KeyNotFound
+                );
+            }
+
+            if (
+                localKey &&
+                blockchainPermission &&
+                localKey.toString() !== blockchainPermission.required_auth.keys[0].key.toString()
+            ) {
+                // User has logged in on another device
+                throwError(`${pair.level} keys do not match`, SdkErrors.KeyNotFound);
+            }
+        }
+
+        return true;
+    }
+
     async logout(): Promise<void> {
         // remove all keys
         await this.keyManager.removeKey({ level: KeyManagerLevel.PASSWORD });
@@ -271,6 +346,8 @@ export class User {
         await this.keyManager.removeKey({ level: KeyManagerLevel.LOCAL });
         // clear storage data
         this.storage.clear();
+
+        this.communication.disconnect();
     }
 
     async isLoggedIn(): Promise<boolean> {
