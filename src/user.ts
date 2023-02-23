@@ -13,8 +13,8 @@ import { getSettings } from './settings';
 import { Communication } from './communication';
 
 enum UserStatus {
-    ACCOUNT_CREATED = 'CREATING',
-    LOGIN_IN = 'LOGGING_IN',
+    CREATING_ACCOUNT = 'CREATING_ACCOUNT',
+    LOGGING_IN = 'LOGGING_IN',
     READY = 'READY',
     DEACTIVATED = 'DEACTIVATED',
 }
@@ -207,7 +207,7 @@ export class User {
         this.storage.accountName = Name.from(newAccountAction.data.name);
         await this.storage.accountName;
 
-        this.storage.status = UserStatus.ACCOUNT_CREATED;
+        this.storage.status = UserStatus.CREATING_ACCOUNT;
         await this.storage.status;
 
         return res;
@@ -271,7 +271,7 @@ export class User {
 
         this.storage.accountName = Name.from(idData.account_name);
         this.storage.username = username;
-        this.storage.status = UserStatus.LOGIN_IN;
+        this.storage.status = UserStatus.LOGGING_IN;
 
         await this.storage.accountName;
         await this.storage.username;
