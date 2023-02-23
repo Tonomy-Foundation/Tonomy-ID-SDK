@@ -1,5 +1,5 @@
 {
-    "version": "0.1.0",
+    "version": "1.0.0",
     "license": "MIT",
     "main": "dist/index.js",
     "typings": "dist/index.d.ts",
@@ -27,7 +27,7 @@
             "pre-commit": "tsdx lint"
         }
     },
-    "name": "tonomy-id-sdk",
+    "name": "@tonomy/tonomy-id-sdk",
     "author": "Jack Tanner",
     "module": "dist/tonomy-id-sdk.esm.js",
     "size-limit": [
@@ -69,5 +69,12 @@
         "did-jwt": "^6.10.1",
         "elliptic": "^6.5.4",
         "socket.io-client": "^4.5.4"
-    }
+    },
+    "publishConfig": {
+        "access": "public"
+    },
+    "keywords": [
+        "sdk",
+        "tonomy"
+    ]
 }
