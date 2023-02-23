@@ -1,6 +1,6 @@
 import { api } from './util/eosio';
 import { createRandomID } from './util/user';
-import { KeyManager, KeyManagerLevel, User, createUserObject, setSettings } from '../src/index';
+import { KeyManager, KeyManagerLevel, User, createUserObject, setSettings, SdkError, SdkErrors } from '../src/index';
 import { JsKeyManager } from '../test/services/jskeymanager';
 import { jsStorageFactory } from '../test/services/jsstorage';
 import settings from './services/settings';
@@ -143,6 +143,58 @@ describe('User class', () => {
             // Close connections
             await user.logout();
             await userLogin.logout();
+        })
+    );
+
+    test(
+        'checkKeysStillValid() keys are still valid after create account',
+        catchAndPrintErrors(async () => {
+            const { user } = await createRandomID();
+
+            await expect(user.checkKeysStillValid()).resolves.toBeTruthy();
+
+            // Close connections
+            await user.logout();
+        })
+    );
+
+    test(
+        'checkKeysStillValid() keys are still valid after create account and login again',
+        catchAndPrintErrors(async () => {
+            const { user, password } = await createRandomID();
+
+            await user.savePIN('1234');
+            await user.saveLocal();
+            await user.updateKeys(password);
+
+            await expect(user.checkKeysStillValid()).resolves.toBeTruthy();
+
+            // Close connections
+            await user.logout();
+        })
+    );
+
+    test(
+        'checkKeysStillValid() keys are not valid after login and change keys but not update yet',
+        catchAndPrintErrors(async () => {
+            const { user } = await createRandomID();
+
+            // Emulate that user updates their keys, but not the blockchain yet
+            await user.saveLocal();
+            await user.savePIN('1234');
+
+            await expect(user.checkKeysStillValid()).rejects.toThrowError(SdkErrors.KeyNotFound);
+
+            // Close connections
+            // TODO if expect fails, then the user.logout() is not called and we dont cleanup. We need to fix this
+            await user.logout();
+        })
+    );
+
+    test(
+        "checkKeysStillValid() throws error if user doesn't exist",
+        catchAndPrintErrors(async () => {
+            await expect(user.checkKeysStillValid()).rejects.toThrowError(SdkErrors.AccountDoesntExist);
         })
     );
 
