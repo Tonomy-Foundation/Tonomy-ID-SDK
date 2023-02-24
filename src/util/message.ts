@@ -1,16 +1,15 @@
 import { decodeJWT } from '@tonomy/did-jwt';
-import { issue, OutputType } from '@tonomy/antelope-ssi-toolkit';
+// import { issue, OutputType } from '@tonomy/antelope-ssi-toolkit';
 import { Issuer, verifyCredential, W3CCredential } from '@tonomy/did-jwt-vc';
 
 // import { Resolver } from '@tonomy/did-resolver';
 import { getSettings } from '../settings';
-
 import { JWTDecoded } from '@tonomy/did-jwt/lib/JWT';
 import crossFetch from 'cross-fetch';
 import { getResolver } from '@tonomy/antelope-did-resolver';
 import { Resolver } from '@tonomy/did-resolver';
-// import { resolve } from './did-jwk';
-// import { getSettings } from '../settings';
+import { issue, OutputType } from '@tonomy/antelope-ssi-toolkit';
+import { resolve } from './did-jwk';
 
 export class Message {
     private decodedJwt: JWTDecoded;
@@ -76,9 +75,9 @@ export class Message {
         const settings = getSettings();
 
         //TODO: use compatible resolver for the didjwk resolver
-        // const jwkResolver: any = {
-        //     resolve,
-        // };
+        const jwkResolver: any = {
+            resolve,
+        };
         // const resolver = {
         //     resolve: new AntelopeDID({ fetch: crossFetch, antelopeChainUrl: settings.blockchainUrl }).resolve,
         // };
@@ -86,12 +85,10 @@ export class Message {
             ...getResolver({ antelopeChainUrl: settings.blockchainUrl, fetch: crossFetch as any }),
         });
 
-        // const result = await Promise.any([
-        //     verifyCredential(this.jwt, { resolve: jwkResolver.resolve }),
-        //     verifyCredential(this.jwt, resolver),
-        // ]);
-
-        const result = await verifyCredential(this.jwt, resolver as any);
+        const result = await Promise.any([
+            verifyCredential(this.jwt, { resolve: jwkResolver.resolve }),
+            verifyCredential(this.jwt, resolver),
+        ]);
 
         return result.verified;
     }

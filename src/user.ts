@@ -310,7 +310,7 @@ export class User {
         const signer = createVCSigner(this.keyManager, KeyManagerLevel.LOCAL);
 
         const issuer: Issuer = {
-            did: await this.getDid(),
+            did: (await this.getDid()) + '#local',
             signer: signer.sign as any,
             alg: 'ES256K-R',
         };
@@ -325,7 +325,7 @@ export class User {
 
         const accountName = await this.storage.accountName;
 
-        return `did:antelope:${this.chainID}:${accountName.toString()}#local`;
+        return `did:antelope:${this.chainID}:${accountName.toString()}`;
     }
 }
 

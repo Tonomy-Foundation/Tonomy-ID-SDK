@@ -12,6 +12,7 @@ export function createJWK(publicKey: PublicKey) {
         y: bnToBase64Url(ecPubKey.getPublic().getY() as any),
         kid: publicKey.toString(),
     };
+
     return publicKeyJwk;
 }
 
@@ -23,6 +24,7 @@ export function toDid(jwk: any) {
     const id = utf8ToB64(JSON.stringify(publicKeyJwk));
 
     const did = `did:jwk:${id}`;
+
     return did;
 }
 
@@ -33,9 +35,11 @@ export function toDidDocument(jwk: any) {
         if (keyOps.includes('sign')) {
             return ['verify'];
         }
+
         if (keyOps.includes('verify')) {
             return ['encrypt'];
         }
+
         return keyOps;
     };
     const {
@@ -81,5 +85,6 @@ export function resolve(did: any, options = {}) {
     if (options) options = {};
     const decoded = b64ToUtf8(did.split(':').pop().split('#')[0]);
     const jwk = JSON.parse(decoded.toString());
+
     return toDidDocument(jwk);
 }
