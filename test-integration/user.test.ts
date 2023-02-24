@@ -250,6 +250,8 @@ describe('User class', () => {
             expect(userLogin.isLoggedIn()).resolves.toBeFalsy();
 
             await expect(userLogin.login(new TonomyUsername('random'), password)).rejects.toThrowError(Error);
+            // Close connections
+            await user.logout();
         })
     );
 });
