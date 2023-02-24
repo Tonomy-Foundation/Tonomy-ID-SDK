@@ -14,7 +14,7 @@ type ActionData = {
 };
 
 interface Signer {
-    sign(digest: Checksum256): Promise<Signature>;
+    sign(digest: Checksum256 | string): Promise<Signature>;
 }
 
 interface AntelopePushTransactionErrorConstructor extends Error {
@@ -44,7 +44,7 @@ function createSigner(privateKey: PrivateKey): Signer {
 
 function createKeyManagerSigner(keyManager: KeyManager, level: KeyManagerLevel, challenge?: string): Signer {
     return {
-        async sign(digest: Checksum256): Promise<Signature> {
+        async sign(digest: string | Checksum256): Promise<Signature> {
             return (await keyManager.signData({
                 level,
                 data: digest,

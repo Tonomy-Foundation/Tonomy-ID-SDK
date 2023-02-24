@@ -1,4 +1,4 @@
-import { decodeJWT, verifyJWT } from 'did-jwt';
+import { decodeJWT, verifyJWT } from '@tonomy/did-jwt';
 import { resolve } from '../../src/util/did-jwk';
 
 describe('did-jwk resolver', () => {

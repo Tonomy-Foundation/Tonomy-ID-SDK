@@ -36,8 +36,7 @@ describe('user signing messages', () => {
 
             const message = await user.signMessage(payload);
 
-            await console.log(message.jwt);
-            expect(message.verify()).resolves.toBe(true);
+            expect(await message.verify()).resolves.toBe(true);
             expect(message.getPayload()).toEqual(payload);
         })
     );

@@ -13,6 +13,7 @@ import { getSettings } from './settings';
 import { Communication } from './communication';
 import { Message } from './util/message';
 import { Issuer } from '@tonomy/did-jwt-vc';
+import { createVCSigner } from './util/crypto';
 
 enum UserStatus {
     CREATING = 'CREATING',
@@ -306,11 +307,12 @@ export class User {
     }
 
     async signMessage(payload: any, recipient?: string): Promise<Message> {
-        const signer = createKeyManagerSigner(this.keyManager, KeyManagerLevel.LOCAL);
+        const signer = createVCSigner(this.keyManager, KeyManagerLevel.LOCAL);
 
         const issuer: Issuer = {
             did: await this.getDid(),
             signer: signer.sign as any,
+            alg: 'ES256K-R',
         };
 
         return await Message.sign(payload, issuer, recipient);

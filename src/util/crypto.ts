@@ -2,6 +2,7 @@ import { Bytes, Checksum256, KeyType, PrivateKey, PublicKey } from '@greymass/eo
 import rb from '@consento/sync-randombytes';
 import elliptic from 'elliptic';
 import { SdkErrors, throwError } from '../services/errors';
+import { KeyManager, KeyManagerLevel } from '../services/keymanager';
 
 const secp256k1 = new elliptic.ec('secp256k1');
 
@@ -19,11 +20,13 @@ function validateKey(keyPair: elliptic.ec.KeyPair) {
 
 export function toElliptic(key: PrivateKey | PublicKey): elliptic.ec.KeyPair {
     let ecKeyPair: elliptic.ec.KeyPair;
+
     if (key instanceof PublicKey) {
         ecKeyPair = secp256k1.keyFromPublic(key.data.array);
     } else {
         ecKeyPair = secp256k1.keyFromPrivate(key.data.array);
     }
+
     validateKey(ecKeyPair);
 
     return ecKeyPair;
@@ -31,6 +34,7 @@ export function toElliptic(key: PrivateKey | PublicKey): elliptic.ec.KeyPair {
 
 export function randomString(bytes: number): string {
     const random = rb(new Uint8Array(bytes));
+
     return Array.from(random).map(int2hex).join('');
 }
 
@@ -61,5 +65,18 @@ export function generateRandomKeyPair(): { privateKey: PrivateKey; publicKey: Pu
     const bytes = randomBytes(32);
     const privateKey = new PrivateKey(KeyType.K1, new Bytes(bytes));
     const publicKey = privateKey.toPublic();
+
     return { privateKey, publicKey };
+}
+
+export function createVCSigner(keyManager: KeyManager, level: KeyManagerLevel) {
+    return {
+        async sign(data: string) {
+            return await keyManager.signData({
+                level,
+                data,
+                outputType: 'jwt',
+            });
+        },
+    };
 }

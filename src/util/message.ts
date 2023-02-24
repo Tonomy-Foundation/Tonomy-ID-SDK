@@ -4,9 +4,12 @@ import { Issuer, verifyCredential, W3CCredential } from '@tonomy/did-jwt-vc';
 
 // import { Resolver } from '@tonomy/did-resolver';
 import { getSettings } from '../settings';
-import AntelopeDID from '@tonomy/antelope-did';
+
 import { JWTDecoded } from '@tonomy/did-jwt/lib/JWT';
-import fetch from 'cross-fetch';
+import crossFetch from 'cross-fetch';
+import { getResolver } from '@tonomy/antelope-did-resolver';
+import { Resolver } from '@tonomy/did-resolver';
+// import { resolve } from './did-jwk';
 // import { getSettings } from '../settings';
 
 export class Message {
@@ -76,22 +79,19 @@ export class Message {
         // const jwkResolver: any = {
         //     resolve,
         // };
-        const resolver = {
-            resolve: new AntelopeDID({ fetch: fetch, chain: settings.blockchainUrl }).resolve,
-        };
-
-        // const antelopeResolver = {
-        //     resolve(did: string) {
-        //         getResolver().antelope(did,);
-        //     },
+        // const resolver = {
+        //     resolve: new AntelopeDID({ fetch: crossFetch, antelopeChainUrl: settings.blockchainUrl }).resolve,
         // };
+        const resolver = new Resolver({
+            ...getResolver({ antelopeChainUrl: settings.blockchainUrl, fetch: crossFetch as any }),
+        });
 
         // const result = await Promise.any([
         //     verifyCredential(this.jwt, { resolve: jwkResolver.resolve }),
         //     verifyCredential(this.jwt, resolver),
         // ]);
 
-        const result = await verifyCredential(this.jwt, resolver);
+        const result = await verifyCredential(this.jwt, resolver as any);
 
         return result.verified;
     }

@@ -8,6 +8,7 @@ import {
 } from '../../src/services/keymanager';
 import argon2 from 'argon2';
 import { Bytes, Checksum256, KeyType, PrivateKey, PublicKey, Signature } from '@greymass/eosio';
+import { createSigner } from '@tonomy/antelope-ssi-toolkit';
 
 type KeyStorage = {
     privateKey: PrivateKey;
@@ -87,17 +88,25 @@ export class JsKeyManager implements KeyManager {
         }
 
         const privateKey = keyStore.privateKey;
-        let digest: Checksum256;
 
-        if (typeof options.data === 'string') {
-            digest = Checksum256.hash(Buffer.from(options.data));
+        if (options.outputType === 'jwt') {
+            if (typeof options.data !== 'string') throw new Error('data must be a string');
+            const signer = createSigner(privateKey);
+
+            return (await signer(options.data)) as string;
         } else {
-            digest = options.data as Checksum256;
+            let digest: Checksum256;
+
+            if (typeof options.data === 'string') {
+                digest = Checksum256.hash(Buffer.from(options.data));
+            } else {
+                digest = options.data as Checksum256;
+            }
+
+            const signature = privateKey.signDigest(digest);
+
+            return signature;
         }
-
-        const signature = privateKey.signDigest(digest);
-
-        return signature;
     }
 
     async getKey(options: GetKeyOptions): Promise<PublicKey> {

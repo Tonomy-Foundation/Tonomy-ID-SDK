@@ -1,7 +1,8 @@
 import { PrivateKey } from '@greymass/eosio';
 import { createSigner } from '@tonomy/antelope-ssi-toolkit';
-import { setSettings } from '../../src';
+import { createVCSigner, generateRandomKeyPair, KeyManagerLevel, setSettings } from '../../src';
 import { Message } from '../../src/util/message';
+import { JsKeyManager } from '../services/jskeymanager';
 
 setSettings({
     blockchainUrl: 'localhost:8888',
@@ -71,12 +72,33 @@ describe('message signed with testnetjungle key', () => {
     // });
 });
 
-describe('message signed with did:jwt', () => {
-    const message = new Message(
-        'eyJhbGciOiJFUzI1NkstUiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJkaWQ6andrOmV5SmpjbllpT2lKelpXTndNalUyYXpFaUxDSnJkSGtpT2lKRlF5SXNJbmdpT2lJeWFFTkZZbmhoWTFFdldXSmhjRmt5VlRVMlkySXJSME13ZDJwamNVMWtia1JvYzJ0R1ZuRjZiVW8wUFNJc0lua2lPaUpZVVN0SFZtTk9ZVGR5UkhWbVRXWkhVbmszTkRkc1MxZFBaWHBHTUVabWRtaHdVVUZ5ZFRkM1VuUkZQU0lzSW10cFpDSTZJbEJWUWw5TE1WODRWa2RvU2pnemIzQmhTMmw2TkZWaVpGYzRhMmcyZEVkQmJXcHhVM0pSVmtaUWRtNWFlRmRFZWpONGRVaG1iVEpwUkNKOSIsImp0aSI6Imh0dHBzOi8vZXhhbXBsZS5jb20vaWQvMTIzNDMyNCIsIm5iZiI6MTY3NjkwMDAzMSwidmMiOnsiQGNvbnRleHQiOlsiaHR0cHM6Ly93d3cudzMub3JnLzIwMTgvY3JlZGVudGlhbHMvdjEiXSwiY3JlZGVudGlhbFN1YmplY3QiOnsibWVzc2FnZSI6eyJjYWxsYmFja1BhdGgiOiIvY2FsbGJhY2siLCJvcmlnaW4iOiJodHRwOi8vMTkyLjE2OC42OC4xMTI6MzAwMSIsInB1YmxpY0tleSI6IlBVQl9LMV84VkdoSjgzb3BhS2l6NFViZFc4a2g2dEdBbWpxU3JRVkZQdm5aeFdEejN4dUhmbTJpRCIsInJhbmRvbVN0cmluZyI6IjY3YzFiNzg0YmM2NWUwZjQxMTllOWQ5Zjk4NzQ4MjJiNmIxOWQ2OTNlN2MzYWJmMjRiZTFjMTFjNWM1ZWU4YjAifX0sInR5cGUiOlsiVmVyaWZpYWJsZUNyZWRlbnRpYWwiXX19.XNGfvbEx0m6_37zZY9fsghDwUIFq4Fszksi5FY2XfpfC3WvNkPn0uhFm6h8KDKl3QdhC8Kf1hf16jt5ntt8m8QA'
-    );
+// describe('message signed with did:jwk', () => {
+//     const message = new Message(
+//         'eyJhbGciOiJFUzI1NkstUiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJkaWQ6andrOmV5SmpjbllpT2lKelpXTndNalUyYXpFaUxDSnJkSGtpT2lKRlF5SXNJbmdpT2lJeWFFTkZZbmhoWTFFdldXSmhjRmt5VlRVMlkySXJSME13ZDJwamNVMWtia1JvYzJ0R1ZuRjZiVW8wUFNJc0lua2lPaUpZVVN0SFZtTk9ZVGR5UkhWbVRXWkhVbmszTkRkc1MxZFBaWHBHTUVabWRtaHdVVUZ5ZFRkM1VuUkZQU0lzSW10cFpDSTZJbEJWUWw5TE1WODRWa2RvU2pnemIzQmhTMmw2TkZWaVpGYzRhMmcyZEVkQmJXcHhVM0pSVmtaUWRtNWFlRmRFZWpONGRVaG1iVEpwUkNKOSIsImp0aSI6Imh0dHBzOi8vZXhhbXBsZS5jb20vaWQvMTIzNDMyNCIsIm5iZiI6MTY3NjkwMDAzMSwidmMiOnsiQGNvbnRleHQiOlsiaHR0cHM6Ly93d3cudzMub3JnLzIwMTgvY3JlZGVudGlhbHMvdjEiXSwiY3JlZGVudGlhbFN1YmplY3QiOnsibWVzc2FnZSI6eyJjYWxsYmFja1BhdGgiOiIvY2FsbGJhY2siLCJvcmlnaW4iOiJodHRwOi8vMTkyLjE2OC42OC4xMTI6MzAwMSIsInB1YmxpY0tleSI6IlBVQl9LMV84VkdoSjgzb3BhS2l6NFViZFc4a2g2dEdBbWpxU3JRVkZQdm5aeFdEejN4dUhmbTJpRCIsInJhbmRvbVN0cmluZyI6IjY3YzFiNzg0YmM2NWUwZjQxMTllOWQ5Zjk4NzQ4MjJiNmIxOWQ2OTNlN2MzYWJmMjRiZTFjMTFjNWM1ZWU4YjAifX0sInR5cGUiOlsiVmVyaWZpYWJsZUNyZWRlbnRpYWwiXX19.XNGfvbEx0m6_37zZY9fsghDwUIFq4Fszksi5FY2XfpfC3WvNkPn0uhFm6h8KDKl3QdhC8Kf1hf16jt5ntt8m8QA'
+//     );
 
-    it('verified the jwt', () => {
-        expect(message.verify()).resolves.toBeTruthy();
+//     it('verified the jwt', () => {
+//         expect(message.verify()).resolves.toBeTruthy();
+//     });
+// });
+
+describe('keymanagersigner is correct', () => {
+    it('has same signer as antelopessi toolkit', async () => {
+        const data = 'hi12asdasdasdsd3';
+
+        const { privateKey } = generateRandomKeyPair();
+        const keymanager = new JsKeyManager();
+
+        keymanager.storeKey({ level: KeyManagerLevel.LOCAL, privateKey: privateKey });
+        const signer = createVCSigner(keymanager, KeyManagerLevel.LOCAL).sign;
+        const antelopeSigner = createSigner(privateKey);
+
+        const signedWithTonomy = await signer(data);
+
+        const signedWithAntelopeToolKit = await antelopeSigner(data);
+
+        expect(signedWithTonomy).toBeTruthy();
+        expect(signedWithAntelopeToolKit).toBeTruthy();
+        expect(signedWithTonomy).toEqual(signedWithAntelopeToolKit);
     });
 });

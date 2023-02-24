@@ -27,11 +27,13 @@ namespace KeyManagerLevel {
      */
     export function from(value: number | string): KeyManagerLevel {
         let index: number;
+
         if (typeof value !== 'number') {
             index = KeyManagerLevel.indexFor(value as KeyManagerLevel);
         } else {
             index = value;
         }
+
         return Object.values(KeyManagerLevel)[index] as KeyManagerLevel;
     }
 }
@@ -56,6 +58,7 @@ type SignDataOptions = {
     level: KeyManagerLevel;
     data: string | Checksum256;
     challenge?: string;
+    outputType?: 'jwt' | 'transaction';
 };
 
 /**
