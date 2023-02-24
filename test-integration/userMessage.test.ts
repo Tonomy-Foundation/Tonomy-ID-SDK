@@ -7,6 +7,7 @@ setSettings(settings);
 
 describe('user signing messages', () => {
     test('user can sign a message', async () => {
+        expect.assertions(3);
         const { user } = await createRandomID();
         const payload = {
             id: 123,
@@ -19,6 +20,7 @@ describe('user signing messages', () => {
 
         expect(message).toBeInstanceOf(Message);
         expect(message.getPayload()).toEqual(payload);
+        user.logout();
     });
 
     test('user can verifies created message', async () => {
@@ -36,5 +38,6 @@ describe('user signing messages', () => {
 
         expect(verify).toBe(true);
         expect(message.getPayload()).toEqual(payload);
+        user.logout();
     });
 });
