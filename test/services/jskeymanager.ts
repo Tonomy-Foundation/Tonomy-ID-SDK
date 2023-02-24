@@ -88,13 +88,6 @@ export class JsKeyManager implements KeyManager {
         }
 
         const privateKey = keyStore.privateKey;
-        let digest: Checksum256;
-
-        if (options.data instanceof String) {
-            digest = Checksum256.hash(Buffer.from(options.data));
-        } else {
-            digest = options.data as Checksum256;
-        }
 
         if (options.outputType === 'jwt') {
             if (typeof options.data !== 'string') throw new Error('data must be a string');

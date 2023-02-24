@@ -4,10 +4,12 @@ import { generateRandomKeyPair } from '../src/util/crypto';
 import URL from 'jsdom-url';
 import { JsKeyManager } from './services/jskeymanager';
 import { Message } from '../src/util/message';
+import { setSettings } from '../src';
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 global.URL = URL;
+setSettings({});
 
 describe('logging in', () => {
     it('generates random key pair', () => {
