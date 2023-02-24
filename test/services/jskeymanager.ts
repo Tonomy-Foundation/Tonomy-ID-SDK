@@ -88,10 +88,17 @@ export class JsKeyManager implements KeyManager {
         }
 
         const privateKey = keyStore.privateKey;
+        let digest: Checksum256;
+
+        if (options.data instanceof String) {
+            digest = Checksum256.hash(Buffer.from(options.data));
+        } else {
+            digest = options.data as Checksum256;
+        }
 
         if (options.outputType === 'jwt') {
             if (typeof options.data !== 'string') throw new Error('data must be a string');
-            const signer = createSigner(privateKey);
+            const signer = createSigner(privateKey as any);
 
             return (await signer(options.data)) as string;
         } else {
@@ -128,7 +135,6 @@ export class JsKeyManager implements KeyManager {
     }
 
     async removeKey(options: GetKeyOptions): Promise<void> {
-        if (!(options.level in this.keyStorage)) throw new Error('No key for this level');
         delete this.keyStorage[options.level];
     }
 }

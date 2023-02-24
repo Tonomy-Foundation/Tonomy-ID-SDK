@@ -16,7 +16,8 @@ import { Issuer } from '@tonomy/did-jwt-vc';
 import { createVCSigner } from './util/crypto';
 
 enum UserStatus {
-    CREATING = 'CREATING',
+    CREATING_ACCOUNT = 'CREATING_ACCOUNT',
+    LOGGING_IN = 'LOGGING_IN',
     READY = 'READY',
     DEACTIVATED = 'DEACTIVATED',
 }
@@ -77,6 +78,18 @@ export class User {
 
         //TODO implement dependency inversion
         this.communication = new Communication();
+    }
+
+    async getStatus(): Promise<UserStatus> {
+        return await this.storage.status;
+    }
+
+    async getAccountName(): Promise<Name> {
+        return await this.storage.accountName;
+    }
+
+    async getUsername(): Promise<TonomyUsername> {
+        return await this.storage.username;
     }
 
     async saveUsername(username: string) {
@@ -198,16 +211,16 @@ export class User {
         this.storage.accountName = Name.from(newAccountAction.data.name);
         await this.storage.accountName;
 
-        this.storage.status = UserStatus.CREATING;
+        this.storage.status = UserStatus.CREATING_ACCOUNT;
         await this.storage.status;
 
         return res;
     }
 
     async updateKeys(password: string) {
-        const status = await this.storage.status;
+        const status = await this.getStatus();
 
-        if (status !== UserStatus.CREATING && status !== UserStatus.READY) {
+        if (status === UserStatus.DEACTIVATED) {
             throw new Error("Can't update keys ");
         }
 
@@ -262,9 +275,88 @@ export class User {
 
         this.storage.accountName = Name.from(idData.account_name);
         this.storage.username = username;
-        this.storage.status = UserStatus.READY;
+        this.storage.status = UserStatus.LOGGING_IN;
+
+        await this.storage.accountName;
+        await this.storage.username;
+        await this.storage.status;
 
         return idData;
+    }
+
+    async checkKeysStillValid(): Promise<boolean> {
+        // Account been created, or has not finished being created yet
+        if (this.storage.status !== UserStatus.READY) throwError('User is not ready', SdkErrors.AccountDoesntExist);
+
+        const accountInfo = await User.getAccountInfo(await this.storage.accountName);
+
+        const checkPairs = [
+            {
+                level: KeyManagerLevel.PIN,
+                permission: 'pin',
+            },
+            {
+                level: KeyManagerLevel.FINGERPRINT,
+                permission: 'fingerprint',
+            },
+            {
+                level: KeyManagerLevel.LOCAL,
+                permission: 'local',
+            },
+            {
+                level: KeyManagerLevel.PASSWORD,
+                permission: 'active',
+            },
+            {
+                level: KeyManagerLevel.PASSWORD,
+                permission: 'owner',
+            },
+        ];
+
+        for (const pair of checkPairs) {
+            let localKey;
+
+            try {
+                localKey = await this.keyManager.getKey({ level: pair.level });
+            } catch (e) {
+                localKey = null;
+            }
+
+            let blockchainPermission;
+
+            try {
+                blockchainPermission = accountInfo.getPermission(pair.permission);
+            } catch (e) {
+                blockchainPermission = null;
+            }
+
+            if (!localKey && blockchainPermission) {
+                // User probably logged into another device and finished create account flow there
+                throwError(
+                    `${pair.level} key was not found in the keyManager, but was found on the blockchain`,
+                    SdkErrors.KeyNotFound
+                );
+            }
+
+            if (localKey && !blockchainPermission) {
+                // User probably hasn't finished create account flow yet
+                throwError(
+                    `${pair.level} keys was not found on the blockchain, but was found in the keyManager`,
+                    SdkErrors.KeyNotFound
+                );
+            }
+
+            if (
+                localKey &&
+                blockchainPermission &&
+                localKey.toString() !== blockchainPermission.required_auth.keys[0].key.toString()
+            ) {
+                // User has logged in on another device
+                throwError(`${pair.level} keys do not match`, SdkErrors.KeyNotFound);
+            }
+        }
+
+        return true;
     }
 
     async logout(): Promise<void> {
@@ -275,10 +367,12 @@ export class User {
         await this.keyManager.removeKey({ level: KeyManagerLevel.LOCAL });
         // clear storage data
         this.storage.clear();
+
+        this.communication.disconnect();
     }
 
     async isLoggedIn(): Promise<boolean> {
-        return !!(await this.storage.status);
+        return (await this.getStatus()) === UserStatus.READY;
     }
 
     static async getAccountInfo(account: TonomyUsername | Name): Promise<API.v1.AccountObject> {

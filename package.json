@@ -1,5 +1,5 @@
 {
-    "version": "0.1.0",
+    "version": "0.2.0",
     "license": "MIT",
     "main": "dist/index.js",
     "typings": "dist/index.d.ts",
@@ -15,7 +15,7 @@
         "build": "npx tsdx build",
         "test": "npx tsdx test test/",
         "test:watch": "npx tsdx test  --watch ",
-        "test:integration": "jest --config ./test-integration/jest.config.js",
+        "test:integration": "jest --detectOpenHandles --config ./test-integration/jest.config.js",
         "bootstrap": "npx ts-node --project ./bootstrap-blockchain/tsconfig.json bootstrap-blockchain/bootstrap.ts",
         "lint": "eslint src test --ext .ts --resolve-plugins-relative-to .",
         "lint:fix": "npm run lint -- --fix",
@@ -28,7 +28,7 @@
             "pre-commit": "tsdx lint"
         }
     },
-    "name": "tonomy-id-sdk",
+    "name": "@tonomy/tonomy-id-sdk",
     "author": "Jack Tanner",
     "module": "dist/tonomy-id-sdk.esm.js",
     "size-limit": [
@@ -75,5 +75,12 @@
         "cross-fetch": "^3.1.5",
         "elliptic": "^6.5.4",
         "socket.io-client": "^4.5.4"
-    }
+    },
+    "publishConfig": {
+        "access": "public"
+    },
+    "keywords": [
+        "sdk",
+        "tonomy"
+    ]
 }

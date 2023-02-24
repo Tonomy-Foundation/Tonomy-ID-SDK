@@ -35,6 +35,9 @@ describe('App class', () => {
             expect(myApp.app.accountName.toString()).toEqual(app.accountName.toString());
             expect(myApp.status).toEqual(AppStatus.READY);
             expect(myApp.added).toBeDefined();
+
+            // Close connections
+            await user.logout();
         })
     );
 });
