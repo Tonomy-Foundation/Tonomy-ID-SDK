@@ -251,6 +251,7 @@ describe('User class', () => {
 
             await expect(userLogin.login(new TonomyUsername('random'), password)).rejects.toThrowError(Error);
             // Close connections
+            await userLogin.logout();
             await user.logout();
         })
     );
