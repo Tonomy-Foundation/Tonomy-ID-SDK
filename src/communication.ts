@@ -1,5 +1,8 @@
 import { io, Socket } from 'socket.io-client';
 import { getSettings } from './settings';
+import { Message } from './util/message';
+
+type Subscriber = (message: Message) => Promise<void>;
 
 export class Communication {
     socketServer: Socket;
@@ -12,56 +15,44 @@ export class Communication {
         });
     }
 
-    /**
-     * connect unregistered user to the website
-     * @param randomSeed the random seed the user need to connect on typically recieved in jwt
+    /* connects to the Tonomy Communication server, authenticates with it's DID
+     * subscribes to any messages that are sent by `sendMessage` by providing a callback function executed every time a message is received
+     * should send a read receipt when messages are received
+     * @returns true if successful
      */
-    connectTonomy(randomSeed: string) {
-        this.socketServer.emit('connectTonomy', { randomSeed });
-    }
+    login(authorization: Message): Promise<boolean> {
+        return new Promise((resolve, reject) => {
+            this.socketServer.emit('login', { message: authorization.jwt }, (response: any) => {
+                if (response.err) {
+                    reject(response.err);
+                }
 
-    onClientConnected(func: (param?: any) => void) {
-        this.socketServer.on('connectTonomy', (param) => {
-            func(param);
+                resolve(response);
+            });
         });
     }
 
-    /**
-     * makes user login to websites
+    /* sends a message to another DID
+     * create a Message object from the message argument
+     * the message is used as the `vc` property of a VC signed by the User's key
      */
-    login(userName: string, client: string) {
-        this.socketServer.emit('loginTonomy', { client, userName });
-    }
+    sendMessage(message: Message): Promise<boolean> {
+        return new Promise((resolve, reject) => {
+            this.socketServer.emit('message', message.jwt, (response: any) => {
+                if (response.err) {
+                    reject(response.err);
+                }
 
-    /**
-     * unregistered website can send jwts to mobile
-     * awaits until the mobile user is connected then sends it the jwt
-     */
-    sendJwtToMobile(requests: string) {
-        this.onClientConnected(() => {
-            this.sendJwtToClient(requests);
-            this.socketServer.off('connectTonomy');
+                resolve(response);
+            });
         });
     }
 
-    sendJwtToBrowser(requests: string, accountName: string) {
-        this.sendJwtToClient(requests, accountName);
-    }
+    // // function that adds a new subscriber, which is called every time a message is received
+    // subscribeMessage(subscriber: Subscriber);
 
-    sendJwtToClient(requests: string, accountName?: string) {
-        this.socketServer.emit('sendLoginJwt', { requests, accountName });
-    }
-
-    onJwtToClient(func: (param?: any) => void) {
-        this.socketServer.on('sendLoginJwt', (param) => {
-            func(param);
-        });
-    }
-
-    SSOWebsiteSendToMobile(randomSeed: string, requests: string) {
-        this.connectTonomy(randomSeed);
-        this.sendJwtToMobile(requests);
-    }
+    // // unsubscribes a function from the receiving a message
+    // unsubscribeMessage(subscriber: Subscriber);
 
     disconnect() {
         this.socketServer.disconnect();
