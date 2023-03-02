@@ -38,7 +38,7 @@ export class Communication {
      */
     sendMessage(message: Message): Promise<boolean> {
         return new Promise((resolve, reject) => {
-            this.socketServer.emit('message', { message: message }, (response: any) => {
+            this.socketServer.emit('message', { message: message.jwt }, (response: any) => {
                 if (response.err) {
                     reject(response.err);
                 }

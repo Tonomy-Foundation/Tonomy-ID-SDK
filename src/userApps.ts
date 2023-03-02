@@ -10,7 +10,7 @@ import { SdkErrors, throwError } from './services/errors';
 import { createJWK, toDid } from './util/did-jwk';
 import { getSettings } from './settings';
 import { App, AppStatus } from './app';
-// import { ES256KSigner } from '@tonomy/did-jwt';
+import { ES256KSigner } from '@tonomy/did-jwt';
 import { Message } from './util/message';
 
 const idContract = IDContract.Instance;
@@ -85,7 +85,7 @@ export class UserApps {
         //TODO: dont create new key if it exist
         const { privateKey, publicKey } = generateRandomKeyPair();
 
-        console.log('public key', publicKey);
+        console.log('public key', publicKey.toString());
 
         if (keyManager) {
             await keyManager.storeKey({
@@ -102,10 +102,20 @@ export class UserApps {
         };
 
         // TODO use expiresIn to make JWT expire after 5 minutes
-        const token = (await this.signMessage(payload, keyManager, keyManagerLevel)).jwt;
+
+        const signer = ES256KSigner(privateKey.data.array, true);
+        const jwk = await createJWK(publicKey);
+
+        const issuer = toDid(jwk);
+
+        const token = (await Message.sign(payload, { did: issuer, signer: signer as any, alg: 'ES256K-R' })).jwt;
+
+        // const token = (await this.signMessage(payload, keyManager, keyManagerLevel)).jwt;
 
         const requests = [token];
         const requestsString = JSON.stringify(requests);
+
+        console.log(token);
 
         if (redirect) {
             window.location.href = `${getSettings().ssoWebsiteOrigin}/login?requests=${requestsString}`;
@@ -118,13 +128,12 @@ export class UserApps {
     static async signMessage(
         message: any,
         keyManager: KeyManager,
-        keyManagerLevel: KeyManagerLevel = KeyManagerLevel.BROWSERLOCALSTORAGE
+        keyManagerLevel: KeyManagerLevel = KeyManagerLevel.BROWSERLOCALSTORAGE,
+        recipient?: string
     ): Promise<Message> {
         const publicKey = await keyManager.getKey({
             level: keyManagerLevel,
         });
-
-        console.log('public key', publicKey);
 
         if (!publicKey) throw throwError('No Key Found for this level', SdkErrors.KeyNotFound);
         const signer = createVCSigner(keyManager, keyManagerLevel).sign;
@@ -133,7 +142,7 @@ export class UserApps {
 
         const issuer = toDid(jwk);
 
-        return await Message.sign(message, { did: issuer, signer: signer as any, alg: 'ES256K-R' });
+        return await Message.sign(message, { did: issuer, signer: signer as any, alg: 'ES256K-R' }, recipient);
     }
 
     /**
