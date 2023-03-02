@@ -24,3 +24,6 @@ export * from './services/errors';
 export * from './userApps';
 export * from './communication';
 export * from './util/message';
+
+export { createSigner } from '@tonomy/antelope-ssi-toolkit';
+export { ES256KSigner } from '@tonomy/did-jwt';

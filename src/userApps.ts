@@ -3,14 +3,14 @@ import { Name, PublicKey } from '@greymass/eosio';
 import { IDContract } from './services/contracts/IDContract';
 import { KeyManager, KeyManagerLevel } from './services/keymanager';
 import { createStorage, PersistentStorageClean, StorageFactory } from './services/storage';
-import { generateRandomKeyPair, randomString } from './util/crypto';
+import { createVCSigner, generateRandomKeyPair, randomString } from './util/crypto';
 import { User } from './user';
 import { createKeyManagerSigner } from './services/eosio/transaction';
 import { SdkErrors, throwError } from './services/errors';
 import { createJWK, toDid } from './util/did-jwk';
 import { getSettings } from './settings';
 import { App, AppStatus } from './app';
-import { ES256KSigner } from '@tonomy/did-jwt';
+// import { ES256KSigner } from '@tonomy/did-jwt';
 import { Message } from './util/message';
 
 const idContract = IDContract.Instance;
@@ -85,6 +85,8 @@ export class UserApps {
         //TODO: dont create new key if it exist
         const { privateKey, publicKey } = generateRandomKeyPair();
 
+        console.log('public key', publicKey);
+
         if (keyManager) {
             await keyManager.storeKey({
                 level: keyManagerLevel,
@@ -99,15 +101,8 @@ export class UserApps {
             callbackPath,
         };
 
-        // TODO store the signer key in localStorage
-        const signer = ES256KSigner(privateKey.data.array, true);
-
-        const jwk = await createJWK(publicKey);
-
-        const issuer = toDid(jwk);
-
         // TODO use expiresIn to make JWT expire after 5 minutes
-        const token = (await Message.sign(payload, { did: issuer, signer, alg: 'ES256K-R' } as any)).jwt;
+        const token = (await this.signMessage(payload, keyManager, keyManagerLevel)).jwt;
 
         const requests = [token];
         const requestsString = JSON.stringify(requests);
@@ -118,6 +113,27 @@ export class UserApps {
         }
 
         return token;
+    }
+
+    static async signMessage(
+        message: any,
+        keyManager: KeyManager,
+        keyManagerLevel: KeyManagerLevel = KeyManagerLevel.BROWSERLOCALSTORAGE
+    ): Promise<Message> {
+        const publicKey = await keyManager.getKey({
+            level: keyManagerLevel,
+        });
+
+        console.log('public key', publicKey);
+
+        if (!publicKey) throw throwError('No Key Found for this level', SdkErrors.KeyNotFound);
+        const signer = createVCSigner(keyManager, keyManagerLevel).sign;
+
+        const jwk = await createJWK(publicKey);
+
+        const issuer = toDid(jwk);
+
+        return await Message.sign(message, { did: issuer, signer: signer as any, alg: 'ES256K-R' });
     }
 
     /**

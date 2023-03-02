@@ -2,7 +2,7 @@ import { io, Socket } from 'socket.io-client';
 import { getSettings } from './settings';
 import { Message } from './util/message';
 
-type Subscriber = (message: Message) => Promise<void>;
+type Subscriber = (message: string) => void;
 
 export class Communication {
     socketServer: Socket;
@@ -38,7 +38,7 @@ export class Communication {
      */
     sendMessage(message: Message): Promise<boolean> {
         return new Promise((resolve, reject) => {
-            this.socketServer.emit('message', message.jwt, (response: any) => {
+            this.socketServer.emit('message', { message: message }, (response: any) => {
                 if (response.err) {
                     reject(response.err);
                 }
@@ -48,11 +48,15 @@ export class Communication {
         });
     }
 
-    // // function that adds a new subscriber, which is called every time a message is received
-    // subscribeMessage(subscriber: Subscriber);
+    // function that adds a new subscriber, which is called every time a message is received
+    subscribeMessage(subscriber: Subscriber): void {
+        this.socketServer.on('message', subscriber);
+    }
 
-    // // unsubscribes a function from the receiving a message
-    // unsubscribeMessage(subscriber: Subscriber);
+    // unsubscribes a function from the receiving a message
+    unsubscribeMessage(subscriber: Subscriber) {
+        this.socketServer.off('message', subscriber);
+    }
 
     disconnect() {
         this.socketServer.disconnect();
