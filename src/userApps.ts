@@ -1,16 +1,17 @@
 /* eslint-disable camelcase */
 import { Name, PublicKey } from '@greymass/eosio';
-import { ES256KSigner, createJWT, verifyJWT, JWTVerified } from 'did-jwt';
 import { IDContract } from './services/contracts/IDContract';
 import { KeyManager, KeyManagerLevel } from './services/keymanager';
 import { createStorage, PersistentStorageClean, StorageFactory } from './services/storage';
-import { generateRandomKeyPair, randomString } from './util/crypto';
+import { createVCSigner, generateRandomKeyPair, randomString } from './util/crypto';
 import { User } from './user';
 import { createKeyManagerSigner } from './services/eosio/transaction';
 import { SdkErrors, throwError } from './services/errors';
-import { createJWK, resolve, toDid } from './util/did-jwk';
+import { createJWK, toDid } from './util/did-jwk';
 import { getSettings } from './settings';
 import { App, AppStatus } from './app';
+import { ES256KSigner } from '@tonomy/did-jwt';
+import { Message } from './util/message';
 
 const idContract = IDContract.Instance;
 
@@ -58,14 +59,17 @@ export class UserApps {
         };
 
         let apps = await this.storage.appRecords;
+
         if (!apps) {
             apps = [];
         }
+
         apps.push(appRecord);
         this.storage.appRecords = apps;
         await this.storage.appRecords;
 
         const signer = createKeyManagerSigner(this.keyManager, KeyManagerLevel.LOCAL);
+
         await idContract.loginwithapp(myAccount.toString(), app.accountName.toString(), 'local', key, signer);
 
         appRecord.status = AppStatus.READY;
@@ -81,6 +85,8 @@ export class UserApps {
         //TODO: dont create new key if it exist
         const { privateKey, publicKey } = generateRandomKeyPair();
 
+        console.log('public key', publicKey.toString());
+
         if (keyManager) {
             await keyManager.storeKey({
                 level: keyManagerLevel,
@@ -95,24 +101,48 @@ export class UserApps {
             callbackPath,
         };
 
-        // TODO store the signer key in localStorage
-        const signer = ES256KSigner(privateKey.data.array, true);
+        // TODO use expiresIn to make JWT expire after 5 minutes
 
+        const signer = ES256KSigner(privateKey.data.array, true);
         const jwk = await createJWK(publicKey);
 
         const issuer = toDid(jwk);
 
-        // TODO use expiresIn to make JWT expire after 5 minutes
-        const token = await createJWT(payload, { issuer, signer, alg: 'ES256K-R' });
+        const token = (await Message.sign(payload, { did: issuer, signer: signer as any, alg: 'ES256K-R' })).jwt;
+
+        // const token = (await this.signMessage(payload, keyManager, keyManagerLevel)).jwt;
 
         const requests = [token];
         const requestsString = JSON.stringify(requests);
+
+        console.log(token);
 
         if (redirect) {
             window.location.href = `${getSettings().ssoWebsiteOrigin}/login?requests=${requestsString}`;
             return;
         }
+
         return token;
+    }
+
+    static async signMessage(
+        message: any,
+        keyManager: KeyManager,
+        keyManagerLevel: KeyManagerLevel = KeyManagerLevel.BROWSERLOCALSTORAGE,
+        recipient?: string
+    ): Promise<Message> {
+        const publicKey = await keyManager.getKey({
+            level: keyManagerLevel,
+        });
+
+        if (!publicKey) throw throwError('No Key Found for this level', SdkErrors.KeyNotFound);
+        const signer = createVCSigner(keyManager, keyManagerLevel).sign;
+
+        const jwk = await createJWK(publicKey);
+
+        const issuer = toDid(jwk);
+
+        return await Message.sign(message, { did: issuer, signer: signer as any, alg: 'ES256K-R' }, recipient);
     }
 
     /**
@@ -125,57 +155,60 @@ export class UserApps {
 
         if (!requests) throwError("requests parameter doesn't exists", SdkErrors.MissingParams);
         const username = params.get('username');
+
         if (!username) throwError("username parameter doesn't exists", SdkErrors.MissingParams);
         const accountName = params.get('accountName');
+
         if (!accountName) throwError("accountName parameter doesn't exists", SdkErrors.MissingParams);
         const result = await UserApps.verifyRequests(requests);
 
         return { result, username, accountName };
     }
 
-    static async verifyRequests(requests: string | null): Promise<JWTVerified[]> {
+    static async verifyRequests(requests: string | null): Promise<Message[]> {
         if (!requests) throwError('No requests found in URL', SdkErrors.MissingParams);
 
         const jwtRequests = JSON.parse(requests);
+
         if (!jwtRequests || !Array.isArray(jwtRequests) || jwtRequests.length === 0) {
             throwError('No JWTs found in URL', SdkErrors.MissingParams);
         }
 
-        const verified: JWTVerified[] = [];
+        const verified: Message[] = [];
+
         for (const jwt of jwtRequests) {
-            console.log('verifying jwt', jwt);
             verified.push(await this.verifyLoginJWT(jwt));
         }
+
         return verified;
     }
 
-    static async onRedirectLogin(): Promise<JWTVerified> {
+    static async onRedirectLogin(): Promise<Message> {
         const urlParams = new URLSearchParams(window.location.search);
         const requests = urlParams.get('requests');
 
         const verifiedRequests = await this.verifyRequests(requests);
 
         const referrer = new URL(document.referrer);
-        for (const request of verifiedRequests) {
-            if (request.payload.origin === referrer.origin) {
-                return request;
+
+        for (const message of verifiedRequests) {
+            if (message.getPayload().origin === referrer.origin) {
+                return message;
             }
         }
+
         throwError(
-            `No origins from: ${verifiedRequests.map((r) => r.payload.origin)} match referrer: ${referrer.origin}`,
+            `No origins from: ${verifiedRequests.map((r) => r.getPayload().origin)} match referrer: ${referrer.origin}`,
             SdkErrors.WrongOrigin
         );
     }
 
-    static async verifyLoginJWT(jwt: string): Promise<JWTVerified> {
-        const resolver: any = {
-            resolve,
-            // TODO add Antelope resolver as well
-        };
-        const res = await verifyJWT(jwt, { resolver });
+    static async verifyLoginJWT(jwt: string): Promise<Message> {
+        const message = new Message(jwt);
+        const res = await message.verify();
 
-        if (!res.verified) throwError('JWT failed verification', SdkErrors.JwtNotValid);
-        return res;
+        if (!res) throwError('JWT failed verification', SdkErrors.JwtNotValid);
+        return message;
     }
 
     static async verifyKeyExistsForApp(

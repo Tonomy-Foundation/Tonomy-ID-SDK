@@ -13,6 +13,7 @@ export * from './util/crypto';
 export * from './services/username';
 
 const EosioUtil = { ...Eosio, ...Transaction };
+
 export { EosioUtil };
 
 export * from './services/contracts/IDContract';
@@ -22,3 +23,7 @@ export * from './services/contracts/EosioTokenContract';
 export * from './services/errors';
 export * from './userApps';
 export * from './communication';
+export * from './util/message';
+
+export { createSigner } from '@tonomy/antelope-ssi-toolkit';
+export { ES256KSigner } from '@tonomy/did-jwt';

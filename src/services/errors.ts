@@ -80,6 +80,8 @@ enum SdkErrors {
     SettingsNotInitialized = 'SettingsNotInitialized',
     MissingParams = 'MissingParams',
     InvalidKey = 'InvalidKey',
+    invalidDataType = 'invalidDataType',
+    missingChallenge = 'missingChallenge',
 }
 
 // eslint-disable-next-line @typescript-eslint/no-namespace

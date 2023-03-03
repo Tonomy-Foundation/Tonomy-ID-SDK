@@ -3,7 +3,7 @@ import { PushTransactionResponse } from '@greymass/eosio/src/api/v1/types';
 import { KeyManager, KeyManagerLevel } from './services/keymanager';
 import { GetPersonResponse, IDContract } from './services/contracts/IDContract';
 import { AntelopePushTransactionError, createKeyManagerSigner, createSigner } from './services/eosio/transaction';
-import { getApi } from './services/eosio/eosio';
+import { getApi, getChainInfo } from './services/eosio/eosio';
 import { createStorage, PersistentStorageClean, StorageFactory } from './services/storage';
 import { SdkErrors, throwError, SdkError } from './services/errors';
 import { AccountType, TonomyUsername } from './services/username';
@@ -11,6 +11,9 @@ import { validatePassword } from './util/passwords';
 import { UserApps } from './userApps';
 import { getSettings } from './settings';
 import { Communication } from './communication';
+import { Message } from './util/message';
+import { Issuer } from '@tonomy/did-jwt-vc';
+import { createVCSigner } from './util/crypto';
 
 enum UserStatus {
     CREATING_ACCOUNT = 'CREATING_ACCOUNT',
@@ -61,6 +64,7 @@ export type UserStorage = {
 const idContract = IDContract.Instance;
 
 export class User {
+    private chainID!: Checksum256;
     keyManager: KeyManager;
     storage: UserStorage & PersistentStorageClean;
     apps: UserApps;
@@ -394,6 +398,28 @@ export class User {
                 throw e;
             }
         }
+    }
+
+    async signMessage(payload: any, recipient?: string): Promise<Message> {
+        const signer = createVCSigner(this.keyManager, KeyManagerLevel.LOCAL);
+
+        const issuer: Issuer = {
+            did: (await this.getDid()) + '#local',
+            signer: signer.sign as any,
+            alg: 'ES256K-R',
+        };
+
+        return await Message.sign(payload, issuer, recipient);
+    }
+
+    async getDid() {
+        if (!this.chainID) {
+            this.chainID = (await getChainInfo()).chain_id as unknown as Checksum256;
+        }
+
+        const accountName = await this.storage.accountName;
+
+        return `did:antelope:${this.chainID}:${accountName.toString()}`;
     }
 }
 

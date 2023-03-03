@@ -4,11 +4,9 @@
         "resolveJsonModule": true,
         "module": "commonjs",
         "target": "es6",
-        "types": [
-            "jest",
-            "node"
-        ],
-        "esModuleInterop": true,
+        "types": ["jest", "node"],
+        "lib": ["ESNext"],
+        "esModuleInterop": true
     },
-    "include": [ "./**/*.ts" ]
+    "include": ["./**/*.ts"]
 }

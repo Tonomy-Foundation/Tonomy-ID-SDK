@@ -14,7 +14,7 @@ type ActionData = {
 };
 
 interface Signer {
-    sign(digest: Checksum256): Promise<Signature>;
+    sign(digest: Checksum256 | string): Promise<Signature>;
 }
 
 interface AntelopePushTransactionErrorConstructor extends Error {
@@ -44,7 +44,7 @@ function createSigner(privateKey: PrivateKey): Signer {
 
 function createKeyManagerSigner(keyManager: KeyManager, level: KeyManagerLevel, challenge?: string): Signer {
     return {
-        async sign(digest: Checksum256): Promise<Signature> {
+        async sign(digest: string | Checksum256): Promise<Signature> {
             return (await keyManager.signData({
                 level,
                 data: digest,
@@ -110,6 +110,7 @@ async function transact(
 
     // Create the action data
     const actionData: Action[] = [];
+
     actions.forEach((data) => {
         actionData.push(Action.from({ ...data, account: contract }, abi.abi));
     });
@@ -132,17 +133,23 @@ async function transact(
 
     // Send to the node
     let res;
+
     try {
         res = await api.v1.chain.push_transaction(signedTransaction);
-    } catch (e: any) {
-        if (e.response && e.response.headers) {
-            if (e.response.json) {
-                throw new AntelopePushTransactionError(e.response.json);
+    } catch (e) {
+        const error = e as any;
+
+        if (error.response && error.response.headers) {
+            if (error.response.json) {
+                throw new AntelopePushTransactionError(error.response.json);
             }
-            throw new HttpError(e);
+
+            throw new HttpError(error);
         }
+
         throw e;
     }
+
     return res;
 }
 
