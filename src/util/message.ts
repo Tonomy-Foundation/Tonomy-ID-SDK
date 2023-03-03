@@ -23,7 +23,6 @@ export class Message {
     static async sign(message: object, issuer: Issuer, recipient?: string): Promise<Message> {
         const vc: W3CCredential = {
             '@context': ['https://www.w3.org/2018/credentials/v1'],
-            // should this be tonomy foundation ?
             id: 'https://example.com/id/1234324',
             type: ['VerifiableCredential'],
             issuer: {

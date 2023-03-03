@@ -3,7 +3,7 @@ import { PushTransactionResponse } from '@greymass/eosio/src/api/v1/types';
 import { KeyManager, KeyManagerLevel } from './services/keymanager';
 import { GetPersonResponse, IDContract } from './services/contracts/IDContract';
 import { AntelopePushTransactionError, createKeyManagerSigner, createSigner } from './services/eosio/transaction';
-import { getApi } from './services/eosio/eosio';
+import { getApi, getChainInfo } from './services/eosio/eosio';
 import { createStorage, PersistentStorageClean, StorageFactory } from './services/storage';
 import { SdkErrors, throwError, SdkError } from './services/errors';
 import { AccountType, TonomyUsername } from './services/username';
@@ -414,7 +414,7 @@ export class User {
 
     async getDid() {
         if (!this.chainID) {
-            this.chainID = await idContract.getChainID();
+            this.chainID = (await getChainInfo()).chain_id;
         }
 
         const accountName = await this.storage.accountName;

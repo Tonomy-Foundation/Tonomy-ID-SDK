@@ -328,12 +328,6 @@ class IDContract {
             version: idData.version,
         };
     }
-
-    async getChainID() {
-        const api = await getApi();
-
-        return (await api.v1.chain.get_info()).chain_id;
-    }
 }
 
 export { IDContract, GetPersonResponse };

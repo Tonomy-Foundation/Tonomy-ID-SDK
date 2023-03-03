@@ -68,9 +68,9 @@ describe('message signed with testnetjungle key', () => {
         expect(message.getPayload()).toEqual({ item: { id: 1, name: 'testname' } });
     });
 
-    // it('verifies the jwt', () => {
-    //     expect(message.verify()).resolves.toBeTruthy();
-    // });
+    it('verifies the jwt', () => {
+        expect(message.verify()).resolves.toBeTruthy();
+    });
 });
 
 describe('message signed with did:jwk', () => {
