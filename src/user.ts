@@ -414,7 +414,7 @@ export class User {
 
     async getDid() {
         if (!this.chainID) {
-            this.chainID = (await getChainInfo()).chain_id;
+            this.chainID = (await getChainInfo()).chain_id as unknown as Checksum256;
         }
 
         const accountName = await this.storage.accountName;

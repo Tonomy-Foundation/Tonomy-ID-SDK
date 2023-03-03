@@ -4,6 +4,8 @@
 // import settings from './services/settings';
 // import { createRandomID } from './util/user';
 
+import { createRandomID } from './util/user';
+
 // setSettings(settings);
 
 // describe('user signing messages', () => {
@@ -42,3 +44,12 @@
 //         user.logout();
 //     });
 // });
+
+describe('one test for the file', () => {
+    it('excpect user to be truthy', async () => {
+        const { user } = await createRandomID();
+
+        expect(user).toBeTruthy();
+        user.logout();
+    });
+});

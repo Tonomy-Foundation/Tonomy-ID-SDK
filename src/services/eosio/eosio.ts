@@ -22,5 +22,5 @@ export async function getApi(): Promise<APIClient> {
 export async function getChainInfo(): Promise<GetInfoResponse> {
     const api = await getApi();
 
-    return await api.v1.chain.get_info();
+    return (await api.v1.chain.get_info()) as unknown as GetInfoResponse;
 }
