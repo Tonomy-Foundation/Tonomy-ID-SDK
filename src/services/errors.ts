@@ -80,6 +80,7 @@ enum SdkErrors {
     SettingsNotInitialized = 'SettingsNotInitialized',
     MissingParams = 'MissingParams',
     InvalidKey = 'InvalidKey',
+    NotLoggedIn = 'NotLoggedIn',
 }
 
 // eslint-disable-next-line @typescript-eslint/no-namespace

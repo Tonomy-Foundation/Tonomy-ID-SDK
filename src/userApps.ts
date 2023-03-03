@@ -49,6 +49,8 @@ export class UserApps {
     }
 
     async loginWithApp(app: App, key: PublicKey): Promise<void> {
+        if (!(await this.user.isLoggedIn())) throwError(SdkErrors.NotLoggedIn);
+
         const myAccount = await this.user.storage.accountName;
 
         const appRecord: UserAppRecord = {
@@ -58,14 +60,17 @@ export class UserApps {
         };
 
         let apps = await this.storage.appRecords;
+
         if (!apps) {
             apps = [];
         }
+
         apps.push(appRecord);
         this.storage.appRecords = apps;
         await this.storage.appRecords;
 
         const signer = createKeyManagerSigner(this.keyManager, KeyManagerLevel.LOCAL);
+
         await idContract.loginwithapp(myAccount.toString(), app.accountName.toString(), 'local', key, signer);
 
         appRecord.status = AppStatus.READY;
@@ -112,6 +117,7 @@ export class UserApps {
             window.location.href = `${getSettings().ssoWebsiteOrigin}/login?requests=${requestsString}`;
             return;
         }
+
         return token;
     }
 
@@ -125,8 +131,10 @@ export class UserApps {
 
         if (!requests) throwError("requests parameter doesn't exists", SdkErrors.MissingParams);
         const username = params.get('username');
+
         if (!username) throwError("username parameter doesn't exists", SdkErrors.MissingParams);
         const accountName = params.get('accountName');
+
         if (!accountName) throwError("accountName parameter doesn't exists", SdkErrors.MissingParams);
         const result = await UserApps.verifyRequests(requests);
 
@@ -137,15 +145,18 @@ export class UserApps {
         if (!requests) throwError('No requests found in URL', SdkErrors.MissingParams);
 
         const jwtRequests = JSON.parse(requests);
+
         if (!jwtRequests || !Array.isArray(jwtRequests) || jwtRequests.length === 0) {
             throwError('No JWTs found in URL', SdkErrors.MissingParams);
         }
 
         const verified: JWTVerified[] = [];
+
         for (const jwt of jwtRequests) {
             console.log('verifying jwt', jwt);
             verified.push(await this.verifyLoginJWT(jwt));
         }
+
         return verified;
     }
 
@@ -156,11 +167,13 @@ export class UserApps {
         const verifiedRequests = await this.verifyRequests(requests);
 
         const referrer = new URL(document.referrer);
+
         for (const request of verifiedRequests) {
             if (request.payload.origin === referrer.origin) {
                 return request;
             }
         }
+
         throwError(
             `No origins from: ${verifiedRequests.map((r) => r.payload.origin)} match referrer: ${referrer.origin}`,
             SdkErrors.WrongOrigin
