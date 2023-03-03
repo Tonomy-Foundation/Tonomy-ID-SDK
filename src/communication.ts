@@ -12,6 +12,7 @@ export class Communication {
 
         this.socketServer = io(url, {
             transports: ['websocket'],
+            retries: 1, // remove this when communication is staging ready
         });
     }
 
