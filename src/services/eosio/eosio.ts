@@ -1,4 +1,5 @@
 import { APIClient, FetchProvider } from '@greymass/eosio';
+import { GetInfoResponse } from '@greymass/eosio/src/api/v1/types';
 import fetch from 'cross-fetch';
 import { getSettings } from '../../settings';
 import { throwError, SdkErrors } from '../errors';
@@ -18,7 +19,7 @@ export async function getApi(): Promise<APIClient> {
     return api;
 }
 
-export async function getChainInfo() {
+export async function getChainInfo(): Promise<GetInfoResponse> {
     const api = await getApi();
 
     return await api.v1.chain.get_info();
