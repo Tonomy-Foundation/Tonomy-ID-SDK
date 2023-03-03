@@ -8,6 +8,8 @@ import {
 } from '../../src/services/keymanager';
 import argon2 from 'argon2';
 import { Bytes, Checksum256, KeyType, PrivateKey, PublicKey, Signature } from '@greymass/eosio';
+import { createSigner } from '@tonomy/antelope-ssi-toolkit';
+import { SdkErrors, throwError } from '../../src';
 
 type KeyStorage = {
     privateKey: PrivateKey;
@@ -74,30 +76,39 @@ export class JsKeyManager implements KeyManager {
     }
 
     async signData(options: SignDataOptions): Promise<string | Signature> {
-        if (!(options.level in this.keyStorage)) throw new Error('No key for this level');
+        if (!(options.level in this.keyStorage)) throw throwError('No key for this level', SdkErrors.KeyNotFound);
 
         const keyStore = this.keyStorage[options.level];
 
         if (options.level === KeyManagerLevel.PASSWORD || options.level === KeyManagerLevel.PIN) {
-            if (!options.challenge) throw new Error('Challenge missing');
+            if (!options.challenge) throw throwError('Challenge missing', SdkErrors.missingChallenge);
 
             const hashedSaltedChallenge = sha256(options.challenge + keyStore.salt);
 
-            if (keyStore.hashedSaltedChallenge !== hashedSaltedChallenge) throw new Error('Challenge does not match');
+            if (keyStore.hashedSaltedChallenge !== hashedSaltedChallenge)
+                throw throwError('Challenge does not match', SdkErrors.PasswordInValid);
         }
 
         const privateKey = keyStore.privateKey;
-        let digest: Checksum256;
 
-        if (options.data instanceof String) {
-            digest = Checksum256.hash(Buffer.from(options.data));
+        if (options.outputType === 'jwt') {
+            if (typeof options.data !== 'string') throw throwError('data must be a string', SdkErrors.invalidDataType);
+            const signer = createSigner(privateKey as any);
+
+            return (await signer(options.data)) as string;
         } else {
-            digest = options.data as Checksum256;
+            let digest: Checksum256;
+
+            if (typeof options.data === 'string') {
+                digest = Checksum256.hash(Buffer.from(options.data));
+            } else {
+                digest = options.data as Checksum256;
+            }
+
+            const signature = privateKey.signDigest(digest);
+
+            return signature;
         }
-
-        const signature = privateKey.signDigest(digest);
-
-        return signature;
     }
 
     async getKey(options: GetKeyOptions): Promise<PublicKey> {

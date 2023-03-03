@@ -1,27 +1,36 @@
 =================================
-Tonomy ID
+Tonomy ID SDK
 =================================
 
-This Software Development Kit is used
-- in the Tonomy ID to manage all business logic, cryptography and interactions with other entities
-- as an SDK for developers to integrate Tonomy ID into their applications (this will likely be a separate package in the future)
+This Tonomy ID SDK is used in the Tonomy ID to manage all business logic, cryptography and interactions with other entities. It is also used to integrate Tonomy ID into applications (this will likely be a separate package in the future)
 
-The SDK is written in typescript.
+Installation
+------------
 
-Contents:
+Install from `nmp registry` using `npm <https://docs.npmjs.com/downloading-and-installing-node-js-and-npm>`_, a
+package manager for javascript.
 
-:ref:`Keyword Index <genindex>`, :ref:`Search Page <search>`
+.. code-block:: bash
+
+    npm install @tonomy/tonomy-id-sdk
+
+Compatibility
+------------
+
+The SDK has been tested with nodejs v16.4.1+.
+
+Sample Applications
+------------
+Applications that illustrate how to use the SDK:
+
+    1. application 1
+    2. application 2 
+
+Contents
+--------
 
 .. toctree::
    :maxdepth: 2
-   :caption: Introduction:
 
-   getting-started
-
-
-.. toctree::
-   :maxdepth: 2
-   :caption: Integrating with Tonomy ID:
-
-   install
-   login
+   usage
+   architecture

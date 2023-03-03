@@ -3,10 +3,13 @@ import { UserApps } from '../src/userApps';
 import { generateRandomKeyPair } from '../src/util/crypto';
 import URL from 'jsdom-url';
 import { JsKeyManager } from './services/jskeymanager';
+import { Message } from '../src/util/message';
+import { setSettings } from '../src';
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 global.URL = URL;
+setSettings({});
 
 describe('logging in', () => {
     it('generates random key pair', () => {
@@ -38,10 +41,11 @@ describe('logging in', () => {
 
         const result = await UserApps.onRedirectLogin();
 
+        expect(result).toBeInstanceOf(Message);
         expect(result).toBeDefined();
-        expect(typeof result.payload.randomString).toBe('string');
-        expect(typeof result.payload.publicKey).toBe('string');
-        expect(result.payload.origin).toBe('http://localhost');
-        expect(result.payload.callbackPath).toBe('/login');
+        expect(typeof result.getPayload().randomString).toBe('string');
+        expect(typeof result.getPayload().publicKey).toBe('string');
+        expect(result.getPayload().origin).toBe('http://localhost');
+        expect(result.getPayload().callbackPath).toBe('/login');
     });
 });
