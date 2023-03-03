@@ -11,6 +11,10 @@ jobs:
 
   publish-npm:
     runs-on: ubuntu-20.04
+    env:
+      NODE_ENV: staging
+      EXPO_TOKEN: ${{ secrets.NPM_TOKEN }}
+    
     steps:
       - name: 🏗 Setup repo
         uses: actions/checkout@v3
@@ -41,5 +45,4 @@ jobs:
         with:
           node-version: 16.4.1
       - run: npm publish
-        env:
-          NODE_AUTH_TOKEN: ${{secrets.npm_token}}
+      
