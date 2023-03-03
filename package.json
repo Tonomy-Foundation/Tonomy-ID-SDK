@@ -71,7 +71,8 @@
         "socket.io-client": "^4.5.4"
     },
     "publishConfig": {
-        "access": "public"
+        "access": "public",
+        "registry": "https://registry.npmjs.org/"
     },
     "keywords": [
         "sdk",
