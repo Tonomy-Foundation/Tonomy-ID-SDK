@@ -1,12 +1,12 @@
 // this needs to get uncommented when we have tonomy communication in the github action and integration tests
-// import { setSettings } from '../src';
+import { setSettings } from '../src';
 // import { Message } from '../src/util/message';
-// import settings from './services/settings';
+import settings from './services/settings';
 // import { createRandomID } from './util/user';
 
 import { createRandomID } from './util/user';
 
-// setSettings(settings);
+setSettings(settings);
 
 // describe('user signing messages', () => {
 //     test('user can sign a message', async () => {
@@ -50,6 +50,6 @@ describe('one test for the file', () => {
         const { user } = await createRandomID();
 
         expect(user).toBeTruthy();
-        user.logout();
+        await user.logout();
     });
 });
