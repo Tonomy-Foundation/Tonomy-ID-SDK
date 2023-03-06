@@ -91,15 +91,11 @@ export function utf8ToB64(str: string) {
 }
 
 export function b64ToUtf8(str: string) {
-    console.log('b64ToUtf8', str);
-
     if (typeof Buffer !== 'undefined') {
         // nodejs
-        console.log('nodejs');
         return Buffer.from(str, 'base64').toString('utf8');
     } else {
         // browser
-        console.log('browser');
         return decodeURIComponent(escape(window.atob(str)));
     }
 }
