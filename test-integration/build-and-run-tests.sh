@@ -9,10 +9,11 @@ SDK_DIR="${PARENT_PATH}/.."
 cd "${SDK_DIR}"
 
 # Setup Tonomy Contracts and Tonomy Communication
-git submodule update --init --recursive
-# git submodule foreach --recursive git checkout development
-# git submodule foreach --recursive git pull
-
+if [ ! -d "Tonomy-Contracts" ]; then
+    git submodule update --init --recursive
+    git submodule foreach git checkout development
+    git submodule foreach git pull
+fi
 
 # Build Tonomy Blockchain image
 cd "${SDK_DIR}/Tonomy-Contracts"
@@ -41,4 +42,4 @@ pm2 start yarn --name "micro" -- run start:dev
 # Run integration tests
 cd  "$SDK_DIR"
 npm run bootstrap
-npm run test:integration || true
+npm run test:integration
