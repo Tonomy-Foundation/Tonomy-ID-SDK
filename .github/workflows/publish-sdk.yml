@@ -12,28 +12,13 @@ jobs:
   publish-npm:
     runs-on: ubuntu-20.04
     env:
-      NODE_ENV: staging
-      EXPO_TOKEN: ${{ secrets.NPM_TOKEN }}
+      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
     
     steps:
       - name: 🏗 Setup repo
         uses: actions/checkout@v3
 
-      - name: Run lint and test
-        uses: actions/setup-node@v3
-        with:
-          node-version: 16.4.1
-      - run: npm install
-      - run: npm run lint
-      - run: npm test
-
-      # - name: "Automated Version Bump"
-      #   uses: "phips28/gh-action-bump-version@master"
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #   with:
-      #     tag-prefix: "v"
-
+      
       - name: 📦 Install
         uses: actions/setup-node@v3
         with:

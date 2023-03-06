@@ -78,7 +78,7 @@
     },
     "publishConfig": {
         "access": "public",
-        "registry": "https://npm.pkg.github.com"
+        "registry-url": "https://registry.npmjs.org/"
     },
     "keywords": [
         "sdk",
