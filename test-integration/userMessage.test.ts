@@ -14,7 +14,7 @@ describe('user signing messages', () => {
             message: 'hi',
         };
 
-        expect(user.signMessage(payload)).resolves.toBeTruthy();
+        await expect(user.signMessage(payload)).resolves.toBeTruthy();
 
         const message = await user.signMessage(payload);
 
