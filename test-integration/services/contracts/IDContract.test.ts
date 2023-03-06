@@ -58,16 +58,16 @@ describe('IDContract class', () => {
             expect(appInfo.description).toEqual(description);
             expect(appInfo.username_hash.toString()).toEqual(username.usernameHash);
             expect(appInfo.logo_url).toEqual(logoUrl);
-            expect(appInfo.origin).toEqual(appOrigin);
+            expect(appInfo.origin).toEqual(origin);
             expect(appInfo.account_name.toString()).toEqual(accountName.toString());
 
-            appInfo = await idContract.getApp(appOrigin);
+            appInfo = await idContract.getApp(origin);
 
             expect(appInfo.app_name).toEqual(appName);
             expect(appInfo.description).toEqual(description);
             expect(appInfo.username_hash.toString()).toEqual(username.usernameHash);
             expect(appInfo.logo_url).toEqual(logoUrl);
-            expect(appInfo.origin).toEqual(appOrigin);
+            expect(appInfo.origin).toEqual(origin);
             expect(appInfo.account_name.toString()).toEqual(accountName.toString());
 
             appInfo = await idContract.getApp(accountName);
@@ -76,7 +76,7 @@ describe('IDContract class', () => {
             expect(appInfo.description).toEqual(description);
             expect(appInfo.username_hash.toString()).toEqual(username.usernameHash);
             expect(appInfo.logo_url).toEqual(logoUrl);
-            expect(appInfo.origin).toEqual(appOrigin);
+            expect(appInfo.origin).toEqual(origin);
             expect(appInfo.account_name.toString()).toEqual(accountName.toString());
         })
     );
