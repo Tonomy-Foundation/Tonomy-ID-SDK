@@ -8,13 +8,14 @@ PARENT_PATH=$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )
 SDK_DIR="${PARENT_PATH}/.."
 cd "${SDK_DIR}"
 
-# Setup Tonomy Contracts
-git submodule init
-cd "${SDK_DIR}/Tonomy-Contracts"
-git checkout development
-git pull
+# Setup Tonomy Contracts and Tonomy Communication
+git submodule update --init --recursive
+# git submodule foreach --recursive git checkout development
+# git submodule foreach --recursive git pull
+
 
 # Build Tonomy Blockchain image
+cd "${SDK_DIR}/Tonomy-Contracts"
 ./blockchain/build-docker.sh
 
 # Install dependencies
@@ -23,7 +24,7 @@ if [ ! -d "node_modules" ]; then
     npm i
 fi
 
-# Run container
+# Run blockchain node
 cd "${SDK_DIR}"
 docker exec -it tonomy_blockchain_integration ./nodeos.sh stop || true
 docker rm -f tonomy_blockchain_integration || true
@@ -31,6 +32,13 @@ docker run -p 8888:8888 --name tonomy_blockchain_integration -d tonomy_blockchai
 echo "Waiting 8 seconds for blockchain node to start"
 sleep 8
 
+# Run Communication server
+cd  "$SDK_DIR/Tonomy-Communication"
+pm2 stop micro || true
+pm2 delete micro || true
+pm2 start yarn --name "micro" -- run start:dev
+
 # Run integration tests
+cd  "$SDK_DIR"
 npm run bootstrap
 npm run test:integration || true
