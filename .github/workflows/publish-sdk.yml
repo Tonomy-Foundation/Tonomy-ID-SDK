@@ -1,11 +1,13 @@
 name: Tonomy SDK publish
 
 on:
-  pull_request:
-    types:
-      - closed
-    branches:
-      - development
+  push:
+    
+  # pull_request:
+  #   types:
+  #     - closed
+  #   branches:
+  #     - development
 
 jobs:
 
@@ -29,8 +31,8 @@ jobs:
         uses: "phips28/gh-action-bump-version@master"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          version-type:  'minor'
+        # with:
+        #   version-type:  'minor'
         
 
       - name: 🚀 Build and publish SDK
