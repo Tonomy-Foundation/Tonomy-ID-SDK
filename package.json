@@ -80,6 +80,10 @@
         "access": "public",
         "registry-url": "https://registry.npmjs.org/"
     },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/Tonomy-Foundation/Tonomy-ID-SDK.git"
+    },
     "keywords": [
         "sdk",
         "tonomy"
