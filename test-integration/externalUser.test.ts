@@ -11,6 +11,7 @@ describe('External User class', () => {
     test(
         'loginWithTonomy(): Logs into new app',
         catchAndPrintErrors(async () => {
+            expect.assertions(1);
             // Create new Tonomy ID user
             const { user, auth } = await createRandomID();
             const userAccountName = await user.storage.accountName;
@@ -19,6 +20,10 @@ describe('External User class', () => {
             const message = await user.signMessage({});
 
             await user.communication.login(message);
+
+            // Create two apps
+            const app = await createRandomApp();
+            const app2 = await createRandomApp();
 
             // Setup a promise that resolves when the subscriber executes
             const subscriberPromise = new Promise((resolve, reject) => {
@@ -29,6 +34,8 @@ describe('External User class', () => {
 
                     const verifiedRequests = await UserApps.verifyRequests(requests);
 
+                    expect(verifiedRequests.length).toBe(2);
+
                     for (const jwt of verifiedRequests) {
                         const payload = jwt.getPayload() as JWTLoginPayload;
                         const app = await App.getApp(payload.origin);
@@ -36,7 +43,6 @@ describe('External User class', () => {
                         const accountName = await user.storage.accountName.toString();
 
                         await user.apps.loginWithApp(app, PublicKey.from(payload?.publicKey));
-                        // TODO: cover case where checked === true and we also need to login to the SSO Login App
 
                         const recieverDid = jwt.getSender();
                         const message = await user.signMessage({ requests, accountName }, recieverDid);
@@ -48,9 +54,7 @@ describe('External User class', () => {
                 });
             });
 
-            // Create an app
-            const app = await createRandomApp();
-
+            // Wait for the subscriber to execute
             await subscriberPromise;
 
             // Close connections
