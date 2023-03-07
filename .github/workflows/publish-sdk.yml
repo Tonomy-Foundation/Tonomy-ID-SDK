@@ -32,8 +32,8 @@ jobs:
         uses: "phips28/gh-action-bump-version@master"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        # with:
-        #   version-type:  'minor'
+        with:
+          version-type:  'patch'
        
       - name: Run lint and test
         uses: actions/setup-node@v3
@@ -48,5 +48,5 @@ jobs:
           node-version: 16.4.1
       - run: npm publish
         env:
-          NODE_AUTH_TOKEN: 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
+          NODE_AUTH_TOKEN: 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
 
