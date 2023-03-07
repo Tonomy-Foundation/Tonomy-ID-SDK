@@ -32,8 +32,8 @@ jobs:
         uses: "phips28/gh-action-bump-version@master"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          version-type:  'minor'
+        # with:
+        #   version-type:  'minor'
        
       - name: Run lint and test
         uses: actions/setup-node@v3
