@@ -3,14 +3,12 @@ import { Name, PublicKey } from '@greymass/eosio';
 import { IDContract } from './services/contracts/IDContract';
 import { KeyManager, KeyManagerLevel } from './services/keymanager';
 import { createStorage, PersistentStorageClean, StorageFactory } from './services/storage';
-import { createVCSigner, generateRandomKeyPair, randomString } from './util/crypto';
+import { createVCSigner } from './util/crypto';
 import { User } from './user';
 import { createKeyManagerSigner } from './services/eosio/transaction';
 import { SdkErrors, throwError } from './services/errors';
 import { createJWK, toDid } from './util/did-jwk';
-import { getSettings } from './settings';
 import { App, AppStatus } from './app';
-import { ES256KSigner } from '@tonomy/did-jwt';
 import { Message } from './util/message';
 
 const idContract = IDContract.Instance;
@@ -77,58 +75,10 @@ export class UserApps {
         await this.storage.appRecords;
     }
 
-    static async onPressLogin(
-        { redirect = true, callbackPath }: OnPressLoginOptions,
-        keyManager: KeyManager,
-        keyManagerLevel: KeyManagerLevel = KeyManagerLevel.BROWSERLOCALSTORAGE
-    ): Promise<string | void> {
-        //TODO: dont create new key if it exist
-        const { privateKey, publicKey } = generateRandomKeyPair();
-
-        console.log('public key', publicKey.toString());
-
-        if (keyManager) {
-            await keyManager.storeKey({
-                level: keyManagerLevel,
-                privateKey: privateKey,
-            });
-        }
-
-        const payload: JWTLoginPayload = {
-            randomString: randomString(32),
-            origin: window.location.origin,
-            publicKey: publicKey.toString(),
-            callbackPath,
-        };
-
-        // TODO use expiresIn to make JWT expire after 5 minutes
-
-        const signer = ES256KSigner(privateKey.data.array, true);
-        const jwk = await createJWK(publicKey);
-
-        const issuer = toDid(jwk);
-
-        const token = (await Message.sign(payload, { did: issuer, signer: signer as any, alg: 'ES256K-R' })).jwt;
-
-        // const token = (await this.signMessage(payload, keyManager, keyManagerLevel)).jwt;
-
-        const requests = [token];
-        const requestsString = JSON.stringify(requests);
-
-        console.log(token);
-
-        if (redirect) {
-            window.location.href = `${getSettings().ssoWebsiteOrigin}/login?requests=${requestsString}`;
-            return;
-        }
-
-        return token;
-    }
-
     static async signMessage(
         message: any,
         keyManager: KeyManager,
-        keyManagerLevel: KeyManagerLevel = KeyManagerLevel.BROWSERLOCALSTORAGE,
+        keyManagerLevel: KeyManagerLevel = KeyManagerLevel.BROWSER_LOCAL_STORAGE,
         recipient?: string
     ): Promise<Message> {
         const publicKey = await keyManager.getKey({
@@ -214,7 +164,7 @@ export class UserApps {
     static async verifyKeyExistsForApp(
         accountName: string,
         keyManager: KeyManager,
-        keyManagerLevel: KeyManagerLevel = KeyManagerLevel.BROWSERLOCALSTORAGE
+        keyManagerLevel: KeyManagerLevel = KeyManagerLevel.BROWSER_LOCAL_STORAGE
     ): Promise<boolean> {
         const pubKey = await keyManager.getKey({
             level: keyManagerLevel,
