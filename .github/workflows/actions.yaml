@@ -14,8 +14,9 @@ jobs:
         with:
           node-version: 16.4.1
       - run: npm install
+      - run: npm run build
       - run: npm run lint
-      - run: npm test
+      - run: npm run test
 
   compile-contracts:
     name: Compiles contracts needed for bootstrap script
