@@ -48,5 +48,5 @@ jobs:
           node-version: 16.4.1
       - run: npm publish
         env:
-          NODE_AUTH_TOKEN: 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
+          NODE_AUTH_TOKEN: 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
 
