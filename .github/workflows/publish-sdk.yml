@@ -15,10 +15,7 @@ permissions:
 jobs:
 
   publish-npm:
-    runs-on: ubuntu-20.04
-    env:
-      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-    
+    runs-on: ubuntu-20.04    
     steps:
       - name: 🏗 Setup repo
         uses: actions/checkout@v3
@@ -34,8 +31,8 @@ jobs:
         uses: "phips28/gh-action-bump-version@master"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        # with:
-        #   version-type:  'minor'
+        with:
+          version-type:  'minor'
         
 
       - name: 🚀 Build and publish SDK
