@@ -36,7 +36,7 @@ export class Communication {
             }, 5000);
         });
 
-        if (this.socketServer.disconnected) {
+        if (!this.socketServer.connected) {
             throwError('Could not connect to Tonomy Communication server', SdkErrors.CommunicationNotConnected);
         }
     }
@@ -65,7 +65,7 @@ export class Communication {
      * @returns true if successful
      */
     async login(authorization: Message): Promise<boolean> {
-        this.connect();
+        await this.connect();
 
         return await this.emitMessage('login', authorization);
     }
