@@ -1,64 +1,212 @@
 // need to use API types from inside tonomy-id-sdk, otherwise type compatibility issues
 import { createRandomApp, createRandomID } from './util/user';
-import { setSettings, User, AppStatus, Message, UserApps, JWTLoginPayload, App } from '../src/index';
+import {
+    setSettings,
+    User,
+    AppStatus,
+    Message,
+    UserApps,
+    JWTLoginPayload,
+    App,
+    KeyManager,
+    Communication,
+    KeyManagerLevel,
+} from '../src/index';
 import settings from './services/settings';
 import { catchAndPrintErrors } from './util/errors';
 import { PublicKey } from '@greymass/eosio';
+import { ExternalUser } from '../src/externalUser';
+import { JsKeyManager } from '../test/services/jskeymanager';
 
 setSettings(settings);
 
 describe('External User class', () => {
     test(
-        'loginWithTonomy(): Logs into new app',
+        'full login to external app success flow',
         catchAndPrintErrors(async () => {
             expect.assertions(1);
+            // ##### Tonomy ID user #####
+            // ##########################
+
             // Create new Tonomy ID user
-            const { user, auth } = await createRandomID();
-            const userAccountName = await user.storage.accountName;
+            const { user: tonomyIdUser, auth } = await createRandomID();
+            const userAccountName = await tonomyIdUser.storage.accountName;
 
-            // Login to Tonomy Communication
-            const message = await user.signMessage({});
+            // Login to Tonomy Communication as the user (did:antelope)
+            const message = await tonomyIdUser.signMessage({});
 
-            await user.communication.login(message);
+            await tonomyIdUser.communication.login(message);
 
-            // Create two apps
-            const app = await createRandomApp();
-            const app2 = await createRandomApp();
+            // Create two apps which will be logged into
+            const externalApp = await createRandomApp();
+            const tonomyLoginApp = await createRandomApp();
+            const appsFound = [false, false];
 
             // Setup a promise that resolves when the subscriber executes
-            const subscriberPromise = new Promise((resolve, reject) => {
-                user.communication.subscribeMessage(async (m) => {
-                    const message = new Message(m);
+            // This emulates the Tonomy ID app, which waits for the user requests
+            const tonomyIdSubscriberPromise = new Promise((resolve, reject) => {
+                setTimeout(() => {
+                    // reject if this takes too long
+                    reject('Subscriber timed out');
+                }, 10000);
+                tonomyIdUser.communication.subscribeMessage(async (m) => {
+                    try {
+                        const message = new Message(m);
 
-                    const requests = message.getPayload().requests;
+                        // receive and verify the requests
+                        const requests = message.getPayload().requests;
 
-                    const verifiedRequests = await UserApps.verifyRequests(requests);
+                        // TODO check this throws an error if requests are not valid, or not signed correctly
+                        const verifiedRequests = await UserApps.verifyRequests(requests);
 
-                    expect(verifiedRequests.length).toBe(2);
+                        expect(verifiedRequests.length).toBe(2);
 
-                    for (const jwt of verifiedRequests) {
-                        const payload = jwt.getPayload() as JWTLoginPayload;
-                        const app = await App.getApp(payload.origin);
+                        for (const jwt of verifiedRequests) {
+                            // parse the requests for their app data
+                            const payload = jwt.getPayload() as JWTLoginPayload;
+                            const loginApp = await App.getApp(payload.origin);
 
-                        const accountName = await user.storage.accountName.toString();
+                            if (loginApp.origin === tonomyLoginApp.origin) appsFound[0] = true;
+                            if (loginApp.origin === externalApp.origin) appsFound[1] = true;
 
-                        await user.apps.loginWithApp(app, PublicKey.from(payload?.publicKey));
+                            const accountName = await tonomyIdUser.storage.accountName.toString();
 
-                        const recieverDid = jwt.getSender();
-                        const message = await user.signMessage({ requests, accountName }, recieverDid);
+                            // login to the app (by adding a permission on the blockchain)
+                            await tonomyIdUser.apps.loginWithApp(loginApp, PublicKey.from(payload?.publicKey));
 
-                        user.communication.sendMessage(message);
+                            // send a message back to the app
+                            const recieverDid = jwt.getSender();
+                            const message = await tonomyIdUser.signMessage({ requests, accountName }, recieverDid);
+
+                            await tonomyIdUser.communication.sendMessage(message);
+                        }
+
+                        resolve(true);
+                    } catch (e) {
+                        reject(e);
                     }
-
-                    resolve(true);
                 });
             });
 
+            // #####External website user (login page) #####
+            // ################################
+
+            // create request for external website
+            // this would redirect the user to the tonomyLoginApp and send the token via the URL, but we're not doing that here
+            // Instead we take the token as output
+            const externalAppJwt = ExternalUser.loginWithTonomy(
+                { callbackPath: '/callback', redirect: false },
+                new JsKeyManager() as unknown as KeyManager
+            );
+
+            // #####Tonomy Login App website user (login page) #####
+            // ########################################
+
+            // catch the externalAppToken in the URL
+            // TODO: check this throws an error if the token is not valid or in the URL
+            // NOTE how will this work in the test?
+            const externalAppJwtVerified = await UserApps.onRedirectLogin();
+
+            // Setup a request for the login app
+            const tonomyLoginAppJwt = (await ExternalUser.loginWithTonomy(
+                { callbackPath: '/callback', redirect: false },
+                new JsKeyManager()
+            )) as string;
+
+            const jwtRequests = [externalAppJwt, tonomyLoginAppJwt];
+
+            // Create a new login message, and take the DID (did:jwk) out as their identity
+            // Tonomy ID will scan the DID in barcode and use connect
+            const logInMessage = new Message(tonomyLoginAppJwt);
+            const tonomyLoginAppDid = logInMessage.getSender();
+
+            // Login to the Tonomy Communication as the login app user
+            const tonomyLoginAppUserCommunication = new Communication();
+
+            await tonomyLoginAppUserCommunication.login(logInMessage);
+
+            // ##### Tonomy ID user (QR code scanner screen) #####
+            // ##########################
+
+            // BarCodeScannerResult. See Tonomy-ID/node_modules/expo-barcode-scanner/src/BarCodeScanner.tsx
+            const barcodeScanResults = {
+                data: tonomyLoginAppDid,
+            };
+            const tonomyIdToLoginAppConnectMessage = await tonomyIdUser.signMessage(
+                { type: 'ack' },
+                barcodeScanResults.data
+            );
+
+            await tonomyIdUser.communication.sendMessage(tonomyIdToLoginAppConnectMessage);
+
+            // ##### Tonomy ID user (SSO screen screen) #####
+            // ##########################
+
+            // Setup a promise that resolves when the subscriber executes
+            // This emulates the Tonomy Login app, which sends requests to the Tonomy ID app and then waits for the response
+            let messageFromTonomyIdUser: Message;
+            const tonomyLoginSubscriberPromise = new Promise((resolve, reject) => {
+                setTimeout(() => {
+                    // reject if this takes too long
+                    reject('Subscriber timed out');
+                }, 10000);
+                // wait for login acknowledgement
+                tonomyLoginAppUserCommunication.subscribeMessage(async (responseMessage) => {
+                    try {
+                        messageFromTonomyIdUser = new Message(responseMessage);
+
+                        if (messageFromTonomyIdUser.getPayload().type === 'ack') {
+                            resolve(true);
+                        } else {
+                            reject('ack not received');
+                        }
+                    } catch (e) {
+                        reject(e);
+                    }
+                });
+            });
+
+            // #####Tonomy Login App website user (login page) #####
+            // ########################################
+
+            // wait for the login subscriber to execute
+            await tonomyLoginSubscriberPromise;
+
+            // then send a Message with the two signed requests, this will be received by the Tonomy ID app
+            const requestMessage = await UserApps.signMessage(
+                {
+                    requests: jwtRequests,
+                },
+                new JsKeyManager(),
+                KeyManagerLevel.BROWSER_LOCAL_STORAGE,
+                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                // @ts-ignore
+                messageFromTonomyIdUser.getSender()
+            );
+
+            await tonomyLoginAppUserCommunication.sendMessage(requestMessage);
+
+            // ##### Tonomy ID user (SSO screen) #####
+            // ##########################
+
             // Wait for the subscriber to execute
-            await subscriberPromise;
+            await tonomyIdSubscriberPromise;
+
+            // check both apps were logged into
+            expect(appsFound[0] && appsFound[1]).toBe(true);
+
+            // #####Tonomy Login App website user (callback page) #####
+            // ########################################
+
+            // receive the callback, verify
+
+            // #####External website user (callback page) #####
+            // ################################
+
+            // receive the callback, verify
 
             // Close connections
-            await user.logout();
+            await tonomyIdUser.logout();
         })
     );
 });
