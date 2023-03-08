@@ -29,9 +29,28 @@ To do a one-off build, use `npm run build`.
 
 ## Tests
 
-To run tests, use `npm test`.
+**unit tests**: `npm test`.
 
-To run integration tests `./test-integration/build-and-run-tests.sh`
+**integration tests**: `./test-integration/build-and-run-tests.sh`
+
+### Run tests with VS Code in debug mode
+
+Install jest globally
+`npm i -g jest@29.4.2`
+
+Ensure you have the jest VS Code extension installed (it is a recommended package in `./.vscode/extensions.json`)
+
+**unit tests**: TODO
+
+**integration tests**:
+
+1. comment out the last line of `./test-integration/build-and-run-tests.sh`
+`# npm run test:integration`
+2. go to a test file e.g. `./test-integration/user.test.ts`
+3. Press one of the `Run | Debug` buttons that now appear above a test. i.e. above `test('savePassword() generates and saves new private key')`
+
+NOTE this running all tests in that file.
+TODO fix so that you can run tests one by one
 
 ## Linting
 
