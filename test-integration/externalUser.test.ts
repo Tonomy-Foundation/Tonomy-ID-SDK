@@ -198,15 +198,39 @@ describe('External User class', () => {
             // #####Tonomy Login App website user (callback page) #####
             // ########################################
 
-            // receive the callback, verify
+            const { result: recievedRequestJwts, accountName, username } = await UserApps.onAppRedirectVerifyRequests();
+
+            expect(username).toBe((await tonomyIdUser.getUsername()).username);
+
+            const redirectJwt = recievedRequestJwts.find(
+                (jwtVerified) => jwtVerified.getPayload().origin !== tonomyLoginApp.origin
+            );
+            const ssoJwt = recievedRequestJwts.find(
+                (jwtVerified) => jwtVerified.getPayload().origin === externalApp.origin
+            );
+
+            if (!redirectJwt) throw new Error('No redirectJwt found');
+
+            const verifiedTonomyLoginSso = await UserApps.verifyKeyExistsForApp(accountName, new JsKeyManager());
+
+            // TODO probably need to use same jsKeyManager for this to pass
+            expect(verifiedTonomyLoginSso).toBe(true);
 
             // #####External website user (callback page) #####
             // ################################
 
-            // receive the callback, verify
+            // const { accountName } = await UserApps.onAppRedirectVerifyRequests();
+            // const verifiedExternalWebsiteLoginSso = await UserApps.verifyKeyExistsForApp(
+            //     accountName,
+            //     new JsKeyManager() as unknown as KeyManager
+            // );
+
+            // TODO probably need to use same jsKeyManager for this to pass
+            // expect(verifiedExternalWebsiteLoginSso).toBe(true);
 
             // Close connections
             await tonomyIdUser.logout();
+            await tonomyLoginAppUserCommunication.disconnect();
         })
     );
 });
