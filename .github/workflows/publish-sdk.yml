@@ -27,7 +27,6 @@ jobs:
           node-version: 16.4.1
           registry-url: https://registry.npmjs.org/
 
-
       - name: "Automated Version Bump"
         uses: "phips28/gh-action-bump-version@master"
         env:
@@ -35,7 +34,7 @@ jobs:
         with:
           version-type:  'patch'
        
-      - name: Run lint and test
+      - name: Install and Build
         uses: actions/setup-node@v3
         with:
           node-version: 16.4.1
@@ -48,5 +47,5 @@ jobs:
           node-version: 16.4.1
       - run: npm publish
         env:
-          NODE_AUTH_TOKEN: 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
+          NPM_TOKEN: ${{secret.NPM_TOKEN}}
 
