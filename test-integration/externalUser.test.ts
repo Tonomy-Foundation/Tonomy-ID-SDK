@@ -29,8 +29,7 @@ describe('External User class', () => {
             // ##########################
 
             // Create new Tonomy ID user
-            const { user: tonomyIdUser, auth } = await createRandomID();
-            const userAccountName = await tonomyIdUser.storage.accountName;
+            const { user: tonomyIdUser } = await createRandomID();
 
             // Login to Tonomy Communication as the user (did:antelope)
             const message = await tonomyIdUser.signMessage({});
@@ -200,6 +199,7 @@ describe('External User class', () => {
 
             const { result: recievedRequestJwts, accountName, username } = await UserApps.onAppRedirectVerifyRequests();
 
+            expect(accountName).toBe(await tonomyIdUser.getAccountName());
             expect(username).toBe((await tonomyIdUser.getUsername()).username);
 
             const redirectJwt = recievedRequestJwts.find(
