@@ -1,17 +1,16 @@
 name: Tonomy SDK publish
 
-on:
-  push:
 
 permissions:
   contents: write
 
-  # pull_request:
-  #   types:
-  #     - closed
-  #   branches:
-  #     - development
-
+on:
+  pull_request:
+    types:
+      - closed
+    branches:
+      - development
+      
 jobs:
 
   publish-npm:
