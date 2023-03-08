@@ -45,7 +45,12 @@ describe('IDContract class', () => {
     test(
         'newapp and getApp',
         catchAndPrintErrors(async () => {
-            const { appName, description, username, logoUrl, origin, accountName } = await createRandomApp();
+            const port = Math.floor(Math.random() * 1000000000);
+            const appOrigin = `http://localhost:${port}`;
+            const { appName, description, username, logoUrl, origin, accountName } = await createRandomApp(
+                appOrigin + '/logo.png',
+                appOrigin
+            );
 
             let appInfo = await idContract.getApp(username);
 
