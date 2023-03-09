@@ -46,8 +46,9 @@ Ensure you have the jest VS Code extension installed (it is a recommended packag
 
 1. comment out the last line of `./test-integration/build-and-run-tests.sh`
 `# npm run test:integration`
-2. go to a test file e.g. `./test-integration/user.test.ts`
-3. Press one of the `Run | Debug` buttons that now appear above a test. i.e. above `test('savePassword() generates and saves new private key')`
+2. run `./test-integration/build-and-run-tests.sh`
+3. go to a test file e.g. `./test-integration/user.test.ts`
+4. Press one of the `Run | Debug` buttons that now appear above a test. i.e. above `test('savePassword() generates and saves new private key')`
 
 NOTE this running all tests in that file.
 TODO fix so that you can run tests one by one

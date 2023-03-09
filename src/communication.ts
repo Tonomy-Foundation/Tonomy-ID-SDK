@@ -8,25 +8,29 @@ type Subscriber = (message: string) => void;
 export class Communication {
     socketServer: Socket;
 
-    /*
-     * connects to the Tonomy Communication server
+    /**
+     * Connects to the Tonomy Communication server
      *
-     * @returns void
-     * @throws SdkErrors.CommunicationNotConnected
+     * @returns {Promise<void>}
+     * @throws {SdkError} CommunicationNotConnected
      */
     private async connect(): Promise<void> {
         const url = getSettings().communicationUrl;
 
         this.socketServer = io(url, {
             transports: ['websocket'],
-            retries: 5, // remove this when communication is staging ready
         });
 
         await new Promise((resolve, reject) => {
+            let resolved = false;
+
             this.socketServer.on('connect', () => {
+                resolved = true;
                 resolve(true);
+                return;
             });
             setTimeout(() => {
+                if (resolved) return;
                 reject(
                     createSdkError(
                         'Could not connect to Tonomy Communication server',
@@ -41,11 +45,17 @@ export class Communication {
         }
     }
 
-    private async emitMessage(event: string, message: Message, timeout = 1000): Promise<boolean> {
-        return new Promise((resolve, reject) => {
-            setTimeout(() => {
-                reject(createSdkError('Communication server timed out', SdkErrors.CommunicationTimeout));
-            }, timeout);
+    /**
+     * Sends a Message object through a websocket connection to the Tonomy Communication server
+     *
+     * @param {string} event - the name of the event to emit
+     * @param {Message} message - the Message object to send
+     * @returns {Promise<boolean>} - true if successful and acknowledged by the server
+     * @throws {SdkError} - CommunicationTimeout
+     */
+    private async emitMessage(event: string, message: Message): Promise<boolean> {
+        return await new Promise((resolve, reject) => {
+            const resolved = false;
 
             this.socketServer.emit(event, { message: message.jwt }, (response: any) => {
                 if (response.err) {
@@ -53,16 +63,25 @@ export class Communication {
                 }
 
                 resolve(response);
+                return;
             });
+            setTimeout(() => {
+                if (resolved) return;
+                reject(
+                    createSdkError(
+                        'Connection timed out to Tonomy Communication server',
+                        SdkErrors.CommunicationTimeout
+                    )
+                );
+            }, 5000);
         });
     }
 
-    constructor() {}
-
-    /* connects to the Tonomy Communication server, authenticates with it's DID
+    /**
+     * connects to the Tonomy Communication server, authenticates with it's DID
      * subscribes to any messages that are sent by `sendMessage` by providing a callback function executed every time a message is received
      * should send a read receipt when messages are received
-     * @returns true if successful
+     * @returns {boolean} - true if successful
      */
     async login(authorization: Message): Promise<boolean> {
         await this.connect();
@@ -89,7 +108,7 @@ export class Communication {
     }
 
     disconnect() {
-        if (this.socketServer.connected) {
+        if (this.socketServer?.connected) {
             this.socketServer.disconnect();
         }
     }
