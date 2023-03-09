@@ -28,6 +28,7 @@ describe('External User class', () => {
 
         // OBJECTS HERE denote the different devices/apps the user is using
         const TONOMY_ID = {} as any;
+        const EXTERNAL_WEBSITE = {} as any;
 
         // ##### Tonomy ID user #####
         // ##########################
@@ -40,69 +41,77 @@ describe('External User class', () => {
         TONOMY_ID.loginResponse = await TONOMY_ID.user.communication.login(TONOMY_ID.loginMessage);
 
         expect(TONOMY_ID.loginResponse).toBe(true);
-        /*
-            // Create two apps which will be logged into
-            const externalApp = await createRandomApp();
-            const tonomyLoginApp = await createRandomApp();
-            const appsFound = [false, false];
 
-            // Setup a promise that resolves when the subscriber executes
-            // This emulates the Tonomy ID app, which waits for the user requests
-            const tonomyIdSubscriberPromise = new Promise((resolve, reject) => {
-                setTimeout(() => {
-                    // reject if this takes too long
-                    reject('Subscriber timed out');
-                }, 10000);
-                tonomyIdUser.communication.subscribeMessage(async (m) => {
-                    try {
-                        const message = new Message(m);
+        // Create two apps which will be logged into
+        const externalApp = await createRandomApp();
+        const tonomyLoginApp = await createRandomApp();
+        const appsFound = [false, false];
 
-                        // receive and verify the requests
-                        const requests = message.getPayload().requests;
+        // Setup a promise that resolves when the subscriber executes
+        // This emulates the Tonomy ID app, which waits for the user requests
+        TONOMY_ID.requestSubscriber = new Promise((resolve, reject) => {
+            let resolved = false;
 
-                        // TODO check this throws an error if requests are not valid, or not signed correctly
-                        const verifiedRequests = await UserApps.verifyRequests(requests);
+            TONOMY_ID.user.communication.subscribeMessage(async (m) => {
+                try {
+                    const message = new Message(m);
 
-                        expect(verifiedRequests.length).toBe(2);
+                    // receive and verify the requests
+                    const requests = message.getPayload().requests;
 
-                        for (const jwt of verifiedRequests) {
-                            // parse the requests for their app data
-                            const payload = jwt.getPayload() as JWTLoginPayload;
-                            const loginApp = await App.getApp(payload.origin);
+                    // TODO check this throws an error if requests are not valid, or not signed correctly
+                    const verifiedRequests = await UserApps.verifyRequests(requests);
 
-                            if (loginApp.origin === tonomyLoginApp.origin) appsFound[0] = true;
-                            if (loginApp.origin === externalApp.origin) appsFound[1] = true;
+                    expect(verifiedRequests.length).toBe(2);
 
-                            const accountName = await tonomyIdUser.storage.accountName.toString();
+                    for (const jwt of verifiedRequests) {
+                        // parse the requests for their app data
+                        const payload = jwt.getPayload() as JWTLoginPayload;
+                        const loginApp = await App.getApp(payload.origin);
 
-                            // login to the app (by adding a permission on the blockchain)
-                            await tonomyIdUser.apps.loginWithApp(loginApp, PublicKey.from(payload?.publicKey));
+                        if (loginApp.origin === tonomyLoginApp.origin) appsFound[0] = true;
+                        if (loginApp.origin === externalApp.origin) appsFound[1] = true;
 
-                            // send a message back to the app
-                            const recieverDid = jwt.getSender();
-                            const message = await tonomyIdUser.signMessage({ requests, accountName }, recieverDid);
+                        const accountName = await TONOMY_ID.user.storage.accountName.toString();
 
-                            await tonomyIdUser.communication.sendMessage(message);
-                        }
+                        // login to the app (by adding a permission on the blockchain)
+                        await TONOMY_ID.user.apps.loginWithApp(loginApp, PublicKey.from(payload?.publicKey));
 
-                        resolve(true);
-                    } catch (e) {
-                        reject(e);
+                        // send a message back to the app
+                        const recieverDid = jwt.getSender();
+                        const message = await TONOMY_ID.user.signMessage({ requests, accountName }, recieverDid);
+
+                        await TONOMY_ID.user.communication.sendMessage(message);
                     }
-                });
+
+                    resolved = true;
+                    resolve(true);
+                    return;
+                } catch (e) {
+                    reject(e);
+                }
             });
 
-            // #####External website user (login page) #####
-            // ################################
+            setTimeout(() => {
+                if (resolved) return;
+                // reject if this takes too long
+                reject('Subscriber timed out');
+            }, 10000);
+        });
+        // TODO need to wait for this to resolve, otherwise it will fail
 
-            // create request for external website
-            // this would redirect the user to the tonomyLoginApp and send the token via the URL, but we're not doing that here
-            // Instead we take the token as output
-            const externalAppJwt = ExternalUser.loginWithTonomy(
-                { callbackPath: '/callback', redirect: false },
-                new JsKeyManager() as unknown as KeyManager
-            );
+        // #####External website user (login page) #####
+        // ################################
 
+        // create request for external website
+        // this would redirect the user to the tonomyLoginApp and send the token via the URL, but we're not doing that here
+        // Instead we take the token as output
+        // EXTERNAL_WEBSITE.jwt = ExternalUser.loginWithTonomy(
+        //     { callbackPath: '/callback', redirect: false },
+        //     new JsKeyManager() as unknown as KeyManager
+        // );
+
+        /*
             // #####Tonomy Login App website user (login page) #####
             // ########################################
 
