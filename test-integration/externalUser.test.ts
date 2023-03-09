@@ -1,3 +1,7 @@
+/**
+ * @jest-environment ./custom-test-env.js
+ */
+
 // need to use API types from inside tonomy-id-sdk, otherwise type compatibility issues
 import { createRandomApp, createRandomID } from './util/user';
 import {
@@ -106,10 +110,13 @@ describe('External User class', () => {
         // create request for external website
         // this would redirect the user to the tonomyLoginApp and send the token via the URL, but we're not doing that here
         // Instead we take the token as output
-        // EXTERNAL_WEBSITE.jwt = ExternalUser.loginWithTonomy(
-        //     { callbackPath: '/callback', redirect: false },
-        //     new JsKeyManager() as unknown as KeyManager
-        // );
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        customTests.setOrigin(externalApp.origin);
+        EXTERNAL_WEBSITE.loginRequestJwt = ExternalUser.loginWithTonomy(
+            { callbackPath: '/callback', redirect: false },
+            new JsKeyManager() as unknown as KeyManager
+        );
 
         /*
             // #####Tonomy Login App website user (login page) #####
