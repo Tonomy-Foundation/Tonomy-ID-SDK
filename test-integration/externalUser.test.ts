@@ -1,27 +1,15 @@
-/**
- * @jest-environment ./custom-test-env.js
- */
-
 // need to use API types from inside tonomy-id-sdk, otherwise type compatibility issues
 import { createRandomApp, createRandomID } from './util/user';
-import {
-    setSettings,
-    User,
-    AppStatus,
-    Message,
-    UserApps,
-    JWTLoginPayload,
-    App,
-    KeyManager,
-    Communication,
-    KeyManagerLevel,
-} from '../src/index';
+import { setSettings, Message, UserApps, JWTLoginPayload, App, KeyManager } from '../src/index';
 import settings from './services/settings';
+import URL from 'jsdom-url';
 import { PublicKey } from '@greymass/eosio';
 import { ExternalUser } from '../src/externalUser';
 import { JsKeyManager } from '../test/services/jskeymanager';
-import { sleep } from './util/sleep';
 
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+global.URL = URL;
 setSettings(settings);
 
 describe('External User class', () => {
@@ -30,14 +18,10 @@ describe('External User class', () => {
     test('full login to external app success flow', async () => {
         // expect.assertions(1);
 
-        // customTests allows us to update the test globals localStorage and window in the custom-test-env.js
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        const CUSTOM_TESTS = customTests;
-
         // OBJECTS HERE denote the different devices/apps the user is using
         const TONOMY_ID = {} as any;
         const EXTERNAL_WEBSITE = {} as any;
+        const TONOMY_LOGIN_WEBSITE = {} as any;
 
         // ##### Tonomy ID user #####
         // ##########################
@@ -61,7 +45,7 @@ describe('External User class', () => {
         TONOMY_ID.requestSubscriber = new Promise((resolve, reject) => {
             let resolved = false;
 
-            TONOMY_ID.user.communication.subscribeMessage(async (m) => {
+            TONOMY_ID.user.communication.subscribeMessage(async (m: any) => {
                 try {
                     const message = new Message(m);
 
@@ -115,7 +99,9 @@ describe('External User class', () => {
         // create request for external website
         // this would redirect the user to the tonomyLoginApp and send the token via the URL, but we're not doing that here
         // Instead we take the token as output
-        CUSTOM_TESTS.setOrigin(externalApp.origin);
+        jsdom.reconfigure({
+            url: externalApp.origin + '/login',
+        });
         EXTERNAL_WEBSITE.loginRequestJwt = ExternalUser.loginWithTonomy(
             { callbackPath: '/callback', redirect: false },
             new JsKeyManager() as unknown as KeyManager
@@ -126,8 +112,13 @@ describe('External User class', () => {
 
         // catch the externalAppToken in the URL
         // TODO: check this throws an error if the token is not valid or in the URL
-        CUSTOM_TESTS.setOrigin(tonomyLoginApp.origin);
-        const externalAppJwtVerified = await UserApps.onRedirectLogin();
+        jsdom.reconfigure({
+            url: tonomyLoginApp.origin + '/login',
+        });
+
+        TONOMY_LOGIN_WEBSITE.externalWebsiteJwtVerified = await UserApps.onRedirectLogin();
+        expect(TONOMY_LOGIN_WEBSITE.externalWebsiteJwtVerified).toBeInstanceOf(Message);
+        /*
 
         // Setup a request for the login app
         const tonomyLoginAppJwt = (await ExternalUser.loginWithTonomy(
@@ -146,7 +137,6 @@ describe('External User class', () => {
         const tonomyLoginAppUserCommunication = new Communication();
 
         await tonomyLoginAppUserCommunication.login(logInMessage);
-        /*
             // ##### Tonomy ID user (QR code scanner screen) #####
             // ##########################
 

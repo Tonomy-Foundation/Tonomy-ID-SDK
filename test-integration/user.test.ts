@@ -1,7 +1,7 @@
 import { api } from './util/eosio';
 import { createRandomID } from './util/user';
 import { KeyManager, KeyManagerLevel, TonomyUsername, User, createUserObject, setSettings } from '../src/index';
-import { SdkError, SdkErrors } from '../src/index';
+import { SdkErrors } from '../src/index';
 import { JsKeyManager } from '../test/services/jskeymanager';
 import { jsStorageFactory } from '../test/services/jsstorage';
 import settings from './services/settings';
@@ -241,8 +241,6 @@ describe('User class', () => {
         'login() fails with userName does not exists',
         catchAndPrintErrors(async () => {
             const { user, password } = await createRandomID();
-
-            const username = await user.storage.username;
 
             const newKeyManager = new JsKeyManager();
             const userLogin = createUserObject(newKeyManager, jsStorageFactory);
