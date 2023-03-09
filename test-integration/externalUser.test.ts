@@ -19,6 +19,7 @@ describe('External User class', () => {
         // expect.assertions(1);
 
         // OBJECTS HERE denote the different devices/apps the user is using
+        // it shows which device is doing what action and has access to which variables
         const TONOMY_ID = {} as any;
         const EXTERNAL_WEBSITE = {} as any;
         const TONOMY_LOGIN_WEBSITE = {} as any;
@@ -111,13 +112,15 @@ describe('External User class', () => {
         // ########################################
 
         // catch the externalAppToken in the URL
-        // TODO: check this throws an error if the token is not valid or in the URL
+        jest.spyOn(document, 'referrer', 'get').mockReturnValue(externalApp.origin);
         jsdom.reconfigure({
             url: tonomyLoginApp.origin + '/login',
         });
 
         TONOMY_LOGIN_WEBSITE.externalWebsiteJwtVerified = await UserApps.onRedirectLogin();
         expect(TONOMY_LOGIN_WEBSITE.externalWebsiteJwtVerified).toBeInstanceOf(Message);
+        expect(TONOMY_LOGIN_WEBSITE.externalWebsiteJwtVerified).toBeInstanceOf(Message);
+        expect(TONOMY_LOGIN_WEBSITE.externalWebsiteJwtVerified.getSender()).toBeInstanceOf(Message);
         /*
 
         // Setup a request for the login app

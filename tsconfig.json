@@ -5,6 +5,7 @@
         "target": "ES2015",
         "module": "esnext",
         "lib": ["dom", "esnext"],
+        "allowJs": true,
         "importHelpers": true,
         // output .d.ts declaration files for consumers
         "declaration": true,

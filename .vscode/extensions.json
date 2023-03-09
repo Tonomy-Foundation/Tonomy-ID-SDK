@@ -3,6 +3,7 @@
         "davidanson.vscode-markdownlint",
         "dbaeumer.vscode-eslint",
         "streetsidesoftware.code-spell-checker",
-        "firsttris.vscode-jest-runner"
+        "firsttris.vscode-jest-runner",
+        "orta.vscode-jest"
     ]
 }
