@@ -13,7 +13,7 @@
     "scripts": {
         "start": "npx tsdx watch --transpileOnly --noClean",
         "build": "npx tsdx build",
-        "test": "npx tsdx test test/",
+        "test": "npx tsdx test --config ./test/jest.config.js",
         "test:watch": "npx tsdx test  --watch ",
         "test:integration": "jest --detectOpenHandles --config ./test-integration/jest.config.js",
         "bootstrap": "npx ts-node --project ./bootstrap-blockchain/tsconfig.json bootstrap-blockchain/bootstrap.ts",
