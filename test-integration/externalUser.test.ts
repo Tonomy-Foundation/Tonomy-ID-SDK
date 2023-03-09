@@ -30,6 +30,11 @@ describe('External User class', () => {
     test('full login to external app success flow', async () => {
         // expect.assertions(1);
 
+        // customTests allows us to update the test globals localStorage and window in the custom-test-env.js
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        const CUSTOM_TESTS = customTests;
+
         // OBJECTS HERE denote the different devices/apps the user is using
         const TONOMY_ID = {} as any;
         const EXTERNAL_WEBSITE = {} as any;
@@ -110,41 +115,38 @@ describe('External User class', () => {
         // create request for external website
         // this would redirect the user to the tonomyLoginApp and send the token via the URL, but we're not doing that here
         // Instead we take the token as output
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        customTests.setOrigin(externalApp.origin);
+        CUSTOM_TESTS.setOrigin(externalApp.origin);
         EXTERNAL_WEBSITE.loginRequestJwt = ExternalUser.loginWithTonomy(
             { callbackPath: '/callback', redirect: false },
             new JsKeyManager() as unknown as KeyManager
         );
 
+        // #####Tonomy Login App website user (login page) #####
+        // ########################################
+
+        // catch the externalAppToken in the URL
+        // TODO: check this throws an error if the token is not valid or in the URL
+        CUSTOM_TESTS.setOrigin(tonomyLoginApp.origin);
+        const externalAppJwtVerified = await UserApps.onRedirectLogin();
+
+        // Setup a request for the login app
+        const tonomyLoginAppJwt = (await ExternalUser.loginWithTonomy(
+            { callbackPath: '/callback', redirect: false },
+            new JsKeyManager()
+        )) as string;
+
+        const jwtRequests = [externalAppJwt, tonomyLoginAppJwt];
+
+        // Create a new login message, and take the DID (did:jwk) out as their identity
+        // Tonomy ID will scan the DID in barcode and use connect
+        const logInMessage = new Message(tonomyLoginAppJwt);
+        const tonomyLoginAppDid = logInMessage.getSender();
+
+        // Login to the Tonomy Communication as the login app user
+        const tonomyLoginAppUserCommunication = new Communication();
+
+        await tonomyLoginAppUserCommunication.login(logInMessage);
         /*
-            // #####Tonomy Login App website user (login page) #####
-            // ########################################
-
-            // catch the externalAppToken in the URL
-            // TODO: check this throws an error if the token is not valid or in the URL
-            // NOTE how will this work in the test?
-            const externalAppJwtVerified = await UserApps.onRedirectLogin();
-
-            // Setup a request for the login app
-            const tonomyLoginAppJwt = (await ExternalUser.loginWithTonomy(
-                { callbackPath: '/callback', redirect: false },
-                new JsKeyManager()
-            )) as string;
-
-            const jwtRequests = [externalAppJwt, tonomyLoginAppJwt];
-
-            // Create a new login message, and take the DID (did:jwk) out as their identity
-            // Tonomy ID will scan the DID in barcode and use connect
-            const logInMessage = new Message(tonomyLoginAppJwt);
-            const tonomyLoginAppDid = logInMessage.getSender();
-
-            // Login to the Tonomy Communication as the login app user
-            const tonomyLoginAppUserCommunication = new Communication();
-
-            await tonomyLoginAppUserCommunication.login(logInMessage);
-
             // ##### Tonomy ID user (QR code scanner screen) #####
             // ##########################
 

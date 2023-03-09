@@ -12,9 +12,7 @@ module.exports = class CustomizedJSDomEnvironment extends JSDOMEnvironment {
         super(config, context);
         this.global.jsdom = this.dom;
     }
-    getVmContext() {
-        return super.getVmContext();
-    }
+
     async setup() {
         await super.setup();
         this.global.jsdom = this.dom;
