@@ -26,17 +26,20 @@ describe('External User class', () => {
     test('full login to external app success flow', async () => {
         // expect.assertions(1);
 
+        // OBJECTS HERE denote the different devices/apps the user is using
+        const TONOMY_ID = {} as any;
+
         // ##### Tonomy ID user #####
         // ##########################
         // Create new Tonomy ID user
-        const { user: tonomyIdUser } = await createRandomID();
+        TONOMY_ID.user = (await createRandomID()).user;
 
         // Login to Tonomy Communication as the user (did:antelope)
-        const message = await tonomyIdUser.signMessage({});
+        TONOMY_ID.loginMessage = await TONOMY_ID.user.signMessage({});
 
-        const val = await tonomyIdUser.communication.login(message);
+        TONOMY_ID.loginResponse = await TONOMY_ID.user.communication.login(TONOMY_ID.loginMessage);
 
-        console.log('val', val);
+        expect(TONOMY_ID.loginResponse).toBe(true);
         /*
             // Create two apps which will be logged into
             const externalApp = await createRandomApp();
@@ -232,6 +235,6 @@ describe('External User class', () => {
             // Close connections
             await tonomyLoginAppUserCommunication.disconnect();
 */
-        await tonomyIdUser.logout();
+        await TONOMY_ID.user.logout();
     });
 });
