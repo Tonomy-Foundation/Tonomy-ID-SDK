@@ -5,6 +5,8 @@
 const element = document.getElementById('tonomy-login');
 const button = document.createElement('button');
 
+button.style.boxShadow =
+    '12px 23px 10px rgba(0, 0, 0, 0.01), 6px 13px 9px rgba(0, 0, 0, 0.05), 3px 6px 7px rgba(0, 0, 0, 0.09), 1px 1px 4px rgba(0, 0, 0, 0.1), 0px 0px 0px rgba(0, 0, 0, 0.1)';
 button.style.backgroundImage =
     'url(https://raw.githubusercontent.com/Tonomy-Foundation/Tonomy-ID-SSO-Website/master/src/assets/tonomy/tonomy-logo48.png)';
 button.style.textAlign = 'center';
