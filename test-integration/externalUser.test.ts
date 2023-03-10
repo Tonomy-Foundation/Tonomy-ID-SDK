@@ -2,11 +2,13 @@
 
 // need to use API types from inside tonomy-id-sdk, otherwise type compatibility issues
 import { createRandomApp, createRandomID } from './util/user';
-import { setSettings, Message, UserApps, Communication, KeyManagerLevel } from '../src/index';
+import { setSettings, Message, UserApps, Communication, KeyManagerLevel, App } from '../src/index';
+import { JWTLoginPayload } from '../src/userApps';
 import settings from './services/settings';
 import URL from 'jsdom-url';
 import { ExternalUser } from '../src/externalUser';
 import { JsKeyManager } from '../test/services/jskeymanager';
+import { PublicKey } from '@greymass/eosio';
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
@@ -29,8 +31,10 @@ describe('External User class', () => {
         // ##########################
         // Create new Tonomy ID user
         TONOMY_ID.user = (await createRandomID()).user;
+        TONOMY_ID.did = await TONOMY_ID.user.getDid();
+        expect(TONOMY_ID.did).toContain('did:antelope:');
 
-        // Login to Tonomy Communication as the user (did:antelope)
+        // Login to Tonomy Communication as the user
         TONOMY_ID.loginMessage = await TONOMY_ID.user.signMessage({});
 
         TONOMY_ID.loginResponse = await TONOMY_ID.user.communication.login(TONOMY_ID.loginMessage);
@@ -40,7 +44,7 @@ describe('External User class', () => {
         // Create two apps which will be logged into
         const externalApp = await createRandomApp();
         const tonomyLoginApp = await createRandomApp();
-        // const appsFound = [false, false];
+        const appsFound = [false, false];
 
         // #####External website user (login page) #####
         // ################################
@@ -59,6 +63,10 @@ describe('External User class', () => {
             EXTERNAL_WEBSITE.jsKeyManager
         );
         expect(typeof EXTERNAL_WEBSITE.loginRequestJwt).toBe('string');
+
+        EXTERNAL_WEBSITE.did = new Message(EXTERNAL_WEBSITE.loginRequestJwt).getSender();
+        expect(EXTERNAL_WEBSITE.did).toContain('did:jwk:');
+
         EXTERNAL_WEBSITE.redirectUrl =
             tonomyLoginApp.origin + '/login?requests=' + JSON.stringify([EXTERNAL_WEBSITE.loginRequestJwt]);
         // #####Tonomy Login App website user (login page) #####
@@ -74,7 +82,7 @@ describe('External User class', () => {
 
         TONOMY_LOGIN_WEBSITE.externalWebsiteJwtVerified = await UserApps.onRedirectLogin();
         expect(TONOMY_LOGIN_WEBSITE.externalWebsiteJwtVerified).toBeInstanceOf(Message);
-        expect(TONOMY_LOGIN_WEBSITE.externalWebsiteJwtVerified.getSender()).toContain('did:jwk');
+        expect(TONOMY_LOGIN_WEBSITE.externalWebsiteJwtVerified.getSender()).toBe(EXTERNAL_WEBSITE.did);
 
         // Setup a request for the login app
         TONOMY_LOGIN_WEBSITE.jsKeyManager = new JsKeyManager();
@@ -82,6 +90,10 @@ describe('External User class', () => {
             { callbackPath: '/callback', redirect: false },
             TONOMY_LOGIN_WEBSITE.jsKeyManager
         )) as string;
+        TONOMY_LOGIN_WEBSITE.did = new Message(TONOMY_LOGIN_WEBSITE.loginRequestJwt).getSender();
+        expect(TONOMY_LOGIN_WEBSITE.did).toContain('did:jwk:');
+        expect(TONOMY_LOGIN_WEBSITE.did).not.toEqual(EXTERNAL_WEBSITE.did);
+
         TONOMY_LOGIN_WEBSITE.jwtRequests = [EXTERNAL_WEBSITE.loginRequestJwt, TONOMY_LOGIN_WEBSITE.loginRequestJwt];
 
         // Create a new login message, and take the DID (did:jwk) out as their identity
@@ -89,8 +101,6 @@ describe('External User class', () => {
         TONOMY_LOGIN_WEBSITE.logInMessage = new Message(TONOMY_LOGIN_WEBSITE.loginRequestJwt);
         TONOMY_LOGIN_WEBSITE.did = TONOMY_LOGIN_WEBSITE.logInMessage.getSender();
         expect(TONOMY_LOGIN_WEBSITE.logInMessage).toBeInstanceOf(Message);
-        expect(TONOMY_LOGIN_WEBSITE.did).toContain('did:jwk');
-        expect(TONOMY_LOGIN_WEBSITE.did).not.toEqual(TONOMY_LOGIN_WEBSITE.externalWebsiteJwtVerified.getSender());
 
         // Login to the Tonomy Communication as the login app user
         TONOMY_LOGIN_WEBSITE.communication = new Communication();
@@ -155,9 +165,6 @@ describe('External User class', () => {
                     // receive and verify the requests
                     const requests = message.getPayload().requests;
 
-                    expect(requests).toBeInstanceOf(Array);
-                    expect(requests.length).toBe(2);
-                    /*
                     // TODO check this throws an error if requests are not valid, or not signed correctly
                     const verifiedRequests = await UserApps.verifyRequests(requests);
 
@@ -186,10 +193,12 @@ describe('External User class', () => {
                             // send a message back to the app
                             const message = await TONOMY_ID.user.signMessage({ requests, accountName }, senderDid);
 
-                            await TONOMY_ID.user.communication.sendMessage(message);
+                            const sendMessageResponse = await TONOMY_ID.user.communication.sendMessage(message);
+
+                            expect(sendMessageResponse).toBe(true);
                         }
                     }
-*/
+
                     resolved = true;
                     resolve(true);
                     return;
@@ -211,12 +220,12 @@ describe('External User class', () => {
         // wait for the login subscriber to execute
         // console.log('waiting for login subscriber to execute', TONOMY_LOGIN_WEBSITE.receivedMessageFromTonomyId);
         await TONOMY_LOGIN_WEBSITE.receiveMessageSubscriber;
-        expect(TONOMY_LOGIN_WEBSITE.receivedMessageFromTonomyId.getSender()).toContain('did:antelope');
+        expect(TONOMY_LOGIN_WEBSITE.receivedMessageFromTonomyId.getSender()).toBe(TONOMY_ID.did + '#local');
 
         // then send a Message with the two signed requests, this will be received by the Tonomy ID app
         TONOMY_LOGIN_WEBSITE.requestMessage = await UserApps.signMessage(
             {
-                requests: TONOMY_LOGIN_WEBSITE.jwtRequests,
+                requests: JSON.stringify(TONOMY_LOGIN_WEBSITE.jwtRequests),
             },
             TONOMY_LOGIN_WEBSITE.jsKeyManager,
             KeyManagerLevel.BROWSER_LOCAL_STORAGE,
@@ -228,7 +237,7 @@ describe('External User class', () => {
         TONOMY_LOGIN_WEBSITE.sendMessageResponse = await TONOMY_LOGIN_WEBSITE.communication.sendMessage(
             TONOMY_LOGIN_WEBSITE.requestMessage
         );
-        // expect(TONOMY_LOGIN_WEBSITE.sendMessageResponse).toBe(true);
+        expect(TONOMY_LOGIN_WEBSITE.sendMessageResponse).toBe(true);
         // ##### Tonomy ID user (SSO screen) #####
         // ##########################
 
