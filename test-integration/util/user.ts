@@ -40,7 +40,7 @@ export async function createRandomApp(logoUrl?: string, origin?: string): Promis
     const name = randomString(8);
     const description = randomString(80);
 
-    const port = Math.floor(Math.random() * 1000000000);
+    const port = Math.floor(Math.random() * 65535);
 
     origin = origin || `http://localhost:${port}`;
     logoUrl = logoUrl || `${origin}/logo.png`;

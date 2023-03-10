@@ -105,15 +105,14 @@ describe('External User class', () => {
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         jsdom.reconfigure({
-            // url: externalApp.origin + '/login',
-            url: 'https://externalwebsite.com/login',
+            url: externalApp.origin + '/login',
         });
 
-        EXTERNAL_WEBSITE.loginRequestJwt = ExternalUser.loginWithTonomy(
+        EXTERNAL_WEBSITE.loginRequestJwt = await ExternalUser.loginWithTonomy(
             { callbackPath: '/callback', redirect: false },
             new JsKeyManager() as unknown as KeyManager
         );
-
+        expect(typeof EXTERNAL_WEBSITE.loginRequestJwt).toBe('string');
         // #####Tonomy Login App website user (login page) #####
         // ########################################
 

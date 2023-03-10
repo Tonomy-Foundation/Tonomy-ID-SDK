@@ -44,8 +44,6 @@ export class ExternalUser {
         const requests = [token];
         const requestsString = JSON.stringify(requests);
 
-        console.log(token);
-
         if (redirect) {
             window.location.href = `${getSettings().ssoWebsiteOrigin}/login?requests=${requestsString}`;
             return;
