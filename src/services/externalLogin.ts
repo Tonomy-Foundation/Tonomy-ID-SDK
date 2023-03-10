@@ -2,8 +2,10 @@
 // import { UserApps } from '../userApps';
 // import { KeyManager } from './keymanager';
 
-const element = document.getElementById('tonomy-login');
+const element = document.getElementById('tonomy-login') as HTMLDivElement;
 const button = document.createElement('button');
+
+button.innerText = 'Login With Tonomy';
 
 button.style.backgroundImage =
     'url(https://raw.githubusercontent.com/Tonomy-Foundation/Tonomy-ID-SSO-Website/master/src/assets/tonomy/tonomy-logo48.png)';
@@ -19,11 +21,10 @@ button.style.borderRadius = '20px';
 button.style.color = '#FFFFFF';
 button.style.fontWeight = '800';
 button.style.border = '0px';
-button.innerText = 'Login With Tonomy';
+
+element.append(button);
 
 button.onclick = () => {
     alert('fine');
     // UserApps.onPressLogin({ callbackPath: '/callback' }, new JsKeyManager() as unknown as KeyManager);
 };
-
-element.append(button);

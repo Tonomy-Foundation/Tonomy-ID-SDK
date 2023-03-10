@@ -1,0 +1,9 @@
+{
+    "compilerOptions": {
+        "target": "es5",
+        "outDir": "./distExternal",
+        "module": "commonjs",
+        "sourceMap": true
+    },
+    "include": ["./src/services/externalLogin*.ts"]
+}
