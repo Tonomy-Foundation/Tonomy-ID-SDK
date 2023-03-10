@@ -2,7 +2,7 @@
 
 // need to use API types from inside tonomy-id-sdk, otherwise type compatibility issues
 import { createRandomApp, createRandomID } from './util/user';
-import { setSettings, Message, UserApps, JWTLoginPayload, App, KeyManager } from '../src/index';
+import { setSettings, Message, UserApps, JWTLoginPayload, App, KeyManager, Communication } from '../src/index';
 import settings from './services/settings';
 import URL from 'jsdom-url';
 import { PublicKey } from '@greymass/eosio';
@@ -24,7 +24,7 @@ describe('External User class', () => {
         // it shows which device is doing what action and has access to which variables
         const TONOMY_ID = {} as any;
         const EXTERNAL_WEBSITE = {} as any;
-        // const TONOMY_LOGIN_WEBSITE = {} as any;
+        const TONOMY_LOGIN_WEBSITE = {} as any;
 
         // ##### Tonomy ID user #####
         // ##########################
@@ -113,40 +113,49 @@ describe('External User class', () => {
             new JsKeyManager() as unknown as KeyManager
         );
         expect(typeof EXTERNAL_WEBSITE.loginRequestJwt).toBe('string');
+        EXTERNAL_WEBSITE.redirectUrl =
+            tonomyLoginApp.origin + '/login?requests=' + JSON.stringify([EXTERNAL_WEBSITE.loginRequestJwt]);
         // #####Tonomy Login App website user (login page) #####
         // ########################################
 
         // catch the externalAppToken in the URL
-        // jest.spyOn(document, 'referrer', 'get').mockReturnValue(externalApp.origin);
+        jest.spyOn(document, 'referrer', 'get').mockReturnValue(externalApp.origin);
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
-        // jsdom.reconfigure({
-        //     url: tonomyLoginApp.origin + '/login',
-        // });
+        jsdom.reconfigure({
+            url: EXTERNAL_WEBSITE.redirectUrl,
+        });
 
-        // TONOMY_LOGIN_WEBSITE.externalWebsiteJwtVerified = await UserApps.onRedirectLogin();
-        // expect(TONOMY_LOGIN_WEBSITE.externalWebsiteJwtVerified).toBeInstanceOf(Message);
-        // expect(TONOMY_LOGIN_WEBSITE.externalWebsiteJwtVerified).toBeInstanceOf(Message);
-        // expect(TONOMY_LOGIN_WEBSITE.externalWebsiteJwtVerified.getSender()).toBeInstanceOf(Message);
-        /*
+        TONOMY_LOGIN_WEBSITE.externalWebsiteJwtVerified = await UserApps.onRedirectLogin();
+        expect(TONOMY_LOGIN_WEBSITE.externalWebsiteJwtVerified).toBeInstanceOf(Message);
+        expect(TONOMY_LOGIN_WEBSITE.externalWebsiteJwtVerified.getSender()).toContain('did:jwk');
 
         // Setup a request for the login app
-        const tonomyLoginAppJwt = (await ExternalUser.loginWithTonomy(
+        TONOMY_LOGIN_WEBSITE.loginRequestJwt = (await ExternalUser.loginWithTonomy(
             { callbackPath: '/callback', redirect: false },
             new JsKeyManager()
         )) as string;
 
-        const jwtRequests = [externalAppJwt, tonomyLoginAppJwt];
+        TONOMY_LOGIN_WEBSITE.jwtRequests = [EXTERNAL_WEBSITE.loginRequestJwt, TONOMY_LOGIN_WEBSITE.loginRequestJwt];
 
         // Create a new login message, and take the DID (did:jwk) out as their identity
         // Tonomy ID will scan the DID in barcode and use connect
-        const logInMessage = new Message(tonomyLoginAppJwt);
-        const tonomyLoginAppDid = logInMessage.getSender();
+        TONOMY_LOGIN_WEBSITE.logInMessage = new Message(TONOMY_LOGIN_WEBSITE.loginRequestJwt);
+        TONOMY_LOGIN_WEBSITE.did = TONOMY_LOGIN_WEBSITE.logInMessage.getSender();
+
+        expect(TONOMY_LOGIN_WEBSITE.logInMessage).toBeInstanceOf(Message);
+        expect(TONOMY_LOGIN_WEBSITE.did).toContain('did:jwk');
+        expect(TONOMY_LOGIN_WEBSITE.did).not.toEqual(TONOMY_LOGIN_WEBSITE.externalWebsiteJwtVerified.getSender());
 
         // Login to the Tonomy Communication as the login app user
-        const tonomyLoginAppUserCommunication = new Communication();
+        TONOMY_LOGIN_WEBSITE.communication = new Communication();
 
-        await tonomyLoginAppUserCommunication.login(logInMessage);
+        TONOMY_LOGIN_WEBSITE.loginResponse = await TONOMY_LOGIN_WEBSITE.communication.login(
+            TONOMY_LOGIN_WEBSITE.logInMessage
+        );
+
+        expect(TONOMY_LOGIN_WEBSITE.loginResponse).toBe(true);
+        /*
             // ##### Tonomy ID user (QR code scanner screen) #####
             // ##########################
 

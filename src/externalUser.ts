@@ -14,8 +14,6 @@ export class ExternalUser {
     ): Promise<string | void> {
         const { privateKey, publicKey } = generateRandomKeyPair();
 
-        console.log('public key', publicKey.toString());
-
         if (keyManager) {
             await keyManager.storeKey({
                 level: keyManagerLevel,
