@@ -4,8 +4,11 @@ import { IDContract } from './services/contracts/IDContract';
 import { createSigner } from './services/eosio/transaction';
 import { getSettings } from './settings';
 import { AccountType, TonomyUsername } from './services/username';
+
+// Instance of IDContract singleton
 const idContract = IDContract.Instance;
 
+// Enum for AppStatus
 enum AppStatus {
     PENDING = 'PENDING',
     CREATING = 'CREATING',
@@ -40,8 +43,14 @@ namespace AppStatus {
     }
 }
 
+/**
+ * Export the AppStatus enum
+ */
 export { AppStatus };
 
+/**
+ * Interface for App data
+ */
 export interface AppData {
     accountName: Name;
     appName: string;
@@ -53,6 +62,10 @@ export interface AppData {
     status: AppStatus;
 }
 
+
+/**
+ * Type for App create options
+ */
 export type AppCreateOptions = {
     usernamePrefix: string;
     appName: string;
@@ -62,6 +75,9 @@ export type AppCreateOptions = {
     publicKey: PublicKey;
 };
 
+/**
+ * Class for creating and fetching App data
+ */
 export class App implements AppData {
     accountName: Name;
     appName: string;
@@ -71,7 +87,12 @@ export class App implements AppData {
     origin: string;
     version: number;
     status: AppStatus;
-
+    
+     /**
+     * Constructor for the App class
+     *
+     * @param options The options for the App object
+     */
     constructor(options: AppData) {
         this.accountName = options.accountName;
         this.appName = options.appName;
@@ -82,7 +103,13 @@ export class App implements AppData {
         this.version = options.version;
         this.status = options.status;
     }
-
+    
+    /**
+     * Static method to create a new App object
+     *
+     * @param options The options for creating the App object
+     * @returns A Promise resolving to the newly created App object
+     */
     static async create(options: AppCreateOptions): Promise<App> {
         const username = TonomyUsername.fromUsername(
             options.usernamePrefix,
@@ -114,6 +141,12 @@ export class App implements AppData {
         });
     }
 
+    /**
+     *Static method to get an existing App object
+     *
+     *@param {string} origin The origin of the app
+     *@returns {Promise<App>} A Promise resolving to the retrieved App object
+     */
     static async getApp(origin: string): Promise<App> {
         const contractAppData = await idContract.getApp(origin);
 
