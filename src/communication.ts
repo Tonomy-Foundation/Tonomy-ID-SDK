@@ -3,7 +3,7 @@ import { createSdkError, SdkErrors, throwError } from './services/errors';
 import { getSettings } from './settings';
 import { Message } from './util/message';
 
-type Subscriber = (message: string) => void;
+export type Subscriber = (message: string) => void;
 
 export class Communication {
     socketServer: Socket;
