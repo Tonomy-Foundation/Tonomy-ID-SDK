@@ -4,12 +4,18 @@ This Software Development Kit is used in Tonomy ID to interact and call with the
 
 The SDK is written in typescript with jest to run tests.
 
-SDK library exists in `/src`
-
-## Dependancies
+## Dependencies
 
 - Linux debian distribution (Ubuntu 20.0.4 LTS used)
 - [Nodejs](https://nodejs.org) v16.4.1+ suggested installed with [nvm](https://github.com/nvm-sh/nvm)
+
+Integration tests:
+
+- [Docker](http://docs.docker.com) v20.10+
+
+## Repositories
+
+- [Contracts](https://github.com/Tonomy-Foundation/Tonomy-Contracts) (inside SDK repo) - Smart contracts to run the governance, identity, DAO, token and other ecosystem tools. This is used to run the integration tests
 
 ## Run
 
@@ -25,10 +31,36 @@ To do a one-off build, use `npm run build`.
 
 To run tests, use `npm test`.
 
+To run integration tests `./test-integration/build-and-run-tests.sh`
+
 ## Linting
 
 Linting is done with `eslint`. Install the recommended VS Code plugin to see markers in your code.
 
 ```bash
 npm run lint
+```
+
+## Error handling
+
+See [errors.ts](./src/services/errors.ts). All errors have a registered unique enumeration code.
+
+## Documentation
+
+Documentation is in the `./docs` folder and runs with readthedocs.io here
+
+<https://tonomy-id-sdk.readthedocs.io>
+
+## To create a new App for SSO
+
+Call
+
+```bash
+npx ts-node --project cli.tsconfig.json --transpileOnly id.ts appName username description logoUrl domain publicKey blockchainUrl
+```
+
+Example
+
+```bash
+npx ts-node --project cli.tsconfig.json --transpileOnly id.ts Netflix netflix "streaming video platform" "https://netflix.com/logo.png" "https://netflix.com" PUB_K1_55csjge6LNnLxECFTtTpCU6Z7chi3h47G8vyzPBjAKdvZmnZ8Z "http://localhost:8888"
 ```

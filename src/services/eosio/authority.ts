@@ -1,11 +1,12 @@
-type KeyWeight = { key: string, weight: number };
+type KeyWeight = { key: string; weight: number };
 type PermissionWeight = {
     permission: {
-        actor: string, permission: string
-    },
-    weight: number
+        actor: string;
+        permission: string;
+    };
+    weight: number;
 };
-type WaitWeight = { wait_sec: number, weight: number }
+type WaitWeight = { wait_sec: number; weight: number };
 
 class Authority {
     threshold: number;
@@ -24,18 +25,22 @@ class Authority {
     }
 
     static fromKey(key: string) {
-        const keys = [{
-            key,
-            weight: 1
-        }]
+        const keys = [
+            {
+                key,
+                weight: 1,
+            },
+        ];
         return new this(1, keys, [], []);
     }
 
-    static fromAccount(permission: { actor: string, permission: string }) {
-        const accounts = [{
-            permission,
-            weight: 1
-        }]
+    static fromAccount(permission: { actor: string; permission: string }) {
+        const accounts = [
+            {
+                permission,
+                weight: 1,
+            },
+        ];
         return new this(1, [], accounts, []);
     }
 
@@ -45,12 +50,11 @@ class Authority {
         this.accounts.push({
             permission: {
                 actor: account,
-                permission: "eosio.code"
+                permission: 'eosio.code',
             },
-            weight: 1
-        })
+            weight: 1,
+        });
     }
 }
-
 
 export { Authority };

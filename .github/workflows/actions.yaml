@@ -1,0 +1,83 @@
+name: Run Tonomy-SDK Tests
+
+on: pull_request
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Run lint and test
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16.4.1
+      - run: npm install
+      - run: npm run lint
+      - run: npm test
+
+  compile-contracts:
+    name: Compiles contracts needed for bootstrap script
+    runs-on: ubuntu-20.04
+    container: eosio/eosio.cdt:v1.8.1
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          repository: Tonomy-Foundation/Tonomy-Contracts
+          ref: development
+          path: Tonomy-Contracts
+
+      - name: Build eosio.bios.tonomy contract
+        run: ./Tonomy-Contracts/contracts/eosio.bios.tonomy/build.sh local
+
+      - name: Build eosio.token contract
+        run: ./Tonomy-Contracts/contracts/eosio.token/build.sh local
+
+      - name: Build id.tonomy contract
+        run: ./Tonomy-Contracts/contracts/id.tonomy/build.sh local
+
+      - name: Add Tonomy-Contracts dir to artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: Tonomy-Contracts
+          path: ./Tonomy-Contracts
+
+  integration-test:
+    needs: compile-contracts
+    runs-on: ubuntu-20.04
+
+    services:
+      blockchain:
+        image: tonomy/blockchain:initialized-development
+        ports:
+          - 8888:8888
+      communication:
+        image: tonomy/communication:development
+        ports:
+          - 5000:5000
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Delete Tonomy-Contracts directory
+        run: rm -rf ./Tonomy-Contracts
+
+      - name: Get Tonomy-Contracts directory from artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: Tonomy-Contracts
+          path: ./Tonomy-Contracts
+
+      - name: Install SDK and Bootstrap blockchain
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16.4.1
+      - run: npm i
+      - run: npm run bootstrap
+
+      - name: Run integration tests
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16.4.1
+      - run: npm run test:integration
