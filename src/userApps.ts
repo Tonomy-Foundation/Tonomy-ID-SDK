@@ -96,7 +96,7 @@ export class UserApps {
     }
 
     /**
-     * gets parameteres from URL and verify the requests coming from the app
+     * gets parameters from URL and verify the requests coming from the app
      * @returns the verified results, accountName and username
      */
     static async onAppRedirectVerifyRequests() {
