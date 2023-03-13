@@ -11,7 +11,6 @@ import URL from 'jsdom-url';
 import { ExternalUser } from '../src/externalUser';
 import { JsKeyManager } from '../test/services/jskeymanager';
 import { PublicKey } from '@greymass/eosio';
-import { sleep } from './util/sleep';
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
@@ -308,28 +307,16 @@ describe('External User class', () => {
         // ##########################
 
         // Wait for the subscriber to execute
-        console.log('TONOMY_ID: check100');
         await TONOMY_ID_requestSubscriber;
-
-        // TODO for some reason need to sleep here, otherwise the TONOMY_ID_requestSubscriber doesn't finish
-        console.log('TONOMY_ID: check101');
-        await sleep(5000);
-        // TODO next line never executes
-        console.log('TONOMY_ID: check102');
 
         // check both apps were logged into
         expect(appsFound[0] && appsFound[1]).toBe(true);
-        console.log('appsFound', appsFound);
 
         // #####Tonomy Login App website user (callback page) #####
         // ########################################
 
         // Receive the message back, and redirect to the callback
-        console.log('stuff');
-
         const requestConfirmedMessageFromTonomyId = await TONOMY_LOGIN_WEBSITE_requestsConfirmedMessagePromise;
-
-        console.log('requestConfirmedMessageFromTonomyId', requestConfirmedMessageFromTonomyId);
 
         expect(TONOMY_LOGIN_WEBSITE_communication.socketServer.listeners('message').length).toBe(1);
         // @ts-ignore TONOMY_LOGIN_WEBSITE_messageSubscriber2 is used before being assigned
@@ -341,49 +328,76 @@ describe('External User class', () => {
 
         expect(payload).toBeDefined();
         expect(payload.requests).toBeDefined();
-        console.log('payload.requests', payload);
+        expect(payload.accountName).toBeDefined();
+        const TONOMY_LOGIN_WEBSITE_requests = JSON.parse(payload.requests) as string[];
 
-        /*
+        expect(TONOMY_LOGIN_WEBSITE_requests.length).toBe(2);
+
+        expect(payload.accountName).toBe(await (await TONOMY_ID_user.getAccountName()).toString());
+        // expect(payload.username).toBe((await TONOMY_ID_user.getUsername()).username);
+
+        console.log('TONOMY_LOGIN_WEBSITE: sending to callback page');
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
-        // jsdom.reconfigure({
-        //     url: TONOMY_ID_redirectRequestsUrl,
-        // });
+        jsdom.reconfigure({
+            url:
+                tonomyLoginApp.origin +
+                `/callback?requests=${payload.requests}&accountName=${payload.accountName}&username=nousername`,
+        });
 
-        // const { result: recievedRequestJwts, accountName, username } = await UserApps.onAppRedirectVerifyRequests();
+        console.log('TONOMY_LOGIN_WEBSITE: /callback: fetching response from URL');
+        const TONOMY_LOGIN_WEBSITE_receivedRedirectRequest = await UserApps.onAppRedirectVerifyRequests();
 
-        // expect(accountName).toBe(await TONOMY_ID_user.getAccountName());
-        // expect(username).toBe((await TONOMY_ID_user.getUsername()).username);
+        const TONOMY_LOGIN_WEBSITE_redirectJwt = TONOMY_LOGIN_WEBSITE_receivedRedirectRequest.result.find(
+            (jwtVerified) => jwtVerified.getPayload().origin !== location.origin
+        );
+        const TONOMY_LOGIN_WEBSITE_ssoJwt = TONOMY_LOGIN_WEBSITE_receivedRedirectRequest.result.find(
+            (jwtVerified) => jwtVerified.getPayload().origin === location.origin
+        );
 
-        // const redirectJwt = recievedRequestJwts.find(
-        //     (jwtVerified) => jwtVerified.getPayload().origin !== tonomyLoginApp.origin
-        // );
-        // const ssoJwt = recievedRequestJwts.find(
-        //     (jwtVerified) => jwtVerified.getPayload().origin === externalApp.origin
-        // );
+        expect(TONOMY_LOGIN_WEBSITE_redirectJwt).toBeDefined();
+        expect(TONOMY_LOGIN_WEBSITE_ssoJwt).toBeDefined();
 
-        /*
-            if (!redirectJwt) throw new Error('No redirectJwt found');
+        if (TONOMY_LOGIN_WEBSITE_ssoJwt) {
+            console.log('TONOMY_LOGIN_WEBSITE: /callback: verifing key exists for app');
+            const verifiedLoginSso = await UserApps.verifyKeyExistsForApp(
+                TONOMY_LOGIN_WEBSITE_receivedRedirectRequest.accountName,
+                TONOMY_LOGIN_WEBSITE_jsKeyManager
+            );
 
-            const verifiedTonomyLoginSso = await UserApps.verifyKeyExistsForApp(accountName, TONOMY_LOGIN_WEBSITE_jsKeyManager);
+            expect(verifiedLoginSso).toBe(true);
+        }
 
-            // TODO probably need to use same jsKeyManager for this to pass
-            expect(verifiedTonomyLoginSso).toBe(true);
+        console.log('TONOMY_LOGIN_WEBSITE: /callback: redirecting to external website');
+        const redirectJwtPayload = TONOMY_LOGIN_WEBSITE_redirectJwt?.getPayload();
 
-            // #####External website user (callback page) #####
-            // ################################
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        jsdom.reconfigure({
+            url:
+                redirectJwtPayload.origin +
+                redirectJwtPayload.callbackPath +
+                `?username=${TONOMY_LOGIN_WEBSITE_receivedRedirectRequest.username}&accountName=${TONOMY_LOGIN_WEBSITE_receivedRedirectRequest.accountName}&requests=` +
+                JSON.stringify([TONOMY_LOGIN_WEBSITE_redirectJwt?.jwt]),
+        });
 
-            // const { accountName } = await UserApps.onAppRedirectVerifyRequests();
-            // const verifiedExternalWebsiteLoginSso = await UserApps.verifyKeyExistsForApp(
-            //     accountName,
-            //     EXTERNAL_WEBSITE_jsKeyManager
-            // );
+        // #####External website user (callback page) #####
+        // ################################
 
-            // TODO probably need to use same jsKeyManager for this to pass
-            // expect(verifiedExternalWebsiteLoginSso).toBe(true);
-            // Close connections
-            await tonomyLoginAppUserCommunication.disconnect();
-*/
+        const EXTERNAL_WEBSITE_receivedRedirectResponse = await UserApps.onAppRedirectVerifyRequests();
+
+        console.log(EXTERNAL_WEBSITE_receivedRedirectResponse);
+
+        console.log(window.location.origin, externalApp.origin);
+
+        const verifiedExternalWebsiteLoginSso = await UserApps.verifyKeyExistsForApp(
+            EXTERNAL_WEBSITE_receivedRedirectResponse.accountName,
+            EXTERNAL_WEBSITE_jsKeyManager
+        );
+
+        expect(verifiedExternalWebsiteLoginSso).toBe(true);
+
+        // cleanup connections
         await TONOMY_LOGIN_WEBSITE_communication.disconnect();
         await TONOMY_ID_user.logout();
     });
