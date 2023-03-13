@@ -39,6 +39,7 @@ export async function createRandomID() {
 export async function createRandomApp(logoUrl?: string, origin?: string): Promise<App> {
     const name = randomString(8);
     const description = randomString(80);
+
     if (!origin) origin = 'http://localhost:3000';
     if (!logoUrl) logoUrl = 'http://localhost:3000/logo.png';
 

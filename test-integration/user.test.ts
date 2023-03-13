@@ -200,6 +200,19 @@ describe('User class', () => {
     );
 
     test(
+        "checkPassword() throws error if password doesn't match",
+        catchAndPrintErrors(async () => {
+            const { user, password } = await createRandomID();
+
+            await user.login(await user.getUsername(), password);
+
+            await expect(user.checkPassword(password)).resolves.toBeTruthy();
+            await expect(user.checkPassword('Testing123!@')).rejects.toThrowError(SdkErrors.PasswordInValid);
+            await expect(user.checkPassword('password')).rejects.toThrowError(SdkErrors.PasswordFormatInvalid);
+        })
+    );
+
+    test(
         'logout',
         catchAndPrintErrors(async () => {
             const { user } = await createRandomID();
