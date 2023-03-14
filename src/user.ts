@@ -58,6 +58,7 @@ export type UserStorage = {
     accountName: Name;
     username: TonomyUsername;
     salt: Checksum256;
+    did: string;
     // TODO update to have all data from blockchain
 };
 
@@ -213,6 +214,7 @@ export class User {
 
         this.storage.status = UserStatus.CREATING_ACCOUNT;
         await this.storage.status;
+        this.storage.did = await this.getDid();
 
         return res;
     }
@@ -276,6 +278,7 @@ export class User {
         this.storage.accountName = Name.from(idData.account_name);
         this.storage.username = username;
         this.storage.status = UserStatus.LOGGING_IN;
+        this.storage.did = await this.getDid();
 
         await this.storage.accountName;
         await this.storage.username;
