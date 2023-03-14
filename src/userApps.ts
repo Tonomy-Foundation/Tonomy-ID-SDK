@@ -169,9 +169,10 @@ export class UserApps {
         const pubKey = await keyManager.getKey({
             level: keyManagerLevel,
         });
-        const user = await User.getAccountInfo(Name.from(accountName));
+        const account = await User.getAccountInfo(Name.from(accountName));
         const app = await App.getApp(window.location.origin);
-        const publickey = user.getPermission(app.accountName).required_auth.keys[0].key;
+
+        const publickey = account.getPermission(app.accountName).required_auth.keys[0].key;
 
         if (!pubKey) throwError("Couldn't fetch Key", SdkErrors.KeyNotFound);
 

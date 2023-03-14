@@ -41,7 +41,7 @@ describe('External User class', () => {
         // Login to Tonomy Communication as the user
         const TONOMY_ID_loginMessage = await TONOMY_ID_user.signMessage({});
 
-        console.log('TONOMY_ID: connect to Tonomy Communication');
+        console.log('TONOMY_ID/appStart: connect to Tonomy Communication');
 
         const TONOMY_ID_loginResponse = await TONOMY_ID_user.communication.login(TONOMY_ID_loginMessage);
 
@@ -65,7 +65,7 @@ describe('External User class', () => {
         });
         const EXTERNAL_WEBSITE_jsKeyManager = new JsKeyManager();
 
-        console.log('EXTERNAL_WEBSITE: create did:jwk and login request');
+        console.log('EXTERNAL_WEBSITE/login: create did:jwk and login request');
 
         const EXTERNAL_WEBSITE_loginRequestJwt = (await ExternalUser.loginWithTonomy(
             { callbackPath: '/callback', redirect: false },
@@ -78,7 +78,7 @@ describe('External User class', () => {
 
         expect(EXTERNAL_WEBSITE_did).toContain('did:jwk:');
 
-        console.log('EXTERNAL_WEBSITE: redirect to Tonomy Login Website');
+        console.log('EXTERNAL_WEBSITE/login: redirect to Tonomy Login Website');
 
         const EXTERNAL_WEBSITE_redirectUrl =
             tonomyLoginApp.origin + '/login?requests=' + JSON.stringify([EXTERNAL_WEBSITE_loginRequestJwt]);
@@ -94,7 +94,7 @@ describe('External User class', () => {
             url: EXTERNAL_WEBSITE_redirectUrl,
         });
 
-        console.log('TONOMY_LOGIN_WEBSITE: collect external website token from URL');
+        console.log('TONOMY_LOGIN_WEBSITE/login: collect external website token from URL');
 
         const TONOMY_LOGIN_WEBSITE_externalWebsiteJwtVerified = await UserApps.onRedirectLogin();
 
@@ -104,7 +104,7 @@ describe('External User class', () => {
         // Setup a request for the login app
         const TONOMY_LOGIN_WEBSITE_jsKeyManager = new JsKeyManager();
 
-        console.log('TONOMY_LOGIN_WEBSITE: create did:jwk and login request');
+        console.log('TONOMY_LOGIN_WEBSITE/login: create did:jwk and login request');
         const TONOMY_LOGIN_WEBSITE_loginRequestJwt = (await ExternalUser.loginWithTonomy(
             { callbackPath: '/callback', redirect: false },
             TONOMY_LOGIN_WEBSITE_jsKeyManager
@@ -126,7 +126,7 @@ describe('External User class', () => {
         expect(TONOMY_LOGIN_WEBSITE_logInMessage).toBeInstanceOf(Message);
 
         // Login to the Tonomy Communication as the login app user
-        console.log('TONOMY_LOGIN_WEBSITE: connect to Tonomy Communication');
+        console.log('TONOMY_LOGIN_WEBSITE/login: connect to Tonomy Communication');
         const TONOMY_LOGIN_WEBSITE_communication = new Communication();
         const TONOMY_LOGIN_WEBSITE_loginResponse = await TONOMY_LOGIN_WEBSITE_communication.login(
             TONOMY_LOGIN_WEBSITE_logInMessage
@@ -143,11 +143,11 @@ describe('External User class', () => {
                 expect(receivedMessage.getSender()).toContain(TONOMY_ID_did);
 
                 if (receivedMessage.getPayload().type === 'ack') {
-                    console.log('TONOMY_LOGIN_WEBSITE: receive connection acknowledgement from Tonomy ID');
+                    console.log('TONOMY_LOGIN_WEBSITE/login: receive connection acknowledgement from Tonomy ID');
                     // we receive the ack message after Tonomy ID scans our QR code
                     resolve({ message: receivedMessage, type: 'ack' });
                 } else {
-                    console.log('TONOMY_LOGIN_WEBSITE: receive receipt of login request from Tonomy ID');
+                    console.log('TONOMY_LOGIN_WEBSITE/login: receive receipt of login request from Tonomy ID');
                     // we receive a message after Tonomy ID user confirms consent to the login request
                     resolve({ message: receivedMessage, type: 'request' });
                     // reject();
@@ -167,7 +167,7 @@ describe('External User class', () => {
 
         // ##### Tonomy ID user (QR code scanner screen) #####
         // ##########################
-        console.log('TONOMY_ID: Scanning QR code with Tonomy ID app');
+        console.log('TONOMY_ID/scanQR: Scanning QR code with Tonomy ID app');
 
         // BarCodeScannerResult. See Tonomy-ID/node_modules/expo-barcode-scanner/src/BarCodeScanner.tsx
         const TONOMY_ID_barcodeScanResults = {
@@ -178,7 +178,7 @@ describe('External User class', () => {
             TONOMY_ID_barcodeScanResults.data
         );
 
-        console.log("TONOMY_ID: connecting to Tonomy Login Website's with their did:jwk from the QR code");
+        console.log("TONOMY_ID/scanQr: connecting to Tonomy Login Website's with their did:jwk from the QR code");
         const TONOMY_ID_sendMessageResponse = await TONOMY_ID_user.communication.sendMessage(TONOMY_ID_connectMessage);
 
         expect(TONOMY_ID_sendMessageResponse).toBe(true);
@@ -187,7 +187,7 @@ describe('External User class', () => {
         // This emulates the Tonomy ID app, which waits for the user requests
         const TONOMY_ID_requestSubscriber = new Promise((resolve) => {
             TONOMY_ID_user.communication.subscribeMessage(async (m: any) => {
-                console.log('TONOMY_ID: receive login requests from Tonomy Login Website');
+                console.log('TONOMY_ID/SSO: receive login requests from Tonomy Login Website');
 
                 const message = new Message(m);
 
@@ -195,7 +195,7 @@ describe('External User class', () => {
                 const requests = message.getPayload().requests;
 
                 // TODO check this throws an error if requests are not valid, or not signed correctly
-                console.log('TONOMY_ID: verifying login request');
+                console.log('TONOMY_ID/SSO: verifying login request');
                 const verifiedRequests = await UserApps.verifyRequests(requests);
 
                 expect(verifiedRequests.length).toBe(2);
@@ -212,13 +212,13 @@ describe('External User class', () => {
                         appsFound[1] = true;
                         expect(senderDid).toBe(EXTERNAL_WEBSITE_did);
 
-                        console.log('TONOMY_ID: logging into external website by adding key to blockchain');
+                        console.log('TONOMY_ID/SSO: logging into external website by adding key to blockchain');
                         await TONOMY_ID_user.apps.loginWithApp(loginApp, PublicKey.from(payload.publicKey));
                     } else if (loginApp.origin === tonomyLoginApp.origin) {
                         appsFound[0] = true;
                         expect(senderDid).toBe(TONOMY_LOGIN_WEBSITE_did);
                         tonomyIdLoginDid = senderDid;
-                        console.log('TONOMY_ID: logging into Tonomy Login website by adding key to blockchain');
+                        console.log('TONOMY_ID/SSO: logging into Tonomy Login website by adding key to blockchain');
                         await TONOMY_ID_user.apps.loginWithApp(loginApp, PublicKey.from(payload.publicKey));
                     } else {
                         throw new Error('Unknown app');
@@ -233,10 +233,9 @@ describe('External User class', () => {
                     tonomyIdLoginDid
                 )) as Message;
 
-                console.log('TONOMY_ID: sending a confirmation of the logins back to Tonomy Login Website');
+                console.log('TONOMY_ID/SSO: sending a confirmation of the logins back to Tonomy Login Website');
                 const sendMessageResponse = await TONOMY_ID_user.communication.sendMessage(respondMessage);
 
-                console.log('TONOMY_ID: check');
                 expect(sendMessageResponse).toBe(true);
 
                 resolve(true);
@@ -264,7 +263,7 @@ describe('External User class', () => {
             connectionMessageFromTonomyId.message.getSender()
         );
 
-        console.log('TONOMY_LOGIN_WEBSITE: sending login request to Tonomy ID app');
+        console.log('TONOMY_LOGIN_WEBSITE/login: sending login request to Tonomy ID app');
         const TONOMY_LOGIN_WEBSITE_sendMessageResponse = await TONOMY_LOGIN_WEBSITE_communication.sendMessage(
             TONOMY_LOGIN_WEBSITE_requestMessage
         );
@@ -280,11 +279,11 @@ describe('External User class', () => {
                 expect(receivedMessage.getSender()).toContain(TONOMY_ID_did);
 
                 if (receivedMessage.getPayload().type === 'ack') {
-                    console.log('TONOMY_LOGIN_WEBSITE2: receive connection acknowledgement from Tonomy ID');
+                    console.log('TONOMY_LOGIN_WEBSITE2/login: receive connection acknowledgement from Tonomy ID');
                     // we receive the ack message after Tonomy ID scans our QR code
                     resolve({ message: receivedMessage, type: 'ack' });
                 } else {
-                    console.log('TONOMY_LOGIN_WEBSITE2: receive receipt of login request from Tonomy ID');
+                    console.log('TONOMY_LOGIN_WEBSITE2/login: receive receipt of login request from Tonomy ID');
                     // we receive a message after Tonomy ID user confirms consent to the login request
                     resolve({ message: receivedMessage, type: 'request' });
                     // reject();
@@ -336,7 +335,7 @@ describe('External User class', () => {
         expect(payload.accountName).toBe(await (await TONOMY_ID_user.getAccountName()).toString());
         // expect(payload.username).toBe((await TONOMY_ID_user.getUsername()).username);
 
-        console.log('TONOMY_LOGIN_WEBSITE: sending to callback page');
+        console.log('TONOMY_LOGIN_WEBSITE/login: sending to callback page');
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         jsdom.reconfigure({
@@ -345,7 +344,7 @@ describe('External User class', () => {
                 `/callback?requests=${payload.requests}&accountName=${payload.accountName}&username=nousername`,
         });
 
-        console.log('TONOMY_LOGIN_WEBSITE: /callback: fetching response from URL');
+        console.log('TONOMY_LOGIN_WEBSITE/callback: fetching response from URL');
         const TONOMY_LOGIN_WEBSITE_receivedRedirectRequest = await UserApps.onAppRedirectVerifyRequests();
 
         const TONOMY_LOGIN_WEBSITE_redirectJwt = TONOMY_LOGIN_WEBSITE_receivedRedirectRequest.result.find(
@@ -359,7 +358,7 @@ describe('External User class', () => {
         expect(TONOMY_LOGIN_WEBSITE_ssoJwt).toBeDefined();
 
         if (TONOMY_LOGIN_WEBSITE_ssoJwt) {
-            console.log('TONOMY_LOGIN_WEBSITE: /callback: verifing key exists for app');
+            console.log('TONOMY_LOGIN_WEBSITE/callback: verifying key exists for app');
             const verifiedLoginSso = await UserApps.verifyKeyExistsForApp(
                 TONOMY_LOGIN_WEBSITE_receivedRedirectRequest.accountName,
                 TONOMY_LOGIN_WEBSITE_jsKeyManager
@@ -368,7 +367,7 @@ describe('External User class', () => {
             expect(verifiedLoginSso).toBe(true);
         }
 
-        console.log('TONOMY_LOGIN_WEBSITE: /callback: redirecting to external website');
+        console.log('TONOMY_LOGIN_WEBSITE/callback: redirecting to external website');
         const redirectJwtPayload = TONOMY_LOGIN_WEBSITE_redirectJwt?.getPayload();
 
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -384,12 +383,10 @@ describe('External User class', () => {
         // #####External website user (callback page) #####
         // ################################
 
+        console.log('EXTERNAL_WEBSITE/callback: fetching response from URL');
         const EXTERNAL_WEBSITE_receivedRedirectResponse = await UserApps.onAppRedirectVerifyRequests();
 
-        console.log(EXTERNAL_WEBSITE_receivedRedirectResponse);
-
-        console.log(window.location.origin, externalApp.origin);
-
+        console.log('EXTERNAL_WEBSITE/callback: verifying key exists for app');
         const verifiedExternalWebsiteLoginSso = await UserApps.verifyKeyExistsForApp(
             EXTERNAL_WEBSITE_receivedRedirectResponse.accountName,
             EXTERNAL_WEBSITE_jsKeyManager
@@ -400,5 +397,6 @@ describe('External User class', () => {
         // cleanup connections
         await TONOMY_LOGIN_WEBSITE_communication.disconnect();
         await TONOMY_ID_user.logout();
+        console.log('finished test');
     });
 });
