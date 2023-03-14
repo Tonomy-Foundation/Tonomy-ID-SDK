@@ -2,7 +2,6 @@ import { Checksum256 } from '@greymass/eosio';
 import { randomString, KeyManager, createUserObject, App } from '../../src/index';
 import { JsKeyManager } from '../../test/services/jskeymanager';
 import { jsStorageFactory } from '../../test/services/jsstorage';
-import { getChainInfo } from '../services/eosio/eosio';
 import { privateKey } from './eosio';
 
 export async function createUser(username: string, password: string) {
@@ -33,7 +32,7 @@ export async function createRandomID() {
 
     await user.createPerson();
     await user.updateKeys(password);
-    const chainID = (await getChainInfo()).chain_id as unknown as Checksum256;
+    const chainID = randomString(8);
 
     return { user, password, pin, auth, chainID };
 }
