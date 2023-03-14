@@ -209,6 +209,8 @@ describe('User class', () => {
             await expect(user.checkPassword(password)).resolves.toBeTruthy();
             await expect(user.checkPassword('Testing123!@')).rejects.toThrowError(SdkErrors.PasswordInValid);
             await expect(user.checkPassword('password')).rejects.toThrowError(SdkErrors.PasswordFormatInvalid);
+
+            await user.logout();
         })
     );
 
