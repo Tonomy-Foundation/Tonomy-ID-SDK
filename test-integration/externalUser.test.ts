@@ -21,7 +21,7 @@ describe('External User class', () => {
     jest.setTimeout(30000);
 
     test('full login to external app success flow', async () => {
-        // expect.assertions(1);
+        expect.assertions(36);
 
         // OBJECTS HERE denote the different devices/apps the user is using
         // it shows which device is doing what action and has access to which variables
@@ -333,6 +333,7 @@ describe('External User class', () => {
         expect(TONOMY_LOGIN_WEBSITE_requests.length).toBe(2);
 
         expect(payload.accountName).toBe(await (await TONOMY_ID_user.getAccountName()).toString());
+        // TODO uncomment when we have username
         // expect(payload.username).toBe((await TONOMY_ID_user.getUsername()).username);
 
         console.log('TONOMY_LOGIN_WEBSITE/login: sending to callback page');
