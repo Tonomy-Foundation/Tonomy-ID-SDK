@@ -11,6 +11,7 @@ import URL from 'jsdom-url';
 import { ExternalUser } from '../src/externalUser';
 import { JsKeyManager } from '../test/services/jskeymanager';
 import { PublicKey } from '@greymass/eosio';
+import { sleep } from './util/sleep';
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
@@ -399,5 +400,8 @@ describe('External User class', () => {
         await TONOMY_LOGIN_WEBSITE_communication.disconnect();
         await TONOMY_ID_user.logout();
         console.log('finished test');
+
+        // TODO for some reason this is needed to ensure all the code lines execute. Not sure why needed
+        await sleep(500);
     });
 });
