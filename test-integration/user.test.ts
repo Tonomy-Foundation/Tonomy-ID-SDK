@@ -255,4 +255,15 @@ describe('User class', () => {
             await user.logout();
         })
     );
+    test(
+        'getDid() ',
+        catchAndPrintErrors(async () => {
+            const { user, chainID } = await createRandomID();
+
+            const accountName = await user.storage.accountName;
+
+            expect(chainID).toBeDefined();
+            expect(accountName).toBeDefined();
+        })
+    );
 });
