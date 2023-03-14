@@ -17,7 +17,7 @@ To use the SDK, first import it:
     async function onButtonPress() {
         setSettings({ ssoWebsiteOrigin: "https://tonomy-id-staging.tonomy.foundation" });
 
-        UserApps.onPressLogin({ callbackPath: '/callback' });
+        ExternalUser.loginWithTonomy({ callbackPath: '/callback' });
     }
     
 We can call the function ``onButtonPress()`` in the login implementation:
