@@ -8,11 +8,5 @@
     },
     "cSpell.words": [
         "tonomy"
-    ],
-    "jestrunner.jestCommand": "npm run test:integration",
-    "jest.autoRun": {
-        "watch": false
-    },
-    "jest.rootPath": "./",
-    "jest.jestCommandLine": "npm run test"
+    ]
 }

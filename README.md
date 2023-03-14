@@ -29,29 +29,19 @@ To do a one-off build, use `npm run build`.
 
 ## Tests
 
-**unit tests**: `npm test`.
+### Unit tests:
 
-**integration tests**: `./test-integration/build-and-run-tests.sh`
+Tests individual class and function logic within the SDK.
 
-### Run tests with VS Code in debug mode
+`npm test`
 
-Install jest globally
-`npm i -g jest@29.4.2`
+### Integration tests:
 
-Ensure you have the jest VS Code extension installed (it is a recommended package in `./.vscode/extensions.json`)
+Tests end-to-end functions across more than one service.
 
-**unit tests**: TODO
+Require another service to be running, such as the blockchain or Tonomy Communication service.
 
-**integration tests**:
-
-1. comment out the last line of `./test-integration/build-and-run-tests.sh`
-`# npm run test:integration`
-2. run `./test-integration/build-and-run-tests.sh`
-3. go to a test file e.g. `./test-integration/user.test.ts`
-4. Press one of the `Run | Debug` buttons that now appear above a test. i.e. above `test('savePassword() generates and saves new private key')`
-
-NOTE this running all tests in that file.
-TODO fix so that you can run tests one by one
+`./test-integration/build-and-run-tests.sh`
 
 ## Linting
 
