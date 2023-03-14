@@ -256,7 +256,7 @@ describe('User class', () => {
         })
     );
     test(
-        'getDid() ',
+        'getDid() expect chainId and account name defined',
         catchAndPrintErrors(async () => {
             const { user, chainID } = await createRandomID();
 
@@ -264,6 +264,7 @@ describe('User class', () => {
 
             expect(chainID).toBeDefined();
             expect(accountName).toBeDefined();
+            await user.logout();
         })
     );
 });
