@@ -93,6 +93,10 @@ export class User {
         return await this.storage.username;
     }
 
+    async getDid(): Promise<string> {
+        return await this.storage.did;
+    }
+
     async saveUsername(username: string) {
         const normalizedUsername = username.normalize('NFKC');
 
@@ -214,7 +218,7 @@ export class User {
 
         this.storage.status = UserStatus.CREATING_ACCOUNT;
         await this.storage.status;
-        this.storage.did = await this.getDid();
+        await this.createDid();
 
         return res;
     }
@@ -274,11 +278,11 @@ export class User {
 
         if (passwordKey.toString() !== onchainKey.toString())
             throwError('Password is incorrect', SdkErrors.PasswordInValid);
+        await this.createDid();
 
         this.storage.accountName = Name.from(idData.account_name);
         this.storage.username = username;
         this.storage.status = UserStatus.LOGGING_IN;
-        this.storage.did = await this.getDid();
 
         await this.storage.accountName;
         await this.storage.username;
@@ -415,14 +419,14 @@ export class User {
         return await Message.sign(payload, issuer, recipient);
     }
 
-    async getDid() {
+    async createDid() {
         if (!this.chainID) {
             this.chainID = (await getChainInfo()).chain_id as unknown as Checksum256;
         }
 
         const accountName = await this.storage.accountName;
 
-        return `did:antelope:${this.chainID}:${accountName.toString()}`;
+        this.storage.did = `did:antelope:${this.chainID}:${accountName.toString()}`;
     }
 }
 

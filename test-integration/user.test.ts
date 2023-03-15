@@ -273,7 +273,7 @@ describe('User class', () => {
 
             expect(chainId).toBeDefined();
             expect(accountName).toBeDefined();
-            expect(user.getDid()).toEqual(`did:antelope:${chainId}:${accountName.toString()}`);
+            expect(await user.getDid()).toEqual(`did:antelope:${chainId}:${accountName.toString()}`);
 
             await user.logout();
         })
