@@ -21,7 +21,8 @@ namespace AppStatus {
     /*
      * Returns the index of the enum value
      *
-     * @param value The level to get the index of
+     * @param {value} AppStatus - The level to get the index of
+     * @return
      */
     export function indexFor(value: AppStatus): number {
         return Object.keys(AppStatus).indexOf(value);
@@ -30,7 +31,8 @@ namespace AppStatus {
     /*
      * Creates an AppStatus from a string or index of the level
      *
-     * @param value The string or index
+     * @param {value} number| string - The string or index
+     * @return {} 
      */
     export function from(value: number | string): AppStatus {
         let index: number;
@@ -64,7 +66,7 @@ export interface AppData {
 
 
 /**
- * Type for App create options
+ * Type for AppCreateOptions
  */
 export type AppCreateOptions = {
     usernamePrefix: string;
@@ -91,7 +93,7 @@ export class App implements AppData {
      /**
      * Constructor for the App class
      *
-     * @param options The options for the App object
+     * @param {options} AppData - The options for the AppData
      */
     constructor(options: AppData) {
         this.accountName = options.accountName;
@@ -107,7 +109,7 @@ export class App implements AppData {
     /**
      * Static method to create a new App object
      *
-     * @param options The options for creating the App object
+     * @param {options} AppCreateOptions - The options for creating the App object
      * @returns A Promise resolving to the newly created App object
      */
     static async create(options: AppCreateOptions): Promise<App> {
@@ -144,7 +146,7 @@ export class App implements AppData {
     /**
      *Static method to get an existing App object
      *
-     *@param {string} origin The origin of the app
+     *@param {string} origin - The origin of the app
      *@returns {Promise<App>} A Promise resolving to the retrieved App object
      */
     static async getApp(origin: string): Promise<App> {
