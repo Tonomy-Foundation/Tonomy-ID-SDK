@@ -282,18 +282,13 @@ describe('User class', () => {
         })
     );
     test(
-        "intializeFromStorage() throws error if storage doesn't exist",
-        catchAndPrintErrors(async () => {
-            await expect(user.intializeFromStorage()).rejects.toThrowError(SdkErrors.AccountDoesntExist);
-        })
-    );
-    test(
         'intializeFromStorage() return true if account exists',
         catchAndPrintErrors(async () => {
             const { user } = await createRandomID();
+            const accountName = await user.storage.accountName;
 
-            expect(await user.getAccountName()).toBeDefined();
-            expect(await user.intializeFromStorage()).resolves.toBeTruthy();
+            expect(accountName).toBeDefined();
+            expect(await user.intializeFromStorage()).resolves.toBe(true);
 
             await user.logout();
         })
@@ -302,8 +297,6 @@ describe('User class', () => {
         "intializeFromStorage() throws error if storage doesn't exist",
         catchAndPrintErrors(async () => {
             await expect(user.intializeFromStorage()).rejects.toThrowError(SdkErrors.AccountDoesntExist);
-
-            await user.logout();
         })
     );
 });
