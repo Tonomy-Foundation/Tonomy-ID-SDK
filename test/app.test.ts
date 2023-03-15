@@ -5,6 +5,7 @@ import URL from 'jsdom-url';
 import { JsKeyManager } from './services/jskeymanager';
 import { Message } from '../src/util/message';
 import { setSettings } from '../src';
+import { ExternalUser } from '../src/externalUser';
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
@@ -21,14 +22,14 @@ describe('logging in', () => {
 
     it('on press button', async () => {
         const keymanager = new JsKeyManager();
-        const jwt = await UserApps.onPressLogin({ callbackPath: '/login', redirect: false }, keymanager);
+        const jwt = await ExternalUser.loginWithTonomy({ callbackPath: '/login', redirect: false }, keymanager);
 
         expect(jwt).toBeDefined();
     });
 
     it('checks login url', async () => {
         const keymanager = new JsKeyManager();
-        const jwt = await UserApps.onPressLogin({ callbackPath: '/login', redirect: false }, keymanager);
+        const jwt = await ExternalUser.loginWithTonomy({ callbackPath: '/login', redirect: false }, keymanager);
         const url = 'http://localhost/login?requests=' + JSON.stringify([jwt]);
 
         jest.spyOn(document, 'referrer', 'get').mockReturnValue('http://localhost');

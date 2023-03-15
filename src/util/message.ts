@@ -1,5 +1,4 @@
 import { decodeJWT } from '@tonomy/did-jwt';
-// import { issue, OutputType } from '@tonomy/antelope-ssi-toolkit';
 import { Issuer, verifyCredential, W3CCredential } from '@tonomy/did-jwt-vc';
 
 // import { Resolver } from '@tonomy/did-resolver';
