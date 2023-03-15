@@ -31,7 +31,7 @@ Login page
     async function onButtonPress() {
         setSettings({ ssoWebsiteOrigin: "https://tonomy-id-staging.tonomy.foundation" });
 
-        UserApps.onPressLogin({ callbackPath: '/callback' });
+        ExternalUser.loginWithTonomy({ callbackPath: '/callback' });
     }
 
 Callback page

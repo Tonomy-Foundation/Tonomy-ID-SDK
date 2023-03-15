@@ -39,8 +39,11 @@ export async function createRandomID() {
 export async function createRandomApp(logoUrl?: string, origin?: string): Promise<App> {
     const name = randomString(8);
     const description = randomString(80);
-    if (!origin) origin = 'http://localhost:3000';
-    if (!logoUrl) logoUrl = 'http://localhost:3000/logo.png';
+
+    const port = Math.floor(Math.random() * 65535);
+
+    origin = origin || `http://localhost:${port}`;
+    logoUrl = logoUrl || `${origin}/logo.png`;
 
     return await App.create({
         usernamePrefix: randomString(8),

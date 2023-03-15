@@ -13,9 +13,8 @@
     "scripts": {
         "start": "npx tsdx watch --transpileOnly --noClean",
         "build": "npx tsdx build",
-        "test": "npx tsdx test test/",
-        "test:watch": "npx tsdx test  --watch ",
-        "test:integration": "jest --detectOpenHandles --config ./test-integration/jest.config.js",
+        "test": "npx tsdx test --config ./test/jest.config.tsdx.js",
+        "test:integration": "tsdx test --detectOpenHandles --config ./test-integration/jest.config.js",
         "bootstrap": "npx ts-node --project ./bootstrap-blockchain/tsconfig.json bootstrap-blockchain/bootstrap.ts",
         "lint": "eslint src test --ext .ts --resolve-plugins-relative-to .",
         "lint:fix": "npm run lint -- --fix",
