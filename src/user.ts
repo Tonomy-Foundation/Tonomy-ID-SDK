@@ -254,6 +254,28 @@ export class User {
         await this.storage.status;
     }
 
+    async checkPassword(password: string): Promise<boolean> {
+        const username = await this.getAccountName();
+
+        const idData = await idContract.getPerson(username);
+        const salt = idData.password_salt;
+
+        await this.savePassword(password, { salt });
+        const passwordKey = await this.keyManager.getKey({
+            level: KeyManagerLevel.PASSWORD,
+        });
+
+        const accountData = await User.getAccountInfo(idData.account_name);
+        const onchainKey = accountData.getPermission('owner').required_auth.keys[0].key; // TODO change to active/other permissions when we make the change
+
+        if (!passwordKey) throwError('Password key not found', SdkErrors.KeyNotFound);
+
+        if (passwordKey.toString() !== onchainKey.toString())
+            throwError('Password is incorrect', SdkErrors.PasswordInValid);
+
+        return true;
+    }
+
     async login(username: TonomyUsername, password: string): Promise<GetPersonResponse> {
         const { keyManager } = this;
 
