@@ -1,5 +1,5 @@
 {
-    "version": "0.3.7",
+    "version": "0.3.8",
     "license": "MIT",
     "main": "dist/index.js",
     "typings": "dist/index.d.ts",
@@ -54,6 +54,7 @@
         "husky": "^8.0.1",
         "jest-environment-jsdom": "^24.9.0",
         "jsdom-url": "^3.0.1",
+        "np": "^7.6.3",
         "prettier": "^2.7.1",
         "size-limit": "^8.0.0",
         "ts-jest": "^29.0.5",

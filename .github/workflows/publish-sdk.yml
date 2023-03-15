@@ -20,32 +20,18 @@ jobs:
       - name: 🏗 Setup repo
         uses: actions/checkout@v3
 
-      
       - name: 📦 Install
         uses: actions/setup-node@v3
         with:
           node-version: 16.4.1
           registry-url: https://registry.npmjs.org/
 
-      - name: "Automated Version Bump"
-        uses: "phips28/gh-action-bump-version@master"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          version-type:  'patch'
-       
-      - name: Install and Build
-        uses: actions/setup-node@v3
-        with:
-          node-version: 16.4.1
-      - run: npm install
-      - run: npm run build      
-          
       - name: 🚀 Build and publish SDK
         uses: actions/setup-node@v3
         with:
           node-version: 16.4.1
-      - run: npm publish
+      - run: npx np patch --preview --no-tests --no-release-draft
+      # - run: np --branch development --no-cleanup --
         env:
           NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
 
