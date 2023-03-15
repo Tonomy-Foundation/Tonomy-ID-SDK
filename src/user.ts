@@ -427,6 +427,7 @@ export class User {
         const accountName = await this.storage.accountName;
 
         this.storage.did = `did:antelope:${this.chainID}:${accountName.toString()}`;
+        return this.storage.did;
     }
 }
 
