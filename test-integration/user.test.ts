@@ -206,10 +206,22 @@ describe('User class', () => {
 
             await user.login(await user.getUsername(), password);
 
-            await expect(user.checkPassword(password)).resolves.toBeTruthy();
-            await expect(user.checkPassword(password)).resolves.toBe(true);
             await expect(user.checkPassword('Testing123!@')).rejects.toThrowError(SdkErrors.PasswordInValid);
             await expect(user.checkPassword('password')).rejects.toThrowError(SdkErrors.PasswordFormatInvalid);
+
+            await user.logout();
+        })
+    );
+
+    test(
+        'checkPassword() returns true when password matches',
+        catchAndPrintErrors(async () => {
+            const { user, password } = await createRandomID();
+
+            await user.login(await user.getUsername(), password);
+
+            await expect(user.checkPassword(password)).resolves.toBeTruthy();
+            await expect(user.checkPassword(password)).resolves.toBe(true);
 
             await user.logout();
         })
