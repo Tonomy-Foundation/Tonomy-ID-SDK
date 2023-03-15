@@ -32,9 +32,8 @@ export async function createRandomID() {
 
     await user.createPerson();
     await user.updateKeys(password);
-    const chainID = randomString(8);
 
-    return { user, password, pin, auth, chainID };
+    return { user, password, pin, auth };
 }
 
 export async function createRandomApp(logoUrl?: string, origin?: string): Promise<App> {
