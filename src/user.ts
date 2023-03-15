@@ -419,7 +419,11 @@ export class User {
         return await Message.sign(payload, issuer, recipient);
     }
 
-    async createDid() {
+    /**
+     * Generate did in storage
+     * @return {string} did string
+     */
+    async createDid(): Promise<string> {
         if (!this.chainID) {
             this.chainID = (await getChainInfo()).chain_id as unknown as Checksum256;
         }
@@ -427,6 +431,7 @@ export class User {
         const accountName = await this.storage.accountName;
 
         this.storage.did = `did:antelope:${this.chainID}:${accountName.toString()}`;
+        await this.storage.did;
         return this.storage.did;
     }
 }
