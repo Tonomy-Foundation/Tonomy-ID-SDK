@@ -1,7 +1,7 @@
+import { Checksum256 } from '@greymass/eosio';
 import { randomString, KeyManager, createUserObject, App } from '../../src/index';
 import { JsKeyManager } from '../../test/services/jskeymanager';
 import { jsStorageFactory } from '../../test/services/jsstorage';
-
 import { privateKey } from './eosio';
 
 export async function createUser(username: string, password: string) {
@@ -39,6 +39,7 @@ export async function createRandomID() {
 export async function createRandomApp(logoUrl?: string, origin?: string): Promise<App> {
     const name = randomString(8);
     const description = randomString(80);
+
     if (!origin) origin = 'http://localhost:3000';
     if (!logoUrl) logoUrl = 'http://localhost:3000/logo.png';
 
