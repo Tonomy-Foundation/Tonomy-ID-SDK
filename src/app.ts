@@ -147,7 +147,7 @@ export class App implements AppData {
      *Static method to get an existing App object
      *
      *@param {string} origin - The origin of the app
-     *@returns {Promise<App>} A Promise resolving to the retrieved App object
+     *@return A Promise resolving to the retrieved App object
      */
     static async getApp(origin: string): Promise<App> {
         const contractAppData = await idContract.getApp(origin);
