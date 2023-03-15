@@ -278,7 +278,6 @@ export class User {
 
         if (passwordKey.toString() !== onchainKey.toString())
             throwError('Password is incorrect', SdkErrors.PasswordInValid);
-        await this.createDid();
 
         this.storage.accountName = Name.from(idData.account_name);
         this.storage.username = username;
@@ -287,6 +286,7 @@ export class User {
         await this.storage.accountName;
         await this.storage.username;
         await this.storage.status;
+        await this.createDid();
 
         return idData;
     }
