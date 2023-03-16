@@ -443,6 +443,16 @@ export class User {
 
         return `did:antelope:${this.chainID}:${accountName.toString()}`;
     }
+
+    async intializeFromStorage() {
+        const accountName = await this.getAccountName();
+
+        if (accountName) {
+            return await this.checkKeysStillValid();
+        } else {
+            throwError('Account "' + accountName + '" not found', SdkErrors.AccountDoesntExist);
+        }
+    }
 }
 
 /**

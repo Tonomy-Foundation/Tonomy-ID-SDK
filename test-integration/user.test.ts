@@ -281,4 +281,22 @@ describe('User class', () => {
             await user.logout();
         })
     );
+    test(
+        'intializeFromStorage() return true if account exists',
+        catchAndPrintErrors(async () => {
+            const { user } = await createRandomID();
+            const accountName = await user.storage.accountName;
+
+            expect(accountName).toBeDefined();
+            await expect(user.intializeFromStorage()).resolves.toBeTruthy();
+
+            await user.logout();
+        })
+    );
+    test(
+        "intializeFromStorage() throws error if storage doesn't exist",
+        catchAndPrintErrors(async () => {
+            await expect(user.intializeFromStorage()).rejects.toThrowError(SdkErrors.AccountDoesntExist);
+        })
+    );
 });
