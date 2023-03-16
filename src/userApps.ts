@@ -96,25 +96,11 @@ export class UserApps {
     }
 
     /**
-     * gets parameters from URL and verify the requests coming from the app
-     * @returns the verified results, accountName and username
+     * Verifies the login request are valid requests signed by valid DIDs
+     *
+     * @param requests {string | null} - a stringified array of JWTs
+     * @returns {Promise<Message[]>} - an array of verified messages containing the login requests
      */
-    static async onAppRedirectVerifyRequests() {
-        const params = new URLSearchParams(window.location.search);
-        const requests = params.get('requests');
-
-        if (!requests) throwError("requests parameter doesn't exists", SdkErrors.MissingParams);
-        const username = params.get('username');
-
-        if (!username) throwError("username parameter doesn't exists", SdkErrors.MissingParams);
-        const accountName = params.get('accountName');
-
-        if (!accountName) throwError("accountName parameter doesn't exists", SdkErrors.MissingParams);
-        const result = await UserApps.verifyRequests(requests);
-
-        return { result, username, accountName };
-    }
-
     static async verifyRequests(requests: string | null): Promise<Message[]> {
         if (!requests) throwError('No requests found in URL', SdkErrors.MissingParams);
 
@@ -133,29 +119,16 @@ export class UserApps {
         return verified;
     }
 
-    static async onRedirectLogin(): Promise<Message> {
-        const urlParams = new URLSearchParams(window.location.search);
-        const requests = urlParams.get('requests');
-
-        const verifiedRequests = await this.verifyRequests(requests);
-
-        const referrer = new URL(document.referrer);
-
-        for (const message of verifiedRequests) {
-            if (message.getPayload().origin === referrer.origin) {
-                return message;
-            }
-        }
-
-        throwError(
-            `No origins from: ${verifiedRequests.map((r) => r.getPayload().origin)} match referrer: ${referrer.origin}`,
-            SdkErrors.WrongOrigin
-        );
-    }
-
+    /**
+     * Verifies a jwt string is a valid message with signature from a DID
+     * @param jwt {string} - the jwt string to verify
+     * @returns {Promise<Message>} - the verified message
+     */
     static async verifyLoginJWT(jwt: string): Promise<Message> {
         const message = new Message(jwt);
         const res = await message.verify();
+
+        // TODO should check the keys in KeyManager are on the blockchain...
 
         if (!res) throwError('JWT failed verification', SdkErrors.JwtNotValid);
         return message;

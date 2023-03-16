@@ -1,12 +1,25 @@
 import { KeyManager, KeyManagerLevel } from './services/keymanager';
-import { JWTLoginPayload, OnPressLoginOptions } from './userApps';
+import { JWTLoginPayload, OnPressLoginOptions, UserApps } from './userApps';
 import { generateRandomKeyPair, randomString } from './util/crypto';
 import { ES256KSigner } from '@tonomy/did-jwt';
 import { createJWK, toDid } from './util/did-jwk';
 import { Message } from './util/message';
 import { getSettings } from './settings';
+import { SdkErrors, throwError } from './services/errors';
 
 export class ExternalUser {
+    /**
+     * Redirects the user to login to the app with their Tonomy ID account
+     *
+     * @description should be called when the user clicks on the login button
+     *
+     * @param onPressLoginOptions {OnPressLoginOptions} - options for the login
+     * @property onPressLoginOptions.redirect {boolean} - if true, redirects the user to the login page, if false, returns the token
+     * @property onPressLoginOptions.callbackPath {string} - the path to redirect the user to after login
+     * @param keyManager {KeyManager} - the key manager to use to store the keys
+     * @param keyManagerLevel {KeyManagerLevel = BROWSER_LOCAL_STORAGE} - the level to store the keys at
+     * @returns {Promise<string | void>} - if redirect is true, returns void, if redirect is false, returns the login request in the form of a JWT token
+     */
     static async loginWithTonomy(
         { redirect = true, callbackPath }: OnPressLoginOptions,
         keyManager: KeyManager,
@@ -78,4 +91,54 @@ export class ExternalUser {
     //     userApps.callBack(keymanager);
     //     return Object.assign(this, {})
     //   }
+
+    /**
+     * Gets parameters from URL and verify the the request confirmation coming from Tonomy ID
+     *
+     * @description should be called in the callback page
+     *
+     * @returns {Promise<{ result: Message[]; username: string; accountName: string }>} the verified requests, accountName and username
+     */
+    static async onAppRedirectVerifyRequests(): Promise<{ result: Message[]; username: string; accountName: string }> {
+        const params = new URLSearchParams(window.location.search);
+        const requests = params.get('requests');
+
+        if (!requests) throwError("requests parameter doesn't exists", SdkErrors.MissingParams);
+        const username = params.get('username');
+
+        if (!username) throwError("username parameter doesn't exists", SdkErrors.MissingParams);
+        const accountName = params.get('accountName');
+
+        if (!accountName) throwError("accountName parameter doesn't exists", SdkErrors.MissingParams);
+        const result = await UserApps.verifyRequests(requests);
+
+        return { result, username, accountName };
+    }
+
+    /**
+     * Verifies the login request received in the URL were successfully authorized by Tonomy ID
+     *
+     * @description should be called in the callback page of the external website
+     *
+     * @returns {Promise<Message>} - the verified login request
+     */
+    static async onRedirectLogin(): Promise<Message> {
+        const urlParams = new URLSearchParams(window.location.search);
+        const requests = urlParams.get('requests');
+
+        const verifiedRequests = await UserApps.verifyRequests(requests);
+
+        const referrer = new URL(document.referrer);
+
+        for (const message of verifiedRequests) {
+            if (message.getPayload().origin === referrer.origin) {
+                return message;
+            }
+        }
+
+        throwError(
+            `No origins from: ${verifiedRequests.map((r) => r.getPayload().origin)} match referrer: ${referrer.origin}`,
+            SdkErrors.WrongOrigin
+        );
+    }
 }
