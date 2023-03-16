@@ -1,5 +1,6 @@
 import { api } from './util/eosio';
 import { createRandomID } from './util/user';
+<<<<<<< HEAD
 import {
     KeyManager,
     KeyManagerLevel,
@@ -10,6 +11,10 @@ import {
     EosioUtil,
 } from '../src/index';
 import { SdkError, SdkErrors } from '../src/index';
+=======
+import { KeyManager, KeyManagerLevel, TonomyUsername, User, createUserObject, setSettings } from '../src/index';
+import { SdkErrors } from '../src/index';
+>>>>>>> development
 import { JsKeyManager } from '../test/services/jskeymanager';
 import { jsStorageFactory } from '../test/services/jsstorage';
 import settings from './services/settings';
@@ -209,6 +214,34 @@ describe('User class', () => {
     );
 
     test(
+        "checkPassword() throws error if password doesn't match",
+        catchAndPrintErrors(async () => {
+            const { user, password } = await createRandomID();
+
+            await user.login(await user.getUsername(), password);
+
+            await expect(user.checkPassword('Testing123!@')).rejects.toThrowError(SdkErrors.PasswordInValid);
+            await expect(user.checkPassword('password')).rejects.toThrowError(SdkErrors.PasswordFormatInvalid);
+
+            await user.logout();
+        })
+    );
+
+    test(
+        'checkPassword() returns true when password matches',
+        catchAndPrintErrors(async () => {
+            const { user, password } = await createRandomID();
+
+            await user.login(await user.getUsername(), password);
+
+            await expect(user.checkPassword(password)).resolves.toBeTruthy();
+            await expect(user.checkPassword(password)).resolves.toBe(true);
+
+            await user.logout();
+        })
+    );
+
+    test(
         'logout',
         catchAndPrintErrors(async () => {
             const { user } = await createRandomID();
@@ -251,8 +284,6 @@ describe('User class', () => {
         catchAndPrintErrors(async () => {
             const { user, password } = await createRandomID();
 
-            const username = await user.storage.username;
-
             const newKeyManager = new JsKeyManager();
             const userLogin = createUserObject(newKeyManager, jsStorageFactory);
 
@@ -274,8 +305,23 @@ describe('User class', () => {
             expect(chainId).toBeDefined();
             expect(accountName).toBeDefined();
             expect(await user.getDid()).toEqual(`did:antelope:${chainId}:${accountName.toString()}`);
+        })
+    );
+    test('intializeFromStorage() return true if account exists',
+        catchAndPrintErrors(async () => {
+            const { user } = await createRandomID();
+            const accountName = await user.storage.accountName;
+
+            expect(accountName).toBeDefined();
+            await expect(user.intializeFromStorage()).resolves.toBeTruthy();
 
             await user.logout();
+        })
+    );
+    test(
+        "intializeFromStorage() throws error if storage doesn't exist",
+        catchAndPrintErrors(async () => {
+            await expect(user.intializeFromStorage()).rejects.toThrowError(SdkErrors.AccountDoesntExist);
         })
     );
 });
