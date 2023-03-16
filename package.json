@@ -21,7 +21,7 @@
         "prepare": "npx tsdx build --transpileOnly --noClean",
         "size": "size-limit",
         "analyze": "size-limit --why",
-        "release": "semantic-release --dry-run --debug"
+        "release": "semantic-release --debug"
     },
     "husky": {
         "hooks": {
