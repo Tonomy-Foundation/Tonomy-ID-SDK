@@ -1,7 +1,12 @@
 {
   "tagFormat": "${version}",
   "plugins": [
-    "@semantic-release/commit-analyzer",
+    ["@semantic-release/commit-analyzer", {
+      "preset": "angular",
+      "releaseRules": [
+        {"type": "*", "release": "patch"}
+      ]
+    }],
     ["@semantic-release/changelog", {
       "changelogFile": "CHANGELOG.md"
     }],

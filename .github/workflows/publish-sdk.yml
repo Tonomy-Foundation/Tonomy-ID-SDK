@@ -4,7 +4,6 @@ name: Tonomy SDK publish
 permissions:
   contents: write
 
-
 on:
   push:
     branches:
