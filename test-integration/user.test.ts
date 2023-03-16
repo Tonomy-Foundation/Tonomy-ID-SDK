@@ -1,6 +1,5 @@
 import { api } from './util/eosio';
 import { createRandomID } from './util/user';
-<<<<<<< HEAD
 import {
     KeyManager,
     KeyManagerLevel,
@@ -10,11 +9,7 @@ import {
     setSettings,
     EosioUtil,
 } from '../src/index';
-import { SdkError, SdkErrors } from '../src/index';
-=======
-import { KeyManager, KeyManagerLevel, TonomyUsername, User, createUserObject, setSettings } from '../src/index';
 import { SdkErrors } from '../src/index';
->>>>>>> development
 import { JsKeyManager } from '../test/services/jskeymanager';
 import { jsStorageFactory } from '../test/services/jsstorage';
 import settings from './services/settings';
@@ -307,7 +302,8 @@ describe('User class', () => {
             expect(await user.getDid()).toEqual(`did:antelope:${chainId}:${accountName.toString()}`);
         })
     );
-    test('intializeFromStorage() return true if account exists',
+    test(
+        'intializeFromStorage() return true if account exists',
         catchAndPrintErrors(async () => {
             const { user } = await createRandomID();
             const accountName = await user.storage.accountName;
