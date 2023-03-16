@@ -18,24 +18,18 @@ jobs:
       - name: 📦 Install
         uses: actions/setup-node@v3
         with:
-          node-version: 16.4.1
+          node-version: 18.12.1
           registry-url: https://registry.npmjs.org/
-
-      - name: "Automated Version Bump"
-        uses: "phips28/gh-action-bump-version@master"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          version-type:  'patch'
 
       - name: 🚀 Build and publish SDK
         uses: actions/setup-node@v3
         with:
-          node-version: 16.4.1
+          node-version: 18.12.1
       - run: npm i
       - run: npm run build
-      - run: npm publish
+      - run: npm run release
         env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
           NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
 
      

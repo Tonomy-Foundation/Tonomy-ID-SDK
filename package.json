@@ -1,5 +1,5 @@
 {
-    "version": "0.3.12",
+    "version": "0.3.15",
     "license": "MIT",
     "main": "dist/index.js",
     "typings": "dist/index.d.ts",
@@ -20,7 +20,8 @@
         "lint:fix": "npm run lint -- --fix",
         "prepare": "npx tsdx build --transpileOnly --noClean",
         "size": "size-limit",
-        "analyze": "size-limit --why"
+        "analyze": "size-limit --why",
+        "release": "semantic-release  --debug"
     },
     "husky": {
         "hooks": {
@@ -41,6 +42,8 @@
         }
     ],
     "devDependencies": {
+        "@semantic-release/changelog": "^6.0.2",
+        "@semantic-release/git": "^10.0.1",
         "@size-limit/preset-small-lib": "^8.0.0",
         "@types/elliptic": "^6.4.14",
         "@types/randombytes": "^2.0.0",
@@ -55,6 +58,7 @@
         "jest-environment-jsdom": "^24.9.0",
         "jsdom-url": "^3.0.1",
         "prettier": "^2.7.1",
+        "semantic-release": "^20.1.1",
         "size-limit": "^8.0.0",
         "ts-jest": "^29.0.5",
         "ts-node": "^10.9.1",
