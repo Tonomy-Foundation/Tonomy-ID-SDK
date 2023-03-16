@@ -13,5 +13,5 @@
     }],
     "@semantic-release/github"
   ],
-  "branch": "fix/168-publish-sdk-bug"
+  "branches": "fix/168-publish-sdk-bug"
 }
