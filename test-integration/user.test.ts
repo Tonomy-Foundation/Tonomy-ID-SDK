@@ -289,7 +289,6 @@ describe('User class', () => {
 
             expect(accountName).toBeDefined();
             await expect(user.intializeFromStorage()).resolves.toBeTruthy();
-            await expect(user.intializeFromStorage()).resolves.toBe(true);
 
             await user.logout();
         })

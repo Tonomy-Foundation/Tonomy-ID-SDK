@@ -70,7 +70,7 @@ export class User {
     apps: UserApps;
     communication: Communication;
 
-    constructor(_keyManager: KeyManager, storageFactory: StorageFactory) {
+    constructor(_: KeyManager, storageFactory: StorageFactory) {
         this.keyManager = _keyManager;
         this.storage = createStorage<UserStorage>('tonomy.user.', storageFactory);
 
