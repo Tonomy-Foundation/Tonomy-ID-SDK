@@ -1,13 +1,12 @@
 name: Tonomy SDK publish
 
-
 permissions:
   contents: write
 
 on:
   push:
     branches:
-      - fix/168-publish-sdk-bug
+      - development
 
 jobs:
   publish-npm:
