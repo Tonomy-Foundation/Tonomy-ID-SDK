@@ -29,7 +29,7 @@ jobs:
           node-version: 16.4.1
       - run: npm i
       - run: npm run build
-      - run: npx np patch --any-branch --no-cleanup --no-tests
+      - run: npx np patch --branch=fix/168-publish-sdk-bug --no-cleanup --no-tests
         env:
           NPM_TOKEN: ${{secrets.NPM_TOKEN}}
 
