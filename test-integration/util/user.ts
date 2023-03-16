@@ -45,6 +45,7 @@ export async function createRandomApp(logoUrl?: string, origin?: string): Promis
     origin = origin || `http://localhost:${port}`;
     logoUrl = logoUrl || `${origin}/logo.png`;
 
+
     return await App.create({
         usernamePrefix: randomString(8),
         appName: name,
