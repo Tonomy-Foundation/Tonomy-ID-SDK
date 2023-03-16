@@ -1,6 +1,5 @@
 name: Tonomy SDK publish
 
-
 permissions:
   contents: write
 
