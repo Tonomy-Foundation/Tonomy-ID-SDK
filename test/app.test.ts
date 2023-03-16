@@ -40,7 +40,7 @@ describe('logging in', () => {
             url,
         });
 
-        const result = await ExternalUser.onRedirectLogin();
+        const result = await UserApps.onRedirectLogin();
 
         expect(result).toBeInstanceOf(Message);
         expect(result).toBeDefined();

@@ -83,17 +83,6 @@ export class ExternalUser {
     //   }
 
     /**
-     *
-     * @param keymanager
-     * @throws error if user didn't login correctly
-     * @returns external user objects
-     */
-    //   static verifyLogin(keymanager = JSsKeymanager: KeyManager, storage = jsStorage: Storage):  Promise<ExternalUser>  {
-    //     userApps.callBack(keymanager);
-    //     return Object.assign(this, {})
-    //   }
-
-    /**
      * Signs a message with the given key manager and the key level
      *
      * @param message {any} - an object to sign
@@ -149,13 +138,13 @@ export class ExternalUser {
     }
 
     /**
-     * Gets parameters from URL and verify the the request confirmation coming from Tonomy ID
+     * Receives the login request from Tonomy ID and verifies the login was successful
      *
      * @description should be called in the callback page
      *
      * @returns {Promise<{ result: Message[]; username: string; accountName: string }>} the verified requests, accountName and username
      */
-    static async onAppRedirectVerifyRequests(): Promise<{ result: Message[]; username: string; accountName: string }> {
+    static async verifyRequests(): Promise<{ result: Message[]; username: string; accountName: string }> {
         const params = new URLSearchParams(window.location.search);
         const requests = params.get('requests');
 
@@ -169,32 +158,5 @@ export class ExternalUser {
         const result = await UserApps.verifyRequests(requests);
 
         return { result, username, accountName };
-    }
-
-    /**
-     * Verifies the login request received in the URL were successfully authorized by Tonomy ID
-     *
-     * @description should be called in the callback page of the external website
-     *
-     * @returns {Promise<Message>} - the verified login request
-     */
-    static async onRedirectLogin(): Promise<Message> {
-        const urlParams = new URLSearchParams(window.location.search);
-        const requests = urlParams.get('requests');
-
-        const verifiedRequests = await UserApps.verifyRequests(requests);
-
-        const referrer = new URL(document.referrer);
-
-        for (const message of verifiedRequests) {
-            if (message.getPayload().origin === referrer.origin) {
-                return message;
-            }
-        }
-
-        throwError(
-            `No origins from: ${verifiedRequests.map((r) => r.getPayload().origin)} match referrer: ${referrer.origin}`,
-            SdkErrors.WrongOrigin
-        );
     }
 }

@@ -97,7 +97,7 @@ describe('External User class', () => {
 
         console.log('TONOMY_LOGIN_WEBSITE/login: collect external website token from URL');
 
-        const TONOMY_LOGIN_WEBSITE_externalWebsiteJwtVerified = await ExternalUser.onRedirectLogin();
+        const TONOMY_LOGIN_WEBSITE_externalWebsiteJwtVerified = await UserApps.onRedirectLogin();
 
         expect(TONOMY_LOGIN_WEBSITE_externalWebsiteJwtVerified).toBeInstanceOf(Message);
         expect(TONOMY_LOGIN_WEBSITE_externalWebsiteJwtVerified.getSender()).toBe(EXTERNAL_WEBSITE_did);
@@ -347,7 +347,7 @@ describe('External User class', () => {
         });
 
         console.log('TONOMY_LOGIN_WEBSITE/callback: fetching response from URL');
-        const TONOMY_LOGIN_WEBSITE_receivedRedirectRequest = await ExternalUser.onAppRedirectVerifyRequests();
+        const TONOMY_LOGIN_WEBSITE_receivedRedirectRequest = await ExternalUser.verifyRequests();
 
         const TONOMY_LOGIN_WEBSITE_redirectJwt = TONOMY_LOGIN_WEBSITE_receivedRedirectRequest.result.find(
             (jwtVerified) => jwtVerified.getPayload().origin !== location.origin
@@ -386,7 +386,7 @@ describe('External User class', () => {
         // ################################
 
         console.log('EXTERNAL_WEBSITE/callback: fetching response from URL');
-        const EXTERNAL_WEBSITE_receivedRedirectResponse = await ExternalUser.onAppRedirectVerifyRequests();
+        const EXTERNAL_WEBSITE_receivedRedirectResponse = await ExternalUser.verifyRequests();
 
         console.log('EXTERNAL_WEBSITE/callback: verifying key exists for app');
         const verifiedExternalWebsiteLoginSso = await ExternalUser.verifyKeyExistsForApp(

@@ -98,6 +98,33 @@ export class UserApps {
     }
 
     /**
+     * Verifies the login request received in the URL were successfully authorized by Tonomy ID
+     *
+     * @description should be called in the callback page of the external website
+     *
+     * @returns {Promise<Message>} - the verified login request
+     */
+    static async onRedirectLogin(): Promise<Message> {
+        const urlParams = new URLSearchParams(window.location.search);
+        const requests = urlParams.get('requests');
+
+        const verifiedRequests = await UserApps.verifyRequests(requests);
+
+        const referrer = new URL(document.referrer);
+
+        for (const message of verifiedRequests) {
+            if (message.getPayload().origin === referrer.origin) {
+                return message;
+            }
+        }
+
+        throwError(
+            `No origins from: ${verifiedRequests.map((r) => r.getPayload().origin)} match referrer: ${referrer.origin}`,
+            SdkErrors.WrongOrigin
+        );
+    }
+
+    /**
      * Verifies a jwt string is a valid message with signature from a DID
      * @param jwt {string} - the jwt string to verify
      * @returns {Promise<Message>} - the verified message
