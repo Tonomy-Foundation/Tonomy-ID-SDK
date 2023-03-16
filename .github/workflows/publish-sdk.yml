@@ -1,14 +1,14 @@
 name: Tonomy SDK publish
 
 
-# permissions:
-#   contents: write
+permissions:
+  contents: write
 
 on:
   push:
     # branches:
     #   - development
-      
+
 jobs:
 
   publish-npm:
@@ -23,14 +23,22 @@ jobs:
           node-version: 16.4.1
           registry-url: https://registry.npmjs.org/
 
+      - name: "Automated Version Bump"
+        uses: "phips28/gh-action-bump-version@master"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          version-type:  'patch'
+
+
       - name: 🚀 Build and publish SDK
         uses: actions/setup-node@v3
         with:
           node-version: 16.4.1
       - run: npm i
       - run: npm run build
-      - run: npx np patch --branch=fix/168-publish-sdk-bug --no-cleanup --no-tests
+      - run: npm publish
         env:
-          NPM_TOKEN: ${{secrets.NPM_TOKEN}}
+          NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
 
      
