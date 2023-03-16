@@ -1,11 +1,14 @@
 import { KeyManager, KeyManagerLevel } from './services/keymanager';
 import { JWTLoginPayload, OnPressLoginOptions, UserApps } from './userApps';
-import { generateRandomKeyPair, randomString } from './util/crypto';
+import { createVCSigner, generateRandomKeyPair, randomString } from './util/crypto';
 import { ES256KSigner } from '@tonomy/did-jwt';
 import { createJWK, toDid } from './util/did-jwk';
 import { Message } from './util/message';
 import { getSettings } from './settings';
 import { SdkErrors, throwError } from './services/errors';
+import { User } from './user';
+import { App } from './app';
+import { Name } from '@greymass/eosio';
 
 export class ExternalUser {
     /**
@@ -50,8 +53,6 @@ export class ExternalUser {
 
         const token = (await Message.sign(payload, { did: issuer, signer: signer as any, alg: 'ES256K-R' })).jwt;
 
-        // const token = (await this.signMessage(payload, keyManager, keyManagerLevel)).jwt;
-
         const requests = [token];
         const requestsString = JSON.stringify(requests);
 
@@ -91,6 +92,61 @@ export class ExternalUser {
     //     userApps.callBack(keymanager);
     //     return Object.assign(this, {})
     //   }
+
+    /**
+     * Signs a message with the given key manager and the key level
+     *
+     * @param message {any} - an object to sign
+     * @param keyManager {KeyManager} - the key manager to use to sign the message
+     * @param keyManagerLevel {KeyManagerLevel=BROWSER_LOCAL_STORAGE} - the level to use to sign the message
+     */
+    static async signMessage(
+        message: any,
+        keyManager: KeyManager,
+        keyManagerLevel: KeyManagerLevel = KeyManagerLevel.BROWSER_LOCAL_STORAGE,
+        recipient?: string
+    ): Promise<Message> {
+        const publicKey = await keyManager.getKey({
+            level: keyManagerLevel,
+        });
+
+        if (!publicKey) throw throwError('No Key Found for this level', SdkErrors.KeyNotFound);
+        const signer = createVCSigner(keyManager, keyManagerLevel).sign;
+
+        const jwk = await createJWK(publicKey);
+
+        const issuer = toDid(jwk);
+
+        return await Message.sign(message, { did: issuer, signer: signer as any, alg: 'ES256K-R' }, recipient);
+    }
+
+    /**
+     * Checks that a key exists in the key manager that has been authorized on the DID
+     *
+     * @description This is called on the callback page to verify that the user has logged in correctly
+     *
+     * @param accountName {string} - the account name to check the key on
+     * @param keyManager {KeyManager} - the key manager to check the key in
+     * @param keyManagerLevel {KeyManagerLevel=BROWSER_LOCAL_STORAGE} - the level to check the key in
+     * @returns {Promise<boolean>} - true if the key exists and is authorized, false otherwise
+     */
+    static async verifyKeyExistsForApp(
+        accountName: string,
+        keyManager: KeyManager,
+        keyManagerLevel: KeyManagerLevel = KeyManagerLevel.BROWSER_LOCAL_STORAGE
+    ): Promise<boolean> {
+        const pubKey = await keyManager.getKey({
+            level: keyManagerLevel,
+        });
+        const account = await User.getAccountInfo(Name.from(accountName));
+        const app = await App.getApp(window.location.origin);
+
+        const publickey = account.getPermission(app.accountName).required_auth.keys[0].key;
+
+        if (!pubKey) throwError("Couldn't fetch Key", SdkErrors.KeyNotFound);
+
+        return pubKey.toString() === publickey.toString();
+    }
 
     /**
      * Gets parameters from URL and verify the the request confirmation coming from Tonomy ID

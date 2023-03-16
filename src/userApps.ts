@@ -1,13 +1,11 @@
 /* eslint-disable camelcase */
-import { Name, PublicKey } from '@greymass/eosio';
+import { PublicKey } from '@greymass/eosio';
 import { IDContract } from './services/contracts/IDContract';
 import { KeyManager, KeyManagerLevel } from './services/keymanager';
 import { createStorage, PersistentStorageClean, StorageFactory } from './services/storage';
-import { createVCSigner } from './util/crypto';
 import { User } from './user';
 import { createKeyManagerSigner } from './services/eosio/transaction';
 import { SdkErrors, throwError } from './services/errors';
-import { createJWK, toDid } from './util/did-jwk';
 import { App, AppStatus } from './app';
 import { Message } from './util/message';
 
@@ -75,26 +73,6 @@ export class UserApps {
         await this.storage.appRecords;
     }
 
-    static async signMessage(
-        message: any,
-        keyManager: KeyManager,
-        keyManagerLevel: KeyManagerLevel = KeyManagerLevel.BROWSER_LOCAL_STORAGE,
-        recipient?: string
-    ): Promise<Message> {
-        const publicKey = await keyManager.getKey({
-            level: keyManagerLevel,
-        });
-
-        if (!publicKey) throw throwError('No Key Found for this level', SdkErrors.KeyNotFound);
-        const signer = createVCSigner(keyManager, keyManagerLevel).sign;
-
-        const jwk = await createJWK(publicKey);
-
-        const issuer = toDid(jwk);
-
-        return await Message.sign(message, { did: issuer, signer: signer as any, alg: 'ES256K-R' }, recipient);
-    }
-
     /**
      * Verifies the login request are valid requests signed by valid DIDs
      *
@@ -132,23 +110,5 @@ export class UserApps {
 
         if (!res) throwError('JWT failed verification', SdkErrors.JwtNotValid);
         return message;
-    }
-
-    static async verifyKeyExistsForApp(
-        accountName: string,
-        keyManager: KeyManager,
-        keyManagerLevel: KeyManagerLevel = KeyManagerLevel.BROWSER_LOCAL_STORAGE
-    ): Promise<boolean> {
-        const pubKey = await keyManager.getKey({
-            level: keyManagerLevel,
-        });
-        const account = await User.getAccountInfo(Name.from(accountName));
-        const app = await App.getApp(window.location.origin);
-
-        const publickey = account.getPermission(app.accountName).required_auth.keys[0].key;
-
-        if (!pubKey) throwError("Couldn't fetch Key", SdkErrors.KeyNotFound);
-
-        return pubKey.toString() === publickey.toString();
     }
 }

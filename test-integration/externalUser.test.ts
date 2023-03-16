@@ -253,7 +253,7 @@ describe('External User class', () => {
         expect(connectionMessageFromTonomyId.message.getSender()).toBe(TONOMY_ID_did + '#local');
 
         // then send a Message with the two signed requests, this will be received by the Tonomy ID app
-        const TONOMY_LOGIN_WEBSITE_requestMessage = await UserApps.signMessage(
+        const TONOMY_LOGIN_WEBSITE_requestMessage = await ExternalUser.signMessage(
             {
                 requests: JSON.stringify(TONOMY_LOGIN_WEBSITE_jwtRequests),
             },
@@ -361,7 +361,7 @@ describe('External User class', () => {
 
         if (TONOMY_LOGIN_WEBSITE_ssoJwt) {
             console.log('TONOMY_LOGIN_WEBSITE/callback: verifying key exists for app');
-            const verifiedLoginSso = await UserApps.verifyKeyExistsForApp(
+            const verifiedLoginSso = await ExternalUser.verifyKeyExistsForApp(
                 TONOMY_LOGIN_WEBSITE_receivedRedirectRequest.accountName,
                 TONOMY_LOGIN_WEBSITE_jsKeyManager
             );
@@ -389,7 +389,7 @@ describe('External User class', () => {
         const EXTERNAL_WEBSITE_receivedRedirectResponse = await ExternalUser.onAppRedirectVerifyRequests();
 
         console.log('EXTERNAL_WEBSITE/callback: verifying key exists for app');
-        const verifiedExternalWebsiteLoginSso = await UserApps.verifyKeyExistsForApp(
+        const verifiedExternalWebsiteLoginSso = await ExternalUser.verifyKeyExistsForApp(
             EXTERNAL_WEBSITE_receivedRedirectResponse.accountName,
             EXTERNAL_WEBSITE_jsKeyManager
         );
