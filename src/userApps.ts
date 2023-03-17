@@ -98,6 +98,29 @@ export class UserApps {
     }
 
     /**
+     * Extracts the login requests, username and accountName from the URL
+     *
+     * @returns the requests (JWTs), username and accountName
+     */
+    static getLoginRequestParams(): { requests: string; username: string; accountName: string } {
+        const params = new URLSearchParams(window.location.search);
+
+        const requests = params.get('requests');
+
+        if (!requests) throwError("requests parameter doesn't exists", SdkErrors.MissingParams);
+
+        const username = params.get('username');
+
+        if (!username) throwError("username parameter doesn't exists", SdkErrors.MissingParams);
+
+        const accountName = params.get('accountName');
+
+        if (!accountName) throwError("accountName parameter doesn't exists", SdkErrors.MissingParams);
+
+        return { requests, username, accountName };
+    }
+
+    /**
      * Verifies the login request received in the URL were successfully authorized by Tonomy ID
      *
      * @description should be called in the callback page of the SSO Login website
@@ -142,6 +165,7 @@ export class UserApps {
         const pubKey = await keyManager.getKey({
             level: keyManagerLevel,
         });
+
         const account = await User.getAccountInfo(Name.from(accountName));
         const app = await App.getApp(window.location.origin);
 

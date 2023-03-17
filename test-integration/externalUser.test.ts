@@ -22,7 +22,7 @@ describe('External User class', () => {
     jest.setTimeout(30000);
 
     test('full login to external app success flow', async () => {
-        expect.assertions(36);
+        expect.assertions(34);
 
         // OBJECTS HERE denote the different devices/apps the user is using
         // it shows which device is doing what action and has access to which variables
@@ -346,31 +346,27 @@ describe('External User class', () => {
                 `/callback?requests=${payload.requests}&accountName=${payload.accountName}&username=nousername`,
         });
 
-        console.log('TONOMY_LOGIN_WEBSITE/callback: fetching response from URL');
-        const TONOMY_LOGIN_WEBSITE_receivedRedirectRequest = await ExternalUser.verifyLoginRequest(false);
-
-        const TONOMY_LOGIN_WEBSITE_redirectJwt = TONOMY_LOGIN_WEBSITE_receivedRedirectRequest.result.find(
-            (jwtVerified) => jwtVerified.getPayload().origin !== location.origin
+        console.log('TONOMY_LOGIN_WEBSITE/callback: fetching response from URL and verifying login');
+        const TONOMY_LOGIN_WEBSITE_externalUser = await ExternalUser.verifyLoginRequest(
+            true,
+            TONOMY_LOGIN_WEBSITE_jsKeyManager
         );
-        const TONOMY_LOGIN_WEBSITE_ssoJwt = TONOMY_LOGIN_WEBSITE_receivedRedirectRequest.result.find(
-            (jwtVerified) => jwtVerified.getPayload().origin === location.origin
+
+        console.log('TONOMY_LOGIN_WEBSITE/callback: checking login request of external website');
+        const { requests } = await UserApps.getLoginRequestParams();
+        const result = await UserApps.verifyRequests(requests);
+
+        const TONOMY_LOGIN_WEBSITE_redirectJwt = result.find(
+            (jwtVerified) => jwtVerified.getPayload().origin !== location.origin
         );
 
         expect(TONOMY_LOGIN_WEBSITE_redirectJwt).toBeDefined();
-        expect(TONOMY_LOGIN_WEBSITE_ssoJwt).toBeDefined();
-
-        if (TONOMY_LOGIN_WEBSITE_ssoJwt) {
-            console.log('TONOMY_LOGIN_WEBSITE/callback: verifying key exists for app');
-            const verifiedLoginSso = await UserApps.verifyKeyExistsForApp(
-                TONOMY_LOGIN_WEBSITE_receivedRedirectRequest.accountName,
-                TONOMY_LOGIN_WEBSITE_jsKeyManager
-            );
-
-            expect(verifiedLoginSso).toBe(true);
-        }
 
         console.log('TONOMY_LOGIN_WEBSITE/callback: redirecting to external website');
         const redirectJwtPayload = TONOMY_LOGIN_WEBSITE_redirectJwt?.getPayload();
+
+        const TONOMY_LOGIN_WEBSITE_username = (await TONOMY_LOGIN_WEBSITE_externalUser.getUsername()).username;
+        const TONOMY_LOGIN_WEBSITE_accountName = await TONOMY_LOGIN_WEBSITE_externalUser.getAccountName();
 
         // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
@@ -378,7 +374,7 @@ describe('External User class', () => {
             url:
                 redirectJwtPayload.origin +
                 redirectJwtPayload.callbackPath +
-                `?username=${TONOMY_LOGIN_WEBSITE_receivedRedirectRequest.username}&accountName=${TONOMY_LOGIN_WEBSITE_receivedRedirectRequest.accountName}&requests=` +
+                `?username=${TONOMY_LOGIN_WEBSITE_username}&accountName=${TONOMY_LOGIN_WEBSITE_accountName.toString()}&requests=` +
                 JSON.stringify([TONOMY_LOGIN_WEBSITE_redirectJwt?.jwt]),
         });
 
@@ -386,16 +382,15 @@ describe('External User class', () => {
         // ################################
 
         console.log('EXTERNAL_WEBSITE/callback: fetching response from URL');
-        // in the client this would normally call verifyLoginRequest() (not false), but we need to use the same EXTERNAL_WEBSITE_jsKeyManager so do this as an extra step
-        const EXTERNAL_WEBSITE_receivedRedirectResponse = await ExternalUser.verifyLoginRequest(false);
-
-        console.log('EXTERNAL_WEBSITE/callback: verifying key exists for app');
-        const verifiedExternalWebsiteLoginSso = await UserApps.verifyKeyExistsForApp(
-            EXTERNAL_WEBSITE_receivedRedirectResponse.accountName,
+        const EXTERNAL_WEBSITE_externalUser = await ExternalUser.verifyLoginRequest(
+            true,
             EXTERNAL_WEBSITE_jsKeyManager
         );
 
-        expect(verifiedExternalWebsiteLoginSso).toBe(true);
+        const externalWebsiteAccount = await EXTERNAL_WEBSITE_externalUser.getAccountName();
+        const tonomyIdAccount = await TONOMY_ID_user.getAccountName();
+
+        expect(externalWebsiteAccount.toString()).toBe(tonomyIdAccount.toString());
 
         // cleanup connections
         await TONOMY_LOGIN_WEBSITE_communication.disconnect();

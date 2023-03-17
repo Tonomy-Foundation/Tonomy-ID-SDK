@@ -7,8 +7,89 @@ import { Message } from './util/message';
 import { getSettings } from './settings';
 import { SdkErrors, throwError } from './services/errors';
 import { JsKeyManager } from '../test/services/jskeymanager';
+import { createStorage, PersistentStorageClean, StorageFactory } from './services/storage';
+import { Name } from '@greymass/eosio';
+import { jsStorageFactory } from '../test/services/jsstorage';
+import { TonomyUsername } from './services/username';
+
+export type ExternalUserStorage = {
+    accountName: Name;
+    username: TonomyUsername;
+    loginRequest: JWTLoginPayload;
+};
 
 export class ExternalUser {
+    keyManager: KeyManager;
+    storage: ExternalUserStorage & PersistentStorageClean;
+
+    /**
+     * Creates a new external user
+     *
+     * @param _keyManager {KeyManager} - the key manager to use for signing
+     * @param storageFactory {StorageFactory} - the storage factory to use for storing data
+     */
+    constructor(_keyManager: KeyManager, storageFactory: StorageFactory) {
+        this.keyManager = _keyManager;
+        this.storage = createStorage<ExternalUserStorage>('tonomy.externalUser.', storageFactory);
+    }
+
+    /**
+     * Sets the account name of the user
+     *
+     * @param accountName {Name} - the account name of the user
+     */
+    async setAccountName(accountName: Name): Promise<void> {
+        this.storage.accountName = accountName;
+        await this.storage.accountName;
+    }
+
+    /**
+     * Sets the username of the user
+     *
+     * @param username {string} - the username of the user
+     */
+    async setUsername(username: string): Promise<void> {
+        this.storage.username = new TonomyUsername(username);
+        await this.storage.username;
+    }
+
+    /**
+     * Gets the username of the user
+     *
+     * @returns {Promise<TonomyUsername>} - the username of the user
+     */
+    async getUsername(): Promise<TonomyUsername> {
+        return await this.storage.username;
+    }
+
+    /**
+     * Sets the login request
+     *
+     * @param loginRequest {JWTLoginPayload} - the login request
+     */
+    async setLoginRequest(loginRequest: JWTLoginPayload): Promise<void> {
+        this.storage.loginRequest = loginRequest;
+        await this.storage.loginRequest;
+    }
+
+    /**
+     * Gets the login request
+     *
+     * @returns {Promise<JWTLoginPayload>} - the login request
+     */
+    async getLoginRequest(): Promise<JWTLoginPayload> {
+        return await this.storage.loginRequest;
+    }
+
+    /**
+     * Gets the account name of the user
+     *
+     * @returns {Promise<Name>} - the account name of the user
+     */
+    async getAccountName(): Promise<Name> {
+        return await this.storage.accountName;
+    }
+
     /**
      * Redirects the user to login to the app with their Tonomy ID account
      *
@@ -69,14 +150,12 @@ export class ExternalUser {
      * @returns the external user object
      */
     //   static getUser(keymanager = JSsKeymanager: KeyManager): Promise<ExternalUser> {
-
-    /**
-     * checks storage for keys and other metadata
-     * fethces user from blockchain
-     * checks if user is loggedin by verifying the keys
-     * delete the keys from storage if they are not verified
-     * returns the user object
-     */
+    //  * checks storage for keys and other metadata
+    //  * fethces user from blockchain
+    //  * checks if user is loggedin by verifying the keys
+    //  * delete the keys from storage if they are not verified
+    //  * returns the user object
+    //  */
     // return Object.assign(this, {})
     //   }
 
@@ -112,32 +191,34 @@ export class ExternalUser {
      *
      * @description should be called in the callback page
      *
-     * @returns {Promise<{ result: Message[]; username: string; accountName: string }>} the verified requests, accountName and username
+     * @returns {Promise<ExternalUser>} an external user object ready to use
      */
-    static async verifyLoginRequest(
-        checkKeys = true,
-        keyManager?: KeyManager
-    ): Promise<{ result: Message[]; username: string; accountName: string }> {
-        const params = new URLSearchParams(window.location.search);
-        const requests = params.get('requests');
+    static async verifyLoginRequest(checkKeys = true, keyManager?: KeyManager): Promise<ExternalUser> {
+        const { requests, username, accountName } = UserApps.getLoginRequestParams();
 
-        if (!requests) throwError("requests parameter doesn't exists", SdkErrors.MissingParams);
-        const username = params.get('username');
-
-        if (!username) throwError("username parameter doesn't exists", SdkErrors.MissingParams);
-        const accountName = params.get('accountName');
-
-        if (!accountName) throwError("accountName parameter doesn't exists", SdkErrors.MissingParams);
         const result = await UserApps.verifyRequests(requests);
 
-        if (checkKeys) {
-            const myKeyManager = keyManager || new JsKeyManager();
+        const myKeyManager = keyManager || new JsKeyManager();
+        const loginRequest = result.find((r) => r.getPayload().origin === window.location.origin)?.getPayload();
 
+        if (!loginRequest) throwError('No login request found for this origin', SdkErrors.OriginMismatch);
+        if (
+            loginRequest.publicKey !==
+            (await myKeyManager.getKey({ level: KeyManagerLevel.BROWSER_LOCAL_STORAGE }))?.toString()
+        )
+            throwError('Key in request does not match', SdkErrors.KeyNotFound);
+
+        if (checkKeys) {
             const keyExists = await UserApps.verifyKeyExistsForApp(accountName, myKeyManager);
 
             if (!keyExists) throwError('Key not found', SdkErrors.KeyNotFound);
         }
 
-        return { result, username, accountName };
+        const externalUser = new ExternalUser(myKeyManager, jsStorageFactory);
+
+        await externalUser.setAccountName(Name.from(accountName));
+        await externalUser.setLoginRequest(loginRequest);
+        await externalUser.setUsername(username);
+        return externalUser;
     }
 }
