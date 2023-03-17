@@ -8,36 +8,50 @@ import { getSettings } from './settings';
 import { SdkErrors, throwError } from './services/errors';
 
 export class ExternalUser {
+    private _did: string;
+
     constructor(
         private keyManager: KeyManager,
         private keyManagerLevel: KeyManagerLevel = KeyManagerLevel.BROWSER_LOCAL_STORAGE
     ) {}
 
+    get did() {
+        if (!this._did) {
+            const did = localStorage.getItem('tonomy.user.did');
+
+            if (did) {
+                this._did;
+            } else {
+                throw throwError('No did found in storage');
+            }
+        }
+
+        return this._did;
+    }
     static async getUser(
         keyManager: KeyManager,
         keyManagerLevel: KeyManagerLevel = KeyManagerLevel.BROWSER_LOCAL_STORAGE
-    ): Promise<ExternalUser> {
+    ): Promise<ExternalUser | false> {
         const accountName = localStorage.getItem('tonomy.user.accountName');
 
         if (!accountName) {
             //TODO: logout
             // keyManager.clear(); must be implemented in future keymanager
-            throwError('accountName not found', SdkErrors.AccountNotFound);
+            throw throwError('accountName not found', SdkErrors.AccountNotFound);
         }
 
-        // eslint-disable-next-line no-useless-catch
         try {
             const result = await UserApps.verifyKeyExistsForApp(accountName, keyManager, keyManagerLevel);
 
             if (result) {
                 return new ExternalUser(keyManager, keyManagerLevel);
             } else {
-                throwError('User Not loggedIn');
+                throw throwError('User Not loggedIn');
             }
         } catch (e) {
             //TODO logout
             // keyManager.clear(); must be implemented in future keymanager
-            throw e;
+            return false;
         }
     }
 
