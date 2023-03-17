@@ -107,9 +107,13 @@ export class UserApps {
         const username = params.get('username');
 
         if (!username) throwError("username parameter doesn't exists", SdkErrors.MissingParams);
+        localStorage.setItem('tonomy.user.username', username);
+
         const accountName = params.get('accountName');
 
         if (!accountName) throwError("accountName parameter doesn't exists", SdkErrors.MissingParams);
+        localStorage.setItem('tonomy.user.accountName', accountName);
+
         const result = await UserApps.verifyRequests(requests);
 
         return { result, username, accountName };
@@ -161,6 +165,13 @@ export class UserApps {
         return message;
     }
 
+    /**
+     * check if app key is registered under user account
+     * @param accountName user account name
+     * @param keyManager keymanager where user saves his keys
+     * @param keyManagerLevel what level app key was saved on
+     * @returns true if app is registered
+     */
     static async verifyKeyExistsForApp(
         accountName: string,
         keyManager: KeyManager,
@@ -169,7 +180,11 @@ export class UserApps {
         const pubKey = await keyManager.getKey({
             level: keyManagerLevel,
         });
+
+        if (!pubKey) throwError('key not found', SdkErrors.KeyNotFound);
         const account = await User.getAccountInfo(Name.from(accountName));
+
+        if (!account) throwError("couldn't fetch account", SdkErrors.AccountNotFound);
         const app = await App.getApp(window.location.origin);
 
         const publickey = account.getPermission(app.accountName).required_auth.keys[0].key;

@@ -1,12 +1,46 @@
 import { KeyManager, KeyManagerLevel } from './services/keymanager';
-import { JWTLoginPayload, OnPressLoginOptions } from './userApps';
+import { JWTLoginPayload, OnPressLoginOptions, UserApps } from './userApps';
 import { generateRandomKeyPair, randomString } from './util/crypto';
 import { ES256KSigner } from '@tonomy/did-jwt';
 import { createJWK, toDid } from './util/did-jwk';
 import { Message } from './util/message';
 import { getSettings } from './settings';
+import { SdkErrors, throwError } from './services/errors';
 
 export class ExternalUser {
+    constructor(
+        private keyManager: KeyManager,
+        private keyManagerLevel: KeyManagerLevel = KeyManagerLevel.BROWSER_LOCAL_STORAGE
+    ) {}
+
+    static async getUser(
+        keyManager: KeyManager,
+        keyManagerLevel: KeyManagerLevel = KeyManagerLevel.BROWSER_LOCAL_STORAGE
+    ): Promise<ExternalUser> {
+        const accountName = localStorage.getItem('tonomy.user.accountName');
+
+        if (!accountName) {
+            //TODO: logout
+            // keyManager.clear(); must be implemented in future keymanager
+            throwError('accountName not found', SdkErrors.AccountNotFound);
+        }
+
+        // eslint-disable-next-line no-useless-catch
+        try {
+            const result = await UserApps.verifyKeyExistsForApp(accountName, keyManager, keyManagerLevel);
+
+            if (result) {
+                return new ExternalUser(keyManager, keyManagerLevel);
+            } else {
+                throwError('User Not loggedIn');
+            }
+        } catch (e) {
+            //TODO logout
+            // keyManager.clear(); must be implemented in future keymanager
+            throw e;
+        }
+    }
+
     static async loginWithTonomy(
         { redirect = true, callbackPath }: OnPressLoginOptions,
         keyManager: KeyManager,
