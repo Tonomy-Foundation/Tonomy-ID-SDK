@@ -144,7 +144,7 @@ export class ExternalUser {
      *
      * @returns {Promise<{ result: Message[]; username: string; accountName: string }>} the verified requests, accountName and username
      */
-    static async verifyRequests(): Promise<{ result: Message[]; username: string; accountName: string }> {
+    static async verifyLoginRequest(): Promise<{ result: Message[]; username: string; accountName: string }> {
         const params = new URLSearchParams(window.location.search);
         const requests = params.get('requests');
 

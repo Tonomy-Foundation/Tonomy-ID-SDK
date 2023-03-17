@@ -347,7 +347,7 @@ describe('External User class', () => {
         });
 
         console.log('TONOMY_LOGIN_WEBSITE/callback: fetching response from URL');
-        const TONOMY_LOGIN_WEBSITE_receivedRedirectRequest = await ExternalUser.verifyRequests();
+        const TONOMY_LOGIN_WEBSITE_receivedRedirectRequest = await ExternalUser.verifyLoginRequest();
 
         const TONOMY_LOGIN_WEBSITE_redirectJwt = TONOMY_LOGIN_WEBSITE_receivedRedirectRequest.result.find(
             (jwtVerified) => jwtVerified.getPayload().origin !== location.origin
@@ -386,7 +386,7 @@ describe('External User class', () => {
         // ################################
 
         console.log('EXTERNAL_WEBSITE/callback: fetching response from URL');
-        const EXTERNAL_WEBSITE_receivedRedirectResponse = await ExternalUser.verifyRequests();
+        const EXTERNAL_WEBSITE_receivedRedirectResponse = await ExternalUser.verifyLoginRequest();
 
         console.log('EXTERNAL_WEBSITE/callback: verifying key exists for app');
         const verifiedExternalWebsiteLoginSso = await ExternalUser.verifyKeyExistsForApp(
