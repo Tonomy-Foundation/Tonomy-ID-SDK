@@ -69,6 +69,7 @@ export function throwError(message: string, code?: SdkErrors): never {
 
 enum SdkErrors {
     UsernameTaken = 'UsernameTaken',
+    AccountNotFound = 'AcccountNotFound',
     AccountDoesntExist = 'AccountDoesntExist',
     UsernameNotFound = 'UsernameNotFound',
     DataQueryNoRowDataFound = 'DataQueryNoRowDataFound',
