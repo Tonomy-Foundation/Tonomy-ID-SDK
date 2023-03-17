@@ -12,13 +12,13 @@ export class JsStorage implements PersistentStorage {
     }
 
     async retrieve(key: string): Promise<any> {
-        if (this.scope + key in this._storage) return this._storage[this.scope + key];
+        if (key in this._storage) return this._storage[key];
 
         if (localStorage) {
-            const value = localStorage.getItem(this.scope + key);
+            const value = localStorage.getItem(key);
 
             if (value) {
-                this._storage[this.scope + key] = JSON.parse(value);
+                this._storage[key] = JSON.parse(value);
                 return value;
             }
         } else {
@@ -28,10 +28,10 @@ export class JsStorage implements PersistentStorage {
 
     async store(key: string, value: any): Promise<void> {
         if (localStorage) {
-            localStorage.setItem(this.scope + key, JSON.stringify(value));
+            localStorage.setItem(key, JSON.stringify(value));
         }
 
-        this._storage[this.scope + key] = value;
+        this._storage[key] = value;
     }
 
     async clear(): Promise<void> {

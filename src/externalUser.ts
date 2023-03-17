@@ -7,7 +7,7 @@ import { Message } from './util/message';
 import { getSettings } from './settings';
 import { SdkErrors, throwError } from './services/errors';
 import { JsKeyManager } from '../test/services/jskeymanager';
-import { createStorage, PersistentStorageClean, StorageFactory } from './services/storage';
+import { createStorage, PersistentStorageClean } from './services/storage';
 import { Name } from '@greymass/eosio';
 import { jsStorageFactory } from '../test/services/jsstorage';
 import { TonomyUsername } from './services/username';
