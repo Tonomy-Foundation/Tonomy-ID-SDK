@@ -8,7 +8,7 @@ import { getSettings } from './settings';
 import { SdkErrors, throwError } from './services/errors';
 
 export class ExternalUser {
-    private _did: string;
+    private did_: string;
 
     constructor(
         private keyManager: KeyManager,
@@ -16,17 +16,17 @@ export class ExternalUser {
     ) {}
 
     get did() {
-        if (!this._did) {
+        if (!this.did_) {
             const did = localStorage.getItem('tonomy.user.did');
 
             if (did) {
-                this._did;
+                this.did_;
             } else {
                 throw throwError('No did found in storage');
             }
         }
 
-        return this._did;
+        return this.did_;
     }
     static async getUser(
         keyManager: KeyManager,
