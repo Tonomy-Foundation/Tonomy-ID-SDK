@@ -7,10 +7,10 @@ import { Message } from './util/message';
 import { getSettings } from './settings';
 import { SdkErrors, throwError } from './services/errors';
 import { JsKeyManager } from '../test/services/jskeymanager';
-import { createStorage, PersistentStorageClean } from './services/storage';
+import { createStorage, PersistentStorageClean, StorageFactory } from './services/storage';
 import { Name } from '@greymass/eosio';
-import { jsStorageFactory } from '../test/services/jsstorage';
 import { TonomyUsername } from './services/username';
+import { browserStorageFactory } from './managers/browserStorage';
 
 export type ExternalUserStorage = {
     accountName: Name;
@@ -20,18 +20,16 @@ export type ExternalUserStorage = {
 
 export class ExternalUser {
     keyManager: KeyManager;
-    private storage: ExternalUserStorage & PersistentStorageClean = createStorage<ExternalUserStorage>(
-        'tonomy.externalUser.',
-        jsStorageFactory
-    );
+    storage: ExternalUserStorage & PersistentStorageClean;
 
     /**
      * Creates a new external user
      *
      * @param _keyManager {KeyManager} - the key manager to use for signing
      */
-    constructor(_keyManager: KeyManager) {
+    constructor(_keyManager: KeyManager, _storageFactory: StorageFactory) {
         this.keyManager = _keyManager;
+        this.storage = createStorage<ExternalUserStorage>('tonomy.externalUser.', _storageFactory);
     }
 
     /**
@@ -191,10 +189,17 @@ export class ExternalUser {
      * Receives the login request from Tonomy ID and verifies the login was successful
      *
      * @description should be called in the callback page
+     * @param checkKeys {boolean} - if true, checks the keys in the keyManager against the blockchain
+     * @param keyManager {KeyManager} - the key manager to use to storage and manage keys
+     * @param storageFactory {StorageFactory} - the storage factory to use to store data
      *
      * @returns {Promise<ExternalUser>} an external user object ready to use
      */
-    static async verifyLoginRequest(checkKeys = true, keyManager?: KeyManager): Promise<ExternalUser> {
+    static async verifyLoginRequest(
+        checkKeys = true,
+        keyManager?: KeyManager,
+        storageFactory?: StorageFactory
+    ): Promise<ExternalUser> {
         const { requests, username, accountName } = UserApps.getLoginRequestParams();
 
         const result = await UserApps.verifyRequests(requests);
@@ -215,7 +220,8 @@ export class ExternalUser {
             if (!keyExists) throwError('Key not found', SdkErrors.KeyNotFound);
         }
 
-        const externalUser = new ExternalUser(myKeyManager);
+        const myStorageFactory = storageFactory || browserStorageFactory;
+        const externalUser = new ExternalUser(myKeyManager, myStorageFactory);
 
         await externalUser.setAccountName(Name.from(accountName));
         await externalUser.setLoginRequest(loginRequest);

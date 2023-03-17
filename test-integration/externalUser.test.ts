@@ -12,6 +12,7 @@ import { ExternalUser } from '../src/externalUser';
 import { JsKeyManager } from '../test/services/jskeymanager';
 import { PublicKey } from '@greymass/eosio';
 import { sleep } from './util/sleep';
+import { jsStorageFactory } from '../test/services/jsstorage';
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
@@ -358,7 +359,8 @@ describe('External User class', () => {
         if (log) console.log('TONOMY_LOGIN_WEBSITE/callback: fetching response from URL and verifying login');
         const TONOMY_LOGIN_WEBSITE_externalUser = await ExternalUser.verifyLoginRequest(
             true,
-            TONOMY_LOGIN_WEBSITE_jsKeyManager
+            TONOMY_LOGIN_WEBSITE_jsKeyManager,
+            jsStorageFactory
         );
 
         if (log) console.log('TONOMY_LOGIN_WEBSITE/callback: checking login request of external website');
@@ -393,7 +395,8 @@ describe('External User class', () => {
         if (log) console.log('EXTERNAL_WEBSITE/callback: fetching response from URL');
         const EXTERNAL_WEBSITE_externalUser = await ExternalUser.verifyLoginRequest(
             true,
-            EXTERNAL_WEBSITE_jsKeyManager
+            EXTERNAL_WEBSITE_jsKeyManager,
+            jsStorageFactory
         );
 
         const externalWebsiteAccount = await EXTERNAL_WEBSITE_externalUser.getAccountName();
