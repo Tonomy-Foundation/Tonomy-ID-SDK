@@ -20,17 +20,18 @@ export type ExternalUserStorage = {
 
 export class ExternalUser {
     keyManager: KeyManager;
-    storage: ExternalUserStorage & PersistentStorageClean;
+    private storage: ExternalUserStorage & PersistentStorageClean = createStorage<ExternalUserStorage>(
+        'tonomy.externalUser.',
+        jsStorageFactory
+    );
 
     /**
      * Creates a new external user
      *
      * @param _keyManager {KeyManager} - the key manager to use for signing
-     * @param storageFactory {StorageFactory} - the storage factory to use for storing data
      */
-    constructor(_keyManager: KeyManager, storageFactory: StorageFactory) {
+    constructor(_keyManager: KeyManager) {
         this.keyManager = _keyManager;
-        this.storage = createStorage<ExternalUserStorage>('tonomy.externalUser.', storageFactory);
     }
 
     /**
@@ -214,7 +215,7 @@ export class ExternalUser {
             if (!keyExists) throwError('Key not found', SdkErrors.KeyNotFound);
         }
 
-        const externalUser = new ExternalUser(myKeyManager, jsStorageFactory);
+        const externalUser = new ExternalUser(myKeyManager);
 
         await externalUser.setAccountName(Name.from(accountName));
         await externalUser.setLoginRequest(loginRequest);
