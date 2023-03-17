@@ -9,6 +9,7 @@ import { SdkErrors, throwError } from './services/errors';
 import { User } from './user';
 import { App } from './app';
 import { Name } from '@greymass/eosio';
+import { JsKeyManager } from '../test/services/jskeymanager';
 
 export class ExternalUser {
     /**
@@ -144,7 +145,10 @@ export class ExternalUser {
      *
      * @returns {Promise<{ result: Message[]; username: string; accountName: string }>} the verified requests, accountName and username
      */
-    static async verifyLoginRequest(): Promise<{ result: Message[]; username: string; accountName: string }> {
+    static async verifyLoginRequest(
+        checkKeys = true,
+        keyManager?: KeyManager
+    ): Promise<{ result: Message[]; username: string; accountName: string }> {
         const params = new URLSearchParams(window.location.search);
         const requests = params.get('requests');
 
@@ -156,6 +160,13 @@ export class ExternalUser {
 
         if (!accountName) throwError("accountName parameter doesn't exists", SdkErrors.MissingParams);
         const result = await UserApps.verifyRequests(requests);
+
+        if (checkKeys) {
+            const myKeyManager = keyManager || new JsKeyManager();
+            const keyExists = await ExternalUser.verifyKeyExistsForApp(accountName, myKeyManager);
+
+            if (!keyExists) throwError('Key not found', SdkErrors.KeyNotFound);
+        }
 
         return { result, username, accountName };
     }
