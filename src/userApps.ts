@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { PublicKey } from '@greymass/eosio';
+import { Name, PublicKey } from '@greymass/eosio';
 import { IDContract } from './services/contracts/IDContract';
 import { KeyManager, KeyManagerLevel } from './services/keymanager';
 import { createStorage, PersistentStorageClean, StorageFactory } from './services/storage';
@@ -100,7 +100,7 @@ export class UserApps {
     /**
      * Verifies the login request received in the URL were successfully authorized by Tonomy ID
      *
-     * @description should be called in the callback page of the external website
+     * @description should be called in the callback page of the SSO Login website
      *
      * @returns {Promise<Message>} - the verified login request
      */
@@ -122,6 +122,34 @@ export class UserApps {
             `No origins from: ${verifiedRequests.map((r) => r.getPayload().origin)} match referrer: ${referrer.origin}`,
             SdkErrors.WrongOrigin
         );
+    }
+
+    /**
+     * Checks that a key exists in the key manager that has been authorized on the DID
+     *
+     * @description This is called on the callback page to verify that the user has logged in correctly
+     *
+     * @param accountName {string} - the account name to check the key on
+     * @param keyManager {KeyManager} - the key manager to check the key in
+     * @param keyManagerLevel {KeyManagerLevel=BROWSER_LOCAL_STORAGE} - the level to check the key in
+     * @returns {Promise<boolean>} - true if the key exists and is authorized, false otherwise
+     */
+    static async verifyKeyExistsForApp(
+        accountName: string,
+        keyManager: KeyManager,
+        keyManagerLevel: KeyManagerLevel = KeyManagerLevel.BROWSER_LOCAL_STORAGE
+    ): Promise<boolean> {
+        const pubKey = await keyManager.getKey({
+            level: keyManagerLevel,
+        });
+        const account = await User.getAccountInfo(Name.from(accountName));
+        const app = await App.getApp(window.location.origin);
+
+        const publickey = account.getPermission(app.accountName).required_auth.keys[0].key;
+
+        if (!pubKey) throwError("Couldn't fetch Key", SdkErrors.KeyNotFound);
+
+        return pubKey.toString() === publickey.toString();
     }
 
     /**

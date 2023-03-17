@@ -347,7 +347,7 @@ describe('External User class', () => {
         });
 
         console.log('TONOMY_LOGIN_WEBSITE/callback: fetching response from URL');
-        const TONOMY_LOGIN_WEBSITE_receivedRedirectRequest = await ExternalUser.verifyLoginRequest();
+        const TONOMY_LOGIN_WEBSITE_receivedRedirectRequest = await ExternalUser.verifyLoginRequest(false);
 
         const TONOMY_LOGIN_WEBSITE_redirectJwt = TONOMY_LOGIN_WEBSITE_receivedRedirectRequest.result.find(
             (jwtVerified) => jwtVerified.getPayload().origin !== location.origin
@@ -361,7 +361,7 @@ describe('External User class', () => {
 
         if (TONOMY_LOGIN_WEBSITE_ssoJwt) {
             console.log('TONOMY_LOGIN_WEBSITE/callback: verifying key exists for app');
-            const verifiedLoginSso = await ExternalUser.verifyKeyExistsForApp(
+            const verifiedLoginSso = await UserApps.verifyKeyExistsForApp(
                 TONOMY_LOGIN_WEBSITE_receivedRedirectRequest.accountName,
                 TONOMY_LOGIN_WEBSITE_jsKeyManager
             );
@@ -386,10 +386,11 @@ describe('External User class', () => {
         // ################################
 
         console.log('EXTERNAL_WEBSITE/callback: fetching response from URL');
-        const EXTERNAL_WEBSITE_receivedRedirectResponse = await ExternalUser.verifyLoginRequest();
+        // in the client this would normally call verifyLoginRequest() (not false), but we need to use the same EXTERNAL_WEBSITE_jsKeyManager so do this as an extra step
+        const EXTERNAL_WEBSITE_receivedRedirectResponse = await ExternalUser.verifyLoginRequest(false);
 
         console.log('EXTERNAL_WEBSITE/callback: verifying key exists for app');
-        const verifiedExternalWebsiteLoginSso = await ExternalUser.verifyKeyExistsForApp(
+        const verifiedExternalWebsiteLoginSso = await UserApps.verifyKeyExistsForApp(
             EXTERNAL_WEBSITE_receivedRedirectResponse.accountName,
             EXTERNAL_WEBSITE_jsKeyManager
         );
@@ -401,7 +402,8 @@ describe('External User class', () => {
         await TONOMY_ID_user.logout();
         console.log('finished test');
 
-        // TODO for some reason this is needed to ensure all the code lines execute. Not sure why needed
+        // for some reason this is needed to ensure all the code lines execute. Not sure why needed
+        // TODO figure out why this is needed and remove issue
         await sleep(500);
     });
 });

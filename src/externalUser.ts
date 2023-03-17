@@ -6,9 +6,6 @@ import { createJWK, toDid } from './util/did-jwk';
 import { Message } from './util/message';
 import { getSettings } from './settings';
 import { SdkErrors, throwError } from './services/errors';
-import { User } from './user';
-import { App } from './app';
-import { Name } from '@greymass/eosio';
 import { JsKeyManager } from '../test/services/jskeymanager';
 
 export class ExternalUser {
@@ -111,34 +108,6 @@ export class ExternalUser {
     }
 
     /**
-     * Checks that a key exists in the key manager that has been authorized on the DID
-     *
-     * @description This is called on the callback page to verify that the user has logged in correctly
-     *
-     * @param accountName {string} - the account name to check the key on
-     * @param keyManager {KeyManager} - the key manager to check the key in
-     * @param keyManagerLevel {KeyManagerLevel=BROWSER_LOCAL_STORAGE} - the level to check the key in
-     * @returns {Promise<boolean>} - true if the key exists and is authorized, false otherwise
-     */
-    static async verifyKeyExistsForApp(
-        accountName: string,
-        keyManager: KeyManager,
-        keyManagerLevel: KeyManagerLevel = KeyManagerLevel.BROWSER_LOCAL_STORAGE
-    ): Promise<boolean> {
-        const pubKey = await keyManager.getKey({
-            level: keyManagerLevel,
-        });
-        const account = await User.getAccountInfo(Name.from(accountName));
-        const app = await App.getApp(window.location.origin);
-
-        const publickey = account.getPermission(app.accountName).required_auth.keys[0].key;
-
-        if (!pubKey) throwError("Couldn't fetch Key", SdkErrors.KeyNotFound);
-
-        return pubKey.toString() === publickey.toString();
-    }
-
-    /**
      * Receives the login request from Tonomy ID and verifies the login was successful
      *
      * @description should be called in the callback page
@@ -163,7 +132,8 @@ export class ExternalUser {
 
         if (checkKeys) {
             const myKeyManager = keyManager || new JsKeyManager();
-            const keyExists = await ExternalUser.verifyKeyExistsForApp(accountName, myKeyManager);
+
+            const keyExists = await UserApps.verifyKeyExistsForApp(accountName, myKeyManager);
 
             if (!keyExists) throwError('Key not found', SdkErrors.KeyNotFound);
         }
