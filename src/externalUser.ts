@@ -6,7 +6,7 @@ import { createJWK, toDid } from './util/did-jwk';
 import { Message } from './util/message';
 import { getSettings } from './settings';
 import { SdkErrors, throwError } from './services/errors';
-import { JsKeyManager } from '../test/services/jskeymanager';
+import { JsKeyManager } from './managers/jskeymanager';
 import { createStorage, PersistentStorageClean, StorageFactory } from './services/storage';
 import { Name } from '@greymass/eosio';
 import { TonomyUsername } from './services/username';

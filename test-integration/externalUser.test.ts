@@ -9,7 +9,7 @@ import { JWTLoginPayload } from '../src/userApps';
 import settings from './services/settings';
 import URL from 'jsdom-url';
 import { ExternalUser } from '../src/externalUser';
-import { JsKeyManager } from '../test/services/jskeymanager';
+import { JsKeyManager } from '../src/managers/jskeymanager';
 import { PublicKey } from '@greymass/eosio';
 import { sleep } from './util/sleep';
 import { jsStorageFactory } from '../test/services/jsstorage';

@@ -2,7 +2,7 @@ import { PrivateKey, PublicKey } from '@greymass/eosio';
 import { UserApps } from '../src/userApps';
 import { generateRandomKeyPair } from '../src/util/crypto';
 import URL from 'jsdom-url';
-import { JsKeyManager } from './services/jskeymanager';
+import { JsKeyManager } from '../src/managers/jskeymanager';
 import { Message } from '../src/util/message';
 import { setSettings } from '../src';
 import { ExternalUser } from '../src/externalUser';
