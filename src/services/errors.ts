@@ -51,8 +51,7 @@ export class SdkError extends Error {
     }
 }
 
-// using never to suppress error https://bobbyhadz.com/blog/typescript-function-that-throws-error#:~:text=To%20declare%20a%20function%20that,terminate%20execution%20of%20the%20program.
-export function throwError(message: string, code?: SdkErrors): never {
+export function createSdkError(message: string, code?: SdkErrors): SdkError {
     let error = new SdkError(message);
 
     if (code) {
@@ -60,7 +59,12 @@ export function throwError(message: string, code?: SdkErrors): never {
         error.code = code;
     }
 
-    throw error;
+    return error;
+}
+
+// using never to suppress error https://bobbyhadz.com/blog/typescript-function-that-throws-error#:~:text=To%20declare%20a%20function%20that,terminate%20execution%20of%20the%20program.
+export function throwError(message: string, code?: SdkErrors): never {
+    throw createSdkError(message, code);
 }
 
 enum SdkErrors {
@@ -82,6 +86,8 @@ enum SdkErrors {
     InvalidKey = 'InvalidKey',
     invalidDataType = 'invalidDataType',
     missingChallenge = 'missingChallenge',
+    CommunicationNotConnected = 'CommunicationNotConnected',
+    CommunicationTimeout = 'CommunicationTimeout',
 }
 
 // eslint-disable-next-line @typescript-eslint/no-namespace

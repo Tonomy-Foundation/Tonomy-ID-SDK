@@ -2,6 +2,7 @@
 const pkg = require('jest-environment-jsdom');
 
 let JSDOMEnvironment = pkg;
+
 if (pkg.default) {
     JSDOMEnvironment = pkg.default;
 }
@@ -11,9 +12,11 @@ module.exports = class CustomizedJSDomEnvironment extends JSDOMEnvironment {
         super(config, context);
         this.global.jsdom = this.dom;
     }
+
     async setup() {
         await super.setup();
         this.global.jsdom = this.dom;
+
         if (typeof this.global.TextEncoder === 'undefined') {
             const { TextEncoder, TextDecoder } = require('util');
 

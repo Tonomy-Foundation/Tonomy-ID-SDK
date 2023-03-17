@@ -29,9 +29,19 @@ To do a one-off build, use `npm run build`.
 
 ## Tests
 
-To run tests, use `npm test`.
+### Unit tests:
 
-To run integration tests `./test-integration/build-and-run-tests.sh`
+Tests individual class and function logic within the SDK.
+
+`npm test`
+
+### Integration tests:
+
+Tests end-to-end functions across more than one service.
+
+Require another service to be running, such as the blockchain or Tonomy Communication service.
+
+`./test-integration/build-and-run-tests.sh`
 
 ## Linting
 
