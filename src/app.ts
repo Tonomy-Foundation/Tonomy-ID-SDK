@@ -22,7 +22,7 @@ namespace AppStatus {
      * Returns the index of the enum value
      *
      * @param {value} AppStatus - The level to get the index of
-     * @return
+     * @return {int} The index of the enum value
      */
     export function indexFor(value: AppStatus): number {
         return Object.keys(AppStatus).indexOf(value);
@@ -32,7 +32,7 @@ namespace AppStatus {
      * Creates an AppStatus from a string or index of the level
      *
      * @param {value} number| string - The string or index
-     * @return {} 
+     * @return {AppStatus} An AppStatus enum value based on a given number or string value.
      */
     export function from(value: number | string): AppStatus {
         let index: number;
