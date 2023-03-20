@@ -3,11 +3,9 @@ import { Name, PublicKey } from '@greymass/eosio';
 import { IDContract } from './services/contracts/IDContract';
 import { KeyManager, KeyManagerLevel } from './services/keymanager';
 import { createStorage, PersistentStorageClean, StorageFactory } from './services/storage';
-import { createVCSigner } from './util/crypto';
 import { User } from './user';
 import { createKeyManagerSigner } from './services/eosio/transaction';
 import { SdkErrors, throwError } from './services/errors';
-import { createJWK, toDid } from './util/did-jwk';
 import { App, AppStatus } from './app';
 import { Message } from './util/message';
 
@@ -75,46 +73,12 @@ export class UserApps {
         await this.storage.appRecords;
     }
 
-    static async signMessage(
-        message: any,
-        keyManager: KeyManager,
-        keyManagerLevel: KeyManagerLevel = KeyManagerLevel.BROWSER_LOCAL_STORAGE,
-        recipient?: string
-    ): Promise<Message> {
-        const publicKey = await keyManager.getKey({
-            level: keyManagerLevel,
-        });
-
-        if (!publicKey) throw throwError('No Key Found for this level', SdkErrors.KeyNotFound);
-        const signer = createVCSigner(keyManager, keyManagerLevel).sign;
-
-        const jwk = await createJWK(publicKey);
-
-        const issuer = toDid(jwk);
-
-        return await Message.sign(message, { did: issuer, signer: signer as any, alg: 'ES256K-R' }, recipient);
-    }
-
     /**
-     * gets parameters from URL and verify the requests coming from the app
-     * @returns the verified results, accountName and username
+     * Verifies the login request are valid requests signed by valid DIDs
+     *
+     * @param requests {string | null} - a stringified array of JWTs
+     * @returns {Promise<Message[]>} - an array of verified messages containing the login requests
      */
-    static async onAppRedirectVerifyRequests() {
-        const params = new URLSearchParams(window.location.search);
-        const requests = params.get('requests');
-
-        if (!requests) throwError("requests parameter doesn't exists", SdkErrors.MissingParams);
-        const username = params.get('username');
-
-        if (!username) throwError("username parameter doesn't exists", SdkErrors.MissingParams);
-        const accountName = params.get('accountName');
-
-        if (!accountName) throwError("accountName parameter doesn't exists", SdkErrors.MissingParams);
-        const result = await UserApps.verifyRequests(requests);
-
-        return { result, username, accountName };
-    }
-
     static async verifyRequests(requests: string | null): Promise<Message[]> {
         if (!requests) throwError('No requests found in URL', SdkErrors.MissingParams);
 
@@ -133,11 +97,41 @@ export class UserApps {
         return verified;
     }
 
+    /**
+     * Extracts the login requests, username and accountName from the URL
+     *
+     * @returns the requests (JWTs), username and accountName
+     */
+    static getLoginRequestParams(): { requests: string; username: string; accountName: string } {
+        const params = new URLSearchParams(window.location.search);
+
+        const requests = params.get('requests');
+
+        if (!requests) throwError("requests parameter doesn't exists", SdkErrors.MissingParams);
+
+        const username = params.get('username');
+
+        if (!username) throwError("username parameter doesn't exists", SdkErrors.MissingParams);
+
+        const accountName = params.get('accountName');
+
+        if (!accountName) throwError("accountName parameter doesn't exists", SdkErrors.MissingParams);
+
+        return { requests, username, accountName };
+    }
+
+    /**
+     * Verifies the login request received in the URL were successfully authorized by Tonomy ID
+     *
+     * @description should be called in the callback page of the SSO Login website
+     *
+     * @returns {Promise<Message>} - the verified login request
+     */
     static async onRedirectLogin(): Promise<Message> {
         const urlParams = new URLSearchParams(window.location.search);
         const requests = urlParams.get('requests');
 
-        const verifiedRequests = await this.verifyRequests(requests);
+        const verifiedRequests = await UserApps.verifyRequests(requests);
 
         const referrer = new URL(document.referrer);
 
@@ -153,14 +147,16 @@ export class UserApps {
         );
     }
 
-    static async verifyLoginJWT(jwt: string): Promise<Message> {
-        const message = new Message(jwt);
-        const res = await message.verify();
-
-        if (!res) throwError('JWT failed verification', SdkErrors.JwtNotValid);
-        return message;
-    }
-
+    /**
+     * Checks that a key exists in the key manager that has been authorized on the DID
+     *
+     * @description This is called on the callback page to verify that the user has logged in correctly
+     *
+     * @param accountName {string} - the account name to check the key on
+     * @param keyManager {KeyManager} - the key manager to check the key in
+     * @param keyManagerLevel {KeyManagerLevel=BROWSER_LOCAL_STORAGE} - the level to check the key in
+     * @returns {Promise<boolean>} - true if the key exists and is authorized, false otherwise
+     */
     static async verifyKeyExistsForApp(
         accountName: string,
         keyManager: KeyManager,
@@ -169,6 +165,7 @@ export class UserApps {
         const pubKey = await keyManager.getKey({
             level: keyManagerLevel,
         });
+
         const account = await User.getAccountInfo(Name.from(accountName));
         const app = await App.getApp(window.location.origin);
 
@@ -177,5 +174,20 @@ export class UserApps {
         if (!pubKey) throwError("Couldn't fetch Key", SdkErrors.KeyNotFound);
 
         return pubKey.toString() === publickey.toString();
+    }
+
+    /**
+     * Verifies a jwt string is a valid message with signature from a DID
+     * @param jwt {string} - the jwt string to verify
+     * @returns {Promise<Message>} - the verified message
+     */
+    static async verifyLoginJWT(jwt: string): Promise<Message> {
+        const message = new Message(jwt);
+        const res = await message.verify();
+
+        // TODO should check the keys in KeyManager are on the blockchain...
+
+        if (!res) throwError('JWT failed verification', SdkErrors.JwtNotValid);
+        return message;
     }
 }
