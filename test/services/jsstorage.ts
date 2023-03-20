@@ -1,7 +1,9 @@
 import { PersistentStorage } from '../../src/services/storage';
 
 export class JsStorage implements PersistentStorage {
-    private _storage: any;
+    private _storage: {
+        [key in string]: any;
+    } = {} as any;
     scope: string;
 
     constructor(scope: string) {

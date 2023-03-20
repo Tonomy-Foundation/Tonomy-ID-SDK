@@ -1,70 +1,159 @@
 import { KeyManager, KeyManagerLevel } from './services/keymanager';
 import { JWTLoginPayload, OnPressLoginOptions, UserApps } from './userApps';
-import { generateRandomKeyPair, randomString } from './util/crypto';
+import { createVCSigner, generateRandomKeyPair, randomString } from './util/crypto';
 import { ES256KSigner } from '@tonomy/did-jwt';
 import { createJWK, toDid } from './util/did-jwk';
 import { Message } from './util/message';
 import { getSettings } from './settings';
 import { SdkErrors, throwError } from './services/errors';
+import { createStorage, PersistentStorageClean, StorageFactory } from './services/storage';
+import { Checksum256, Name } from '@greymass/eosio';
+import { TonomyUsername } from './services/username';
+import { browserStorageFactory } from './managers/browserStorage';
+import { getChainInfo } from './services/eosio/eosio';
+
+export type ExternalUserStorage = {
+    accountName: Name;
+    username: TonomyUsername;
+    loginRequest: JWTLoginPayload;
+};
+
+export type VerifyLoginOptions = {
+    checkKeys?: boolean;
+    keyManager: KeyManager;
+    storageFactory?: StorageFactory;
+};
 
 export class ExternalUser {
-    private did_: string;
+    keyManager: KeyManager;
+    storage: ExternalUserStorage & PersistentStorageClean;
+    did_: string;
 
-    constructor(
-        private keyManager: KeyManager,
-        private keyManagerLevel: KeyManagerLevel = KeyManagerLevel.BROWSER_LOCAL_STORAGE
-    ) {}
-
-    get did() {
-        if (!this.did_) {
-            const did = localStorage.getItem('tonomy.user.did');
-
-            if (did) {
-                this.did_;
-            } else {
-                throw throwError('No did found in storage');
-            }
-        }
-
-        return this.did_;
+    /**
+     * Creates a new external user
+     *
+     * @param _keyManager {KeyManager} - the key manager to use for signing
+     */
+    constructor(_keyManager: KeyManager, _storageFactory: StorageFactory) {
+        this.keyManager = _keyManager;
+        this.storage = createStorage<ExternalUserStorage>('tonomy.externalUser.', _storageFactory);
     }
-    static async getUser(
-        keyManager: KeyManager,
-        keyManagerLevel: KeyManagerLevel = KeyManagerLevel.BROWSER_LOCAL_STORAGE
-    ): Promise<ExternalUser | false> {
-        const accountName = localStorage.getItem('tonomy.user.accountName');
 
-        if (!accountName) {
-            //TODO: logout
-            // keyManager.clear(); must be implemented in future keymanager
-            throw throwError('accountName not found', SdkErrors.AccountNotFound);
-        }
+    static async getUser(keyManager: KeyManager, storageFactory: StorageFactory): Promise<ExternalUser | false> {
+        const user = new ExternalUser(keyManager, storageFactory);
 
         try {
-            const result = await UserApps.verifyKeyExistsForApp(accountName, keyManager, keyManagerLevel);
+            const accountName = (await user.getAccountName()).toString();
+
+            if (!accountName) {
+                //TODO: logout
+                // keyManager.clear(); must be implemented in future keymanager
+                throw throwError('accountName not found', SdkErrors.AccountNotFound);
+            }
+
+            const result = await UserApps.verifyKeyExistsForApp(accountName, keyManager);
 
             if (result) {
-                return new ExternalUser(keyManager, keyManagerLevel);
+                return user;
             } else {
                 throw throwError('User Not loggedIn');
             }
         } catch (e) {
             //TODO logout
             // keyManager.clear(); must be implemented in future keymanager
+            user.storage.clear();
             return false;
         }
     }
 
+    async getDid() {
+        if (!this.did_) {
+            const accountName = await (await this.getAccountName()).toString();
+            const chainID = (await getChainInfo()).chain_id as unknown as Checksum256;
+
+            this.did_ = `did:antelope:${chainID}:${accountName}`;
+        }
+
+        return this.did_;
+    }
+
+    /**
+     * Sets the account name of the user
+     *
+     * @param accountName {Name} - the account name of the user
+     */
+    async setAccountName(accountName: Name): Promise<void> {
+        this.storage.accountName = accountName;
+        await this.storage.accountName;
+    }
+
+    /**
+     * Sets the username of the user
+     *
+     * @param username {string} - the username of the user
+     */
+    async setUsername(username: string): Promise<void> {
+        this.storage.username = new TonomyUsername(username);
+        await this.storage.username;
+    }
+
+    /**
+     * Gets the username of the user
+     *
+     * @returns {Promise<TonomyUsername>} - the username of the user
+     */
+    async getUsername(): Promise<TonomyUsername> {
+        return await this.storage.username;
+    }
+
+    /**
+     * Sets the login request
+     *
+     * @param loginRequest {JWTLoginPayload} - the login request
+     */
+    async setLoginRequest(loginRequest: JWTLoginPayload): Promise<void> {
+        this.storage.loginRequest = loginRequest;
+        await this.storage.loginRequest;
+    }
+
+    /**
+     * Gets the login request
+     *
+     * @returns {Promise<JWTLoginPayload>} - the login request
+     */
+    async getLoginRequest(): Promise<JWTLoginPayload> {
+        return await this.storage.loginRequest;
+    }
+
+    /**
+     * Gets the account name of the user
+     *
+     * @returns {Promise<Name>} - the account name of the user
+     */
+    async getAccountName(): Promise<Name> {
+        return await this.storage.accountName;
+    }
+
+    /**
+     * Redirects the user to login to the app with their Tonomy ID account
+     *
+     * @description should be called when the user clicks on the login button
+     *
+     * @param onPressLoginOptions {OnPressLoginOptions} - options for the login
+     * @property onPressLoginOptions.redirect {boolean} - if true, redirects the user to the login page, if false, returns the token
+     * @property onPressLoginOptions.callbackPath {string} - the path to redirect the user to after login
+     * @param keyManager {KeyManager} - the key manager to use to store the keys
+     * @returns {Promise<string | void>} - if redirect is true, returns void, if redirect is false, returns the login request in the form of a JWT token
+     */
     static async loginWithTonomy(
         { redirect = true, callbackPath }: OnPressLoginOptions,
-        keyManager: KeyManager,
-        keyManagerLevel: KeyManagerLevel = KeyManagerLevel.BROWSER_LOCAL_STORAGE
+        keyManager: KeyManager
     ): Promise<string | void> {
         const { privateKey, publicKey } = generateRandomKeyPair();
 
         if (keyManager) {
             await keyManager.storeKey({
-                level: keyManagerLevel,
+                level: KeyManagerLevel.BROWSER_LOCAL_STORAGE,
                 privateKey: privateKey,
             });
         }
@@ -85,8 +174,6 @@ export class ExternalUser {
 
         const token = (await Message.sign(payload, { did: issuer, signer: signer as any, alg: 'ES256K-R' })).jwt;
 
-        // const token = (await this.signMessage(payload, keyManager, keyManagerLevel)).jwt;
-
         const requests = [token];
         const requestsString = JSON.stringify(requests);
 
@@ -105,25 +192,77 @@ export class ExternalUser {
      * @returns the external user object
      */
     //   static getUser(keymanager = JSsKeymanager: KeyManager): Promise<ExternalUser> {
-
-    /**
-     * checks storage for keys and other metadata
-     * fethces user from blockchain
-     * checks if user is loggedin by verifying the keys
-     * delete the keys from storage if they are not verified
-     * returns the user object
-     */
+    //  * checks storage for keys and other metadata
+    //  * fethces user from blockchain
+    //  * checks if user is loggedin by verifying the keys
+    //  * delete the keys from storage if they are not verified
+    //  * returns the user object
+    //  */
     // return Object.assign(this, {})
     //   }
 
     /**
+     * Signs a message with the given key manager and the key level
      *
-     * @param keymanager
-     * @throws error if user didn't login correctly
-     * @returns external user objects
+     * @param message {any} - an object to sign
+     * @param keyManager {KeyManager} - the key manager to use to sign the message
      */
-    //   static verifyLogin(keymanager = JSsKeymanager: KeyManager, storage = jsStorage: Storage):  Promise<ExternalUser>  {
-    //     userApps.callBack(keymanager);
-    //     return Object.assign(this, {})
-    //   }
+    static async signMessage(message: any, keyManager: KeyManager, recipient?: string): Promise<Message> {
+        const keyManagerLevel = KeyManagerLevel.BROWSER_LOCAL_STORAGE;
+        const publicKey = await keyManager.getKey({
+            level: keyManagerLevel,
+        });
+
+        if (!publicKey) throw throwError('No Key Found for this level', SdkErrors.KeyNotFound);
+        const signer = createVCSigner(keyManager, keyManagerLevel).sign;
+
+        const jwk = await createJWK(publicKey);
+
+        const issuer = toDid(jwk);
+
+        return await Message.sign(message, { did: issuer, signer: signer as any, alg: 'ES256K-R' }, recipient);
+    }
+
+    /**
+     * Receives the login request from Tonomy ID and verifies the login was successful
+     *
+     * @description should be called in the callback page
+     *
+     * @param {options} VerifyLoginOptions - options for the login
+     * @property {options.checkKeys} boolean - if true, checks the keys in the keyManager against the blockchain
+     * @property {options.keyManager} KeyManager - the key manager to use to storage and manage keys
+     * @property {options.storageFactory} [StorageFactory] - the storage factory to use to store data
+     *
+     * @returns {Promise<ExternalUser>} an external user object ready to use
+     */
+    static async verifyLoginRequest(options: VerifyLoginOptions): Promise<ExternalUser> {
+        if (!options.checkKeys) options.checkKeys = true;
+
+        const { requests, username, accountName } = UserApps.getLoginRequestParams();
+
+        const result = await UserApps.verifyRequests(requests);
+
+        const loginRequest = result.find((r) => r.getPayload().origin === window.location.origin)?.getPayload();
+
+        if (!loginRequest) throwError('No login request found for this origin', SdkErrors.OriginMismatch);
+        if (
+            loginRequest.publicKey !==
+            (await options.keyManager.getKey({ level: KeyManagerLevel.BROWSER_LOCAL_STORAGE }))?.toString()
+        )
+            throwError('Key in request does not match', SdkErrors.KeyNotFound);
+
+        if (options.checkKeys) {
+            const keyExists = await UserApps.verifyKeyExistsForApp(accountName, options.keyManager);
+
+            if (!keyExists) throwError('Key not found', SdkErrors.KeyNotFound);
+        }
+
+        const myStorageFactory = options.storageFactory || browserStorageFactory;
+        const externalUser = new ExternalUser(options.keyManager, myStorageFactory);
+
+        await externalUser.setAccountName(Name.from(accountName));
+        await externalUser.setLoginRequest(loginRequest);
+        await externalUser.setUsername(username);
+        return externalUser;
+    }
 }

@@ -89,6 +89,7 @@ enum SdkErrors {
     missingChallenge = 'missingChallenge',
     CommunicationNotConnected = 'CommunicationNotConnected',
     CommunicationTimeout = 'CommunicationTimeout',
+    OriginMismatch = 'OriginMismatch',
 }
 
 // eslint-disable-next-line @typescript-eslint/no-namespace
