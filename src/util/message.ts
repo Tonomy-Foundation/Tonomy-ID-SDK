@@ -19,7 +19,7 @@ export class Message {
      * @param recipient the recipient id
      * @returns a message objects
      */
-    static async sign(message: object, issuer: Issuer, type: string, recipient?: string): Promise<Message> {
+    static async sign(message: object, issuer: Issuer, type?: string, recipient?: string): Promise<Message> {
         const vc: W3CCredential = {
             '@context': ['https://www.w3.org/2018/credentials/v1'],
             id: 'https://example.com/id/1234324',
@@ -30,13 +30,13 @@ export class Message {
             issuanceDate: new Date().toISOString(),
             credentialSubject: {
                 message,
-                ...(type && { type }),
+                
             },
         };
 
         // add recipient to vc if given
         if (recipient) vc.credentialSubject.id = recipient;
-
+        if(type) vc.credentialSubject.type = type;
         const result = await issue(vc, {
             issuer: issuer,
             outputType: OutputType.JWT,

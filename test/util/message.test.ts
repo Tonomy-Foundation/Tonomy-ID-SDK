@@ -48,6 +48,7 @@ describe('message signed with testnetjungle key', () => {
                 signer: createSigner(PrivateKey.from('5K64AHK3SbXjzmeWeG1Mx98uNFnQRpGYZJJz6fMjho7RytrEAAy') as any),
                 alg: 'ES256K-R',
             },
+            'message',
             'did:antelope:eos:testnet:jungle:reball1block#permission1'
         );
     });
