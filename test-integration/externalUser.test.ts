@@ -281,29 +281,8 @@ describe('External User class', () => {
 
         // setup subscriber that waits for the response that the requests are confirmed by Tonomy ID
         let TONOMY_LOGIN_WEBSITE_messageSubscriber2: Subscriber;
-        let TONOMY_LOGIN_WEBSITE_messageSubscriber3: Subscriber;
-
         const TONOMY_LOGIN_WEBSITE_subscriberExecutor2 = (resolve: any) => {
             TONOMY_LOGIN_WEBSITE_messageSubscriber2 = (responseMessage: any) => {
-                const receivedMessage = new Message(responseMessage);
-
-                expect(receivedMessage.getSender()).toContain(TONOMY_ID_did);
-
-                if (receivedMessage.getPayload().type === 'ack') {
-                    if (log)
-                        console.log('TONOMY_LOGIN_WEBSITE2/login: receive connection acknowledgement from Tonomy ID');
-                    // we receive the ack message after Tonomy ID scans our QR code
-                    resolve({ message: receivedMessage, type: 'ack' });
-                } else {
-                    if (log)
-                        console.log('TONOMY_LOGIN_WEBSITE2/login: receive receipt of login request from Tonomy ID');
-                    // we receive a message after Tonomy ID user confirms consent to the login request
-                    resolve({ message: receivedMessage, type: 'request' });
-                    // reject();
-                }
-            };
-
-            TONOMY_LOGIN_WEBSITE_messageSubscriber3 = (responseMessage: any) => {
                 const receivedMessage = new Message(responseMessage);
 
                 expect(receivedMessage.getSender()).toContain(TONOMY_ID_did);
@@ -328,38 +307,10 @@ describe('External User class', () => {
             type: 'ack' | 'request';
         }>(TONOMY_LOGIN_WEBSITE_subscriberExecutor2);
 
-        const TONOMY_LOGIN_WEBSITE_subscriberExecutor3 = (resolve: any) => {
-            TONOMY_LOGIN_WEBSITE_messageSubscriber3 = (responseMessage: any) => {
-                const receivedMessage = new Message(responseMessage);
-
-                expect(receivedMessage.getSender()).toContain(TONOMY_ID_did);
-
-                if (receivedMessage.getPayload().type === 'ack') {
-                    if (log)
-                        console.log('TONOMY_LOGIN_WEBSITE2/login: receive connection acknowledgement from Tonomy ID');
-                    // we receive the ack message after Tonomy ID scans our QR code
-                    resolve({ message: receivedMessage, type: 'ack' });
-                } else {
-                    if (log)
-                        console.log('TONOMY_LOGIN_WEBSITE2/login: receive receipt of login request from Tonomy ID');
-                    // we receive a message after Tonomy ID user confirms consent to the login request
-                    resolve({ message: receivedMessage, type: 'request' });
-                    // reject();
-                }
-            };
-        };
-
-        const TONOMY_LOGIN_WEBSITE_requestsConfirmedMessagePromise = new Promise<{
-            message: Message;
-            type: 'ack' | 'request';
-        }>(TONOMY_LOGIN_WEBSITE_subscriberExecutor3);
-
         // @ts-ignore TONOMY_LOGIN_WEBSITE_messageSubscriber is used before being assigned
         TONOMY_LOGIN_WEBSITE_communication.unsubscribeMessage(TONOMY_LOGIN_WEBSITE_messageSubscriber);
         // @ts-ignore TONOMY_LOGIN_WEBSITE_messageSubscriber2 is used before being assigned
         TONOMY_LOGIN_WEBSITE_communication.subscribeMessage(TONOMY_LOGIN_WEBSITE_messageSubscriber2);
-        TONOMY_LOGIN_WEBSITE_communication.subscribeMessage(TONOMY_LOGIN_WEBSITE_messageSubscriber3, 'TonomyMessage');
-
         expect(TONOMY_LOGIN_WEBSITE_communication.socketServer.listeners('message').length).toBe(1);
 
         // ##### Tonomy ID user (SSO screen) #####
@@ -380,8 +331,6 @@ describe('External User class', () => {
         expect(TONOMY_LOGIN_WEBSITE_communication.socketServer.listeners('message').length).toBe(1);
         // @ts-ignore TONOMY_LOGIN_WEBSITE_messageSubscriber2 is used before being assigned
         TONOMY_LOGIN_WEBSITE_communication.unsubscribeMessage(TONOMY_LOGIN_WEBSITE_messageSubscriber2);
-        TONOMY_LOGIN_WEBSITE_communication.unsubscribeMessage(TONOMY_LOGIN_WEBSITE_messageSubscriber3);
-
         expect(TONOMY_LOGIN_WEBSITE_communication.socketServer.listeners('message').length).toBe(0);
 
         expect(requestConfirmedMessageFromTonomyId.type).toBe('request');
