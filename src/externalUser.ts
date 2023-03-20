@@ -39,7 +39,10 @@ export class ExternalUser {
         this.storage = createStorage<ExternalUserStorage>('tonomy.externalUser.', _storageFactory);
     }
 
-    static async getUser(keyManager: KeyManager, storageFactory: StorageFactory): Promise<ExternalUser | false> {
+    static async getUser(
+        keyManager: KeyManager,
+        storageFactory: StorageFactory = browserStorageFactory
+    ): Promise<ExternalUser | false> {
         const user = new ExternalUser(keyManager, storageFactory);
 
         try {
