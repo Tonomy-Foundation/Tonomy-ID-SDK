@@ -8,17 +8,21 @@ type TestStorage = {
 describe('Storage', () => {
     it('creates a storage correctly with type', async () => {
         const testStorage = createStorage<TestStorage>('tonomy.test.', jsStorageFactory);
+
         testStorage.test = 'test';
         await testStorage.test;
 
         const test = await testStorage.test;
+
         expect(test).toBe('test');
 
         const testStorage2 = createStorage<TestStorage>('tonomy.test2.', jsStorageFactory);
+
         testStorage2.test = 'test2';
         await testStorage2.test;
 
         const test2 = await testStorage2.test;
+
         expect(test2).toBe('test2');
         expect(test).toBe('test');
     });
@@ -35,10 +39,12 @@ describe('Storage', () => {
 
     it('creates a storage correctly with type', async () => {
         const testStorage = createStorage('tonomy.test.', jsStorageFactory) as any;
+
         testStorage.test = 'test';
         await testStorage.test;
 
         const test = await testStorage.test;
+
         expect(test).toBe('test');
     });
 });

@@ -58,10 +58,12 @@ export const storageProxyHandler: Storage = {
             if (key === 'clear') {
                 target.cache = {};
             }
+
             return function () {
                 target[key]();
             };
         }
+
         if (target.cache[scopedKey]) return target.cache[scopedKey];
 
         return target
@@ -103,6 +105,7 @@ export type StorageFactory = (scope: string) => PersistentStorage;
 
 export function createStorage<T>(scope: string, storageFactory: StorageFactory): T & PersistentStorageClean {
     const storage = storageFactory(scope);
+
     storage.cache = {};
     const proxy = new Proxy(storage, storageProxyHandler as any) as any;
 

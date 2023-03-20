@@ -30,13 +30,12 @@ export class Message {
             issuanceDate: new Date().toISOString(),
             credentialSubject: {
                 message,
-                
             },
         };
 
         // add recipient to vc if given
         if (recipient) vc.credentialSubject.id = recipient;
-        if(type) vc.credentialSubject.type = type;
+        if (type) vc.credentialSubject.type = type;
         const result = await issue(vc, {
             issuer: issuer,
             outputType: OutputType.JWT,

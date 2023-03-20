@@ -64,6 +64,7 @@ class EosioContract {
             },
         };
         const actions = [setcodeAction, setabiAction];
+
         return await transact(Name.from('eosio'), actions, signer);
     }
 
