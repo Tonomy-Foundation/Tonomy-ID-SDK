@@ -1,5 +1,4 @@
 import { decodeJWT } from '@tonomy/did-jwt';
-// import { issue, OutputType } from '@tonomy/antelope-ssi-toolkit';
 import { Issuer, verifyCredential, W3CCredential } from '@tonomy/did-jwt-vc';
 
 // import { Resolver } from '@tonomy/did-resolver';
@@ -20,17 +19,18 @@ export class Message {
      * @param recipient the recipient id
      * @returns a message objects
      */
-    static async sign(message: object, issuer: Issuer, recipient?: string): Promise<Message> {
+    static async sign(message: object, issuer: Issuer, type: string, recipient?: string): Promise<Message> {
         const vc: W3CCredential = {
             '@context': ['https://www.w3.org/2018/credentials/v1'],
             id: 'https://example.com/id/1234324',
-            type: ['VerifiableCredential'],
+            type: ['VerifiableCredential', 'TonomyMessage'],
             issuer: {
                 id: issuer.did,
             },
             issuanceDate: new Date().toISOString(),
             credentialSubject: {
                 message,
+                type,
             },
         };
 
@@ -62,6 +62,11 @@ export class Message {
     // Returns the original unsigned payload
     getPayload(): any {
         return this.decodedJwt.payload.vc.credentialSubject.message;
+    }
+
+    // Returns the original unsigned type
+    getType(): any {
+        return this.decodedJwt.payload.vc.credentialSubject.type;
     }
 
     // // Returns the message type (ignores VerifiableCredential type). This is used to determine what kind of message it is (login request, login request confirmation etc...) so the client can choose what to do with it
