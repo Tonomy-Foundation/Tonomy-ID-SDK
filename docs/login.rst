@@ -49,7 +49,9 @@ Callback page
 
     async function verifyLogin() {
         try {
-            const user = await ExternalUser.verifyLoginRequest();
+            const user = await ExternalUser.verifyLoginRequest({
+                keyManager: new JsKeyManager(),
+            });
         } catch (e) {
             if (e instanceof SdkErrors) {
                 // Handle error

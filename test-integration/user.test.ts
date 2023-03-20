@@ -2,7 +2,7 @@ import { api } from './util/eosio';
 import { createRandomID } from './util/user';
 import { KeyManager, KeyManagerLevel, TonomyUsername, User, createUserObject, setSettings } from '../src/index';
 import { SdkErrors } from '../src/index';
-import { JsKeyManager } from '../src/managers/jskeymanager';
+import { JsKeyManager } from '../test/services/jskeymanager';
 import { jsStorageFactory } from '../test/services/jsstorage';
 import settings from './services/settings';
 import { catchAndPrintErrors } from './util/errors';

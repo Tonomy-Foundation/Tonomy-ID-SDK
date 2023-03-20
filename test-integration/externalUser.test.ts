@@ -9,7 +9,7 @@ import { JWTLoginPayload } from '../src/userApps';
 import settings from './services/settings';
 import URL from 'jsdom-url';
 import { ExternalUser } from '../src/externalUser';
-import { JsKeyManager } from '../src/managers/jskeymanager';
+import { JsKeyManager } from '../test/services/jskeymanager';
 import { PublicKey } from '@greymass/eosio';
 import { sleep } from './util/sleep';
 import { jsStorageFactory } from '../test/services/jsstorage';
@@ -357,11 +357,10 @@ describe('External User class', () => {
         });
 
         if (log) console.log('TONOMY_LOGIN_WEBSITE/callback: fetching response from URL and verifying login');
-        const TONOMY_LOGIN_WEBSITE_externalUser = await ExternalUser.verifyLoginRequest(
-            true,
-            TONOMY_LOGIN_WEBSITE_jsKeyManager,
-            jsStorageFactory
-        );
+        const TONOMY_LOGIN_WEBSITE_externalUser = await ExternalUser.verifyLoginRequest({
+            keyManager: TONOMY_LOGIN_WEBSITE_jsKeyManager,
+            storageFactory: jsStorageFactory,
+        });
 
         if (log) console.log('TONOMY_LOGIN_WEBSITE/callback: checking login request of external website');
         const { requests } = await UserApps.getLoginRequestParams();
@@ -393,11 +392,10 @@ describe('External User class', () => {
         // ################################
 
         if (log) console.log('EXTERNAL_WEBSITE/callback: fetching response from URL');
-        const EXTERNAL_WEBSITE_externalUser = await ExternalUser.verifyLoginRequest(
-            true,
-            EXTERNAL_WEBSITE_jsKeyManager,
-            jsStorageFactory
-        );
+        const EXTERNAL_WEBSITE_externalUser = await ExternalUser.verifyLoginRequest({
+            keyManager: EXTERNAL_WEBSITE_jsKeyManager,
+            storageFactory: jsStorageFactory,
+        });
 
         const externalWebsiteAccount = await EXTERNAL_WEBSITE_externalUser.getAccountName();
         const tonomyIdAccount = await TONOMY_ID_user.getAccountName();

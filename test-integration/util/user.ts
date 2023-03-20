@@ -1,5 +1,5 @@
 import { randomString, KeyManager, createUserObject, App } from '../../src/index';
-import { JsKeyManager } from '../../src/managers/jskeymanager';
+import { JsKeyManager } from '../../test/services/jskeymanager';
 import { jsStorageFactory } from '../../test/services/jsstorage';
 
 import { privateKey } from './eosio';
