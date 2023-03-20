@@ -30,7 +30,7 @@ export class Message {
             issuanceDate: new Date().toISOString(),
             credentialSubject: {
                 message,
-                type,
+                ...(type && { type }),
             },
         };
 

@@ -23,6 +23,25 @@ describe('user signing messages', () => {
         user.logout();
     });
 
+    test('user can sign a message and type', async () => {
+        expect.assertions(3);
+        const { user } = await createRandomID();
+        const payload = {
+            id: 123,
+            message: 'hi',
+            type: 'TonomyMessage',
+        };
+
+        await expect(user.signMessage(payload)).resolves.toBeTruthy();
+
+        const message = await user.signMessage(payload);
+
+        expect(message).toBeInstanceOf(Message);
+        expect(message.getPayload()).toEqual(payload);
+        expect(message.getType()).toEqual(payload);
+        user.logout();
+    });
+
     test('user can verifies created message', async () => {
         expect.assertions(3);
         const { user } = await createRandomID();
