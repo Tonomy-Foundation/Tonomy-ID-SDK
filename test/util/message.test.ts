@@ -29,9 +29,9 @@ describe('check if message class has correct functions', () => {
     it('has getPayload function', () => {
         expect(message).toHaveProperty('getPayload');
     });
-    // it('has getType function', () => {
-    //     expect(message).toHaveProperty('getType');
-    // });
+    it('has getType function', () => {
+        expect(message).toHaveProperty('getType');
+    });
     it('has verify function', () => {
         expect(message).toHaveProperty('verify');
     });
@@ -67,6 +67,9 @@ describe('message signed with testnetjungle key', () => {
 
     it('gets right payload', () => {
         expect(message.getPayload()).toEqual({ item: { id: 1, name: 'testname' } });
+    });
+    it('gets right type', () => {
+        expect(message.getType()).toBe('message');
     });
 });
 
