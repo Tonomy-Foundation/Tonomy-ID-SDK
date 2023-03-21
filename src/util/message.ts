@@ -32,7 +32,7 @@ export class Message {
                 message,
             },
         };
-        console.log(type)
+
         // add recipient to vc if given
         if (recipient) vc.credentialSubject.id = recipient;
         if (type) vc.credentialSubject.type = type;

@@ -98,7 +98,7 @@ export class Communication {
     }
 
     // function that adds a new subscriber, which is called every time a message is received
-    subscribeMessage(subscriber: Subscriber, type?:string): void {
+    subscribeMessage(subscriber: Subscriber, type?: string): void {
         //this.socketServer.on('message', subscriber);
 
         this.socketServer.on('message', (message) => {
