@@ -9,7 +9,7 @@ import {
     setSettings,
     EosioUtil,
 } from '../src/index';
-import { SdkError, SdkErrors } from '../src/index';
+import { SdkErrors } from '../src/index';
 import { JsKeyManager } from '../test/services/jskeymanager';
 import { jsStorageFactory } from '../test/services/jsstorage';
 import settings from './services/settings';

@@ -174,8 +174,6 @@ export class UserApps {
 
         const publickey = account.getPermission(app.accountName).required_auth.keys[0].key;
 
-        if (!pubKey) throw throwError("Couldn't fetch Key", SdkErrors.KeyNotFound);
-
         return pubKey.toString() === publickey.toString();
     }
 

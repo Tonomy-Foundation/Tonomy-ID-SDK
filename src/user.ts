@@ -456,16 +456,6 @@ export class User {
         await this.storage.did;
         return this.storage.did;
     }
-
-    async intializeFromStorage() {
-        const accountName = await this.getAccountName();
-
-        if (accountName) {
-            return await this.checkKeysStillValid();
-        } else {
-            throwError('Account "' + accountName + '" not found', SdkErrors.AccountDoesntExist);
-        }
-    }
 }
 
 /**

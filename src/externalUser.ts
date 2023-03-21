@@ -42,7 +42,7 @@ export class ExternalUser {
     static async getUser(
         keyManager: KeyManager,
         storageFactory: StorageFactory = browserStorageFactory
-    ): Promise<ExternalUser | false> {
+    ): Promise<ExternalUser> {
         const user = new ExternalUser(keyManager, storageFactory);
 
         try {
@@ -59,13 +59,13 @@ export class ExternalUser {
             if (result) {
                 return user;
             } else {
-                throw throwError('User Not loggedIn');
+                throw throwError('User Not loggedIn', SdkErrors.UserNotLoggedIn);
             }
         } catch (e) {
             //TODO logout
             // keyManager.clear(); must be implemented in future keymanager
             user.storage.clear();
-            return false;
+            throw e;
         }
     }
 

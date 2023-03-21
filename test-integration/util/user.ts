@@ -1,4 +1,3 @@
-import { Checksum256 } from '@greymass/eosio';
 import { randomString, KeyManager, createUserObject, App } from '../../src/index';
 import { JsKeyManager } from '../../test/services/jskeymanager';
 import { jsStorageFactory } from '../../test/services/jsstorage';
