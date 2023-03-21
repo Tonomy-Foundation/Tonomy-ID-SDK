@@ -3,7 +3,7 @@ import { createSdkError, SdkErrors, throwError } from './services/errors';
 import { getSettings } from './settings';
 import { Message } from './util/message';
 
-export type Subscriber = (message: string) => void;
+export type Subscriber = (message: Message) => void;
 
 export class Communication {
     socketServer: Socket;
@@ -98,8 +98,14 @@ export class Communication {
     }
 
     // function that adds a new subscriber, which is called every time a message is received
-    subscribeMessage(subscriber: Subscriber): void {
-        this.socketServer.on('message', subscriber);
+    subscribeMessage(subscriber: Subscriber, type?:string): void {
+        //this.socketServer.on('message', subscriber);
+
+        this.socketServer.on('message', (message) => {
+            if (!type || message.getType() === type) {
+                subscriber(message);
+            }
+        });
     }
 
     // unsubscribes a function from the receiving a message

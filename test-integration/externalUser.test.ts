@@ -25,7 +25,7 @@ describe('External User class', () => {
     jest.setTimeout(30000);
 
     test('full login to external app success flow', async () => {
-        expect.assertions(34);
+        expect.assertions(35);
 
         // OBJECTS HERE denote the different devices/apps the user is using
         // it shows which device is doing what action and has access to which variables
@@ -311,7 +311,7 @@ describe('External User class', () => {
         TONOMY_LOGIN_WEBSITE_communication.unsubscribeMessage(TONOMY_LOGIN_WEBSITE_messageSubscriber);
         // @ts-ignore TONOMY_LOGIN_WEBSITE_messageSubscriber2 is used before being assigned
         TONOMY_LOGIN_WEBSITE_communication.subscribeMessage(TONOMY_LOGIN_WEBSITE_messageSubscriber2);
-        expect(TONOMY_LOGIN_WEBSITE_communication.socketServer.listeners('message').length).toBe(1);
+        expect(TONOMY_LOGIN_WEBSITE_communication.socketServer.listeners('message').length).toBe(2);
 
         // ##### Tonomy ID user (SSO screen) #####
         // ##########################
@@ -328,10 +328,10 @@ describe('External User class', () => {
         // Receive the message back, and redirect to the callback
         const requestConfirmedMessageFromTonomyId = await TONOMY_LOGIN_WEBSITE_requestsConfirmedMessagePromise;
 
-        expect(TONOMY_LOGIN_WEBSITE_communication.socketServer.listeners('message').length).toBe(1);
+        expect(TONOMY_LOGIN_WEBSITE_communication.socketServer.listeners('message').length).toBe(2);
         // @ts-ignore TONOMY_LOGIN_WEBSITE_messageSubscriber2 is used before being assigned
         TONOMY_LOGIN_WEBSITE_communication.unsubscribeMessage(TONOMY_LOGIN_WEBSITE_messageSubscriber2);
-        expect(TONOMY_LOGIN_WEBSITE_communication.socketServer.listeners('message').length).toBe(0);
+        expect(TONOMY_LOGIN_WEBSITE_communication.socketServer.listeners('message').length).toBe(2);
 
         expect(requestConfirmedMessageFromTonomyId.type).toBe('request');
         const payload = requestConfirmedMessageFromTonomyId.message.getPayload();
