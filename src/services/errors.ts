@@ -89,6 +89,7 @@ enum SdkErrors {
     CommunicationNotConnected = 'CommunicationNotConnected',
     CommunicationTimeout = 'CommunicationTimeout',
     OriginMismatch = 'OriginMismatch',
+    AccountNotFound = 'AccountNotFound',
 }
 
 // eslint-disable-next-line @typescript-eslint/no-namespace
