@@ -102,7 +102,7 @@ export class Communication {
         //this.socketServer.on('message', subscriber);
 
         this.socketServer.on('message', (message) => {
-            if (!type || message.getType() === type) {
+            if (!type || new Message(message).getType() === type) {
                 subscriber(message);
             }
         });
