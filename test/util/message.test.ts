@@ -29,9 +29,9 @@ describe('check if message class has correct functions', () => {
     it('has getPayload function', () => {
         expect(message).toHaveProperty('getPayload');
     });
-    // it('has getType function', () => {
-    //     expect(message).toHaveProperty('getType');
-    // });
+    it('has getType function', () => {
+        expect(message).toHaveProperty('getType');
+    });
     it('has verify function', () => {
         expect(message).toHaveProperty('verify');
     });
@@ -48,8 +48,7 @@ describe('message signed with testnetjungle key', () => {
                 signer: createSigner(PrivateKey.from('5K64AHK3SbXjzmeWeG1Mx98uNFnQRpGYZJJz6fMjho7RytrEAAy') as any),
                 alg: 'ES256K-R',
             },
-            'did:antelope:eos:testnet:jungle:reball1block#permission1',
-            'message'
+            'did:antelope:eos:testnet:jungle:reball1block#permission1'
         );
     });
 
@@ -67,9 +66,6 @@ describe('message signed with testnetjungle key', () => {
 
     it('gets right payload', () => {
         expect(message.getPayload()).toEqual({ item: { id: 1, name: 'testname' } });
-    });
-    it('gets right type', () => {
-        expect(message.getType()).toEqual('message');
     });
 });
 
@@ -101,5 +97,26 @@ describe('keymanagersigner is correct', () => {
         expect(signedWithTonomy).toBeTruthy();
         expect(signedWithAntelopeToolKit).toBeTruthy();
         expect(signedWithTonomy).toEqual(signedWithAntelopeToolKit);
+    });
+});
+
+describe('message signed with type', () => {
+    let message: Message;
+
+    beforeAll(async () => {
+        message = await Message.sign(
+            { item: { id: 1, name: 'testname' } },
+            {
+                did: 'did:antelope:eos:testnet:jungle:reball1block#permission0',
+                signer: createSigner(PrivateKey.from('5K64AHK3SbXjzmeWeG1Mx98uNFnQRpGYZJJz6fMjho7RytrEAAy') as any),
+                alg: 'ES256K-R',
+            },
+            'did:antelope:eos:testnet:jungle:reball1block#permission1',
+            'message'
+        );
+    });
+
+    it('gets right type', () => {
+        expect(message.getType()).toEqual('message');
     });
 });
