@@ -23,7 +23,7 @@ export class Message {
         const vc: W3CCredential = {
             '@context': ['https://www.w3.org/2018/credentials/v1'],
             id: 'https://example.com/id/1234324',
-            type: ['VerifiableCredential', 'TonomyMessage'],
+            type: ['VerifiableCredential'],
             issuer: {
                 id: issuer.did,
             },
