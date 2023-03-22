@@ -25,7 +25,7 @@ describe('External User class', () => {
     jest.setTimeout(30000);
 
     test('full login to external app success flow', async () => {
-        expect.assertions(34);
+        expect.assertions(35);
 
         // OBJECTS HERE denote the different devices/apps the user is using
         // it shows which device is doing what action and has access to which variables
@@ -405,6 +405,11 @@ describe('External User class', () => {
         // cleanup connections
         await TONOMY_LOGIN_WEBSITE_communication.disconnect();
         await TONOMY_ID_user.logout();
+
+        if (log) console.log('EXTERNALuser: calling get User');
+        const externalUser = await ExternalUser.getUser(EXTERNAL_WEBSITE_jsKeyManager, jsStorageFactory);
+
+        expect(externalUser).toBeInstanceOf(ExternalUser);
         if (log) console.log('finished test');
 
         // for some reason this is needed to ensure all the code lines execute. Not sure why needed
