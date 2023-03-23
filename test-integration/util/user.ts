@@ -1,7 +1,6 @@
 import { randomString, KeyManager, createUserObject, App } from '../../src/index';
 import { JsKeyManager } from '../../test/services/jskeymanager';
 import { jsStorageFactory } from '../../test/services/jsstorage';
-
 import { privateKey } from './eosio';
 
 export async function createUser(username: string, password: string) {
@@ -44,7 +43,6 @@ export async function createRandomApp(logoUrl?: string, origin?: string): Promis
 
     origin = origin || `http://localhost:${port}`;
     logoUrl = logoUrl || `${origin}/logo.png`;
-
 
     return await App.create({
         usernamePrefix: randomString(8),
