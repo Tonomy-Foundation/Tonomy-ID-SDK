@@ -89,6 +89,7 @@ enum SdkErrors {
     CommunicationNotConnected = 'CommunicationNotConnected',
     CommunicationTimeout = 'CommunicationTimeout',
     OriginMismatch = 'OriginMismatch',
+    PinInValid = 'PinInValid',
 }
 
 // eslint-disable-next-line @typescript-eslint/no-namespace
