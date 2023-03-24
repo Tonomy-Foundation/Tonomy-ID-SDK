@@ -74,7 +74,7 @@ export class ExternalUser {
             const accountName = await (await this.getAccountName()).toString();
             const chainID = (await getChainInfo()).chain_id as unknown as Checksum256;
 
-            this.did_ = `did:antelope:${chainID}:${accountName}`;
+            this.did_ = `did:antelope:${chainID}:${accountName}#local`;
         }
 
         return this.did_;
