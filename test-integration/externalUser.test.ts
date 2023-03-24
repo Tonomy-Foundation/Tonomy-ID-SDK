@@ -328,10 +328,10 @@ describe('External User class', () => {
         // Receive the message back, and redirect to the callback
         const requestConfirmedMessageFromTonomyId = await TONOMY_LOGIN_WEBSITE_requestsConfirmedMessagePromise;
 
-        expect(TONOMY_LOGIN_WEBSITE_communication.socketServer.listeners('message').length).toBe(2);
+        expect(TONOMY_LOGIN_WEBSITE_communication.socketServer.listeners('message').length).toBe(1);
         // @ts-ignore TONOMY_LOGIN_WEBSITE_messageSubscriber2 is used before being assigned
         TONOMY_LOGIN_WEBSITE_communication.unsubscribeMessage(TONOMY_LOGIN_WEBSITE_messageSubscriber2);
-        expect(TONOMY_LOGIN_WEBSITE_communication.socketServer.listeners('message').length).toBe(2);
+        expect(TONOMY_LOGIN_WEBSITE_communication.socketServer.listeners('message').length).toBe(0);
 
         expect(requestConfirmedMessageFromTonomyId.type).toBe('request');
         const payload = requestConfirmedMessageFromTonomyId.message.getPayload();
