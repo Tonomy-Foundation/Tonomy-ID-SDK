@@ -22,15 +22,13 @@ export class Communication {
         });
 
         await new Promise((resolve, reject) => {
-            let resolved = false;
-
             this.socketServer.on('connect', () => {
-                resolved = true;
                 resolve(true);
                 return;
             });
             setTimeout(() => {
-                if (resolved) return;
+                if (this.socketServer.connected) return;
+
                 reject(
                     createSdkError(
                         'Could not connect to Tonomy Communication server',
@@ -39,10 +37,6 @@ export class Communication {
                 );
             }, 5000);
         });
-
-        if (!this.socketServer.connected) {
-            throwError('Could not connect to Tonomy Communication server', SdkErrors.CommunicationNotConnected);
-        }
     }
 
     /**
