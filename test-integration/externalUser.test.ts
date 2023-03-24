@@ -192,10 +192,10 @@ describe('External User class', () => {
         // Setup a promise that resolves when the subscriber executes
         // This emulates the Tonomy ID app, which waits for the user requests
         const TONOMY_ID_requestSubscriber = new Promise((resolve) => {
-            TONOMY_ID_user.communication.subscribeMessage(async (message) => {
+            TONOMY_ID_user.communication.subscribeMessage(async (m: any) => {
                 if (log) console.log('TONOMY_ID/SSO: receive login requests from Tonomy Login Website');
 
-                // const message = new Message(m);
+                const message = new Message(m);
 
                 // receive and verify the requests
                 const requests = message.getPayload().requests;

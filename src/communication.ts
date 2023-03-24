@@ -105,7 +105,7 @@ export class Communication {
             const msg = new Message(message);
 
             if (!type || msg.getType() === type) {
-                subscriber(msg);
+                subscriber(message);
             }
         });
     }
