@@ -321,4 +321,39 @@ describe('User class', () => {
             await expect(user.intializeFromStorage()).rejects.toThrowError(SdkErrors.AccountDoesntExist);
         })
     );
+    test(
+        'CheckPin() returns true when pin matches',
+        catchAndPrintErrors(async () => {
+            const { user, password } = await createRandomID();
+
+            await user.login(await user.getUsername(), password);
+
+            await expect(user.checkPassword(password)).resolves.toBeTruthy();
+            await expect(user.checkPassword(password)).resolves.toBe(true);
+
+            await user.savePIN('12345');
+            await expect(user.keyManager.getKey({ level: KeyManagerLevel.PIN })).resolves.toBeDefined();
+
+            await expect(user.checkPin('12345')).resolves.toBe(true);
+
+            await user.logout();
+        })
+    );
+    test(
+        'CheckPin() throws error if the Key Does not matches',
+        catchAndPrintErrors(async () => {
+            const { user, password } = await createRandomID();
+
+            await user.login(await user.getUsername(), password);
+
+            await expect(user.checkPassword(password)).resolves.toBeTruthy();
+            await expect(user.checkPassword(password)).resolves.toBe(true);
+
+            await user.savePIN('12345');
+            await expect(user.keyManager.getKey({ level: KeyManagerLevel.PIN })).resolves.toBeDefined();
+            await expect(user.checkPin('12121')).rejects.toThrowError(SdkErrors.PinInValid);
+
+            await user.logout();
+        })
+    );
 });
