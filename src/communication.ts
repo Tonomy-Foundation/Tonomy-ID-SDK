@@ -15,7 +15,7 @@ export class Communication {
      * @throws {SdkError} CommunicationNotConnected
      */
     private async connect(): Promise<void> {
-        if (this.socketServer.connected) return; // dont override socket if connected
+        if (this.socketServer?.connected) return; // dont override socket if connected
         const url = getSettings().communicationUrl;
 
         this.socketServer = io(url, {
