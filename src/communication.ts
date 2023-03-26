@@ -1,5 +1,5 @@
 import { io, Socket } from 'socket.io-client';
-import { createSdkError, SdkErrors, throwError } from './services/errors';
+import { createSdkError, SdkErrors } from './services/errors';
 import { getSettings } from './settings';
 import { Message } from './util/message';
 
