@@ -46,7 +46,7 @@ export class ExternalUser {
         const user = new ExternalUser(keyManager, storageFactory);
 
         try {
-            const accountName = (await user.getAccountName()).toString();
+            const accountName = await user.getAccountName();
 
             if (!accountName) {
                 //TODO: logout
@@ -54,7 +54,7 @@ export class ExternalUser {
                 throw throwError('accountName not found', SdkErrors.AccountNotFound);
             }
 
-            const result = await UserApps.verifyKeyExistsForApp(accountName, keyManager);
+            const result = await UserApps.verifyKeyExistsForApp(accountName.toString(), keyManager);
 
             if (result) {
                 return user;
