@@ -3,8 +3,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
 // need to use API types from inside tonomy-id-sdk, otherwise type compatibility issues
-import { createRandomApp, createRandomID } from './util/user';
-import { setSettings, Message, UserApps, Communication, App, KeyManagerLevel, Subscriber } from '../src/index';
+import { createRandomApp, createRandomID, loginToTonomyCommunication } from './util/user';
+import { setSettings, Message, UserApps, App, KeyManagerLevel, Subscriber } from '../src/index';
 import { JWTLoginPayload } from '../src/userApps';
 import settings from './services/settings';
 import URL from 'jsdom-url';
@@ -13,6 +13,7 @@ import { JsKeyManager } from '../test/services/jskeymanager';
 import { PublicKey } from '@greymass/eosio';
 import { sleep } from './util/sleep';
 import { jsStorageFactory } from '../test/services/jsstorage';
+import { externalWebsiteUserPressLoginToTonomyButton, loginWebsiteOnRedirect } from './util/externalUser';
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
@@ -25,7 +26,7 @@ describe('External User class', () => {
     jest.setTimeout(30000);
 
     test('full login to external app success flow', async () => {
-        expect.assertions(34);
+        expect.assertions(32);
 
         // OBJECTS HERE denote the different devices/apps the user is using
         // it shows which device is doing what action and has access to which variables
@@ -42,14 +43,7 @@ describe('External User class', () => {
 
         expect(TONOMY_ID_did).toContain('did:antelope:');
 
-        // Login to Tonomy Communication as the user
-        const TONOMY_ID_loginMessage = await TONOMY_ID_user.signMessage({});
-
-        if (log) console.log('TONOMY_ID/appStart: connect to Tonomy Communication');
-
-        const TONOMY_ID_loginResponse = await TONOMY_ID_user.communication.login(TONOMY_ID_loginMessage);
-
-        expect(TONOMY_ID_loginResponse).toBe(true);
+        await loginToTonomyCommunication(TONOMY_ID_user, log);
 
         // Create two apps which will be logged into
         const externalApp = await createRandomApp();
@@ -69,23 +63,12 @@ describe('External User class', () => {
         });
         const EXTERNAL_WEBSITE_jsKeyManager = new JsKeyManager();
 
-        if (log) console.log('EXTERNAL_WEBSITE/login: create did:jwk and login request');
-
-        const EXTERNAL_WEBSITE_loginRequestJwt = (await ExternalUser.loginWithTonomy(
-            { callbackPath: '/callback', redirect: false },
-            EXTERNAL_WEBSITE_jsKeyManager
-        )) as string;
-
-        expect(typeof EXTERNAL_WEBSITE_loginRequestJwt).toBe('string');
-
-        const EXTERNAL_WEBSITE_did = new Message(EXTERNAL_WEBSITE_loginRequestJwt).getSender();
-
-        expect(EXTERNAL_WEBSITE_did).toContain('did:jwk:');
-
-        if (log) console.log('EXTERNAL_WEBSITE/login: redirect to Tonomy Login Website');
-
-        const EXTERNAL_WEBSITE_redirectUrl =
-            tonomyLoginApp.origin + '/login?requests=' + JSON.stringify([EXTERNAL_WEBSITE_loginRequestJwt]);
+        const { did: EXTERNAL_WEBSITE_did, redirectUrl: EXTERNAL_WEBSITE_redirectUrl } =
+            await externalWebsiteUserPressLoginToTonomyButton(
+                EXTERNAL_WEBSITE_jsKeyManager,
+                tonomyLoginApp.origin,
+                log
+            );
 
         // #####Tonomy Login App website user (login page) #####
         // ########################################
@@ -98,45 +81,14 @@ describe('External User class', () => {
             url: EXTERNAL_WEBSITE_redirectUrl,
         });
 
-        if (log) console.log('TONOMY_LOGIN_WEBSITE/login: collect external website token from URL');
-
-        const TONOMY_LOGIN_WEBSITE_externalWebsiteJwtVerified = await UserApps.onRedirectLogin();
-
-        expect(TONOMY_LOGIN_WEBSITE_externalWebsiteJwtVerified).toBeInstanceOf(Message);
-        expect(TONOMY_LOGIN_WEBSITE_externalWebsiteJwtVerified.getSender()).toBe(EXTERNAL_WEBSITE_did);
-
         // Setup a request for the login app
         const TONOMY_LOGIN_WEBSITE_jsKeyManager = new JsKeyManager();
 
-        if (log) console.log('TONOMY_LOGIN_WEBSITE/login: create did:jwk and login request');
-        const TONOMY_LOGIN_WEBSITE_loginRequestJwt = (await ExternalUser.loginWithTonomy(
-            { callbackPath: '/callback', redirect: false },
-            TONOMY_LOGIN_WEBSITE_jsKeyManager
-        )) as string;
-        const TONOMY_LOGIN_WEBSITE_did = new Message(TONOMY_LOGIN_WEBSITE_loginRequestJwt).getSender();
-
-        expect(TONOMY_LOGIN_WEBSITE_did).toContain('did:jwk:');
-        expect(TONOMY_LOGIN_WEBSITE_did).not.toEqual(EXTERNAL_WEBSITE_did);
-
-        const TONOMY_LOGIN_WEBSITE_jwtRequests = [
-            EXTERNAL_WEBSITE_loginRequestJwt,
-            TONOMY_LOGIN_WEBSITE_loginRequestJwt,
-        ];
-
-        // Create a new login message, and take the DID (did:jwk) out as their identity
-        // Tonomy ID will scan the DID in barcode and use connect
-        const TONOMY_LOGIN_WEBSITE_logInMessage = new Message(TONOMY_LOGIN_WEBSITE_loginRequestJwt);
-
-        expect(TONOMY_LOGIN_WEBSITE_logInMessage).toBeInstanceOf(Message);
-
-        // Login to the Tonomy Communication as the login app user
-        if (log) console.log('TONOMY_LOGIN_WEBSITE/login: connect to Tonomy Communication');
-        const TONOMY_LOGIN_WEBSITE_communication = new Communication();
-        const TONOMY_LOGIN_WEBSITE_loginResponse = await TONOMY_LOGIN_WEBSITE_communication.login(
-            TONOMY_LOGIN_WEBSITE_logInMessage
-        );
-
-        expect(TONOMY_LOGIN_WEBSITE_loginResponse).toBe(true);
+        const {
+            did: TONOMY_LOGIN_WEBSITE_did,
+            jwtRequests: TONOMY_LOGIN_WEBSITE_jwtRequests,
+            communication: TONOMY_LOGIN_WEBSITE_communication,
+        } = await loginWebsiteOnRedirect(EXTERNAL_WEBSITE_did, TONOMY_LOGIN_WEBSITE_jsKeyManager, log);
 
         // setup subscriber for connection to Tonomy ID acknowledgement
         let TONOMY_LOGIN_WEBSITE_messageSubscriber: Subscriber;

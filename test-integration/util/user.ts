@@ -1,4 +1,4 @@
-import { randomString, KeyManager, createUserObject, App } from '../../src/index';
+import { randomString, KeyManager, createUserObject, App, User } from '../../src/index';
 import { JsKeyManager } from '../../test/services/jskeymanager';
 import { jsStorageFactory } from '../../test/services/jsstorage';
 import { privateKey } from './eosio';
@@ -53,4 +53,15 @@ export async function createRandomApp(logoUrl?: string, origin?: string): Promis
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         publicKey: privateKey.toPublic() as any,
     });
+}
+
+export async function loginToTonomyCommunication(user: User, log = false) {
+    // Login to Tonomy Communication as the user
+    const loginMessage = await user.signMessage({});
+
+    if (log) console.log('TONOMY_ID/appStart: connect to Tonomy Communication');
+
+    const loginResponse = await user.communication.login(loginMessage);
+
+    expect(loginResponse).toBe(true);
 }
