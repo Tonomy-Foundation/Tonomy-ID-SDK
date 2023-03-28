@@ -1,5 +1,7 @@
 /* eslint-disable no-console */
+import { Name } from '@greymass/eosio';
 import { Communication, ExternalUser, KeyManager, KeyManagerLevel, Message, Subscriber, UserApps } from '../../src';
+import { jsStorageFactory } from '../../test/services/jsstorage';
 
 export async function externalWebsiteUserPressLoginToTonomyButton(
     keyManager: KeyManager,
@@ -89,6 +91,36 @@ export async function setupTonomyIdAckSubscriber(did: string, log = false) {
     return { subscriber, promise };
 }
 
+export async function setupTonomyIdRequestConfirmSubscriber(did: string, log = false) {
+    let subscriber: Subscriber;
+    const subscriberExecutor = (resolve: any) => {
+        subscriber = (responseMessage: any) => {
+            const receivedMessage = new Message(responseMessage);
+
+            expect(receivedMessage.getSender()).toContain(did);
+
+            if (receivedMessage.getPayload().type === 'ack') {
+                if (log) console.log('TONOMY_LOGIN_WEBSITE/login: receive connection acknowledgement from Tonomy ID');
+                // we receive the ack message after Tonomy ID scans our QR code
+                resolve({ message: receivedMessage, type: 'ack' });
+            } else {
+                if (log) console.log('TONOMY_LOGIN_WEBSITE/login: receive receipt of login request from Tonomy ID');
+                // we receive a message after Tonomy ID user confirms consent to the login request
+                resolve({ message: receivedMessage, type: 'request' });
+                // reject();
+            }
+        };
+    };
+
+    const promise = new Promise<{
+        type: string;
+        message: Message;
+    }>(subscriberExecutor);
+
+    // @ts-expect-error - subscriber is used before being assigned
+    return { subscriber, promise };
+}
+
 export async function sendLoginRequestsMessage(
     requests: string[],
     keyManager: KeyManager,
@@ -110,4 +142,40 @@ export async function sendLoginRequestsMessage(
     const sendMessageResponse = await communication.sendMessage(requestMessage);
 
     expect(sendMessageResponse).toBe(true);
+}
+
+export async function loginWebsiteOnCallback(keyManager: KeyManager, log = true) {
+    if (log) console.log('TONOMY_LOGIN_WEBSITE/callback: fetching response from URL and verifying login');
+    const externalUser = await ExternalUser.verifyLoginRequest({
+        keyManager,
+        storageFactory: jsStorageFactory,
+    });
+
+    if (log) console.log('TONOMY_LOGIN_WEBSITE/callback: checking login request of external website');
+    const { requests } = await UserApps.getLoginRequestParams();
+    const result = await UserApps.verifyRequests(requests);
+
+    const redirectJwt = result.find((jwtVerified) => jwtVerified.getPayload().origin !== location.origin);
+
+    expect(redirectJwt).toBeDefined();
+
+    if (log) console.log('TONOMY_LOGIN_WEBSITE/callback: redirecting to external website');
+
+    const username = (await externalUser.getUsername()).username;
+    const accountName = await externalUser.getAccountName();
+
+    return { redirectJwt, username, accountName };
+}
+
+export async function externalWebsiteOnCallback(keyManager: KeyManager, accountName: Name, log = true) {
+    if (log) console.log('EXTERNAL_WEBSITE/callback: fetching response from URL');
+    const externalUser = await ExternalUser.verifyLoginRequest({
+        keyManager,
+        storageFactory: jsStorageFactory,
+    });
+
+    const externalWebsiteAccount = await externalUser.getAccountName();
+    const tonomyIdAccount = accountName;
+
+    expect(externalWebsiteAccount.toString()).toBe(tonomyIdAccount.toString());
 }
