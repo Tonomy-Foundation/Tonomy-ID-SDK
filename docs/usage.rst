@@ -14,6 +14,7 @@ Register your app
 First, you need to register your app with Tonomy ID. You can do this by running the following command:
 
 .. code-block:: bash
+
     npx ts-node --project cli.tsconfig.json --transpileOnly id.ts appName username description logoUrl domain publicKey blockchainUrl
 
     # Example
