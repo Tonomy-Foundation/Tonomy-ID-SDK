@@ -9,6 +9,14 @@ The SDK is written in typescript with jest to run tests.
 - Linux debian distribution (Ubuntu 20.0.4 LTS used)
 - [Nodejs](https://nodejs.org) v16.4.1+ suggested installed with [nvm](https://github.com/nvm-sh/nvm)
 
+Integration tests:
+
+- [Docker](http://docs.docker.com) v20.10+
+
+## Repositories
+
+- [Contracts](https://github.com/Tonomy-Foundation/Tonomy-Contracts) (inside SDK repo) - Smart contracts to run the governance, identity, DAO, token and other ecosystem tools. This is used to run the integration tests
+
 ## Run
 
 ```bash
@@ -21,7 +29,19 @@ To do a one-off build, use `npm run build`.
 
 ## Tests
 
-To run tests, use `npm test`.
+### Unit tests:
+
+Tests individual class and function logic within the SDK.
+
+`npm test`
+
+### Integration tests:
+
+Tests end-to-end functions across more than one service.
+
+Require another service to be running, such as the blockchain or Tonomy Communication service.
+
+`./test-integration/build-and-run-tests.sh`
 
 ## Linting
 

@@ -8,6 +8,8 @@ import {
 } from '../../src/services/keymanager';
 import argon2 from 'argon2';
 import { Bytes, Checksum256, KeyType, PrivateKey, PublicKey, Signature } from '@greymass/eosio';
+import { createSigner } from '@tonomy/antelope-ssi-toolkit';
+import { SdkErrors, throwError } from '../../src';
 
 type KeyStorage = {
     privateKey: PrivateKey;
@@ -26,6 +28,7 @@ export class JsKeyManager implements KeyManager {
     // Creates a cryptographically secure Private key
     generateRandomPrivateKey(): PrivateKey {
         const bytes = randomBytes(32);
+
         return new PrivateKey(KeyType.K1, new Bytes(bytes));
     }
 
@@ -57,48 +60,83 @@ export class JsKeyManager implements KeyManager {
             privateKey: options.privateKey,
             publicKey: options.privateKey.toPublic(),
         };
+
         if (options.level === KeyManagerLevel.PASSWORD || options.level === KeyManagerLevel.PIN) {
             if (!options.challenge) throw new Error('Challenge missing');
             keyStore.salt = randomString(32);
             keyStore.hashedSaltedChallenge = sha256(options.challenge + keyStore.salt);
         }
+
+        if (options.level === KeyManagerLevel.BROWSER_LOCAL_STORAGE) {
+            localStorage.setItem('tonomy.id.' + KeyManagerLevel.BROWSER_LOCAL_STORAGE, options.privateKey.toString());
+        }
+
         this.keyStorage[options.level] = keyStore;
         return keyStore.publicKey;
     }
 
     async signData(options: SignDataOptions): Promise<string | Signature> {
-        if (!(options.level in this.keyStorage)) throw new Error('No key for this level');
+        if (!(options.level in this.keyStorage)) throw throwError('No key for this level', SdkErrors.KeyNotFound);
 
         const keyStore = this.keyStorage[options.level];
 
         if (options.level === KeyManagerLevel.PASSWORD || options.level === KeyManagerLevel.PIN) {
-            if (!options.challenge) throw new Error('Challenge missing');
+            if (!options.challenge) throw throwError('Challenge missing', SdkErrors.missingChallenge);
 
             const hashedSaltedChallenge = sha256(options.challenge + keyStore.salt);
 
-            if (keyStore.hashedSaltedChallenge !== hashedSaltedChallenge) throw new Error('Challenge does not match');
+            if (keyStore.hashedSaltedChallenge !== hashedSaltedChallenge)
+                throw throwError('Challenge does not match', SdkErrors.PasswordInValid);
         }
 
         const privateKey = keyStore.privateKey;
-        let digest: Checksum256;
-        if (options.data instanceof String) {
-            digest = Checksum256.hash(Buffer.from(options.data));
-        } else {
-            digest = options.data as Checksum256;
-        }
-        const signature = privateKey.signDigest(digest);
 
-        return signature;
+        if (options.outputType === 'jwt') {
+            if (typeof options.data !== 'string') throw throwError('data must be a string', SdkErrors.invalidDataType);
+            const signer = createSigner(privateKey as any);
+
+            return (await signer(options.data)) as string;
+        } else {
+            let digest: Checksum256;
+
+            if (typeof options.data === 'string') {
+                digest = Checksum256.hash(Buffer.from(options.data));
+            } else {
+                digest = options.data as Checksum256;
+            }
+
+            const signature = privateKey.signDigest(digest);
+
+            return signature;
+        }
     }
 
     async getKey(options: GetKeyOptions): Promise<PublicKey> {
-        if (!(options.level in this.keyStorage)) throw new Error('No key for this level');
-        const keyStore = this.keyStorage[options.level];
-        return keyStore.publicKey;
+        if (options.level === KeyManagerLevel.BROWSER_LOCAL_STORAGE) {
+            // use cache if available
+            if (options.level in this.keyStorage) return this.keyStorage[options.level].publicKey;
+
+            const data = localStorage.getItem('tonomy.id.' + options.level);
+
+            if (!data) {
+                throw new Error('No key for this level');
+            }
+
+            (this.keyStorage[options.level] as KeyStorage) = {
+                privateKey: PrivateKey.fromString(data),
+                publicKey: PrivateKey.fromString(data).toPublic(),
+            };
+            return PrivateKey.from(data).toPublic();
+        } else {
+            if (!(options.level in this.keyStorage)) throw new Error('No key for this level');
+
+            const keyStore = this.keyStorage[options.level];
+
+            return keyStore.publicKey;
+        }
     }
 
     async removeKey(options: GetKeyOptions): Promise<void> {
-        if (!(options.level in this.keyStorage)) throw new Error('No key for this level');
         delete this.keyStorage[options.level];
     }
 }

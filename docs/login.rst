@@ -45,7 +45,7 @@ Login page
     async function onButtonPress() {
         setSettings({ ssoWebsiteOrigin: "https://tonomy-id-staging.tonomy.foundation" });
 
-        UserApps.onPressLogin({ callbackPath: '/callback' });
+        ExternalUser.loginWithTonomy({ callbackPath: '/callback' });
     }
 
 
@@ -56,7 +56,7 @@ Callback page
 
 .. code-block:: typescript
 
-    import { SdkError, UserApps } from '@tonomy/tonomy-id-sdk';
+    import { SdkError, ExternalUser } from '@tonomy/tonomy-id-sdk';
 
     ...
 
@@ -66,12 +66,17 @@ Callback page
 
     async function verifyLogin() {
         try {
-            const user = await UserApps.verifyUserLogin();
+            const user = await ExternalUser.verifyLoginRequest({
+                keyManager: new JsKeyManager(),
+            });
         } catch (e) {
             if (e instanceof SdkErrors) {
                 // Handle error
             }
         }
+
+        // Get the account name
+        const accountName = await user.getAccountName();
 
         // For example, you can now sign a transaction on the Antelope blockchain
         .. TODO

@@ -1,5 +1,5 @@
 {
-    "version": "0.1.0",
+    "version": "0.3.18",
     "license": "MIT",
     "main": "dist/index.js",
     "typings": "dist/index.d.ts",
@@ -13,19 +13,22 @@
     "scripts": {
         "start": "npx tsdx watch --transpileOnly --noClean",
         "build": "npx tsdx build",
-        "test": "npx tsdx test",
+        "test": "npx tsdx test --config ./test/jest.config.tsdx.js",
+        "test:integration": "tsdx test --detectOpenHandles --config ./test-integration/jest.config.js",
+        "bootstrap": "npx ts-node --project ./bootstrap-blockchain/tsconfig.json bootstrap-blockchain/bootstrap.ts",
         "lint": "eslint src test --ext .ts --resolve-plugins-relative-to .",
         "lint:fix": "npm run lint -- --fix",
         "prepare": "npx tsdx build --transpileOnly --noClean",
         "size": "size-limit",
-        "analyze": "size-limit --why"
+        "analyze": "size-limit --why",
+        "release": "semantic-release  --debug"
     },
     "husky": {
         "hooks": {
             "pre-commit": "tsdx lint"
         }
     },
-    "name": "tonomy-id-sdk",
+    "name": "@tonomy/tonomy-id-sdk",
     "author": "Jack Tanner",
     "module": "dist/tonomy-id-sdk.esm.js",
     "size-limit": [
@@ -39,11 +42,14 @@
         }
     ],
     "devDependencies": {
+        "@semantic-release/changelog": "^6.0.2",
+        "@semantic-release/git": "^10.0.1",
         "@size-limit/preset-small-lib": "^8.0.0",
         "@types/elliptic": "^6.4.14",
         "@types/randombytes": "^2.0.0",
         "@typescript-eslint/eslint-plugin": "^5.40.0",
         "@typescript-eslint/parser": "^5.40.0",
+        "address": "^1.2.2",
         "argon2": "^0.30.2",
         "eslint": "^8.25.0",
         "eslint-config-prettier": "^8.5.0",
@@ -52,7 +58,10 @@
         "jest-environment-jsdom": "^24.9.0",
         "jsdom-url": "^3.0.1",
         "prettier": "^2.7.1",
+        "semantic-release": "^20.1.1",
         "size-limit": "^8.0.0",
+        "ts-jest": "^29.0.5",
+        "ts-node": "^10.9.1",
         "tsdx": "^0.14.1",
         "tslib": "^2.4.0",
         "typescript": "^4.7.4"
@@ -60,8 +69,26 @@
     "dependencies": {
         "@consento/sync-randombytes": "^1.0.5",
         "@greymass/eosio": "^0.6.4",
+        "@tonomy/antelope-did": "^0.1.5",
+        "@tonomy/antelope-did-resolver": "^0.2.2",
+        "@tonomy/antelope-ssi-toolkit": "^1.1.0",
+        "@tonomy/did-jwt": "^6.10.1",
+        "@tonomy/did-jwt-vc": "^3.1.3",
+        "@tonomy/did-resolver": "^4.0.4",
         "cross-fetch": "^3.1.5",
-        "did-jwt": "^6.10.1",
-        "elliptic": "^6.5.4"
-    }
+        "elliptic": "^6.5.4",
+        "socket.io-client": "^4.5.4"
+    },
+    "publishConfig": {
+        "access": "public",
+        "registry-url": "https://registry.npmjs.org/"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/Tonomy-Foundation/Tonomy-ID-SDK.git"
+    },
+    "keywords": [
+        "sdk",
+        "tonomy"
+    ]
 }

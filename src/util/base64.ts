@@ -19,8 +19,10 @@ const Base64 = {
                     "'btoa' failed: The string to be encoded contains characters outside of the Latin1 range."
                 );
             }
+
             block = (block << 8) | charCode;
         }
+
         return output;
     },
 
@@ -31,6 +33,7 @@ const Base64 = {
         if (str.length % 4 === 1) {
             throw new Error("'atob' failed: The string to be decoded is not correctly encoded.");
         }
+
         for (
             let bc = 0, bs = 0, buffer, i = 0;
             (buffer = str.charAt(i++));
@@ -58,6 +61,7 @@ export function bnToBase64Url(bn: typeof BN): string {
     if (typeof Buffer !== 'undefined') {
         // nodejs
         const buffer = (bn as any).toArrayLike(Buffer, 'be');
+
         return Buffer.from(buffer).toString('base64');
     } else {
         // browser
@@ -87,14 +91,11 @@ export function utf8ToB64(str: string) {
 }
 
 export function b64ToUtf8(str: string) {
-    console.log('b64ToUtf8', str);
     if (typeof Buffer !== 'undefined') {
         // nodejs
-        console.log('nodejs');
         return Buffer.from(str, 'base64').toString('utf8');
     } else {
         // browser
-        console.log('browser');
         return decodeURIComponent(escape(window.atob(str)));
     }
 }
