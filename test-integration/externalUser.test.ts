@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 /* eslint-disable camelcase */
 /* eslint-disable @typescript-eslint/no-unused-vars */
@@ -13,7 +14,11 @@ import { JsKeyManager } from '../test/services/jskeymanager';
 import { PublicKey } from '@greymass/eosio';
 import { sleep } from './util/sleep';
 import { jsStorageFactory } from '../test/services/jsstorage';
-import { externalWebsiteUserPressLoginToTonomyButton, loginWebsiteOnRedirect } from './util/externalUser';
+import {
+    externalWebsiteUserPressLoginToTonomyButton,
+    loginWebsiteOnRedirect,
+    setupTonomyIdAckSubscriber,
+} from './util/externalUser';
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
@@ -91,34 +96,10 @@ describe('External User class', () => {
         } = await loginWebsiteOnRedirect(EXTERNAL_WEBSITE_did, TONOMY_LOGIN_WEBSITE_jsKeyManager, log);
 
         // setup subscriber for connection to Tonomy ID acknowledgement
-        let TONOMY_LOGIN_WEBSITE_messageSubscriber: Subscriber;
-        const TONOMY_LOGIN_WEBSITE_subscriberExecutor = (resolve: any) => {
-            TONOMY_LOGIN_WEBSITE_messageSubscriber = (responseMessage: any) => {
-                const receivedMessage = new Message(responseMessage);
-
-                expect(receivedMessage.getSender()).toContain(TONOMY_ID_did);
-
-                if (receivedMessage.getPayload().type === 'ack') {
-                    if (log)
-                        console.log('TONOMY_LOGIN_WEBSITE/login: receive connection acknowledgement from Tonomy ID');
-                    // we receive the ack message after Tonomy ID scans our QR code
-                    resolve({ message: receivedMessage, type: 'ack' });
-                } else {
-                    if (log) console.log('TONOMY_LOGIN_WEBSITE/login: receive receipt of login request from Tonomy ID');
-                    // we receive a message after Tonomy ID user confirms consent to the login request
-                    resolve({ message: receivedMessage, type: 'request' });
-                    // reject();
-                }
-            };
-        };
-
-        const TONOMY_LOGIN_WEBSITE_ackMessagePromise = new Promise<{
-            type: string;
-            message: Message;
-        }>(TONOMY_LOGIN_WEBSITE_subscriberExecutor);
+        const { subscriber: TONOMY_LOGIN_WEBSITE_messageSubscriber, promise: TONOMY_LOGIN_WEBSITE_ackMessagePromise } =
+            await setupTonomyIdAckSubscriber(TONOMY_ID_did, log);
 
         expect(TONOMY_LOGIN_WEBSITE_communication.socketServer.listeners('message').length).toBe(0);
-        // @ts-ignore TONOMY_LOGIN_WEBSITE_messageSubscriber is used before being assigned
         TONOMY_LOGIN_WEBSITE_communication.subscribeMessage(TONOMY_LOGIN_WEBSITE_messageSubscriber);
         expect(TONOMY_LOGIN_WEBSITE_communication.socketServer.listeners('message').length).toBe(1);
 

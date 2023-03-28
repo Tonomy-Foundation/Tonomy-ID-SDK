@@ -1,5 +1,5 @@
 /* eslint-disable no-console */
-import { Communication, ExternalUser, KeyManager, Message, UserApps } from '../../src';
+import { Communication, ExternalUser, KeyManager, Message, Subscriber, UserApps } from '../../src';
 
 export async function externalWebsiteUserPressLoginToTonomyButton(
     keyManager: KeyManager,
@@ -57,4 +57,34 @@ export async function loginWebsiteOnRedirect(externalWebsiteDid: string, keyMana
     expect(loginResponse).toBe(true);
 
     return { did, jwtRequests, communication };
+}
+
+export async function setupTonomyIdAckSubscriber(did: string, log = false) {
+    let subscriber: Subscriber;
+    const subscriberExecutor = (resolve: any) => {
+        subscriber = (responseMessage: any) => {
+            const receivedMessage = new Message(responseMessage);
+
+            expect(receivedMessage.getSender()).toContain(did);
+
+            if (receivedMessage.getPayload().type === 'ack') {
+                if (log) console.log('TONOMY_LOGIN_WEBSITE/login: receive connection acknowledgement from Tonomy ID');
+                // we receive the ack message after Tonomy ID scans our QR code
+                resolve({ message: receivedMessage, type: 'ack' });
+            } else {
+                if (log) console.log('TONOMY_LOGIN_WEBSITE/login: receive receipt of login request from Tonomy ID');
+                // we receive a message after Tonomy ID user confirms consent to the login request
+                resolve({ message: receivedMessage, type: 'request' });
+                // reject();
+            }
+        };
+    };
+
+    const promise = new Promise<{
+        type: string;
+        message: Message;
+    }>(subscriberExecutor);
+
+    // @ts-expect-error - subscriber is used before being assigned
+    return { subscriber, promise };
 }
