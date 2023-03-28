@@ -402,7 +402,7 @@ describe('External User class', () => {
         expect(externalWebsiteAccount.toString()).toBe(tonomyIdAccount.toString());
 
         /**
-         * this will not work because storage isn't presistant
+         * this will not work because storage isn't persistent
          */
         // if (log) console.log('EXTERNALuser: calling get User');
         // console.log(EXTERNAL_WEBSITE_externalUser.storage);
