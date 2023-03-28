@@ -57,6 +57,8 @@ jobs:
         image: tonomy/communication:development
         ports:
           - 5000:5000
+        env:
+          - BLOCKCHAIN_URL: "http://blockchain:8888"
 
     steps:
       - uses: actions/checkout@v3
