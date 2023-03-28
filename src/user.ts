@@ -159,28 +159,12 @@ export class User {
     }
 
     async checkPin(pin: string): Promise<boolean> {
-        const username = await this.getAccountName();
-
-        const idData = await idContract.getPerson(username);
-
         const pinKey = await this.keyManager.getKey({
             level: KeyManagerLevel.PIN,
+            challenge: pin,
         });
 
-        // console.log('Pin Key', pinKey?.toString());
-        // console.log('Pin Key data', pinKey?.data);
-
-        console.log('pin', pin);
-        const accountData = await User.getAccountInfo(idData.account_name);
-        // get pin Pin now and match with given Pin key
-
-        const onchainKey = accountData.getPermission('owner').required_auth.keys[0].key;
-        // TODO change to active/other permissions when we make the change
-
-        // console.log('all keys', JSON.stringify(accountData.getPermission('owner').required_auth.keys));
-        if (!pinKey) throwError('Pin key not found', SdkErrors.KeyNotFound);
-
-        if (pinKey.toString() !== onchainKey.toString()) throwError('Pin is incorrect', SdkErrors.PinInValid);
+        if (!pinKey) throwError('Pin is incorrect', SdkErrors.PinInValid);
         return true;
     }
 

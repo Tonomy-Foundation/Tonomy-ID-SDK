@@ -66,6 +66,7 @@ type SignDataOptions = {
  */
 type GetKeyOptions = {
     level: KeyManagerLevel;
+    challenge?: string;
 };
 
 interface KeyManager {

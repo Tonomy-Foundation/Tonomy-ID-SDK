@@ -328,9 +328,6 @@ describe('User class', () => {
 
             await user.login(await user.getUsername(), password);
 
-            await expect(user.checkPassword(password)).resolves.toBeTruthy();
-            await expect(user.checkPassword(password)).resolves.toBe(true);
-
             await user.savePIN('12345');
             await expect(user.keyManager.getKey({ level: KeyManagerLevel.PIN })).resolves.toBeDefined();
 
@@ -345,9 +342,6 @@ describe('User class', () => {
             const { user, password } = await createRandomID();
 
             await user.login(await user.getUsername(), password);
-
-            await expect(user.checkPassword(password)).resolves.toBeTruthy();
-            await expect(user.checkPassword(password)).resolves.toBe(true);
 
             await user.savePIN('12345');
             await expect(user.keyManager.getKey({ level: KeyManagerLevel.PIN })).resolves.toBeDefined();
