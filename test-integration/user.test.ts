@@ -1,11 +1,20 @@
 import { api } from './util/eosio';
 import { createRandomID } from './util/user';
-import { KeyManager, KeyManagerLevel, TonomyUsername, User, createUserObject, setSettings } from '../src/index';
+import {
+    KeyManager,
+    KeyManagerLevel,
+    TonomyUsername,
+    User,
+    createUserObject,
+    setSettings,
+    EosioUtil,
+} from '../src/index';
 import { SdkErrors } from '../src/index';
 import { JsKeyManager } from '../test/services/jskeymanager';
 import { jsStorageFactory } from '../test/services/jsstorage';
 import settings from './services/settings';
 import { catchAndPrintErrors } from './util/errors';
+import { Checksum256 } from '@greymass/eosio';
 
 let auth: KeyManager;
 let user: User;
@@ -278,6 +287,19 @@ describe('User class', () => {
             await expect(userLogin.login(new TonomyUsername('random'), password)).rejects.toThrowError(Error);
             // Close connections
             await userLogin.logout();
+            await user.logout();
+        })
+    );
+    test(
+        'getDid() expect chainId and account name defined',
+        catchAndPrintErrors(async () => {
+            const { user } = await createRandomID();
+            const accountName = await user.storage.accountName;
+            const chainId = (await EosioUtil.getChainInfo()).chain_id as unknown as Checksum256;
+
+            expect(chainId).toBeDefined();
+            expect(accountName).toBeDefined();
+            expect(await user.getDid()).toEqual(`did:antelope:${chainId}:${accountName.toString()}`);
             await user.logout();
         })
     );
