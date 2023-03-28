@@ -47,7 +47,8 @@ jobs:
   integration-test:
     needs: compile-contracts
     runs-on: ubuntu-20.04
-
+    env:
+      BLOCKCHAIN_URL: "http://blockchain:8888"
     services:
       blockchain:
         image: tonomy/blockchain:initialized-development
@@ -57,8 +58,7 @@ jobs:
         image: tonomy/communication:development
         ports:
           - 5000:5000
-        env:
-          - BLOCKCHAIN_URL: "http://blockchain:8888"
+
 
     steps:
       - uses: actions/checkout@v3
