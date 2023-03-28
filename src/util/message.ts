@@ -83,11 +83,15 @@ export class Message {
             ...getResolver({ antelopeChainUrl: settings.blockchainUrl, fetch: crossFetch as any }),
         });
 
-        const result = await Promise.any([
-            verifyCredential(this.jwt, { resolve: jwkResolver.resolve }),
-            verifyCredential(this.jwt, resolver),
-        ]);
+        try {
+            const result = await Promise.any([
+                verifyCredential(this.jwt, { resolve: jwkResolver.resolve }),
+                verifyCredential(this.jwt, resolver),
+            ]);
 
-        return result.verified;
+            return result.verified;
+        } catch (e) {
+            return false;
+        }
     }
 }
