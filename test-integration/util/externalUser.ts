@@ -1,5 +1,5 @@
 /* eslint-disable no-console */
-import { Communication, ExternalUser, KeyManager, Message, Subscriber, UserApps } from '../../src';
+import { Communication, ExternalUser, KeyManager, KeyManagerLevel, Message, Subscriber, UserApps } from '../../src';
 
 export async function externalWebsiteUserPressLoginToTonomyButton(
     keyManager: KeyManager,
@@ -87,4 +87,27 @@ export async function setupTonomyIdAckSubscriber(did: string, log = false) {
 
     // @ts-expect-error - subscriber is used before being assigned
     return { subscriber, promise };
+}
+
+export async function sendLoginRequestsMessage(
+    requests: string[],
+    keyManager: KeyManager,
+    communication: Communication,
+    recipientDid: string,
+    log = false
+) {
+    // then send a Message with the two signed requests, this will be received by the Tonomy ID app
+    const requestMessage = await ExternalUser.signMessage(
+        {
+            requests: JSON.stringify(requests),
+        },
+        keyManager,
+        KeyManagerLevel.BROWSER_LOCAL_STORAGE,
+        recipientDid
+    );
+
+    if (log) console.log('TONOMY_LOGIN_WEBSITE/login: sending login request to Tonomy ID app');
+    const sendMessageResponse = await communication.sendMessage(requestMessage);
+
+    expect(sendMessageResponse).toBe(true);
 }

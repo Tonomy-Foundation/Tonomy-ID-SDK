@@ -4,19 +4,24 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
 // need to use API types from inside tonomy-id-sdk, otherwise type compatibility issues
-import { createRandomApp, createRandomID, loginToTonomyCommunication } from './util/user';
-import { setSettings, Message, UserApps, App, KeyManagerLevel, Subscriber } from '../src/index';
-import { JWTLoginPayload } from '../src/userApps';
+import {
+    createRandomApp,
+    createRandomID,
+    loginToTonomyCommunication,
+    scanQrAndAck,
+    setupLoginRequestSubscriber,
+} from './util/user';
+import { setSettings, Message, UserApps, Subscriber } from '../src/index';
 import settings from './services/settings';
 import URL from 'jsdom-url';
 import { ExternalUser } from '../src/externalUser';
 import { JsKeyManager } from '../test/services/jskeymanager';
-import { PublicKey } from '@greymass/eosio';
 import { sleep } from './util/sleep';
 import { jsStorageFactory } from '../test/services/jsstorage';
 import {
     externalWebsiteUserPressLoginToTonomyButton,
     loginWebsiteOnRedirect,
+    sendLoginRequestsMessage,
     setupTonomyIdAckSubscriber,
 } from './util/externalUser';
 
@@ -105,87 +110,19 @@ describe('External User class', () => {
 
         // ##### Tonomy ID user (QR code scanner screen) #####
         // ##########################
-        if (log) console.log('TONOMY_ID/scanQR: Scanning QR code with Tonomy ID app');
-
-        // BarCodeScannerResult. See Tonomy-ID/node_modules/expo-barcode-scanner/src/BarCodeScanner.tsx
-        const TONOMY_ID_barcodeScanResults = {
-            data: TONOMY_LOGIN_WEBSITE_did,
-        };
-        const TONOMY_ID_connectMessage = await TONOMY_ID_user.signMessage(
-            { type: 'ack' },
-            TONOMY_ID_barcodeScanResults.data
-        );
-
-        if (log)
-            console.log("TONOMY_ID/scanQr: connecting to Tonomy Login Website's with their did:jwk from the QR code");
-        const TONOMY_ID_sendMessageResponse = await TONOMY_ID_user.communication.sendMessage(TONOMY_ID_connectMessage);
-
-        expect(TONOMY_ID_sendMessageResponse).toBe(true);
-
-        // Setup a promise that resolves when the subscriber executes
-        // This emulates the Tonomy ID app, which waits for the user requests
-        const TONOMY_ID_requestSubscriber = new Promise((resolve) => {
-            TONOMY_ID_user.communication.subscribeMessage(async (m: any) => {
-                if (log) console.log('TONOMY_ID/SSO: receive login requests from Tonomy Login Website');
-
-                const message = new Message(m);
-
-                // receive and verify the requests
-                const requests = message.getPayload().requests;
-
-                // TODO check this throws an error if requests are not valid, or not signed correctly
-                if (log) console.log('TONOMY_ID/SSO: verifying login request');
-                const verifiedRequests = await UserApps.verifyRequests(requests);
-
-                expect(verifiedRequests.length).toBe(2);
-
-                let tonomyIdLoginDid = '';
-
-                for (const jwt of verifiedRequests) {
-                    // parse the requests for their app data
-                    const payload = jwt.getPayload() as JWTLoginPayload;
-                    const loginApp = await App.getApp(payload.origin);
-                    const senderDid = jwt.getSender();
-
-                    if (loginApp.origin === externalApp.origin) {
-                        appsFound[1] = true;
-                        expect(senderDid).toBe(EXTERNAL_WEBSITE_did);
-
-                        if (log)
-                            console.log('TONOMY_ID/SSO: logging into external website by adding key to blockchain');
-                        await TONOMY_ID_user.apps.loginWithApp(loginApp, PublicKey.from(payload.publicKey));
-                    } else if (loginApp.origin === tonomyLoginApp.origin) {
-                        appsFound[0] = true;
-                        expect(senderDid).toBe(TONOMY_LOGIN_WEBSITE_did);
-                        tonomyIdLoginDid = senderDid;
-                        if (log)
-                            console.log('TONOMY_ID/SSO: logging into Tonomy Login website by adding key to blockchain');
-                        await TONOMY_ID_user.apps.loginWithApp(loginApp, PublicKey.from(payload.publicKey));
-                    } else {
-                        throw new Error('Unknown app');
-                    }
-                }
-
-                const accountName = await TONOMY_ID_user.storage.accountName.toString();
-
-                // send a message back to the app
-                const respondMessage = (await TONOMY_ID_user.signMessage(
-                    { requests, accountName },
-                    tonomyIdLoginDid
-                )) as Message;
-
-                if (log)
-                    console.log('TONOMY_ID/SSO: sending a confirmation of the logins back to Tonomy Login Website');
-                const sendMessageResponse = await TONOMY_ID_user.communication.sendMessage(respondMessage);
-
-                expect(sendMessageResponse).toBe(true);
-
-                resolve(true);
-            });
-        });
+        await scanQrAndAck(TONOMY_ID_user, TONOMY_LOGIN_WEBSITE_did, log);
 
         // #####Tonomy Login App website user (login page) #####
         // ########################################
+        const TONOMY_ID_requestSubscriber = setupLoginRequestSubscriber(
+            TONOMY_ID_user,
+            externalApp.origin,
+            EXTERNAL_WEBSITE_did,
+            tonomyLoginApp.origin,
+            TONOMY_LOGIN_WEBSITE_did,
+            appsFound,
+            log
+        );
 
         // wait for the ack message to confirm Tonomy ID is connected
         const connectionMessageFromTonomyId = await TONOMY_LOGIN_WEBSITE_ackMessagePromise;
@@ -193,24 +130,13 @@ describe('External User class', () => {
         expect(connectionMessageFromTonomyId.type).toBe('ack');
         expect(connectionMessageFromTonomyId.message.getSender()).toBe(TONOMY_ID_did + '#local');
 
-        // then send a Message with the two signed requests, this will be received by the Tonomy ID app
-        const TONOMY_LOGIN_WEBSITE_requestMessage = await ExternalUser.signMessage(
-            {
-                requests: JSON.stringify(TONOMY_LOGIN_WEBSITE_jwtRequests),
-            },
+        await sendLoginRequestsMessage(
+            TONOMY_LOGIN_WEBSITE_jwtRequests,
             TONOMY_LOGIN_WEBSITE_jsKeyManager,
-            KeyManagerLevel.BROWSER_LOCAL_STORAGE,
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-ignore
-            connectionMessageFromTonomyId.message.getSender()
+            TONOMY_LOGIN_WEBSITE_communication,
+            connectionMessageFromTonomyId.message.getSender(),
+            log
         );
-
-        if (log) console.log('TONOMY_LOGIN_WEBSITE/login: sending login request to Tonomy ID app');
-        const TONOMY_LOGIN_WEBSITE_sendMessageResponse = await TONOMY_LOGIN_WEBSITE_communication.sendMessage(
-            TONOMY_LOGIN_WEBSITE_requestMessage
-        );
-
-        expect(TONOMY_LOGIN_WEBSITE_sendMessageResponse).toBe(true);
 
         // setup subscriber that waits for the response that the requests are confirmed by Tonomy ID
         let TONOMY_LOGIN_WEBSITE_messageSubscriber2: Subscriber;
