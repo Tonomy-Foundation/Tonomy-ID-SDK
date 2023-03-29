@@ -33,6 +33,7 @@ export class JsKeyManager implements KeyManager {
 
         switch (options.level) {
             case KeyManagerLevel.LOCAL:
+            case KeyManagerLevel.FINGERPRINT:
                 break;
             case KeyManagerLevel.PASSWORD:
             case KeyManagerLevel.PIN:
@@ -45,7 +46,7 @@ export class JsKeyManager implements KeyManager {
                 localStorage.setItem('tonomy.id.' + options.level, JSON.stringify(keyStore));
                 break;
             default:
-                throw new Error('Key level not supported');
+                throwError('Invalid level', SdkErrors.InvalidKeyLevel);
         }
 
         this.keyStorage[options.level] = keyStore;
