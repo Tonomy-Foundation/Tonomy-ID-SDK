@@ -1,6 +1,6 @@
 # Tonomy ID SDK
 
-This Software Development Kit is used in Tonomy ID to interact and call with the EOSIO blockchain and services. It is also used as the public API for integration by applications to do single sign-on, share credentials and sign transactions.
+This Software Development Kit is used in Tonomy ID to interact and call with the Antelope blockchain and services. It is also used as the public API for integration by applications to do single sign-on, share credentials and sign transactions.
 
 The SDK is written in typescript with jest to run tests.
 
@@ -60,17 +60,3 @@ See [errors.ts](./src/services/errors.ts). All errors have a registered unique e
 Documentation is in the `./docs` folder and runs with readthedocs.io here
 
 <https://tonomy-id-sdk.readthedocs.io>
-
-## To create a new App for SSO
-
-Call
-
-```bash
-npx ts-node --project cli.tsconfig.json --transpileOnly id.ts appName username description logoUrl domain publicKey blockchainUrl
-```
-
-Example
-
-```bash
-npx ts-node --project cli.tsconfig.json --transpileOnly id.ts Netflix netflix "streaming video platform" "https://netflix.com/logo.png" "https://netflix.com" PUB_K1_55csjge6LNnLxECFTtTpCU6Z7chi3h47G8vyzPBjAKdvZmnZ8Z "http://localhost:8888"
-```
