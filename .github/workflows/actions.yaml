@@ -47,7 +47,6 @@ jobs:
   integration-test:
     needs: compile-contracts
     runs-on: ubuntu-20.04
-
     services:
       blockchain:
         image: tonomy/blockchain:initialized-development
@@ -55,6 +54,8 @@ jobs:
           - 8888:8888
       communication:
         image: tonomy/communication:development
+        env:
+          BLOCKCHAIN_URL: "http://blockchain:8888"
         ports:
           - 5000:5000
 
@@ -76,7 +77,6 @@ jobs:
           node-version: 16.4.1
       - run: npm i
       - run: npm run bootstrap
-
       - name: Run integration tests
         uses: actions/setup-node@v3
         with:

@@ -31,7 +31,7 @@ global.URL = URL;
 
 setSettings(settings);
 
-const log = false;
+const log = true;
 
 describe('External User class', () => {
     jest.setTimeout(30000);
