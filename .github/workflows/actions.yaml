@@ -54,7 +54,8 @@ jobs:
           - 8888:8888
       communication:
         image: tonomy/communication:development
-        network: host
+        env:
+          BLOCKCHAIN_URL: "http://blockchain:8888"
         ports:
           - 5000:5000
 
