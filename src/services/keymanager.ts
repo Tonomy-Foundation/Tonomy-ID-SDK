@@ -66,7 +66,10 @@ type SignDataOptions = {
  */
 type GetKeyOptions = {
     level: KeyManagerLevel;
-    challenge?: string;
+};
+type CheckKeyOptions = {
+    level: KeyManagerLevel;
+    challenge: string;
 };
 
 interface KeyManager {
@@ -124,13 +127,13 @@ interface KeyManager {
     ): Promise<{ privateKey: PrivateKey; salt: Checksum256 }>;
 
     /**
-     * checks the key against the provided challenge with hashedSaltedChallenge
-     * @param Options for checking key with level, and challenge
-     * @returns Boolean if matched
+     * checks the key against the provided challenge
+     * @param {CheckKeyOptions} options - for checking key with level, and challenge
+     * @returns {boolean} - returns matching status
      *
-     * @throws if challenge is not provided or not matched
+     * @throws  if challenge is not provided
      */
-    checkKey(options: GetKeyOptions): Promise<boolean>;
+    checkKey(options: CheckKeyOptions): Promise<boolean>;
 }
 
-export { KeyManager, KeyManagerLevel, StoreKeyOptions, SignDataOptions, GetKeyOptions };
+export { KeyManager, KeyManagerLevel, StoreKeyOptions, SignDataOptions, GetKeyOptions, CheckKeyOptions };

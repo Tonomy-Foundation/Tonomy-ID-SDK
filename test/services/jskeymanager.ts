@@ -5,6 +5,7 @@ import {
     SignDataOptions,
     GetKeyOptions,
     StoreKeyOptions,
+    CheckKeyOptions,
 } from '../../src/services/keymanager';
 import argon2 from 'argon2';
 import { Bytes, Checksum256, KeyType, PrivateKey, PublicKey, Signature } from '@greymass/eosio';
@@ -135,7 +136,7 @@ export class JsKeyManager implements KeyManager {
             return keyStore.publicKey;
         }
     }
-    async checkKey(options: GetKeyOptions): Promise<boolean> {
+    async checkKey(options: CheckKeyOptions): Promise<boolean> {
         if (!(options.level in this.keyStorage)) throw new Error('No key for this level');
 
         const keyStore = this.keyStorage[options.level];
