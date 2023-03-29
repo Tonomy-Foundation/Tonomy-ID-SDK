@@ -142,11 +142,10 @@ export class JsKeyManager implements KeyManager {
         const keyStore = this.keyStorage[options.level];
 
         if (options.level === KeyManagerLevel.PIN) {
-            if (options?.challenge) {
+            if (options.challenge) {
                 const hashedSaltedChallenge = sha256(options?.challenge + keyStore.salt);
 
-                if (hashedSaltedChallenge === keyStore.hashedSaltedChallenge) return true;
-                else throw throwError('Pin is incorrect', SdkErrors.PinInValid);
+                return hashedSaltedChallenge === keyStore.hashedSaltedChallenge;
             } else throw throwError('challenge is missing', SdkErrors.missingChallenge);
         } else throw throwError('Invalid Level', SdkErrors.invalidDataType);
     }

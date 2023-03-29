@@ -64,9 +64,15 @@ type SignDataOptions = {
 /**
  * @param level - The security level of the key
  */
+
 type GetKeyOptions = {
     level: KeyManagerLevel;
 };
+
+/**
+ * @param level - The security level of the key
+ * @param challenge - the challenge to check
+ */
 type CheckKeyOptions = {
     level: KeyManagerLevel;
     challenge: string;
