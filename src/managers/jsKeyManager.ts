@@ -11,7 +11,7 @@ import { Checksum256, PrivateKey, PublicKey, Signature } from '@greymass/eosio';
 import { createSigner } from '@tonomy/antelope-ssi-toolkit';
 import { SdkErrors, throwError } from '..';
 
-type KeyStorage = {
+export type KeyStorage = {
     privateKey: PrivateKey;
     publicKey: PublicKey;
     // TODO: check that this complies with the eosio checksum256 format
