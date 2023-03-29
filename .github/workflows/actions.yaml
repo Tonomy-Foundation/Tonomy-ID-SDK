@@ -55,7 +55,7 @@ jobs:
       communication:
         image: tonomy/communication:development
         env:
-          BLOCKCHAIN_URL: "blockchain:8888"
+          BLOCKCHAIN_URL: "http://blockchain:8888"
         ports:
           - 5000:5000
 
@@ -78,9 +78,10 @@ jobs:
           node-version: 16.4.1
       - run: npm i
       - run: npm run bootstrap
-
       - name: Run integration tests
         uses: actions/setup-node@v3
         with:
           node-version: 16.4.1
+      - run: curl blockchain:8888
+      - run: curl http://blockchain:8888
       - run: npm run test:integration
