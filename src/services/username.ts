@@ -25,11 +25,13 @@ namespace AccountType {
      */
     export function from(value: number | string): AccountType {
         let index: number;
+
         if (typeof value !== 'number') {
             index = AccountType.indexFor(value as AccountType);
         } else {
             index = value;
         }
+
         return Object.values(AccountType)[index] as AccountType;
     }
 
@@ -59,10 +61,15 @@ export class TonomyUsername {
 
     static fromUsername(username: string, type: AccountType, suffix: string) {
         const fullUsername = username + '.' + AccountType.getPreSuffix(type) + suffix;
+
         return new TonomyUsername(fullUsername);
     }
 
     static fromFullUsername(username: string): TonomyUsername {
         return new TonomyUsername(username);
+    }
+
+    getBaseUsername() {
+        return this.username?.split('.')[0];
     }
 }
