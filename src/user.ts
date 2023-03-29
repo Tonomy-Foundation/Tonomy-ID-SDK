@@ -13,7 +13,7 @@ import { getSettings } from './settings';
 import { Communication } from './communication';
 import { Message } from './util/message';
 import { Issuer } from '@tonomy/did-jwt-vc';
-import { createVCSigner } from './util/crypto';
+import { createVCSigner, generateRandomKeyPair } from './util/crypto';
 
 enum UserStatus {
     CREATING_ACCOUNT = 'CREATING_ACCOUNT',
@@ -52,6 +52,11 @@ namespace UserStatus {
 }
 
 export { UserStatus };
+
+type KeyFromPasswordFn = (
+    password: string,
+    salt?: Checksum256
+) => Promise<{ privateKey: PrivateKey; salt: Checksum256 }>;
 
 export type UserStorage = {
     status: UserStatus;
@@ -120,19 +125,25 @@ export class User {
         await this.storage.username;
     }
 
-    async savePassword(masterPassword: string, options?: { salt?: Checksum256 }) {
+    async savePassword(
+        masterPassword: string,
+        options: {
+            keyFromPasswordFn: KeyFromPasswordFn;
+            salt?: Checksum256;
+        }
+    ) {
         const password = validatePassword(masterPassword);
 
         let privateKey: PrivateKey;
         let salt: Checksum256;
 
-        if (options && options.salt) {
+        if (options.salt) {
             salt = options.salt;
-            const res = await this.keyManager.generatePrivateKeyFromPassword(password, salt);
+            const res = await options.keyFromPasswordFn(password, salt);
 
             privateKey = res.privateKey;
         } else {
-            const res = await this.keyManager.generatePrivateKeyFromPassword(password);
+            const res = await options.keyFromPasswordFn(password);
 
             privateKey = res.privateKey;
             salt = res.salt;
@@ -149,7 +160,7 @@ export class User {
     }
 
     async savePIN(pin: string) {
-        const privateKey = this.keyManager.generateRandomPrivateKey();
+        const privateKey = generateRandomKeyPair().privateKey;
 
         await this.keyManager.storeKey({
             level: KeyManagerLevel.PIN,
@@ -169,7 +180,7 @@ export class User {
     }
 
     async saveFingerprint() {
-        const privateKey = this.keyManager.generateRandomPrivateKey();
+        const privateKey = generateRandomKeyPair().privateKey;
 
         await this.keyManager.storeKey({
             level: KeyManagerLevel.FINGERPRINT,
@@ -178,7 +189,7 @@ export class User {
     }
 
     async saveLocal() {
-        const privateKey = this.keyManager.generateRandomPrivateKey();
+        const privateKey = generateRandomKeyPair().privateKey;
 
         await this.keyManager.storeKey({
             level: KeyManagerLevel.LOCAL,
@@ -270,13 +281,18 @@ export class User {
         await this.storage.status;
     }
 
-    async checkPassword(password: string): Promise<boolean> {
+    async checkPassword(
+        password: string,
+        options: {
+            keyFromPasswordFn: KeyFromPasswordFn;
+        }
+    ): Promise<boolean> {
         const username = await this.getAccountName();
 
         const idData = await idContract.getPerson(username);
         const salt = idData.password_salt;
 
-        await this.savePassword(password, { salt });
+        await this.savePassword(password, { ...options, salt });
         const passwordKey = await this.keyManager.getKey({
             level: KeyManagerLevel.PASSWORD,
         });
@@ -292,13 +308,19 @@ export class User {
         return true;
     }
 
-    async login(username: TonomyUsername, password: string): Promise<GetPersonResponse> {
+    async login(
+        username: TonomyUsername,
+        password: string,
+        options: {
+            keyFromPasswordFn: KeyFromPasswordFn;
+        }
+    ): Promise<GetPersonResponse> {
         const { keyManager } = this;
 
         const idData = await idContract.getPerson(username);
         const salt = idData.password_salt;
 
-        await this.savePassword(password, { salt });
+        await this.savePassword(password, { ...options, salt });
         const passwordKey = await keyManager.getKey({
             level: KeyManagerLevel.PASSWORD,
         });

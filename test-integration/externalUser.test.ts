@@ -14,7 +14,7 @@ import {
 import { App, setSettings, User, KeyManager, StorageFactory } from '../src/index';
 import settings from './services/settings';
 import URL from 'jsdom-url';
-import { JsKeyManager } from '../test/services/jskeymanager';
+import { JsKeyManager } from '../src/managers/jsKeyManager';
 import { sleep } from './util/sleep';
 import {
     externalWebsiteOnCallback,

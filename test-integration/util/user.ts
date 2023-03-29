@@ -9,8 +9,9 @@ import {
     UserApps,
     JWTLoginPayload,
 } from '../../src/index';
-import { JsKeyManager } from '../../test/services/jskeymanager';
+import { JsKeyManager } from '../../src/managers/jsKeyManager';
 import { jsStorageFactory } from '../../test/services/jsstorage';
+import { generatePrivateKeyFromPassword } from '../../test/services/keys';
 import { privateKey } from './eosio';
 
 export async function createUser(username: string, password: string) {
@@ -18,7 +19,7 @@ export async function createUser(username: string, password: string) {
     const user = createUserObject(auth, jsStorageFactory);
 
     await user.saveUsername(username);
-    await user.savePassword(password);
+    await user.savePassword(password, { keyFromPasswordFn: generatePrivateKeyFromPassword });
 
     await user.createPerson();
 
@@ -34,7 +35,7 @@ export async function createRandomID() {
     const pin = Math.floor(Math.random() * 5).toString();
 
     await user.saveUsername(username);
-    await user.savePassword(password);
+    await user.savePassword(password, { keyFromPasswordFn: generatePrivateKeyFromPassword });
     await user.savePIN(pin);
     await user.saveFingerprint();
     await user.saveLocal();

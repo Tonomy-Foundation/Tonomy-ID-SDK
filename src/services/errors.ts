@@ -84,14 +84,15 @@ enum SdkErrors {
     SettingsNotInitialized = 'SettingsNotInitialized',
     MissingParams = 'MissingParams',
     InvalidKey = 'InvalidKey',
-    invalidDataType = 'invalidDataType',
-    missingChallenge = 'missingChallenge',
+    InvalidKeyLevel = 'InvalidKeyLevel',
+    MissingChallenge = 'MissingChallenge',
     CommunicationNotConnected = 'CommunicationNotConnected',
     CommunicationTimeout = 'CommunicationTimeout',
     OriginMismatch = 'OriginMismatch',
     PinInValid = 'PinInValid',
     AccountNotFound = 'AccountNotFound',
     UserNotLoggedIn = 'UserNotLoggedIn',
+    InvalidData = 'InvalidData',
 }
 
 // eslint-disable-next-line @typescript-eslint/no-namespace
