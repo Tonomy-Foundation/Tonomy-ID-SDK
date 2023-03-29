@@ -64,8 +64,18 @@ type SignDataOptions = {
 /**
  * @param level - The security level of the key
  */
+
 type GetKeyOptions = {
     level: KeyManagerLevel;
+};
+
+/**
+ * @param level - The security level of the key
+ * @param challenge - the challenge to check
+ */
+type CheckKeyOptions = {
+    level: KeyManagerLevel;
+    challenge: string;
 };
 
 interface KeyManager {
@@ -121,6 +131,15 @@ interface KeyManager {
         password: string,
         salt?: Checksum256
     ): Promise<{ privateKey: PrivateKey; salt: Checksum256 }>;
+
+    /**
+     * checks the key against the provided challenge
+     * @param {CheckKeyOptions} options - for checking key with level, and challenge
+     * @returns {boolean} - returns matching status
+     *
+     * @throws  if challenge is not provided
+     */
+    checkKey(options: CheckKeyOptions): Promise<boolean>;
 }
 
-export { KeyManager, KeyManagerLevel, StoreKeyOptions, SignDataOptions, GetKeyOptions };
+export { KeyManager, KeyManagerLevel, StoreKeyOptions, SignDataOptions, GetKeyOptions, CheckKeyOptions };
