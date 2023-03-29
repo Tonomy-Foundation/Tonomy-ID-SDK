@@ -53,8 +53,8 @@ export class Communication {
             const resolved = false;
 
             this.socketServer.emit(event, { message: message.jwt }, (response: any) => {
-                if (response.err) {
-                    reject(response.err);
+                if (response.error) {
+                    reject(response);
                 }
 
                 resolve(response);
