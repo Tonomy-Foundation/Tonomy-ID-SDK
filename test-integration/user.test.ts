@@ -1,11 +1,20 @@
 import { api } from './util/eosio';
 import { createRandomID } from './util/user';
-import { KeyManager, KeyManagerLevel, TonomyUsername, User, createUserObject, setSettings } from '../src/index';
+import {
+    KeyManager,
+    KeyManagerLevel,
+    TonomyUsername,
+    User,
+    createUserObject,
+    setSettings,
+    EosioUtil,
+} from '../src/index';
 import { SdkErrors } from '../src/index';
 import { JsKeyManager } from '../test/services/jskeymanager';
 import { jsStorageFactory } from '../test/services/jsstorage';
 import settings from './services/settings';
 import { catchAndPrintErrors } from './util/errors';
+import { Checksum256 } from '@greymass/eosio';
 
 let auth: KeyManager;
 let user: User;
@@ -282,6 +291,19 @@ describe('User class', () => {
         })
     );
     test(
+        'getDid() expect chainId and account name defined',
+        catchAndPrintErrors(async () => {
+            const { user } = await createRandomID();
+            const accountName = await user.storage.accountName;
+            const chainId = (await EosioUtil.getChainInfo()).chain_id as unknown as Checksum256;
+
+            expect(chainId).toBeDefined();
+            expect(accountName).toBeDefined();
+            expect(await user.getDid()).toEqual(`did:antelope:${chainId}:${accountName.toString()}`);
+            await user.logout();
+        })
+    );
+    test(
         'intializeFromStorage() return true if account exists',
         catchAndPrintErrors(async () => {
             const { user } = await createRandomID();
@@ -297,6 +319,35 @@ describe('User class', () => {
         "intializeFromStorage() throws error if storage doesn't exist",
         catchAndPrintErrors(async () => {
             await expect(user.intializeFromStorage()).rejects.toThrowError(SdkErrors.AccountDoesntExist);
+        })
+    );
+    test(
+        'CheckPin() returns true when pin matches',
+        catchAndPrintErrors(async () => {
+            const { user, password } = await createRandomID();
+
+            await user.login(await user.getUsername(), password);
+
+            await user.savePIN('12345');
+            await expect(user.keyManager.getKey({ level: KeyManagerLevel.PIN })).resolves.toBeDefined();
+
+            await expect(user.checkPin('12345')).resolves.toBe(true);
+
+            await user.logout();
+        })
+    );
+    test(
+        'CheckPin() throws error if the Key Does not matches',
+        catchAndPrintErrors(async () => {
+            const { user, password } = await createRandomID();
+
+            await user.login(await user.getUsername(), password);
+
+            await user.savePIN('12345');
+            await expect(user.keyManager.getKey({ level: KeyManagerLevel.PIN })).resolves.toBeDefined();
+            await expect(user.checkPin('12121')).rejects.toThrowError(SdkErrors.PinInValid);
+
+            await user.logout();
         })
     );
 });
