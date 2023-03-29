@@ -58,6 +58,7 @@ export type UserStorage = {
     accountName: Name;
     username: TonomyUsername;
     salt: Checksum256;
+    did: string;
     // TODO update to have all data from blockchain
 };
 
@@ -90,6 +91,10 @@ export class User {
 
     async getUsername(): Promise<TonomyUsername> {
         return await this.storage.username;
+    }
+
+    async getDid(): Promise<string> {
+        return await this.storage.did;
     }
 
     async saveUsername(username: string) {
@@ -153,6 +158,16 @@ export class User {
         });
     }
 
+    async checkPin(pin: string): Promise<boolean> {
+        const pinKey = await this.keyManager.checkKey({
+            level: KeyManagerLevel.PIN,
+            challenge: pin,
+        });
+
+        if (!pinKey) throwError('Pin is incorrect', SdkErrors.PinInValid);
+        return true;
+    }
+
     async saveFingerprint() {
         const privateKey = this.keyManager.generateRandomPrivateKey();
 
@@ -213,6 +228,7 @@ export class User {
 
         this.storage.status = UserStatus.CREATING_ACCOUNT;
         await this.storage.status;
+        await this.createDid();
 
         return res;
     }
@@ -302,6 +318,7 @@ export class User {
         await this.storage.accountName;
         await this.storage.username;
         await this.storage.status;
+        await this.createDid();
 
         return idData;
     }
@@ -434,14 +451,20 @@ export class User {
         return await Message.sign(payload, issuer, recipient);
     }
 
-    async getDid() {
+    /**
+     * Generate did in storage
+     * @return {string} did string
+     */
+    async createDid(): Promise<string> {
         if (!this.chainID) {
             this.chainID = (await getChainInfo()).chain_id as unknown as Checksum256;
         }
 
         const accountName = await this.storage.accountName;
 
-        return `did:antelope:${this.chainID}:${accountName.toString()}`;
+        this.storage.did = `did:antelope:${this.chainID}:${accountName.toString()}`;
+        await this.storage.did;
+        return this.storage.did;
     }
 
     async intializeFromStorage() {
