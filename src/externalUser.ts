@@ -7,9 +7,10 @@ import { Message } from './util/message';
 import { getSettings } from './settings';
 import { SdkErrors, throwError } from './services/errors';
 import { createStorage, PersistentStorageClean, StorageFactory } from './services/storage';
-import { Name } from '@greymass/eosio';
+import { Checksum256, Name } from '@greymass/eosio';
 import { TonomyUsername } from './services/username';
 import { browserStorageFactory } from './managers/browserStorage';
+import { getChainInfo } from './services/eosio/eosio';
 
 export type ExternalUserStorage = {
     accountName: Name;
@@ -26,6 +27,7 @@ export type VerifyLoginOptions = {
 export class ExternalUser {
     keyManager: KeyManager;
     storage: ExternalUserStorage & PersistentStorageClean;
+    did_: string;
 
     /**
      * Creates a new external user
@@ -35,6 +37,47 @@ export class ExternalUser {
     constructor(_keyManager: KeyManager, _storageFactory: StorageFactory) {
         this.keyManager = _keyManager;
         this.storage = createStorage<ExternalUserStorage>('tonomy.externalUser.', _storageFactory);
+    }
+
+    static async getUser(
+        keyManager: KeyManager,
+        storageFactory: StorageFactory = browserStorageFactory
+    ): Promise<ExternalUser> {
+        const user = new ExternalUser(keyManager, storageFactory);
+
+        try {
+            const accountName = await user.getAccountName();
+
+            if (!accountName) {
+                //TODO: logout
+                // keyManager.clear(); must be implemented in future keymanager
+                throw throwError('accountName not found', SdkErrors.AccountNotFound);
+            }
+
+            const result = await UserApps.verifyKeyExistsForApp(accountName.toString(), keyManager);
+
+            if (result) {
+                return user;
+            } else {
+                throw throwError('User Not loggedIn', SdkErrors.UserNotLoggedIn);
+            }
+        } catch (e) {
+            //TODO logout
+            // keyManager.clear(); must be implemented in future keymanager
+            user.storage.clear();
+            throw e;
+        }
+    }
+
+    async getDid() {
+        if (!this.did_) {
+            const accountName = await (await this.getAccountName()).toString();
+            const chainID = (await getChainInfo()).chain_id as unknown as Checksum256;
+
+            this.did_ = `did:antelope:${chainID}:${accountName}#local`;
+        }
+
+        return this.did_;
     }
 
     /**
@@ -103,19 +146,17 @@ export class ExternalUser {
      * @property onPressLoginOptions.redirect {boolean} - if true, redirects the user to the login page, if false, returns the token
      * @property onPressLoginOptions.callbackPath {string} - the path to redirect the user to after login
      * @param keyManager {KeyManager} - the key manager to use to store the keys
-     * @param keyManagerLevel {KeyManagerLevel = BROWSER_LOCAL_STORAGE} - the level to store the keys at
      * @returns {Promise<string | void>} - if redirect is true, returns void, if redirect is false, returns the login request in the form of a JWT token
      */
     static async loginWithTonomy(
         { redirect = true, callbackPath }: OnPressLoginOptions,
-        keyManager: KeyManager,
-        keyManagerLevel: KeyManagerLevel = KeyManagerLevel.BROWSER_LOCAL_STORAGE
+        keyManager: KeyManager
     ): Promise<string | void> {
         const { privateKey, publicKey } = generateRandomKeyPair();
 
         if (keyManager) {
             await keyManager.storeKey({
-                level: keyManagerLevel,
+                level: KeyManagerLevel.BROWSER_LOCAL_STORAGE,
                 privateKey: privateKey,
             });
         }
@@ -168,14 +209,9 @@ export class ExternalUser {
      *
      * @param message {any} - an object to sign
      * @param keyManager {KeyManager} - the key manager to use to sign the message
-     * @param keyManagerLevel {KeyManagerLevel=BROWSER_LOCAL_STORAGE} - the level to use to sign the message
      */
-    static async signMessage(
-        message: any,
-        keyManager: KeyManager,
-        keyManagerLevel: KeyManagerLevel = KeyManagerLevel.BROWSER_LOCAL_STORAGE,
-        recipient?: string
-    ): Promise<Message> {
+    static async signMessage(message: any, keyManager: KeyManager, recipient?: string): Promise<Message> {
+        const keyManagerLevel = KeyManagerLevel.BROWSER_LOCAL_STORAGE;
         const publicKey = await keyManager.getKey({
             level: keyManagerLevel,
         });

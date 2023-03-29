@@ -4,7 +4,7 @@
 
 // need to use API types from inside tonomy-id-sdk, otherwise type compatibility issues
 import { createRandomApp, createRandomID } from './util/user';
-import { setSettings, Message, UserApps, Communication, App, KeyManagerLevel, Subscriber } from '../src/index';
+import { setSettings, Message, UserApps, Communication, App, Subscriber } from '../src/index';
 import { JWTLoginPayload } from '../src/userApps';
 import settings from './services/settings';
 import URL from 'jsdom-url';
@@ -266,7 +266,6 @@ describe('External User class', () => {
                 requests: JSON.stringify(TONOMY_LOGIN_WEBSITE_jwtRequests),
             },
             TONOMY_LOGIN_WEBSITE_jsKeyManager,
-            KeyManagerLevel.BROWSER_LOCAL_STORAGE,
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
             // @ts-ignore
             connectionMessageFromTonomyId.message.getSender()
@@ -402,11 +401,22 @@ describe('External User class', () => {
 
         expect(externalWebsiteAccount.toString()).toBe(tonomyIdAccount.toString());
 
+        /**
+         * this will not work because storage isn't persistent
+         */
+        // if (log) console.log('EXTERNALuser: calling get User');
+        // console.log(EXTERNAL_WEBSITE_externalUser.storage);
+        // const externalUser = await ExternalUser.getUser(
+        //     EXTERNAL_WEBSITE_jsKeyManager,
+        //     jsStorageFactory.bind(EXTERNAL_WEBSITE_externalUser.storage)
+        // );
+
+        // expect(externalUser).toBeInstanceOf(ExternalUser);
+        if (log) console.log('finished test');
+
         // cleanup connections
         await TONOMY_LOGIN_WEBSITE_communication.disconnect();
         await TONOMY_ID_user.logout();
-        if (log) console.log('finished test');
-
         // for some reason this is needed to ensure all the code lines execute. Not sure why needed
         // TODO figure out why this is needed and remove issue
         await sleep(500);

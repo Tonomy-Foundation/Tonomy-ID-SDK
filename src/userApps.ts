@@ -166,12 +166,13 @@ export class UserApps {
             level: keyManagerLevel,
         });
 
+        if (!pubKey) throw throwError('key not found', SdkErrors.KeyNotFound);
         const account = await User.getAccountInfo(Name.from(accountName));
+
+        if (!account) throwError("couldn't fetch account", SdkErrors.AccountNotFound);
         const app = await App.getApp(window.location.origin);
 
         const publickey = account.getPermission(app.accountName).required_auth.keys[0].key;
-
-        if (!pubKey) throwError("Couldn't fetch Key", SdkErrors.KeyNotFound);
 
         return pubKey.toString() === publickey.toString();
     }
