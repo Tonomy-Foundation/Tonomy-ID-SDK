@@ -183,7 +183,7 @@ export class User {
         const privateKey = generateRandomKeyPair().privateKey;
 
         await this.keyManager.storeKey({
-            level: KeyManagerLevel.FINGERPRINT,
+            level: KeyManagerLevel.BIOMETRIC,
             privateKey,
         });
     }
@@ -255,7 +255,7 @@ export class User {
 
         const pinKey = await keyManager.getKey({ level: KeyManagerLevel.PIN });
         const fingerprintKey = await keyManager.getKey({
-            level: KeyManagerLevel.FINGERPRINT,
+            level: KeyManagerLevel.BIOMETRIC,
         });
         const localKey = await keyManager.getKey({ level: KeyManagerLevel.LOCAL });
 
@@ -263,14 +263,14 @@ export class User {
         // use status in smart contract to lock the account till finished creating
         interface KeyInterface {
             PIN: string;
-            FINGERPRINT: string;
+            BIOMETRIC: string;
             LOCAL: string;
         }
 
         const keys = {} as KeyInterface;
 
         if (pinKey) keys.PIN = pinKey.toString();
-        if (fingerprintKey) keys.FINGERPRINT = fingerprintKey.toString();
+        if (fingerprintKey) keys.BIOMETRIC = fingerprintKey.toString();
         if (localKey) keys.LOCAL = localKey.toString();
 
         const signer = createKeyManagerSigner(keyManager, KeyManagerLevel.PASSWORD, password);
@@ -357,7 +357,7 @@ export class User {
                 permission: 'pin',
             },
             {
-                level: KeyManagerLevel.FINGERPRINT,
+                level: KeyManagerLevel.BIOMETRIC,
                 permission: 'fingerprint',
             },
             {
@@ -424,7 +424,7 @@ export class User {
         // remove all keys
         await this.keyManager.removeKey({ level: KeyManagerLevel.PASSWORD });
         await this.keyManager.removeKey({ level: KeyManagerLevel.PIN });
-        await this.keyManager.removeKey({ level: KeyManagerLevel.FINGERPRINT });
+        await this.keyManager.removeKey({ level: KeyManagerLevel.BIOMETRIC });
         await this.keyManager.removeKey({ level: KeyManagerLevel.LOCAL });
         // clear storage data
         this.storage.clear();

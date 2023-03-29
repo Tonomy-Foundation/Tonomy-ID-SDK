@@ -32,21 +32,21 @@ export class JsKeyManager implements KeyManager {
         };
 
         switch (options.level) {
-            case KeyManagerLevel.LOCAL:
-            case KeyManagerLevel.FINGERPRINT:
-                break;
-            case KeyManagerLevel.PASSWORD:
-            case KeyManagerLevel.PIN:
-                if (!options.challenge) throwError('Challenge missing', SdkErrors.MissingChallenge);
-                keyStore.salt = randomString(32);
-                keyStore.hashedSaltedChallenge = sha256(options.challenge + keyStore.salt);
-                break;
-            case KeyManagerLevel.BROWSER_LOCAL_STORAGE:
-            case KeyManagerLevel.BROWSER_SESSION_STORAGE:
-                localStorage.setItem('tonomy.id.' + options.level, JSON.stringify(keyStore));
-                break;
-            default:
-                throwError('Invalid level', SdkErrors.InvalidKeyLevel);
+        case KeyManagerLevel.LOCAL:
+        case KeyManagerLevel.BIOMETRIC:
+            break;
+        case KeyManagerLevel.PASSWORD:
+        case KeyManagerLevel.PIN:
+            if (!options.challenge) throwError('Challenge missing', SdkErrors.MissingChallenge);
+            keyStore.salt = randomString(32);
+            keyStore.hashedSaltedChallenge = sha256(options.challenge + keyStore.salt);
+            break;
+        case KeyManagerLevel.BROWSER_LOCAL_STORAGE:
+        case KeyManagerLevel.BROWSER_SESSION_STORAGE:
+            localStorage.setItem('tonomy.id.' + options.level, JSON.stringify(keyStore));
+            break;
+        default:
+            throwError('Invalid level', SdkErrors.InvalidKeyLevel);
         }
 
         this.keyStorage[options.level] = keyStore;

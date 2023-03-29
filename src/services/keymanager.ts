@@ -3,7 +3,7 @@ import { Checksum256, PrivateKey, PublicKey, Signature } from '@greymass/eosio';
 enum KeyManagerLevel {
     PASSWORD = 'PASSWORD',
     PIN = 'PIN',
-    FINGERPRINT = 'FINGERPRINT',
+    BIOMETRIC = 'BIOMETRIC',
     LOCAL = 'LOCAL',
     BROWSER_LOCAL_STORAGE = 'BROWSER_LOCAL_STORAGE',
     BROWSER_SESSION_STORAGE = 'BROWSER_SESSION_STORAGE',

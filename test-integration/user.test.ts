@@ -58,9 +58,9 @@ describe('User class', () => {
     test(
         'saveFingerprint() saves new private key',
         catchAndPrintErrors(async () => {
-            expect(() => user.keyManager.getKey({ level: KeyManagerLevel.FINGERPRINT })).rejects.toThrowError(Error);
+            expect(() => user.keyManager.getKey({ level: KeyManagerLevel.BIOMETRIC })).rejects.toThrowError(Error);
             await user.saveFingerprint();
-            expect(user.keyManager.getKey({ level: KeyManagerLevel.FINGERPRINT })).resolves.toBeDefined();
+            expect(user.keyManager.getKey({ level: KeyManagerLevel.BIOMETRIC })).resolves.toBeDefined();
         })
     );
 
@@ -256,7 +256,7 @@ describe('User class', () => {
             expect(await user.storage.status).toBeFalsy();
             expect(() => user.keyManager.getKey({ level: KeyManagerLevel.PASSWORD })).rejects.toThrowError(Error);
             expect(() => user.keyManager.getKey({ level: KeyManagerLevel.PIN })).rejects.toThrowError(Error);
-            expect(() => user.keyManager.getKey({ level: KeyManagerLevel.FINGERPRINT })).rejects.toThrowError(Error);
+            expect(() => user.keyManager.getKey({ level: KeyManagerLevel.BIOMETRIC })).rejects.toThrowError(Error);
             expect(() => user.keyManager.getKey({ level: KeyManagerLevel.LOCAL })).rejects.toThrowError(Error);
             expect(user.isLoggedIn()).resolves.toBeFalsy();
 

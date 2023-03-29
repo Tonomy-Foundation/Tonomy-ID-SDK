@@ -11,7 +11,7 @@ enum PermissionLevel {
     ACTIVE = 'ACTIVE',
     PASSWORD = 'PASSWORD',
     PIN = 'PIN',
-    FINGERPRINT = 'FINGERPRINT',
+    BIOMETRIC = 'BIOMETRIC',
     LOCAL = 'LOCAL',
 }
 
@@ -97,7 +97,7 @@ class IDContract {
     async updatekeysper(
         account: string,
         keys: {
-            FINGERPRINT?: string;
+            BIOMETRIC?: string;
             PIN?: string;
             LOCAL?: string;
         },
