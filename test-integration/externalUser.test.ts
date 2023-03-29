@@ -11,13 +11,14 @@ import {
     scanQrAndAck,
     setupLoginRequestSubscriber,
 } from './util/user';
-import { App, setSettings, User, KeyManager } from '../src/index';
+import { App, setSettings, User, KeyManager, StorageFactory } from '../src/index';
 import settings from './services/settings';
 import URL from 'jsdom-url';
 import { JsKeyManager } from '../test/services/jskeymanager';
 import { sleep } from './util/sleep';
 import {
     externalWebsiteOnCallback,
+    externalWebsiteOnReload,
     externalWebsiteUserPressLoginToTonomyButton,
     loginWebsiteOnCallback,
     loginWebsiteOnRedirect,
@@ -25,6 +26,7 @@ import {
     setupTonomyIdAckSubscriber,
     setupTonomyIdRequestConfirmSubscriber,
 } from './util/externalUser';
+import { createStorageFactory } from './util/storageFactory';
 
 // @ts-expect-error - type error on global
 global.URL = URL;
@@ -48,6 +50,8 @@ describe('External User class', () => {
     let tonomyLoginApp: App;
     let TONOMY_LOGIN_WEBSITE_jsKeyManager: KeyManager;
     let EXTERNAL_WEBSITE_jsKeyManager: KeyManager;
+    let TONOMY_LOGIN_WEBSITE_storage_factory: StorageFactory;
+    let EXTERNAL_WEBSITE_storage_factory: StorageFactory;
 
     beforeEach(async () => {
         // ##### Tonomy ID user #####
@@ -68,6 +72,10 @@ describe('External User class', () => {
         // setup KeyManagers for the external website and tonomy login website
         TONOMY_LOGIN_WEBSITE_jsKeyManager = new JsKeyManager();
         EXTERNAL_WEBSITE_jsKeyManager = new JsKeyManager();
+
+        // setup storage factories for the external website and tonomy login website
+        TONOMY_LOGIN_WEBSITE_storage_factory = createStorageFactory('tonomy-login-website.');
+        EXTERNAL_WEBSITE_storage_factory = createStorageFactory('external-website.');
     });
 
     afterEach(async () => {
@@ -81,7 +89,7 @@ describe('External User class', () => {
 
     describe('SSO login full end-to-end flow', () => {
         test('User succeeds at login to external website', async () => {
-            expect.assertions(32);
+            expect.assertions(34);
 
             const appsFound = [false, false];
 
@@ -215,7 +223,11 @@ describe('External User class', () => {
                 redirectJwt: TONOMY_LOGIN_WEBSITE_redirectJwt,
                 username: TONOMY_LOGIN_WEBSITE_username,
                 accountName: TONOMY_LOGIN_WEBSITE_accountName,
-            } = await loginWebsiteOnCallback(TONOMY_LOGIN_WEBSITE_jsKeyManager, log);
+            } = await loginWebsiteOnCallback(
+                TONOMY_LOGIN_WEBSITE_jsKeyManager,
+                TONOMY_LOGIN_WEBSITE_storage_factory,
+                log
+            );
 
             const redirectJwtPayload = TONOMY_LOGIN_WEBSITE_redirectJwt?.getPayload();
 
@@ -231,7 +243,19 @@ describe('External User class', () => {
             // #####External website user (callback page) #####
             // ################################
 
-            await externalWebsiteOnCallback(EXTERNAL_WEBSITE_jsKeyManager, await TONOMY_ID_user.getAccountName(), log);
+            await externalWebsiteOnCallback(
+                EXTERNAL_WEBSITE_jsKeyManager,
+                EXTERNAL_WEBSITE_storage_factory,
+                await TONOMY_ID_user.getAccountName(),
+                log
+            );
+
+            await externalWebsiteOnReload(
+                EXTERNAL_WEBSITE_jsKeyManager,
+                EXTERNAL_WEBSITE_storage_factory,
+                TONOMY_ID_user,
+                log
+            );
 
             // cleanup connections
             await TONOMY_LOGIN_WEBSITE_communication.disconnect();

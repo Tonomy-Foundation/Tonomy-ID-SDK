@@ -1,7 +1,15 @@
 /* eslint-disable no-console */
 import { Name } from '@greymass/eosio';
-import { Communication, ExternalUser, KeyManager, KeyManagerLevel, Message, Subscriber, UserApps } from '../../src';
-import { jsStorageFactory } from '../../test/services/jsstorage';
+import {
+    Communication,
+    ExternalUser,
+    KeyManager,
+    Message,
+    StorageFactory,
+    Subscriber,
+    User,
+    UserApps,
+} from '../../src';
 
 export async function externalWebsiteUserPressLoginToTonomyButton(
     keyManager: KeyManager,
@@ -134,7 +142,6 @@ export async function sendLoginRequestsMessage(
             requests: JSON.stringify(requests),
         },
         keyManager,
-        KeyManagerLevel.BROWSER_LOCAL_STORAGE,
         recipientDid
     );
 
@@ -144,11 +151,11 @@ export async function sendLoginRequestsMessage(
     expect(sendMessageResponse).toBe(true);
 }
 
-export async function loginWebsiteOnCallback(keyManager: KeyManager, log = true) {
+export async function loginWebsiteOnCallback(keyManager: KeyManager, storageFactory: StorageFactory, log = true) {
     if (log) console.log('TONOMY_LOGIN_WEBSITE/callback: fetching response from URL and verifying login');
     const externalUser = await ExternalUser.verifyLoginRequest({
         keyManager,
-        storageFactory: jsStorageFactory,
+        storageFactory,
     });
 
     if (log) console.log('TONOMY_LOGIN_WEBSITE/callback: checking login request of external website');
@@ -167,15 +174,34 @@ export async function loginWebsiteOnCallback(keyManager: KeyManager, log = true)
     return { redirectJwt, username, accountName };
 }
 
-export async function externalWebsiteOnCallback(keyManager: KeyManager, accountName: Name, log = true) {
+export async function externalWebsiteOnCallback(
+    keyManager: KeyManager,
+    storageFactory: StorageFactory,
+    accountName: Name,
+    log = true
+) {
     if (log) console.log('EXTERNAL_WEBSITE/callback: fetching response from URL');
     const externalUser = await ExternalUser.verifyLoginRequest({
         keyManager,
-        storageFactory: jsStorageFactory,
+        storageFactory,
     });
 
     const externalWebsiteAccount = await externalUser.getAccountName();
     const tonomyIdAccount = accountName;
 
     expect(externalWebsiteAccount.toString()).toBe(tonomyIdAccount.toString());
+}
+
+export async function externalWebsiteOnReload(
+    keyManager: KeyManager,
+    storageFactory: StorageFactory,
+    tonomyUser: User,
+    log = false
+) {
+    if (log) console.log('EXTERNAL_WEBSITE/home: calling get User');
+
+    const externalUser = await ExternalUser.getUser(keyManager, storageFactory);
+
+    expect(externalUser).toBeDefined();
+    expect((await externalUser.getAccountName()).toString()).toBe(await (await tonomyUser.getAccountName()).toString());
 }
