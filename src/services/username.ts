@@ -65,4 +65,8 @@ export class TonomyUsername {
     static fromFullUsername(username: string): TonomyUsername {
         return new TonomyUsername(username);
     }
+
+    getBaseUsername(){
+        return this.username?.split('.')[0];
+    }
 }
