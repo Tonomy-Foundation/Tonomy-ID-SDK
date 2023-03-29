@@ -158,6 +158,16 @@ export class User {
         });
     }
 
+    async checkPin(pin: string): Promise<boolean> {
+        const pinKey = await this.keyManager.checkKey({
+            level: KeyManagerLevel.PIN,
+            challenge: pin,
+        });
+
+        if (!pinKey) throwError('Pin is incorrect', SdkErrors.PinInValid);
+        return true;
+    }
+
     async saveFingerprint() {
         const privateKey = this.keyManager.generateRandomPrivateKey();
 
