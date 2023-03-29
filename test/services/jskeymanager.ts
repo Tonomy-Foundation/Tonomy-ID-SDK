@@ -132,17 +132,22 @@ export class JsKeyManager implements KeyManager {
 
             const keyStore = this.keyStorage[options.level];
 
-            if (options.level === KeyManagerLevel.PIN) {
-                if (options?.challenge) {
-                    const hashedSaltedChallenge = sha256(options?.challenge + keyStore.salt);
-
-                    if (hashedSaltedChallenge === keyStore.hashedSaltedChallenge) return keyStore.publicKey;
-                    else throw throwError('Pin is incorrect', SdkErrors.PinInValid);
-                }
-            }
-
             return keyStore.publicKey;
         }
+    }
+    async checkKey(options: GetKeyOptions): Promise<boolean> {
+        if (!(options.level in this.keyStorage)) throw new Error('No key for this level');
+
+        const keyStore = this.keyStorage[options.level];
+
+        if (options.level === KeyManagerLevel.PIN) {
+            if (options?.challenge) {
+                const hashedSaltedChallenge = sha256(options?.challenge + keyStore.salt);
+
+                if (hashedSaltedChallenge === keyStore.hashedSaltedChallenge) return true;
+                else throw throwError('Pin is incorrect', SdkErrors.PinInValid);
+            } else throw throwError('challenge is missing', SdkErrors.missingChallenge);
+        } else throw throwError('Invalid Level', SdkErrors.invalidDataType);
     }
 
     async removeKey(options: GetKeyOptions): Promise<void> {

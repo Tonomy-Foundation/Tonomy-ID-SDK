@@ -122,6 +122,15 @@ interface KeyManager {
         password: string,
         salt?: Checksum256
     ): Promise<{ privateKey: PrivateKey; salt: Checksum256 }>;
+
+    /**
+     * checks the key against the provided challenge with hashedSaltedChallenge
+     * @param Options for checking key with level, and challenge
+     * @returns Boolean if matched
+     *
+     * @throws if challenge is not provided or not matched
+     */
+    checkKey(options: GetKeyOptions): Promise<boolean>;
 }
 
 export { KeyManager, KeyManagerLevel, StoreKeyOptions, SignDataOptions, GetKeyOptions };
