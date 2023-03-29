@@ -1,5 +1,5 @@
 import { io, Socket } from 'socket.io-client';
-import { createSdkError, SdkErrors, throwError } from './services/errors';
+import { createSdkError, SdkErrors } from './services/errors';
 import { getSettings } from './settings';
 import { Message } from './util/message';
 
@@ -15,6 +15,7 @@ export class Communication {
      * @throws {SdkError} CommunicationNotConnected
      */
     private async connect(): Promise<void> {
+        if (this.socketServer?.connected) return; // dont override socket if connected
         const url = getSettings().communicationUrl;
 
         this.socketServer = io(url, {
@@ -22,15 +23,13 @@ export class Communication {
         });
 
         await new Promise((resolve, reject) => {
-            let resolved = false;
-
             this.socketServer.on('connect', () => {
-                resolved = true;
                 resolve(true);
                 return;
             });
             setTimeout(() => {
-                if (resolved) return;
+                if (this.socketServer.connected) return;
+
                 reject(
                     createSdkError(
                         'Could not connect to Tonomy Communication server',
@@ -39,10 +38,6 @@ export class Communication {
                 );
             }, 5000);
         });
-
-        if (!this.socketServer.connected) {
-            throwError('Could not connect to Tonomy Communication server', SdkErrors.CommunicationNotConnected);
-        }
     }
 
     /**
@@ -58,8 +53,8 @@ export class Communication {
             const resolved = false;
 
             this.socketServer.emit(event, { message: message.jwt }, (response: any) => {
-                if (response.err) {
-                    reject(response.err);
+                if (response.error) {
+                    reject(response);
                 }
 
                 resolve(response);
