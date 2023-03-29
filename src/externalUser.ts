@@ -11,6 +11,7 @@ import { Checksum256, Name } from '@greymass/eosio';
 import { TonomyUsername } from './services/username';
 import { browserStorageFactory } from './managers/browserStorage';
 import { getChainInfo } from './services/eosio/eosio';
+import { JsKeyManager } from './managers/jsKeyManager';
 
 export type ExternalUserStorage = {
     accountName: Name;
@@ -20,10 +21,14 @@ export type ExternalUserStorage = {
 
 export type VerifyLoginOptions = {
     checkKeys?: boolean;
-    keyManager: KeyManager;
+    keyManager?: KeyManager;
     storageFactory?: StorageFactory;
 };
 
+/**
+ * An external user on a website that is being logged into by a Tonomy ID user
+ *
+ */
 export class ExternalUser {
     keyManager: KeyManager;
     storage: ExternalUserStorage & PersistentStorageClean;
@@ -32,18 +37,25 @@ export class ExternalUser {
     /**
      * Creates a new external user
      *
-     * @param _keyManager {KeyManager} - the key manager to use for signing
+     * @param {KeyManager} _keyManager - the key manager to use for signing
+     * @param {StorageFactory} _storageFactory - the storage factory to use for persistent storage
      */
     constructor(_keyManager: KeyManager, _storageFactory: StorageFactory) {
         this.keyManager = _keyManager;
         this.storage = createStorage<ExternalUserStorage>('tonomy.externalUser.', _storageFactory);
     }
 
-    static async getUser(
-        keyManager: KeyManager,
-        storageFactory: StorageFactory = browserStorageFactory
-    ): Promise<ExternalUser> {
-        const user = new ExternalUser(keyManager, storageFactory);
+    /**
+     * Retreives the user from persistent storage if it exists and verifies the keys are valid
+     *
+     * @param {StorageFactory} [storageFactory=browserStorageFactory] - the storage factory to use for persistent storage
+     * @param {KeyManager} [keyManager=new JsKeyManager()] - the key manager to use for signing
+     * @returns {Promise<ExternalUser>} - the user
+     */
+    static async getUser(options: { storageFactory: StorageFactory; keyManager: KeyManager }): Promise<ExternalUser> {
+        if (!options.storageFactory) options.storageFactory = browserStorageFactory;
+        if (!options.keyManager) options.keyManager = new JsKeyManager();
+        const user = new ExternalUser(options.keyManager, options.storageFactory);
 
         try {
             const accountName = await user.getAccountName();
@@ -54,7 +66,7 @@ export class ExternalUser {
                 throw throwError('accountName not found', SdkErrors.AccountNotFound);
             }
 
-            const result = await UserApps.verifyKeyExistsForApp(accountName.toString(), keyManager);
+            const result = await UserApps.verifyKeyExistsForApp(accountName.toString(), options.keyManager);
 
             if (result) {
                 return user;
@@ -69,6 +81,11 @@ export class ExternalUser {
         }
     }
 
+    /**
+     * Returns the DID of the user
+     *
+     * @returns {Promise<string>} - the DID of the user
+     */
     async getDid() {
         if (!this.did_) {
             const accountName = await (await this.getAccountName()).toString();
@@ -83,7 +100,7 @@ export class ExternalUser {
     /**
      * Sets the account name of the user
      *
-     * @param accountName {Name} - the account name of the user
+     * @param {Name} accountName - the account name of the user
      */
     async setAccountName(accountName: Name): Promise<void> {
         this.storage.accountName = accountName;
@@ -93,7 +110,7 @@ export class ExternalUser {
     /**
      * Sets the username of the user
      *
-     * @param username {string} - the username of the user
+     * @param {string} username - the username of the user
      */
     async setUsername(username: string): Promise<void> {
         this.storage.username = new TonomyUsername(username);
@@ -112,7 +129,7 @@ export class ExternalUser {
     /**
      * Sets the login request
      *
-     * @param loginRequest {JWTLoginPayload} - the login request
+     * @param {JWTLoginPayload} loginRequest - the login request
      */
     async setLoginRequest(loginRequest: JWTLoginPayload): Promise<void> {
         this.storage.loginRequest = loginRequest;
@@ -142,15 +159,15 @@ export class ExternalUser {
      *
      * @description should be called when the user clicks on the login button
      *
-     * @param onPressLoginOptions {OnPressLoginOptions} - options for the login
-     * @property onPressLoginOptions.redirect {boolean} - if true, redirects the user to the login page, if false, returns the token
-     * @property onPressLoginOptions.callbackPath {string} - the path to redirect the user to after login
-     * @param keyManager {KeyManager} - the key manager to use to store the keys
+     * @param {OnPressLoginOptions} onPressLoginOptions - options for the login
+     * @property {boolean} onPressLoginOptions.redirect - if true, redirects the user to the login page, if false, returns the token
+     * @property {string} onPressLoginOptions.callbackPath - the path to redirect the user to after login
+     * @param {KeyManager} keyManager - the key manager to use to store the keys
      * @returns {Promise<string | void>} - if redirect is true, returns void, if redirect is false, returns the login request in the form of a JWT token
      */
     static async loginWithTonomy(
         { redirect = true, callbackPath }: OnPressLoginOptions,
-        keyManager: KeyManager
+        keyManager: KeyManager = new JsKeyManager()
     ): Promise<string | void> {
         const { privateKey, publicKey } = generateRandomKeyPair();
 
@@ -189,41 +206,35 @@ export class ExternalUser {
     }
 
     /**
-     *
-     * @param [keymanager=JSKEymanager]
-     * @throws if user doesn't exists, keys are missing or user not loggedIn
-     * @returns the external user object
-     */
-    //   static getUser(keymanager = JSsKeymanager: KeyManager): Promise<ExternalUser> {
-    //  * checks storage for keys and other metadata
-    //  * fethces user from blockchain
-    //  * checks if user is loggedin by verifying the keys
-    //  * delete the keys from storage if they are not verified
-    //  * returns the user object
-    //  */
-    // return Object.assign(this, {})
-    //   }
-
-    /**
      * Signs a message with the given key manager and the key level
      *
-     * @param message {any} - an object to sign
-     * @param keyManager {KeyManager} - the key manager to use to sign the message
+     * @param {any} message - an object to sign
+     * @param {string} recipient - the recipient's DID
+     * @param {KeyManager} keyManager - the key manager to use to sign the message
+     * @returns {Promise<Message>} - the signed message
      */
-    static async signMessage(message: any, keyManager: KeyManager, recipient?: string): Promise<Message> {
+    static async signMessage(
+        message: any,
+        options: {
+            recipient?: string;
+            keyManager?: KeyManager;
+        } = {}
+    ): Promise<Message> {
         const keyManagerLevel = KeyManagerLevel.BROWSER_LOCAL_STORAGE;
-        const publicKey = await keyManager.getKey({
+
+        if (!options.keyManager) options.keyManager = new JsKeyManager();
+        const publicKey = await options.keyManager.getKey({
             level: keyManagerLevel,
         });
 
         if (!publicKey) throw throwError('No Key Found for this level', SdkErrors.KeyNotFound);
-        const signer = createVCSigner(keyManager, keyManagerLevel).sign;
+        const signer = createVCSigner(options.keyManager, keyManagerLevel).sign;
 
         const jwk = await createJWK(publicKey);
 
         const issuer = toDid(jwk);
 
-        return await Message.sign(message, { did: issuer, signer: signer as any, alg: 'ES256K-R' }, recipient);
+        return await Message.sign(message, { did: issuer, signer: signer as any, alg: 'ES256K-R' }, options.recipient);
     }
 
     /**
@@ -232,14 +243,15 @@ export class ExternalUser {
      * @description should be called in the callback page
      *
      * @param {options} VerifyLoginOptions - options for the login
-     * @property {options.checkKeys} boolean - if true, checks the keys in the keyManager against the blockchain
-     * @property {options.keyManager} KeyManager - the key manager to use to storage and manage keys
+     * @property {options.checkKeys} [boolean=true] - if true, checks the keys in the keyManager against the blockchain
+     * @property {options.keyManager} [KeyManager] - the key manager to use to storage and manage keys
      * @property {options.storageFactory} [StorageFactory] - the storage factory to use to store data
      *
      * @returns {Promise<ExternalUser>} an external user object ready to use
      */
     static async verifyLoginRequest(options: VerifyLoginOptions): Promise<ExternalUser> {
         if (!options.checkKeys) options.checkKeys = true;
+        if (!options.keyManager) options.keyManager = new JsKeyManager();
 
         const { requests, username, accountName } = UserApps.getLoginRequestParams();
 

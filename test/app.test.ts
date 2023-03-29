@@ -2,7 +2,6 @@ import { PrivateKey, PublicKey } from '@greymass/eosio';
 import { UserApps } from '../src/userApps';
 import { generateRandomKeyPair } from '../src/util/crypto';
 import URL from 'jsdom-url';
-import { JsKeyManager } from '../src/managers/jsKeyManager';
 import { Message } from '../src/util/message';
 import { setSettings } from '../src';
 import { ExternalUser } from '../src/externalUser';
@@ -21,15 +20,13 @@ describe('logging in', () => {
     });
 
     it('on press button', async () => {
-        const keymanager = new JsKeyManager();
-        const jwt = await ExternalUser.loginWithTonomy({ callbackPath: '/login', redirect: false }, keymanager);
+        const jwt = await ExternalUser.loginWithTonomy({ callbackPath: '/login', redirect: false });
 
         expect(jwt).toBeDefined();
     });
 
     it('checks login url', async () => {
-        const keymanager = new JsKeyManager();
-        const jwt = await ExternalUser.loginWithTonomy({ callbackPath: '/login', redirect: false }, keymanager);
+        const jwt = await ExternalUser.loginWithTonomy({ callbackPath: '/login', redirect: false });
         const url = 'http://localhost/login?requests=' + JSON.stringify([jwt]);
 
         jest.spyOn(document, 'referrer', 'get').mockReturnValue('http://localhost');
