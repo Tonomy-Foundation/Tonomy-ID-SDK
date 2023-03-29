@@ -82,6 +82,5 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 16.4.1
-      - run: curl blockchain:8888
       - run: curl http://blockchain:8888
       - run: npm run test:integration
