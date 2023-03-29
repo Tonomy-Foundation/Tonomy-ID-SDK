@@ -66,7 +66,4 @@ export class TonomyUsername {
         return new TonomyUsername(username);
     }
 
-    getBaseUsername(){
-        return this.username?.split('.')[0];
-    }
 }
