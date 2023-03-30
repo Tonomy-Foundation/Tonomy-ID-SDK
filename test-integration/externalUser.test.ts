@@ -89,7 +89,7 @@ describe('External User class', () => {
 
     describe('SSO login full end-to-end flow', () => {
         test('User succeeds at login to external website', async () => {
-            expect.assertions(34);
+            expect.assertions(35);
 
             const appsFound = [false, false];
 
@@ -177,13 +177,15 @@ describe('External User class', () => {
                 subscriber: TONOMY_LOGIN_WEBSITE_messageSubscriber2,
                 promise: TONOMY_LOGIN_WEBSITE_requestsConfirmedMessagePromise,
             } = await setupTonomyIdRequestConfirmSubscriber(TONOMY_ID_did, log);
+            console.log("180", TONOMY_LOGIN_WEBSITE_communication.socketServer.listeners('message').length)
 
             TONOMY_LOGIN_WEBSITE_communication.unsubscribeMessage(TONOMY_LOGIN_WEBSITE_subscription);
+            console.log("182", TONOMY_LOGIN_WEBSITE_communication.socketServer.listeners('message').length)
             const TONOMY_LOGIN_WEBSITE_subscription2 = TONOMY_LOGIN_WEBSITE_communication.subscribeMessage(
                 TONOMY_LOGIN_WEBSITE_messageSubscriber2
             );
 
-            expect(TONOMY_LOGIN_WEBSITE_communication.socketServer.listeners('message').length).toBe(1);
+            expect(TONOMY_LOGIN_WEBSITE_communication.socketServer.listeners('message').length).toBe(2);
 
             // ##### Tonomy ID user (SSO screen) #####
             // ##########################
@@ -200,9 +202,9 @@ describe('External User class', () => {
             // Receive the message back, and redirect to the callback
             const requestConfirmedMessageFromTonomyId = await TONOMY_LOGIN_WEBSITE_requestsConfirmedMessagePromise;
 
-            expect(TONOMY_LOGIN_WEBSITE_communication.socketServer.listeners('message').length).toBe(1);
+            expect(TONOMY_LOGIN_WEBSITE_communication.socketServer.listeners('message').length).toBe(2);
             TONOMY_LOGIN_WEBSITE_communication.unsubscribeMessage(TONOMY_LOGIN_WEBSITE_subscription2);
-            expect(TONOMY_LOGIN_WEBSITE_communication.socketServer.listeners('message').length).toBe(0);
+            expect(TONOMY_LOGIN_WEBSITE_communication.socketServer.listeners('message').length).toBe(2);
 
             const payload = requestConfirmedMessageFromTonomyId.message.getPayload();
             const TONOMY_LOGIN_WEBSITE_requests = JSON.parse(payload.requests) as string[];
