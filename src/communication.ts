@@ -5,8 +5,10 @@ import { Message } from './util/message';
 
 export type Subscriber = (message: Message) => void;
 
+let identifier = 0;
 export class Communication {
     socketServer: Socket;
+    private subscribers= new Map<string, Subscriber>();
 
     /**
      * Connects to the Tonomy Communication server
@@ -93,13 +95,18 @@ export class Communication {
     }
 
     // function that adds a new subscriber, which is called every time a message is received
-    subscribeMessage(subscriber: Subscriber): void {
+    subscribeMessage(subscriber: Subscriber): string {
+        identifier++;
+        this.subscribers.set(identifier.toString(), subscriber)
         this.socketServer.on('message', subscriber);
+        return identifier.toString();
     }
 
     // unsubscribes a function from the receiving a message
-    unsubscribeMessage(subscriber: Subscriber) {
+    unsubscribeMessage(id: string) {
+        const subscriber = this.subscribers.get(id);
         this.socketServer.off('message', subscriber);
+        this.subscribers.delete(id);
     }
 
     disconnect() {
