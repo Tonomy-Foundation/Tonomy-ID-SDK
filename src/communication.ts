@@ -6,9 +6,10 @@ import { Message } from './util/message';
 export type Subscriber = (message: Message) => void;
 
 let identifier = 0;
+
 export class Communication {
     socketServer: Socket;
-    private subscribers= new Map<string, Subscriber>();
+    private subscribers = new Map<string, Subscriber>();
 
     /**
      * Connects to the Tonomy Communication server
@@ -95,20 +96,21 @@ export class Communication {
     }
 
     // function that adds a new subscriber, which is called every time a message is received
-    subscribeMessage(subscriber: Subscriber, type?:string): string {
+    subscribeMessage(subscriber: Subscriber, type?: string): string {
         identifier++;
         this.subscribers.set(identifier.toString(), subscriber);
-        this.socketServer.on('message', (message:Message) => {
-            if(!type || message.getType() === type){
-                subscriber(message)
+        this.socketServer.on('message', (message: Message) => {
+            if (!type || message.getType() === type) {
+                subscriber(message);
             }
-            });
+        });
         return identifier.toString();
     }
 
     // unsubscribes a function from the receiving a message
     unsubscribeMessage(id: string) {
         const subscriber = this.subscribers.get(id);
+
         this.socketServer.off('message', subscriber);
         this.subscribers.delete(id);
     }
