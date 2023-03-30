@@ -71,7 +71,7 @@ export class JsKeyManager implements KeyManager {
                 ? localStorage.getItem(KEY_STORAGE_NAMESPACE + options.level)
                 : sessionStorage.getItem(KEY_STORAGE_NAMESPACE + options.level);
 
-            if (!storage) throw throwError('No key for this level', SdkErrors.KeyNotFound);
+            if (!storage) throwError(`No key for level ${options.level}`, SdkErrors.KeyNotFound);
             const keystore = JSON.parse(storage);
 
             this.keyStorage[options.level] = keystore;
@@ -79,7 +79,7 @@ export class JsKeyManager implements KeyManager {
             return keystore;
         }
 
-        throw throwError('No key for this level', SdkErrors.KeyNotFound);
+        throwError(`No key for level ${options.level}`, SdkErrors.KeyNotFound);
     }
 
     async signData(options: SignDataOptions): Promise<string | Signature> {
