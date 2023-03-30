@@ -95,10 +95,14 @@ export class Communication {
     }
 
     // function that adds a new subscriber, which is called every time a message is received
-    subscribeMessage(subscriber: Subscriber): string {
+    subscribeMessage(subscriber: Subscriber, type?:string): string {
         identifier++;
-        this.subscribers.set(identifier.toString(), subscriber)
-        this.socketServer.on('message', subscriber);
+        this.subscribers.set(identifier.toString(), subscriber);
+        this.socketServer.on('message', (message:Message) => {
+            if(!type || message.getType() === type){
+                subscriber(message);
+            }
+            });
         return identifier.toString();
     }
 
