@@ -46,6 +46,7 @@ export class Message {
     }
 
     constructor(public jwt: string) {
+        console.log("jwt", jwt)
         this.decodedJwt = decodeJWT(jwt);
         this.jwt = jwt;
     }
