@@ -67,9 +67,10 @@ export class JsKeyManager implements KeyManager {
             options.level === KeyManagerLevel.BROWSER_LOCAL_STORAGE ||
             options.level === KeyManagerLevel.BROWSER_SESSION_STORAGE
         ) {
-            const storage = KeyManagerLevel.BROWSER_LOCAL_STORAGE
-                ? localStorage.getItem(KEY_STORAGE_NAMESPACE + options.level)
-                : sessionStorage.getItem(KEY_STORAGE_NAMESPACE + options.level);
+            const storage =
+                options.level === KeyManagerLevel.BROWSER_LOCAL_STORAGE
+                    ? localStorage.getItem(KEY_STORAGE_NAMESPACE + options.level)
+                    : sessionStorage.getItem(KEY_STORAGE_NAMESPACE + options.level);
 
             if (!storage) throwError(`No key for level ${options.level}`, SdkErrors.KeyNotFound);
             const keystore = JSON.parse(storage);
@@ -142,7 +143,7 @@ export class JsKeyManager implements KeyManager {
             options.level === KeyManagerLevel.BROWSER_LOCAL_STORAGE ||
             options.level === KeyManagerLevel.BROWSER_SESSION_STORAGE
         ) {
-            KeyManagerLevel.BROWSER_LOCAL_STORAGE
+            options.level === KeyManagerLevel.BROWSER_LOCAL_STORAGE
                 ? localStorage.removeItem(KEY_STORAGE_NAMESPACE + options.level)
                 : sessionStorage.removeItem(KEY_STORAGE_NAMESPACE + options.level);
         }
