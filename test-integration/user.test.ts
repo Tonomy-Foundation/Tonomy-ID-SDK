@@ -222,7 +222,7 @@ describe('User class', () => {
 
             await expect(
                 user.checkPassword('Testing123!@', { keyFromPasswordFn: generatePrivateKeyFromPassword })
-            ).rejects.toThrowError(SdkErrors.PasswordInValid);
+            ).rejects.toThrowError(SdkErrors.PasswordInvalid);
             await expect(
                 user.checkPassword('password', { keyFromPasswordFn: generatePrivateKeyFromPassword })
             ).rejects.toThrowError(SdkErrors.PasswordFormatInvalid);
@@ -359,7 +359,7 @@ describe('User class', () => {
 
             await user.savePIN('12345');
             await expect(user.keyManager.getKey({ level: KeyManagerLevel.PIN })).resolves.toBeDefined();
-            await expect(user.checkPin('12121')).rejects.toThrowError(SdkErrors.PinInValid);
+            await expect(user.checkPin('12121')).rejects.toThrowError(SdkErrors.PinInvalid);
 
             await user.logout();
         })

@@ -116,7 +116,7 @@ interface KeyManager {
      * @param {CheckKeyOptions} options - options for checking the key challenge
      * @returns {Promise<boolean>} - returns matching status
      *
-     * @throws if challenge is not provided
+     * @throws if challenge is not provided, or if key is not found
      */
     checkKey(options: CheckKeyOptions): Promise<boolean>;
 

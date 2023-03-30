@@ -32,21 +32,23 @@ export class JsKeyManager implements KeyManager {
         };
 
         switch (options.level) {
-        case KeyManagerLevel.LOCAL:
-        case KeyManagerLevel.BIOMETRIC:
-            break;
-        case KeyManagerLevel.PASSWORD:
-        case KeyManagerLevel.PIN:
-            if (!options.challenge) throwError('Challenge missing', SdkErrors.MissingChallenge);
-            keyStore.salt = randomString(32);
-            keyStore.hashedSaltedChallenge = sha256(options.challenge + keyStore.salt);
-            break;
-        case KeyManagerLevel.BROWSER_LOCAL_STORAGE:
-        case KeyManagerLevel.BROWSER_SESSION_STORAGE:
-            localStorage.setItem('tonomy.id.' + options.level, JSON.stringify(keyStore));
-            break;
-        default:
-            throwError('Invalid level', SdkErrors.InvalidKeyLevel);
+            case KeyManagerLevel.LOCAL:
+            case KeyManagerLevel.BIOMETRIC:
+                break;
+            case KeyManagerLevel.PASSWORD:
+            case KeyManagerLevel.PIN:
+                if (!options.challenge) throwError('Challenge missing', SdkErrors.MissingChallenge);
+                keyStore.salt = randomString(32);
+                keyStore.hashedSaltedChallenge = sha256(options.challenge + keyStore.salt);
+                break;
+            case KeyManagerLevel.BROWSER_LOCAL_STORAGE:
+                sessionStorage.setItem('tonomy.id.' + options.level, JSON.stringify(keyStore));
+                break;
+            case KeyManagerLevel.BROWSER_SESSION_STORAGE:
+                localStorage.setItem('tonomy.id.' + options.level, JSON.stringify(keyStore));
+                break;
+            default:
+                throwError('Invalid level', SdkErrors.InvalidKeyLevel);
         }
 
         this.keyStorage[options.level] = keyStore;
@@ -62,7 +64,9 @@ export class JsKeyManager implements KeyManager {
             options.level === KeyManagerLevel.BROWSER_LOCAL_STORAGE ||
             options.level === KeyManagerLevel.BROWSER_SESSION_STORAGE
         ) {
-            const storage = localStorage.getItem('tonomy.id.' + options.level);
+            const storage = KeyManagerLevel.BROWSER_LOCAL_STORAGE
+                ? localStorage.getItem('tonomy.id.' + options.level)
+                : sessionStorage.getItem('tonomy.id.' + options.level);
 
             if (!storage) throw throwError('No key for this level', SdkErrors.KeyNotFound);
             const keystore = JSON.parse(storage);
@@ -80,7 +84,12 @@ export class JsKeyManager implements KeyManager {
 
         if (options.level === KeyManagerLevel.PASSWORD || options.level === KeyManagerLevel.PIN) {
             if (!options.challenge) throwError('Challenge missing', SdkErrors.MissingChallenge);
-            await this.checkKey({ level: options.level, challenge: options.challenge });
+            const validChallenge = await this.checkKey({ level: options.level, challenge: options.challenge });
+
+            if (!validChallenge && options.level === KeyManagerLevel.PASSWORD)
+                throwError('Invalid password', SdkErrors.PasswordInvalid);
+            if (!validChallenge && options.level === KeyManagerLevel.PIN)
+                throwError('Invalid PIN', SdkErrors.PinInvalid);
         }
 
         const privateKey = keyStore.privateKey;
@@ -130,7 +139,9 @@ export class JsKeyManager implements KeyManager {
             options.level === KeyManagerLevel.BROWSER_LOCAL_STORAGE ||
             options.level === KeyManagerLevel.BROWSER_SESSION_STORAGE
         ) {
-            localStorage.removeItem('tonomy.id.' + options.level);
+            KeyManagerLevel.BROWSER_LOCAL_STORAGE
+                ? localStorage.removeItem('tonomy.id.' + options.level)
+                : sessionStorage.removeItem('tonomy.id.' + options.level);
         }
     }
 }

@@ -175,7 +175,7 @@ export class User {
             challenge: pin,
         });
 
-        if (!pinKey) throwError('Pin is incorrect', SdkErrors.PinInValid);
+        if (!pinKey) throwError('Pin is incorrect', SdkErrors.PinInvalid);
         return true;
     }
 
@@ -303,7 +303,7 @@ export class User {
         if (!passwordKey) throwError('Password key not found', SdkErrors.KeyNotFound);
 
         if (passwordKey.toString() !== onchainKey.toString())
-            throwError('Password is incorrect', SdkErrors.PasswordInValid);
+            throwError('Password is incorrect', SdkErrors.PasswordInvalid);
 
         return true;
     }
@@ -331,7 +331,7 @@ export class User {
         const onchainKey = accountData.getPermission('owner').required_auth.keys[0].key; // TODO change to active/other permissions when we make the change
 
         if (passwordKey.toString() !== onchainKey.toString())
-            throwError('Password is incorrect', SdkErrors.PasswordInValid);
+            throwError('Password is incorrect', SdkErrors.PasswordInvalid);
 
         this.storage.accountName = Name.from(idData.account_name);
         this.storage.username = username;
