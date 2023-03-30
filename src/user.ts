@@ -251,25 +251,37 @@ export class User {
 
         const { keyManager } = this;
 
-        const pinKey = await keyManager.getKey({ level: KeyManagerLevel.PIN });
-        const fingerprintKey = await keyManager.getKey({
-            level: KeyManagerLevel.BIOMETRIC,
-        });
-        const localKey = await keyManager.getKey({ level: KeyManagerLevel.LOCAL });
-
         // TODO:
         // use status in smart contract to lock the account till finished creating
-        interface KeyInterface {
+        const keys = {} as {
             PIN: string;
             BIOMETRIC: string;
             LOCAL: string;
+        };
+
+        try {
+            const pinKey = await keyManager.getKey({ level: KeyManagerLevel.PIN });
+
+            keys.PIN = pinKey.toString();
+        } finally {
+            // do nothing
         }
 
-        const keys = {} as KeyInterface;
+        try {
+            const biometricKey = await keyManager.getKey({ level: KeyManagerLevel.BIOMETRIC });
 
-        if (pinKey) keys.PIN = pinKey.toString();
-        if (fingerprintKey) keys.BIOMETRIC = fingerprintKey.toString();
-        if (localKey) keys.LOCAL = localKey.toString();
+            keys.BIOMETRIC = biometricKey.toString();
+        } finally {
+            // do nothing
+        }
+
+        try {
+            const localKey = await keyManager.getKey({ level: KeyManagerLevel.LOCAL });
+
+            keys.LOCAL = localKey.toString();
+        } finally {
+            // do nothing
+        }
 
         const signer = createKeyManagerSigner(keyManager, KeyManagerLevel.PASSWORD, password);
         const accountName = await this.storage.accountName;

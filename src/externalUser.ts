@@ -227,7 +227,6 @@ export class ExternalUser {
             level: keyManagerLevel,
         });
 
-        if (!publicKey) throw throwError('No Key Found for this level', SdkErrors.KeyNotFound);
         const signer = createVCSigner(options.keyManager, keyManagerLevel).sign;
 
         const jwk = await createJWK(publicKey);

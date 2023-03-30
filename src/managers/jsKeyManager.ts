@@ -75,7 +75,12 @@ export class JsKeyManager implements KeyManager {
             if (!storage) throwError(`No key for level ${options.level}`, SdkErrors.KeyNotFound);
             const keystore = JSON.parse(storage);
 
-            this.keyStorage[options.level] = keystore;
+            this.keyStorage[options.level] = {
+                privateKey: PrivateKey.from(keystore.privateKey),
+                publicKey: PublicKey.from(keystore.publicKey),
+                hashedSaltedChallenge: keystore.hashedSaltedChallenge,
+                salt: keystore.salt,
+            };
 
             return keystore;
         }
