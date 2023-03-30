@@ -6,7 +6,7 @@ import { createJWK, toDid } from './util/did-jwk';
 import { Message } from './util/message';
 import { getSettings } from './settings';
 import { SdkErrors, throwError } from './services/errors';
-import { createStorage, PersistentStorageClean, StorageFactory } from './services/storage';
+import { createStorage, PersistentStorageClean, StorageFactory, STORAGE_NAMESPACE } from './services/storage';
 import { Checksum256, Name } from '@greymass/eosio';
 import { TonomyUsername } from './services/username';
 import { browserStorageFactory } from './managers/browserStorage';
@@ -42,7 +42,7 @@ export class ExternalUser {
      */
     constructor(_keyManager: KeyManager, _storageFactory: StorageFactory) {
         this.keyManager = _keyManager;
-        this.storage = createStorage<ExternalUserStorage>('tonomy.externalUser.', _storageFactory);
+        this.storage = createStorage<ExternalUserStorage>(STORAGE_NAMESPACE + 'external.user.', _storageFactory);
     }
 
     /**

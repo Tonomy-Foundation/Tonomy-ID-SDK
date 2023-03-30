@@ -4,7 +4,7 @@ import { KeyManager, KeyManagerLevel } from './services/keymanager';
 import { GetPersonResponse, IDContract } from './services/contracts/IDContract';
 import { AntelopePushTransactionError, createKeyManagerSigner, createSigner } from './services/eosio/transaction';
 import { getApi, getChainInfo } from './services/eosio/eosio';
-import { createStorage, PersistentStorageClean, StorageFactory } from './services/storage';
+import { createStorage, PersistentStorageClean, StorageFactory, STORAGE_NAMESPACE } from './services/storage';
 import { SdkErrors, throwError, SdkError } from './services/errors';
 import { AccountType, TonomyUsername } from './services/username';
 import { validatePassword } from './util/passwords';
@@ -78,7 +78,7 @@ export class User {
 
     constructor(_keyManager: KeyManager, storageFactory: StorageFactory) {
         this.keyManager = _keyManager;
-        this.storage = createStorage<UserStorage>('tonomy.user.', storageFactory);
+        this.storage = createStorage<UserStorage>(STORAGE_NAMESPACE + 'user.', storageFactory);
 
         this.apps = new UserApps(this, _keyManager, storageFactory);
 
