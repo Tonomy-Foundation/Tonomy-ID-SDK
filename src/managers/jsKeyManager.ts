@@ -45,10 +45,10 @@ export class JsKeyManager implements KeyManager {
             keyStore.hashedSaltedChallenge = sha256(options.challenge + keyStore.salt);
             break;
         case KeyManagerLevel.BROWSER_LOCAL_STORAGE:
-            sessionStorage.setItem(KEY_STORAGE_NAMESPACE + options.level, JSON.stringify(keyStore));
+            localStorage.setItem(KEY_STORAGE_NAMESPACE + options.level, JSON.stringify(keyStore));
             break;
         case KeyManagerLevel.BROWSER_SESSION_STORAGE:
-            localStorage.setItem(KEY_STORAGE_NAMESPACE + options.level, JSON.stringify(keyStore));
+            sessionStorage.setItem(KEY_STORAGE_NAMESPACE + options.level, JSON.stringify(keyStore));
             break;
         default:
             throwError('Invalid level', SdkErrors.InvalidKeyLevel);
@@ -73,16 +73,17 @@ export class JsKeyManager implements KeyManager {
                     : sessionStorage.getItem(KEY_STORAGE_NAMESPACE + options.level);
 
             if (!storage) throwError(`No key for level ${options.level}`, SdkErrors.KeyNotFound);
-            const keystore = JSON.parse(storage);
+            const keyStore = JSON.parse(storage);
 
             this.keyStorage[options.level] = {
-                privateKey: PrivateKey.from(keystore.privateKey),
-                publicKey: PublicKey.from(keystore.publicKey),
-                hashedSaltedChallenge: keystore.hashedSaltedChallenge,
-                salt: keystore.salt,
+                privateKey: PrivateKey.from(keyStore.privateKey),
+                publicKey: PublicKey.from(keyStore.publicKey),
             };
+            if (keyStore.hashedSaltedChallenge)
+                this.keyStorage[options.level].hashedSaltedChallenge = keyStore.hashedSaltedChallenge;
+            if (keyStore.salt) this.keyStorage[options.level].salt = keyStore.salt;
 
-            return keystore;
+            return keyStore;
         }
 
         throwError(`No key for level ${options.level}`, SdkErrors.KeyNotFound);

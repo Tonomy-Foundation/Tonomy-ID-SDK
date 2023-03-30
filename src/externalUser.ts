@@ -74,9 +74,9 @@ export class ExternalUser {
                 throw throwError('User Not loggedIn', SdkErrors.UserNotLoggedIn);
             }
         } catch (e) {
-            //TODO logout
-            // keyManager.clear(); must be implemented in future keymanager
             user.storage.clear();
+            user.keyManager.removeKey({ level: KeyManagerLevel.BROWSER_LOCAL_STORAGE });
+            user.keyManager.removeKey({ level: KeyManagerLevel.BROWSER_SESSION_STORAGE });
             throw e;
         }
     }
