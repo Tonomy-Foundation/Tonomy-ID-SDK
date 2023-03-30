@@ -104,11 +104,12 @@ export class Communication {
     }
 
     // unsubscribes a function from the receiving a message
-    unsubscribeMessage(id: string):void {
+    unsubscribeMessage(id: string): void {
         const subscriber = this.subscribers.get(id);
-        if(subscriber) {
+
+        if (subscriber) {
             this.socketServer.off('message', subscriber);
-            this.subscribers.delete(id);        
+            this.subscribers.delete(id);
         }
     }
 
