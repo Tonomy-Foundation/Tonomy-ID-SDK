@@ -246,7 +246,7 @@ export class User {
         const status = await this.getStatus();
 
         if (status === UserStatus.DEACTIVATED) {
-            throw new Error("Can't update keys ");
+            throwError("Can't update keys for deactivated user", SdkErrors.UserDeactivated);
         }
 
         const { keyManager } = this;
@@ -263,24 +263,24 @@ export class User {
             const pinKey = await keyManager.getKey({ level: KeyManagerLevel.PIN });
 
             keys.PIN = pinKey.toString();
-        } finally {
-            // do nothing
+        } catch (e) {
+            if (!(e instanceof SdkError) || e.code !== SdkErrors.KeyNotFound) throw e;
         }
 
         try {
             const biometricKey = await keyManager.getKey({ level: KeyManagerLevel.BIOMETRIC });
 
             keys.BIOMETRIC = biometricKey.toString();
-        } finally {
-            // do nothing
+        } catch (e) {
+            if (!(e instanceof SdkError) || e.code !== SdkErrors.KeyNotFound) throw e;
         }
 
         try {
             const localKey = await keyManager.getKey({ level: KeyManagerLevel.LOCAL });
 
             keys.LOCAL = localKey.toString();
-        } finally {
-            // do nothing
+        } catch (e) {
+            if (!(e instanceof SdkError) || e.code !== SdkErrors.KeyNotFound) throw e;
         }
 
         const signer = createKeyManagerSigner(keyManager, KeyManagerLevel.PASSWORD, password);

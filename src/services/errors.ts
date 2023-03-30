@@ -92,6 +92,7 @@ enum SdkErrors {
     PinInvalid = 'PinInvalid',
     AccountNotFound = 'AccountNotFound',
     UserNotLoggedIn = 'UserNotLoggedIn',
+    UserDeactivated = 'UserDeactivated',
     InvalidData = 'InvalidData',
 }
 
