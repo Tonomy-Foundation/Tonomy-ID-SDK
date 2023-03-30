@@ -99,9 +99,10 @@ export class Communication {
     subscribeMessage(subscriber: Subscriber, type?: string): string {
         identifier++;
         this.subscribers.set(identifier.toString(), subscriber);
-        this.socketServer.on('message', (message: Message) => {
-            if (!type || message.getType() === type) {
-                subscriber(message);
+        this.socketServer.on('message', (message) => {
+            const msg = new Message(message)
+            if (!type || msg.getType() === type) {
+                subscriber(msg);
             }
         });
         return identifier.toString();
