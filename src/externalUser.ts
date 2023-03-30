@@ -7,7 +7,7 @@ import { Message } from './util/message';
 import { getSettings } from './settings';
 import { SdkErrors, throwError } from './services/errors';
 import { createStorage, PersistentStorageClean, StorageFactory, STORAGE_NAMESPACE } from './services/storage';
-import { Checksum256, Name } from '@greymass/eosio';
+import { Checksum256, Name, PublicKey } from '@greymass/eosio';
 import { TonomyUsername } from './services/username';
 import { browserStorageFactory } from './managers/browserStorage';
 import { getChainInfo } from './services/eosio/eosio';
@@ -241,14 +241,15 @@ export class ExternalUser {
      *
      * @description should be called in the callback page
      *
-     * @param {options} VerifyLoginOptions - options for the login
-     * @property {options.checkKeys} [boolean=true] - if true, checks the keys in the keyManager against the blockchain
-     * @property {options.keyManager} [KeyManager] - the key manager to use to storage and manage keys
-     * @property {options.storageFactory} [StorageFactory] - the storage factory to use to store data
+     * @param {VerifyLoginOptions} options - options for the login
+     * @property {boolean} [options.checkKeys = true] - if true, checks the keys in the keyManager against the blockchain
+     * @property {KeyManager} [options.keyManager] - the key manager to use to storage and manage keys
+     * @property {StorageFactory} [options.storageFactory] - the storage factory to use to store data
      *
      * @returns {Promise<ExternalUser>} an external user object ready to use
      */
-    static async verifyLoginRequest(options: VerifyLoginOptions): Promise<ExternalUser> {
+    static async verifyLoginRequest(options?: VerifyLoginOptions): Promise<ExternalUser> {
+        if (!options) options = {};
         if (!options.checkKeys) options.checkKeys = true;
         if (!options.keyManager) options.keyManager = new JsKeyManager();
 

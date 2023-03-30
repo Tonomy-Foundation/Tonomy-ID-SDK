@@ -83,7 +83,7 @@ export class JsKeyManager implements KeyManager {
                 this.keyStorage[options.level].hashedSaltedChallenge = keyStore.hashedSaltedChallenge;
             if (keyStore.salt) this.keyStorage[options.level].salt = keyStore.salt;
 
-            return keyStore;
+            return this.keyStorage[options.level];
         }
 
         throwError(`No key for level ${options.level}`, SdkErrors.KeyNotFound);
