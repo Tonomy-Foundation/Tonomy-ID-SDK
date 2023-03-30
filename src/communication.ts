@@ -96,32 +96,20 @@ export class Communication {
     }
 
     // function that adds a new subscriber, which is called every time a message is received
-    subscribeMessage(subscriber: Subscriber, type?: string): string {
+    subscribeMessage(subscriber: Subscriber): string {
         identifier++;
-        this.socketServer.on('message', (message) => {
-            this.subscribers.set(identifier.toString(), subscriber);
-            const msg = new Message(message)
-            if (!type || msg.getType() === type) {
-                subscriber(msg);
-
-            }
-        });
+        this.socketServer.on('message', subscriber);
+        this.subscribers.set(identifier.toString(), subscriber);
         return identifier.toString();
     }
 
     // unsubscribes a function from the receiving a message
     unsubscribeMessage(id: string):void {
         const subscriber = this.subscribers.get(id);
-        console.log("test", this.subscribers.get(id))
         if(subscriber) {
-            console.log("iff")
             this.socketServer.off('message', subscriber);
-            this.subscribers.delete(id);
-            console.log("subscriberrr", this.subscribers)
-        
+            this.subscribers.delete(id);        
         }
-        
-        
     }
 
     disconnect() {
