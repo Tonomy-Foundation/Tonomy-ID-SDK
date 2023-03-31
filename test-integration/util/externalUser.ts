@@ -72,8 +72,7 @@ export async function loginWebsiteOnRedirect(externalWebsiteDid: string, keyMana
 export async function setupTonomyIdAckSubscriber(did: string, log = false) {
     let subscriber: Subscriber;
     const subscriberExecutor = (resolve: any) => {
-        subscriber = (responseMessage: any) => {
-            const receivedMessage = new Message(responseMessage);
+        subscriber = (receivedMessage) => {
 
             expect(receivedMessage.getSender()).toContain(did);
 
@@ -102,9 +101,7 @@ export async function setupTonomyIdAckSubscriber(did: string, log = false) {
 export async function setupTonomyIdRequestConfirmSubscriber(did: string, log = false) {
     let subscriber: Subscriber;
     const subscriberExecutor = (resolve: any) => {
-        subscriber = (responseMessage: any) => {
-            const receivedMessage = new Message(responseMessage);
-
+        subscriber = (receivedMessage) => {
             expect(receivedMessage.getSender()).toContain(did);
 
             if (receivedMessage.getPayload().type === 'ack') {
