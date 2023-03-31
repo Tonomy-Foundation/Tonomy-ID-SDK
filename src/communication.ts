@@ -98,7 +98,7 @@ export class Communication {
      * function that adds a new subscriber, which is called every time a message is received
      *
      * @param {Subscriber} subscriber - the message object
-     * @param {string} type - the Message object to send
+     * @param {string} [type] - shows itsan optional parameters
      * @returns {number} - identifier which will be used for unsubscribe
      */
     subscribeMessage(subscriber: Subscriber, type?: string): number {
@@ -120,8 +120,8 @@ export class Communication {
     /**
      * unsubscribes a function from the receiving a message
      *
-     * @param {number} id - identifier which will be used for unsubscribe]
-     * @returns void
+     * @param {number} id - identifier which will be used for unsubscribe
+     *
      */
     unsubscribeMessage(id: number): void {
         const subscriber = this.subscribers.get(id);
