@@ -17,6 +17,7 @@ export class Message {
      * creates a signed message and return message object
      * @param message the messageResolver with the signer and the did
      * @param recipient the recipient id
+     * @param type the message type
      * @returns a message objects
      */
     static async sign(message: object, issuer: Issuer, recipient?: string, type?: string): Promise<Message> {
@@ -64,7 +65,10 @@ export class Message {
         return this.decodedJwt.payload.vc.credentialSubject.message;
     }
 
-    // // Returns the message type (ignores VerifiableCredential type). This is used to determine what kind of message it is (login request, login request confirmation etc...) so the client can choose what to do with it
+    /**
+     * Returns the message type This is used to determine what kind of message it is 
+     * @returns a type
+     */
     getType(): any {
         return this.decodedJwt.payload.vc.credentialSubject.type;
     }

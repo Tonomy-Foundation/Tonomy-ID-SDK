@@ -5,11 +5,10 @@ import { Message } from './util/message';
 
 export type Subscriber = (message: Message) => void;
 
-let identifier = 0;
-
 export class Communication {
     socketServer: Socket;
-    private subscribers = new Map<string, Subscriber>();
+    private identifier: 0;
+    private subscribers = new Map<number, Subscriber>();
 
     /**
      * Connects to the Tonomy Communication server
@@ -95,9 +94,15 @@ export class Communication {
         return this.emitMessage('message', message);
     }
 
-    // function that adds a new subscriber, which is called every time a message is received
-    subscribeMessage(subscriber: Subscriber, type?:string): string {
-        identifier++;
+    /**
+     * function that adds a new subscriber, which is called every time a message is received
+     *
+     * @param {Subscriber} subscriber - the message object
+     * @param {string} type - the Message object to send
+     * @returns {number} - identifier which will be used for unsubscribe
+     */
+    subscribeMessage(subscriber: Subscriber, type?:string): number {
+        this.identifier++;
         const messageHandler = (message: any) => {
             const msg = new Message(message)
             if(!type || msg.getType() === type) {
@@ -105,12 +110,17 @@ export class Communication {
             }
         }
         this.socketServer.on('message', messageHandler);
-        this.subscribers.set(identifier.toString(), messageHandler);
-        return identifier.toString();
+        this.subscribers.set(this.identifier, messageHandler);
+        return this.identifier;
     }
 
-    // unsubscribes a function from the receiving a message
-    unsubscribeMessage(id: string): void {
+     /**
+     * unsubscribes a function from the receiving a message
+     *
+     * @param {number} id - identifier which will be used for unsubscribe]
+     * @returns void 
+     */
+    unsubscribeMessage(id: number): void {
         const subscriber = this.subscribers.get(id);
 
         if (subscriber) {
