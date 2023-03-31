@@ -7,7 +7,7 @@ import { Message } from './util/message';
 import { getSettings } from './settings';
 import { SdkErrors, throwError } from './services/errors';
 import { createStorage, PersistentStorageClean, StorageFactory, STORAGE_NAMESPACE } from './services/storage';
-import { Checksum256, Name, PublicKey } from '@greymass/eosio';
+import { Checksum256, Name } from '@greymass/eosio';
 import { TonomyUsername } from './services/username';
 import { browserStorageFactory } from './managers/browserStorage';
 import { getChainInfo } from './services/eosio/eosio';
@@ -171,12 +171,10 @@ export class ExternalUser {
     ): Promise<string | void> {
         const { privateKey, publicKey } = generateRandomKeyPair();
 
-        if (keyManager) {
-            await keyManager.storeKey({
-                level: KeyManagerLevel.BROWSER_LOCAL_STORAGE,
-                privateKey: privateKey,
-            });
-        }
+        await keyManager.storeKey({
+            level: KeyManagerLevel.BROWSER_LOCAL_STORAGE,
+            privateKey: privateKey,
+        });
 
         const payload: JWTLoginPayload = {
             randomString: randomString(32),
@@ -251,29 +249,27 @@ export class ExternalUser {
     static async verifyLoginRequest(options?: VerifyLoginOptions): Promise<ExternalUser> {
         if (!options) options = {};
         if (!options.checkKeys) options.checkKeys = true;
-        if (!options.keyManager) options.keyManager = new JsKeyManager();
+        const keyManager = options.keyManager || new JsKeyManager();
 
         const { requests, username, accountName } = UserApps.getLoginRequestParams();
 
         const result = await UserApps.verifyRequests(requests);
 
         const loginRequest = result.find((r) => r.getPayload().origin === window.location.origin)?.getPayload();
+        const keyFromStorage = await keyManager.getKey({ level: KeyManagerLevel.BROWSER_LOCAL_STORAGE });
 
         if (!loginRequest) throwError('No login request found for this origin', SdkErrors.OriginMismatch);
-        if (
-            loginRequest.publicKey !==
-            (await options.keyManager.getKey({ level: KeyManagerLevel.BROWSER_LOCAL_STORAGE }))?.toString()
-        )
+        if (loginRequest.publicKey !== keyFromStorage.toString())
             throwError('Key in request does not match', SdkErrors.KeyNotFound);
 
         if (options.checkKeys) {
-            const keyExists = await UserApps.verifyKeyExistsForApp(accountName, options.keyManager);
+            const keyExists = await UserApps.verifyKeyExistsForApp(accountName, keyManager);
 
             if (!keyExists) throwError('Key not found', SdkErrors.KeyNotFound);
         }
 
         const myStorageFactory = options.storageFactory || browserStorageFactory;
-        const externalUser = new ExternalUser(options.keyManager, myStorageFactory);
+        const externalUser = new ExternalUser(keyManager, myStorageFactory);
 
         await externalUser.setAccountName(Name.from(accountName));
         await externalUser.setLoginRequest(loginRequest);
