@@ -108,7 +108,8 @@ export class Communication {
             if(!type || msg.getType() === type) {
                 subscriber(msg)
             }
-        }
+        };
+
         this.socketServer.on('message', messageHandler);
         this.subscribers.set(this.identifier, messageHandler);
         return this.identifier;
