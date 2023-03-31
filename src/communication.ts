@@ -101,12 +101,14 @@ export class Communication {
      * @param {string} type - the Message object to send
      * @returns {number} - identifier which will be used for unsubscribe
      */
-    subscribeMessage(subscriber: Subscriber, type?:string): number {
+    subscribeMessage(subscriber: Subscriber, type?: string): number {
         this.identifier++;
+
         const messageHandler = (message: any) => {
-            const msg = new Message(message)
-            if(!type || msg.getType() === type) {
-                subscriber(msg)
+            const msg = new Message(message);
+
+            if (!type || msg.getType() === type) {
+                subscriber(msg);
             }
         };
 
@@ -115,11 +117,11 @@ export class Communication {
         return this.identifier;
     }
 
-     /**
+    /**
      * unsubscribes a function from the receiving a message
      *
      * @param {number} id - identifier which will be used for unsubscribe]
-     * @returns void 
+     * @returns void
      */
     unsubscribeMessage(id: number): void {
         const subscriber = this.subscribers.get(id);

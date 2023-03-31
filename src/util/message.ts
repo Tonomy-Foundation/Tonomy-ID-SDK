@@ -66,7 +66,7 @@ export class Message {
     }
 
     /**
-     * Returns the message type This is used to determine what kind of message it is 
+     * Returns the message type This is used to determine what kind of message it is
      * @returns a type
      */
     getType(): any {
