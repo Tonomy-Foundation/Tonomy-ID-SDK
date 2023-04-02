@@ -38,8 +38,8 @@
         "strictPropertyInitialization": false
     },
     "exclude": [
-        "test/*",
-        "test-integration/*",
+      "test/*",
+      "test-integration/*",
       "node_modules",
       "lib"
     ]
