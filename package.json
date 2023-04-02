@@ -1,70 +1,76 @@
 {
     "version": "0.3.23",
     "license": "MIT",
-    "main": "dist/index.js",
+    "type": "module",
+    "source": "src/index.ts",
+    "main": "./lib/index.cjs",
+    "module": "./lib/index.module.js",
+    "unpkg": "./lib/index.umd.js",
+    "types": "./lib/index.d.ts",
+    "umd:main": "./lib/index.umd.js",
     "typings": "dist/index.d.ts",
+    "exports": {
+        ".": {
+            "types": "./lib/index.d.ts",
+            "require": "./lib/index.cjs",
+            "import": "./lib/index.module.js"
+        }
+    },
     "files": [
         "dist",
-        "src"
+        "src",
+        "lib",
+        "LICENSE"
     ],
     "engines": {
         "node": ">=10"
     },
     "scripts": {
-        "start": "npx tsdx watch --transpileOnly --noClean",
-        "build": "npx tsdx build",
-        "test": "npx tsdx test --config ./test/jest.config.tsdx.js",
-        "test:integration": "tsdx test --detectOpenHandles --config ./test-integration/jest.config.js",
+        "start": "echo 'No start script defined'",
+        "build:js": "microbundle --compress=false",
+        "build:browser": "webpack --config webpack.config.cjs",
+        "build": "npm run build:js && npm run build:browser",
+        "test": "jest --config ./test/jest.config.tsdx.json",
+        "test:integration": "jest --detectOpenHandles --config ./test-integration/jest.config.js",
         "bootstrap": "npx ts-node --project ./bootstrap-blockchain/tsconfig.json bootstrap-blockchain/bootstrap.ts",
         "lint": "eslint src test --ext .ts --resolve-plugins-relative-to .",
         "lint:fix": "npm run lint -- --fix",
-        "prepare": "npx tsdx build --transpileOnly --noClean",
-        "size": "size-limit",
-        "analyze": "size-limit --why",
         "release": "semantic-release  --debug"
-    },
-    "husky": {
-        "hooks": {
-            "pre-commit": "tsdx lint"
-        }
     },
     "name": "@tonomy/tonomy-id-sdk",
     "author": "Jack Tanner",
-    "module": "dist/tonomy-id-sdk.esm.js",
-    "size-limit": [
-        {
-            "path": "dist/tonomy-id-sdk.cjs.production.min.js",
-            "limit": "10 KB"
-        },
-        {
-            "path": "dist/tonomy-id-sdk.esm.js",
-            "limit": "10 KB"
-        }
-    ],
     "devDependencies": {
+        "@babel/core": "^7.21.4",
+        "@babel/preset-env": "^7.21.4",
+        "@babel/preset-typescript": "^7.21.4",
         "@semantic-release/changelog": "^6.0.2",
         "@semantic-release/git": "^10.0.1",
         "@size-limit/preset-small-lib": "^8.0.0",
         "@types/elliptic": "^6.4.14",
+        "@types/jest": "^29.5.0",
         "@types/randombytes": "^2.0.0",
         "@typescript-eslint/eslint-plugin": "^5.40.0",
         "@typescript-eslint/parser": "^5.40.0",
         "address": "^1.2.2",
         "argon2": "^0.30.2",
+        "babel-jest": "^29.5.0",
         "eslint": "^8.25.0",
         "eslint-config-prettier": "^8.5.0",
+        "eslint-plugin-jest": "^27.2.1",
         "eslint-plugin-prettier": "^3.4.1",
-        "husky": "^8.0.1",
-        "jest-environment-jsdom": "^24.9.0",
+        "jest": "^29.5.0",
+        "jest-environment-jsdom": "^29.5.0",
         "jsdom-url": "^3.0.1",
+        "microbundle": "^0.15.1",
         "prettier": "^2.7.1",
         "semantic-release": "^20.1.1",
         "size-limit": "^8.0.0",
         "ts-jest": "^29.0.5",
         "ts-node": "^10.9.1",
-        "tsdx": "^0.14.1",
         "tslib": "^2.4.0",
-        "typescript": "^4.7.4"
+        "typescript": "^4.7.4",
+        "webpack": "^5.77.0",
+        "webpack-cli": "^5.0.1"
     },
     "dependencies": {
         "@consento/sync-randombytes": "^1.0.5",
