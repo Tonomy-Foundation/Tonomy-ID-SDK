@@ -4,6 +4,7 @@ import fs from 'fs';
 import path from 'path';
 import { Name } from '@greymass/eosio';
 import { EosioContract } from '../src/index';
+import { Signer } from '../src/services/eosio/transaction';
 
 const eosioContract: EosioContract = EosioContract.Instance;
 
@@ -21,7 +22,7 @@ function getDeployableFilesFromDir(dir: string) {
     };
 }
 
-async function deployContract({ account, contractDir }, signer) {
+async function deployContract({ account, contractDir }: { account: string, contractDir: string }, signer: Signer) {
     const { wasmPath, abiPath } = getDeployableFilesFromDir(contractDir);
 
     const wasmFile = fs.readFileSync(wasmPath);

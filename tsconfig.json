@@ -1,11 +1,6 @@
 {
-    "include" : [
-      "src/**/*",
-      "test/**/*",
-      "test-integration/**/*"
-    ],
     "compilerOptions": {
-        "target": "ES2018",
+        "target": "esnext",
         "module": "esnext",
         "lib": [
             "dom",
@@ -15,19 +10,14 @@
         ],
         "importHelpers": true,
         "declaration": true,
-        //   "declarationMap": true,
+        "declarationMap": true,
         "sourceMap": true,
-        "rootDir": "./src",
         "outDir": "lib",
         "strict": true,
         "noImplicitReturns": true,
-        //   "noImplicitThis": false,
-        
-          "types": [
-            "jest"
+        "types": [
+            "jest", "node"
           ],
-          // "allowSyntheticDefaultImports": true,
-        //   "resolveJsonModule": true,
         "noFallthroughCasesInSwitch": true,
         "noUnusedLocals": true,
         "noUnusedParameters": true,

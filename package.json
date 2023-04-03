@@ -17,22 +17,20 @@
         }
     },
     "files": [
-        "dist",
         "src",
         "lib",
+        "package.json",
         "LICENSE"
     ],
     "engines": {
         "node": ">=10"
     },
     "scripts": {
-        "start": "echo 'No start script defined'",
-        "build:js": "microbundle --compress=false",
-        "build:browser": "webpack --config webpack.config.cjs",
-        "build": "npm run build:js && npm run build:browser",
+        "start": "microbundle watch",
+        "build": "microbundle --compress=false",
         "test": "jest --config ./test/jest.config.unit.ts",
         "test:integration": "jest --detectOpenHandles --config ./test-integration/jest.config.integration.ts",
-        "bootstrap": "npx ts-node --project ./bootstrap-blockchain/tsconfig.json bootstrap-blockchain/bootstrap.ts",
+        "bootstrap": "microbundle --compress=false --target=node -f cjs -i bootstrap-blockchain/bootstrap.ts -o bin/bootstrap.js&& node ./bin/bootstrap.cjs",
         "lint": "eslint src test --ext .ts --resolve-plugins-relative-to .",
         "lint:fix": "npm run lint -- --fix",
         "release": "semantic-release  --debug"
@@ -41,18 +39,17 @@
     "author": "Jack Tanner",
     "devDependencies": {
         "@babel/core": "^7.21.4",
+        "@babel/node": "^7.20.7",
         "@babel/preset-env": "^7.21.4",
         "@babel/preset-typescript": "^7.21.4",
         "@semantic-release/changelog": "^6.0.2",
         "@semantic-release/git": "^10.0.1",
-        "@size-limit/preset-small-lib": "^8.0.0",
         "@types/elliptic": "^6.4.14",
         "@types/jest": "^29.5.0",
         "@types/randombytes": "^2.0.0",
         "@typescript-eslint/eslint-plugin": "^5.40.0",
         "@typescript-eslint/parser": "^5.40.0",
         "address": "^1.2.2",
-        "argon2": "^0.30.2",
         "babel-jest": "^29.5.0",
         "eslint": "^8.25.0",
         "eslint-config-prettier": "^8.5.0",
@@ -64,13 +61,9 @@
         "microbundle": "^0.15.1",
         "prettier": "^2.7.1",
         "semantic-release": "^20.1.1",
-        "size-limit": "^8.0.0",
         "ts-jest": "^29.0.5",
-        "ts-node": "^10.9.1",
         "tslib": "^2.4.0",
-        "typescript": "^4.7.4",
-        "webpack": "^5.77.0",
-        "webpack-cli": "^5.0.1"
+        "typescript": "^4.7.4"
     },
     "dependencies": {
         "@consento/sync-randombytes": "^1.0.5",
@@ -81,6 +74,7 @@
         "@tonomy/did-jwt": "^6.10.1",
         "@tonomy/did-jwt-vc": "^3.1.3",
         "@tonomy/did-resolver": "^4.0.4",
+        "argon2": "^0.30.3",
         "cross-fetch": "^3.1.5",
         "elliptic": "^6.5.4",
         "socket.io-client": "^4.5.4"

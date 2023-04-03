@@ -1,9 +1,10 @@
 import { publicKey } from './keys';
 import { Authority, EosioContract, App, AppCreateOptions } from '../src/index';
+import { Signer } from '../src/services/eosio/transaction';
 
 const eosioContract: EosioContract = EosioContract.Instance;
 
-export async function createAccount({ account }, signer) {
+export async function createAccount({ account }: { account: string}, signer: Signer) {
     const ownerAuth = Authority.fromKey(publicKey.toString());
 
     const activeAuth = Authority.fromKey(publicKey.toString());
