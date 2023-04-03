@@ -46,15 +46,15 @@ export class ExternalUser {
     }
 
     /**
-     * Retreives the user from persistent storage if it exists and verifies the keys are valid
+     * Retrieves the user from persistent storage if it exists and verifies the keys are valid
      *
-     * @param {StorageFactory} [storageFactory=browserStorageFactory] - the storage factory to use for persistent storage
-     * @param {KeyManager} [keyManager=new JsKeyManager()] - the key manager to use for signing
+     * @property {StorageFactory} [options.storageFactory=browserStorageFactory] - the storage factory to use for persistent storage
+     * @property {KeyManager} [options.keyManager=new JsKeyManager()] - the key manager to use for signing
      * @returns {Promise<ExternalUser>} - the user
      */
-    static async getUser(options: { storageFactory: StorageFactory; keyManager: KeyManager }): Promise<ExternalUser> {
-        if (!options.storageFactory) options.storageFactory = browserStorageFactory;
-        if (!options.keyManager) options.keyManager = new JsKeyManager();
+    static async getUser(
+        options = { storageFactory: browserStorageFactory as StorageFactory, keyManager: new JsKeyManager() }
+    ): Promise<ExternalUser> {
         const user = new ExternalUser(options.keyManager, options.storageFactory);
 
         try {
@@ -207,8 +207,8 @@ export class ExternalUser {
      * Signs a message with the given key manager and the key level
      *
      * @param {any} message - an object to sign
-     * @param {string} recipient - the recipient's DID
-     * @param {KeyManager} keyManager - the key manager to use to sign the message
+     * @property {string} options.recipient - the recipient's DID
+     * @property {KeyManager} [options.keyManager=new JsKeyManager()] - the key manager to use to sign the message
      * @returns {Promise<Message>} - the signed message
      */
     static async signMessage(
@@ -239,7 +239,7 @@ export class ExternalUser {
      *
      * @description should be called in the callback page
      *
-     * @param {VerifyLoginOptions} options - options for the login
+     * @param {VerifyLoginOptions} [options] - options for the login
      * @property {boolean} [options.checkKeys = true] - if true, checks the keys in the keyManager against the blockchain
      * @property {KeyManager} [options.keyManager] - the key manager to use to storage and manage keys
      * @property {StorageFactory} [options.storageFactory] - the storage factory to use to store data
