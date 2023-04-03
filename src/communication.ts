@@ -7,7 +7,7 @@ export type Subscriber = (message: Message) => void;
 
 export class Communication {
     socketServer: Socket;
-    private identifier: 0;
+    private static identifier: 0;
     private subscribers = new Map<number, Subscriber>();
 
     /**
@@ -102,17 +102,18 @@ export class Communication {
      * @returns {number} - identifier which will be used for unsubscribe
      */
     subscribeMessage(subscriber: Subscriber, type?:string): number {
-        this.identifier++;
+        Communication.identifier++;
         const messageHandler = (message: any) => {
             const msg = new Message(message)
             if(!type || msg.getType() === type) {
                 subscriber(msg)
             }
+            return this;
         };
 
         this.socketServer.on('message', messageHandler);
-        this.subscribers.set(this.identifier, messageHandler);
-        return this.identifier;
+        this.subscribers.set(Communication.identifier, messageHandler);
+        return Communication.identifier;
     }
 
      /**
