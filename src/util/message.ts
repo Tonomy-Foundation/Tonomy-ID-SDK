@@ -66,8 +66,8 @@ export class Message {
     }
 
     /**
-     * Returns the message type This is used to determine what kind of message it is 
-     * @returns a type
+     * Returns the message type This is used to determine what kind of message it is
+     * @returns {string} the message type
      */
     getType(): any {
         return this.decodedJwt.payload.vc.credentialSubject.type;
