@@ -352,7 +352,7 @@ describe('User class', () => {
     );
 
     test(
-        '',
+        'usernmaeExists(), returns true if username already exists if not throws and error',
         catchAndPrintErrors(async () => {
             const { user, username } = await createRandomID();
 
