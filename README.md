@@ -1,6 +1,13 @@
 # Tonomy ID SDK
 
-This Software Development Kit is used in Tonomy ID to interact and call with the Antelope blockchain and services. It is also used as the public API for integration by applications to do single sign-on, share credentials and sign transactions.
+The Software Development Kit is used in the Tonomy ID ecosystems to interact with Tonomy identities and services.
+
+It has four outputs:
+
+- **SDK**: `./src/sdk` The SDK which acts as the business logic in Tonomy ID wallet. This is the main output.
+- **API**: `./src/api` The API library used by integrators to interact with Tonomy ID users and to do single sign-on, share credentials and sign transactions.
+- **Bootstrap CLI**: `./src/cli/bootstrap` A script used to intialize the blockchain with the Tonomy Contracts and starting accounts.
+- **Apps CLI**: `./src/cli/apps` A CLI tool to create, update and delete Tonomy Apps.
 
 The SDK is written in typescript with jest to run tests.
 
@@ -29,13 +36,13 @@ To do a one-off build, use `npm run build`.
 
 ## Tests
 
-### Unit tests:
+### Unit tests
 
 Tests individual class and function logic within the SDK.
 
 `npm test`
 
-### Integration tests:
+### Integration tests
 
 Tests end-to-end functions across more than one service.
 
