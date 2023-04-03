@@ -2,7 +2,7 @@
     "version": "0.3.23",
     "license": "MIT",
     "type": "module",
-    "source": "src/index.ts",
+    "source": "src/sdk/index.ts",
     "main": "./lib/index.cjs",
     "module": "./lib/index.module.js",
     "unpkg": "./lib/index.umd.js",
@@ -29,7 +29,7 @@
     "scripts": {
         "start": "microbundle watch",
         "build:sdk": "microbundle --compress=false",
-        "build:bootstrap": "microbundle --compress=false --target=node -f cjs -i bootstrap-blockchain/bootstrap.ts -o bin/bootstrap.js",
+        "build:bootstrap": "microbundle --compress=false --target=node -f cjs -i ./src/cli/bootstrap/bootstrap.ts -o bin/bootstrap.js",
         "build": "npm run build:sdk && npm run build:bootstrap",
         "test": "jest --config ./test/jest.config.unit.ts",
         "test:integration": "jest --detectOpenHandles --config ./test-integration/jest.config.integration.ts",

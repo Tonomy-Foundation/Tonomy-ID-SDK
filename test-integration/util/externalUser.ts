@@ -9,7 +9,7 @@ import {
     Subscriber,
     User,
     UserApps,
-} from '../../src';
+} from '../../src/sdk';
 
 export async function externalWebsiteUserPressLoginToTonomyButton(
     keyManager: KeyManager,

@@ -11,7 +11,7 @@ import {
     scanQrAndAck,
     setupLoginRequestSubscriber,
 } from './util/user';
-import { App, setSettings, User, KeyManager, StorageFactory } from '../src/index';
+import { App, setSettings, User, KeyManager, StorageFactory } from '../src/sdk/index';
 import settings from './services/settings';
 import URL from 'jsdom-url';
 import { JsKeyManager } from '../test/services/jskeymanager';

@@ -1,6 +1,6 @@
 // need to use API types from inside tonomy-id-sdk, otherwise type compatibility issues
 import { createRandomApp, createRandomID } from './util/user';
-import { setSettings, User, AppStatus } from '../src/index';
+import { setSettings, User, AppStatus } from '../src/sdk/index';
 import settings from './services/settings';
 import { catchAndPrintErrors } from './util/errors';
 

@@ -24,7 +24,7 @@ export * from './services/errors';
 export * from './userApps';
 export * from './communication';
 export * from './util/message';
-export * from './externalUser';
+export * from '../api/externalUser';
 export * from './managers/browserStorage';
 
 export { createSigner } from '@tonomy/antelope-ssi-toolkit';

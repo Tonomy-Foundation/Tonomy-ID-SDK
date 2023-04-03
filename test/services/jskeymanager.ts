@@ -1,4 +1,4 @@
-import { sha256, randomString, randomBytes } from '../../src/util/crypto';
+import { sha256, randomString, randomBytes } from '../../src/sdk/util/crypto';
 import {
     KeyManager,
     KeyManagerLevel,
@@ -6,11 +6,11 @@ import {
     GetKeyOptions,
     StoreKeyOptions,
     CheckKeyOptions,
-} from '../../src/services/keymanager';
+} from '../../src/sdk/services/keymanager';
 import argon2 from 'argon2';
 import { Bytes, Checksum256, KeyType, PrivateKey, PublicKey, Signature } from '@greymass/eosio';
 import { createSigner } from '@tonomy/antelope-ssi-toolkit';
-import { SdkErrors, throwError } from '../../src';
+import { SdkErrors, throwError } from '../../src/sdk';
 
 type KeyStorage = {
     privateKey: PrivateKey;

@@ -1,11 +1,11 @@
 import { PrivateKey, PublicKey } from '@greymass/eosio';
-import { UserApps } from '../src/userApps';
-import { generateRandomKeyPair } from '../src/util/crypto';
+import { UserApps } from '../src/sdk/userApps';
+import { generateRandomKeyPair } from '../src/sdk/util/crypto';
 import URL from 'jsdom-url';
 import { JsKeyManager } from './services/jskeymanager';
-import { Message } from '../src/util/message';
-import { setSettings } from '../src';
-import { ExternalUser } from '../src/externalUser';
+import { Message } from '../src/sdk/util/message';
+import { setSettings } from '../src/sdk';
+import { ExternalUser } from '../src/api/externalUser';
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore

@@ -8,7 +8,7 @@ import {
     Message,
     UserApps,
     JWTLoginPayload,
-} from '../../src/index';
+} from '../../src/sdk/index';
 import { JsKeyManager } from '../../test/services/jskeymanager';
 import { jsStorageFactory } from '../../test/services/jsstorage';
 import { privateKey } from './eosio';

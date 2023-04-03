@@ -1,10 +1,10 @@
 import { publicKey } from './keys';
-import { Authority, EosioContract, App, AppCreateOptions } from '../src/index';
-import { Signer } from '../src/services/eosio/transaction';
+import { Authority, EosioContract, App, AppCreateOptions } from '../../sdk/index';
+import { Signer } from '../../sdk/services/eosio/transaction';
 
 const eosioContract: EosioContract = EosioContract.Instance;
 
-export async function createAccount({ account }: { account: string}, signer: Signer) {
+export async function createAccount({ account }: { account: string }, signer: Signer) {
     const ownerAuth = Authority.fromKey(publicKey.toString());
 
     const activeAuth = Authority.fromKey(publicKey.toString());
@@ -17,5 +17,6 @@ export async function createAccount({ account }: { account: string}, signer: Sig
 
 export async function createApp(options: AppCreateOptions) {
     const res = await App.create(options);
+
     console.log('New app created with username: ', res.username.username);
 }
