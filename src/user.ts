@@ -121,10 +121,10 @@ export class User {
     }
 
     /**
+     * Check if a username already exists
      * @param {string} username - a string param that represents the username
      * @returns {boolean} true if username already exists and false if doesn't exists
      */
-
     async usernameExists(username: string): Promise<boolean> {
         const normalizedUsername = username.normalize('NFKC');
 
@@ -134,9 +134,16 @@ export class User {
             getSettings().accountSuffix
         );
 
-        (await User.getAccountInfo(fullUsername)) as any; // Throws error if username is taken
+        try {
+            (await User.getAccountInfo(fullUsername)) as any; // Throws error if username is taken
+            return true;
+        } catch (e) {
+            if (!(e instanceof SdkError && e.code === SdkErrors.UsernameNotFound)) {
+                return false;
+            }
 
-        return true;
+            throw e;
+        }
     }
 
     async savePassword(masterPassword: string, options?: { salt?: Checksum256 }) {
