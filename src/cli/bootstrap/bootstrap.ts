@@ -10,7 +10,7 @@ import { createUser } from '../../../test-integration/util/user';
 setSettings(settings);
 const eosioTokenContract = EosioTokenContract.Instance;
 
-async function main() {
+export default async function bootstrap() {
     await createAccount({ account: 'eosio.token' }, signer);
     await deployContract(
         { account: 'eosio.token', contractDir: path.join(__dirname, '../Tonomy-Contracts/contracts/eosio.token') },
@@ -53,17 +53,3 @@ async function main() {
     // The Apple app needs to have a test user for their review. That is this user.
     await createUser('testuser', '1GjGtP%g5UOp2lQ&U5*p');
 }
-
-Promise.resolve(main())
-    .then(() => {
-        process.exit(0);
-    })
-    .catch((err) => {
-        // this is to ignore websockets errors
-        if (err.message.includes('websocket')) {
-            return;
-        }
-
-        console.error(err);
-        process.exit(1);
-    });

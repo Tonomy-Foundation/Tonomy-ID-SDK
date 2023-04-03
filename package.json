@@ -29,11 +29,12 @@
     "scripts": {
         "start": "microbundle watch",
         "build:sdk": "microbundle --compress=false",
-        "build:bootstrap": "microbundle --compress=false --target=node -f cjs -i ./src/cli/bootstrap/bootstrap.ts -o bin/bootstrap.js",
+        "build:cli": "microbundle --compress=false --target=node -f cjs -i ./src/cli/index.ts -o bin/index.js",
         "build": "npm run build:sdk && npm run build:bootstrap",
         "test": "jest --config ./test/jest.config.unit.ts",
         "test:integration": "jest --detectOpenHandles --config ./test-integration/jest.config.integration.ts",
-        "bootstrap": "node ./bin/bootstrap.cjs",
+        "cli": "node ./bin/index.cjs",
+        "bootstrap": "npm run cli bootstrap",
         "lint": "eslint src test --ext .ts --resolve-plugins-relative-to .",
         "lint:fix": "npm run lint -- --fix",
         "release": "semantic-release  --debug"
