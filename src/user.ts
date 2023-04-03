@@ -120,6 +120,21 @@ export class User {
         await this.storage.username;
     }
 
+    async usernameExists(username: string): Promise<boolean> {
+        const normalizedUsername = username.normalize('NFKC');
+
+        const fullUsername = TonomyUsername.fromUsername(
+            normalizedUsername,
+            AccountType.PERSON,
+            getSettings().accountSuffix
+        );
+
+        const user: API.v1.AccountObject = (await User.getAccountInfo(fullUsername)) as any; // Throws error if username is taken
+
+        if (user) return true;
+        else return false;
+    }
+
     async savePassword(masterPassword: string, options?: { salt?: Checksum256 }) {
         const password = validatePassword(masterPassword);
 

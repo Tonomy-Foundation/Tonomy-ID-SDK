@@ -42,7 +42,7 @@ export async function createRandomID() {
     await user.createPerson();
     await user.updateKeys(password);
 
-    return { user, password, pin, auth };
+    return { user, password, pin, auth, username };
 }
 
 export async function createRandomApp(logoUrl?: string, origin?: string): Promise<App> {
