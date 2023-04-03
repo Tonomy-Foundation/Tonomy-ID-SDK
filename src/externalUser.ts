@@ -52,10 +52,13 @@ export class ExternalUser {
      * @property {KeyManager} [options.keyManager=new JsKeyManager()] - the key manager to use for signing
      * @returns {Promise<ExternalUser>} - the user
      */
-    static async getUser(
-        options = { storageFactory: browserStorageFactory as StorageFactory, keyManager: new JsKeyManager() }
-    ): Promise<ExternalUser> {
-        const user = new ExternalUser(options.keyManager, options.storageFactory);
+    static async getUser(options?: {
+        storageFactory?: StorageFactory;
+        keyManager?: KeyManager;
+    }): Promise<ExternalUser> {
+        const keyManager = options?.keyManager || new JsKeyManager();
+        const storageFactory = options?.storageFactory || browserStorageFactory;
+        const user = new ExternalUser(keyManager, storageFactory);
 
         try {
             const accountName = await user.getAccountName();
@@ -66,7 +69,7 @@ export class ExternalUser {
                 throw throwError('accountName not found', SdkErrors.AccountNotFound);
             }
 
-            const result = await UserApps.verifyKeyExistsForApp(accountName.toString(), options.keyManager);
+            const result = await UserApps.verifyKeyExistsForApp(accountName.toString(), keyManager);
 
             if (result) {
                 return user;
