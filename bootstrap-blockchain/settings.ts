@@ -22,10 +22,10 @@ const defaultConfig = {
 };
 
 const stagingConfig = {
-    ssoWebsiteOrigin: `https://tonomy-id-staging.tonomy.foundation`,
-    ssoWebsiteLogoUrl: `https://tonomy-id-staging.tonomy.foundation/tonomy-logo1024.png`,
-    demoWebsiteOrigin: `https://tonomy-id-market-com-staging.tonomy.foundation`,
-    demoWebsiteLogoUrl: `https://tonomy-id-market-com-staging.tonomy.foundation/market.com.png`,
+    ssoWebsiteOrigin: `https://sso.staging.tonomy.foundation`,
+    ssoWebsiteLogoUrl: `https://sso.staging.tonomy.foundation/tonomy-logo1024.png`,
+    demoWebsiteOrigin: `https://demo.staging.tonomy.foundation/`,
+    demoWebsiteLogoUrl: `https://demo.staging.tonomy.foundation/market.com.png`,
 };
 
 type SettingsType = {
@@ -41,20 +41,20 @@ const settings: SettingsType = {
 } as SettingsType;
 
 switch (env) {
-    case 'test':
-    case 'local':
-    case 'development':
-        config = defaultConfig;
-        break;
-    case 'staging':
-        config = stagingConfig;
-        break;
-    case 'production':
-        config = defaultConfig;
-        // TODO add production config when ready
-        break;
-    default:
-        throw new Error('Unknown environment: ' + env);
+case 'test':
+case 'local':
+case 'development':
+    config = defaultConfig;
+    break;
+case 'staging':
+    config = stagingConfig;
+    break;
+case 'production':
+    config = defaultConfig;
+    // TODO add production config when ready
+    break;
+default:
+    throw new Error('Unknown environment: ' + env);
 }
 
 settings.config = config;
