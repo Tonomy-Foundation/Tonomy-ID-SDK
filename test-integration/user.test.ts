@@ -357,7 +357,6 @@ describe('User class', () => {
             const { user, username } = await createRandomID();
 
             await expect(user.usernameExists(username)).resolves.toBe(true);
-            await expect(user.usernameExists(username)).resolves.toBeTruthy();
 
             await expect(user.usernameExists('RandomUsername')).rejects.toThrowError(SdkErrors.UsernameNotFound);
 

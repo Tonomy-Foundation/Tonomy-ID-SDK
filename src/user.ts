@@ -135,10 +135,10 @@ export class User {
         );
 
         try {
-            (await User.getAccountInfo(fullUsername)) as any; // Throws error if username is taken
+            await User.getAccountInfo(fullUsername);
             return true;
         } catch (e) {
-            if (!(e instanceof SdkError && e.code === SdkErrors.UsernameNotFound)) {
+            if (e instanceof SdkError && e.code === SdkErrors.UsernameNotFound) {
                 return false;
             }
 
