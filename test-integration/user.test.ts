@@ -358,7 +358,7 @@ describe('User class', () => {
 
             await expect(user.usernameExists(username)).resolves.toBe(true);
 
-            await expect(user.usernameExists('RandomUsername')).rejects.toThrowError(SdkErrors.UsernameNotFound);
+            await expect(user.usernameExists('RandomUsername')).resolves.toBeFalsy();
 
             await user.logout();
         })
