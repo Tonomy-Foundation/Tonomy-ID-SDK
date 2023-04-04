@@ -101,14 +101,16 @@ export class Communication {
      * @param {string} [type] - shows itsan optional parameters
      * @returns {number} - identifier which will be used for unsubscribe
      */
-    subscribeMessage(subscriber: Subscriber, type?:string): number {
+    subscribeMessage(subscriber: Subscriber, type?: string): number {
         Communication.identifier++;
+
         const messageHandler = (message: any) => {
             const msg = new Message(message);
 
             if (!type || msg.getType() === type) {
                 subscriber(msg);
             }
+
             return this;
         };
 
