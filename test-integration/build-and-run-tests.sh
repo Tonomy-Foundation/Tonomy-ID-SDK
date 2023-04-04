@@ -24,6 +24,9 @@ cd "${SDK_DIR}"
 if [ ! -d "node_modules" ]; then
     npm i
 fi
+if [ ! -d "build" ]; then
+    npm run build
+fi
 
 # Run blockchain node
 cd "${SDK_DIR}"

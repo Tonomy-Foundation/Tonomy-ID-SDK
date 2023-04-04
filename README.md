@@ -24,6 +24,18 @@ Integration tests:
 
 - [Contracts](https://github.com/Tonomy-Foundation/Tonomy-Contracts) (inside SDK repo) - Smart contracts to run the governance, identity, DAO, token and other ecosystem tools. This is used to run the integration tests
 
+## Build
+
+`npm run build`
+
+Build notes:
+
+- Build just the sdk `npm run build:sdk`
+- Build just the cli `npm run build:cli`
+- Cli has dependency of `argon2` package, which is not needed by SDK and should be moved to a devDependency if possible
+- Build just the api `npm run build:api`
+- To build a browser .js file that can be used in a `<script>` tag, you can use `./build/api/index.umd.js` but this throws an error currently due to incompatibility with `/node_modules/@tonomy/antelope-did-resolver/node_modules/eosjs/dist/eosjs-api-interfaces.js` and other `eosjs` dependencies. TODO this should be fixed.
+
 ## Run
 
 ```bash
