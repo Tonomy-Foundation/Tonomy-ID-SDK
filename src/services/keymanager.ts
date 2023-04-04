@@ -3,7 +3,7 @@ import { Checksum256, PrivateKey, PublicKey, Signature } from '@greymass/eosio';
 enum KeyManagerLevel {
     PASSWORD = 'PASSWORD',
     PIN = 'PIN',
-    FINGERPRINT = 'FINGERPRINT',
+    BIOMETRIC = 'BIOMETRIC',
     LOCAL = 'LOCAL',
     BROWSER_LOCAL_STORAGE = 'BROWSER_LOCAL_STORAGE',
     BROWSER_SESSION_STORAGE = 'BROWSER_SESSION_STORAGE',
@@ -39,9 +39,9 @@ namespace KeyManagerLevel {
 }
 
 /**
- * @param level - The security level of the key
- * @param privateKey - The private key to be stored
- * @param [challenge] - A challenge that needs to be presented in order for the key to be used
+ * @param {KeyManagerLevel} level - The security level of the key
+ * @param {PrivateKey} privateKey - The private key to be stored
+ * @param {string} [challenge] - A challenge that needs to be presented in order for the key to be used
  */
 type StoreKeyOptions = {
     level: KeyManagerLevel;
@@ -50,9 +50,10 @@ type StoreKeyOptions = {
 };
 
 /**
- * @param level - The security level of the key
- * @param data - The data that will be used to create a digital signature
- * @param [challenge] - A challenge that needs to be presented in order for the key to be used
+ * @param {KeyManagerLevel} level - The security level of the key
+ * @param {string | Checksum256} data - The data that will be used to create a digital signature
+ * @param {string} [challenge] - A challenge that needs to be presented in order for the key to be used
+ * @param {'jwt' | 'transaction'} [outputType] - The type of output to return
  */
 type SignDataOptions = {
     level: KeyManagerLevel;
@@ -62,16 +63,15 @@ type SignDataOptions = {
 };
 
 /**
- * @param level - The security level of the key
+ * @param {KeyManagerLevel} level - The security level of the key
  */
-
 type GetKeyOptions = {
     level: KeyManagerLevel;
 };
 
 /**
- * @param level - The security level of the key
- * @param challenge - the challenge to check
+ * @param {KeyManagerLevel} level - The security level of the key
+ * @param {string} challenge - the challenge to check
  */
 type CheckKeyOptions = {
     level: KeyManagerLevel;
@@ -85,61 +85,48 @@ interface KeyManager {
      * @remarks
      * Once a private key is stored, it may no longer be accessible.
      *
-     * @param options - Options for storing the key
-     * @returns The PublicKey
+     * @param {StoreKeyOptions} options - Options for storing the key
+     * @returns {Promise<PublicKey>} The public key
      */
     storeKey(options: StoreKeyOptions): Promise<PublicKey>;
 
     /**
      * Signs the hash of data with a stored private key
      *
-     * @param options - Options for signing data
-     * @returns A digital signature of the SHA256 hashed data
+     * @param {SignDataOptions} options - Options for signing data
+     * @returns {Promise<string | Signature>} A digital signature of the SHA256 hashed data
      *
-     * @throws if a key does not exist for the level the challenge is incorrect
+     * @throws if a key does not exist for the level or if the challenge is incorrect
      */
     signData(options: SignDataOptions): Promise<string | Signature>;
 
     /**
-     * Returns the public key of a stored private key
+     * Returns the public key for provided a key level
      *
-     * @param options - Options for retreiving the key
-     * @returns The PublicKey or null if no key exists
+     * @param {GetKeyOptions} options - Options for retrieving the key
+     * @returns {Promise<PublicKey>} The public key
+     *
+     * @throws If a key does not exist for the level
      */
-    getKey(options: GetKeyOptions): Promise<PublicKey | null>;
+    getKey(options: GetKeyOptions): Promise<PublicKey>;
 
     /**
-     * @param options - Options for removing a key
+     * Checks the key against the provided challenge
+     *
+     * @param {CheckKeyOptions} options - options for checking the key challenge
+     * @returns {Promise<boolean>} - returns matching status
+     *
+     * @throws if challenge is not provided, or if key is not found
+     */
+    checkKey(options: CheckKeyOptions): Promise<boolean>;
+
+    /**
+     * Removes a key for the provided level
+     *
+     * @param {GetKeyOptions} options - Options for removing a key
      * @throws if a key does not exist for the level
      */
     removeKey(options: GetKeyOptions): Promise<void>;
-
-    /**
-     * generates a random private key
-     *
-     * @returns The PrivateKey
-     */
-    generateRandomPrivateKey(): PrivateKey;
-
-    /**
-     * generates a private key from a password and creates random salt
-     * @param password password to encrypt the private key with
-     * @returns encrypted private key and salt
-     *
-     */
-    generatePrivateKeyFromPassword(
-        password: string,
-        salt?: Checksum256
-    ): Promise<{ privateKey: PrivateKey; salt: Checksum256 }>;
-
-    /**
-     * checks the key against the provided challenge
-     * @param {CheckKeyOptions} options - for checking key with level, and challenge
-     * @returns {boolean} - returns matching status
-     *
-     * @throws  if challenge is not provided
-     */
-    checkKey(options: CheckKeyOptions): Promise<boolean>;
 }
 
 export { KeyManager, KeyManagerLevel, StoreKeyOptions, SignDataOptions, GetKeyOptions, CheckKeyOptions };

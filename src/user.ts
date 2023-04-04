@@ -4,7 +4,7 @@ import { KeyManager, KeyManagerLevel } from './services/keymanager';
 import { GetPersonResponse, IDContract } from './services/contracts/IDContract';
 import { AntelopePushTransactionError, createKeyManagerSigner, createSigner } from './services/eosio/transaction';
 import { getApi, getChainInfo } from './services/eosio/eosio';
-import { createStorage, PersistentStorageClean, StorageFactory } from './services/storage';
+import { createStorage, PersistentStorageClean, StorageFactory, STORAGE_NAMESPACE } from './services/storage';
 import { SdkErrors, throwError, SdkError } from './services/errors';
 import { AccountType, TonomyUsername } from './services/username';
 import { validatePassword } from './util/passwords';
@@ -13,7 +13,7 @@ import { getSettings } from './settings';
 import { Communication } from './communication';
 import { Message } from './util/message';
 import { Issuer } from '@tonomy/did-jwt-vc';
-import { createVCSigner } from './util/crypto';
+import { createVCSigner, generateRandomKeyPair } from './util/crypto';
 
 enum UserStatus {
     CREATING_ACCOUNT = 'CREATING_ACCOUNT',
@@ -53,6 +53,11 @@ namespace UserStatus {
 
 export { UserStatus };
 
+type KeyFromPasswordFn = (
+    password: string,
+    salt?: Checksum256
+) => Promise<{ privateKey: PrivateKey; salt: Checksum256 }>;
+
 export type UserStorage = {
     status: UserStatus;
     accountName: Name;
@@ -73,7 +78,7 @@ export class User {
 
     constructor(_keyManager: KeyManager, storageFactory: StorageFactory) {
         this.keyManager = _keyManager;
-        this.storage = createStorage<UserStorage>('tonomy.user.', storageFactory);
+        this.storage = createStorage<UserStorage>(STORAGE_NAMESPACE + 'user.', storageFactory);
 
         this.apps = new UserApps(this, _keyManager, storageFactory);
 
@@ -146,19 +151,25 @@ export class User {
         }
     }
 
-    async savePassword(masterPassword: string, options?: { salt?: Checksum256 }) {
+    async savePassword(
+        masterPassword: string,
+        options: {
+            keyFromPasswordFn: KeyFromPasswordFn;
+            salt?: Checksum256;
+        }
+    ) {
         const password = validatePassword(masterPassword);
 
         let privateKey: PrivateKey;
         let salt: Checksum256;
 
-        if (options && options.salt) {
+        if (options.salt) {
             salt = options.salt;
-            const res = await this.keyManager.generatePrivateKeyFromPassword(password, salt);
+            const res = await options.keyFromPasswordFn(password, salt);
 
             privateKey = res.privateKey;
         } else {
-            const res = await this.keyManager.generatePrivateKeyFromPassword(password);
+            const res = await options.keyFromPasswordFn(password);
 
             privateKey = res.privateKey;
             salt = res.salt;
@@ -175,7 +186,7 @@ export class User {
     }
 
     async savePIN(pin: string) {
-        const privateKey = this.keyManager.generateRandomPrivateKey();
+        const privateKey = generateRandomKeyPair().privateKey;
 
         await this.keyManager.storeKey({
             level: KeyManagerLevel.PIN,
@@ -190,21 +201,21 @@ export class User {
             challenge: pin,
         });
 
-        if (!pinKey) throwError('Pin is incorrect', SdkErrors.PinInValid);
+        if (!pinKey) throwError('Pin is incorrect', SdkErrors.PinInvalid);
         return true;
     }
 
     async saveFingerprint() {
-        const privateKey = this.keyManager.generateRandomPrivateKey();
+        const privateKey = generateRandomKeyPair().privateKey;
 
         await this.keyManager.storeKey({
-            level: KeyManagerLevel.FINGERPRINT,
+            level: KeyManagerLevel.BIOMETRIC,
             privateKey,
         });
     }
 
     async saveLocal() {
-        const privateKey = this.keyManager.generateRandomPrivateKey();
+        const privateKey = generateRandomKeyPair().privateKey;
 
         await this.keyManager.storeKey({
             level: KeyManagerLevel.LOCAL,
@@ -221,8 +232,6 @@ export class User {
         const passwordKey = await keyManager.getKey({
             level: KeyManagerLevel.PASSWORD,
         });
-
-        if (!passwordKey) throwError('Password key not found', SdkErrors.KeyNotFound);
 
         // TODO this needs to change to the actual key used, from settings
         const idTonomyActiveKey = PrivateKey.from('PVT_K1_2bfGi9rYsXQSXXTvJbDAPhHLQUojjaNLomdm3cEJ1XTzMqUt3V');
@@ -263,30 +272,42 @@ export class User {
         const status = await this.getStatus();
 
         if (status === UserStatus.DEACTIVATED) {
-            throw new Error("Can't update keys ");
+            throwError("Can't update keys for deactivated user", SdkErrors.UserDeactivated);
         }
 
         const { keyManager } = this;
 
-        const pinKey = await keyManager.getKey({ level: KeyManagerLevel.PIN });
-        const fingerprintKey = await keyManager.getKey({
-            level: KeyManagerLevel.FINGERPRINT,
-        });
-        const localKey = await keyManager.getKey({ level: KeyManagerLevel.LOCAL });
-
         // TODO:
         // use status in smart contract to lock the account till finished creating
-        interface KeyInterface {
+        const keys = {} as {
             PIN: string;
-            FINGERPRINT: string;
+            BIOMETRIC: string;
             LOCAL: string;
+        };
+
+        try {
+            const pinKey = await keyManager.getKey({ level: KeyManagerLevel.PIN });
+
+            keys.PIN = pinKey.toString();
+        } catch (e) {
+            if (!(e instanceof SdkError) || e.code !== SdkErrors.KeyNotFound) throw e;
         }
 
-        const keys = {} as KeyInterface;
+        try {
+            const biometricKey = await keyManager.getKey({ level: KeyManagerLevel.BIOMETRIC });
 
-        if (pinKey) keys.PIN = pinKey.toString();
-        if (fingerprintKey) keys.FINGERPRINT = fingerprintKey.toString();
-        if (localKey) keys.LOCAL = localKey.toString();
+            keys.BIOMETRIC = biometricKey.toString();
+        } catch (e) {
+            if (!(e instanceof SdkError) || e.code !== SdkErrors.KeyNotFound) throw e;
+        }
+
+        try {
+            const localKey = await keyManager.getKey({ level: KeyManagerLevel.LOCAL });
+
+            keys.LOCAL = localKey.toString();
+        } catch (e) {
+            if (!(e instanceof SdkError) || e.code !== SdkErrors.KeyNotFound) throw e;
+        }
 
         const signer = createKeyManagerSigner(keyManager, KeyManagerLevel.PASSWORD, password);
         const accountName = await this.storage.accountName;
@@ -296,13 +317,18 @@ export class User {
         await this.storage.status;
     }
 
-    async checkPassword(password: string): Promise<boolean> {
+    async checkPassword(
+        password: string,
+        options: {
+            keyFromPasswordFn: KeyFromPasswordFn;
+        }
+    ): Promise<boolean> {
         const username = await this.getAccountName();
 
         const idData = await idContract.getPerson(username);
         const salt = idData.password_salt;
 
-        await this.savePassword(password, { salt });
+        await this.savePassword(password, { ...options, salt });
         const passwordKey = await this.keyManager.getKey({
             level: KeyManagerLevel.PASSWORD,
         });
@@ -310,32 +336,34 @@ export class User {
         const accountData = await User.getAccountInfo(idData.account_name);
         const onchainKey = accountData.getPermission('owner').required_auth.keys[0].key; // TODO change to active/other permissions when we make the change
 
-        if (!passwordKey) throwError('Password key not found', SdkErrors.KeyNotFound);
-
         if (passwordKey.toString() !== onchainKey.toString())
-            throwError('Password is incorrect', SdkErrors.PasswordInValid);
+            throwError('Password is incorrect', SdkErrors.PasswordInvalid);
 
         return true;
     }
 
-    async login(username: TonomyUsername, password: string): Promise<GetPersonResponse> {
+    async login(
+        username: TonomyUsername,
+        password: string,
+        options: {
+            keyFromPasswordFn: KeyFromPasswordFn;
+        }
+    ): Promise<GetPersonResponse> {
         const { keyManager } = this;
 
         const idData = await idContract.getPerson(username);
         const salt = idData.password_salt;
 
-        await this.savePassword(password, { salt });
+        await this.savePassword(password, { ...options, salt });
         const passwordKey = await keyManager.getKey({
             level: KeyManagerLevel.PASSWORD,
         });
-
-        if (!passwordKey) throwError('Password key not found', SdkErrors.KeyNotFound);
 
         const accountData = await User.getAccountInfo(idData.account_name);
         const onchainKey = accountData.getPermission('owner').required_auth.keys[0].key; // TODO change to active/other permissions when we make the change
 
         if (passwordKey.toString() !== onchainKey.toString())
-            throwError('Password is incorrect', SdkErrors.PasswordInValid);
+            throwError('Password is incorrect', SdkErrors.PasswordInvalid);
 
         this.storage.accountName = Name.from(idData.account_name);
         this.storage.username = username;
@@ -361,7 +389,7 @@ export class User {
                 permission: 'pin',
             },
             {
-                level: KeyManagerLevel.FINGERPRINT,
+                level: KeyManagerLevel.BIOMETRIC,
                 permission: 'fingerprint',
             },
             {
@@ -428,7 +456,7 @@ export class User {
         // remove all keys
         await this.keyManager.removeKey({ level: KeyManagerLevel.PASSWORD });
         await this.keyManager.removeKey({ level: KeyManagerLevel.PIN });
-        await this.keyManager.removeKey({ level: KeyManagerLevel.FINGERPRINT });
+        await this.keyManager.removeKey({ level: KeyManagerLevel.BIOMETRIC });
         await this.keyManager.removeKey({ level: KeyManagerLevel.LOCAL });
         // clear storage data
         this.storage.clear();

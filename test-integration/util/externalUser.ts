@@ -72,8 +72,7 @@ export async function loginWebsiteOnRedirect(externalWebsiteDid: string, keyMana
 export async function setupTonomyIdAckSubscriber(did: string, log = false) {
     let subscriber: Subscriber;
     const subscriberExecutor = (resolve: any) => {
-        subscriber = (responseMessage: any) => {
-            const receivedMessage = new Message(responseMessage);
+        subscriber = (receivedMessage) => {
 
             expect(receivedMessage.getSender()).toContain(did);
 
@@ -102,9 +101,7 @@ export async function setupTonomyIdAckSubscriber(did: string, log = false) {
 export async function setupTonomyIdRequestConfirmSubscriber(did: string, log = false) {
     let subscriber: Subscriber;
     const subscriberExecutor = (resolve: any) => {
-        subscriber = (responseMessage: any) => {
-            const receivedMessage = new Message(responseMessage);
-
+        subscriber = (receivedMessage) => {
             expect(receivedMessage.getSender()).toContain(did);
 
             if (receivedMessage.getPayload().type === 'ack') {
@@ -141,8 +138,7 @@ export async function sendLoginRequestsMessage(
         {
             requests: JSON.stringify(requests),
         },
-        keyManager,
-        recipientDid
+        { keyManager, recipient: recipientDid }
     );
 
     if (log) console.log('TONOMY_LOGIN_WEBSITE/login: sending login request to Tonomy ID app');
@@ -200,7 +196,7 @@ export async function externalWebsiteOnReload(
 ) {
     if (log) console.log('EXTERNAL_WEBSITE/home: calling get User');
 
-    const externalUser = await ExternalUser.getUser(keyManager, storageFactory);
+    const externalUser = await ExternalUser.getUser({ keyManager, storageFactory });
 
     expect(externalUser).toBeDefined();
     expect((await externalUser.getAccountName()).toString()).toBe(await (await tonomyUser.getAccountName()).toString());

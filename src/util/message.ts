@@ -17,13 +17,14 @@ export class Message {
      * creates a signed message and return message object
      * @param message the messageResolver with the signer and the did
      * @param recipient the recipient id
+     * @param type the message type
      * @returns a message objects
      */
-    static async sign(message: object, issuer: Issuer, recipient?: string): Promise<Message> {
+    static async sign(message: object, issuer: Issuer, recipient?: string, type?: string): Promise<Message> {
         const vc: W3CCredential = {
             '@context': ['https://www.w3.org/2018/credentials/v1'],
             id: 'https://example.com/id/1234324',
-            type: ['VerifiableCredential'],
+            type: ['VerifiableCredential', 'TonomyMessage'],
             issuer: {
                 id: issuer.did,
             },
@@ -35,6 +36,7 @@ export class Message {
 
         // add recipient to vc if given
         if (recipient) vc.credentialSubject.id = recipient;
+        if (type) vc.credentialSubject.type = type;
 
         const result = await issue(vc, {
             issuer: issuer,
@@ -63,8 +65,13 @@ export class Message {
         return this.decodedJwt.payload.vc.credentialSubject.message;
     }
 
-    // // Returns the message type (ignores VerifiableCredential type). This is used to determine what kind of message it is (login request, login request confirmation etc...) so the client can choose what to do with it
-    // getType(): string {}
+    /**
+     * Returns the message type This is used to determine what kind of message it is
+     * @returns {string} the message type
+     */
+    getType(): any {
+        return this.decodedJwt.payload.vc.credentialSubject.type;
+    }
 
     /* Verifies the VC. True if valid
      * this is setup to resolve did:antelope and did:jwk DIDs

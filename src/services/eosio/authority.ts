@@ -31,6 +31,7 @@ class Authority {
                 weight: 1,
             },
         ];
+
         return new this(1, keys, [], []);
     }
 
@@ -41,6 +42,7 @@ class Authority {
                 weight: 1,
             },
         ];
+
         return new this(1, [], accounts, []);
     }
 
