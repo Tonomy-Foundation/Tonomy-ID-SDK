@@ -4,6 +4,7 @@ import { IDContract } from './services/contracts/IDContract';
 import { createSigner } from './services/eosio/transaction';
 import { getSettings } from './settings';
 import { AccountType, TonomyUsername } from './services/username';
+
 const idContract = IDContract.Instance;
 
 enum AppStatus {
@@ -31,11 +32,13 @@ namespace AppStatus {
      */
     export function from(value: number | string): AppStatus {
         let index: number;
+
         if (typeof value !== 'number') {
             index = AppStatus.indexFor(value as AppStatus);
         } else {
             index = value;
         }
+
         return Object.values(AppStatus)[index] as AppStatus;
     }
 }
