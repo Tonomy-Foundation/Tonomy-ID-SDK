@@ -138,8 +138,7 @@ export async function sendLoginRequestsMessage(
         {
             requests: JSON.stringify(requests),
         },
-        keyManager,
-        recipientDid
+        { keyManager, recipient: recipientDid }
     );
 
     if (log) console.log('TONOMY_LOGIN_WEBSITE/login: sending login request to Tonomy ID app');
@@ -197,7 +196,7 @@ export async function externalWebsiteOnReload(
 ) {
     if (log) console.log('EXTERNAL_WEBSITE/home: calling get User');
 
-    const externalUser = await ExternalUser.getUser(keyManager, storageFactory);
+    const externalUser = await ExternalUser.getUser({ keyManager, storageFactory });
 
     expect(externalUser).toBeDefined();
     expect((await externalUser.getAccountName()).toString()).toBe(await (await tonomyUser.getAccountName()).toString());

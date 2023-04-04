@@ -1,6 +1,6 @@
 // need to use API types from inside tonomy-id-sdk, otherwise type compatibility issues
 import { createRandomApp, createRandomID } from './util/user';
-import { setSettings, User, AppStatus } from '../src/index';
+import { setSettings, User, AppStatus, generateRandomKeyPair } from '../src/index';
 import settings from './services/settings';
 import { catchAndPrintErrors } from './util/errors';
 
@@ -10,11 +10,11 @@ describe('App class', () => {
     test(
         'loginWithApp(): Logs into new app',
         catchAndPrintErrors(async () => {
-            const { user, auth } = await createRandomID();
+            const { user } = await createRandomID();
             const userAccountName = await user.storage.accountName;
 
             const app = await createRandomApp();
-            const newKey = auth.generateRandomPrivateKey();
+            const newKey = generateRandomKeyPair().privateKey;
 
             await user.apps.loginWithApp(app, newKey.toPublic());
 

@@ -2,7 +2,7 @@
 import { Name, PublicKey } from '@greymass/eosio';
 import { IDContract } from './services/contracts/IDContract';
 import { KeyManager, KeyManagerLevel } from './services/keymanager';
-import { createStorage, PersistentStorageClean, StorageFactory } from './services/storage';
+import { createStorage, PersistentStorageClean, StorageFactory, STORAGE_NAMESPACE } from './services/storage';
 import { User } from './user';
 import { createKeyManagerSigner } from './services/eosio/transaction';
 import { SdkErrors, throwError } from './services/errors';
@@ -42,7 +42,7 @@ export class UserApps {
     constructor(_user: User, _keyManager: KeyManager, storageFactory: StorageFactory) {
         this.user = _user;
         this.keyManager = _keyManager;
-        this.storage = createStorage<UserAppStorage>('tonomy.user.apps.', storageFactory);
+        this.storage = createStorage<UserAppStorage>(STORAGE_NAMESPACE + 'user.apps.', storageFactory);
     }
 
     async loginWithApp(app: App, key: PublicKey): Promise<void> {
@@ -166,7 +166,6 @@ export class UserApps {
             level: keyManagerLevel,
         });
 
-        if (!pubKey) throw throwError('key not found', SdkErrors.KeyNotFound);
         const account = await User.getAccountInfo(Name.from(accountName));
 
         if (!account) throwError("couldn't fetch account", SdkErrors.AccountNotFound);
