@@ -44,5 +44,5 @@ pm2 start yarn --name "micro" -- run start:dev
 
 # Run integration tests
 cd  "$SDK_DIR"
-npm run bootstrap
+npm run cli bootstrap
 npm run test:integration

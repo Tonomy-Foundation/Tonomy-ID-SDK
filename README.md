@@ -32,9 +32,17 @@ Build notes:
 
 - Build just the sdk `npm run build:sdk`
 - Build just the cli `npm run build:cli`
-- Cli has dependency of `argon2` package, which is not needed by SDK and should be moved to a devDependency if possible
-- Build just the api `npm run build:api`
-- To build a browser .js file that can be used in a `<script>` tag, you can use `./build/api/index.umd.js` but this throws an error currently due to incompatibility with `/node_modules/@tonomy/antelope-did-resolver/node_modules/eosjs/dist/eosjs-api-interfaces.js` and other `eosjs` dependencies. TODO this should be fixed.
+- Cli has dependency of `argon2` package, which is not needed by SDK and should be moved to a devDependency if these softwares are ever separated.
+
+### Building a js bundle that can be used in a `<script>` tag
+
+`microbundle --compress=false --external none -f umd -i ./src/api/index.ts -o build/api/index.js`
+
+In theory, you can then use `<script src="./build/api/index.umd.js"></script>` which will provide a global `tonomyIdSdk` object.
+
+But there are errors from the module management in `/node_modules/@tonomy/antelope-did-resolver/node_modules/eosjs` in the `/dist/eosjs-api-interfaces.js` and `/dist/eosjs-rpc-interfaces.js`. TODO this should be fixed.
+
+For now an `{ api }` object is exported from the SDK which can be imported in any npm project.
 
 ## Run
 
