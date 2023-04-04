@@ -104,10 +104,10 @@ export async function setupLoginRequestSubscriber(
     // Setup a promise that resolves when the subscriber executes
     // This emulates the Tonomy ID app, which waits for the user requests
     return new Promise((resolve) => {
-        user.communication.subscribeMessage(async (m: any) => {
+        user.communication.subscribeMessage(async (message) => {
             if (log) console.log('TONOMY_ID/SSO: receive login requests from Tonomy Login Website');
 
-            const message = new Message(m);
+            // const message = new Message(m);
 
             // receive and verify the requests
             const requests = message.getPayload().requests;
