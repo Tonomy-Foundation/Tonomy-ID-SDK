@@ -1,3 +1,9 @@
+
+/**
+ * Find the Tonomy button in the DOM and update the styles
+ * 
+ * @throws {Error} If the button is not found
+ */
 export function modifyTonomyButton() {
     const tonomyButton = document.getElementsByClassName('tonomy-login-button');
 
