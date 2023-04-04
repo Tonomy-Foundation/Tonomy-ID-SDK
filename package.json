@@ -22,11 +22,7 @@
     },
     "files": [
         "src",
-        "lib",
-        "api",
-        "bin",
-        "package.json",
-        "LICENSE"
+        "build"
     ],
     "engines": {
         "node": ">=10"
