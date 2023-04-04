@@ -13,7 +13,7 @@ const eosioTokenContract = EosioTokenContract.Instance;
 export default async function bootstrap() {
     await createAccount({ account: 'eosio.token' }, signer);
     await deployContract(
-        { account: 'eosio.token', contractDir: path.join(__dirname, '../Tonomy-Contracts/contracts/eosio.token') },
+        { account: 'eosio.token', contractDir: path.join(__dirname, '../../Tonomy-Contracts/contracts/eosio.token') },
         signer
     );
     await eosioTokenContract.create('1000000000 SYS', signer);
@@ -21,12 +21,12 @@ export default async function bootstrap() {
 
     await createAccount({ account: 'id.tonomy' }, signer);
     await deployContract(
-        { account: 'id.tonomy', contractDir: path.join(__dirname, '../Tonomy-Contracts/contracts/id.tonomy') },
+        { account: 'id.tonomy', contractDir: path.join(__dirname, '../../Tonomy-Contracts/contracts/id.tonomy') },
         signer
     );
 
     await deployContract(
-        { account: 'eosio', contractDir: path.join(__dirname, '../Tonomy-Contracts/contracts/eosio.bios.tonomy') },
+        { account: 'eosio', contractDir: path.join(__dirname, '../../Tonomy-Contracts/contracts/eosio.bios.tonomy') },
         signer
     );
 

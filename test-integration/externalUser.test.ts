@@ -11,10 +11,10 @@ import {
     scanQrAndAck,
     setupLoginRequestSubscriber,
 } from './util/user';
-import { App, setSettings, User, KeyManager, StorageFactory } from '../src/sdk/index';
+import { App, setSettings, User, KeyManager, StorageFactory, STORAGE_NAMESPACE } from '../src/sdk/index';
 import settings from './services/settings';
 import URL from 'jsdom-url';
-import { JsKeyManager } from '../test/services/jskeymanager';
+import { JsKeyManager } from '../src/sdk/managers/jsKeyManager';
 import { sleep } from './util/sleep';
 import {
     externalWebsiteOnCallback,
@@ -33,7 +33,7 @@ global.URL = URL;
 
 setSettings(settings);
 
-const log = true;
+const log = false;
 
 describe('External User class', () => {
     jest.setTimeout(30000);
@@ -74,8 +74,8 @@ describe('External User class', () => {
         EXTERNAL_WEBSITE_jsKeyManager = new JsKeyManager();
 
         // setup storage factories for the external website and tonomy login website
-        TONOMY_LOGIN_WEBSITE_storage_factory = createStorageFactory('tonomy-login-website.');
-        EXTERNAL_WEBSITE_storage_factory = createStorageFactory('external-website.');
+        TONOMY_LOGIN_WEBSITE_storage_factory = createStorageFactory(STORAGE_NAMESPACE + 'login-website.');
+        EXTERNAL_WEBSITE_storage_factory = createStorageFactory(STORAGE_NAMESPACE + 'external-website.');
     });
 
     afterEach(async () => {

@@ -2,13 +2,11 @@ import { PrivateKey, PublicKey } from '@greymass/eosio';
 import { UserApps } from '../src/sdk/userApps';
 import { generateRandomKeyPair } from '../src/sdk/util/crypto';
 import URL from 'jsdom-url';
-import { JsKeyManager } from './services/jskeymanager';
 import { Message } from '../src/sdk/util/message';
 import { setSettings } from '../src/sdk';
 import { ExternalUser } from '../src/api/externalUser';
 
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
+// @ts-expect-error - URL type on global does not match
 global.URL = URL;
 setSettings({});
 
@@ -21,15 +19,13 @@ describe('logging in', () => {
     });
 
     it('on press button', async () => {
-        const keymanager = new JsKeyManager();
-        const jwt = await ExternalUser.loginWithTonomy({ callbackPath: '/login', redirect: false }, keymanager);
+        const jwt = await ExternalUser.loginWithTonomy({ callbackPath: '/login', redirect: false });
 
         expect(jwt).toBeDefined();
     });
 
     it('checks login url', async () => {
-        const keymanager = new JsKeyManager();
-        const jwt = await ExternalUser.loginWithTonomy({ callbackPath: '/login', redirect: false }, keymanager);
+        const jwt = await ExternalUser.loginWithTonomy({ callbackPath: '/login', redirect: false });
         const url = 'http://localhost/login?requests=' + JSON.stringify([jwt]);
 
         jest.spyOn(document, 'referrer', 'get').mockReturnValue('http://localhost');

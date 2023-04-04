@@ -10,11 +10,12 @@ import {
     EosioUtil,
 } from '../src/sdk/index';
 import { SdkErrors } from '../src/sdk/index';
-import { JsKeyManager } from '../test/services/jskeymanager';
+import { JsKeyManager } from '../src/sdk/managers/jsKeyManager';
 import { jsStorageFactory } from '../test/services/jsstorage';
 import settings from './services/settings';
 import { catchAndPrintErrors } from './util/errors';
 import { Checksum256 } from '@greymass/eosio';
+import { generatePrivateKeyFromPassword } from '../test/services/keys';
 
 let auth: KeyManager;
 let user: User;
@@ -39,7 +40,7 @@ describe('User class', () => {
 
             expect(() => user.keyManager.getKey({ level: KeyManagerLevel.PASSWORD })).rejects.toThrowError(Error);
             expect(await user.storage.salt).not.toBeDefined();
-            await user.savePassword('n4RR8mj!cC$VaG907bq4');
+            await user.savePassword('n4RR8mj!cC$VaG907bq4', { keyFromPasswordFn: generatePrivateKeyFromPassword });
             expect(user.keyManager.getKey({ level: KeyManagerLevel.PASSWORD })).resolves.toBeDefined();
             expect(await user.storage.salt).toBeDefined();
         })
@@ -57,9 +58,9 @@ describe('User class', () => {
     test(
         'saveFingerprint() saves new private key',
         catchAndPrintErrors(async () => {
-            expect(() => user.keyManager.getKey({ level: KeyManagerLevel.FINGERPRINT })).rejects.toThrowError(Error);
+            expect(() => user.keyManager.getKey({ level: KeyManagerLevel.BIOMETRIC })).rejects.toThrowError(Error);
             await user.saveFingerprint();
-            expect(user.keyManager.getKey({ level: KeyManagerLevel.FINGERPRINT })).resolves.toBeDefined();
+            expect(user.keyManager.getKey({ level: KeyManagerLevel.BIOMETRIC })).resolves.toBeDefined();
         })
     );
 
@@ -124,7 +125,9 @@ describe('User class', () => {
             const userLogin = createUserObject(newKeyManager, jsStorageFactory);
 
             expect(userLogin.isLoggedIn()).resolves.toBeFalsy();
-            const idInfo = await userLogin.login(username, password);
+            const idInfo = await userLogin.login(username, password, {
+                keyFromPasswordFn: generatePrivateKeyFromPassword,
+            });
 
             expect(idInfo.username_hash.toString()).toBe(username.usernameHash);
             expect(userLogin.keyManager.getKey({ level: KeyManagerLevel.PASSWORD })).resolves.toBeDefined();
@@ -148,7 +151,9 @@ describe('User class', () => {
             const newKeyManager = new JsKeyManager();
             const userLogin = createUserObject(newKeyManager, jsStorageFactory);
 
-            await expect(() => userLogin.login(username, 'differentpassword')).rejects.toThrowError(Error);
+            await expect(() =>
+                userLogin.login(username, 'differentpassword', { keyFromPasswordFn: generatePrivateKeyFromPassword })
+            ).rejects.toThrowError(Error);
 
             // Close connections
             await user.logout();
@@ -213,10 +218,14 @@ describe('User class', () => {
         catchAndPrintErrors(async () => {
             const { user, password } = await createRandomID();
 
-            await user.login(await user.getUsername(), password);
+            await user.login(await user.getUsername(), password, { keyFromPasswordFn: generatePrivateKeyFromPassword });
 
-            await expect(user.checkPassword('Testing123!@')).rejects.toThrowError(SdkErrors.PasswordInValid);
-            await expect(user.checkPassword('password')).rejects.toThrowError(SdkErrors.PasswordFormatInvalid);
+            await expect(
+                user.checkPassword('Testing123!@', { keyFromPasswordFn: generatePrivateKeyFromPassword })
+            ).rejects.toThrowError(SdkErrors.PasswordInvalid);
+            await expect(
+                user.checkPassword('password', { keyFromPasswordFn: generatePrivateKeyFromPassword })
+            ).rejects.toThrowError(SdkErrors.PasswordFormatInvalid);
 
             await user.logout();
         })
@@ -227,10 +236,11 @@ describe('User class', () => {
         catchAndPrintErrors(async () => {
             const { user, password } = await createRandomID();
 
-            await user.login(await user.getUsername(), password);
+            await user.login(await user.getUsername(), password, { keyFromPasswordFn: generatePrivateKeyFromPassword });
 
-            await expect(user.checkPassword(password)).resolves.toBeTruthy();
-            await expect(user.checkPassword(password)).resolves.toBe(true);
+            await expect(
+                user.checkPassword(password, { keyFromPasswordFn: generatePrivateKeyFromPassword })
+            ).resolves.toBe(true);
 
             await user.logout();
         })
@@ -246,7 +256,7 @@ describe('User class', () => {
             expect(await user.storage.status).toBeFalsy();
             expect(() => user.keyManager.getKey({ level: KeyManagerLevel.PASSWORD })).rejects.toThrowError(Error);
             expect(() => user.keyManager.getKey({ level: KeyManagerLevel.PIN })).rejects.toThrowError(Error);
-            expect(() => user.keyManager.getKey({ level: KeyManagerLevel.FINGERPRINT })).rejects.toThrowError(Error);
+            expect(() => user.keyManager.getKey({ level: KeyManagerLevel.BIOMETRIC })).rejects.toThrowError(Error);
             expect(() => user.keyManager.getKey({ level: KeyManagerLevel.LOCAL })).rejects.toThrowError(Error);
             expect(user.isLoggedIn()).resolves.toBeFalsy();
 
@@ -284,7 +294,11 @@ describe('User class', () => {
 
             expect(userLogin.isLoggedIn()).resolves.toBeFalsy();
 
-            await expect(userLogin.login(new TonomyUsername('random'), password)).rejects.toThrowError(Error);
+            await expect(
+                userLogin.login(new TonomyUsername('random'), password, {
+                    keyFromPasswordFn: generatePrivateKeyFromPassword,
+                })
+            ).rejects.toThrowError(Error);
             // Close connections
             await userLogin.logout();
             await user.logout();
@@ -326,7 +340,7 @@ describe('User class', () => {
         catchAndPrintErrors(async () => {
             const { user, password } = await createRandomID();
 
-            await user.login(await user.getUsername(), password);
+            await user.login(await user.getUsername(), password, { keyFromPasswordFn: generatePrivateKeyFromPassword });
 
             await user.savePIN('12345');
             await expect(user.keyManager.getKey({ level: KeyManagerLevel.PIN })).resolves.toBeDefined();
@@ -341,11 +355,11 @@ describe('User class', () => {
         catchAndPrintErrors(async () => {
             const { user, password } = await createRandomID();
 
-            await user.login(await user.getUsername(), password);
+            await user.login(await user.getUsername(), password, { keyFromPasswordFn: generatePrivateKeyFromPassword });
 
             await user.savePIN('12345');
             await expect(user.keyManager.getKey({ level: KeyManagerLevel.PIN })).resolves.toBeDefined();
-            await expect(user.checkPin('12121')).rejects.toThrowError(SdkErrors.PinInValid);
+            await expect(user.checkPin('12121')).rejects.toThrowError(SdkErrors.PinInvalid);
 
             await user.logout();
         })

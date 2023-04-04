@@ -19,5 +19,6 @@ export function getSettings(): SettingsType {
     if (!initialized) {
         throwError('Settings not yet initialized', SdkErrors.SettingsNotInitialized);
     }
+
     return settings;
 }

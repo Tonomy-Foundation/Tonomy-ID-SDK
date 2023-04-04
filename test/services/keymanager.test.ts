@@ -1,11 +1,12 @@
 import { Checksum256, PrivateKey } from '@greymass/eosio';
-import { JsKeyManager } from './jskeymanager';
+import { JsKeyManager } from '../../src/sdk/managers/jsKeyManager';
 import argon2 from 'argon2';
 import { jsStorageFactory } from './jsstorage';
 import { createUserObject } from '../../src/sdk/user';
 import { KeyManagerLevel } from '../../src/sdk/services/keymanager';
-import { randomBytes } from '../../src/sdk/util/crypto';
+import { randomBytes, generateRandomKeyPair } from '../../src/sdk/util/crypto';
 import { setSettings } from '../../src/sdk';
+import { generatePrivateKeyFromPassword } from './keys';
 
 const keyManager = new JsKeyManager();
 
@@ -27,7 +28,7 @@ describe('Keymanager class', () => {
 
     test('generatePrivateKeyFromPassword() returns privatekey', async () => {
         const password = '123';
-        const { privateKey, salt } = await keyManager.generatePrivateKeyFromPassword(password);
+        const { privateKey, salt } = await generatePrivateKeyFromPassword(password);
 
         expect(privateKey).toBeInstanceOf(PrivateKey);
         expect(salt).toBeDefined();
@@ -77,30 +78,26 @@ describe('Keymanager class', () => {
 
     test('generatePrivateKeyFromPassword() password can be verfied', async () => {
         const password = '123';
-        const { privateKey, salt } = await keyManager.generatePrivateKeyFromPassword(password);
+        const { privateKey, salt } = await generatePrivateKeyFromPassword(password);
 
-        const { privateKey: privateKey2 } = await keyManager.generatePrivateKeyFromPassword(password, salt);
+        const { privateKey: privateKey2 } = await generatePrivateKeyFromPassword(password, salt);
 
         expect(privateKey).toEqual(privateKey2);
     });
 
-    test('generateRandomPrivateKey() is defined', () => {
-        expect(keyManager.generateRandomPrivateKey).toBeDefined();
-    });
-
-    test('generateRandomPrivateKey() generates random key', async () => {
-        const r1 = keyManager.generateRandomPrivateKey();
+    test('generateRandomKeyPair() generates random key', async () => {
+        const r1 = generateRandomKeyPair().privateKey;
 
         expect(r1).toBeInstanceOf(PrivateKey);
 
-        const r2 = keyManager.generateRandomPrivateKey();
+        const r2 = generateRandomKeyPair().privateKey;
 
         expect(r1).not.toEqual(r2);
     });
 
     test('generates same key as RN keymanager', async () => {
         const salt: Checksum256 = Checksum256.from(Buffer.from('12345678901234567890123456789012', 'utf-8'));
-        const { privateKey } = await keyManager.generatePrivateKeyFromPassword('password', salt);
+        const { privateKey } = await generatePrivateKeyFromPassword('password', salt);
 
         expect(privateKey.toString()).toBe('PVT_K1_pPnFBQwMSQgjAenyLdMHoeFQBtazFBYEWeA12FtKpm5PEY4fc');
     });
