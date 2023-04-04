@@ -125,6 +125,32 @@ export class User {
         await this.storage.username;
     }
 
+    /**
+     * Check if a username already exists
+     * @param {string} username - a string param that represents the username
+     * @returns {boolean} true if username already exists and false if doesn't exists
+     */
+    async usernameExists(username: string): Promise<boolean> {
+        const normalizedUsername = username.normalize('NFKC');
+
+        const fullUsername = TonomyUsername.fromUsername(
+            normalizedUsername,
+            AccountType.PERSON,
+            getSettings().accountSuffix
+        );
+
+        try {
+            await User.getAccountInfo(fullUsername);
+            return true;
+        } catch (e) {
+            if (e instanceof SdkError && e.code === SdkErrors.UsernameNotFound) {
+                return false;
+            }
+
+            throw e;
+        }
+    }
+
     async savePassword(
         masterPassword: string,
         options: {
