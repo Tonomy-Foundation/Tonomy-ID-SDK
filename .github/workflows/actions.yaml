@@ -16,7 +16,7 @@ jobs:
       - run: npm install
       - run: npm run build
       - run: npm run lint
-      - run: npm run test
+      - run: npm run test:unit
 
   compile-contracts:
     name: Compiles contracts needed for bootstrap script
@@ -76,7 +76,7 @@ jobs:
         with:
           node-version: 16.4.1
       - run: npm i
-      - run: npm run bootstrap
+      - run: npm run cli bootstrap
       - name: Run integration tests
         uses: actions/setup-node@v3
         with:
