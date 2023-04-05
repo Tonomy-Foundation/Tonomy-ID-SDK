@@ -1,36 +1,35 @@
 {
-    "compilerOptions": {
-        "target": "esnext",
-        "module": "esnext",
-        "lib": [
-            "dom",
-            "esnext",
-            "es6",
-            "es2015.promise"
-        ],
-        "importHelpers": true,
-        "declaration": true,
-        "declarationMap": true,
-        "sourceMap": true,
-        "outDir": "build/sdk",
-        "strict": true,
-        "noImplicitReturns": true,
-        "types": [
-            "jest", "node"
-          ],
-        "noFallthroughCasesInSwitch": true,
-        "noUnusedLocals": true,
-        "noUnusedParameters": true,
-        "moduleResolution": "node",
-        "esModuleInterop": true,
-        "skipLibCheck": true,
-        "forceConsistentCasingInFileNames": true,
-        "strictPropertyInitialization": false
-    },
-    "exclude": [
-      "test/*",
-      "test-integration/*",
-      "node_modules",
-      "build"
-    ]
-  }
+  "compilerOptions": {
+    "target": "esnext",
+    "module": "esnext",
+    "lib": [
+      "dom",
+      "esnext",
+      "es6",
+      "es2015.promise"
+    ],
+    "importHelpers": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "outDir": "build/sdk",
+    "strict": true,
+    "noImplicitReturns": true,
+    "types": [
+      "jest",
+      "node"
+    ],
+    "noFallthroughCasesInSwitch": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "strictPropertyInitialization": false
+  },
+  "exclude": [
+    "node_modules",
+    "build"
+  ]
+}

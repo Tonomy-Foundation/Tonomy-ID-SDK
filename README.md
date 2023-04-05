@@ -33,6 +33,7 @@ Build notes:
 - Build just the sdk `npm run build:sdk`
 - Build just the cli `npm run build:cli`
   - Cli has dependency of `argon2` package, which is not needed by SDK and should be moved to a devDependency if these softwares are ever separated.
+  - Cli depends on a few files in the `./test-integration` directory. Ideally `tsconfig.ts` should specify `"rootDir": "src" but this currently fails because of this dependency.
 
 ## Run
 
