@@ -5,8 +5,8 @@ The Software Development Kit is used in the Tonomy ID ecosystems to interact wit
 It has four outputs:
 
 - **SDK**: `./src/sdk` The SDK which acts as the business logic in Tonomy ID wallet. This is the main output.
-- **API**: `./src/api` The API library used by integrators to interact with Tonomy ID users and to do single sign-on, share credentials and sign transactions.
-- **Bootstrap CLI**: `./src/cli/bootstrap` A script used to intialize the blockchain with the Tonomy Contracts and starting accounts.
+- **API**: `./src/api` The API library used by integrators to interact with Tonomy ID users and to do single sign-on, share credentials and sign transactions. (currently bundled in the SDK package but intended for external bundle later. see <https://github.com/Tonomy-Foundation/Tonomy-ID-SDK/pull/196#issuecomment-1497478858>)
+- **Bootstrap CLI**: `./src/cli/bootstrap` A script used to initialize the blockchain with the Tonomy Contracts and starting accounts.
 - **Apps CLI**: `./src/cli/apps` A CLI tool to create, update and delete Tonomy Apps.
 
 The SDK is written in typescript with jest to run tests.
@@ -32,17 +32,7 @@ Build notes:
 
 - Build just the sdk `npm run build:sdk`
 - Build just the cli `npm run build:cli`
-- Cli has dependency of `argon2` package, which is not needed by SDK and should be moved to a devDependency if these softwares are ever separated.
-
-### Building a js bundle that can be used in a `<script>` tag
-
-`microbundle --compress=false --external none -f umd -i ./src/api/index.ts -o build/api/index.js`
-
-In theory, you can then use `<script src="./build/api/index.umd.js"></script>` which will provide a global `tonomyIdSdk` object.
-
-But there are errors from the module management in `/node_modules/@tonomy/antelope-did-resolver/node_modules/eosjs` in the `/dist/eosjs-api-interfaces.js` and `/dist/eosjs-rpc-interfaces.js`. TODO this should be fixed.
-
-For now an `{ api }` object is exported from the SDK which can be imported in any npm project.
+  - Cli has dependency of `argon2` package, which is not needed by SDK and should be moved to a devDependency if these softwares are ever separated.
 
 ## Run
 
