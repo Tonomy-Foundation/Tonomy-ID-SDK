@@ -13,11 +13,6 @@
             "types": "./build/sdk/index.d.ts",
             "require": "./build/sdk/index.cjs",
             "import": "./build/sdk/index.module.js"
-        },
-        "./api": {
-            "types": "./build/api/index.d.ts",
-            "require": "./build/api/index.cjs",
-            "import": "./build/api/index.module.js"
         }
     },
     "files": [
@@ -32,9 +27,10 @@
         "build:sdk": "microbundle --compress=false",
         "build:cli": "microbundle --compress=false --target=node -f cjs -i ./src/cli/index.ts -o build/cli/index.js",
         "build": "npm run build:sdk && npm run build:cli",
-        "test": "jest --config ./test/jest.config.unit.ts",
-        "test:setup": "./test-integration/build-and-run-tests.sh",
-        "test:integration": "jest --detectOpenHandles --config ./test-integration/jest.config.integration.ts",
+        "test:unit": "jest --selectProjects \"Unit tests\"",
+        "test:setup": "./test-integration/build-and-run-services.sh",
+        "test:integration": "jest --detectOpenHandles --selectProjects \"Integration tests\"",
+        "test": "jest --detectOpenHandles",
         "cli": "node ./build/cli/index.cjs",
         "lint": "eslint src test --ext .ts --resolve-plugins-relative-to .",
         "lint:fix": "npm run lint -- --fix",

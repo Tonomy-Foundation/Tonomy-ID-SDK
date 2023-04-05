@@ -3,6 +3,7 @@
         "davidanson.vscode-markdownlint",
         "dbaeumer.vscode-eslint",
         "streetsidesoftware.code-spell-checker",
-        "vivaxy.vscode-conventional-commits"
+        "vivaxy.vscode-conventional-commits",
+        "Orta.vscode-jest"
     ]
 }

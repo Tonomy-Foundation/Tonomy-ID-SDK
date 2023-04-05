@@ -27,6 +27,10 @@ fi
 if [ ! -d "build" ]; then
     npm run build
 fi
+cd "${SDK_DIR}/Tonomy-Communication"
+if [ ! -d "node_modules" ]; then
+    npm i
+fi
 
 # Run blockchain node
 cd "${SDK_DIR}"
@@ -42,7 +46,6 @@ pm2 stop micro || true
 pm2 delete micro || true
 pm2 start yarn --name "micro" -- run start:dev
 
-# Run integration tests
+# Run bootstrap script
 cd  "$SDK_DIR"
 npm run cli bootstrap
-npm run test:integration

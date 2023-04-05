@@ -60,15 +60,31 @@ To do a one-off build, use `npm run build`.
 
 Tests individual class and function logic within the SDK.
 
-`npm test`
+`npm test:unit`
 
 ### Integration tests
 
 Tests end-to-end functions across more than one service.
 
-Require another service to be running, such as the blockchain or Tonomy Communication service.
+First run the blockchain or Tonomy Communication service locally.
 
-`./test-integration/build-and-run-tests.sh`
+`npm run test:setup`
+
+Then run the tests
+
+`npm run test:integration`
+
+### Run all tests in the VS Code debugger
+
+Make sure you install the Jest extension (recommended automatically when you open VS Code)
+
+If you also want to do this with the integration tests then run `npm run test:setup`
+
+Then go to any test e.g. `test/app.test.ts` and you can click ▶️ or right click and press "Debug test". You can also look at the Jest Test Explorer in the left-side activity bar.
+
+## Command line interface
+
+`npm run cli`
 
 ## Linting
 
