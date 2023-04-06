@@ -17,7 +17,7 @@ package manager for javascript.
 Compatibility
 ------------
 
-The SDK has been tested with nodejs v16.4.1+.
+The SDK has been tested with nodejs v18.12.1+.
 
 Sample Applications
 ------------
