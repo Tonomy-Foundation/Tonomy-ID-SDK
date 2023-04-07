@@ -5,6 +5,7 @@ import {
     ExternalUser,
     KeyManager,
     Message,
+    MessageType,
     StorageFactory,
     Subscriber,
     User,
@@ -69,23 +70,14 @@ export async function loginWebsiteOnRedirect(externalWebsiteDid: string, keyMana
     return { did, jwtRequests, communication };
 }
 
-export async function setupTonomyIdAckSubscriber(did: string, log = false) {
+export async function setupTonomyIdIdentifySubscriber(did: string, log = false) {
     let subscriber: Subscriber;
     const subscriberExecutor = (resolve: any) => {
         subscriber = (receivedMessage) => {
-
             expect(receivedMessage.getSender()).toContain(did);
 
-            if (receivedMessage.getPayload().type === 'ack') {
-                if (log) console.log('TONOMY_LOGIN_WEBSITE/login: receive connection acknowledgement from Tonomy ID');
-                // we receive the ack message after Tonomy ID scans our QR code
-                resolve({ message: receivedMessage, type: 'ack' });
-            } else {
-                if (log) console.log('TONOMY_LOGIN_WEBSITE/login: receive receipt of login request from Tonomy ID');
-                // we receive a message after Tonomy ID user confirms consent to the login request
-                resolve({ message: receivedMessage, type: 'request' });
-                // reject();
-            }
+            if (log) console.log('TONOMY_LOGIN_WEBSITE/login: receive connection acknowledgement from Tonomy ID');
+            resolve({ message: receivedMessage });
         };
     };
 
@@ -104,16 +96,9 @@ export async function setupTonomyIdRequestConfirmSubscriber(did: string, log = f
         subscriber = (receivedMessage) => {
             expect(receivedMessage.getSender()).toContain(did);
 
-            if (receivedMessage.getPayload().type === 'ack') {
-                if (log) console.log('TONOMY_LOGIN_WEBSITE/login: receive connection acknowledgement from Tonomy ID');
-                // we receive the ack message after Tonomy ID scans our QR code
-                resolve({ message: receivedMessage, type: 'ack' });
-            } else {
-                if (log) console.log('TONOMY_LOGIN_WEBSITE/login: receive receipt of login request from Tonomy ID');
-                // we receive a message after Tonomy ID user confirms consent to the login request
-                resolve({ message: receivedMessage, type: 'request' });
-                // reject();
-            }
+            if (log) console.log('TONOMY_LOGIN_WEBSITE/login: receive receipt of login request from Tonomy ID');
+            // we receive a message after Tonomy ID user confirms consent to the login request
+            resolve({ message: receivedMessage });
         };
     };
 
@@ -138,7 +123,7 @@ export async function sendLoginRequestsMessage(
         {
             requests: JSON.stringify(requests),
         },
-        { keyManager, recipient: recipientDid }
+        { keyManager, recipient: recipientDid, type: MessageType.LOGIN_REQUEST }
     );
 
     if (log) console.log('TONOMY_LOGIN_WEBSITE/login: sending login request to Tonomy ID app');

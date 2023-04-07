@@ -85,7 +85,10 @@ export async function scanQrAndAck(user: User, qrCodeData: string, log = false) 
     const barcodeScanResults = {
         data: qrCodeData,
     };
-    const connectMessage = await user.signMessage({ type: 'ack' }, { recipient: barcodeScanResults.data });
+    const connectMessage = await user.signMessage(
+        {},
+        { recipient: barcodeScanResults.data, type: MessageType.IDENTIFY }
+    );
 
     if (log) console.log("TONOMY_ID/scanQr: connecting to Tonomy Login Website's with their did:jwk from the QR code");
     const sendMessageResponse = await user.communication.sendMessage(connectMessage);
@@ -107,8 +110,6 @@ export async function setupLoginRequestSubscriber(
     return new Promise((resolve) => {
         user.communication.subscribeMessage(async (message) => {
             if (log) console.log('TONOMY_ID/SSO: receive login requests from Tonomy Login Website');
-
-            // const message = new Message(m);
 
             // receive and verify the requests
             const requests = message.getPayload().requests;
@@ -150,7 +151,7 @@ export async function setupLoginRequestSubscriber(
             // send a message back to the app
             const respondMessage = (await user.signMessage(
                 { requests, accountName },
-                { recipient: tonomyIdLoginDid }
+                { recipient: tonomyIdLoginDid, type: MessageType.LOGIN_REQUEST_RESPONSE }
             )) as Message;
 
             if (log) console.log('TONOMY_ID/SSO: sending a confirmation of the logins back to Tonomy Login Website');
@@ -159,6 +160,6 @@ export async function setupLoginRequestSubscriber(
             expect(sendMessageResponse).toBe(true);
 
             resolve(true);
-        });
+        }, MessageType.LOGIN_REQUEST);
     });
 }

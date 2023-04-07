@@ -11,7 +11,7 @@ import {
     scanQrAndAck,
     setupLoginRequestSubscriber,
 } from './util/user';
-import { App, setSettings, User, KeyManager, StorageFactory, STORAGE_NAMESPACE } from '../src/index';
+import { App, setSettings, User, KeyManager, StorageFactory, STORAGE_NAMESPACE, MessageType } from '../src/index';
 import settings from './services/settings';
 import URL from 'jsdom-url';
 import { JsKeyManager } from '../src/managers/jsKeyManager';
@@ -23,7 +23,7 @@ import {
     loginWebsiteOnCallback,
     loginWebsiteOnRedirect,
     sendLoginRequestsMessage,
-    setupTonomyIdAckSubscriber,
+    setupTonomyIdIdentifySubscriber,
     setupTonomyIdRequestConfirmSubscriber,
 } from './util/externalUser';
 import { createStorageFactory } from './util/storageFactory';
@@ -133,10 +133,14 @@ describe('External User class', () => {
             const {
                 subscriber: TONOMY_LOGIN_WEBSITE_messageSubscriber,
                 promise: TONOMY_LOGIN_WEBSITE_ackMessagePromise,
-            } = await setupTonomyIdAckSubscriber(TONOMY_ID_did, log);
+            } = await setupTonomyIdIdentifySubscriber(TONOMY_ID_did, log);
 
             expect(TONOMY_LOGIN_WEBSITE_communication.socketServer.listeners('message').length).toBe(0);
-            const TONOMY_LOGIN_WEBSITE_subscription=TONOMY_LOGIN_WEBSITE_communication.subscribeMessage(TONOMY_LOGIN_WEBSITE_messageSubscriber);
+            const TONOMY_LOGIN_WEBSITE_subscription = TONOMY_LOGIN_WEBSITE_communication.subscribeMessage(
+                TONOMY_LOGIN_WEBSITE_messageSubscriber,
+                MessageType.IDENTIFY
+            );
+
             expect(TONOMY_LOGIN_WEBSITE_communication.socketServer.listeners('message').length).toBe(1);
 
             // ##### Tonomy ID user (QR code scanner screen) #####
@@ -158,7 +162,6 @@ describe('External User class', () => {
             // wait for the ack message to confirm Tonomy ID is connected
             const connectionMessageFromTonomyId = await TONOMY_LOGIN_WEBSITE_ackMessagePromise;
 
-            expect(connectionMessageFromTonomyId.type).toBe('ack');
             expect(connectionMessageFromTonomyId.message.getSender()).toBe(TONOMY_ID_did + '#local');
 
             await sendLoginRequestsMessage(
@@ -176,7 +179,11 @@ describe('External User class', () => {
             } = await setupTonomyIdRequestConfirmSubscriber(TONOMY_ID_did, log);
 
             TONOMY_LOGIN_WEBSITE_communication.unsubscribeMessage(TONOMY_LOGIN_WEBSITE_subscription);
-            const TONOMY_LOGIN_WEBSITE_subscription2 = TONOMY_LOGIN_WEBSITE_communication.subscribeMessage(TONOMY_LOGIN_WEBSITE_messageSubscriber2);
+            const TONOMY_LOGIN_WEBSITE_subscription2 = TONOMY_LOGIN_WEBSITE_communication.subscribeMessage(
+                TONOMY_LOGIN_WEBSITE_messageSubscriber2,
+                MessageType.LOGIN_REQUEST_RESPONSE
+            );
+
             expect(TONOMY_LOGIN_WEBSITE_communication.socketServer.listeners('message').length).toBe(1);
 
             // ##### Tonomy ID user (SSO screen) #####
@@ -201,7 +208,6 @@ describe('External User class', () => {
             const payload = requestConfirmedMessageFromTonomyId.message.getPayload();
             const TONOMY_LOGIN_WEBSITE_requests = JSON.parse(payload.requests) as string[];
 
-            expect(requestConfirmedMessageFromTonomyId.type).toBe('request');
             expect(payload).toBeDefined();
             expect(payload.requests).toBeDefined();
             expect(payload.accountName).toBeDefined();
