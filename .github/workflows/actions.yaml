@@ -12,8 +12,8 @@ jobs:
       - name: Run lint and test
         uses: actions/setup-node@v3
         with:
-          node-version: 16.4.1
-      - run: npm install
+          node-version: 18.12.1
+      - run: npm ci
       - run: npm run build
       - run: npm run lint
       - run: npm run test
@@ -74,11 +74,11 @@ jobs:
       - name: Install SDK and Bootstrap blockchain
         uses: actions/setup-node@v3
         with:
-          node-version: 16.4.1
-      - run: npm i
+          node-version: 18.12.1
+      - run: npm ci
       - run: npm run bootstrap
       - name: Run integration tests
         uses: actions/setup-node@v3
         with:
-          node-version: 16.4.1
+          node-version: 18.12.1
       - run: npm run test:integration

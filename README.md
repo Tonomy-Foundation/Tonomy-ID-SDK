@@ -7,7 +7,7 @@ The SDK is written in typescript with jest to run tests.
 ## Dependencies
 
 - Linux debian distribution (Ubuntu 20.0.4 LTS used)
-- [Nodejs](https://nodejs.org) v16.4.1+ suggested installed with [nvm](https://github.com/nvm-sh/nvm)
+- [Nodejs](https://nodejs.org) v18.12.1+ suggested installed with [nvm](https://github.com/nvm-sh/nvm)
 
 Integration tests:
 
@@ -29,13 +29,13 @@ To do a one-off build, use `npm run build`.
 
 ## Tests
 
-### Unit tests:
+### Unit tests
 
 Tests individual class and function logic within the SDK.
 
 `npm test`
 
-### Integration tests:
+### Integration tests
 
 Tests end-to-end functions across more than one service.
 
