@@ -212,6 +212,7 @@ export class ExternalUser {
      * @param {any} message - an object to sign
      * @property {string} options.recipient - the recipient's DID
      * @property {KeyManager} [options.keyManager=new JsKeyManager()] - the key manager to use to sign the message
+     * @property {string} [options.type] - the type of the message
      * @returns {Promise<Message>} - the signed message
      */
     static async signMessage(
@@ -219,6 +220,7 @@ export class ExternalUser {
         options: {
             recipient?: string;
             keyManager?: KeyManager;
+            type?: string;
         } = {}
     ): Promise<Message> {
         const keyManagerLevel = KeyManagerLevel.BROWSER_LOCAL_STORAGE;
@@ -234,7 +236,12 @@ export class ExternalUser {
 
         const issuer = toDid(jwk);
 
-        return await Message.sign(message, { did: issuer, signer: signer as any, alg: 'ES256K-R' }, options.recipient);
+        return await Message.sign(
+            message,
+            { did: issuer, signer: signer as any, alg: 'ES256K-R' },
+            options.recipient,
+            options.type
+        );
     }
 
     /**

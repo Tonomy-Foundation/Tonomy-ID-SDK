@@ -8,6 +8,7 @@ import {
     Message,
     UserApps,
     JWTLoginPayload,
+    MessageType,
 } from '../../src/index';
 import { JsKeyManager } from '../../src/managers/jsKeyManager';
 import { jsStorageFactory } from '../../test/services/jsstorage';
@@ -68,7 +69,7 @@ export async function createRandomApp(logoUrl?: string, origin?: string): Promis
 
 export async function loginToTonomyCommunication(user: User, log = false) {
     // Login to Tonomy Communication as the user
-    const loginMessage = await user.signMessage({});
+    const loginMessage = await user.signMessage({}, { type: MessageType.SERVICE_LOGIN });
 
     if (log) console.log('TONOMY_ID/appStart: connect to Tonomy Communication');
 
@@ -84,7 +85,7 @@ export async function scanQrAndAck(user: User, qrCodeData: string, log = false) 
     const barcodeScanResults = {
         data: qrCodeData,
     };
-    const connectMessage = await user.signMessage({ type: 'ack' }, barcodeScanResults.data);
+    const connectMessage = await user.signMessage({ type: 'ack' }, { recipient: barcodeScanResults.data });
 
     if (log) console.log("TONOMY_ID/scanQr: connecting to Tonomy Login Website's with their did:jwk from the QR code");
     const sendMessageResponse = await user.communication.sendMessage(connectMessage);
@@ -147,7 +148,10 @@ export async function setupLoginRequestSubscriber(
             const accountName = await user.storage.accountName.toString();
 
             // send a message back to the app
-            const respondMessage = (await user.signMessage({ requests, accountName }, tonomyIdLoginDid)) as Message;
+            const respondMessage = (await user.signMessage(
+                { requests, accountName },
+                { recipient: tonomyIdLoginDid }
+            )) as Message;
 
             if (log) console.log('TONOMY_ID/SSO: sending a confirmation of the logins back to Tonomy Login Website');
             const sendMessageResponse = await user.communication.sendMessage(respondMessage);
