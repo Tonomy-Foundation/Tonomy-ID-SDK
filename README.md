@@ -23,6 +23,7 @@ Integration tests:
 ## Repositories
 
 - [Contracts](https://github.com/Tonomy-Foundation/Tonomy-Contracts) (inside SDK repo) - Smart contracts to run the governance, identity, DAO, token and other ecosystem tools. This is used to run the integration tests
+- [Communication](https://github.com/Tonomy-Foundation/Tonomy-Communication) (inside SDK repo) - Service to provide peer-to-peer messaging for Tonomy ID users. This is used to run the integration tests
 
 ## Build
 
@@ -41,7 +42,7 @@ Build notes:
 npm start
 ```
 
-This builds to `/dist` and runs the project in watch mode so any edits you save inside `src` causes a rebuild to `/dist`.
+This builds to `/build` and runs the project in watch mode so any edits you save inside `src` causes a rebuild to `/build`.
 
 To do a one-off build, use `npm run build`.
 
@@ -69,7 +70,7 @@ Then run the tests
 
 Make sure you install the Jest extension (recommended automatically when you open VS Code)
 
-If you also want to do this with the integration tests then run `npm run test:setup`
+If you also want to do this with the integration tests then run `npm run test:setup` first
 
 Then go to any test e.g. `test/app.test.ts` and you can click ▶️ or right click and press "Debug test". You can also look at the Jest Test Explorer in the left-side activity bar.
 
