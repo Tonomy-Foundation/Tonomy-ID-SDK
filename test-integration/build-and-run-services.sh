@@ -12,7 +12,12 @@ cd "${SDK_DIR}"
 
 function setup {
     # Setup Tonomy Contracts and Tonomy Communication git submodules
-    if [ ! -d "Tonomy-Contracts" ]; then
+    set +e
+    # Check if git submodules are initalized https://stackoverflow.com/a/74452777
+    git submodule status | grep --quiet '^-'
+    isgitmodulesupdated=$?
+    set -e
+    if [ "${isgitmodulesupdated}" ]; then
         git submodule update --init --recursive
         git submodule foreach git checkout development
         git submodule foreach git pull
