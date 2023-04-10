@@ -364,4 +364,17 @@ describe('User class', () => {
             await user.logout();
         })
     );
+
+    test(
+        'usernameExists(), returns true if username already exists if not throws an error',
+        catchAndPrintErrors(async () => {
+            const { user, username } = await createRandomID();
+
+            await expect(user.usernameExists(username)).resolves.toBe(true);
+
+            await expect(user.usernameExists('RandomUsername')).resolves.toBe(false);
+
+            await user.logout();
+        })
+    );
 });

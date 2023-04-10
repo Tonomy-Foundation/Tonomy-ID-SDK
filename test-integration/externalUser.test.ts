@@ -136,7 +136,7 @@ describe('External User class', () => {
             } = await setupTonomyIdAckSubscriber(TONOMY_ID_did, log);
 
             expect(TONOMY_LOGIN_WEBSITE_communication.socketServer.listeners('message').length).toBe(0);
-            TONOMY_LOGIN_WEBSITE_communication.subscribeMessage(TONOMY_LOGIN_WEBSITE_messageSubscriber);
+            const TONOMY_LOGIN_WEBSITE_subscription=TONOMY_LOGIN_WEBSITE_communication.subscribeMessage(TONOMY_LOGIN_WEBSITE_messageSubscriber);
             expect(TONOMY_LOGIN_WEBSITE_communication.socketServer.listeners('message').length).toBe(1);
 
             // ##### Tonomy ID user (QR code scanner screen) #####
@@ -175,8 +175,8 @@ describe('External User class', () => {
                 promise: TONOMY_LOGIN_WEBSITE_requestsConfirmedMessagePromise,
             } = await setupTonomyIdRequestConfirmSubscriber(TONOMY_ID_did, log);
 
-            TONOMY_LOGIN_WEBSITE_communication.unsubscribeMessage(TONOMY_LOGIN_WEBSITE_messageSubscriber);
-            TONOMY_LOGIN_WEBSITE_communication.subscribeMessage(TONOMY_LOGIN_WEBSITE_messageSubscriber2);
+            TONOMY_LOGIN_WEBSITE_communication.unsubscribeMessage(TONOMY_LOGIN_WEBSITE_subscription);
+            const TONOMY_LOGIN_WEBSITE_subscription2 = TONOMY_LOGIN_WEBSITE_communication.subscribeMessage(TONOMY_LOGIN_WEBSITE_messageSubscriber2);
             expect(TONOMY_LOGIN_WEBSITE_communication.socketServer.listeners('message').length).toBe(1);
 
             // ##### Tonomy ID user (SSO screen) #####
@@ -195,7 +195,7 @@ describe('External User class', () => {
             const requestConfirmedMessageFromTonomyId = await TONOMY_LOGIN_WEBSITE_requestsConfirmedMessagePromise;
 
             expect(TONOMY_LOGIN_WEBSITE_communication.socketServer.listeners('message').length).toBe(1);
-            TONOMY_LOGIN_WEBSITE_communication.unsubscribeMessage(TONOMY_LOGIN_WEBSITE_messageSubscriber2);
+            TONOMY_LOGIN_WEBSITE_communication.unsubscribeMessage(TONOMY_LOGIN_WEBSITE_subscription2);
             expect(TONOMY_LOGIN_WEBSITE_communication.socketServer.listeners('message').length).toBe(0);
 
             const payload = requestConfirmedMessageFromTonomyId.message.getPayload();
