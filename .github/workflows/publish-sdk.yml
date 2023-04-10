@@ -9,6 +9,8 @@ on:
       - development
 
 jobs:
+  timeout-minutes: 20
+
   publish-npm:
     runs-on: ubuntu-20.04
     steps:
