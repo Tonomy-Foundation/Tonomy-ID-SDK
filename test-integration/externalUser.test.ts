@@ -11,10 +11,10 @@ import {
     scanQrAndAck,
     setupLoginRequestSubscriber,
 } from './util/user';
-import { App, setSettings, User, KeyManager, StorageFactory, STORAGE_NAMESPACE } from '../src/index';
+import { App, setSettings, User, KeyManager, StorageFactory, STORAGE_NAMESPACE } from '../src/sdk/index';
 import settings from './services/settings';
 import URL from 'jsdom-url';
-import { JsKeyManager } from '../src/managers/jsKeyManager';
+import { JsKeyManager } from '../src/sdk/managers/jsKeyManager';
 import { sleep } from './util/sleep';
 import {
     externalWebsiteOnCallback,
@@ -33,7 +33,7 @@ global.URL = URL;
 
 setSettings(settings);
 
-const log = true;
+const log = false;
 
 describe('External User class', () => {
     jest.setTimeout(30000);

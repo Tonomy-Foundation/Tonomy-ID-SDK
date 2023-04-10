@@ -1,5 +1,5 @@
-import { AccountType, TonomyUsername } from '../../src/services/username';
-import { getSettings, setSettings } from '../../src/settings';
+import { AccountType, TonomyUsername } from '../../src/sdk/services/username';
+import { getSettings, setSettings } from '../../src/sdk/settings';
 
 setSettings({
     accountSuffix: '.test.tonomy.id',

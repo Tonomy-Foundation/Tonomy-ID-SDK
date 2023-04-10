@@ -1,4 +1,4 @@
-import { SettingsType } from '../../src/index';
+import { SettingsType } from '../../src/sdk/index';
 
 const settings: Partial<SettingsType> = {
     blockchainUrl: 'http://localhost:8888',

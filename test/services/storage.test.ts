@@ -1,4 +1,4 @@
-import { createStorage, STORAGE_NAMESPACE } from '../../src/services/storage';
+import { createStorage, STORAGE_NAMESPACE } from '../../src/sdk/services/storage';
 import { jsStorageFactory } from './jsstorage';
 
 type TestStorage = {

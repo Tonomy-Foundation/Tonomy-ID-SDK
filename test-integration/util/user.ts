@@ -8,8 +8,8 @@ import {
     Message,
     UserApps,
     JWTLoginPayload,
-} from '../../src/index';
-import { JsKeyManager } from '../../src/managers/jsKeyManager';
+} from '../../src/sdk/index';
+import { JsKeyManager } from '../../src/sdk/managers/jsKeyManager';
 import { jsStorageFactory } from '../../test/services/jsstorage';
 import { generatePrivateKeyFromPassword } from '../../test/services/keys';
 import { privateKey } from './eosio';

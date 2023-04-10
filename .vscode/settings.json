@@ -8,5 +8,13 @@
     },
     "cSpell.words": [
         "tonomy"
-    ]
+    ],
+    "jest.autoRun": {
+        "onSave": false
+    },
+    "jest.debugMode": false,
+    "jest.jestCommandLine": "npm run test",
+    "jest.testExplorer": {
+        "enabled": true
+    },
 }

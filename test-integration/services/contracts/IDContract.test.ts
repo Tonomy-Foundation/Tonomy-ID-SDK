@@ -1,4 +1,4 @@
-import { IDContract, setSettings } from '../../../src/index';
+import { IDContract, setSettings } from '../../../src/sdk/index';
 import { catchAndPrintErrors } from '../../util/errors';
 import { createRandomID, createRandomApp } from '../../util/user';
 import settings from '../settings';

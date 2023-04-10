@@ -1,6 +1,6 @@
 import { Bytes, KeyType, PrivateKey, Checksum256 } from '@greymass/eosio';
 import argon2 from 'argon2';
-import { randomBytes } from '../../src/util/crypto';
+import { randomBytes } from '../../src/sdk/util/crypto';
 
 export async function generatePrivateKeyFromPassword(
     password: string,

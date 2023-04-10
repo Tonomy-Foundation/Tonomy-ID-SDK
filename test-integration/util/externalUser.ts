@@ -1,15 +1,7 @@
 /* eslint-disable no-console */
 import { Name } from '@greymass/eosio';
-import {
-    Communication,
-    ExternalUser,
-    KeyManager,
-    Message,
-    StorageFactory,
-    Subscriber,
-    User,
-    UserApps,
-} from '../../src';
+import { Communication, KeyManager, Message, StorageFactory, Subscriber, User, UserApps } from '../../src/sdk';
+import { ExternalUser } from '../../src/api/externalUser';
 
 export async function externalWebsiteUserPressLoginToTonomyButton(
     keyManager: KeyManager,

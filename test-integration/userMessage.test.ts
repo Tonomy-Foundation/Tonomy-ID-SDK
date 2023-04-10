@@ -1,5 +1,5 @@
-import { setSettings } from '../src';
-import { Message } from '../src/util/message';
+import { setSettings } from '../src/sdk';
+import { Message } from '../src/sdk/util/message';
 import settings from './services/settings';
 import { createRandomID } from './util/user';
 

@@ -1,17 +1,17 @@
-import { KeyManager, KeyManagerLevel } from './services/keymanager';
-import { JWTLoginPayload, OnPressLoginOptions, UserApps } from './userApps';
-import { createVCSigner, generateRandomKeyPair, randomString } from './util/crypto';
+import { KeyManager, KeyManagerLevel } from '../sdk/services/keymanager';
+import { JWTLoginPayload, OnPressLoginOptions, UserApps } from '../sdk/userApps';
+import { createVCSigner, generateRandomKeyPair, randomString } from '../sdk/util/crypto';
 import { ES256KSigner } from '@tonomy/did-jwt';
-import { createJWK, toDid } from './util/did-jwk';
-import { Message } from './util/message';
-import { getSettings } from './settings';
-import { SdkErrors, throwError } from './services/errors';
-import { createStorage, PersistentStorageClean, StorageFactory, STORAGE_NAMESPACE } from './services/storage';
+import { createJWK, toDid } from '../sdk/util/did-jwk';
+import { Message } from '../sdk/util/message';
+import { getSettings } from '../sdk/settings';
+import { SdkErrors, throwError } from '../sdk/services/errors';
+import { createStorage, PersistentStorageClean, StorageFactory, STORAGE_NAMESPACE } from '../sdk/services/storage';
 import { Checksum256, Name } from '@greymass/eosio';
-import { TonomyUsername } from './services/username';
-import { browserStorageFactory } from './managers/browserStorage';
-import { getChainInfo } from './services/eosio/eosio';
-import { JsKeyManager } from './managers/jsKeyManager';
+import { TonomyUsername } from '../sdk/services/username';
+import { browserStorageFactory } from '../sdk/managers/browserStorage';
+import { getChainInfo } from '../sdk/services/eosio/eosio';
+import { JsKeyManager } from '../sdk/managers/jsKeyManager';
 
 export type ExternalUserStorage = {
     accountName: Name;

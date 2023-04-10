@@ -1,5 +1,5 @@
-import { SdkErrors } from '../../src/services/errors';
-import { validatePassword } from '../../src/util/passwords';
+import { SdkErrors } from '../../src/sdk/services/errors';
+import { validatePassword } from '../../src/sdk/util/passwords';
 
 describe('validatePassword()', () => {
     it('it succeeds with good password', () => {
