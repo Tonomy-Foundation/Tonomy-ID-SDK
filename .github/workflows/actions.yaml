@@ -76,6 +76,7 @@ jobs:
         with:
           node-version: 18.12.1
       - run: npm ci
+      - run: npm build:cli
       - run: npm run cli bootstrap
 
       - name: Run integration tests
