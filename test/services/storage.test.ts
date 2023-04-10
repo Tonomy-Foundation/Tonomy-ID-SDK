@@ -1,5 +1,5 @@
 import { createStorage, STORAGE_NAMESPACE } from '../../src/sdk/services/storage';
-import { jsStorageFactory } from './jsstorage';
+import { jsStorageFactory } from '../../src/cli/bootstrap/jsstorage';
 
 type TestStorage = {
     test: string;

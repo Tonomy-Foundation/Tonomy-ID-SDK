@@ -13,6 +13,7 @@
     "declarationMap": true,
     "sourceMap": true,
     "outDir": "build/sdk",
+    "rootDir": "src",
     "strict": true,
     "noImplicitReturns": true,
     "types": [
