@@ -3,8 +3,6 @@ name: Run Tonomy-SDK Tests
 on: pull_request
 
 jobs:
-  timeout-minutes: 20
-  
   test:
     runs-on: ubuntu-latest
 
