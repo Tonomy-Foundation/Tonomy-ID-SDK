@@ -6,11 +6,11 @@
     "main": "./build/sdk/index.cjs",
     "module": "./build/sdk/index.module.js",
     "unpkg": "./build/sdk/index.umd.js",
-    "types": "./build/sdk/index.d.ts",
+    "types": "./build/sdk/sdk/index.d.ts",
     "umd:main": "./build/sdk/index.umd.js",
     "exports": {
         ".": {
-            "types": "./build/sdk/index.d.ts",
+            "types": "./build/sdk/sdk/index.d.ts",
             "require": "./build/sdk/index.cjs",
             "import": "./build/sdk/index.module.js"
         },
@@ -27,8 +27,8 @@
         "node": ">=10"
     },
     "scripts": {
-        "start": "microbundle watch",
-        "build:sdk": "microbundle --compress=false",
+        "start": "microbundle watch  -i ./src/src/index.ts -o build/sdk/index.js",
+        "build:sdk": "microbundle --compress=false -i ./src/sdk/index.ts -o build/sdk/index.js",
         "build:cli": "microbundle --compress=false --target=node -f cjs -i ./src/cli/index.ts -o build/cli/index.js",
         "build:api": "mkdir -p ./build/api && cp ./src/api/tonomy.css ./build/api/tonomy.css",
         "build": "npm run build:sdk && npm run build:cli && npm run build:api",
