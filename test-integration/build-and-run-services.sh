@@ -37,7 +37,7 @@ function setup {
     # Install dependencies Tonomy Communication
     cd "${SDK_DIR}/Tonomy-Communication"
     if [ ! -d "node_modules" ]; then
-        npm i
+        yarn install
     fi
 }
 
