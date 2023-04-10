@@ -1,3 +1,4 @@
+// SDK
 import * as Eosio from './services/eosio/eosio';
 import * as Transaction from './services/eosio/transaction';
 
@@ -24,9 +25,11 @@ export * from './services/errors';
 export * from './userApps';
 export * from './communication';
 export * from './util/message';
-export * from './externalUser';
 export * from './managers/browserStorage';
 export * from './managers/jsKeyManager';
 
 export { createSigner } from '@tonomy/antelope-ssi-toolkit';
 export { ES256KSigner } from '@tonomy/did-jwt';
+
+// API
+export * from '../api/index';

@@ -8,9 +8,9 @@ import {
     createUserObject,
     setSettings,
     EosioUtil,
-} from '../src/index';
-import { SdkErrors } from '../src/index';
-import { JsKeyManager } from '../src/managers/jsKeyManager';
+} from '../src/sdk/index';
+import { SdkErrors } from '../src/sdk/index';
+import { JsKeyManager } from '../src/sdk/managers/jsKeyManager';
 import { jsStorageFactory } from '../test/services/jsstorage';
 import settings from './services/settings';
 import { catchAndPrintErrors } from './util/errors';

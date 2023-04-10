@@ -2,7 +2,6 @@
 import { Name } from '@greymass/eosio';
 import {
     Communication,
-    ExternalUser,
     KeyManager,
     Message,
     MessageType,
@@ -10,7 +9,8 @@ import {
     Subscriber,
     User,
     UserApps,
-} from '../../src';
+} from '../../src/sdk';
+import { ExternalUser } from '../../src/api/externalUser';
 
 export async function externalWebsiteUserPressLoginToTonomyButton(
     keyManager: KeyManager,

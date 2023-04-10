@@ -1,19 +1,19 @@
 import deployContract from './deploy-contract';
 import path from 'path';
 import { createAccount, createApp } from './create-account';
-import { EosioTokenContract, setSettings } from '../src/index';
+import { EosioTokenContract, setSettings } from '../../sdk/index';
 import { signer, publicKey } from './keys';
 import bootstrapSettings from './settings';
-import settings from '../test-integration/services/settings';
-import { createUser } from '../test-integration/util/user';
+import settings from '../../../test-integration/services/settings';
+import { createUser } from '../../../test-integration/util/user';
 
 setSettings(settings);
 const eosioTokenContract = EosioTokenContract.Instance;
 
-async function main() {
+export default async function bootstrap() {
     await createAccount({ account: 'eosio.token' }, signer);
     await deployContract(
-        { account: 'eosio.token', contractDir: path.join(__dirname, '../Tonomy-Contracts/contracts/eosio.token') },
+        { account: 'eosio.token', contractDir: path.join(__dirname, '../../Tonomy-Contracts/contracts/eosio.token') },
         signer
     );
     await eosioTokenContract.create('1000000000 SYS', signer);
@@ -21,12 +21,12 @@ async function main() {
 
     await createAccount({ account: 'id.tonomy' }, signer);
     await deployContract(
-        { account: 'id.tonomy', contractDir: path.join(__dirname, '../Tonomy-Contracts/contracts/id.tonomy') },
+        { account: 'id.tonomy', contractDir: path.join(__dirname, '../../Tonomy-Contracts/contracts/id.tonomy') },
         signer
     );
 
     await deployContract(
-        { account: 'eosio', contractDir: path.join(__dirname, '../Tonomy-Contracts/contracts/eosio.bios.tonomy') },
+        { account: 'eosio', contractDir: path.join(__dirname, '../../Tonomy-Contracts/contracts/eosio.bios.tonomy') },
         signer
     );
 
@@ -53,17 +53,3 @@ async function main() {
     // The Apple app needs to have a test user for their review. That is this user.
     await createUser('testuser', '1GjGtP%g5UOp2lQ&U5*p');
 }
-
-Promise.resolve(main())
-    .then(() => {
-        process.exit(0);
-    })
-    .catch((err) => {
-        // this is to ignore websockets errors
-        if (err.message.includes('websocket')) {
-            return;
-        }
-
-        console.error(err);
-        process.exit(1);
-    });

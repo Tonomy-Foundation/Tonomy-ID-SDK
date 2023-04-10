@@ -1,4 +1,4 @@
-import { StorageFactory } from '../../src';
+import { StorageFactory } from '../../src/sdk';
 import { JsStorage } from '../../test/services/jsstorage';
 
 export function createStorageFactory(scope: string): StorageFactory {
