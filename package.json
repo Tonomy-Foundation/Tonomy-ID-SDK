@@ -13,6 +13,10 @@
             "types": "./build/sdk/index.d.ts",
             "require": "./build/sdk/index.cjs",
             "import": "./build/sdk/index.module.js"
+        },
+        "./src/api/tonomy.css": {
+            "import": "./src/api/tonomy.css",
+            "require": "./src/api/tonomy.css"
         }
     },
     "files": [
