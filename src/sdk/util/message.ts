@@ -9,7 +9,7 @@ import { issue, OutputType } from '@tonomy/antelope-ssi-toolkit';
 import { resolve } from './did-jwk';
 
 export enum MessageType {
-    SERVICE_LOGIN = 'SERVICE_LOGIN',
+    COMMUNICATION_LOGIN = 'COMMUNICATION_LOGIN',
     IDENTIFY = 'IDENTIFY',
     LOGIN_REQUEST = 'LOGIN_REQUEST',
     LOGIN_REQUEST_RESPONSE = 'LOGIN_REQUEST_RESPONSE',

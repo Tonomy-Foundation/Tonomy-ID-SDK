@@ -60,7 +60,7 @@ export async function createRandomApp(logoUrl?: string, origin?: string): Promis
 
 export async function loginToTonomyCommunication(user: User, log = false) {
     // Login to Tonomy Communication as the user
-    const loginMessage = await user.signMessage({}, { type: MessageType.SERVICE_LOGIN });
+    const loginMessage = await user.signMessage({}, { type: MessageType.COMMUNICATION_LOGIN });
 
     if (log) console.log('TONOMY_ID/appStart: connect to Tonomy Communication');
 

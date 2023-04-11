@@ -216,7 +216,7 @@ export class ExternalUser {
                 {},
                 { did: issuer, signer: signer as any, alg: 'ES256K-R' },
                 undefined,
-                MessageType.SERVICE_LOGIN
+                MessageType.COMMUNICATION_LOGIN
             );
 
             return { loginRequest, loginToCommunication };
