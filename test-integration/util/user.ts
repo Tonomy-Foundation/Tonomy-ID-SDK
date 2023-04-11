@@ -11,21 +11,12 @@ import {
     MessageType,
     JsKeyManager,
 } from '../../src/sdk/index';
-import { jsStorageFactory } from '../../test/services/jsstorage';
-import { generatePrivateKeyFromPassword } from '../../test/services/keys';
+import { jsStorageFactory } from '../../src/cli/bootstrap/jsstorage';
+import { generatePrivateKeyFromPassword } from '../../src/cli/bootstrap/keys';
 import { privateKey } from './eosio';
+import { createUser } from '../../src/cli/bootstrap/user';
 
-export async function createUser(username: string, password: string) {
-    const auth: KeyManager = new JsKeyManager();
-    const user = createUserObject(auth, jsStorageFactory);
-
-    await user.saveUsername(username);
-    await user.savePassword(password, { keyFromPasswordFn: generatePrivateKeyFromPassword });
-
-    await user.createPerson();
-
-    return { user, password, auth };
-}
+export { createUser };
 
 export async function createRandomID() {
     const auth: KeyManager = new JsKeyManager();

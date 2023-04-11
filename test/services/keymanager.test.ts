@@ -1,12 +1,12 @@
 import { Checksum256, PrivateKey } from '@greymass/eosio';
 import { JsKeyManager } from '../../src/sdk/managers/jsKeyManager';
 import argon2 from 'argon2';
-import { jsStorageFactory } from './jsstorage';
+import { jsStorageFactory } from '../../src/cli/bootstrap/jsstorage';
 import { createUserObject } from '../../src/sdk/user';
 import { KeyManagerLevel } from '../../src/sdk/services/keymanager';
 import { randomBytes, generateRandomKeyPair } from '../../src/sdk/util/crypto';
 import { setSettings } from '../../src/sdk';
-import { generatePrivateKeyFromPassword } from './keys';
+import { generatePrivateKeyFromPassword } from '../../src/cli/bootstrap/keys';
 
 const keyManager = new JsKeyManager();
 

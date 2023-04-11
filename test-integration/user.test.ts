@@ -11,11 +11,11 @@ import {
 } from '../src/sdk/index';
 import { SdkErrors } from '../src/sdk/index';
 import { JsKeyManager } from '../src/sdk/managers/jsKeyManager';
-import { jsStorageFactory } from '../test/services/jsstorage';
+import { jsStorageFactory } from '../src/cli/bootstrap/jsstorage';
 import settings from './services/settings';
 import { catchAndPrintErrors } from './util/errors';
 import { Checksum256 } from '@greymass/eosio';
-import { generatePrivateKeyFromPassword } from '../test/services/keys';
+import { generatePrivateKeyFromPassword } from '../src/cli/bootstrap/keys';
 
 let auth: KeyManager;
 let user: User;
