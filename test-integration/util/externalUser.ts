@@ -10,7 +10,7 @@ import {
     User,
     UserApps,
 } from '../../src/sdk';
-import { ExternalUser } from '../../src/api/externalUser';
+import { ExternalUser, LoginWithTonomyMessages } from '../../src/api/externalUser';
 
 export async function externalWebsiteUserPressLoginToTonomyButton(
     keyManager: KeyManager,
@@ -19,20 +19,20 @@ export async function externalWebsiteUserPressLoginToTonomyButton(
 ) {
     if (log) console.log('EXTERNAL_WEBSITE/login: create did:jwk and login request');
 
-    const loginRequestJwt = (await ExternalUser.loginWithTonomy(
+    const { loginRequest } = (await ExternalUser.loginWithTonomy(
         { callbackPath: '/callback', redirect: false },
         keyManager
-    )) as string;
+    )) as LoginWithTonomyMessages;
 
-    expect(typeof loginRequestJwt).toBe('string');
+    expect(typeof loginRequest.jwt).toBe('string');
 
-    const did = new Message(loginRequestJwt).getSender();
+    const did = loginRequest.getSender();
 
     expect(did).toContain('did:jwk:');
 
     if (log) console.log('EXTERNAL_WEBSITE/login: redirect to Tonomy Login Website');
 
-    const redirectUrl = loginAppOrigin + '/login?requests=' + JSON.stringify([loginRequestJwt]);
+    const redirectUrl = loginAppOrigin + '/login?requests=' + JSON.stringify([loginRequest.jwt]);
 
     return { did, redirectUrl };
 }
@@ -45,25 +45,21 @@ export async function loginWebsiteOnRedirect(externalWebsiteDid: string, keyMana
     expect(jwtVerified.getSender()).toBe(externalWebsiteDid);
 
     if (log) console.log('TONOMY_LOGIN_WEBSITE/login: create did:jwk and login request');
-    const loginRequestJwt = (await ExternalUser.loginWithTonomy(
+    const { loginRequest, loginToCommunication } = (await ExternalUser.loginWithTonomy(
         { callbackPath: '/callback', redirect: false },
         keyManager
-    )) as string;
-    const did = new Message(loginRequestJwt).getSender();
+    )) as LoginWithTonomyMessages;
+    const did = loginRequest.getSender();
 
     expect(did).toContain('did:jwk:');
     expect(did).not.toEqual(externalWebsiteDid);
 
-    const jwtRequests = [loginRequestJwt, jwtVerified.jwt];
-
-    // Create a new login message, and take the DID (did:jwk) out as their identity
-    // Tonomy ID will scan the DID in barcode and use connect
-    const loginMessage = new Message(loginRequestJwt);
+    const jwtRequests = [loginRequest.jwt, jwtVerified.jwt];
 
     // Login to the Tonomy Communication as the login app user
     if (log) console.log('TONOMY_LOGIN_WEBSITE/login: connect to Tonomy Communication');
     const communication = new Communication();
-    const loginResponse = await communication.login(loginMessage);
+    const loginResponse = await communication.login(loginToCommunication);
 
     expect(loginResponse).toBe(true);
 

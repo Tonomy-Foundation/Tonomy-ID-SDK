@@ -3,7 +3,7 @@ import { JWTLoginPayload, OnPressLoginOptions, UserApps } from '../sdk/userApps'
 import { createVCSigner, generateRandomKeyPair, randomString } from '../sdk/util/crypto';
 import { ES256KSigner } from '@tonomy/did-jwt';
 import { createJWK, toDid } from '../sdk/util/did-jwk';
-import { Message } from '../sdk/util/message';
+import { Message, MessageType } from '../sdk/util/message';
 import { getSettings } from '../sdk/settings';
 import { SdkErrors, throwError } from '../sdk/services/errors';
 import { createStorage, PersistentStorageClean, StorageFactory, STORAGE_NAMESPACE } from '../sdk/services/storage';
@@ -17,12 +17,18 @@ export type ExternalUserStorage = {
     accountName: Name;
     username: TonomyUsername;
     loginRequest: JWTLoginPayload;
+    did: string;
 };
 
 export type VerifyLoginOptions = {
     checkKeys?: boolean;
     keyManager?: KeyManager;
     storageFactory?: StorageFactory;
+};
+
+export type LoginWithTonomyMessages = {
+    loginRequest: Message;
+    loginToCommunication: Message;
 };
 
 /**
@@ -90,14 +96,18 @@ export class ExternalUser {
      * @returns {Promise<string>} - the DID of the user
      */
     async getDid() {
-        if (!this.did_) {
+        let did = await this.storage.did;
+
+        if (!did) {
             const accountName = await (await this.getAccountName()).toString();
             const chainID = (await getChainInfo()).chain_id as unknown as Checksum256;
 
-            this.did_ = `did:antelope:${chainID}:${accountName}#local`;
+            did = `did:antelope:${chainID}:${accountName}#local`;
+            this.storage.did = did;
+            await this.storage.did;
         }
 
-        return this.did_;
+        return did;
     }
 
     /**
@@ -165,13 +175,13 @@ export class ExternalUser {
      * @param {OnPressLoginOptions} onPressLoginOptions - options for the login
      * @property {boolean} onPressLoginOptions.redirect - if true, redirects the user to the login page, if false, returns the token
      * @property {string} onPressLoginOptions.callbackPath - the path to redirect the user to after login
-     * @param {KeyManager} keyManager - the key manager to use to store the keys
-     * @returns {Promise<string | void>} - if redirect is true, returns void, if redirect is false, returns the login request in the form of a JWT token
+     * @param {KeyManager} [keyManager] - the key manager to use to store the keys
+     * @returns {Promise<LoginWithTonomyMessages | void>} - if redirect is true, returns void, if redirect is false, returns the login request in the form of a JWT token
      */
     static async loginWithTonomy(
         { redirect = true, callbackPath }: OnPressLoginOptions,
         keyManager: KeyManager = new JsKeyManager()
-    ): Promise<string | void> {
+    ): Promise<LoginWithTonomyMessages | void> {
         const { privateKey, publicKey } = generateRandomKeyPair();
 
         await keyManager.storeKey({
@@ -193,17 +203,24 @@ export class ExternalUser {
 
         const issuer = toDid(jwk);
 
-        const token = (await Message.sign(payload, { did: issuer, signer: signer as any, alg: 'ES256K-R' })).jwt;
-
-        const requests = [token];
-        const requestsString = JSON.stringify(requests);
+        const loginRequest = await Message.sign(payload, { did: issuer, signer: signer as any, alg: 'ES256K-R' });
 
         if (redirect) {
+            const requests = [loginRequest.jwt];
+            const requestsString = JSON.stringify(requests);
+
             window.location.href = `${getSettings().ssoWebsiteOrigin}/login?requests=${requestsString}`;
             return;
-        }
+        } else {
+            const loginToCommunication = await Message.sign(
+                {},
+                { did: issuer, signer: signer as any, alg: 'ES256K-R' },
+                undefined,
+                MessageType.SERVICE_LOGIN
+            );
 
-        return token;
+            return { loginRequest, loginToCommunication };
+        }
     }
 
     /**

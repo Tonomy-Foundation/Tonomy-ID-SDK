@@ -10,7 +10,8 @@
         "tonomy"
     ],
     "jest.autoRun": {
-        "onSave": false
+        "onSave": false,
+        "onStartup": false
     },
     "jest.debugMode": false,
     "jest.jestCommandLine": "npm run test",

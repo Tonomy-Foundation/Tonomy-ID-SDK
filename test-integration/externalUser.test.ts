@@ -89,7 +89,7 @@ describe('External User class', () => {
 
     describe('SSO login full end-to-end flow', () => {
         test('User succeeds at login to external website', async () => {
-            expect.assertions(34);
+            expect.assertions(32);
 
             const appsFound = [false, false];
 
