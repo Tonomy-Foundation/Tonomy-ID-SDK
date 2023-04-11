@@ -28,3 +28,6 @@ Applications that illustrate how to use the SDK:
 
 - [Integrating external applications](/integrating)
 - [SDK Architecture](/architecture)
+
+TODO
+<https://squidfunk.github.io/mkdocs-material/#everything-you-would-expect>
