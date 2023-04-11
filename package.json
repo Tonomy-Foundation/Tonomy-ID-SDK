@@ -39,7 +39,9 @@
         "cli": "node ./build/cli/index.cjs",
         "lint": "eslint src test --ext .ts --resolve-plugins-relative-to .",
         "lint:fix": "npm run lint -- --fix",
-        "release": "semantic-release  --debug"
+        "release": "semantic-release  --debug",
+        "docs:serve": "mkdocs serve",
+        "docs:build": "mkdocs build -c"
     },
     "name": "@tonomy/tonomy-id-sdk",
     "author": "Jack Tanner",

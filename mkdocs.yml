@@ -1,1 +1,5 @@
-site_name: My Docs
+site_name: Tonomy SDK
+nav:
+    - Home: index.md
+    - Integration: integration.md
+    - Architecture: architecture.md

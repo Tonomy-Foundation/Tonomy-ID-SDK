@@ -91,6 +91,10 @@ See [errors.ts](./src/services/errors.ts). All errors have a registered unique e
 
 ## Documentation
 
-Documentation is in the `./docs` folder and runs with readthedocs.io here
+Documentation is in the `./docs` folder and runs with [mkdocs](https://www.mkdocs.org).
 
-<https://tonomy-id-sdk.readthedocs.io>
+Install with `sudo apt-get -y install mkdocs`
+
+Then `npm run docs:serve`
+
+<https://docs.tonomy.foundation>

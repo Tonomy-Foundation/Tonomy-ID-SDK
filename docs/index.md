@@ -1,17 +1,30 @@
-# Welcome to MkDocs
+# Tonomy SDK
 
-For full documentation visit [mkdocs.org](https://www.mkdocs.org).
+This Tonomy SDK is a software development kit for
 
-## Commands
+- integrating external applications to use login and identity services provided by Tonomy ID
+- building smart wallet applications like Tonomy ID
 
-* `mkdocs new [dir-name]` - Create a new project.
-* `mkdocs serve` - Start the live-reloading docs server.
-* `mkdocs build` - Build the documentation site.
-* `mkdocs -h` - Print help message and exit.
+It manages all the business logic, cryptography and interactions with other entities.
 
-## Project layout
+## Installation
 
-    mkdocs.yml    # The configuration file.
-    docs/
-        index.md  # The documentation homepage.
-        ...       # Other markdown pages, images and other files.
+```bash
+npm install @tonomy/tonomy-id-sdk
+```
+
+### Compatibility
+
+The SDK has been tested with nodejs v18.12.1+.
+
+### Sample Applications
+
+Applications that illustrate how to use the SDK:
+
+1. [Tonomy Demo (integrated external application)](https://github.com/Tonomy-Foundation/Tonomy-App-Websites/tree/development/src/demo)
+2. [Tonomy ID (smart wallet)](https://github.com/Tonomy-Foundation/Tonomy-ID/tree/development)
+
+## Contents
+
+- [Integrating external applications](/integrating)
+- [SDK Architecture](/architecture)
