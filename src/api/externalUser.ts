@@ -38,7 +38,7 @@ export type LoginWithTonomyMessages = {
 export class ExternalUser {
     keyManager: KeyManager;
     storage: ExternalUserStorage & PersistentStorageClean;
-    did_: string;
+    did: string;
 
     /**
      * Creates a new external user
@@ -96,15 +96,14 @@ export class ExternalUser {
      * @returns {Promise<string>} - the DID of the user
      */
     async getDid() {
-        let did = await this.storage.did;
+        let did = this.did;
 
         if (!did) {
             const accountName = await (await this.getAccountName()).toString();
             const chainID = (await getChainInfo()).chain_id as unknown as Checksum256;
 
             did = `did:antelope:${chainID}:${accountName}#local`;
-            this.storage.did = did;
-            await this.storage.did;
+            this.did = did;
         }
 
         return did;
