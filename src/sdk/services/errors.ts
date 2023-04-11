@@ -35,12 +35,10 @@ export class HttpError extends Error {
 
 export class CommunicationError extends Error {
     exception: {
-        error: {
-            response: string;
-            name: string;
-            status: number;
-            message: string;
-        };
+        response: string;
+        name: string;
+        status: number;
+        message: string;
     };
 
     constructor(communicationError: CommunicationError) {

@@ -56,7 +56,7 @@ export class Communication {
 
             this.socketServer.emit(event, { message: message.jwt }, (response: any) => {
                 if (response.error) {
-                    if (response.exception?.error?.name === 'HttpException' && response.exception) {
+                    if (response.exception?.name === 'HttpException') {
                         const communicationError = new CommunicationError(response);
 
                         reject(communicationError);
