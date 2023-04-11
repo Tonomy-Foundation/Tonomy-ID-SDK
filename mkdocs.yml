@@ -3,3 +3,5 @@ nav:
     - Home: index.md
     - Integration: integration.md
     - Architecture: architecture.md
+theme:
+  name: material
