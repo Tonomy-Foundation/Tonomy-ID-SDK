@@ -1,5 +1,5 @@
 import { io, Socket } from 'socket.io-client';
-import { createSdkError, SdkErrors } from './services/errors';
+import { CommunicationError, createSdkError, SdkErrors } from './services/errors';
 import { getSettings } from './settings';
 import { Message } from './util/message';
 
@@ -56,7 +56,15 @@ export class Communication {
 
             this.socketServer.emit(event, { message: message.jwt }, (response: any) => {
                 if (response.error) {
+                    if (response.exception?.error?.name === 'HttpException' && response.exception) {
+                        const communicationError = new CommunicationError(response);
+
+                        reject(communicationError);
+                        return;
+                    }
+
                     reject(response);
+                    return;
                 }
 
                 resolve(response);
