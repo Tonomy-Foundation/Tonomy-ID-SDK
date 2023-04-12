@@ -2,6 +2,16 @@
 
 This architecture sets forward the structure of the SDK library.
 
+       Controllers
+      /     |     \
+     /      |      \
+    v       |       v
+  Services  |     Storage
+     \      |      /
+      \     |     /
+       v    v    v
+        Utilities
+
 This is what we should work towards!
 
 ## Controllers
@@ -10,7 +20,7 @@ Provide the functional controllers called in the Tonomy ID smart wallet.
 
 ## Storage
 
-Storage interfaces and default implementations for managing persistent data and key management.
+Storage interfaces and default implementations for managing persistent data and key management. They should not depend on controllers.
 
 ## Services
 
