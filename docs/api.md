@@ -85,3 +85,31 @@ try {
     }
 }
 ```
+
+## User object API
+
+With a logged in user you can do the following
+
+### Get the account information
+
+```typescript
+const accountName = await user.getAccountName().toString();
+```
+
+### Get your DID
+
+```typescript
+const accountName = await user.getDid();
+```
+
+### Sign a blockchain transaction
+
+TODO
+
+### Sign a W3C verifiable credential
+
+TODO
+
+### Send a peer-to-peer message to another Tonomy identity
+
+TODO

@@ -22,11 +22,5 @@ The SDK has been tested with nodejs v18.12.1+.
 
 Applications that illustrate how to use the SDK:
 
-1. [Tonomy Demo (uses the API)](https://github.com/Tonomy-Foundation/Tonomy-App-Websites/tree/development/src/demo)
-2. [Tonomy ID smart wallet (uses the SDK)](https://github.com/Tonomy-Foundation/Tonomy-ID/tree/development)
-
-## Contents
-
-- [API](/api)
-- [CLI](/cli)
-- [SDK](/sdk)
+1. <a href="https://github.com/Tonomy-Foundation/Tonomy-App-Websites/tree/development/src/demo" target="_blank">Tonomy Demo (uses the API)</a>
+2. <a href="https://github.com/Tonomy-Foundation/Tonomy-ID/tree/development" target="_blank">Tonomy ID smart wallet (uses the SDK)</a>
