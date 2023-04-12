@@ -1,10 +1,10 @@
 import { PrivateKey, PublicKey } from '@greymass/eosio';
-import { UserApps } from '../src/sdk/controllers/userApps';
-import { generateRandomKeyPair } from '../src/sdk/util/crypto';
+import { UserApps } from '../../src/sdk/controllers/userApps';
+import { generateRandomKeyPair } from '../../src/sdk/util/crypto';
 import URL from 'jsdom-url';
-import { Message } from '../src/sdk/util/message';
-import { setSettings } from '../src/sdk';
-import { ExternalUser, LoginWithTonomyMessages } from '../src/api/externalUser';
+import { Message } from '../../src/sdk/services/communication/message';
+import { setSettings } from '../../src/sdk';
+import { ExternalUser, LoginWithTonomyMessages } from '../../src/api/externalUser';
 
 // @ts-expect-error - URL type on global does not match
 global.URL = URL;

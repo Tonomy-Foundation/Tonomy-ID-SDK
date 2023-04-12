@@ -1,7 +1,7 @@
-import { IDContract, setSettings } from '../../../src/sdk/index';
-import { catchAndPrintErrors } from '../../util/errors';
-import { createRandomID, createRandomApp } from '../../util/user';
-import settings from '../settings';
+import { IDContract, setSettings } from '../../../../src/sdk/index';
+import { catchAndPrintErrors } from '../../../helpers/errors';
+import { createRandomID, createRandomApp } from '../../../helpers/user';
+import settings from '../../../helpers/settings';
 
 setSettings(settings);
 

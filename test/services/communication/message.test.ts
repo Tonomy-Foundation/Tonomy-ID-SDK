@@ -1,8 +1,8 @@
 import { PrivateKey } from '@greymass/eosio';
 import { createSigner } from '@tonomy/antelope-ssi-toolkit';
-import { createVCSigner, generateRandomKeyPair, KeyManagerLevel, setSettings } from '../../src/sdk';
-import { Message } from '../../src/sdk/util/message';
-import { JsKeyManager } from '../../src/sdk/managers/jsKeyManager';
+import { createVCSigner, generateRandomKeyPair, KeyManagerLevel, setSettings } from '../../../src/sdk';
+import { Message } from '../../../src/sdk/services/communication/message';
+import { JsKeyManager } from '../../../src/sdk/storage/jsKeyManager';
 
 setSettings({
     blockchainUrl: 'localhost:8888',

@@ -1,7 +1,7 @@
-import { setSettings } from '../src/sdk';
-import { Message } from '../src/sdk/util/message';
-import settings from './services/settings';
-import { createRandomID } from './util/user';
+import { setSettings } from '../../src/sdk';
+import { Message } from '../../src/sdk/services/communication/message';
+import settings from '../helpers/settings';
+import { createRandomID } from '../helpers/user';
 
 setSettings(settings);
 
