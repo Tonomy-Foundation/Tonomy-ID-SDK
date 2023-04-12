@@ -6,7 +6,7 @@ See a full example Reactjs website with Tonomy ID login here:
 
 <a href="https://demo.staging.tonomy.foundation" target="_blank">Demo website</a>
 
-## SSO Steps
+## Login steps
 
 Follow these steps to allow a Tonomy identity to log into your application.
 
@@ -14,6 +14,9 @@ Follow these steps to allow a Tonomy identity to log into your application.
 2. Set the network
 3. `/login` page
 4. `/callback` page
+5. `/` page to check for logged in users
+
+Examples below are for a Reactjs website.
 
 ### 1. Register your app
 
@@ -25,16 +28,18 @@ See [/cli/#register-a-tonomy-app](/cli/#register-a-tonomy-app)
 import { api } from '@tonomy/tonomy-id-sdk';
 
 // Configure to use a specific network (in this case, the Tonomy staging network)
-api.setSettings({ ssoWebsiteOrigin: "https://tonomy-id-staging.tonomy.foundation" });
+// Best to run this on the root app provider (e.g. App.tsx in Reactjs)
+api.setSettings({
+    ssoWebsiteOrigin: "https://tonomy-id-staging.tonomy.foundation",
+    blockchainUrl: "https://blockchain-api-staging.tonomy.foundation"
+});
 ```
 
 ### 3. Login page
 
-(Reactjs example)
-
 ```typescript
 async function onButtonPress() {
-    api.ExternalUser.loginWithTonomy({ callbackPath: '/callback' });
+    await api.ExternalUser.loginWithTonomy({ callbackPath: '/callback' });
 }
 ```
 
@@ -53,17 +58,30 @@ import "@tonomy/tonomy-id-sdk/build/api/tonomy.css";
 or
 
 ```html
-<link href="https://unpkg.com/@tonomy/tonomy-id-sdk/build/api/tonomy.css" ... >
+<link href="https://unpkg.com/@tonomy/tonomy-id-sdk/build/api/tonomy.css" />
 ```
 
 ### 4. Callback page
 
-(Reactjs example)
+```typescript
+// call this when the page loads
+// e.g. in useEffect() in Reactjs
+const user = await api.ExternalUser.verifyLoginRequest();
+```
+
+### 5. Home page
 
 ```typescript
-// call this function when the page loads
+import { api, SdkError, SdkErrors } from '@tonomy/tonomy-id-sdk';
+
+// call this when the page loads
 // e.g. in useEffect() in Reactjs
-async function verifyLogin() {
-    const user = await api.ExternalUser.verifyLoginRequest();
+let user;
+try {
+    user = await api.ExternalUser.getUser();
+} catch (e) {
+    if (e instanceof SdkError && e.code === SdkErrors.AccountNotFound) {
+        // User has not logged in yet
+    }
 }
 ```
