@@ -1,7 +1,16 @@
 /* eslint-disable no-console */
 import { Name } from '@greymass/eosio';
-import { Communication, KeyManager, Message, StorageFactory, Subscriber, User, UserApps } from '../../src/sdk';
-import { ExternalUser } from '../../src/api/externalUser';
+import {
+    Communication,
+    KeyManager,
+    Message,
+    MessageType,
+    StorageFactory,
+    Subscriber,
+    User,
+    UserApps,
+} from '../../src/sdk';
+import { ExternalUser, LoginWithTonomyMessages } from '../../src/api/externalUser';
 
 export async function externalWebsiteUserPressLoginToTonomyButton(
     keyManager: KeyManager,
@@ -10,20 +19,20 @@ export async function externalWebsiteUserPressLoginToTonomyButton(
 ) {
     if (log) console.log('EXTERNAL_WEBSITE/login: create did:jwk and login request');
 
-    const loginRequestJwt = (await ExternalUser.loginWithTonomy(
+    const { loginRequest } = (await ExternalUser.loginWithTonomy(
         { callbackPath: '/callback', redirect: false },
         keyManager
-    )) as string;
+    )) as LoginWithTonomyMessages;
 
-    expect(typeof loginRequestJwt).toBe('string');
+    expect(typeof loginRequest.jwt).toBe('string');
 
-    const did = new Message(loginRequestJwt).getSender();
+    const did = loginRequest.getSender();
 
     expect(did).toContain('did:jwk:');
 
     if (log) console.log('EXTERNAL_WEBSITE/login: redirect to Tonomy Login Website');
 
-    const redirectUrl = loginAppOrigin + '/login?requests=' + JSON.stringify([loginRequestJwt]);
+    const redirectUrl = loginAppOrigin + '/login?requests=' + JSON.stringify([loginRequest.jwt]);
 
     return { did, redirectUrl };
 }
@@ -36,48 +45,35 @@ export async function loginWebsiteOnRedirect(externalWebsiteDid: string, keyMana
     expect(jwtVerified.getSender()).toBe(externalWebsiteDid);
 
     if (log) console.log('TONOMY_LOGIN_WEBSITE/login: create did:jwk and login request');
-    const loginRequestJwt = (await ExternalUser.loginWithTonomy(
+    const { loginRequest, loginToCommunication } = (await ExternalUser.loginWithTonomy(
         { callbackPath: '/callback', redirect: false },
         keyManager
-    )) as string;
-    const did = new Message(loginRequestJwt).getSender();
+    )) as LoginWithTonomyMessages;
+    const did = loginRequest.getSender();
 
     expect(did).toContain('did:jwk:');
     expect(did).not.toEqual(externalWebsiteDid);
 
-    const jwtRequests = [loginRequestJwt, jwtVerified.jwt];
-
-    // Create a new login message, and take the DID (did:jwk) out as their identity
-    // Tonomy ID will scan the DID in barcode and use connect
-    const loginMessage = new Message(loginRequestJwt);
+    const jwtRequests = [loginRequest.jwt, jwtVerified.jwt];
 
     // Login to the Tonomy Communication as the login app user
     if (log) console.log('TONOMY_LOGIN_WEBSITE/login: connect to Tonomy Communication');
     const communication = new Communication();
-    const loginResponse = await communication.login(loginMessage);
+    const loginResponse = await communication.login(loginToCommunication);
 
     expect(loginResponse).toBe(true);
 
     return { did, jwtRequests, communication };
 }
 
-export async function setupTonomyIdAckSubscriber(did: string, log = false) {
+export async function setupTonomyIdIdentifySubscriber(did: string, log = false) {
     let subscriber: Subscriber;
     const subscriberExecutor = (resolve: any) => {
         subscriber = (receivedMessage) => {
-
             expect(receivedMessage.getSender()).toContain(did);
 
-            if (receivedMessage.getPayload().type === 'ack') {
-                if (log) console.log('TONOMY_LOGIN_WEBSITE/login: receive connection acknowledgement from Tonomy ID');
-                // we receive the ack message after Tonomy ID scans our QR code
-                resolve({ message: receivedMessage, type: 'ack' });
-            } else {
-                if (log) console.log('TONOMY_LOGIN_WEBSITE/login: receive receipt of login request from Tonomy ID');
-                // we receive a message after Tonomy ID user confirms consent to the login request
-                resolve({ message: receivedMessage, type: 'request' });
-                // reject();
-            }
+            if (log) console.log('TONOMY_LOGIN_WEBSITE/login: receive connection acknowledgement from Tonomy ID');
+            resolve({ message: receivedMessage });
         };
     };
 
@@ -96,16 +92,9 @@ export async function setupTonomyIdRequestConfirmSubscriber(did: string, log = f
         subscriber = (receivedMessage) => {
             expect(receivedMessage.getSender()).toContain(did);
 
-            if (receivedMessage.getPayload().type === 'ack') {
-                if (log) console.log('TONOMY_LOGIN_WEBSITE/login: receive connection acknowledgement from Tonomy ID');
-                // we receive the ack message after Tonomy ID scans our QR code
-                resolve({ message: receivedMessage, type: 'ack' });
-            } else {
-                if (log) console.log('TONOMY_LOGIN_WEBSITE/login: receive receipt of login request from Tonomy ID');
-                // we receive a message after Tonomy ID user confirms consent to the login request
-                resolve({ message: receivedMessage, type: 'request' });
-                // reject();
-            }
+            if (log) console.log('TONOMY_LOGIN_WEBSITE/login: receive receipt of login request from Tonomy ID');
+            // we receive a message after Tonomy ID user confirms consent to the login request
+            resolve({ message: receivedMessage });
         };
     };
 
@@ -130,7 +119,7 @@ export async function sendLoginRequestsMessage(
         {
             requests: JSON.stringify(requests),
         },
-        { keyManager, recipient: recipientDid }
+        { keyManager, recipient: recipientDid, type: MessageType.LOGIN_REQUEST }
     );
 
     if (log) console.log('TONOMY_LOGIN_WEBSITE/login: sending login request to Tonomy ID app');

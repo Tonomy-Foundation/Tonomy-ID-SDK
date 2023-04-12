@@ -33,6 +33,32 @@ export class HttpError extends Error {
     }
 }
 
+export class CommunicationError extends Error {
+    exception: {
+        response: string;
+        name: string;
+        status: number;
+        message: string;
+    };
+
+    constructor(communicationError: CommunicationError) {
+        super('Communication Error');
+        // Ensure the name of this error is the same as the class name
+        this.name = this.constructor.name;
+
+        // This clips the constructor invocation from the stack trace.
+        // It's not absolutely essential, but it does make the stack trace a little nicer.
+        //  @see Node.js reference (bottom)
+        if (Error.captureStackTrace) {
+            Error.captureStackTrace(this, this.constructor);
+        }
+
+        this.stack = new Error().stack;
+
+        this.exception = communicationError.exception;
+    }
+}
+
 export class SdkError extends Error {
     code: SdkErrors;
 
