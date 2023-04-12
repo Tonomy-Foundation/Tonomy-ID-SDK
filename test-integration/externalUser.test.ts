@@ -25,8 +25,8 @@ import {
     sendLoginRequestsMessage,
     setupTonomyIdIdentifySubscriber,
     setupTonomyIdRequestConfirmSubscriber,
-} from './util/externalUser';
-import { createStorageFactory } from './util/storageFactory';
+} from './helpers/externalUser';
+import { createStorageFactory } from './helpers/storageFactory';
 
 // @ts-expect-error - type error on global
 global.URL = URL;

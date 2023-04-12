@@ -1,5 +1,5 @@
 import { api } from '../helpers/eosio';
-import { createRandomID } from '../util/user';
+import { createRandomID } from '../helpers/user';
 import {
     KeyManager,
     KeyManagerLevel,
