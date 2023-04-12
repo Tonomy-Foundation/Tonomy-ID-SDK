@@ -1,8 +1,8 @@
 import { Bytes, Checksum256, KeyType, PrivateKey, PublicKey } from '@greymass/eosio';
 import rb from '@consento/sync-randombytes';
 import elliptic from 'elliptic';
-import { SdkErrors, throwError } from '../services/errors';
-import { KeyManager, KeyManagerLevel } from '../services/keymanager';
+import { SdkErrors, throwError } from './errors';
+import { KeyManager, KeyManagerLevel } from '../storage/keymanager';
 
 const secp256k1 = new elliptic.ec('secp256k1');
 

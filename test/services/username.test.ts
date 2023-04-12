@@ -1,4 +1,4 @@
-import { AccountType, TonomyUsername } from '../../src/sdk/services/username';
+import { AccountType, TonomyUsername } from '../../src/sdk/util/username';
 import { getSettings, setSettings } from '../../src/sdk/settings';
 
 setSettings({

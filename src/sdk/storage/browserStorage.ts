@@ -1,4 +1,4 @@
-import { PersistentStorage } from '../services/storage';
+import { PersistentStorage } from './storage';
 
 export class BrowserStorage implements PersistentStorage {
     private _storage: {

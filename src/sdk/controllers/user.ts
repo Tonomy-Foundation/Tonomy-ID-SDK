@@ -1,19 +1,23 @@
 import { Name, PrivateKey, API, Checksum256 } from '@greymass/eosio';
 import { PushTransactionResponse } from '@greymass/eosio/src/api/v1/types';
-import { KeyManager, KeyManagerLevel } from './services/keymanager';
-import { GetPersonResponse, IDContract } from './services/contracts/IDContract';
-import { AntelopePushTransactionError, createKeyManagerSigner, createSigner } from './services/eosio/transaction';
-import { getApi, getChainInfo } from './services/eosio/eosio';
-import { createStorage, PersistentStorageClean, StorageFactory, STORAGE_NAMESPACE } from './services/storage';
-import { SdkErrors, throwError, SdkError } from './services/errors';
-import { AccountType, TonomyUsername } from './services/username';
-import { validatePassword } from './util/passwords';
+import { KeyManager, KeyManagerLevel } from '../storage/keymanager';
+import { GetPersonResponse, IDContract } from '../services/blockchain/contracts/IDContract';
+import {
+    AntelopePushTransactionError,
+    createKeyManagerSigner,
+    createSigner,
+} from '../services/blockchain/eosio/transaction';
+import { getApi, getChainInfo } from '../services/blockchain/eosio/eosio';
+import { createStorage, PersistentStorageClean, StorageFactory, STORAGE_NAMESPACE } from '../storage/storage';
+import { SdkErrors, throwError, SdkError } from '../util/errors';
+import { AccountType, TonomyUsername } from '../util/username';
+import { validatePassword } from '../util/passwords';
 import { UserApps } from './userApps';
-import { getSettings } from './settings';
-import { Communication } from './communication';
-import { Message } from './util/message';
+import { getSettings } from '../settings';
+import { Communication } from '../services/communication/communication';
+import { Message } from '../services/communication//message';
 import { Issuer } from '@tonomy/did-jwt-vc';
-import { createVCSigner, generateRandomKeyPair } from './util/crypto';
+import { createVCSigner, generateRandomKeyPair } from '../util/crypto';
 
 enum UserStatus {
     CREATING_ACCOUNT = 'CREATING_ACCOUNT',

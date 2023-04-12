@@ -1,5 +1,5 @@
 import { PrivateKey, PublicKey } from '@greymass/eosio';
-import { UserApps } from '../src/sdk/userApps';
+import { UserApps } from '../src/sdk/controllers/userApps';
 import { generateRandomKeyPair } from '../src/sdk/util/crypto';
 import URL from 'jsdom-url';
 import { Message } from '../src/sdk/util/message';
