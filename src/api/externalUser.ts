@@ -46,6 +46,19 @@ export class ExternalUser {
     }
 
     /**
+     * Clear the storage and remove keys
+     *
+     */
+    async logout(): Promise<void> {
+        // remove all keys
+        this.keyManager.removeKey({ level: KeyManagerLevel.BROWSER_LOCAL_STORAGE });
+        this.keyManager.removeKey({ level: KeyManagerLevel.BROWSER_SESSION_STORAGE });
+        // clear storage data
+        this.storage.clear();
+
+    }
+
+    /**
      * Retrieves the user from persistent storage if it exists and verifies the keys are valid
      *
      * @property {StorageFactory} [options.storageFactory=browserStorageFactory] - the storage factory to use for persistent storage
@@ -64,8 +77,7 @@ export class ExternalUser {
             const accountName = await user.getAccountName();
 
             if (!accountName) {
-                //TODO: logout
-                // keyManager.clear(); must be implemented in future keymanager
+                await user.logout();
                 throw throwError('accountName not found', SdkErrors.AccountNotFound);
             }
 
@@ -77,12 +89,12 @@ export class ExternalUser {
                 throw throwError('User Not loggedIn', SdkErrors.UserNotLoggedIn);
             }
         } catch (e) {
-            user.storage.clear();
-            user.keyManager.removeKey({ level: KeyManagerLevel.BROWSER_LOCAL_STORAGE });
-            user.keyManager.removeKey({ level: KeyManagerLevel.BROWSER_SESSION_STORAGE });
+            await user.logout();
             throw e;
         }
     }
+
+    
 
     /**
      * Returns the DID of the user
