@@ -40,8 +40,8 @@
         "lint": "eslint src test --ext .ts --resolve-plugins-relative-to .",
         "lint:fix": "npm run lint -- --fix",
         "release": "semantic-release  --debug",
-        "docs:serve": "mkdocs serve",
-        "docs:build": "mkdocs build -c",
+        "docs:serve": "python -m mkdocs serve",
+        "docs:build": "python -m mkdocs build -c",
         "prepare": "npm run build"
     },
     "name": "@tonomy/tonomy-id-sdk",
