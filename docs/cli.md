@@ -8,9 +8,9 @@ This is a temporary solution while we build the Tonomy Developer Console where T
 
 A private key is used to manage a Tonomy App
 
-TODO
-
-(for now you can use ...)
+```bash
+npm run cli keys create
+```
 
 ## Register a Tonomy App
 

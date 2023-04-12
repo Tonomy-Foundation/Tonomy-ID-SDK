@@ -41,7 +41,8 @@
         "lint:fix": "npm run lint -- --fix",
         "release": "semantic-release  --debug",
         "docs:serve": "mkdocs serve",
-        "docs:build": "mkdocs build -c"
+        "docs:build": "mkdocs build -c",
+        "prepare": "npm run build"
     },
     "name": "@tonomy/tonomy-id-sdk",
     "author": "Jack Tanner",
