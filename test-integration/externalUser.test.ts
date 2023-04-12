@@ -25,6 +25,7 @@ import {
     sendLoginRequestsMessage,
     setupTonomyIdAckSubscriber,
     setupTonomyIdRequestConfirmSubscriber,
+    externalWebsiteOnLogout
 } from './util/externalUser';
 import { createStorageFactory } from './util/storageFactory';
 
@@ -255,6 +256,11 @@ describe('External User class', () => {
                 EXTERNAL_WEBSITE_storage_factory,
                 TONOMY_ID_user,
                 log
+            );
+
+            await externalWebsiteOnLogout(
+                EXTERNAL_WEBSITE_jsKeyManager,
+                EXTERNAL_WEBSITE_storage_factory,
             );
 
             // cleanup connections

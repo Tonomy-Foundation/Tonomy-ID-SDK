@@ -193,3 +193,12 @@ export async function externalWebsiteOnReload(
     expect(externalUser).toBeDefined();
     expect((await externalUser.getAccountName()).toString()).toBe(await (await tonomyUser.getAccountName()).toString());
 }
+
+
+export async function externalWebsiteOnLogout(
+    keyManager: KeyManager,
+    storageFactory: StorageFactory,
+) {
+    const externalUser = await ExternalUser.getUser({ keyManager, storageFactory });
+    await externalUser.logout();
+}

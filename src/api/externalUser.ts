@@ -55,7 +55,6 @@ export class ExternalUser {
         this.keyManager.removeKey({ level: KeyManagerLevel.BROWSER_SESSION_STORAGE });
         // clear storage data
         this.storage.clear();
-
     }
 
     /**
@@ -77,6 +76,7 @@ export class ExternalUser {
             const accountName = await user.getAccountName();
 
             if (!accountName) {
+                console.log("logoutt")
                 await user.logout();
                 throw throwError('accountName not found', SdkErrors.AccountNotFound);
             }
