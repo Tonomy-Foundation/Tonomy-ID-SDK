@@ -1,7 +1,16 @@
 site_name: Tonomy SDK
 nav:
     - Home: index.md
-    - Integration: integration.md
-    - Architecture: architecture.md
+    - API - Interact with identities: api.md
+    - CLI - Manage Tonomy Apps: cli.md
+    - SDK - Build smart wallets: sdk.md
 theme:
   name: material
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences

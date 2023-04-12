@@ -93,7 +93,12 @@ See [errors.ts](./src/services/errors.ts). All errors have a registered unique e
 
 Documentation is in the `./docs` folder and runs with [mkdocs](https://www.mkdocs.org) with [material](https://squidfunk.github.io/mkdocs-material) theme.
 
-Install with `sudo apt-get -y install mkdocs`
+Install with
+
+```bash
+sudo apt-get -y install mkdocs
+pip install mkdocs-material
+```
 
 Then `npm run docs:serve`
 

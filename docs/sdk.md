@@ -1,8 +1,8 @@
-# Architecture
+# Software Development Kit (SDK)
 
 The Tonomy ID SDK is built with [typescript](https://www.typescriptlang.org).
 
-## SDK components
+## SDK architecture
 
 The SDK has 11 major components.
 
@@ -24,7 +24,7 @@ This class is used by external applications to register their applications in th
 
 ### Blockchain Client
 
-The blockchain client connects the SDK to our blockchain service that is running two smart contracts, eosio and id.tonomy. eosio is a system level governance
+The blockchain client connects the SDK to our blockchain service that is running two smart contracts, Antelope and id.tonomy. Antelope is a system level governance
 contract that sets who is allowed to run the blockchain and create accounts.
 
 Additionally, id.tonomy is a smart contract that manages permissions for users to create and login into accounts. It also provides additional cryptographic information for the SDK logic to work.
@@ -66,3 +66,7 @@ This is the main entry class. It is used to manage each Tonomy ID user. Using th
 ### UserApps
 
 UserApp is used to manage the relationship between each Tonomy ID user and the apps they use.
+
+### ExternalUser
+
+This is the main API for external applications to use the SSO and integration features.

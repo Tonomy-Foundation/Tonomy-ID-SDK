@@ -1,11 +1,12 @@
 # Tonomy SDK
 
-This Tonomy SDK is a software development kit for
+This Tonomy SDK has three components:
 
-- integrating external applications to use login and identity services provided by Tonomy ID
-- building smart wallet applications like Tonomy ID
+- [API](/api): application programming interface to manage single sign-on (SSO) and other interactions with Tonomy identities for web and mobile apps
+- [CLI](/cli): command line interface to manage Tonomy Apps for use in SSO
+- [SDK](/sdk): software development kit for building smart wallet applications like Tonomy ID
 
-It manages all the business logic, cryptography and interactions with other entities.
+It manages all the business logic, cryptography and interactions between identities and applications.
 
 ## Installation
 
@@ -21,10 +22,11 @@ The SDK has been tested with nodejs v18.12.1+.
 
 Applications that illustrate how to use the SDK:
 
-1. [Tonomy Demo (integrated external application)](https://github.com/Tonomy-Foundation/Tonomy-App-Websites/tree/development/src/demo)
-2. [Tonomy ID (smart wallet)](https://github.com/Tonomy-Foundation/Tonomy-ID/tree/development)
+1. [Tonomy Demo (uses the API)](https://github.com/Tonomy-Foundation/Tonomy-App-Websites/tree/development/src/demo)
+2. [Tonomy ID smart wallet (uses the SDK)](https://github.com/Tonomy-Foundation/Tonomy-ID/tree/development)
 
 ## Contents
 
-- [Integrating external applications](/integration)
-- [SDK Architecture](/architecture)
+- [API](/api)
+- [CLI](/cli)
+- [SDK](/sdk)
