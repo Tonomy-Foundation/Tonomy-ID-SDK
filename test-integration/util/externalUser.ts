@@ -200,5 +200,7 @@ export async function externalWebsiteOnLogout(
     storageFactory: StorageFactory,
 ) {
     const externalUser = await ExternalUser.getUser({ keyManager, storageFactory });
+    const accountName = externalUser.storage.accountName
     await externalUser.logout();
+    expect((await externalUser.getAccountName())).toBe(undefined);
 }
