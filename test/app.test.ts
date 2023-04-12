@@ -4,7 +4,7 @@ import { generateRandomKeyPair } from '../src/sdk/util/crypto';
 import URL from 'jsdom-url';
 import { Message } from '../src/sdk/util/message';
 import { setSettings } from '../src/sdk';
-import { ExternalUser } from '../src/api/externalUser';
+import { ExternalUser, LoginWithTonomyMessages } from '../src/api/externalUser';
 
 // @ts-expect-error - URL type on global does not match
 global.URL = URL;
@@ -19,14 +19,20 @@ describe('logging in', () => {
     });
 
     it('on press button', async () => {
-        const jwt = await ExternalUser.loginWithTonomy({ callbackPath: '/login', redirect: false });
+        const { loginRequest } = (await ExternalUser.loginWithTonomy({
+            callbackPath: '/login',
+            redirect: false,
+        })) as LoginWithTonomyMessages;
 
-        expect(jwt).toBeDefined();
+        expect(typeof loginRequest.jwt).toBe('string');
     });
 
     it('checks login url', async () => {
-        const jwt = await ExternalUser.loginWithTonomy({ callbackPath: '/login', redirect: false });
-        const url = 'http://localhost/login?requests=' + JSON.stringify([jwt]);
+        const { loginRequest } = (await ExternalUser.loginWithTonomy({
+            callbackPath: '/login',
+            redirect: false,
+        })) as LoginWithTonomyMessages;
+        const url = 'http://localhost/login?requests=' + JSON.stringify([loginRequest.jwt]);
 
         jest.spyOn(document, 'referrer', 'get').mockReturnValue('http://localhost');
 

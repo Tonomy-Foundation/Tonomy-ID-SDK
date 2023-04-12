@@ -493,7 +493,7 @@ export class User {
         }
     }
 
-    async signMessage(payload: any, recipient?: string): Promise<Message> {
+    async signMessage(payload: any, options: { recipient?: string; type?: string } = {}): Promise<Message> {
         const signer = createVCSigner(this.keyManager, KeyManagerLevel.LOCAL);
 
         const issuer: Issuer = {
@@ -502,7 +502,7 @@ export class User {
             alg: 'ES256K-R',
         };
 
-        return await Message.sign(payload, issuer, recipient);
+        return await Message.sign(payload, issuer, options.recipient, options.type);
     }
 
     /**
