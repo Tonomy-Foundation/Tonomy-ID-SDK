@@ -1,6 +1,6 @@
 {
     "version": "0.3.37",
-    "license": "MIT",
+    "license": "Apache-2.0",
     "type": "module",
     "source": "src/sdk/index.ts",
     "main": "./build/sdk/index.cjs",
