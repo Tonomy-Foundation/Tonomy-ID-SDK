@@ -1,28 +1,34 @@
-import { KeyManager, KeyManagerLevel } from '../sdk/services/keymanager';
-import { JWTLoginPayload, OnPressLoginOptions, UserApps } from '../sdk/userApps';
+import { KeyManager, KeyManagerLevel } from '../sdk/storage/keymanager';
+import { JWTLoginPayload, OnPressLoginOptions, UserApps } from '../sdk/controllers/userApps';
 import { createVCSigner, generateRandomKeyPair, randomString } from '../sdk/util/crypto';
 import { ES256KSigner } from '@tonomy/did-jwt';
 import { createJWK, toDid } from '../sdk/util/did-jwk';
-import { Message } from '../sdk/util/message';
+import { Message, MessageType } from '../sdk/services/communication//message';
 import { getSettings } from '../sdk/settings';
-import { SdkErrors, throwError } from '../sdk/services/errors';
-import { createStorage, PersistentStorageClean, StorageFactory, STORAGE_NAMESPACE } from '../sdk/services/storage';
+import { SdkErrors, throwError } from '../sdk/util/errors';
+import { createStorage, PersistentStorageClean, StorageFactory, STORAGE_NAMESPACE } from '../sdk/storage/storage';
 import { Checksum256, Name } from '@greymass/eosio';
-import { TonomyUsername } from '../sdk/services/username';
-import { browserStorageFactory } from '../sdk/managers/browserStorage';
-import { getChainInfo } from '../sdk/services/eosio/eosio';
-import { JsKeyManager } from '../sdk/managers/jsKeyManager';
+import { TonomyUsername } from '../sdk/util/username';
+import { browserStorageFactory } from '../sdk/storage/browserStorage';
+import { getChainInfo } from '../sdk/services/blockchain/eosio/eosio';
+import { JsKeyManager } from '../sdk/storage/jsKeyManager';
 
 export type ExternalUserStorage = {
     accountName: Name;
     username: TonomyUsername;
     loginRequest: JWTLoginPayload;
+    did: string;
 };
 
 export type VerifyLoginOptions = {
     checkKeys?: boolean;
     keyManager?: KeyManager;
     storageFactory?: StorageFactory;
+};
+
+export type LoginWithTonomyMessages = {
+    loginRequest: Message;
+    loginToCommunication: Message;
 };
 
 /**
@@ -32,7 +38,7 @@ export type VerifyLoginOptions = {
 export class ExternalUser {
     keyManager: KeyManager;
     storage: ExternalUserStorage & PersistentStorageClean;
-    did_: string;
+    did: string;
 
     /**
      * Creates a new external user
@@ -101,14 +107,17 @@ export class ExternalUser {
      * @returns {Promise<string>} - the DID of the user
      */
     async getDid() {
-        if (!this.did_) {
+        let did = this.did;
+
+        if (!did) {
             const accountName = await (await this.getAccountName()).toString();
             const chainID = (await getChainInfo()).chain_id as unknown as Checksum256;
 
-            this.did_ = `did:antelope:${chainID}:${accountName}#local`;
+            did = `did:antelope:${chainID}:${accountName}#local`;
+            this.did = did;
         }
 
-        return this.did_;
+        return did;
     }
 
     /**
@@ -176,13 +185,13 @@ export class ExternalUser {
      * @param {OnPressLoginOptions} onPressLoginOptions - options for the login
      * @property {boolean} onPressLoginOptions.redirect - if true, redirects the user to the login page, if false, returns the token
      * @property {string} onPressLoginOptions.callbackPath - the path to redirect the user to after login
-     * @param {KeyManager} keyManager - the key manager to use to store the keys
-     * @returns {Promise<string | void>} - if redirect is true, returns void, if redirect is false, returns the login request in the form of a JWT token
+     * @param {KeyManager} [keyManager] - the key manager to use to store the keys
+     * @returns {Promise<LoginWithTonomyMessages | void>} - if redirect is true, returns void, if redirect is false, returns the login request in the form of a JWT token
      */
     static async loginWithTonomy(
         { redirect = true, callbackPath }: OnPressLoginOptions,
         keyManager: KeyManager = new JsKeyManager()
-    ): Promise<string | void> {
+    ): Promise<LoginWithTonomyMessages | void> {
         const { privateKey, publicKey } = generateRandomKeyPair();
 
         await keyManager.storeKey({
@@ -204,17 +213,24 @@ export class ExternalUser {
 
         const issuer = toDid(jwk);
 
-        const token = (await Message.sign(payload, { did: issuer, signer: signer as any, alg: 'ES256K-R' })).jwt;
-
-        const requests = [token];
-        const requestsString = JSON.stringify(requests);
+        const loginRequest = await Message.sign(payload, { did: issuer, signer: signer as any, alg: 'ES256K-R' });
 
         if (redirect) {
+            const requests = [loginRequest.jwt];
+            const requestsString = JSON.stringify(requests);
+
             window.location.href = `${getSettings().ssoWebsiteOrigin}/login?requests=${requestsString}`;
             return;
-        }
+        } else {
+            const loginToCommunication = await Message.sign(
+                {},
+                { did: issuer, signer: signer as any, alg: 'ES256K-R' },
+                undefined,
+                MessageType.COMMUNICATION_LOGIN
+            );
 
-        return token;
+            return { loginRequest, loginToCommunication };
+        }
     }
 
     /**
@@ -223,6 +239,7 @@ export class ExternalUser {
      * @param {any} message - an object to sign
      * @property {string} options.recipient - the recipient's DID
      * @property {KeyManager} [options.keyManager=new JsKeyManager()] - the key manager to use to sign the message
+     * @property {string} [options.type] - the type of the message
      * @returns {Promise<Message>} - the signed message
      */
     static async signMessage(
@@ -230,6 +247,7 @@ export class ExternalUser {
         options: {
             recipient?: string;
             keyManager?: KeyManager;
+            type?: string;
         } = {}
     ): Promise<Message> {
         const keyManagerLevel = KeyManagerLevel.BROWSER_LOCAL_STORAGE;
@@ -245,7 +263,12 @@ export class ExternalUser {
 
         const issuer = toDid(jwk);
 
-        return await Message.sign(message, { did: issuer, signer: signer as any, alg: 'ES256K-R' }, options.recipient);
+        return await Message.sign(
+            message,
+            { did: issuer, signer: signer as any, alg: 'ES256K-R' },
+            options.recipient,
+            options.type
+        );
     }
 
     /**

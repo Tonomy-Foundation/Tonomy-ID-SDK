@@ -1,35 +1,37 @@
 // SDK
-import * as Eosio from './services/eosio/eosio';
-import * as Transaction from './services/eosio/transaction';
+import * as Eosio from './services/blockchain/eosio/eosio';
+import * as Transaction from './services/blockchain/eosio/transaction';
 
-export * from './services/keymanager';
-export * from './services/storage';
-export * from './user';
-export * from './userApps';
-export * from './app';
+export * from './storage/keymanager';
+export * from './storage/storage';
+export * from './controllers/user';
+export * from './controllers/userApps';
+export * from './controllers/app';
 
 export * from './settings';
-export * from './services/eosio/authority';
+export * from './services/blockchain/eosio/authority';
 export * from './util/crypto';
-export * from './services/username';
+export * from './util/username';
 
 const EosioUtil = { ...Eosio, ...Transaction };
 
 export { EosioUtil };
 
-export * from './services/contracts/IDContract';
-export * from './services/contracts/EosioContract';
-export * from './services/contracts/EosioTokenContract';
+export * from './services/blockchain/contracts/IDContract';
+export * from './services/blockchain/contracts/EosioContract';
+export * from './services/blockchain/contracts/EosioTokenContract';
 
-export * from './services/errors';
-export * from './userApps';
-export * from './communication';
-export * from './util/message';
-export * from './managers/browserStorage';
-export * from './managers/jsKeyManager';
+export * from './util/errors';
+export * from './controllers/userApps';
+export * from './services/communication/communication';
+export * from './services/communication/message';
+export * from './storage/browserStorage';
+export * from './storage/jsKeyManager';
 
 export { createSigner } from '@tonomy/antelope-ssi-toolkit';
 export { ES256KSigner } from '@tonomy/did-jwt';
+
+export * from '../api/externalUser';
 
 // API
 export * from '../api/index';

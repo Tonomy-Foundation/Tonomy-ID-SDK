@@ -1,6 +1,6 @@
 import { publicKey } from './keys';
 import { Authority, EosioContract, App, AppCreateOptions } from '../../sdk/index';
-import { Signer } from '../../sdk/services/eosio/transaction';
+import { Signer } from '../../sdk/services/blockchain/eosio/transaction';
 
 const eosioContract: EosioContract = EosioContract.Instance;
 

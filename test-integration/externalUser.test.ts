@@ -10,12 +10,12 @@ import {
     loginToTonomyCommunication,
     scanQrAndAck,
     setupLoginRequestSubscriber,
-} from './util/user';
-import { App, setSettings, User, KeyManager, StorageFactory, STORAGE_NAMESPACE } from '../src/sdk/index';
-import settings from './services/settings';
+} from './helpers/user';
+import { App, setSettings, User, KeyManager, StorageFactory, STORAGE_NAMESPACE, MessageType } from '../src/sdk/index';
+import settings from './helpers/settings';
 import URL from 'jsdom-url';
-import { JsKeyManager } from '../src/sdk/managers/jsKeyManager';
-import { sleep } from './util/sleep';
+import { JsKeyManager } from '../src/sdk/storage/jsKeyManager';
+import { sleep } from './helpers/sleep';
 import {
     externalWebsiteOnCallback,
     externalWebsiteOnReload,
@@ -23,11 +23,11 @@ import {
     loginWebsiteOnCallback,
     loginWebsiteOnRedirect,
     sendLoginRequestsMessage,
-    setupTonomyIdAckSubscriber,
+    setupTonomyIdIdentifySubscriber,
     setupTonomyIdRequestConfirmSubscriber,
     externalWebsiteOnLogout
-} from './util/externalUser';
-import { createStorageFactory } from './util/storageFactory';
+} from './helpers/externalUser';
+import { createStorageFactory } from './helpers/storageFactory';
 
 // @ts-expect-error - type error on global
 global.URL = URL;
@@ -90,7 +90,7 @@ describe('External User class', () => {
 
     describe('SSO login full end-to-end flow', () => {
         test('User succeeds at login to external website', async () => {
-            expect.assertions(36);
+            expect.assertions(35);
 
             const appsFound = [false, false];
 
@@ -134,10 +134,14 @@ describe('External User class', () => {
             const {
                 subscriber: TONOMY_LOGIN_WEBSITE_messageSubscriber,
                 promise: TONOMY_LOGIN_WEBSITE_ackMessagePromise,
-            } = await setupTonomyIdAckSubscriber(TONOMY_ID_did, log);
+            } = await setupTonomyIdIdentifySubscriber(TONOMY_ID_did, log);
 
             expect(TONOMY_LOGIN_WEBSITE_communication.socketServer.listeners('message').length).toBe(0);
-            const TONOMY_LOGIN_WEBSITE_subscription=TONOMY_LOGIN_WEBSITE_communication.subscribeMessage(TONOMY_LOGIN_WEBSITE_messageSubscriber);
+            const TONOMY_LOGIN_WEBSITE_subscription = TONOMY_LOGIN_WEBSITE_communication.subscribeMessage(
+                TONOMY_LOGIN_WEBSITE_messageSubscriber,
+                MessageType.IDENTIFY
+            );
+
             expect(TONOMY_LOGIN_WEBSITE_communication.socketServer.listeners('message').length).toBe(1);
 
             // ##### Tonomy ID user (QR code scanner screen) #####
@@ -159,7 +163,6 @@ describe('External User class', () => {
             // wait for the ack message to confirm Tonomy ID is connected
             const connectionMessageFromTonomyId = await TONOMY_LOGIN_WEBSITE_ackMessagePromise;
 
-            expect(connectionMessageFromTonomyId.type).toBe('ack');
             expect(connectionMessageFromTonomyId.message.getSender()).toBe(TONOMY_ID_did + '#local');
 
             await sendLoginRequestsMessage(
@@ -177,7 +180,11 @@ describe('External User class', () => {
             } = await setupTonomyIdRequestConfirmSubscriber(TONOMY_ID_did, log);
 
             TONOMY_LOGIN_WEBSITE_communication.unsubscribeMessage(TONOMY_LOGIN_WEBSITE_subscription);
-            const TONOMY_LOGIN_WEBSITE_subscription2 = TONOMY_LOGIN_WEBSITE_communication.subscribeMessage(TONOMY_LOGIN_WEBSITE_messageSubscriber2);
+            const TONOMY_LOGIN_WEBSITE_subscription2 = TONOMY_LOGIN_WEBSITE_communication.subscribeMessage(
+                TONOMY_LOGIN_WEBSITE_messageSubscriber2,
+                MessageType.LOGIN_REQUEST_RESPONSE
+            );
+
             expect(TONOMY_LOGIN_WEBSITE_communication.socketServer.listeners('message').length).toBe(1);
 
             // ##### Tonomy ID user (SSO screen) #####
@@ -202,7 +209,6 @@ describe('External User class', () => {
             const payload = requestConfirmedMessageFromTonomyId.message.getPayload();
             const TONOMY_LOGIN_WEBSITE_requests = JSON.parse(payload.requests) as string[];
 
-            expect(requestConfirmedMessageFromTonomyId.type).toBe('request');
             expect(payload).toBeDefined();
             expect(payload.requests).toBeDefined();
             expect(payload.accountName).toBeDefined();

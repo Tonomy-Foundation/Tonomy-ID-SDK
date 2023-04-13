@@ -11,6 +11,10 @@ It has four outputs:
 
 The SDK is written in typescript with jest to run tests.
 
+## Documentation
+
+<a href="https://docs.tonomy.foundation" target="_blank">https://docs.tonomy.foundation</a>
+
 ## Dependencies
 
 - Linux debian distribution (Ubuntu 20.0.4 LTS used)
@@ -19,6 +23,10 @@ The SDK is written in typescript with jest to run tests.
 Integration tests:
 
 - [Docker](http://docs.docker.com) v20.10+
+
+Documentation:
+
+- [mkdocs](https://www.mkdocs.org) with [material](https://squidfunk.github.io/mkdocs-material) theme
 
 ## Repositories
 
@@ -91,6 +99,15 @@ See [errors.ts](./src/services/errors.ts). All errors have a registered unique e
 
 ## Documentation
 
-Documentation is in the `./docs` folder and runs with readthedocs.io here
+Documentation is in the `./docs` folder and runs with [mkdocs](https://www.mkdocs.org) with [material](https://squidfunk.github.io/mkdocs-material) theme.
 
-<https://tonomy-id-sdk.readthedocs.io>
+Install with
+
+```bash
+sudo apt-get -y install mkdocs
+pip install mkdocs-material
+```
+
+Then `npm run docs:serve`
+
+<https://docs.tonomy.foundation>
