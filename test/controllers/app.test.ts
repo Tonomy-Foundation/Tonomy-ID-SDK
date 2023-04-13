@@ -24,7 +24,7 @@ describe('logging in', () => {
             redirect: false,
         })) as LoginWithTonomyMessages;
 
-        expect(typeof loginRequest.jwt).toBe('string');
+        expect(typeof loginRequest.toString()).toBe('string');
     });
 
     it('checks login url', async () => {
@@ -32,7 +32,7 @@ describe('logging in', () => {
             callbackPath: '/login',
             redirect: false,
         })) as LoginWithTonomyMessages;
-        const url = 'http://localhost/login?requests=' + JSON.stringify([loginRequest.jwt]);
+        const url = 'http://localhost/login?requests=' + JSON.stringify([loginRequest.toString()]);
 
         jest.spyOn(document, 'referrer', 'get').mockReturnValue('http://localhost');
 

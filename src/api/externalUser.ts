@@ -205,7 +205,7 @@ export class ExternalUser {
         const loginRequest = await Message.sign(payload, { did: issuer, signer: signer as any, alg: 'ES256K-R' });
 
         if (redirect) {
-            const requests = [loginRequest.jwt];
+            const requests = [loginRequest.toString()];
             const requestsString = JSON.stringify(requests);
 
             window.location.href = `${getSettings().ssoWebsiteOrigin}/login?requests=${requestsString}`;

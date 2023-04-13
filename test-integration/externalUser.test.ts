@@ -243,7 +243,7 @@ describe('External User class', () => {
                     redirectJwtPayload.origin +
                     redirectJwtPayload.callbackPath +
                     `?username=${TONOMY_LOGIN_WEBSITE_username}&accountName=${TONOMY_LOGIN_WEBSITE_accountName.toString()}&requests=` +
-                    JSON.stringify([TONOMY_LOGIN_WEBSITE_redirectJwt?.jwt]),
+                    JSON.stringify([TONOMY_LOGIN_WEBSITE_redirectJwt?.toString()]),
             });
 
             // #####External website user (callback page) #####

@@ -11,3 +11,5 @@ export type JWTVCPayload = {
     credentialSubject: any;
     type: string[];
 };
+
+export type Extensible<T> = T & { [x: string]: any };

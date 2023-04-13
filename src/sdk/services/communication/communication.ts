@@ -54,7 +54,7 @@ export class Communication {
         return await new Promise((resolve, reject) => {
             const resolved = false;
 
-            this.socketServer.emit(event, { message: message.jwt }, (response: any) => {
+            this.socketServer.emit(event, { message: message.toString() }, (response: any) => {
                 if (response.error) {
                     if (response.exception?.name === 'HttpException') {
                         const communicationError = new CommunicationError(response);

@@ -64,8 +64,8 @@ export class VerifiableCredential<T = object> {
      *
      * @returns {DIDurl | undefined} the issuer
      */
-    getIssuer(): DIDurl | undefined {
-        return this.getPayload().iss;
+    getIssuer(): DIDurl {
+        return this.getPayload().iss as DIDurl;
     }
 
     /**
@@ -158,6 +158,7 @@ export class VerifiableCredential<T = object> {
      * @param {string[]} type - the type of the Verifiable Credential
      * @param {object} credentialSubject - the credential subject of the Verifiable Credential
      * @param {Issuer} issuer - the issuer of the Verifiable Credential
+     * @param {DIDurl} [subject] - the subject of the Verifiable Credential
      *
      * @returns {Promise<VerifiableCredential>} the Verifiable Credential
      */
@@ -165,7 +166,8 @@ export class VerifiableCredential<T = object> {
         id: DIDurl,
         type: string[],
         credentialSubject: T,
-        issuer: Issuer
+        issuer: Issuer,
+        subject?: DIDurl
     ): Promise<VerifiableCredential<T>> {
         const vc: W3CCredential = {
             '@context': ['https://www.w3.org/2018/credentials/v1'],
@@ -177,6 +179,8 @@ export class VerifiableCredential<T = object> {
             issuanceDate: new Date().toISOString(),
             credentialSubject: credentialSubject as any,
         };
+
+        if (subject) vc.credentialSubject.id = subject;
 
         const jwt = await createVerifiableCredentialJwt(vc, issuer, { canonicalize: true });
 

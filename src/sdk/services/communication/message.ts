@@ -1,12 +1,7 @@
-import { decodeJWT } from '@tonomy/did-jwt';
-import { Issuer, verifyCredential, W3CCredential } from '@tonomy/did-jwt-vc';
-import { getSettings } from '../../settings';
-import { JWTDecoded } from '@tonomy/did-jwt/lib/JWT';
-import crossFetch from 'cross-fetch';
-import { getResolver } from '@tonomy/antelope-did-resolver';
-import { Resolver } from '@tonomy/did-resolver';
-import { issue, OutputType } from '@tonomy/antelope-ssi-toolkit';
-import { getResolver as getJwkResolver } from '../../util/ssi/did-jwk';
+import { Issuer } from '@tonomy/did-jwt-vc';
+import { VerifiableCredential } from '../../util/ssi/vc';
+import { DIDurl, JWT } from '../../util/ssi/types';
+import { randomString } from '../../util/crypto';
 
 export enum MessageType {
     COMMUNICATION_LOGIN = 'COMMUNICATION_LOGIN',
@@ -15,86 +10,99 @@ export enum MessageType {
     LOGIN_REQUEST_RESPONSE = 'LOGIN_REQUEST_RESPONSE',
 }
 
-export class Message {
-    private decodedJwt: JWTDecoded;
+export class Message<T = object> {
+    vc: VerifiableCredential<{ message: T; type?: string }>;
 
-    /**
-     * creates a signed message and return message object
-     * @param message the messageResolver with the signer and the did
-     * @param recipient the recipient id
-     * @param type the message type
-     * @returns a message objects
-     */
-    static async sign(message: object, issuer: Issuer, recipient?: string, type?: string): Promise<Message> {
-        const vc: W3CCredential = {
-            '@context': ['https://www.w3.org/2018/credentials/v1'],
-            id: 'https://example.com/id/1234324',
-            type: ['VerifiableCredential', 'TonomyMessage'],
-            issuer: {
-                id: issuer.did,
-            },
-            issuanceDate: new Date().toISOString(),
-            credentialSubject: {
-                message,
-            },
-        };
-
-        // add recipient to vc if given
-        if (recipient) vc.credentialSubject.id = recipient;
-        if (type) vc.credentialSubject.type = type;
-
-        const result = await issue(vc, {
-            issuer: issuer,
-            outputType: OutputType.JWT,
-        });
-
-        return new Message(result);
-    }
-
-    constructor(public jwt: string) {
-        this.decodedJwt = decodeJWT(jwt);
-        this.jwt = jwt;
-    }
-
-    // Returns the sender of the message (iss property of the signed VC)
-    getSender(): string {
-        return this.decodedJwt.payload.iss as string;
-    }
-    // Returns the recipient of the message (sub property of the signed VC)
-    getRecipient(): string {
-        return this.decodedJwt.payload.sub as string;
-    }
-
-    // Returns the original unsigned payload
-    getPayload(): any {
-        return this.decodedJwt.payload.vc.credentialSubject.message;
+    constructor(vc: VerifiableCredential<{ message: T; type?: string }> | JWT) {
+        if (typeof vc === 'string') {
+            this.vc = new VerifiableCredential<{ message: T; type?: string }>(vc);
+        } else {
+            this.vc = vc;
+        }
     }
 
     /**
-     * Returns the message type This is used to determine what kind of message it is
-     * @returns {string} the message type
+     * Creates a signed Message object
+     *
+     * @param {object} message the message
+     * @param {Issuer} issuer the issuer id
+     * @param {DIDUrl} recipient the recipient id
+     * @param {string} [type] the message type
+     *
+     * @returns a message object
      */
-    getType(): any {
-        return this.decodedJwt.payload.vc.credentialSubject.type;
+    static async sign<T = object>(message: T, issuer: Issuer, recipient: string, type?: string): Promise<Message<T>> {
+        const credentialSubject = Object.assign({ message }, { type });
+
+        const id = 'https://tonomy.foundation/message/id/' + randomString(10);
+
+        const vc = await VerifiableCredential.sign<{ message: T; type?: string }>(
+            id,
+            ['VerifiableCredential', 'TonomyMessage'],
+            credentialSubject,
+            issuer,
+            recipient
+        );
+
+        return new Message<T>(vc);
     }
 
-    /* Verifies the VC. True if valid
-     * this is setup to resolve did:antelope and did:jwk DIDs
+    /**
+     * Returns the internal Verifiable Credential
+     * @returns {VerifiableCredential} the VC
+     */
+    getVc(): VerifiableCredential<{ message: T; type?: string }> {
+        return this.vc;
+    }
+
+    /**
+     * Returns the sender of the message
+     * @returns {DIDurl} the message sender
+     */
+    getSender(): DIDurl {
+        return this.getVc().getIssuer();
+    }
+
+    /**
+     * Returns the recipient of the message
+     * @returns {DIDur} the message recipient
+     */
+    getRecipient(): DIDurl {
+        return this.getVc().getSubject() as string;
+    }
+
+    /**
+     * Returns the message payload
+     * @returns {object} the message
+     */
+    getPayload(): T {
+        return this.getVc().getCredentialSubject().message;
+    }
+
+    /**
+     * Returns the message type used to determine what kind of message it is
+     * @returns {string | undefined} the message type
+     */
+    getType(): string | undefined {
+        return this.getVc().getCredentialSubject().type;
+    }
+
+    /**
+     * Verifies that the message is signed by the sender
+     *
+     * @returns {Promise<boolean>} true if the message is signed by the sender
+     * @throws {Error} if the message is not signed by the sender
      */
     async verify(): Promise<boolean> {
-        const settings = getSettings();
+        return (await this.getVc().verify()).verified;
+    }
 
-        const resolver = new Resolver({
-            ...getJwkResolver(),
-            ...getResolver({ antelopeChainUrl: settings.blockchainUrl, fetch: crossFetch as any }),
-        });
-
-        try {
-            const result = await verifyCredential(this.jwt, resolver);
-
-            return result.verified;
-        } catch (e) {
-            return false;
-        }
+    /**
+     * Returns the JWT string
+     *
+     * @returns {string} the JWT string
+     */
+    toString(): string {
+        return this.getVc().toString();
     }
 }

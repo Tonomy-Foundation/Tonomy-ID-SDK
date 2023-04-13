@@ -24,7 +24,7 @@ export async function externalWebsiteUserPressLoginToTonomyButton(
         keyManager
     )) as LoginWithTonomyMessages;
 
-    expect(typeof loginRequest.jwt).toBe('string');
+    expect(typeof loginRequest.toString()).toBe('string');
 
     const did = loginRequest.getSender();
 
@@ -32,7 +32,7 @@ export async function externalWebsiteUserPressLoginToTonomyButton(
 
     if (log) console.log('EXTERNAL_WEBSITE/login: redirect to Tonomy Login Website');
 
-    const redirectUrl = loginAppOrigin + '/login?requests=' + JSON.stringify([loginRequest.jwt]);
+    const redirectUrl = loginAppOrigin + '/login?requests=' + JSON.stringify([loginRequest.toString()]);
 
     return { did, redirectUrl };
 }
@@ -54,7 +54,7 @@ export async function loginWebsiteOnRedirect(externalWebsiteDid: string, keyMana
     expect(did).toContain('did:jwk:');
     expect(did).not.toEqual(externalWebsiteDid);
 
-    const jwtRequests = [loginRequest.jwt, jwtVerified.jwt];
+    const jwtRequests = [loginRequest.toString(), jwtVerified.toString()];
 
     // Login to the Tonomy Communication as the login app user
     if (log) console.log('TONOMY_LOGIN_WEBSITE/login: connect to Tonomy Communication');
