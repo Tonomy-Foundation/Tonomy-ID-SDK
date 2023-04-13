@@ -90,7 +90,7 @@ describe('External User class', () => {
 
     describe('SSO login full end-to-end flow', () => {
         test('User succeeds at login to external website', async () => {
-            expect.assertions(35);
+            expect.assertions(36);
 
             const appsFound = [false, false];
 
@@ -209,6 +209,8 @@ describe('External User class', () => {
 
             expect(TONOMY_LOGIN_WEBSITE_requests.length).toBe(2);
             expect(payload.accountName).toBe(await (await TONOMY_ID_user.getAccountName()).toString());
+            expect(payload.username).toBe(await (await TONOMY_ID_user.getUsername()).username?.split('.')[0]);
+
             // TODO uncomment when we have username
             // expect(payload.username).toBe((await TONOMY_ID_user.getUsername()).username);
             if (log) console.log('TONOMY_LOGIN_WEBSITE/login: sending to callback page');
@@ -216,7 +218,7 @@ describe('External User class', () => {
             jsdom.reconfigure({
                 url:
                     tonomyLoginApp.origin +
-                    `/callback?requests=${payload.requests}&accountName=${payload.accountName}&username=nousername`,
+                    `/callback?requests=${payload.requests}&accountName=${payload.accountName}&username=${payload.username}`,
             });
 
             const {

@@ -136,9 +136,11 @@ export async function setupLoginRequestSubscriber(
             }
 
             const accountName = await user.storage.accountName.toString();
+            const username = (await user.getUsername()).username?.split('.')[0];
+            // const username = await user.storage.accountName.toString();
 
             // send a message back to the app
-            const respondMessage = (await user.signMessage({ requests, accountName }, tonomyIdLoginDid)) as Message;
+            const respondMessage = (await user.signMessage({ requests, accountName, username }, tonomyIdLoginDid)) as Message;
 
             if (log) console.log('TONOMY_ID/SSO: sending a confirmation of the logins back to Tonomy Login Website');
             const sendMessageResponse = await user.communication.sendMessage(respondMessage);
