@@ -6,7 +6,7 @@ import crossFetch from 'cross-fetch';
 import { getResolver } from '@tonomy/antelope-did-resolver';
 import { Resolver } from '@tonomy/did-resolver';
 import { issue, OutputType } from '@tonomy/antelope-ssi-toolkit';
-import { resolve } from '../../util/did-jwk';
+import { getResolver as getJwkResolver } from '../../util/did-jwk';
 
 export enum MessageType {
     COMMUNICATION_LOGIN = 'COMMUNICATION_LOGIN',
@@ -84,22 +84,13 @@ export class Message {
     async verify(): Promise<boolean> {
         const settings = getSettings();
 
-        //TODO: use compatible resolver for the didjwk resolver
-        const jwkResolver: any = {
-            resolve,
-        };
-        // const resolver = {
-        //     resolve: new AntelopeDID({ fetch: crossFetch, antelopeChainUrl: settings.blockchainUrl }).resolve,
-        // };
         const resolver = new Resolver({
+            ...getJwkResolver(),
             ...getResolver({ antelopeChainUrl: settings.blockchainUrl, fetch: crossFetch as any }),
         });
 
         try {
-            const result = await Promise.any([
-                verifyCredential(this.jwt, { resolve: jwkResolver.resolve }),
-                verifyCredential(this.jwt, resolver),
-            ]);
+            const result = await verifyCredential(this.jwt, resolver);
 
             return result.verified;
         } catch (e) {
