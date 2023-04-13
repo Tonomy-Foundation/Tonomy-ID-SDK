@@ -1,4 +1,4 @@
-import { SdkErrors } from '../../src/sdk/services/errors';
+import { SdkErrors } from '../../src/sdk/util/errors';
 import { validatePassword } from '../../src/sdk/util/passwords';
 
 describe('validatePassword()', () => {

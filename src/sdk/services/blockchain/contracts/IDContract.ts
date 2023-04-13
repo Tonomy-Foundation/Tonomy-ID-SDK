@@ -1,10 +1,10 @@
 /* eslint-disable camelcase */
 import { API, Checksum256, Name, PublicKey } from '@greymass/eosio';
-import { TonomyUsername } from '../username';
+import { TonomyUsername } from '../../../util/username';
 import { getApi } from '../eosio/eosio';
 import { Signer, transact } from '../eosio/transaction';
-import { SdkErrors, throwError } from '../errors';
-import { sha256 } from '../../util/crypto';
+import { SdkErrors, throwError } from '../../../util/errors';
+import { sha256 } from '../../../util/crypto';
 
 enum PermissionLevel {
     OWNER = 'OWNER',

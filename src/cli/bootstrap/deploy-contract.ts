@@ -4,7 +4,7 @@ import fs from 'fs';
 import path from 'path';
 import { Name } from '@greymass/eosio';
 import { EosioContract } from '../../sdk/index';
-import { Signer } from '../../sdk/services/eosio/transaction';
+import { Signer } from '../../sdk/services/blockchain/eosio/transaction';
 
 const eosioContract: EosioContract = EosioContract.Instance;
 

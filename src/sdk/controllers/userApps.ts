@@ -1,13 +1,13 @@
 /* eslint-disable camelcase */
 import { Name, PublicKey } from '@greymass/eosio';
-import { IDContract } from './services/contracts/IDContract';
-import { KeyManager, KeyManagerLevel } from './services/keymanager';
-import { createStorage, PersistentStorageClean, StorageFactory, STORAGE_NAMESPACE } from './services/storage';
+import { IDContract } from '../services/blockchain/contracts/IDContract';
+import { KeyManager, KeyManagerLevel } from '../storage/keymanager';
+import { createStorage, PersistentStorageClean, StorageFactory, STORAGE_NAMESPACE } from '../storage/storage';
 import { User } from './user';
-import { createKeyManagerSigner } from './services/eosio/transaction';
-import { SdkErrors, throwError } from './services/errors';
+import { createKeyManagerSigner } from '../services/blockchain/eosio/transaction';
+import { SdkErrors, throwError } from '../util/errors';
 import { App, AppStatus } from './app';
-import { Message } from './util/message';
+import { Message } from '../services/communication/message';
 
 const idContract = IDContract.Instance;
 

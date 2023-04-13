@@ -1,4 +1,4 @@
-import { SdkErrors, throwError } from './services/errors';
+import { SdkErrors, throwError } from './util/errors';
 
 export type SettingsType = {
     blockchainUrl: string;

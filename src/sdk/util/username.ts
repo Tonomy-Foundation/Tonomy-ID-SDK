@@ -1,4 +1,4 @@
-import { sha256 } from '../util/crypto';
+import { sha256 } from './crypto';
 
 enum AccountType {
     PERSON = 'PERSON',

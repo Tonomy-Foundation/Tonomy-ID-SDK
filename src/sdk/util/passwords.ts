@@ -1,4 +1,4 @@
-import { SdkErrors, throwError } from '../services/errors';
+import { SdkErrors, throwError } from './errors';
 import { top100Passwords } from './top100Passwords';
 
 export function validatePassword(masterPassword: string): string {

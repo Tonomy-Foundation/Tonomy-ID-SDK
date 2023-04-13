@@ -1,5 +1,5 @@
-import { api } from './util/eosio';
-import { createRandomID } from './util/user';
+import { api } from '../helpers/eosio';
+import { createRandomID } from '../helpers/user';
 import {
     KeyManager,
     KeyManagerLevel,
@@ -8,14 +8,14 @@ import {
     createUserObject,
     setSettings,
     EosioUtil,
-} from '../src/sdk/index';
-import { SdkErrors } from '../src/sdk/index';
-import { JsKeyManager } from '../src/sdk/managers/jsKeyManager';
-import { jsStorageFactory } from '../src/cli/bootstrap/jsstorage';
-import settings from './services/settings';
-import { catchAndPrintErrors } from './util/errors';
+} from '../../src/sdk/index';
+import { SdkErrors } from '../../src/sdk/index';
+import { JsKeyManager } from '../../src/sdk/storage/jsKeyManager';
+import { jsStorageFactory } from '../../src/cli/bootstrap/jsstorage';
+import settings from '../helpers/settings';
+import { catchAndPrintErrors } from '../helpers/errors';
 import { Checksum256 } from '@greymass/eosio';
-import { generatePrivateKeyFromPassword } from '../src/cli/bootstrap/keys';
+import { generatePrivateKeyFromPassword } from '../../src/cli/bootstrap/keys';
 
 let auth: KeyManager;
 let user: User;

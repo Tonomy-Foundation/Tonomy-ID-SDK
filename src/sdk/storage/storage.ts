@@ -1,4 +1,4 @@
-import { throwError } from './errors';
+import { throwError } from '../util/errors';
 
 export interface PersistentStorageClean {
     clear: () => Promise<void>;

@@ -10,12 +10,12 @@ import {
     loginToTonomyCommunication,
     scanQrAndAck,
     setupLoginRequestSubscriber,
-} from './util/user';
+} from './helpers/user';
 import { App, setSettings, User, KeyManager, StorageFactory, STORAGE_NAMESPACE, MessageType } from '../src/sdk/index';
-import settings from './services/settings';
+import settings from './helpers/settings';
 import URL from 'jsdom-url';
-import { JsKeyManager } from '../src/sdk/managers/jsKeyManager';
-import { sleep } from './util/sleep';
+import { JsKeyManager } from '../src/sdk/storage/jsKeyManager';
+import { sleep } from './helpers/sleep';
 import {
     externalWebsiteOnCallback,
     externalWebsiteOnReload,
@@ -25,8 +25,8 @@ import {
     sendLoginRequestsMessage,
     setupTonomyIdIdentifySubscriber,
     setupTonomyIdRequestConfirmSubscriber,
-} from './util/externalUser';
-import { createStorageFactory } from './util/storageFactory';
+} from './helpers/externalUser';
+import { createStorageFactory } from './helpers/storageFactory';
 
 // @ts-expect-error - type error on global
 global.URL = URL;

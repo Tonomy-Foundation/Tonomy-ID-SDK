@@ -1,6 +1,6 @@
 import { PublicKey } from '@greymass/eosio';
 import { setSettings } from '../../sdk/settings';
-import { App, AppCreateOptions } from '../../sdk/app';
+import { App, AppCreateOptions } from '../../sdk/controllers/app';
 
 export default async function apps(args: string[]) {
     if (args[0] === 'create') {

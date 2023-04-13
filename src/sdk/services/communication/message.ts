@@ -1,12 +1,12 @@
 import { decodeJWT } from '@tonomy/did-jwt';
 import { Issuer, verifyCredential, W3CCredential } from '@tonomy/did-jwt-vc';
-import { getSettings } from '../settings';
+import { getSettings } from '../../settings';
 import { JWTDecoded } from '@tonomy/did-jwt/lib/JWT';
 import crossFetch from 'cross-fetch';
 import { getResolver } from '@tonomy/antelope-did-resolver';
 import { Resolver } from '@tonomy/did-resolver';
 import { issue, OutputType } from '@tonomy/antelope-ssi-toolkit';
-import { resolve } from './did-jwk';
+import { resolve } from '../../util/did-jwk';
 
 export enum MessageType {
     COMMUNICATION_LOGIN = 'COMMUNICATION_LOGIN',
