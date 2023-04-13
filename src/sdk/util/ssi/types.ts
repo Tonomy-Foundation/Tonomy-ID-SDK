@@ -7,7 +7,6 @@ export type DIDurl = URL;
 export type JWT = string;
 
 export type JWTVCPayload = {
-    id: URL;
     '@context': string[];
     credentialSubject: any;
     type: string[];

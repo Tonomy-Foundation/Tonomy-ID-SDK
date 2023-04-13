@@ -18,7 +18,7 @@ import { toDateTime } from '../time';
 /**
  * A W3C Verifiable Credential
  */
-export class VerifiableCredential<T = any> {
+export class VerifiableCredential<T = object> {
     private decodedJwt: JWTDecoded;
     private jwt: JWT;
 
@@ -83,7 +83,7 @@ export class VerifiableCredential<T = any> {
      * @returns {URL | undefined} the id
      */
     getId(): URL | undefined {
-        return this.getPayload().id;
+        return this.getPayload().jti;
     }
 
     /**
@@ -161,10 +161,10 @@ export class VerifiableCredential<T = any> {
      *
      * @returns {Promise<VerifiableCredential>} the Verifiable Credential
      */
-    static async sign<T>(
+    static async sign<T = object>(
         id: DIDurl,
         type: string[],
-        credentialSubject: object,
+        credentialSubject: T,
         issuer: Issuer
     ): Promise<VerifiableCredential<T>> {
         const vc: W3CCredential = {
@@ -175,7 +175,7 @@ export class VerifiableCredential<T = any> {
                 id: issuer.did,
             },
             issuanceDate: new Date().toISOString(),
-            credentialSubject,
+            credentialSubject: credentialSubject as any,
         };
 
         const jwt = await createVerifiableCredentialJwt(vc, issuer, { canonicalize: true });
