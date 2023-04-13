@@ -6,7 +6,7 @@ import crossFetch from 'cross-fetch';
 import { getResolver } from '@tonomy/antelope-did-resolver';
 import { Resolver } from '@tonomy/did-resolver';
 import { issue, OutputType } from '@tonomy/antelope-ssi-toolkit';
-import { getResolver as getJwkResolver } from '../../util/did-jwk';
+import { getResolver as getJwkResolver } from '../../util/ssi/did-jwk';
 
 export enum MessageType {
     COMMUNICATION_LOGIN = 'COMMUNICATION_LOGIN',

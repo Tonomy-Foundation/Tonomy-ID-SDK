@@ -1,6 +1,6 @@
 import { PublicKey } from '@greymass/eosio';
-import { toElliptic } from './crypto';
-import { b64ToUtf8, bnToBase64Url, utf8ToB64 } from './base64';
+import { toElliptic } from '../crypto';
+import { b64ToUtf8, bnToBase64Url, utf8ToB64 } from '../base64';
 import { ResolverRegistry, ParsedDID, DIDResolutionResult, DIDDocument } from '@tonomy/did-resolver';
 
 export function createJWK(publicKey: PublicKey) {

@@ -1,0 +1,194 @@
+import { decodeJWT } from '@tonomy/did-jwt';
+import { JWTDecoded, JWTPayload } from '@tonomy/did-jwt/lib/JWT';
+import { DIDurl, JWT, JWTVCPayload } from './types';
+import { getSettings } from '../../settings';
+import { Resolver } from '@tonomy/did-resolver';
+import { getResolver } from '@tonomy/antelope-did-resolver';
+import { getResolver as getJwkResolver } from './did-jwk';
+import crossFetch from 'cross-fetch';
+import {
+    verifyCredential,
+    W3CCredential,
+    Issuer,
+    createVerifiableCredentialJwt,
+    VerifiedCredential,
+} from '@tonomy/did-jwt-vc';
+import { toDateTime } from '../time';
+
+/**
+ * A W3C Verifiable Credential
+ */
+export class VerifiableCredential<T = any> {
+    private decodedJwt: JWTDecoded;
+    private jwt: JWT;
+
+    /**
+     * @param {JWT} jwt - a JWT string
+     *
+     * @returns {VerifiableCredential} a VerifiableCredential object
+     */
+    constructor(jwt: JWT) {
+        this.decodedJwt = decodeJWT(jwt);
+        this.jwt = jwt;
+    }
+
+    /**
+     * Returns the payload of the JWT
+     *
+     * @returns {JWTPayload} the payload of the JWT
+     */
+    getPayload(): JWTPayload {
+        return this.decodedJwt.payload;
+    }
+
+    /**
+     * Returns the vc object of the JWT
+     *
+     * @returns {JWTVCPayload} the vc object
+     */
+    getVc(): JWTVCPayload {
+        return this.getPayload().vc;
+    }
+
+    /**
+     * Returns the credentialSubject object of the Verifiable Credential
+     *
+     * @returns {any} the credentialSubject object
+     */
+    getCredentialSubject(): T {
+        return this.getVc().credentialSubject;
+    }
+
+    /**
+     * Returns the issuer of the Verifiable Credential
+     *
+     * @returns {DIDurl | undefined} the issuer
+     */
+    getIssuer(): DIDurl | undefined {
+        return this.getPayload().iss;
+    }
+
+    /**
+     * Returns the subject of the Verifiable Credential
+     *
+     * @returns {DIDurl | undefined} the subject of the Verifiable Credential
+     */
+    getSubject(): DIDurl | undefined {
+        return this.getPayload().sub;
+    }
+
+    /**
+     * Returns the ID of the Verifiable Credential
+     *
+     * @returns {URL | undefined} the id
+     */
+    getId(): URL | undefined {
+        return this.getPayload().id;
+    }
+
+    /**
+     * Returns the audience of the Verifiable Credential
+     *
+     * @returns {DIDurl | DIDurl[] | undefined} the audience
+     */
+    getAudience(): DIDurl | DIDurl[] | undefined {
+        return this.getPayload().aud;
+    }
+
+    /**
+     * Returns the expiration of the Verifiable Credential
+     *
+     * @returns {Date | undefined} the expiration
+     */
+    getExpiration(): Date | undefined {
+        const secSinceEpoc = this.getPayload().exp;
+
+        if (secSinceEpoc) {
+            return toDateTime(secSinceEpoc);
+        } else return undefined;
+    }
+
+    /**
+     * Returns the issued time of the Verifiable Credential
+     *
+     * @returns {Date | undefined} the issued time
+     */
+    getIssuedAt(): Date | undefined {
+        const secSinceEpoc = this.getPayload().iat;
+
+        if (secSinceEpoc) {
+            return toDateTime(secSinceEpoc);
+        } else return undefined;
+    }
+
+    /**
+     * Returns the time the verifiable credential is valid after
+     *
+     * @returns {Date | undefined} the time the verifiable credential is valid after
+     */
+    getNotBefore(): Date | undefined {
+        const secSinceEpoc = this.getPayload().nbf;
+
+        if (secSinceEpoc) {
+            return toDateTime(secSinceEpoc);
+        } else return undefined;
+    }
+
+    /**
+     * Verifies the Verifiable Credential is signed by the issuer
+     *
+     * @returns {Promise<VerifiedCredential>} the verified credential
+     * @throws {Error} if the Verifiable Credential is not signed correctly by the issuer
+     */
+    async verify(): Promise<VerifiedCredential> {
+        const settings = getSettings();
+
+        const resolver = new Resolver({
+            ...getJwkResolver(),
+            ...getResolver({ antelopeChainUrl: settings.blockchainUrl, fetch: crossFetch as any }),
+        });
+
+        return verifyCredential(this.jwt, resolver);
+    }
+
+    /**
+     * Creates a new Verifiable Credential object signed by the issuer
+     *
+     * @param {DIDurl} id - the id of the Verifiable Credential
+     * @param {string[]} type - the type of the Verifiable Credential
+     * @param {object} credentialSubject - the credential subject of the Verifiable Credential
+     * @param {Issuer} issuer - the issuer of the Verifiable Credential
+     *
+     * @returns {Promise<VerifiableCredential>} the Verifiable Credential
+     */
+    static async sign<T>(
+        id: DIDurl,
+        type: string[],
+        credentialSubject: object,
+        issuer: Issuer
+    ): Promise<VerifiableCredential<T>> {
+        const vc: W3CCredential = {
+            '@context': ['https://www.w3.org/2018/credentials/v1'],
+            id,
+            type,
+            issuer: {
+                id: issuer.did,
+            },
+            issuanceDate: new Date().toISOString(),
+            credentialSubject,
+        };
+
+        const jwt = await createVerifiableCredentialJwt(vc, issuer, { canonicalize: true });
+
+        return new VerifiableCredential<T>(jwt);
+    }
+
+    /**
+     * Returns the JWT string
+     *
+     * @returns {string} the JWT string
+     */
+    toString(): string {
+        return this.jwt;
+    }
+}

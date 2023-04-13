@@ -2,7 +2,7 @@ import { KeyManager, KeyManagerLevel } from '../sdk/storage/keymanager';
 import { JWTLoginPayload, OnPressLoginOptions, UserApps } from '../sdk/controllers/userApps';
 import { createVCSigner, generateRandomKeyPair, randomString } from '../sdk/util/crypto';
 import { ES256KSigner } from '@tonomy/did-jwt';
-import { createJWK, toDid } from '../sdk/util/did-jwk';
+import { createJWK, toDid } from '../sdk/util/ssi/did-jwk';
 import { Message, MessageType } from '../sdk/services/communication//message';
 import { getSettings } from '../sdk/settings';
 import { SdkErrors, throwError } from '../sdk/util/errors';
