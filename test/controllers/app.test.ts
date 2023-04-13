@@ -5,6 +5,7 @@ import URL from 'jsdom-url';
 import { Message } from '../../src/sdk/services/communication/message';
 import { setSettings } from '../../src/sdk';
 import { ExternalUser, LoginWithTonomyMessages } from '../../src/api/externalUser';
+import { LoginRequest } from '../../src/sdk/util/request';
 
 // @ts-expect-error - URL type on global does not match
 global.URL = URL;
@@ -44,7 +45,7 @@ describe('logging in', () => {
 
         const result = await UserApps.onRedirectLogin();
 
-        expect(result).toBeInstanceOf(Message);
+        expect(result).toBeInstanceOf(LoginRequest);
         expect(result).toBeDefined();
         expect(typeof result.getPayload().randomString).toBe('string');
         expect(typeof result.getPayload().publicKey).toBe('string');

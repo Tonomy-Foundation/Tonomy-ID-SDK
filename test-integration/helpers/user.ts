@@ -7,7 +7,6 @@ import {
     User,
     Message,
     UserApps,
-    JWTLoginPayload,
     MessageType,
     JsKeyManager,
 } from '../../src/sdk/index';
@@ -15,6 +14,7 @@ import { jsStorageFactory } from '../../src/cli/bootstrap/jsstorage';
 import { generatePrivateKeyFromPassword } from '../../src/cli/bootstrap/keys';
 import { privateKey } from './eosio';
 import { createUser } from '../../src/cli/bootstrap/user';
+import { LoginRequestPayload } from '../../src/sdk/util/request';
 
 export { createUser };
 
@@ -115,7 +115,7 @@ export async function setupLoginRequestSubscriber(
 
             for (const jwt of verifiedRequests) {
                 // parse the requests for their app data
-                const payload = jwt.getPayload() as JWTLoginPayload;
+                const payload = jwt.getPayload() as LoginRequestPayload;
                 const loginApp = await App.getApp(payload.origin);
                 const senderDid = jwt.getSender();
 

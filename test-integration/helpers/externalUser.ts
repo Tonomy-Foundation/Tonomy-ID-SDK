@@ -40,9 +40,9 @@ export async function externalWebsiteUserPressLoginToTonomyButton(
 export async function loginWebsiteOnRedirect(externalWebsiteDid: string, keyManager: KeyManager, log = false) {
     if (log) console.log('TONOMY_LOGIN_WEBSITE/login: collect external website token from URL');
 
-    const jwtVerified = await UserApps.onRedirectLogin();
+    const externalLoginRequest = await UserApps.onRedirectLogin();
 
-    expect(jwtVerified.getSender()).toBe(externalWebsiteDid);
+    expect(externalLoginRequest.getSender()).toBe(externalWebsiteDid);
 
     if (log) console.log('TONOMY_LOGIN_WEBSITE/login: create did:jwk and login request');
     const { loginRequest, loginToCommunication } = (await ExternalUser.loginWithTonomy(
@@ -54,7 +54,7 @@ export async function loginWebsiteOnRedirect(externalWebsiteDid: string, keyMana
     expect(did).toContain('did:jwk:');
     expect(did).not.toEqual(externalWebsiteDid);
 
-    const jwtRequests = [loginRequest.toString(), jwtVerified.toString()];
+    const jwtRequests = [loginRequest.toString(), externalLoginRequest.toString()];
 
     // Login to the Tonomy Communication as the login app user
     if (log) console.log('TONOMY_LOGIN_WEBSITE/login: connect to Tonomy Communication');
@@ -119,7 +119,8 @@ export async function sendLoginRequestsMessage(
         {
             requests: JSON.stringify(requests),
         },
-        { keyManager, recipient: recipientDid, type: MessageType.LOGIN_REQUEST }
+        recipientDid,
+        { keyManager, type: MessageType.LOGIN_REQUEST }
     );
 
     if (log) console.log('TONOMY_LOGIN_WEBSITE/login: sending login request to Tonomy ID app');
@@ -136,7 +137,7 @@ export async function loginWebsiteOnCallback(keyManager: KeyManager, storageFact
     });
 
     if (log) console.log('TONOMY_LOGIN_WEBSITE/callback: checking login request of external website');
-    const { requests } = await UserApps.getLoginRequestParams();
+    const { requests } = await UserApps.getLoginRequestFromUrl();
     const result = await UserApps.verifyRequests(requests);
 
     const redirectJwt = result.find((jwtVerified) => jwtVerified.getPayload().origin !== location.origin);

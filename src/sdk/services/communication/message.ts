@@ -10,6 +10,9 @@ export enum MessageType {
     LOGIN_REQUEST_RESPONSE = 'LOGIN_REQUEST_RESPONSE',
 }
 
+/**
+ * A message that can be sent between two Tonomy identities
+ */
 export class Message<T = object> {
     vc: VerifiableCredential<{ message: T; type?: string }>;
 
