@@ -94,10 +94,10 @@ describe('User class', () => {
             expect(accountInfo.getPermission('pin').required_auth.threshold.toNumber()).toBe(1);
             expect(accountInfo.getPermission('pin').required_auth.keys[0].key).toBeDefined();
 
-            // Fingerprint key
-            expect(accountInfo.getPermission('fingerprint').parent.toString()).toBe('owner');
-            expect(accountInfo.getPermission('fingerprint').required_auth.threshold.toNumber()).toBe(1);
-            expect(accountInfo.getPermission('fingerprint').required_auth.keys[0].key).toBeDefined();
+            // Biometric key
+            expect(accountInfo.getPermission('biometric').parent.toString()).toBe('owner');
+            expect(accountInfo.getPermission('biometric').required_auth.threshold.toNumber()).toBe(1);
+            expect(accountInfo.getPermission('biometric').required_auth.keys[0].key).toBeDefined();
 
             // Local key
             expect(accountInfo.getPermission('local').parent.toString()).toBe('owner');
@@ -378,18 +378,20 @@ describe('User class', () => {
         })
     );
     test(
-        'login twice throw error',
+        'Create an account, logs out and logs back in, while skipping PIN and Biometric',
         catchAndPrintErrors(async () => {
             const { user, password } = await createRandomID(false);
-            const key1 = await user.keyManager.getKey({level: KeyManagerLevel.LOCAL});
+            const key1 = await user.keyManager.getKey({ level: KeyManagerLevel.LOCAL });
             const username1 = await user.getUsername();
+
             await user.logout();
             await user.login(username1, password, { keyFromPasswordFn: generatePrivateKeyFromPassword });
             await user.saveLocal();
-            const key2 = await user.keyManager.getKey({level: KeyManagerLevel.LOCAL});
-            expect(key1.toString()).not.toEqual(key2.toString())
-            // await user.updateKeys(password);
-            // await user.logout();
+            const key2 = await user.keyManager.getKey({ level: KeyManagerLevel.LOCAL });
+
+            expect(key1.toString()).not.toEqual(key2.toString());
+            await user.updateKeys(password);
+            await user.logout();
         })
     );
 });

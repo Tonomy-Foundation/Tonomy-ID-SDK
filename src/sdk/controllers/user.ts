@@ -220,6 +220,7 @@ export class User {
 
     async saveLocal() {
         const privateKey = generateRandomKeyPair().privateKey;
+
         await this.keyManager.storeKey({
             level: KeyManagerLevel.LOCAL,
             privateKey,
@@ -393,7 +394,7 @@ export class User {
             },
             {
                 level: KeyManagerLevel.BIOMETRIC,
-                permission: 'fingerprint',
+                permission: 'biometric',
             },
             {
                 level: KeyManagerLevel.LOCAL,
