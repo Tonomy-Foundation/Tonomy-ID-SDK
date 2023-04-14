@@ -12,13 +12,18 @@ describe('crypto randomString()', () => {
     });
 });
 
-describe('crypto randomString() and randomkey', () => {
-    it('randomString creates a random string', () => {
+describe('crypto generateRandomKeyPair()', () => {
+    it('generateRandomKeyPair() creates a random keypair', () => {
         const key1 = generateRandomKeyPair();
         const key2 = generateRandomKeyPair();
-        expect(randomBytes(32)).not.toEqual(randomBytes(32));
+
         expect(key1.privateKey.toString()).not.toEqual(key2.privateKey.toString());
         expect(key1.publicKey.toString()).not.toEqual(key2.publicKey.toString());
+    });
+});
 
+describe('crypto randomBytes()', () => {
+    it('randomBytes() creates a unique bytes', () => {
+        expect(randomBytes(32)).not.toEqual(randomBytes(32));
     });
 });
