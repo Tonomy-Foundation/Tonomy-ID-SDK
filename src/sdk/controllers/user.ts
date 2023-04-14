@@ -220,7 +220,6 @@ export class User {
 
     async saveLocal() {
         const privateKey = generateRandomKeyPair().privateKey;
-
         await this.keyManager.storeKey({
             level: KeyManagerLevel.LOCAL,
             privateKey,

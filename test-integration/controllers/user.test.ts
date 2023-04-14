@@ -377,4 +377,19 @@ describe('User class', () => {
             await user.logout();
         })
     );
+    test(
+        'login twice throw error',
+        catchAndPrintErrors(async () => {
+            const { user, password } = await createRandomID(false);
+            const key1 = await user.keyManager.getKey({level: KeyManagerLevel.LOCAL});
+            const username1 = await user.getUsername();
+            await user.logout();
+            await user.login(username1, password, { keyFromPasswordFn: generatePrivateKeyFromPassword });
+            await user.saveLocal();
+            const key2 = await user.keyManager.getKey({level: KeyManagerLevel.LOCAL});
+            expect(key1.toString()).not.toEqual(key2.toString())
+            // await user.updateKeys(password);
+            // await user.logout();
+        })
+    );
 });
