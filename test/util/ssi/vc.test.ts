@@ -1,11 +1,10 @@
-import { decodeJWT, verifyJWT } from '@tonomy/did-jwt';
-import { VerificationMethod } from '@tonomy/did-resolver';
-import { VerifiableCredential } from '../../../src/sdk/util/ssi/vc';
+import { VerifiableCredential, VerifiableCredentialWithType } from '../../../src/sdk/util/ssi/vc';
 import { generateRandomKeyPair, randomString, setSettings } from '../../../src/sdk';
 import { createJWK } from '../../../src/sdk/util/ssi/did-jwk';
 import { ES256KSigner } from '@tonomy/did-jwt';
 import { Issuer } from '@tonomy/did-jwt-vc';
 import { toDid } from '../../../src/sdk/util/ssi/did-jwk';
+import { LoginRequest, LoginRequestPayload } from '../../../src/sdk/util/request';
 
 type TestObject = {
     name: string;
@@ -73,5 +72,50 @@ describe('VerifiableCredential class', () => {
 
         expect((await vc.verify()).verified).toBe(true);
         expect(vc.toString().length).toBeGreaterThan(10);
+    });
+});
+
+describe('VerifiableCredentialWithType class', () => {
+    let issuer: Issuer;
+    let request: LoginRequestPayload;
+
+    beforeEach(async () => {
+        const { privateKey, publicKey } = generateRandomKeyPair();
+        const signer = ES256KSigner(privateKey.data.array, true);
+        const jwk = await createJWK(publicKey);
+        const did = toDid(jwk);
+
+        issuer = {
+            did,
+            signer,
+            alg: 'ES256K-R',
+        };
+        request = {
+            randomString: randomString(32),
+            origin: 'https://tonomy.foundation',
+            publicKey: publicKey.toString(),
+            callbackPath: '/callback',
+        };
+    });
+
+    it('fails if it is created using the VerifiableCredentialWithType class', async () => {
+        await expect(VerifiableCredentialWithType.sign<LoginRequestPayload>(request, issuer)).rejects.toThrow(
+            'class should be a derived class of VerifiableCredentialWithType'
+        );
+    });
+
+    it('Can be created using the different constructors', async () => {
+        const loginRequest = await LoginRequest.sign(request, issuer);
+        const newRequest = new VerifiableCredentialWithType(loginRequest);
+
+        expect(newRequest.getType()).toBe('LoginRequest');
+
+        const newLoginRequest = new LoginRequest(newRequest);
+
+        expect(newLoginRequest.getType()).toBe('LoginRequest');
+
+        const newLoginRequestFromVc = new LoginRequest(loginRequest.getVc());
+
+        expect(newLoginRequestFromVc.getType()).toBe('LoginRequest');
     });
 });

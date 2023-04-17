@@ -4,9 +4,10 @@ import argon2 from 'argon2';
 import { jsStorageFactory } from '../../src/cli/bootstrap/jsstorage';
 import { createUserObject } from '../../src/sdk/controllers/user';
 import { KeyManagerLevel } from '../../src/sdk/storage/keymanager';
-import { randomBytes, generateRandomKeyPair } from '../../src/sdk/util/crypto';
+import { randomBytes, generateRandomKeyPair, createVCSigner } from '../../src/sdk/util/crypto';
 import { setSettings } from '../../src/sdk';
 import { generatePrivateKeyFromPassword } from '../../src/cli/bootstrap/keys';
+import { createSigner } from '@tonomy/antelope-ssi-toolkit';
 
 const keyManager = new JsKeyManager();
 
@@ -100,5 +101,24 @@ describe('Keymanager class', () => {
         const { privateKey } = await generatePrivateKeyFromPassword('password', salt);
 
         expect(privateKey.toString()).toBe('PVT_K1_pPnFBQwMSQgjAenyLdMHoeFQBtazFBYEWeA12FtKpm5PEY4fc');
+    });
+
+    it('has same signer as antelopessi toolkit', async () => {
+        const data = 'hi12asdasdasdsd3';
+
+        const { privateKey } = generateRandomKeyPair();
+        const keymanager = new JsKeyManager();
+
+        keymanager.storeKey({ level: KeyManagerLevel.LOCAL, privateKey: privateKey });
+        const signer = createVCSigner(keymanager, KeyManagerLevel.LOCAL).sign;
+        const antelopeSigner = createSigner(privateKey as any);
+
+        const signedWithTonomy = await signer(data);
+
+        const signedWithAntelopeToolKit = await antelopeSigner(data);
+
+        expect(signedWithTonomy).toBeTruthy();
+        expect(signedWithAntelopeToolKit).toBeTruthy();
+        expect(signedWithTonomy).toEqual(signedWithAntelopeToolKit);
     });
 });

@@ -14,6 +14,7 @@ import {
     VerifiedCredential,
 } from '@tonomy/did-jwt-vc';
 import { toDateTime } from '../time';
+import { randomString } from '../crypto';
 
 /**
  * A W3C Verifiable Credential
@@ -169,7 +170,7 @@ export class VerifiableCredential<T = object> {
         issuer: Issuer,
         options: {
             subject?: URL;
-        }
+        } = {}
     ): Promise<VerifiableCredential<T>> {
         const vc: W3CCredential = {
             '@context': ['https://www.w3.org/2018/credentials/v1'],
@@ -196,5 +197,125 @@ export class VerifiableCredential<T = object> {
      */
     toString(): string {
         return this.jwt;
+    }
+}
+
+type VerifiableCredentialOptions = {
+    subject?: URL;
+    additionalTypes?: string[];
+};
+
+/**
+ * A wrapper that adds a type object to VCs to allow for identification, and presents a simper interace
+ *
+ * This is the base class. It is expected that extension classes will be created for the different VC types.
+ * See LoginRequest for an example.
+ */
+export class VerifiableCredentialWithType<T = object> {
+    vc: VerifiableCredential<{ payload: T; type: string }>;
+
+    constructor(vc: VerifiableCredential<{ payload: T; type: string }> | VerifiableCredentialWithType | JWT) {
+        if (typeof vc === 'string') {
+            this.vc = new VerifiableCredential<{ payload: T; type: string }>(vc);
+        } else if (vc instanceof VerifiableCredentialWithType) {
+            this.vc = vc.getVc() as VerifiableCredential<{ payload: T; type: string }>;
+        } else {
+            this.vc = vc;
+        }
+    }
+
+    /**
+     * Creates a signed VC object
+     *
+     * @param {object} payload the payload
+     * @param {Issuer} issuer the issuer id
+     * @param {VerifiableCredentialOptions} options the options
+     *
+     * @returns a VC object
+     */
+    static async sign<T = object>(
+        payload: T,
+        issuer: Issuer,
+        options: VerifiableCredentialOptions = {}
+    ): Promise<VerifiableCredentialWithType<T>> {
+        const payloadType = this.name;
+
+        if (
+            payloadType === VerifiableCredentialWithType.name ||
+            payloadType === 'VerifiableCredentialWithType' ||
+            payloadType === ''
+        ) {
+            throw new Error('class should be a derived class of VerifiableCredentialWithType to use the type property');
+        }
+
+        const credentialSubject = Object.assign({}, { payload, type: payloadType });
+
+        const id = 'https://tonomy.foundation/vc/id/' + randomString(10);
+        const vcType = ['VerifiableCredential', 'TonomyVerifiableCredentialWithType'];
+
+        if (options.additionalTypes) {
+            vcType.push(...options.additionalTypes);
+        }
+
+        const vc = await VerifiableCredential.sign<{ payload: T; type: string }>(
+            id,
+            vcType,
+            credentialSubject,
+            issuer,
+            options
+        );
+
+        return new VerifiableCredentialWithType<T>(vc);
+    }
+
+    /**
+     * Returns the internal Verifiable Credential
+     * @returns {VerifiableCredential} the VC
+     */
+    getVc(): VerifiableCredential<{ payload: T; type: string }> {
+        return this.vc;
+    }
+
+    /**
+     * Returns the issuer of the payload
+     * @returns {DIDurl} the payload issuer
+     */
+    getIssuer(): DIDurl {
+        return this.getVc().getIssuer();
+    }
+
+    /**
+     * Returns the payload
+     * @returns {object} the payload
+     */
+    getPayload(): T {
+        return this.getVc().getCredentialSubject().payload;
+    }
+
+    /**
+     * Returns the payload type used to determine what kind of payload it is
+     * @returns {string | undefined} the payload type
+     */
+    getType(): string | undefined {
+        return this.getVc().getCredentialSubject().type;
+    }
+
+    /**
+     * Verifies that the VC is signed by the issuer
+     *
+     * @returns {Promise<boolean>} true if the VC is signed by the issuer
+     * @throws {Error} if the VC is not signed by the issuer
+     */
+    async verify(): Promise<boolean> {
+        return (await this.getVc().verify()).verified;
+    }
+
+    /**
+     * Returns the JWT string
+     *
+     * @returns {string} the JWT string
+     */
+    toString(): string {
+        return this.getVc().toString();
     }
 }

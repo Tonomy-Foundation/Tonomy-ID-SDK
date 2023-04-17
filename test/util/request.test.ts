@@ -3,7 +3,7 @@ import { createJWK } from '../../src/sdk/util/ssi/did-jwk';
 import { ES256KSigner } from '@tonomy/did-jwt';
 import { Issuer } from '@tonomy/did-jwt-vc';
 import { toDid } from '../../src/sdk/util/ssi/did-jwk';
-import { LoginRequest, LoginRequestPayload, Request } from '../../src/sdk/util/request';
+import { LoginRequest, LoginRequestPayload } from '../../src/sdk/util/request';
 
 setSettings({});
 
@@ -30,31 +30,12 @@ describe('Request class', () => {
         };
     });
 
-    it('fails if it is created using the Request class', async () => {
-        await expect(Request.sign<LoginRequestPayload>(request, issuer)).rejects.toThrow(
-            'class should be a derived class of Request'
-        );
-    });
-
-    it('Can be created using the different constructors', async () => {
-        const loginRequest = await LoginRequest.sign(request, issuer);
-        const newRequest = new Request(loginRequest);
-
-        expect(newRequest.getType()).toBe('LoginRequest');
-        const newLoginRequest = new LoginRequest(newRequest);
-
-        expect(newLoginRequest.getType()).toBe('LoginRequest');
-        const newLoginRequestFromVc = new LoginRequest(loginRequest.getVc());
-
-        expect(newLoginRequestFromVc.getType()).toBe('LoginRequest');
-    });
-
     it('creates a LoginRequest with the correct functions', async () => {
         const loginRequest = await LoginRequest.sign(request, issuer);
 
         expect(loginRequest).toBeDefined();
         expect(loginRequest.getVc).toBeDefined();
-        expect(loginRequest.getSender).toBeDefined();
+        expect(loginRequest.getIssuer).toBeDefined();
         expect(loginRequest.getPayload).toBeDefined();
         expect(loginRequest.getType).toBeDefined();
         expect(loginRequest.verify).toBeDefined();
@@ -64,7 +45,7 @@ describe('Request class', () => {
     it('creates a LoginRequest with a did-jwk', async () => {
         const loginRequest = await LoginRequest.sign(request, issuer);
 
-        expect(loginRequest.getSender()).toBe(issuer.did);
+        expect(loginRequest.getIssuer()).toBe(issuer.did);
         expect(loginRequest.getPayload()).toStrictEqual(request);
         expect(loginRequest.getType()).toBe('LoginRequest');
 
