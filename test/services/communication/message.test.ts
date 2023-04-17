@@ -1,7 +1,7 @@
 import { PrivateKey } from '@greymass/eosio';
 import { createSigner } from '@tonomy/antelope-ssi-toolkit';
 import { ES256KSigner, generateRandomKeyPair, setSettings } from '../../../src/sdk';
-import { IdentifyMessage, Message } from '../../../src/sdk/services/communication/message';
+import { IdentifyMessage } from '../../../src/sdk/services/communication/message';
 import { Issuer } from '@tonomy/did-jwt-vc';
 import { createJWK, toDid } from '../../../src/sdk/util/ssi/did-jwk';
 
@@ -48,6 +48,17 @@ describe('Message class', () => {
 
         expect(await identifyMessage.verify()).toBe(true);
         expect(identifyMessage.toString().length).toBeGreaterThan(10);
+    });
+
+    it('creates a IdentifyMessage with a did-jwk with the correct types', async () => {
+        const identifyMessage = await IdentifyMessage.signMessage({}, issuer, recipient);
+
+        expect(identifyMessage.getType()).toBe('IdentifyMessage');
+        expect(identifyMessage.getVc().getVc().type).toStrictEqual([
+            'VerifiableCredential',
+            'TonomyVerifiableCredentialWithType',
+            'TonomyMessage',
+        ]);
     });
 
     describe('message signed with testnetjungle key', () => {
