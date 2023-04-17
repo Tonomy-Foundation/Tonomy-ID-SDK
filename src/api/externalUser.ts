@@ -4,7 +4,7 @@ import { createVCSigner, generateRandomKeyPair, randomString } from '../sdk/util
 import { ES256KSigner } from '@tonomy/did-jwt';
 import { createJWK, toDid } from '../sdk/util/ssi/did-jwk';
 import { Message, MessageType } from '../sdk/services/communication//message';
-import { getSettings } from '../sdk/settings';
+import { getSettings } from '../sdk/util/settings';
 import { SdkErrors, throwError } from '../sdk/util/errors';
 import { createStorage, PersistentStorageClean, StorageFactory, STORAGE_NAMESPACE } from '../sdk/storage/storage';
 import { Checksum256, Name } from '@greymass/eosio';

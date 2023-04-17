@@ -1,6 +1,6 @@
 import { io, Socket } from 'socket.io-client';
 import { CommunicationError, createSdkError, SdkErrors } from '../../util/errors';
-import { getSettings } from '../../settings';
+import { getSettings } from '../../util/settings';
 import { Message } from '../../services/communication/message';
 
 export type Subscriber = (message: Message) => void;

@@ -13,7 +13,7 @@ import { SdkErrors, throwError, SdkError } from '../util/errors';
 import { AccountType, TonomyUsername } from '../util/username';
 import { validatePassword } from '../util/passwords';
 import { UserApps } from './userApps';
-import { getSettings } from '../settings';
+import { getSettings } from '../util/settings';
 import { Communication } from '../services/communication/communication';
 import { Message } from '../services/communication//message';
 import { Issuer } from '@tonomy/did-jwt-vc';

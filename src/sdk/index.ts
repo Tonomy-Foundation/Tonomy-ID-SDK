@@ -8,7 +8,7 @@ export * from './controllers/user';
 export * from './controllers/userApps';
 export * from './controllers/app';
 
-export * from './settings';
+export * from './util/settings';
 export * from './services/blockchain/eosio/authority';
 export * from './util/crypto';
 export * from './util/username';

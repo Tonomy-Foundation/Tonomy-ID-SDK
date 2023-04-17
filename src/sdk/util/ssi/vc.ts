@@ -1,7 +1,7 @@
 import { decodeJWT } from '@tonomy/did-jwt';
 import { JWTDecoded, JWTPayload } from '@tonomy/did-jwt/lib/JWT';
 import { DIDurl, JWT, JWTVCPayload } from './types';
-import { getSettings } from '../../settings';
+import { getSettings } from '../settings';
 import { Resolver } from '@tonomy/did-resolver';
 import { getResolver } from '@tonomy/antelope-did-resolver';
 import { getResolver as getJwkResolver } from './did-jwk';
