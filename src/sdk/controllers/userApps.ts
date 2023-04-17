@@ -102,7 +102,12 @@ export class UserApps {
      *
      * @returns the requests (JWTs), username and accountName
      */
-    static getLoginRequestParams(): { requests: string; username: string; accountName: string } {
+    static getLoginRequestParams(): {
+        requests: string;
+        username: string;
+        accountName: string;
+        response: { success: boolean; reason: SdkErrors };
+        } {
         const params = new URLSearchParams(window.location.search);
 
         const requests = params.get('requests');
@@ -117,7 +122,10 @@ export class UserApps {
 
         if (!accountName) throwError("accountName parameter doesn't exists", SdkErrors.MissingParams);
 
-        return { requests, username, accountName };
+        const responseParams = params.get('response');
+        const response = responseParams && JSON.parse(responseParams);
+
+        return { requests, username, accountName, response };
     }
 
     /**
