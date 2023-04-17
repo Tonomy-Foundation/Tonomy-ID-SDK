@@ -1,12 +1,9 @@
-import { decodeJWT, verifyJWT } from '@tonomy/did-jwt';
-import { VerificationMethod } from '@tonomy/did-resolver';
-import { VerifiableCredential } from '../../src/sdk/util/ssi/vc';
 import { generateRandomKeyPair, randomString, setSettings } from '../../src/sdk';
 import { createJWK } from '../../src/sdk/util/ssi/did-jwk';
 import { ES256KSigner } from '@tonomy/did-jwt';
 import { Issuer } from '@tonomy/did-jwt-vc';
 import { toDid } from '../../src/sdk/util/ssi/did-jwk';
-import { LoginRequest, LoginRequestPayload } from '../../src/sdk/util/request';
+import { LoginRequest, LoginRequestPayload, Request } from '../../src/sdk/util/request';
 
 setSettings({});
 
@@ -31,6 +28,22 @@ describe('Request class', () => {
             publicKey: publicKey.toString(),
             callbackPath: '/callback',
         };
+    });
+
+    it('fails if it is created using the Request class', async () => {
+        await expect(Request.sign<LoginRequestPayload>(request, issuer)).rejects.toThrow(
+            'class should be a derived class of Request'
+        );
+    });
+
+    it('Can be created using the LoginRequest class', async () => {
+        const loginRequest = await LoginRequest.sign(request, issuer);
+        const newRequest = new Request(loginRequest);
+
+        expect(newRequest.getType()).toBe('LoginRequest');
+        const newLoginRequest = new LoginRequest(newRequest);
+
+        expect(newLoginRequest.getType()).toBe('LoginRequest');
     });
 
     it('creates a LoginRequest with the correct functions', async () => {

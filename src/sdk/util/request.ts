@@ -3,6 +3,10 @@ import { VerifiableCredential } from './ssi/vc';
 import { DIDurl, JWT } from './ssi/types';
 import { randomString } from './crypto';
 
+type RequestOptions = {
+    subject?: URL;
+};
+
 /**
  * A request that a external application can make to a Tonomy ID wallet
  *
@@ -12,9 +16,11 @@ import { randomString } from './crypto';
 export class Request<T = object> {
     vc: VerifiableCredential<{ request: T; type: string }>;
 
-    constructor(vc: VerifiableCredential<{ request: T; type: string }> | JWT) {
+    constructor(vc: VerifiableCredential<{ request: T; type: string }> | Request | JWT) {
         if (typeof vc === 'string') {
             this.vc = new VerifiableCredential<{ request: T; type: string }>(vc);
+        } else if (vc instanceof Request) {
+            this.vc = vc.getVc() as VerifiableCredential<{ request: T; type: string }>;
         } else {
             this.vc = vc;
         }
@@ -28,10 +34,10 @@ export class Request<T = object> {
      *
      * @returns a request object
      */
-    static async sign<T = object>(request: T, issuer: Issuer): Promise<Request<T>> {
+    static async sign<T = object>(request: T, issuer: Issuer, options: RequestOptions = {}): Promise<Request<T>> {
         const type = this.name;
 
-        if (type === Request.name) {
+        if (type === Request.name || type === 'Request' || type === '') {
             throw new Error('class should be a derived class of Request');
         }
 
