@@ -1,6 +1,6 @@
 import { decodeJWT } from '@tonomy/did-jwt';
 import { JWTDecoded, JWTPayload } from '@tonomy/did-jwt/lib/JWT';
-import { DIDurl, JWT, JWTVCPayload } from './types';
+import { DIDurl, URL, JWT, JWTVCPayload } from './types';
 import { getSettings } from '../settings';
 import { Resolver } from '@tonomy/did-resolver';
 import { getResolver } from '@tonomy/antelope-did-resolver';
@@ -158,7 +158,7 @@ export class VerifiableCredential<T = object> {
      * @param {string[]} type - the type of the Verifiable Credential
      * @param {object} credentialSubject - the credential subject of the Verifiable Credential
      * @param {Issuer} issuer - the issuer of the Verifiable Credential
-     * @param {DIDurl} [subject] - the subject of the Verifiable Credential
+     * @property {URL} [options.subject] - the subject of the Verifiable Credential
      *
      * @returns {Promise<VerifiableCredential>} the Verifiable Credential
      */
@@ -167,7 +167,9 @@ export class VerifiableCredential<T = object> {
         type: string[],
         credentialSubject: T,
         issuer: Issuer,
-        subject?: DIDurl
+        options: {
+            subject?: URL;
+        }
     ): Promise<VerifiableCredential<T>> {
         const vc: W3CCredential = {
             '@context': ['https://www.w3.org/2018/credentials/v1'],
@@ -180,7 +182,7 @@ export class VerifiableCredential<T = object> {
             credentialSubject: credentialSubject as any,
         };
 
-        if (subject) vc.credentialSubject.id = subject;
+        if (options.subject) vc.credentialSubject.id = options.subject;
 
         const jwt = await createVerifiableCredentialJwt(vc, issuer, { canonicalize: true });
 

@@ -1,6 +1,6 @@
 import { Issuer } from '@tonomy/did-jwt-vc';
 import { VerifiableCredential } from './ssi/vc';
-import { DIDurl, JWT } from './ssi/types';
+import { DIDurl, JWT, URL } from './ssi/types';
 import { randomString } from './crypto';
 
 type RequestOptions = {
@@ -31,6 +31,7 @@ export class Request<T = object> {
      *
      * @param {object} request the request
      * @param {Issuer} issuer the issuer id
+     * @param {RequestOptions} options the options
      *
      * @returns a request object
      */
@@ -49,7 +50,8 @@ export class Request<T = object> {
             id,
             ['VerifiableCredential', 'TonomyRequest'],
             credentialSubject,
-            issuer
+            issuer,
+            options
         );
 
         return new Request<T>(vc);

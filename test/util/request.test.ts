@@ -36,7 +36,7 @@ describe('Request class', () => {
         );
     });
 
-    it('Can be created using the LoginRequest class', async () => {
+    it('Can be created using the different constructors', async () => {
         const loginRequest = await LoginRequest.sign(request, issuer);
         const newRequest = new Request(loginRequest);
 
@@ -44,6 +44,9 @@ describe('Request class', () => {
         const newLoginRequest = new LoginRequest(newRequest);
 
         expect(newLoginRequest.getType()).toBe('LoginRequest');
+        const newLoginRequestFromVc = new LoginRequest(loginRequest.getVc());
+
+        expect(newLoginRequestFromVc.getType()).toBe('LoginRequest');
     });
 
     it('creates a LoginRequest with the correct functions', async () => {
