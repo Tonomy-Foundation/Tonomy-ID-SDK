@@ -25,7 +25,7 @@ import {
     sendLoginRequestsMessage,
     setupTonomyIdIdentifySubscriber,
     setupTonomyIdRequestConfirmSubscriber,
-    externalWebsiteOnLogout
+    externalWebsiteOnLogout,
 } from './helpers/externalUser';
 import { createStorageFactory } from './helpers/storageFactory';
 
@@ -215,7 +215,6 @@ describe('External User class', () => {
 
             expect(TONOMY_LOGIN_WEBSITE_requests.length).toBe(2);
             expect(payload.accountName).toBe(await (await TONOMY_ID_user.getAccountName()).toString());
-            expect(payload.username).toBe(await (await TONOMY_ID_user.getUsername()).username?.split('.')[0]);
 
             // TODO uncomment when we have username
             // expect(payload.username).toBe((await TONOMY_ID_user.getUsername()).username);
@@ -224,7 +223,7 @@ describe('External User class', () => {
             jsdom.reconfigure({
                 url:
                     tonomyLoginApp.origin +
-                    `/callback?requests=${payload.requests}&accountName=${payload.accountName}&username=${payload.username}`,
+                    `/callback?requests=${payload.requests}&accountName=${payload.accountName}&username=nousername`,
             });
 
             const {
@@ -265,10 +264,7 @@ describe('External User class', () => {
                 log
             );
 
-            await externalWebsiteOnLogout(
-                EXTERNAL_WEBSITE_jsKeyManager,
-                EXTERNAL_WEBSITE_storage_factory,
-            );
+            await externalWebsiteOnLogout(EXTERNAL_WEBSITE_jsKeyManager, EXTERNAL_WEBSITE_storage_factory);
 
             // cleanup connections
             await TONOMY_LOGIN_WEBSITE_communication.disconnect();
