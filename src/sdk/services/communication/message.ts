@@ -1,9 +1,10 @@
 import { Issuer } from '@tonomy/did-jwt-vc';
 import { DIDurl, JWT, URL } from '../../util/ssi/types';
-import { VerifiableCredential, VerifiableCredentialWithType } from '../../util/ssi/vc';
+import { VerifiableCredentialWithType } from '../../util/ssi/vc';
 import { LoginRequest } from '../../util/request';
 import { TonomyUsername } from '../../util/username';
 import { Name } from '@greymass/eosio';
+import { SdkErrors } from '../../util/errors';
 
 // export enum MessageType {
 //     COMMUNICATION_LOGIN = 'COMMUNICATION_LOGIN',
@@ -77,16 +78,19 @@ export class Message<T = object> extends VerifiableCredentialWithType<T> {
 export type IdentifyMessagePayload = Record<string, never>;
 export class IdentifyMessage extends Message<IdentifyMessagePayload> { }
 
-export type LoginRequestMessagePayload = {
+export type LoginRequestsMessagePayload = {
     requests: LoginRequest[];
 };
-export class LoginRequestMessage extends Message<LoginRequestMessagePayload> { }
+export class LoginRequestsMessage extends Message<LoginRequestsMessagePayload> { }
 
 export type LoginRequestResponseMessagePayload = {
     success: boolean;
+    error?: {
+        code: SdkErrors;
+        reason: string;
+    };
     requests?: LoginRequest[];
-    accountName: Name;
-    username: TonomyUsername;
-    failReason?: string;
+    accountName?: Name;
+    username?: TonomyUsername;
 };
 export class LoginRequestResponseMessage extends Message<LoginRequestResponseMessagePayload> { }
