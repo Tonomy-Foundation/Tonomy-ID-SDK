@@ -215,14 +215,14 @@ describe('External User class', () => {
             expect(TONOMY_LOGIN_WEBSITE_requests.length).toBe(2);
             expect(payload.accountName).toBe(await (await TONOMY_ID_user.getAccountName()).toString());
             // TODO uncomment when we have username
-            // expect(payload.username).toBe((await TONOMY_ID_user.getUsername()).username);
+            expect(payload.username).toBe((await TONOMY_ID_user.getUsername()).username);
 
             if (log) console.log('TONOMY_LOGIN_WEBSITE/login: sending to callback page');
             // @ts-expect-error - cannot find name jsdom
             jsdom.reconfigure({
                 url:
                     tonomyLoginApp.origin +
-                    `/callback?requests=${payload.requests}&accountName=${payload.accountName}&username=nousername`,
+                    `/callback?requests=${payload.requests}&accountName=${payload.accountName}&username=${payload.username}`,
             });
 
             const {

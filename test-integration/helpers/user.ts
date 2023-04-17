@@ -138,10 +138,11 @@ export async function setupLoginRequestSubscriber(
             }
 
             const accountName = await user.storage.accountName.toString();
+            const username = (await user.getUsername()).username?.split('.')[0];
 
             // send a message back to the app
             const respondMessage = (await user.signMessage(
-                { requests, accountName },
+                { requests, accountName, username },
                 { recipient: tonomyIdLoginDid, type: MessageType.LOGIN_REQUEST_RESPONSE }
             )) as Message;
 
