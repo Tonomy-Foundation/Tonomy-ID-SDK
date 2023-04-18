@@ -69,6 +69,58 @@ describe('crypto generatePrivateKeyFromPassword()', () => {
 
         expect(hash.toString('hex')).toEqual('30e30e19f23a98bdb2e932d8c0e40ca4471cc02bb39cc4b508afe30921b44573');
     });
+
+    test('time hashing in generatePrivateKeyFromPassword() function', async () => {
+        const password = '123';
+        const salt = Checksum256.from(randomBytes(32));
+        const options = {
+            salt: Buffer.from(salt.hexString),
+            type: argon2.argon2id,
+            raw: true,
+            timeCost: 3,
+            memoryCost: 16384,
+            parallelism: 1,
+            hashLength: 32,
+        };
+
+        async function timeArgon2(options: any): Promise<number> {
+            const start = new Date();
+
+            await argon2.hash(password, options);
+            const finish = new Date();
+
+            return finish.getTime() - start.getTime();
+        }
+
+        const time0 = await timeArgon2(options);
+        const time1 = await timeArgon2({ ...options, ...{ type: argon2.argon2d } });
+        const time2 = await timeArgon2({ ...options, ...{ type: argon2.argon2i } });
+        const time3 = await timeArgon2({ ...options, ...{ memoryCost: 16384 * 10 } });
+        const time3a = await timeArgon2({ ...options, ...{ memoryCost: 16384 * 4 } });
+        const time4 = await timeArgon2({ ...options, ...{ parallelism: 10 } });
+        const time5 = await timeArgon2({
+            ...options,
+            ...{ salt: Buffer.from(randomBytes(32 * 10)), hashLength: 32 * 10 },
+        });
+
+        console.log(`generatePrivateKeyFromPassword() took time:\n
+                     time0: ${time0}ms\n
+                     time1: ${time1}ms\n
+                     time2: ${time2}ms\n
+                     time3: ${time3}ms\n
+                     time3a: ${time3a}ms\n
+                     time4: ${time4}ms\n
+                     time5: ${time5}ms`);
+    });
+
+    test('password can be verfied', async () => {
+        const password = '123';
+        const { privateKey, salt } = await generatePrivateKeyFromPassword(password);
+
+        const { privateKey: privateKey2 } = await generatePrivateKeyFromPassword(password, salt);
+
+        expect(privateKey).toEqual(privateKey2);
+    });
 });
 
 describe('crypto randomBytes()', () => {
