@@ -393,7 +393,7 @@ export class User {
             },
             {
                 level: KeyManagerLevel.BIOMETRIC,
-                permission: 'fingerprint',
+                permission: 'biometric',
             },
             {
                 level: KeyManagerLevel.LOCAL,

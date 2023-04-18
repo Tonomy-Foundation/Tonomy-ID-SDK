@@ -1,5 +1,5 @@
 {
-    "version": "0.3.38",
+    "version": "0.3.40",
     "license": "Apache-2.0",
     "type": "module",
     "source": "src/sdk/index.ts",
@@ -34,6 +34,7 @@
         "build": "npm run build:sdk && npm run build:cli && npm run build:api",
         "test:unit": "jest --selectProjects \"Unit tests\"",
         "test:setup": "./test-integration/build-and-run-services.sh start",
+        "test:setup-down": "./test-integration/build-and-run-services.sh stop",
         "test:integration": "jest --detectOpenHandles --selectProjects \"Integration tests\"",
         "test": "jest --detectOpenHandles",
         "cli": "node ./build/cli/index.cjs",

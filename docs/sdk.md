@@ -61,7 +61,7 @@ This client connects to the Tonomy Communication server which acts as a bridge f
 
 ### User
 
-This is the main entry class. It is used to manage each Tonomy ID user. Using this class, a user can create a unique Tonomy ID by setting a username, password, and fingerprint. In addition, it can also be used to update a user's information.
+This is the main entry class. It is used to manage each Tonomy ID user. Using this class, a user can create a unique Tonomy ID by setting a username, password, and biometric. In addition, it can also be used to update a user's information.
 
 ### UserApps
 

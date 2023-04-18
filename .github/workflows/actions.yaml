@@ -21,7 +21,7 @@ jobs:
   compile-contracts:
     name: Compiles contracts needed for bootstrap script
     runs-on: ubuntu-20.04
-    container: eosio/eosio.cdt:v1.8.1
+    container: tonomy/antelope
     steps:
       - uses: actions/checkout@v3
         with:

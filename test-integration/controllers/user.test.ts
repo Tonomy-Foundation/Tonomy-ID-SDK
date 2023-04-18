@@ -79,10 +79,10 @@ describe('User class', () => {
         expect(accountInfo.getPermission('pin').required_auth.threshold.toNumber()).toBe(1);
         expect(accountInfo.getPermission('pin').required_auth.keys[0].key).toBeDefined();
 
-        // Fingerprint key
-        expect(accountInfo.getPermission('fingerprint').parent.toString()).toBe('owner');
-        expect(accountInfo.getPermission('fingerprint').required_auth.threshold.toNumber()).toBe(1);
-        expect(accountInfo.getPermission('fingerprint').required_auth.keys[0].key).toBeDefined();
+        // Biometric key
+        expect(accountInfo.getPermission('biometric').parent.toString()).toBe('owner');
+        expect(accountInfo.getPermission('biometric').required_auth.threshold.toNumber()).toBe(1);
+        expect(accountInfo.getPermission('biometric').required_auth.keys[0].key).toBeDefined();
 
         // Local key
         expect(accountInfo.getPermission('local').parent.toString()).toBe('owner');
@@ -238,6 +238,7 @@ describe('User class', () => {
         // Close connections
         await user.logout();
     });
+
     test('login() fails with userName does not exists', async () => {
         const { user, password } = await createRandomID();
 
@@ -265,6 +266,7 @@ describe('User class', () => {
         expect(await user.getDid()).toEqual(`did:antelope:${chainId}:${accountName.toString()}`);
         await user.logout();
     });
+
     test('intializeFromStorage() return true if account exists', async () => {
         const { user } = await createRandomID();
         const accountName = await user.storage.accountName;
@@ -274,9 +276,11 @@ describe('User class', () => {
 
         await user.logout();
     });
+
     test("intializeFromStorage() throws error if storage doesn't exist", async () => {
         await expect(user.intializeFromStorage()).rejects.toThrowError(SdkErrors.AccountDoesntExist);
     });
+
     test('CheckPin() returns true when pin matches', async () => {
         const { user, password } = await createRandomID();
 
@@ -289,6 +293,7 @@ describe('User class', () => {
 
         await user.logout();
     });
+
     test('CheckPin() throws error if the Key Does not matches', async () => {
         const { user, password } = await createRandomID();
 
@@ -308,6 +313,21 @@ describe('User class', () => {
 
         await expect(user.usernameExists('RandomUsername')).resolves.toBe(false);
 
+        await user.logout();
+    });
+
+    test('Create an account, logs out and logs back in, while skipping PIN and Biometric', async () => {
+        const { user, password } = await createRandomID(false);
+        const key1 = await user.keyManager.getKey({ level: KeyManagerLevel.LOCAL });
+        const username1 = await user.getUsername();
+
+        await user.logout();
+        await user.login(username1, password, { keyFromPasswordFn: generatePrivateKeyFromPassword });
+        await user.saveLocal();
+        const key2 = await user.keyManager.getKey({ level: KeyManagerLevel.LOCAL });
+
+        expect(key1.toString()).not.toEqual(key2.toString());
+        await user.updateKeys(password);
         await user.logout();
     });
 });
