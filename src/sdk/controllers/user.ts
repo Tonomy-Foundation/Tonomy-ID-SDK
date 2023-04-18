@@ -15,7 +15,6 @@ import { validatePassword } from '../util/passwords';
 import { UserApps } from './userApps';
 import { getSettings } from '../util/settings';
 import { Communication } from '../services/communication/communication';
-import { Message } from '../services/communication//message';
 import { Issuer } from '@tonomy/did-jwt-vc';
 import { createVCSigner, generateRandomKeyPair } from '../util/crypto';
 
@@ -497,16 +496,15 @@ export class User {
         }
     }
 
-    async signMessage(payload: any, options: { recipient?: string; type?: string } = {}): Promise<Message> {
+    async getIssuer(): Promise<Issuer> {
+        const did = await this.getDid();
         const signer = createVCSigner(this.keyManager, KeyManagerLevel.LOCAL);
 
-        const issuer: Issuer = {
-            did: (await this.getDid()) + '#local',
+        return {
+            did: did + '#local',
             signer: signer.sign as any,
             alg: 'ES256K-R',
         };
-
-        return await Message.sign(payload, issuer, options.recipient, options.type);
     }
 
     /**

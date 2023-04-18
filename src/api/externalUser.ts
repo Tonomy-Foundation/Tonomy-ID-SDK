@@ -1,9 +1,9 @@
 import { KeyManager, KeyManagerLevel } from '../sdk/storage/keymanager';
 import { OnPressLoginOptions, UserApps } from '../sdk/controllers/userApps';
-import { createVCSigner, generateRandomKeyPair, randomString } from '../sdk/util/crypto';
+import { generateRandomKeyPair, randomString } from '../sdk/util/crypto';
 import { ES256KSigner } from '@tonomy/did-jwt';
+import { Issuer } from '@tonomy/did-jwt-vc';
 import { createJWK, toDid } from '../sdk/util/ssi/did-jwk';
-import { Message, MessageType } from '../sdk/services/communication//message';
 import { getSettings } from '../sdk/util/settings';
 import { SdkErrors, throwError } from '../sdk/util/errors';
 import { createStorage, PersistentStorageClean, StorageFactory, STORAGE_NAMESPACE } from '../sdk/storage/storage';
@@ -13,6 +13,8 @@ import { browserStorageFactory } from '../sdk/storage/browserStorage';
 import { getChainInfo } from '../sdk/services/blockchain/eosio/eosio';
 import { JsKeyManager } from '../sdk/storage/jsKeyManager';
 import { LoginRequest, LoginRequestPayload } from '../sdk/util/request';
+import { AuthenticationRequest } from '../sdk/util/request';
+import { createKeyManagerSigner } from '../sdk/services/blockchain/eosio/transaction';
 
 export type ExternalUserStorage = {
     accountName: Name;
@@ -29,7 +31,7 @@ export type VerifyLoginOptions = {
 
 export type LoginWithTonomyMessages = {
     loginRequest: LoginRequest;
-    loginToCommunication: Message;
+    loginToCommunication: AuthenticationRequest;
 };
 
 /**
@@ -192,7 +194,7 @@ export class ExternalUser {
         const payload: LoginRequestPayload = {
             randomString: randomString(32),
             origin: window.location.origin,
-            publicKey: publicKey.toString(),
+            publicKey: publicKey,
             callbackPath,
         };
 
@@ -201,9 +203,12 @@ export class ExternalUser {
         const signer = ES256KSigner(privateKey.data.array, true);
         const jwk = await createJWK(publicKey);
 
-        const issuer = toDid(jwk);
-
-        const loginRequest = await LoginRequest.sign(payload, { did: issuer, signer: signer as any, alg: 'ES256K-R' });
+        const issuer = {
+            did: toDid(jwk),
+            signer: signer as any,
+            alg: 'ES256K-R',
+        };
+        const loginRequest = await LoginRequest.sign(payload, issuer);
 
         if (redirect) {
             const requests = [loginRequest.toString()];
@@ -212,53 +217,36 @@ export class ExternalUser {
             window.location.href = `${getSettings().ssoWebsiteOrigin}/login?requests=${requestsString}`;
             return;
         } else {
-            const loginToCommunication = await Message.sign(
-                {},
-                { did: issuer, signer: signer as any, alg: 'ES256K-R' },
-                undefined,
-                MessageType.COMMUNICATION_LOGIN
-            );
+            const loginToCommunication = await AuthenticationRequest.sign({}, issuer);
 
             return { loginRequest, loginToCommunication };
         }
     }
 
-    /**
-     * Signs a message with the given key manager and the key level
-     *
-     * @param {any} message - an object to sign
-     * @property {string} options.recipient - the recipient's DID
-     * @property {KeyManager} [options.keyManager=new JsKeyManager()] - the key manager to use to sign the message
-     * @property {string} [options.type] - the type of the message
-     * @returns {Promise<Message>} - the signed message
-     */
-    static async signMessage(
-        message: object,
-        recipient: string,
-        options: {
-            keyManager?: KeyManager;
-            type?: string;
-        } = {}
-    ): Promise<Message> {
-        const keyManagerLevel = KeyManagerLevel.BROWSER_LOCAL_STORAGE;
-
-        if (!options.keyManager) options.keyManager = new JsKeyManager();
-        const publicKey = await options.keyManager.getKey({
-            level: keyManagerLevel,
+    static async getDidJwkIssuerFromStorage(keyManager: KeyManager = new JsKeyManager()): Promise<Issuer> {
+        const publicKey = await keyManager.getKey({
+            level: KeyManagerLevel.BROWSER_LOCAL_STORAGE,
         });
 
-        const signer = createVCSigner(options.keyManager, keyManagerLevel).sign;
-
+        const signer = ES256KSigner(publicKey.data.array, true);
         const jwk = await createJWK(publicKey);
 
-        const issuer = toDid(jwk);
+        return {
+            did: toDid(jwk),
+            signer: signer as any,
+            alg: 'ES256K-R',
+        };
+    }
 
-        return await Message.sign(
-            message,
-            { did: issuer, signer: signer as any, alg: 'ES256K-R' },
-            recipient,
-            options.type
-        );
+    async getIssuer(keyManager: KeyManager = new JsKeyManager()): Promise<Issuer> {
+        const did = await this.getDid();
+        const signer = createKeyManagerSigner(keyManager, KeyManagerLevel.BROWSER_LOCAL_STORAGE);
+
+        return {
+            did,
+            signer: signer as any,
+            alg: 'ES256K-R',
+        };
     }
 
     /**
@@ -287,7 +275,7 @@ export class ExternalUser {
 
         if (!loginRequest) throwError('No login request found for this origin', SdkErrors.OriginMismatch);
 
-        if (loginRequest.publicKey !== keyFromStorage.toString()) {
+        if (loginRequest.publicKey.toString() !== keyFromStorage.toString()) {
             throwError('Key in request does not match', SdkErrors.KeyNotFound);
         }
 

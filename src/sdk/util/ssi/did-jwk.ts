@@ -100,8 +100,11 @@ export function getResolver(): ResolverRegistry {
     return {
         jwk: (
             did: string,
+            // @ts-expect-error(TS6133 declared but never used)
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             parsed: ParsedDID,
             // @ts-expect-error(TS6133 declared but never used)
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             resolver: Resolvable
         ) => {
             return resolve(did);

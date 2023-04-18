@@ -1,6 +1,6 @@
 import { Issuer } from '@tonomy/did-jwt-vc';
-import { DIDurl, JWT, URL } from '../../util/ssi/types';
-import { VerifiableCredentialWithType } from '../../util/ssi/vc';
+import { DIDurl, URL } from '../../util/ssi/types';
+import { VerifiableCredentialWithType, VerifiableCredentialOptions } from '../../util/ssi/vc';
 import { LoginRequest } from '../../util/request';
 import { TonomyUsername } from '../../util/username';
 import { Name } from '@greymass/eosio';
@@ -18,8 +18,12 @@ import { SdkErrors } from '../../util/errors';
  */
 export class Message<T = object> extends VerifiableCredentialWithType<T> {
     static async sign<T = object>(
+        //@ts-expect-error - declared but not read
         request: T,
+        //@ts-expect-error - declared but not read
         issuer: Issuer,
+        //@ts-expect-error - declared but not read
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         options: VerifiableCredentialOptions = {}
     ): Promise<VerifiableCredentialWithType<T>> {
         throw new Error('Use Message.signMessage instead');

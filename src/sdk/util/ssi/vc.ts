@@ -200,7 +200,7 @@ export class VerifiableCredential<T = object> {
     }
 }
 
-type VerifiableCredentialOptions = {
+export type VerifiableCredentialOptions = {
     subject?: URL;
     additionalTypes?: string[];
 };
