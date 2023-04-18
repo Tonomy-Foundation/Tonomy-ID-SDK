@@ -12,7 +12,7 @@ export async function generatePrivateKeyFromPassword(
 ): Promise<{ privateKey: PrivateKey; salt: Checksum256 }> {
     if (!salt) salt = Checksum256.from(randomBytes(32));
     const hash = await argon2.hash(password, {
-        salt: Buffer.from(salt.hexString, 'hex'),
+        salt: Buffer.from(salt.hexString),
         type: argon2.argon2id,
         raw: true,
         timeCost: 3,
@@ -21,7 +21,7 @@ export async function generatePrivateKeyFromPassword(
         hashLength: 32,
     });
 
-    const bytes = new Bytes(hash);
+    const bytes = Bytes.from(hash);
 
     const privateKey = new PrivateKey(KeyType.K1, bytes);
 

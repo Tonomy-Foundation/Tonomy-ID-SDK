@@ -94,11 +94,4 @@ describe('Keymanager class', () => {
 
         expect(r1).not.toEqual(r2);
     });
-
-    test('generates same key as RN keymanager', async () => {
-        const salt: Checksum256 = Checksum256.from(Buffer.from('12345678901234567890123456789012', 'utf-8'));
-        const { privateKey } = await generatePrivateKeyFromPassword('password', salt);
-
-        expect(privateKey.toString()).toBe('PVT_K1_pPnFBQwMSQgjAenyLdMHoeFQBtazFBYEWeA12FtKpm5PEY4fc');
-    });
 });
