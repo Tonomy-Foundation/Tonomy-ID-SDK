@@ -18,7 +18,7 @@ import { LoginRequestPayload } from '../../src/sdk/util/request';
 
 export { createUser };
 
-export async function createRandomID(checkKeys= true) {
+export async function createRandomID(checkKeys = true) {
     const auth: KeyManager = new JsKeyManager();
     const user = createUserObject(auth, jsStorageFactory);
 
@@ -28,8 +28,8 @@ export async function createRandomID(checkKeys= true) {
 
     await user.saveUsername(username);
     await user.savePassword(password, { keyFromPasswordFn: generatePrivateKeyFromPassword });
-    checkKeys && await user.savePIN(pin);
-    checkKeys && await user.saveFingerprint();
+    checkKeys && (await user.savePIN(pin));
+    checkKeys && (await user.saveFingerprint());
     await user.saveLocal();
 
     await user.createPerson();

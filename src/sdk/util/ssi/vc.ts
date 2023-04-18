@@ -269,6 +269,14 @@ export class VerifiableCredentialWithType<T = object> {
     }
 
     /**
+     * Returns the type of the VC
+     * @returns {string} the class type of the VC
+     */
+    static getType(): string {
+        return this.name;
+    }
+
+    /**
      * Returns the internal Verifiable Credential
      * @returns {VerifiableCredential} the VC
      */

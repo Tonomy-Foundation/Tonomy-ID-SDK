@@ -5,7 +5,7 @@ import { getApi } from '../eosio/eosio';
 import { Signer, transact } from '../eosio/transaction';
 import { SdkErrors, throwError } from '../../../util/errors';
 import { sha256 } from '../../../util/crypto';
-import { getSettings } from '../../../settings';
+import { getSettings } from '../../../util/settings';
 import fetch from 'cross-fetch';
 
 enum PermissionLevel {
