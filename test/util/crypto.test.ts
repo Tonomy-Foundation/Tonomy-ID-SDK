@@ -42,6 +42,7 @@ describe('crypto generatePrivateKeyFromPassword()', () => {
     });
 
     it('generatePrivateKeyFromPassword() creates the same private key from a password and salt as what happens in Tonomy ID', async () => {
+        // See equivalent test in RNKeyManager.ts in Tonomy ID
         const saltInput = Checksum256.from(sha256('testsalt'));
 
         const { privateKey, salt } = await generatePrivateKeyFromPassword('testpassword', saltInput);
@@ -53,19 +54,16 @@ describe('crypto generatePrivateKeyFromPassword()', () => {
     it('argon2 generates the same value as with https://argon2.online', async () => {
         const password = 'testpassword';
         const saltInput = Checksum256.from(sha256('testsalt'));
-        // 4edf07edc95b2fdcbcaf2378fd12d8ac212c2aa6e326c59c3e629be3039d6432
 
         const hash = await argon2.hash(password, {
-            salt: Buffer.from(saltInput.hexString, 'hex'),
-            hashLength: 32,
+            salt: Buffer.from(saltInput.hexString),
             type: argon2.argon2id,
             raw: true,
+            timeCost: 3,
             memoryCost: 16384,
             parallelism: 1,
-            timeCost: 1, // iterations
+            hashLength: 32,
         });
-
-        const bytes = new Uint8Array(hash);
 
         expect(hash.toString('hex')).toEqual('30e30e19f23a98bdb2e932d8c0e40ca4471cc02bb39cc4b508afe30921b44573');
     });
