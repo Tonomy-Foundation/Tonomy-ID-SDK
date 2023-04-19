@@ -1,6 +1,6 @@
 import { KeyManager, KeyManagerLevel } from '../sdk/storage/keymanager';
 import { OnPressLoginOptions, UserApps } from '../sdk/controllers/userApps';
-import { generateRandomKeyPair, randomString } from '../sdk/util/crypto';
+import { createVCSigner, generateRandomKeyPair, randomString } from '../sdk/util/crypto';
 import { ES256KSigner } from '@tonomy/did-jwt';
 import { Issuer } from '@tonomy/did-jwt-vc';
 import { createJWK, toDid } from '../sdk/util/ssi/did-jwk';
@@ -13,8 +13,8 @@ import { browserStorageFactory } from '../sdk/storage/browserStorage';
 import { getChainInfo } from '../sdk/services/blockchain/eosio/eosio';
 import { JsKeyManager } from '../sdk/storage/jsKeyManager';
 import { LoginRequest, LoginRequestPayload } from '../sdk/util/request';
-import { AuthenticationRequest } from '../sdk/util/request';
 import { createKeyManagerSigner } from '../sdk/services/blockchain/eosio/transaction';
+import { AuthenticationMessage } from '../sdk';
 
 export type ExternalUserStorage = {
     accountName: Name;
@@ -31,7 +31,7 @@ export type VerifyLoginOptions = {
 
 export type LoginWithTonomyMessages = {
     loginRequest: LoginRequest;
-    loginToCommunication: AuthenticationRequest;
+    loginToCommunication: AuthenticationMessage;
 };
 
 /**
@@ -217,7 +217,7 @@ export class ExternalUser {
             window.location.href = `${getSettings().ssoWebsiteOrigin}/login?requests=${requestsString}`;
             return;
         } else {
-            const loginToCommunication = await AuthenticationRequest.sign({}, issuer);
+            const loginToCommunication = await AuthenticationMessage.signMessageWithoutRecipient({}, issuer);
 
             return { loginRequest, loginToCommunication };
         }
@@ -227,13 +227,13 @@ export class ExternalUser {
         const publicKey = await keyManager.getKey({
             level: KeyManagerLevel.BROWSER_LOCAL_STORAGE,
         });
+        const signer = createVCSigner(keyManager, KeyManagerLevel.BROWSER_LOCAL_STORAGE);
 
-        const signer = ES256KSigner(publicKey.data.array, true);
         const jwk = await createJWK(publicKey);
 
         return {
             did: toDid(jwk),
-            signer: signer as any,
+            signer: signer.sign as any,
             alg: 'ES256K-R',
         };
     }

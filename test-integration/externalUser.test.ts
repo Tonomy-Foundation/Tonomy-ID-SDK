@@ -5,16 +5,27 @@
 
 // need to use API types from inside tonomy-id-sdk, otherwise type compatibility issues
 import {
+    App,
+    setSettings,
+    User,
+    KeyManager,
+    StorageFactory,
+    STORAGE_NAMESPACE,
+    IdentifyMessage,
+    LoginRequestResponseMessage,
+} from '../src/sdk/index';
+import URL from 'jsdom-url';
+import { JsKeyManager } from '../src/sdk/storage/jsKeyManager';
+
+// helpers
+import {
     createRandomApp,
     createRandomID,
     loginToTonomyCommunication,
     scanQrAndAck,
     setupLoginRequestSubscriber,
 } from './helpers/user';
-import { App, setSettings, User, KeyManager, StorageFactory, STORAGE_NAMESPACE, MessageType } from '../src/sdk/index';
 import settings from './helpers/settings';
-import URL from 'jsdom-url';
-import { JsKeyManager } from '../src/sdk/storage/jsKeyManager';
 import { sleep } from './helpers/sleep';
 import {
     externalWebsiteOnCallback,
@@ -33,7 +44,7 @@ global.URL = URL;
 
 setSettings(settings);
 
-const log = false;
+const log = true;
 
 describe('External User class', () => {
     jest.setTimeout(30000);
@@ -138,7 +149,7 @@ describe('External User class', () => {
             expect(TONOMY_LOGIN_WEBSITE_communication.socketServer.listeners('message').length).toBe(0);
             const TONOMY_LOGIN_WEBSITE_subscription = TONOMY_LOGIN_WEBSITE_communication.subscribeMessage(
                 TONOMY_LOGIN_WEBSITE_messageSubscriber,
-                MessageType.IDENTIFY
+                IdentifyMessage.getType()
             );
 
             expect(TONOMY_LOGIN_WEBSITE_communication.socketServer.listeners('message').length).toBe(1);
@@ -162,13 +173,13 @@ describe('External User class', () => {
             // wait for the ack message to confirm Tonomy ID is connected
             const connectionMessageFromTonomyId = await TONOMY_LOGIN_WEBSITE_ackMessagePromise;
 
-            expect(connectionMessageFromTonomyId.message.getSender()).toBe(TONOMY_ID_did + '#local');
+            expect(connectionMessageFromTonomyId.getSender()).toBe(TONOMY_ID_did + '#local');
 
             await sendLoginRequestsMessage(
                 TONOMY_LOGIN_WEBSITE_jwtRequests,
                 TONOMY_LOGIN_WEBSITE_jsKeyManager,
                 TONOMY_LOGIN_WEBSITE_communication,
-                connectionMessageFromTonomyId.message.getSender(),
+                connectionMessageFromTonomyId.getSender(),
                 log
             );
 
@@ -181,7 +192,7 @@ describe('External User class', () => {
             TONOMY_LOGIN_WEBSITE_communication.unsubscribeMessage(TONOMY_LOGIN_WEBSITE_subscription);
             const TONOMY_LOGIN_WEBSITE_subscription2 = TONOMY_LOGIN_WEBSITE_communication.subscribeMessage(
                 TONOMY_LOGIN_WEBSITE_messageSubscriber2,
-                MessageType.LOGIN_REQUEST_RESPONSE
+                LoginRequestResponseMessage.getType()
             );
 
             expect(TONOMY_LOGIN_WEBSITE_communication.socketServer.listeners('message').length).toBe(1);
@@ -205,14 +216,13 @@ describe('External User class', () => {
             TONOMY_LOGIN_WEBSITE_communication.unsubscribeMessage(TONOMY_LOGIN_WEBSITE_subscription2);
             expect(TONOMY_LOGIN_WEBSITE_communication.socketServer.listeners('message').length).toBe(0);
 
-            const payload = requestConfirmedMessageFromTonomyId.message.getPayload();
-            const TONOMY_LOGIN_WEBSITE_requests = JSON.parse(payload.requests) as string[];
+            const payload = requestConfirmedMessageFromTonomyId.getPayload().requests;
 
             expect(payload).toBeDefined();
             expect(payload.requests).toBeDefined();
             expect(payload.accountName).toBeDefined();
 
-            expect(TONOMY_LOGIN_WEBSITE_requests.length).toBe(2);
+            expect(payload.requests.length).toBe(2);
             expect(payload.accountName).toBe(await (await TONOMY_ID_user.getAccountName()).toString());
             // TODO uncomment when we have username
             // expect(payload.username).toBe((await TONOMY_ID_user.getUsername()).username);

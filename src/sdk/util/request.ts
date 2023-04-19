@@ -1,5 +1,6 @@
 import { PublicKey } from '@greymass/eosio';
-import { VerifiableCredentialWithType } from './ssi/vc';
+import { VCWithTypeType, VerifiableCredentialOptions, VerifiableCredentialWithType } from './ssi/vc';
+import { Issuer } from '@tonomy/did-jwt-vc';
 
 export type LoginRequestPayload = {
     randomString: string;
@@ -7,8 +8,16 @@ export type LoginRequestPayload = {
     publicKey: PublicKey;
     callbackPath?: string;
 };
-export class LoginRequest extends VerifiableCredentialWithType<LoginRequestPayload> { }
 
-// empty object
-export type AuthenticationRequestPayload = Record<string, never>;
-export class AuthenticationRequest extends VerifiableCredentialWithType<AuthenticationRequestPayload> { }
+export class LoginRequest extends VerifiableCredentialWithType<LoginRequestPayload> {
+    constructor(vc: LoginRequest | VCWithTypeType<LoginRequestPayload>) {
+        super(vc);
+        this.decodedPayload.publicKey = PublicKey.from(super.getPayload().publicKey);
+    }
+
+    static async sign(payload: LoginRequestPayload, issuer: Issuer, options: VerifiableCredentialOptions = {}) {
+        const vc = await super.sign<LoginRequestPayload>(payload, issuer, options);
+
+        return new LoginRequest(vc);
+    }
+}

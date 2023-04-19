@@ -48,7 +48,7 @@ describe('logging in', () => {
         expect(result).toBeInstanceOf(LoginRequest);
         expect(result).toBeDefined();
         expect(typeof result.getPayload().randomString).toBe('string');
-        expect(typeof result.getPayload().publicKey).toBe('string');
+        expect(result.getPayload().publicKey).toBeInstanceOf(PublicKey);
         expect(result.getPayload().origin).toBe('http://localhost');
         expect(result.getPayload().callbackPath).toBe('/login');
     });

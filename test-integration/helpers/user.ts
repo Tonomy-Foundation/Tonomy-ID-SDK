@@ -9,12 +9,16 @@ import {
     UserApps,
     MessageType,
     JsKeyManager,
+    IdentifyMessage,
+    AuthenticationMessage,
+    LoginRequestsMessage,
+    LoginRequestResponseMessage,
 } from '../../src/sdk/index';
 import { jsStorageFactory } from '../../src/cli/bootstrap/jsstorage';
 import { generatePrivateKeyFromPassword } from '../../src/cli/bootstrap/keys';
 import { privateKey } from './eosio';
 import { createUser } from '../../src/cli/bootstrap/user';
-import { LoginRequestPayload } from '../../src/sdk/util/request';
+import { AuthenticationRequest, LoginRequestPayload } from '../../src/sdk/util/request';
 
 export { createUser };
 
@@ -59,12 +63,13 @@ export async function createRandomApp(logoUrl?: string, origin?: string): Promis
 }
 
 export async function loginToTonomyCommunication(user: User, log = false) {
+    const issuer = await user.getIssuer();
     // Login to Tonomy Communication as the user
-    const loginMessage = await user.signMessage({}, { type: MessageType.COMMUNICATION_LOGIN });
+    const authMessage = await AuthenticationMessage.signMessageWithoutRecipient({}, issuer);
 
     if (log) console.log('TONOMY_ID/appStart: connect to Tonomy Communication');
 
-    const loginResponse = await user.communication.login(loginMessage);
+    const loginResponse = await user.communication.login(authMessage);
 
     expect(loginResponse).toBe(true);
 }
@@ -76,10 +81,8 @@ export async function scanQrAndAck(user: User, qrCodeData: string, log = false) 
     const barcodeScanResults = {
         data: qrCodeData,
     };
-    const connectMessage = await user.signMessage(
-        {},
-        { recipient: barcodeScanResults.data, type: MessageType.IDENTIFY }
-    );
+
+    const connectMessage = await IdentifyMessage.signMessage({}, await user.getIssuer(), barcodeScanResults.data);
 
     if (log) console.log("TONOMY_ID/scanQr: connecting to Tonomy Login Website's with their did:jwk from the QR code");
     const sendMessageResponse = await user.communication.sendMessage(connectMessage);
@@ -100,10 +103,12 @@ export async function setupLoginRequestSubscriber(
     // This emulates the Tonomy ID app, which waits for the user requests
     return new Promise((resolve) => {
         user.communication.subscribeMessage(async (message) => {
+            const loginRequestMessage = new LoginRequestsMessage(message);
+
             if (log) console.log('TONOMY_ID/SSO: receive login requests from Tonomy Login Website');
 
             // receive and verify the requests
-            const requests = message.getPayload().requests;
+            const requests = loginRequestMessage.getPayload().requests;
 
             // TODO check this throws an error if requests are not valid, or not signed correctly
             if (log) console.log('TONOMY_ID/SSO: verifying login request');
@@ -113,11 +118,11 @@ export async function setupLoginRequestSubscriber(
 
             let tonomyIdLoginDid = '';
 
-            for (const jwt of verifiedRequests) {
+            for (const request of verifiedRequests) {
                 // parse the requests for their app data
-                const payload = jwt.getPayload() as LoginRequestPayload;
+                const payload = request.getPayload();
                 const loginApp = await App.getApp(payload.origin);
-                const senderDid = jwt.getSender();
+                const senderDid = request.getIssuer();
 
                 if (loginApp.origin === externalOrigin) {
                     appsFound[1] = true;
@@ -137,13 +142,19 @@ export async function setupLoginRequestSubscriber(
                 }
             }
 
-            const accountName = await user.storage.accountName.toString();
+            const accountName = await user.storage.accountName;
 
             // send a message back to the app
-            const respondMessage = (await user.signMessage(
-                { requests, accountName },
-                { recipient: tonomyIdLoginDid, type: MessageType.LOGIN_REQUEST_RESPONSE }
-            )) as Message;
+            const issuer = await user.getIssuer();
+            const respondMessage = await LoginRequestResponseMessage.signMessage(
+                {
+                    success: true,
+                    requests: verifiedRequests,
+                    accountName,
+                },
+                issuer,
+                tonomyIdLoginDid
+            );
 
             if (log) console.log('TONOMY_ID/SSO: sending a confirmation of the logins back to Tonomy Login Website');
             const sendMessageResponse = await user.communication.sendMessage(respondMessage);
@@ -151,6 +162,6 @@ export async function setupLoginRequestSubscriber(
             expect(sendMessageResponse).toBe(true);
 
             resolve(true);
-        }, MessageType.LOGIN_REQUEST);
+        }, LoginRequestsMessage.getType());
     });
 }

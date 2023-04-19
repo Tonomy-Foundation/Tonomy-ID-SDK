@@ -198,6 +198,15 @@ export class VerifiableCredential<T = object> {
     toString(): string {
         return this.jwt;
     }
+
+    /**
+     * Returns the JWT string, called by JSON.stringify
+     *
+     * @returns {string} the JWT string
+     */
+    toJSON(): string {
+        return this.toString();
+    }
 }
 
 export type VerifiableCredentialOptions = {
@@ -205,16 +214,27 @@ export type VerifiableCredentialOptions = {
     additionalTypes?: string[];
 };
 
+export type VCWithTypeType<T> = VerifiableCredential<{ payload: T; type: string }> | VerifiableCredentialWithType | JWT;
+
 /**
  * A wrapper that adds a type object to VCs to allow for identification, and presents a simper interace
  *
  * This is the base class. It is expected that extension classes will be created for the different VC types.
  * See LoginRequest for an example.
+ *
+ * @inheritdoc Constructor and sign should be overridden if the payload type requires ad-hoc decoding
  */
 export class VerifiableCredentialWithType<T = object> {
-    vc: VerifiableCredential<{ payload: T; type: string }>;
+    private vc: VerifiableCredential<{ payload: T; type: string }>;
+    protected decodedPayload: T;
 
-    constructor(vc: VerifiableCredential<{ payload: T; type: string }> | VerifiableCredentialWithType | JWT) {
+    /**
+     *
+     * @param vc the VC to wrap
+     *
+     * @inheritdoc override me if the payload type requires ad-hoc decoding
+     */
+    constructor(vc: VCWithTypeType<T>) {
         if (typeof vc === 'string') {
             this.vc = new VerifiableCredential<{ payload: T; type: string }>(vc);
         } else if (vc instanceof VerifiableCredentialWithType) {
@@ -222,10 +242,14 @@ export class VerifiableCredentialWithType<T = object> {
         } else {
             this.vc = vc;
         }
+
+        this.decodedPayload = this.getVc().getCredentialSubject().payload;
     }
 
     /**
      * Creates a signed VC object
+     *
+     * @inheritdoc override me if the payload type requires ad-hoc decoding, by calling the child class constructor
      *
      * @param {object} payload the payload
      * @param {Issuer} issuer the issuer id
@@ -297,7 +321,7 @@ export class VerifiableCredentialWithType<T = object> {
      * @returns {object} the payload
      */
     getPayload(): T {
-        return this.getVc().getCredentialSubject().payload;
+        return this.decodedPayload;
     }
 
     /**
@@ -325,5 +349,14 @@ export class VerifiableCredentialWithType<T = object> {
      */
     toString(): string {
         return this.getVc().toString();
+    }
+
+    /**
+     * Returns the JWT string, called by JSON.stringify
+     *
+     * @returns {string} the JWT string
+     */
+    toJSON(): string {
+        return this.toString();
     }
 }
