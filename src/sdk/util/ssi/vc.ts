@@ -15,6 +15,7 @@ import {
 } from '@tonomy/did-jwt-vc';
 import { toDateTime } from '../time';
 import { randomString } from '../crypto';
+import { Serializable } from '../serializable';
 
 /**
  * A W3C Verifiable Credential

@@ -1,7 +1,7 @@
 /**
  * An interface for objects that can be serialized to JSON.
  */
-interface Serializable {
+export interface Serializable {
     /**
      * Returns the a JSON representation of the object
      *

@@ -1,4 +1,6 @@
 import { sha256 } from './crypto';
+import { SdkErrors, throwError } from './errors';
+import { Serializable } from './serializable';
 
 enum AccountType {
     PERSON = 'PERSON',
@@ -82,9 +84,14 @@ export class TonomyUsername implements Serializable {
 
     /**
      * Used in JSON.stringify
-     * @returns the username hash
+     * @returns the username
+     *
+     * @throws Error if username is not set
      */
     toJSON() {
-        return this.toString();
+        const username = this.toString();
+
+        if (!username) throwError('Username is not set', SdkErrors.UsernameNotDefined);
+        return username;
     }
 }
