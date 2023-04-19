@@ -72,4 +72,19 @@ export class TonomyUsername {
     getBaseUsername() {
         return this.username?.split('.')[0];
     }
+
+    /**
+     * @returns the username hash
+     */
+    toString() {
+        return this.username;
+    }
+
+    /**
+     * Used in JSON.stringify
+     * @returns the username hash
+     */
+    toJSON() {
+        return this.toString();
+    }
 }

@@ -1,5 +1,5 @@
 import { Issuer } from '@tonomy/did-jwt-vc';
-import { DIDurl, JWT, URL } from '../../util/ssi/types';
+import { DIDurl, URL } from '../../util/ssi/types';
 import { VerifiableCredentialWithType, VerifiableCredentialOptions, VCWithTypeType } from '../../util/ssi/vc';
 import { LoginRequest } from '../../util/request';
 import { TonomyUsername } from '../../util/username';
@@ -140,7 +140,7 @@ export class LoginRequestResponseMessage extends Message<LoginRequestResponseMes
         vc:
             | LoginRequestResponseMessage
             | Message<LoginRequestResponseMessagePayload>
-            | VCWithTypeType<LoginRequestsMessagePayload>
+            | VCWithTypeType<LoginRequestResponseMessagePayload>
     ) {
         super(vc);
         const payload = this.getVc().getPayload().vc.credentialSubject.payload;
@@ -154,7 +154,9 @@ export class LoginRequestResponseMessage extends Message<LoginRequestResponseMes
                 ...payload,
                 requests: payload.requests.map((request: string) => new LoginRequest(request)),
                 accountName: Name.from(payload.accountName),
-                username: new TonomyUsername(payload.username),
+                username: payload.username.username
+                    ? new TonomyUsername(payload.username.username)
+                    : new TonomyUsername(payload.username),
             };
         }
     }

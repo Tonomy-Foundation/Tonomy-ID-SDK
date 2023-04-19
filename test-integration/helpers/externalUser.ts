@@ -142,10 +142,10 @@ export async function loginWebsiteOnCallback(keyManager: KeyManager, storageFact
 
     if (log) console.log('TONOMY_LOGIN_WEBSITE/callback: redirecting to external website');
 
-    const username = (await externalUser.getUsername()).username;
+    const username = await externalUser.getUsername();
     const accountName = await externalUser.getAccountName();
 
-    return { redirectJwt, username, accountName };
+    return { redirectJwt: redirectJwt as LoginRequest, username, accountName };
 }
 
 export async function externalWebsiteOnCallback(
