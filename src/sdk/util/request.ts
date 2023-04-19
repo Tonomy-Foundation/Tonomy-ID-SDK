@@ -15,7 +15,7 @@ export class LoginRequest extends VerifiableCredentialWithType<LoginRequestPaylo
         this.decodedPayload.publicKey = PublicKey.from(super.getPayload().publicKey);
     }
 
-    static async sign(payload: LoginRequestPayload, issuer: Issuer, options: VerifiableCredentialOptions = {}) {
+    static async signRequest(payload: LoginRequestPayload, issuer: Issuer, options: VerifiableCredentialOptions = {}) {
         const vc = await super.sign<LoginRequestPayload>(payload, issuer, options);
 
         return new LoginRequest(vc);

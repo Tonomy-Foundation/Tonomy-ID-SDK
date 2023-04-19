@@ -208,7 +208,7 @@ export class ExternalUser {
             signer: signer as any,
             alg: 'ES256K-R',
         };
-        const loginRequest = await LoginRequest.sign(payload, issuer);
+        const loginRequest = await LoginRequest.signRequest(payload, issuer);
 
         if (redirect) {
             const requests = [loginRequest.toString()];

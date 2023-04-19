@@ -20,7 +20,7 @@ import { Serializable } from '../serializable';
 /**
  * A W3C Verifiable Credential
  */
-export class VerifiableCredential<T = object> {
+export class VerifiableCredential<T extends object = object> {
     private decodedJwt: JWTDecoded;
     private jwt: JWT;
 
@@ -164,7 +164,7 @@ export class VerifiableCredential<T = object> {
      *
      * @returns {Promise<VerifiableCredential>} the Verifiable Credential
      */
-    static async sign<T = object>(
+    static async sign<T extends object = object>(
         id: DIDurl,
         type: string[],
         credentialSubject: T,
@@ -215,7 +215,10 @@ export type VerifiableCredentialOptions = {
     additionalTypes?: string[];
 };
 
-export type VCWithTypeType<T> = VerifiableCredential<{ payload: T; type: string }> | VerifiableCredentialWithType | JWT;
+export type VCWithTypeType<T extends object = object> =
+    | VerifiableCredential<{ payload: T; type: string }>
+    | VerifiableCredentialWithType<T>
+    | JWT;
 
 /**
  * A wrapper that adds a type object to VCs to allow for identification, and presents a simper interace
@@ -225,7 +228,7 @@ export type VCWithTypeType<T> = VerifiableCredential<{ payload: T; type: string 
  *
  * @inheritdoc Constructor and sign should be overridden if the payload type requires ad-hoc decoding
  */
-export class VerifiableCredentialWithType<T = object> implements Serializable {
+export class VerifiableCredentialWithType<T extends object = object> implements Serializable {
     private vc: VerifiableCredential<{ payload: T; type: string }>;
     protected decodedPayload: T;
 
@@ -258,7 +261,7 @@ export class VerifiableCredentialWithType<T = object> implements Serializable {
      *
      * @returns a VC object
      */
-    static async sign<T = object>(
+    protected static async sign<T extends object = object>(
         payload: T,
         issuer: Issuer,
         options: VerifiableCredentialOptions = {}

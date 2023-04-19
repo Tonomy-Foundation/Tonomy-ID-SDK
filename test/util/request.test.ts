@@ -32,7 +32,7 @@ describe('Request class', () => {
     });
 
     it('creates a LoginRequest with the correct functions', async () => {
-        const loginRequest = await LoginRequest.sign(request, issuer);
+        const loginRequest = await LoginRequest.signRequest(request, issuer);
 
         expect(loginRequest).toBeDefined();
         expect(loginRequest.getVc).toBeDefined();
@@ -44,7 +44,7 @@ describe('Request class', () => {
     });
 
     it('creates a LoginRequest with a did-jwk', async () => {
-        const loginRequest = await LoginRequest.sign(request, issuer);
+        const loginRequest = await LoginRequest.signRequest(request, issuer);
 
         expect(loginRequest.getIssuer()).toBe(issuer.did);
         expect(loginRequest.getPayload()).toStrictEqual(request);
@@ -80,7 +80,7 @@ describe('LoginRequest class', () => {
             publicKey: publicKey,
             callbackPath: '/callback',
         };
-        loginRequest = await LoginRequest.sign(request, issuer);
+        loginRequest = await LoginRequest.signRequest(request, issuer);
     });
 
     test('Creates LoginRequest payload is object with PublicKey type', async () => {

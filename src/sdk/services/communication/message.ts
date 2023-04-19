@@ -1,6 +1,6 @@
 import { Issuer } from '@tonomy/did-jwt-vc';
 import { DIDurl, URL } from '../../util/ssi/types';
-import { VerifiableCredentialWithType, VerifiableCredentialOptions, VCWithTypeType } from '../../util/ssi/vc';
+import { VerifiableCredentialWithType, VCWithTypeType } from '../../util/ssi/vc';
 import { LoginRequest } from '../../util/request';
 import { TonomyUsername } from '../../util/username';
 import { Name } from '@greymass/eosio';
@@ -9,23 +9,13 @@ import { SdkErrors } from '../../util/errors';
 /**
  * A message that can be sent between two Tonomy identities
  *
- * @inheritdoc Constructor and signMessage should be overridden if the payload type requires ad-hoc decoding
+ * @inheritdoc Constructor should be overridden if the payload type requires ad-hoc decoding
+ * @inheritdoc A new static function signMessage() should be added to child classes
+ * as an alternative constructor to sign a message object and return the class type
  */
-export class Message<T = object> extends VerifiableCredentialWithType<T> {
+export class Message<T extends object = object> extends VerifiableCredentialWithType<T> {
     constructor(vc: VCWithTypeType<T>) {
         super(vc);
-    }
-
-    static async sign<T = object>(
-        //@ts-expect-error - declared but not read
-        request: T,
-        //@ts-expect-error - declared but not read
-        issuer: Issuer,
-        //@ts-expect-error - declared but not read
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        options: VerifiableCredentialOptions = {}
-    ): Promise<VerifiableCredentialWithType<T>> {
-        throw new Error('Use Message.signMessage instead');
     }
 
     /**
@@ -40,7 +30,7 @@ export class Message<T = object> extends VerifiableCredentialWithType<T> {
      *
      * @returns a message object
      */
-    static async signMessage<T = object>(
+    protected static async signMessageWithRecipient<T extends object = object>(
         message: T,
         issuer: Issuer,
         recipient: DIDurl,
@@ -82,18 +72,31 @@ export class Message<T = object> extends VerifiableCredentialWithType<T> {
 // empty object
 export type AuthenticationMessagePayload = Record<string, never>;
 export class AuthenticationMessage extends Message<AuthenticationMessagePayload> {
-    static signMessageWithoutRecipient<T = object>(
-        message: T,
+    static async signMessageWithoutRecipient<AuthenticationMessagePayload>(
+        message: AuthenticationMessagePayload,
         issuer: Issuer,
         options?: { subject?: string | undefined }
-    ): Promise<Message<T>> {
-        return super.signMessage(message, issuer, '', options);
+    ) {
+        const vc = await super.signMessageWithRecipient(message as any, issuer, '', options);
+
+        return new AuthenticationMessage(vc);
     }
 }
 
 // empty object
 export type IdentifyMessagePayload = Record<string, never>;
-export class IdentifyMessage extends Message<IdentifyMessagePayload> { }
+export class IdentifyMessage extends Message<IdentifyMessagePayload> {
+    static async signMessage(
+        message: IdentifyMessagePayload,
+        issuer: Issuer,
+        recipient: DIDurl,
+        options: { subject?: URL } = {}
+    ) {
+        const vc = await super.signMessageWithRecipient<IdentifyMessagePayload>(message, issuer, recipient, options);
+
+        return new IdentifyMessage(vc);
+    }
+}
 
 export type LoginRequestsMessagePayload = {
     requests: LoginRequest[];
@@ -119,7 +122,12 @@ export class LoginRequestsMessage extends Message<LoginRequestsMessagePayload> {
         recipient: DIDurl,
         options: { subject?: URL } = {}
     ) {
-        const vc = await super.signMessage<LoginRequestsMessagePayload>(message, issuer, recipient, options);
+        const vc = await super.signMessageWithRecipient<LoginRequestsMessagePayload>(
+            message,
+            issuer,
+            recipient,
+            options
+        );
 
         return new LoginRequestsMessage(vc);
     }
@@ -167,7 +175,12 @@ export class LoginRequestResponseMessage extends Message<LoginRequestResponseMes
         recipient: DIDurl,
         options: { subject?: URL } = {}
     ) {
-        const vc = await super.signMessage<LoginRequestResponseMessagePayload>(message, issuer, recipient, options);
+        const vc = await super.signMessageWithRecipient<LoginRequestResponseMessagePayload>(
+            message,
+            issuer,
+            recipient,
+            options
+        );
 
         return new LoginRequestResponseMessage(vc);
     }

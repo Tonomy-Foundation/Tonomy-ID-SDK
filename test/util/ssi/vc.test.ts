@@ -105,7 +105,7 @@ describe('VerifiableCredentialWithType class', () => {
     });
 
     it('Can be created using the different constructors', async () => {
-        const loginRequest = await LoginRequest.sign(request, issuer);
+        const loginRequest = await LoginRequest.signRequest(request, issuer);
         const newRequest = new VerifiableCredentialWithType(loginRequest);
 
         expect(newRequest.getType()).toBe('LoginRequest');
