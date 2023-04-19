@@ -224,7 +224,7 @@ export type VCWithTypeType<T> = VerifiableCredential<{ payload: T; type: string 
  *
  * @inheritdoc Constructor and sign should be overridden if the payload type requires ad-hoc decoding
  */
-export class VerifiableCredentialWithType<T = object> {
+export class VerifiableCredentialWithType<T = object> implements Serializable {
     private vc: VerifiableCredential<{ payload: T; type: string }>;
     protected decodedPayload: T;
 

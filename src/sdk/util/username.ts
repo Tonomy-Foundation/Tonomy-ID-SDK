@@ -42,7 +42,7 @@ namespace AccountType {
 
 export { AccountType };
 
-export class TonomyUsername {
+export class TonomyUsername implements Serializable {
     username?: string;
     usernameHash: string;
 
