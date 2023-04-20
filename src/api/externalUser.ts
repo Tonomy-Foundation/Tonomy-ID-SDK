@@ -92,6 +92,7 @@ export class ExternalUser {
                 throw throwError('User Not loggedIn', SdkErrors.UserNotLoggedIn);
             }
         } catch (e) {
+            //add logout
             await user.logout();
             throw e;
         }
