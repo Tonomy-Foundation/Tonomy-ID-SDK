@@ -25,6 +25,7 @@ import {
     sendLoginRequestsMessage,
     setupTonomyIdIdentifySubscriber,
     setupTonomyIdRequestConfirmSubscriber,
+    externalWebsiteOnLogout,
 } from './helpers/externalUser';
 import { createStorageFactory } from './helpers/storageFactory';
 
@@ -89,7 +90,7 @@ describe('External User class', () => {
 
     describe('SSO login full end-to-end flow', () => {
         test('User succeeds at login to external website', async () => {
-            expect.assertions(32);
+            expect.assertions(33);
 
             const appsFound = [false, false];
 
@@ -214,9 +215,9 @@ describe('External User class', () => {
 
             expect(TONOMY_LOGIN_WEBSITE_requests.length).toBe(2);
             expect(payload.accountName).toBe(await (await TONOMY_ID_user.getAccountName()).toString());
+
             // TODO uncomment when we have username
             // expect(payload.username).toBe((await TONOMY_ID_user.getUsername()).username);
-
             if (log) console.log('TONOMY_LOGIN_WEBSITE/login: sending to callback page');
             // @ts-expect-error - cannot find name jsdom
             jsdom.reconfigure({
@@ -262,6 +263,8 @@ describe('External User class', () => {
                 TONOMY_ID_user,
                 log
             );
+
+            await externalWebsiteOnLogout(EXTERNAL_WEBSITE_jsKeyManager, EXTERNAL_WEBSITE_storage_factory);
 
             // cleanup connections
             await TONOMY_LOGIN_WEBSITE_communication.disconnect();

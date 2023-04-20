@@ -34,6 +34,11 @@ export type OnPressLoginOptions = {
     redirect?: boolean;
 };
 
+export type ResponseParams = {
+    success: boolean;
+    reason: SdkErrors;
+};
+
 export class UserApps {
     user: User;
     keyManager: KeyManager;
@@ -100,9 +105,20 @@ export class UserApps {
     /**
      * Extracts the login requests, username and accountName from the URL
      *
-     * @returns the requests (JWTs), username and accountName
+     * @param requests {string} - a string param that represents the token
+     * @param username {string} - a string param that represents the username
+     * @param accountName {string} - a string param that represents the accountname 
+     * @param response {Response} - a object that contains  {success: Boolean, reason: String}
+
+     * @returns the requests (JWTs), username and accountName, response
      */
-    static getLoginRequestParams(): { requests: string; username: string; accountName: string } {
+    static getLoginRequestParams(): {
+        requests: string;
+        username: string;
+        accountName: string;
+        response: ResponseParams;
+        // eslint-disable-next-line indent
+    } {
         const params = new URLSearchParams(window.location.search);
 
         const requests = params.get('requests');
@@ -117,7 +133,10 @@ export class UserApps {
 
         if (!accountName) throwError("accountName parameter doesn't exists", SdkErrors.MissingParams);
 
-        return { requests, username, accountName };
+        const responseParams = params.get('response');
+        const response = responseParams && JSON.parse(responseParams);
+
+        return { requests, username, accountName, response };
     }
 
     /**
