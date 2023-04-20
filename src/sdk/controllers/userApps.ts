@@ -117,7 +117,8 @@ export class UserApps {
         username: string;
         accountName: string;
         response: ResponseParams;
-        } {
+        // eslint-disable-next-line indent
+    } {
         const params = new URLSearchParams(window.location.search);
 
         const requests = params.get('requests');
