@@ -18,7 +18,7 @@ import { createUser } from '../../src/cli/bootstrap/user';
 
 export { createUser };
 
-export async function createRandomID() {
+export async function createRandomID(checkKeys= true) {
     const auth: KeyManager = new JsKeyManager();
     const user = createUserObject(auth, jsStorageFactory);
 
@@ -28,8 +28,8 @@ export async function createRandomID() {
 
     await user.saveUsername(username);
     await user.savePassword(password, { keyFromPasswordFn: generatePrivateKeyFromPassword });
-    await user.savePIN(pin);
-    await user.saveFingerprint();
+    checkKeys && await user.savePIN(pin);
+    checkKeys && await user.saveFingerprint();
     await user.saveLocal();
 
     await user.createPerson();

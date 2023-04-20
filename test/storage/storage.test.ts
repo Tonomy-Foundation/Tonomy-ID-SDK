@@ -27,16 +27,6 @@ describe('Storage', () => {
         expect(test).toBe('test');
     });
 
-    // This fails typescript compilation as expected
-    // it('creates a storage correctly with type', async () => {
-    //     const testStorage = createStorage<TestStorage>(STORAGE_NAMESPACE + 'test.', storageFactory);
-    //     testStorage.test2 = 'test';
-    //     await testStorage.test2;
-
-    //     const test = await testStorage.test2;
-    //     expect(test).toBe('test');
-    // });
-
     it('creates a storage correctly with type', async () => {
         const testStorage = createStorage(STORAGE_NAMESPACE + 'test.', jsStorageFactory) as any;
 
