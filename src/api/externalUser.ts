@@ -282,7 +282,7 @@ export class ExternalUser {
 
         const { requests, username, accountName, response } = UserApps.getLoginRequestParams();
 
-        if (response.success === false) {
+        if (response && response.success === false) {
             throwError('Login Failed', response.reason);
         }
 
