@@ -221,12 +221,15 @@ export type VCWithTypeType<T extends object = object> =
     | JWT;
 
 /**
- * A wrapper that adds a type object to VCs to allow for identification, and presents a simper interace
+ * A wrapper that adds a type object to VCs to allow for identification, and presents a simper interface
  *
  * This is the base class. It is expected that extension classes will be created for the different VC types.
- * See LoginRequest for an example.
  *
- * @inheritdoc Constructor and sign should be overridden if the payload type requires ad-hoc decoding
+ * @inheritdoc sign() is a protected alternative constructor. In child classes, a new alternative constructor
+ * should be created which returns the child class type.
+ * @inheritdoc if the payload type requires ad-hoc decoding, override the constructor and decode the payload
+ *
+ * @example see an example of the above in the LoginRequestMessage class in `../..services/communication/messages.ts`
  */
 export class VerifiableCredentialWithType<T extends object = object> implements Serializable {
     private vc: VerifiableCredential<{ payload: T; type: string }>;
@@ -253,7 +256,7 @@ export class VerifiableCredentialWithType<T extends object = object> implements 
     /**
      * Creates a signed VC object
      *
-     * @inheritdoc override me if the payload type requires ad-hoc decoding, by calling the child class constructor
+     * @access protected
      *
      * @param {object} payload the payload
      * @param {Issuer} issuer the issuer id
@@ -357,6 +360,8 @@ export class VerifiableCredentialWithType<T extends object = object> implements 
 
     /**
      * Returns the JWT string, called by JSON.stringify
+     *
+     * @overrides Serializable
      *
      * @returns {string} the JWT string
      */

@@ -9,19 +9,24 @@ import { SdkErrors } from '../../util/errors';
 /**
  * A message that can be sent between two Tonomy identities
  *
- * @inheritdoc Constructor should be overridden if the payload type requires ad-hoc decoding
- * @inheritdoc A new static function signMessage() should be added to child classes
- * as an alternative constructor to sign a message object and return the class type
+ * @inheritdoc signMessageWithRecipient() is a protected alternative constructor. In child classes,
+ * a new alternative constructor called signMessage() should be created which returns the child class type.
+ * @inheritdoc if the payload type requires ad-hoc decoding, override the constructor and decode the payload
+ *
+ * @example see an example of the above in the LoginRequestMessage class
  */
 export class Message<T extends object = object> extends VerifiableCredentialWithType<T> {
+    /**
+     * @inheritdoc override me if the payload type requires ad-hoc decoding
+     */
     constructor(vc: VCWithTypeType<T>) {
         super(vc);
     }
 
     /**
-     * Creates a signed Message object
+     * Alternative constructor that returns type Message
      *
-     * @inheritdoc override me if the payload type requires ad-hoc decoding, by calling the child class constructor
+     * @access protected
      *
      * @param {object} message the message
      * @param {Issuer} issuer the issuer id
@@ -72,6 +77,9 @@ export class Message<T extends object = object> extends VerifiableCredentialWith
 // empty object
 export type AuthenticationMessagePayload = Record<string, never>;
 export class AuthenticationMessage extends Message<AuthenticationMessagePayload> {
+    /**
+     * Alternative constructor that returns type AuthenticationMessage
+     */
     static async signMessageWithoutRecipient<AuthenticationMessagePayload>(
         message: AuthenticationMessagePayload,
         issuer: Issuer,
@@ -86,6 +94,9 @@ export class AuthenticationMessage extends Message<AuthenticationMessagePayload>
 // empty object
 export type IdentifyMessagePayload = Record<string, never>;
 export class IdentifyMessage extends Message<IdentifyMessagePayload> {
+    /**
+     * Alternative constructor that returns type IdentifyMessage
+     */
     static async signMessage(
         message: IdentifyMessagePayload,
         issuer: Issuer,
@@ -103,6 +114,9 @@ export type LoginRequestsMessagePayload = {
 };
 
 export class LoginRequestsMessage extends Message<LoginRequestsMessagePayload> {
+    /**
+     * @override the Message constructor to decode the payload of type LoginRequestsMessagePayload
+     */
     constructor(
         vc: LoginRequestsMessage | Message<LoginRequestsMessagePayload> | VCWithTypeType<LoginRequestsMessagePayload>
     ) {
@@ -116,6 +130,9 @@ export class LoginRequestsMessage extends Message<LoginRequestsMessagePayload> {
         this.decodedPayload = { requests: payload.requests.map((request: string) => new LoginRequest(request)) };
     }
 
+    /**
+     * Alternative constructor that returns type LoginRequestsMessage
+     */
     static async signMessage(
         message: LoginRequestsMessagePayload,
         issuer: Issuer,
@@ -144,6 +161,9 @@ export type LoginRequestResponseMessagePayload = {
     username?: TonomyUsername;
 };
 export class LoginRequestResponseMessage extends Message<LoginRequestResponseMessagePayload> {
+    /**
+     * @override the Message constructor to decode the payload of type LoginRequestResponseMessagePayload
+     */
     constructor(
         vc:
             | LoginRequestResponseMessage
@@ -169,6 +189,9 @@ export class LoginRequestResponseMessage extends Message<LoginRequestResponseMes
         }
     }
 
+    /**
+     * Alternative constructor that returns type LoginRequestResponseMessage
+     */
     static async signMessage(
         message: LoginRequestResponseMessagePayload,
         issuer: Issuer,
