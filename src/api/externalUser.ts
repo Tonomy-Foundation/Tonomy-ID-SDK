@@ -51,6 +51,10 @@ export class ExternalUser {
         this.storage = createStorage<ExternalUserStorage>(STORAGE_NAMESPACE + 'external.user.', _storageFactory);
     }
 
+    /**
+     * Removes the keys and clear storage
+     *
+     */
     async logout() {
         this.storage.clear();
         this.keyManager.removeKey({ level: KeyManagerLevel.BROWSER_LOCAL_STORAGE });
