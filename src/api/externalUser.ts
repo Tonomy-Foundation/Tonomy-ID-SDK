@@ -51,6 +51,12 @@ export class ExternalUser {
         this.storage = createStorage<ExternalUserStorage>(STORAGE_NAMESPACE + 'external.user.', _storageFactory);
     }
 
+    async logout() {
+        this.storage.clear();
+        this.keyManager.removeKey({ level: KeyManagerLevel.BROWSER_LOCAL_STORAGE });
+        this.keyManager.removeKey({ level: KeyManagerLevel.BROWSER_SESSION_STORAGE });
+    }
+
     /**
      * Retrieves the user from persistent storage if it exists and verifies the keys are valid
      *
@@ -70,8 +76,7 @@ export class ExternalUser {
             const accountName = await user.getAccountName();
 
             if (!accountName) {
-                //TODO: logout
-                // keyManager.clear(); must be implemented in future keymanager
+                await user.logout();
                 throw throwError('accountName not found', SdkErrors.AccountNotFound);
             }
 
@@ -83,9 +88,7 @@ export class ExternalUser {
                 throw throwError('User Not loggedIn', SdkErrors.UserNotLoggedIn);
             }
         } catch (e) {
-            user.storage.clear();
-            user.keyManager.removeKey({ level: KeyManagerLevel.BROWSER_LOCAL_STORAGE });
-            user.keyManager.removeKey({ level: KeyManagerLevel.BROWSER_SESSION_STORAGE });
+            await user.logout();
             throw e;
         }
     }

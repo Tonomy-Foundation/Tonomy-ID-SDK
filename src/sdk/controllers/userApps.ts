@@ -117,7 +117,7 @@ export class UserApps {
         username: string;
         accountName: string;
         response: ResponseParams;
-    } {
+        } {
         const params = new URLSearchParams(window.location.search);
 
         const requests = params.get('requests');
