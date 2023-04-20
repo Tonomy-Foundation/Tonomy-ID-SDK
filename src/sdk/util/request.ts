@@ -6,7 +6,7 @@ export type LoginRequestPayload = {
     randomString: string;
     origin: string;
     publicKey: PublicKey;
-    callbackPath?: string;
+    callbackPath: string;
 };
 
 export class LoginRequest extends VerifiableCredentialWithType<LoginRequestPayload> {

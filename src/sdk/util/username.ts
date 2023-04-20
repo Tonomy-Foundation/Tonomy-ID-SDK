@@ -71,14 +71,16 @@ export class TonomyUsername implements Serializable {
         return new TonomyUsername(username);
     }
 
-    getBaseUsername() {
+    getBaseUsername(): string {
+        if (!this.username) throwError('Username is not set', SdkErrors.UsernameNotDefined);
         return this.username?.split('.')[0];
     }
 
     /**
      * @returns the username hash
      */
-    toString() {
+    toString(): string {
+        if (!this.username) throwError('Username is not set', SdkErrors.UsernameNotDefined);
         return this.username;
     }
 
@@ -88,10 +90,7 @@ export class TonomyUsername implements Serializable {
      *
      * @throws Error if username is not set
      */
-    toJSON() {
-        const username = this.toString();
-
-        if (!username) throwError('Username is not set', SdkErrors.UsernameNotDefined);
-        return username;
+    toJSON(): string {
+        return this.toString();
     }
 }
