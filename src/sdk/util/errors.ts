@@ -121,6 +121,8 @@ enum SdkErrors {
     UsernameNotDefined = 'UsernameNotDefined',
     UserNotLoggedIn = 'UserNotLoggedIn',
     WrongOrigin = 'WrongOrigin',
+    UserCancelled = 'UserCancelled',
+    UserLogout = 'UserLogout',
 }
 
 // eslint-disable-next-line @typescript-eslint/no-namespace

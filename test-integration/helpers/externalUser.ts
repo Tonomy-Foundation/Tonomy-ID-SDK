@@ -135,7 +135,6 @@ export async function loginWebsiteOnCallback(keyManager: KeyManager, storageFact
     if (log) console.log('TONOMY_LOGIN_WEBSITE/callback: checking login request of external website');
     const { requests } = await UserApps.getLoginRequestFromUrl();
     const result = await UserApps.verifyRequests(requests);
-
     const redirectJwt = result.find((jwtVerified) => jwtVerified.getPayload().origin !== location.origin);
 
     expect(redirectJwt).toBeDefined();
@@ -178,4 +177,14 @@ export async function externalWebsiteOnReload(
 
     expect(externalUser).toBeDefined();
     expect((await externalUser.getAccountName()).toString()).toBe(await (await tonomyUser.getAccountName()).toString());
+}
+
+
+export async function externalWebsiteOnLogout(
+    keyManager: KeyManager,
+    storageFactory: StorageFactory,
+) {
+    const externalUser = await ExternalUser.getUser({ keyManager, storageFactory });
+    await externalUser.logout();
+    expect((await externalUser.getAccountName())).toBe(undefined);
 }

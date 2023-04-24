@@ -27,6 +27,11 @@ export type OnPressLoginOptions = {
     redirect?: boolean;
 };
 
+export type ResponseParams = {
+    success: boolean;
+    reason: SdkErrors;
+};
+
 export class UserApps {
     user: User;
     keyManager: KeyManager;
