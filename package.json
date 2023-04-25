@@ -88,7 +88,8 @@
         "base64url": "^3.0.1",
         "cross-fetch": "^3.1.5",
         "elliptic": "^6.5.4",
-        "socket.io-client": "^4.5.4"
+        "socket.io-client": "^4.5.4",
+        "universal-base64url": "^1.1.0"
     },
     "publishConfig": {
         "access": "public",

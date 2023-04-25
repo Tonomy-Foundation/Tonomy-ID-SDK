@@ -1,4 +1,4 @@
-import base64url from 'base64url';
+import { decode, encode } from 'universal-base64url';
 import { BN } from 'bn.js';
 
 // Inspired by https://github.com/davidchambers/Base64.js/blob/master/base64.js
@@ -102,9 +102,9 @@ export function b64ToUtf8(str: string) {
 }
 
 export function strToBase64Url(str: string) {
-    return base64url.encode(str);
+    return encode(str);
 }
 
 export function base64UrlToStr(str: string) {
-    return base64url.decode(str);
+    return decode(str);
 }
