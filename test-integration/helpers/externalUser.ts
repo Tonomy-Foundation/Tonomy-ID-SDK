@@ -14,6 +14,7 @@ import {
 } from '../../src/sdk';
 import { ExternalUser, LoginWithTonomyMessages } from '../../src/api/externalUser';
 import { LoginRequest } from '../../src/sdk/util/request';
+import base64url from 'base64url';
 
 export async function externalWebsiteUserPressLoginToTonomyButton(
     keyManager: KeyManager,
@@ -35,7 +36,11 @@ export async function externalWebsiteUserPressLoginToTonomyButton(
 
     if (log) console.log('EXTERNAL_WEBSITE/login: redirect to Tonomy Login Website');
 
-    const redirectUrl = loginAppOrigin + '/login?requests=' + JSON.stringify([loginRequest.toString()]);
+    const payload = {
+        requests: [loginRequest],
+    };
+    const base64UrlPayload = base64url.encode(JSON.stringify(payload));
+    const redirectUrl = loginAppOrigin + '/login?payload=' + base64UrlPayload;
 
     return { did, redirectUrl };
 }
@@ -179,12 +184,9 @@ export async function externalWebsiteOnReload(
     expect((await externalUser.getAccountName()).toString()).toBe(await (await tonomyUser.getAccountName()).toString());
 }
 
-
-export async function externalWebsiteOnLogout(
-    keyManager: KeyManager,
-    storageFactory: StorageFactory,
-) {
+export async function externalWebsiteOnLogout(keyManager: KeyManager, storageFactory: StorageFactory) {
     const externalUser = await ExternalUser.getUser({ keyManager, storageFactory });
+
     await externalUser.logout();
-    expect((await externalUser.getAccountName())).toBe(undefined);
+    expect(await externalUser.getAccountName()).toBe(undefined);
 }

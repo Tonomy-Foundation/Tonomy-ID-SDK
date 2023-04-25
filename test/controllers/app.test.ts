@@ -2,10 +2,10 @@ import { PrivateKey, PublicKey } from '@greymass/eosio';
 import { UserApps } from '../../src/sdk/controllers/userApps';
 import { generateRandomKeyPair } from '../../src/sdk/util/crypto';
 import URL from 'jsdom-url';
-import { Message } from '../../src/sdk/services/communication/message';
 import { setSettings } from '../../src/sdk';
 import { ExternalUser, LoginWithTonomyMessages } from '../../src/api/externalUser';
 import { LoginRequest } from '../../src/sdk/util/request';
+import base64url from 'base64url';
 
 // @ts-expect-error - URL type on global does not match
 global.URL = URL;
@@ -33,7 +33,11 @@ describe('logging in', () => {
             callbackPath: '/login',
             redirect: false,
         })) as LoginWithTonomyMessages;
-        const url = 'http://localhost/login?requests=' + JSON.stringify([loginRequest.toString()]);
+        const payload = {
+            requests: [loginRequest],
+        };
+        const base64UrlPayload = base64url.encode(JSON.stringify(payload));
+        const url = 'http://localhost/login?payload=' + base64UrlPayload;
 
         jest.spyOn(document, 'referrer', 'get').mockReturnValue('http://localhost');
 

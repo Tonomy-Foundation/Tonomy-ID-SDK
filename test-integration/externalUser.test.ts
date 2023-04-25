@@ -39,13 +39,14 @@ import {
     externalWebsiteOnLogout,
 } from './helpers/externalUser';
 import { createStorageFactory } from './helpers/storageFactory';
+import base64url from 'base64url';
 
 // @ts-expect-error - type error on global
 global.URL = URL;
 
 setSettings(settings);
 
-const log = false;
+const log = true;
 
 describe('External User class', () => {
     jest.setTimeout(30000);
@@ -229,13 +230,11 @@ describe('External User class', () => {
             expect(payload.username?.toString()).toBe((await TONOMY_ID_user.getUsername()).username);
 
             if (log) console.log('TONOMY_LOGIN_WEBSITE/login: sending to callback page');
+            const TONOMY_LOGIN_WEBSITE_base64UrlPayload = base64url.encode(JSON.stringify(payload));
+
             // @ts-expect-error - cannot find name jsdom
             jsdom.reconfigure({
-                url:
-                    tonomyLoginApp.origin +
-                    `/callback?requests=${JSON.stringify(
-                        payload.requests
-                    )}&accountName=${payload.accountName?.toString()}&username=${payload.username?.toString()}`,
+                url: tonomyLoginApp.origin + `/callback?payload=${TONOMY_LOGIN_WEBSITE_base64UrlPayload}`,
             });
 
             const {
@@ -250,13 +249,21 @@ describe('External User class', () => {
 
             const redirectJwtPayload = TONOMY_LOGIN_WEBSITE_redirectJwt?.getPayload();
 
+            const EXTERNAL_WEBSITE_base64UrlPayload = base64url.encode(
+                JSON.stringify({
+                    success: true,
+                    requests: [TONOMY_LOGIN_WEBSITE_redirectJwt],
+                    username: TONOMY_LOGIN_WEBSITE_username,
+                    accountName: TONOMY_LOGIN_WEBSITE_accountName,
+                })
+            );
+
             // @ts-expect-error - cannot find name jsdom
             jsdom.reconfigure({
                 url:
                     redirectJwtPayload.origin +
                     redirectJwtPayload.callbackPath +
-                    `?username=${TONOMY_LOGIN_WEBSITE_username.toString()}&accountName=${TONOMY_LOGIN_WEBSITE_accountName.toString()}&requests=` +
-                    JSON.stringify([TONOMY_LOGIN_WEBSITE_redirectJwt.toString()]),
+                    `?payload=${EXTERNAL_WEBSITE_base64UrlPayload}`,
             });
 
             // #####External website user (callback page) #####

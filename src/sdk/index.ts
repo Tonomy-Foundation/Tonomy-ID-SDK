@@ -38,6 +38,7 @@ export * from './storage/jsKeyManager';
 export { createSigner } from '@tonomy/antelope-ssi-toolkit';
 export { ES256KSigner } from '@tonomy/did-jwt';
 
+export * as base64url from 'base64url';
 // API
 export * from '../api/externalUser';
 export * from '../api/index';

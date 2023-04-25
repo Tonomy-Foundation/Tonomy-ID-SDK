@@ -9,6 +9,9 @@ import { SdkErrors, throwError } from '../util/errors';
 import { App, AppStatus } from './app';
 import { TonomyUsername } from '../util/username';
 import { LoginRequest } from '../util/request';
+import { LoginRequestsMessagePayload } from '../services/communication/message';
+import { LoginRequestResponseMessagePayload } from '../services/communication/message';
+import base64url from 'base64url';
 
 const idContract = IDContract.Instance;
 
@@ -89,21 +92,21 @@ export class UserApps {
     /**
      * Extracts the login requests from the URL
      *
-     * @returns { requests: LoginRequest[] } the requests, username and accountName
+     * @returns {LoginRequestsMessagePayload} the requests, username and accountName
      */
-    static getLoginRequestFromUrl(): { requests: LoginRequest[] } {
+    static getLoginRequestFromUrl(): LoginRequestsMessagePayload {
         const params = new URLSearchParams(window.location.search);
 
-        const requests = params.get('requests');
+        const base64UrlPayload = params.get('payload');
 
-        if (!requests) throwError("requests parameter doesn't exists", SdkErrors.MissingParams);
-        const jwtRequests = JSON.parse(requests) as string[];
+        if (!base64UrlPayload) throwError("payload parameter doesn't exists", SdkErrors.MissingParams);
 
-        if (!jwtRequests || !Array.isArray(jwtRequests) || jwtRequests.length === 0) {
-            throwError('No JWTs found in URL', SdkErrors.MissingParams);
-        }
+        const parsedPayload = JSON.parse(base64url.decode(base64UrlPayload));
 
-        const loginRequests = jwtRequests.map((r: string) => new LoginRequest(r));
+        if (!parsedPayload || !parsedPayload.requests)
+            throwError('No requests found in payload', SdkErrors.MissingParams);
+
+        const loginRequests = parsedPayload.requests.map((r: string) => new LoginRequest(r));
 
         return { requests: loginRequests };
     }
@@ -111,19 +114,34 @@ export class UserApps {
     /**
      * Extracts the login requests, username and accountName from the URL
      *
-     * @returns { requests: LoginRequest[]; username: TonomyUsername; accountName: Name } the requests, username and accountName
+     * @returns {LoginRequestResponseMessagePayload} the requests, username and accountName
      */
-    static getLoginRequestResponseFromUrl(): { requests: LoginRequest[]; username: TonomyUsername; accountName: Name } {
+    static getLoginRequestResponseFromUrl(): LoginRequestResponseMessagePayload {
+        const params = new URLSearchParams(window.location.search);
+
+        const base64UrlPayload = params.get('payload');
+
+        if (!base64UrlPayload) throwError("payload parameter doesn't exists", SdkErrors.MissingParams);
+
+        const parsedPayload = JSON.parse(base64url.decode(base64UrlPayload));
+
+        if (!parsedPayload.success) throwError("success parameter doesn't exists", SdkErrors.MissingParams);
+
         const { requests } = this.getLoginRequestFromUrl();
 
-        const params = new URLSearchParams(window.location.search);
-        const username = params.get('username');
-        const accountName = params.get('accountName');
-
-        if (!username) throwError("username parameter doesn't exists", SdkErrors.MissingParams);
-        if (!accountName) throwError("accountName parameter doesn't exists", SdkErrors.MissingParams);
-
-        return { requests, username: new TonomyUsername(username), accountName: Name.from(accountName) };
+        if (parsedPayload.success) {
+            if (!parsedPayload.username) throwError("username parameter doesn't exists", SdkErrors.MissingParams);
+            if (!parsedPayload.accountName) throwError("accountName parameter doesn't exists", SdkErrors.MissingParams);
+            return {
+                success: true,
+                requests,
+                username: new TonomyUsername(parsedPayload.username),
+                accountName: Name.from(parsedPayload.accountName),
+            };
+        } else {
+            if (!parsedPayload.error) throwError("error parameter doesn't exists", SdkErrors.MissingParams);
+            return { success: false, requests, error: parsedPayload.error };
+        }
     }
 
     /**

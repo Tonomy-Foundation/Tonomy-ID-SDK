@@ -14,7 +14,8 @@ import { getChainInfo } from '../sdk/services/blockchain/eosio/eosio';
 import { JsKeyManager } from '../sdk/storage/jsKeyManager';
 import { LoginRequest, LoginRequestPayload } from '../sdk/util/request';
 import { createKeyManagerSigner } from '../sdk/services/blockchain/eosio/transaction';
-import { AuthenticationMessage } from '../sdk';
+import { AuthenticationMessage, LoginRequestsMessagePayload } from '../sdk';
+import base64url from 'base64url';
 
 export type ExternalUserStorage = {
     accountName: Name;
@@ -219,10 +220,12 @@ export class ExternalUser {
         const loginRequest = await LoginRequest.signRequest(payload, issuer);
 
         if (redirect) {
-            const requests = [loginRequest.toString()];
-            const requestsString = JSON.stringify(requests);
+            const payload: LoginRequestsMessagePayload = {
+                requests: [loginRequest],
+            };
+            const base64UrlPayload = base64url.encode(JSON.stringify(payload));
 
-            window.location.href = `${getSettings().ssoWebsiteOrigin}/login?requests=${requestsString}`;
+            window.location.href = `${getSettings().ssoWebsiteOrigin}${callbackPath}?payload=${base64UrlPayload}`;
             return;
         } else {
             const loginToCommunication = await AuthenticationMessage.signMessageWithoutRecipient({}, issuer);
@@ -274,7 +277,16 @@ export class ExternalUser {
         if (!options.checkKeys) options.checkKeys = true;
         const keyManager = options.keyManager || new JsKeyManager();
 
-        const { requests, username, accountName } = UserApps.getLoginRequestResponseFromUrl();
+        const { success, error, requests, username, accountName } = UserApps.getLoginRequestResponseFromUrl();
+
+        if (!success) {
+            if (!error) throwError('Unknown error', SdkErrors.MissingParams);
+            throwError(error.reason, error.code);
+        }
+
+        if (!requests || !accountName || !username) {
+            throwError('Missing parameters', SdkErrors.MissingParams);
+        }
 
         const result = await UserApps.verifyRequests(requests);
 
