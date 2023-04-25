@@ -27,18 +27,17 @@ export * from './util/errors';
 export * from './util/crypto';
 export * from './util/username';
 export * from './util/request';
+export * from './util/base64';
 
 // Storage
 export * from './storage/keymanager';
 export * from './storage/storage';
 export * from './storage/browserStorage';
 export * from './storage/jsKeyManager';
-
 // Other
 export { createSigner } from '@tonomy/antelope-ssi-toolkit';
 export { ES256KSigner } from '@tonomy/did-jwt';
 
-export * as base64url from 'base64url';
 // API
 export * from '../api/externalUser';
 export * from '../api/index';

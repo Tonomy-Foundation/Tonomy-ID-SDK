@@ -15,7 +15,7 @@ import { JsKeyManager } from '../sdk/storage/jsKeyManager';
 import { LoginRequest, LoginRequestPayload } from '../sdk/util/request';
 import { createKeyManagerSigner } from '../sdk/services/blockchain/eosio/transaction';
 import { AuthenticationMessage, LoginRequestsMessagePayload } from '../sdk';
-import base64url from 'base64url';
+import { strToBase64Url } from '../sdk/util/base64';
 
 export type ExternalUserStorage = {
     accountName: Name;
@@ -223,7 +223,7 @@ export class ExternalUser {
             const payload: LoginRequestsMessagePayload = {
                 requests: [loginRequest],
             };
-            const base64UrlPayload = base64url.encode(JSON.stringify(payload));
+            const base64UrlPayload = strToBase64Url(JSON.stringify(payload));
 
             window.location.href = `${getSettings().ssoWebsiteOrigin}${callbackPath}?payload=${base64UrlPayload}`;
             return;

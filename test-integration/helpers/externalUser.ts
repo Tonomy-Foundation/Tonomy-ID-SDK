@@ -6,7 +6,6 @@ import {
     KeyManager,
     LoginRequestResponseMessage,
     LoginRequestsMessage,
-    Message,
     StorageFactory,
     Subscriber,
     User,
@@ -14,7 +13,7 @@ import {
 } from '../../src/sdk';
 import { ExternalUser, LoginWithTonomyMessages } from '../../src/api/externalUser';
 import { LoginRequest } from '../../src/sdk/util/request';
-import base64url from 'base64url';
+import { strToBase64Url } from '../../src/sdk/util/base64';
 
 export async function externalWebsiteUserPressLoginToTonomyButton(
     keyManager: KeyManager,
@@ -39,7 +38,7 @@ export async function externalWebsiteUserPressLoginToTonomyButton(
     const payload = {
         requests: [loginRequest],
     };
-    const base64UrlPayload = base64url.encode(JSON.stringify(payload));
+    const base64UrlPayload = strToBase64Url(JSON.stringify(payload));
     const redirectUrl = loginAppOrigin + '/login?payload=' + base64UrlPayload;
 
     return { did, redirectUrl };

@@ -39,7 +39,7 @@ import {
     externalWebsiteOnLogout,
 } from './helpers/externalUser';
 import { createStorageFactory } from './helpers/storageFactory';
-import base64url from 'base64url';
+import { strToBase64Url } from '../src/sdk/util/base64';
 
 // @ts-expect-error - type error on global
 global.URL = URL;
@@ -230,7 +230,7 @@ describe('External User class', () => {
             expect(payload.username?.toString()).toBe((await TONOMY_ID_user.getUsername()).username);
 
             if (log) console.log('TONOMY_LOGIN_WEBSITE/login: sending to callback page');
-            const TONOMY_LOGIN_WEBSITE_base64UrlPayload = base64url.encode(JSON.stringify(payload));
+            const TONOMY_LOGIN_WEBSITE_base64UrlPayload = strToBase64Url(JSON.stringify(payload));
 
             // @ts-expect-error - cannot find name jsdom
             jsdom.reconfigure({
@@ -249,7 +249,7 @@ describe('External User class', () => {
 
             const redirectJwtPayload = TONOMY_LOGIN_WEBSITE_redirectJwt?.getPayload();
 
-            const EXTERNAL_WEBSITE_base64UrlPayload = base64url.encode(
+            const EXTERNAL_WEBSITE_base64UrlPayload = strToBase64Url(
                 JSON.stringify({
                     success: true,
                     requests: [TONOMY_LOGIN_WEBSITE_redirectJwt],
