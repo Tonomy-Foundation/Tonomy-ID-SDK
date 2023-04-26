@@ -151,7 +151,7 @@ export async function setupLoginRequestSubscriber(
                     success: true,
                     requests: verifiedRequests,
                     accountName,
-                    username: await user.storage.username,
+                    username: await user.getUsername(),
                 },
                 issuer,
                 tonomyIdLoginDid

@@ -13,7 +13,6 @@ import { browserStorageFactory } from '../sdk/storage/browserStorage';
 import { getChainInfo } from '../sdk/services/blockchain/eosio/eosio';
 import { JsKeyManager } from '../sdk/storage/jsKeyManager';
 import { LoginRequest, LoginRequestPayload } from '../sdk/util/request';
-import { createKeyManagerSigner } from '../sdk/services/blockchain/eosio/transaction';
 import { AuthenticationMessage, LoginRequestsMessagePayload } from '../sdk';
 import { strToBase64Url } from '../sdk/util/base64';
 
@@ -147,7 +146,16 @@ export class ExternalUser {
      * @returns {Promise<TonomyUsername>} - the username of the user
      */
     async getUsername(): Promise<TonomyUsername> {
-        return await this.storage.username;
+        const storage = await this.storage.username;
+
+        if (!storage) throwError('Username not set', SdkErrors.InvalidData);
+        else if (storage instanceof TonomyUsername) {
+            return storage;
+        } else if (typeof storage === 'string') {
+            return new TonomyUsername(storage);
+        } else {
+            throwError('Username not in expected format', SdkErrors.InvalidData);
+        }
     }
 
     /**
@@ -251,11 +259,11 @@ export class ExternalUser {
 
     async getIssuer(keyManager: KeyManager = new JsKeyManager()): Promise<Issuer> {
         const did = await this.getDid();
-        const signer = createKeyManagerSigner(keyManager, KeyManagerLevel.BROWSER_LOCAL_STORAGE);
+        const signer = createVCSigner(keyManager, KeyManagerLevel.BROWSER_LOCAL_STORAGE);
 
         return {
             did,
-            signer: signer as any,
+            signer: signer.sign as any,
             alg: 'ES256K-R',
         };
     }

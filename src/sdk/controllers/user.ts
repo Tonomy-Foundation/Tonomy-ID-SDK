@@ -98,7 +98,16 @@ export class User {
     }
 
     async getUsername(): Promise<TonomyUsername> {
-        return await this.storage.username;
+        const storage = await this.storage.username;
+
+        if (!storage) throwError('Username not set', SdkErrors.InvalidData);
+        else if (storage instanceof TonomyUsername) {
+            return storage;
+        } else if (typeof storage === 'string') {
+            return new TonomyUsername(storage);
+        } else {
+            throwError('Username not in expected format', SdkErrors.InvalidData);
+        }
     }
 
     async getDid(): Promise<string> {
@@ -228,8 +237,9 @@ export class User {
 
     async createPerson(): Promise<PushTransactionResponse> {
         const { keyManager } = this;
-        const username = await this.storage.username;
+        const username = await this.getUsername();
 
+        console.log('\n\nusername', username);
         const usernameHash = username.usernameHash;
 
         const passwordKey = await keyManager.getKey({

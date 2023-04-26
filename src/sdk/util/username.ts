@@ -78,6 +78,8 @@ export class TonomyUsername implements Serializable {
 
     /**
      * @returns the username hash
+     *
+     * @throws Error if username is not set
      */
     toString(): string {
         if (!this.username) throwError('Username is not set', SdkErrors.UsernameNotDefined);
