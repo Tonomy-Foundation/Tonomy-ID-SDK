@@ -239,7 +239,6 @@ export class User {
         const { keyManager } = this;
         const username = await this.getUsername();
 
-        console.log('\n\nusername', username);
         const usernameHash = username.usernameHash;
 
         const passwordKey = await keyManager.getKey({

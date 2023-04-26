@@ -160,12 +160,14 @@ export class UserApps {
 
         const myRequest = verifiedRequests.find((r) => r.getPayload().origin === referrer.origin);
 
-        if (!myRequest)
-            throwError(
-                `No origins from: ${verifiedRequests.map((r) => r.getPayload().origin)} match referrer: ${referrer.origin
-                }`,
-                SdkErrors.WrongOrigin
-            );
+        if (!myRequest) {
+            const msg =
+                `No origins from: ${verifiedRequests.map((r) => r.getPayload().origin)} ` +
+                `match referrer: ${referrer.origin}`;
+
+            throwError(msg, SdkErrors.WrongOrigin);
+        }
+
         return myRequest;
     }
 
