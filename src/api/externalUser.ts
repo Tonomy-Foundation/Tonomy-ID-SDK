@@ -225,7 +225,7 @@ export class ExternalUser {
             };
             const base64UrlPayload = strToBase64Url(JSON.stringify(payload));
 
-            window.location.href = `${getSettings().ssoWebsiteOrigin}${callbackPath}?payload=${base64UrlPayload}`;
+            window.location.href = `${getSettings().ssoWebsiteOrigin}/login?payload=${base64UrlPayload}`;
             return;
         } else {
             const loginToCommunication = await AuthenticationMessage.signMessageWithoutRecipient({}, issuer);
