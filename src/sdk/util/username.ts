@@ -1,4 +1,6 @@
 import { sha256 } from './crypto';
+import { SdkErrors, throwError } from './errors';
+import { Serializable } from './serializable';
 
 enum AccountType {
     PERSON = 'PERSON',
@@ -42,7 +44,7 @@ namespace AccountType {
 
 export { AccountType };
 
-export class TonomyUsername {
+export class TonomyUsername implements Serializable {
     username?: string;
     usernameHash: string;
 
@@ -69,7 +71,33 @@ export class TonomyUsername {
         return new TonomyUsername(username);
     }
 
-    getBaseUsername() {
+    getBaseUsername(): string {
+        if (!this.username) throwError('Username is not set', SdkErrors.UsernameNotDefined);
         return this.username?.split('.')[0];
+    }
+
+    /**
+     * @returns the username hash
+     *
+     * @throws Error if username is not set
+     */
+    toString(): string {
+        if (!this.username) throwError('Username is not set', SdkErrors.UsernameNotDefined);
+        return this.username;
+    }
+
+    /**
+     * Returns the JSON string representation of the object - which is the username string
+     *
+     * @description This is used in JSON.stringify(). It is not recommended to use this method directly.
+     * Only the username is returned, not the full object. This is all that is needed to reconstruct the
+     * full object in the constructor, and thus minimizes the size of the JSON string.
+     *
+     * @override Serializable.toJSON
+     * @returns {string} the username
+     * @throws Error if username is not set
+     */
+    toJSON(): string {
+        return this.toString();
     }
 }

@@ -2,7 +2,7 @@
 import { Name, PrivateKey, PublicKey } from '@greymass/eosio';
 import { IDContract } from '../services/blockchain/contracts/IDContract';
 import { createSigner } from '../services/blockchain/eosio/transaction';
-import { getSettings } from '../settings';
+import { getSettings } from '../util/settings';
 import { AccountType, TonomyUsername } from '../util/username';
 
 const idContract = IDContract.Instance;

@@ -1,10 +1,10 @@
 import { KeyManager, KeyManagerLevel } from '../sdk/storage/keymanager';
-import { JWTLoginPayload, OnPressLoginOptions, UserApps } from '../sdk/controllers/userApps';
+import { OnPressLoginOptions, UserApps } from '../sdk/controllers/userApps';
 import { createVCSigner, generateRandomKeyPair, randomString } from '../sdk/util/crypto';
 import { ES256KSigner } from '@tonomy/did-jwt';
-import { createJWK, toDid } from '../sdk/util/did-jwk';
-import { Message, MessageType } from '../sdk/services/communication//message';
-import { getSettings } from '../sdk/settings';
+import { Issuer } from '@tonomy/did-jwt-vc';
+import { createJWK, toDid } from '../sdk/util/ssi/did-jwk';
+import { getSettings } from '../sdk/util/settings';
 import { SdkErrors, throwError } from '../sdk/util/errors';
 import { createStorage, PersistentStorageClean, StorageFactory, STORAGE_NAMESPACE } from '../sdk/storage/storage';
 import { Checksum256, Name } from '@greymass/eosio';
@@ -12,11 +12,14 @@ import { TonomyUsername } from '../sdk/util/username';
 import { browserStorageFactory } from '../sdk/storage/browserStorage';
 import { getChainInfo } from '../sdk/services/blockchain/eosio/eosio';
 import { JsKeyManager } from '../sdk/storage/jsKeyManager';
+import { LoginRequest, LoginRequestPayload } from '../sdk/util/request';
+import { AuthenticationMessage, LoginRequestsMessagePayload } from '../sdk';
+import { strToBase64Url } from '../sdk/util/base64';
 
 export type ExternalUserStorage = {
     accountName: Name;
     username: TonomyUsername;
-    loginRequest: JWTLoginPayload;
+    loginRequest: LoginRequestPayload;
     did: string;
 };
 
@@ -27,8 +30,8 @@ export type VerifyLoginOptions = {
 };
 
 export type LoginWithTonomyMessages = {
-    loginRequest: Message;
-    loginToCommunication: Message;
+    loginRequest: LoginRequest;
+    loginToCommunication: AuthenticationMessage;
 };
 
 /**
@@ -84,7 +87,7 @@ export class ExternalUser {
                 throw throwError('accountName not found', SdkErrors.AccountNotFound);
             }
 
-            const result = await UserApps.verifyKeyExistsForApp(accountName.toString(), keyManager);
+            const result = await UserApps.verifyKeyExistsForApp(accountName, keyManager);
 
             if (result) {
                 return user;
@@ -132,8 +135,8 @@ export class ExternalUser {
      *
      * @param {string} username - the username of the user
      */
-    async setUsername(username: string): Promise<void> {
-        this.storage.username = new TonomyUsername(username);
+    async setUsername(username: TonomyUsername): Promise<void> {
+        this.storage.username = username;
         await this.storage.username;
     }
 
@@ -143,15 +146,24 @@ export class ExternalUser {
      * @returns {Promise<TonomyUsername>} - the username of the user
      */
     async getUsername(): Promise<TonomyUsername> {
-        return await this.storage.username;
+        const storage = await this.storage.username;
+
+        if (!storage) throwError('Username not set', SdkErrors.InvalidData);
+        else if (storage instanceof TonomyUsername) {
+            return storage;
+        } else if (typeof storage === 'string') {
+            return new TonomyUsername(storage);
+        } else {
+            throwError('Username not in expected format', SdkErrors.InvalidData);
+        }
     }
 
     /**
      * Sets the login request
      *
-     * @param {JWTLoginPayload} loginRequest - the login request
+     * @param {LoginRequestPayload} loginRequest - the login request
      */
-    async setLoginRequest(loginRequest: JWTLoginPayload): Promise<void> {
+    async setLoginRequest(loginRequest: LoginRequestPayload): Promise<void> {
         this.storage.loginRequest = loginRequest;
         await this.storage.loginRequest;
     }
@@ -159,9 +171,9 @@ export class ExternalUser {
     /**
      * Gets the login request
      *
-     * @returns {Promise<JWTLoginPayload>} - the login request
+     * @returns {Promise<LoginRequestPayload>} - the login request
      */
-    async getLoginRequest(): Promise<JWTLoginPayload> {
+    async getLoginRequest(): Promise<LoginRequestPayload> {
         return await this.storage.loginRequest;
     }
 
@@ -196,10 +208,10 @@ export class ExternalUser {
             privateKey: privateKey,
         });
 
-        const payload: JWTLoginPayload = {
+        const payload: LoginRequestPayload = {
             randomString: randomString(32),
             origin: window.location.origin,
-            publicKey: publicKey.toString(),
+            publicKey: publicKey,
             callbackPath,
         };
 
@@ -208,64 +220,52 @@ export class ExternalUser {
         const signer = ES256KSigner(privateKey.data.array, true);
         const jwk = await createJWK(publicKey);
 
-        const issuer = toDid(jwk);
-
-        const loginRequest = await Message.sign(payload, { did: issuer, signer: signer as any, alg: 'ES256K-R' });
+        const issuer = {
+            did: toDid(jwk),
+            signer: signer as any,
+            alg: 'ES256K-R',
+        };
+        const loginRequest = await LoginRequest.signRequest(payload, issuer);
 
         if (redirect) {
-            const requests = [loginRequest.jwt];
-            const requestsString = JSON.stringify(requests);
+            const payload: LoginRequestsMessagePayload = {
+                requests: [loginRequest],
+            };
+            const base64UrlPayload = strToBase64Url(JSON.stringify(payload));
 
-            window.location.href = `${getSettings().ssoWebsiteOrigin}/login?requests=${requestsString}`;
+            window.location.href = `${getSettings().ssoWebsiteOrigin}/login?payload=${base64UrlPayload}`;
             return;
         } else {
-            const loginToCommunication = await Message.sign(
-                {},
-                { did: issuer, signer: signer as any, alg: 'ES256K-R' },
-                undefined,
-                MessageType.COMMUNICATION_LOGIN
-            );
+            const loginToCommunication = await AuthenticationMessage.signMessageWithoutRecipient({}, issuer);
 
             return { loginRequest, loginToCommunication };
         }
     }
 
-    /**
-     * Signs a message with the given key manager and the key level
-     *
-     * @param {any} message - an object to sign
-     * @property {string} options.recipient - the recipient's DID
-     * @property {KeyManager} [options.keyManager=new JsKeyManager()] - the key manager to use to sign the message
-     * @property {string} [options.type] - the type of the message
-     * @returns {Promise<Message>} - the signed message
-     */
-    static async signMessage(
-        message: any,
-        options: {
-            recipient?: string;
-            keyManager?: KeyManager;
-            type?: string;
-        } = {}
-    ): Promise<Message> {
-        const keyManagerLevel = KeyManagerLevel.BROWSER_LOCAL_STORAGE;
-
-        if (!options.keyManager) options.keyManager = new JsKeyManager();
-        const publicKey = await options.keyManager.getKey({
-            level: keyManagerLevel,
+    static async getDidJwkIssuerFromStorage(keyManager: KeyManager = new JsKeyManager()): Promise<Issuer> {
+        const publicKey = await keyManager.getKey({
+            level: KeyManagerLevel.BROWSER_LOCAL_STORAGE,
         });
-
-        const signer = createVCSigner(options.keyManager, keyManagerLevel).sign;
+        const signer = createVCSigner(keyManager, KeyManagerLevel.BROWSER_LOCAL_STORAGE);
 
         const jwk = await createJWK(publicKey);
 
-        const issuer = toDid(jwk);
+        return {
+            did: toDid(jwk),
+            signer: signer.sign as any,
+            alg: 'ES256K-R',
+        };
+    }
 
-        return await Message.sign(
-            message,
-            { did: issuer, signer: signer as any, alg: 'ES256K-R' },
-            options.recipient,
-            options.type
-        );
+    async getIssuer(keyManager: KeyManager = new JsKeyManager()): Promise<Issuer> {
+        const did = await this.getDid();
+        const signer = createVCSigner(keyManager, KeyManagerLevel.BROWSER_LOCAL_STORAGE);
+
+        return {
+            did,
+            signer: signer.sign as any,
+            alg: 'ES256K-R',
+        };
     }
 
     /**
@@ -285,10 +285,15 @@ export class ExternalUser {
         if (!options.checkKeys) options.checkKeys = true;
         const keyManager = options.keyManager || new JsKeyManager();
 
-        const { requests, username, accountName, response } = UserApps.getLoginRequestParams();
+        const { success, error, requests, username, accountName } = UserApps.getLoginRequestResponseFromUrl();
 
-        if (response && response.success === false) {
-            throwError('Login Failed', response.reason);
+        if (!success) {
+            if (!error) throwError('Unknown error', SdkErrors.MissingParams);
+            throwError(error.reason, error.code);
+        }
+
+        if (!requests || !accountName || !username) {
+            throwError('Missing parameters', SdkErrors.MissingParams);
         }
 
         const result = await UserApps.verifyRequests(requests);
@@ -297,8 +302,10 @@ export class ExternalUser {
         const keyFromStorage = await keyManager.getKey({ level: KeyManagerLevel.BROWSER_LOCAL_STORAGE });
 
         if (!loginRequest) throwError('No login request found for this origin', SdkErrors.OriginMismatch);
-        if (loginRequest.publicKey !== keyFromStorage.toString())
+
+        if (loginRequest.publicKey.toString() !== keyFromStorage.toString()) {
             throwError('Key in request does not match', SdkErrors.KeyNotFound);
+        }
 
         if (options.checkKeys) {
             const keyExists = await UserApps.verifyKeyExistsForApp(accountName, keyManager);
@@ -309,7 +316,7 @@ export class ExternalUser {
         const myStorageFactory = options.storageFactory || browserStorageFactory;
         const externalUser = new ExternalUser(keyManager, myStorageFactory);
 
-        await externalUser.setAccountName(Name.from(accountName));
+        await externalUser.setAccountName(accountName);
         await externalUser.setLoginRequest(loginRequest);
         await externalUser.setUsername(username);
         return externalUser;

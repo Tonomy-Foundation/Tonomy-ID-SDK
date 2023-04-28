@@ -7,7 +7,11 @@ import { User } from './user';
 import { createKeyManagerSigner } from '../services/blockchain/eosio/transaction';
 import { SdkErrors, throwError } from '../util/errors';
 import { App, AppStatus } from './app';
-import { Message } from '../services/communication/message';
+import { TonomyUsername } from '../util/username';
+import { LoginRequest } from '../util/request';
+import { LoginRequestsMessagePayload } from '../services/communication/message';
+import { LoginRequestResponseMessagePayload } from '../services/communication/message';
+import { base64UrlToStr } from '../util/base64';
 
 const idContract = IDContract.Instance;
 
@@ -19,14 +23,6 @@ export type UserAppRecord = {
 
 export type UserAppStorage = {
     appRecords: UserAppRecord[];
-};
-
-// TODO change to use VC
-export type JWTLoginPayload = {
-    randomString: string;
-    origin: string;
-    publicKey: string;
-    callbackPath?: string;
 };
 
 export type OnPressLoginOptions = {
@@ -81,62 +77,71 @@ export class UserApps {
     /**
      * Verifies the login request are valid requests signed by valid DIDs
      *
-     * @param requests {string | null} - a stringified array of JWTs
-     * @returns {Promise<Message[]>} - an array of verified messages containing the login requests
+     * @param {LoginRequest[]} requests - an array of login requests
+     * @returns {Promise<LoginRequest[]>} - an array of verified login requests
      */
-    static async verifyRequests(requests: string | null): Promise<Message[]> {
-        if (!requests) throwError('No requests found in URL', SdkErrors.MissingParams);
-
-        const jwtRequests = JSON.parse(requests);
-
-        if (!jwtRequests || !Array.isArray(jwtRequests) || jwtRequests.length === 0) {
-            throwError('No JWTs found in URL', SdkErrors.MissingParams);
+    static async verifyRequests(requests: LoginRequest[]): Promise<LoginRequest[]> {
+        for (const request of requests) {
+            if (!(await request.verify()))
+                throwError(`Invalid request for ${request.getPayload().origin}`, SdkErrors.JwtNotValid);
         }
 
-        const verified: Message[] = [];
+        return requests;
+    }
 
-        for (const jwt of jwtRequests) {
-            verified.push(await this.verifyLoginJWT(jwt));
-        }
+    /**
+     * Extracts the login requests from the URL
+     *
+     * @returns {LoginRequestsMessagePayload} the requests, username and accountName
+     */
+    static getLoginRequestFromUrl(): LoginRequestsMessagePayload {
+        const params = new URLSearchParams(window.location.search);
 
-        return verified;
+        const base64UrlPayload = params.get('payload');
+
+        if (!base64UrlPayload) throwError("payload parameter doesn't exists", SdkErrors.MissingParams);
+
+        const parsedPayload = JSON.parse(base64UrlToStr(base64UrlPayload));
+
+        if (!parsedPayload || !parsedPayload.requests)
+            throwError('No requests found in payload', SdkErrors.MissingParams);
+
+        const loginRequests = parsedPayload.requests.map((r: string) => new LoginRequest(r));
+
+        return { requests: loginRequests };
     }
 
     /**
      * Extracts the login requests, username and accountName from the URL
      *
-     * @param requests {string} - a string param that represents the token
-     * @param username {string} - a string param that represents the username
-     * @param accountName {string} - a string param that represents the accountname 
-     * @param response {Response} - a object that contains  {success: Boolean, reason: String}
-
-     * @returns the requests (JWTs), username and accountName, response
+     * @returns {LoginRequestResponseMessagePayload} the requests, username and accountName
      */
-    static getLoginRequestParams(): {
-        requests: string;
-        username: string;
-        accountName: string;
-        response: ResponseParams;
-        // eslint-disable-next-line indent
-    } {
+    static getLoginRequestResponseFromUrl(): LoginRequestResponseMessagePayload {
         const params = new URLSearchParams(window.location.search);
 
-        const requests = params.get('requests');
+        const base64UrlPayload = params.get('payload');
 
-        if (!requests) throwError("requests parameter doesn't exists", SdkErrors.MissingParams);
+        if (!base64UrlPayload) throwError("payload parameter doesn't exists", SdkErrors.MissingParams);
 
-        const username = params.get('username');
+        const parsedPayload = JSON.parse(base64UrlToStr(base64UrlPayload));
 
-        if (!username) throwError("username parameter doesn't exists", SdkErrors.MissingParams);
+        if (!parsedPayload.success) throwError("success parameter doesn't exists", SdkErrors.MissingParams);
 
-        const accountName = params.get('accountName');
+        const { requests } = this.getLoginRequestFromUrl();
 
-        if (!accountName) throwError("accountName parameter doesn't exists", SdkErrors.MissingParams);
-
-        const responseParams = params.get('response');
-        const response = responseParams && JSON.parse(responseParams);
-
-        return { requests, username, accountName, response };
+        if (parsedPayload.success) {
+            if (!parsedPayload.username) throwError("username parameter doesn't exists", SdkErrors.MissingParams);
+            if (!parsedPayload.accountName) throwError("accountName parameter doesn't exists", SdkErrors.MissingParams);
+            return {
+                success: true,
+                requests,
+                username: new TonomyUsername(parsedPayload.username),
+                accountName: Name.from(parsedPayload.accountName),
+            };
+        } else {
+            if (!parsedPayload.error) throwError("error parameter doesn't exists", SdkErrors.MissingParams);
+            return { success: false, requests, error: parsedPayload.error };
+        }
     }
 
     /**
@@ -144,26 +149,26 @@ export class UserApps {
      *
      * @description should be called in the callback page of the SSO Login website
      *
-     * @returns {Promise<Message>} - the verified login request
+     * @returns {Promise<LoginRequest>} - the verified login request
      */
-    static async onRedirectLogin(): Promise<Message> {
-        const urlParams = new URLSearchParams(window.location.search);
-        const requests = urlParams.get('requests');
+    static async onRedirectLogin(): Promise<LoginRequest> {
+        const { requests } = this.getLoginRequestFromUrl();
 
         const verifiedRequests = await UserApps.verifyRequests(requests);
 
         const referrer = new URL(document.referrer);
 
-        for (const message of verifiedRequests) {
-            if (message.getPayload().origin === referrer.origin) {
-                return message;
-            }
+        const myRequest = verifiedRequests.find((r) => r.getPayload().origin === referrer.origin);
+
+        if (!myRequest) {
+            const msg =
+                `No origins from: ${verifiedRequests.map((r) => r.getPayload().origin)} ` +
+                `match referrer: ${referrer.origin}`;
+
+            throwError(msg, SdkErrors.WrongOrigin);
         }
 
-        throwError(
-            `No origins from: ${verifiedRequests.map((r) => r.getPayload().origin)} match referrer: ${referrer.origin}`,
-            SdkErrors.WrongOrigin
-        );
+        return myRequest;
     }
 
     /**
@@ -177,7 +182,7 @@ export class UserApps {
      * @returns {Promise<boolean>} - true if the key exists and is authorized, false otherwise
      */
     static async verifyKeyExistsForApp(
-        accountName: string,
+        accountName: Name,
         keyManager: KeyManager,
         keyManagerLevel: KeyManagerLevel = KeyManagerLevel.BROWSER_LOCAL_STORAGE
     ): Promise<boolean> {
@@ -185,7 +190,7 @@ export class UserApps {
             level: keyManagerLevel,
         });
 
-        const account = await User.getAccountInfo(Name.from(accountName));
+        const account = await User.getAccountInfo(accountName);
 
         if (!account) throwError("couldn't fetch account", SdkErrors.AccountNotFound);
         const app = await App.getApp(window.location.origin);
@@ -193,20 +198,5 @@ export class UserApps {
         const publickey = account.getPermission(app.accountName).required_auth.keys[0].key;
 
         return pubKey.toString() === publickey.toString();
-    }
-
-    /**
-     * Verifies a jwt string is a valid message with signature from a DID
-     * @param jwt {string} - the jwt string to verify
-     * @returns {Promise<Message>} - the verified message
-     */
-    static async verifyLoginJWT(jwt: string): Promise<Message> {
-        const message = new Message(jwt);
-        const res = await message.verify();
-
-        // TODO should check the keys in KeyManager are on the blockchain...
-
-        if (!res) throwError('JWT failed verification', SdkErrors.JwtNotValid);
-        return message;
     }
 }

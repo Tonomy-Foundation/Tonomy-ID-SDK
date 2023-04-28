@@ -1,109 +1,210 @@
-import { decodeJWT } from '@tonomy/did-jwt';
-import { Issuer, verifyCredential, W3CCredential } from '@tonomy/did-jwt-vc';
-import { getSettings } from '../../settings';
-import { JWTDecoded } from '@tonomy/did-jwt/lib/JWT';
-import crossFetch from 'cross-fetch';
-import { getResolver } from '@tonomy/antelope-did-resolver';
-import { Resolver } from '@tonomy/did-resolver';
-import { issue, OutputType } from '@tonomy/antelope-ssi-toolkit';
-import { resolve } from '../../util/did-jwk';
+import { Issuer } from '@tonomy/did-jwt-vc';
+import { DIDurl, URL } from '../../util/ssi/types';
+import { VerifiableCredentialWithType, VCWithTypeType } from '../../util/ssi/vc';
+import { LoginRequest } from '../../util/request';
+import { TonomyUsername } from '../../util/username';
+import { Name } from '@greymass/eosio';
+import { SdkErrors } from '../../util/errors';
 
-export enum MessageType {
-    COMMUNICATION_LOGIN = 'COMMUNICATION_LOGIN',
-    IDENTIFY = 'IDENTIFY',
-    LOGIN_REQUEST = 'LOGIN_REQUEST',
-    LOGIN_REQUEST_RESPONSE = 'LOGIN_REQUEST_RESPONSE',
+/**
+ * A message that can be sent between two Tonomy identities
+ *
+ * @inheritdoc signMessageWithRecipient() is a protected alternative constructor. In child classes,
+ * a new alternative constructor called signMessage() should be created which returns the child class type.
+ * @inheritdoc if the payload type requires ad-hoc decoding, override the constructor and decode the payload
+ *
+ * @example see an example of the above in the LoginRequestMessage class
+ */
+export class Message<T extends object = object> extends VerifiableCredentialWithType<T> {
+    /**
+     * @inheritdoc override me if the payload type requires ad-hoc decoding
+     */
+    constructor(vc: VCWithTypeType<T>) {
+        super(vc);
+    }
+
+    /**
+     * Alternative constructor that returns type Message
+     *
+     * @access protected
+     *
+     * @param {object} message the message
+     * @param {Issuer} issuer the issuer id
+     * @param {DIDUrl} recipient the recipient id
+     * @param {VerifiableCredentialOptions} options the options
+     *
+     * @returns a message object
+     */
+    protected static async signMessageWithRecipient<T extends object = object>(
+        message: T,
+        issuer: Issuer,
+        recipient: DIDurl,
+        options: { subject?: URL } = {}
+    ): Promise<Message<T>> {
+        const payloadType = this.name;
+
+        if (payloadType === Message.name || payloadType === 'Message') {
+            throw new Error('class should be a derived class of Message to use the type property');
+        }
+
+        const newOptions = {
+            subject: recipient,
+            additionalTypes: ['TonomyMessage'],
+            ...options,
+        };
+        const request = await super.sign(message, issuer, newOptions);
+
+        return new Message<T>(request.getVc());
+    }
+
+    /**
+     * Returns the recipient of the message
+     * @returns {DIDur} the message recipient
+     */
+    getRecipient(): DIDurl {
+        return this.getVc().getSubject() as string;
+    }
+
+    /**
+     * Returns the sender of the message
+     * @returns {DIDur} the message sender
+     */
+    getSender(): DIDurl {
+        return super.getIssuer();
+    }
 }
 
-export class Message {
-    private decodedJwt: JWTDecoded;
-
+// empty object
+export type AuthenticationMessagePayload = Record<string, never>;
+export class AuthenticationMessage extends Message<AuthenticationMessagePayload> {
     /**
-     * creates a signed message and return message object
-     * @param message the messageResolver with the signer and the did
-     * @param recipient the recipient id
-     * @param type the message type
-     * @returns a message objects
+     * Alternative constructor that returns type AuthenticationMessage
      */
-    static async sign(message: object, issuer: Issuer, recipient?: string, type?: string): Promise<Message> {
-        const vc: W3CCredential = {
-            '@context': ['https://www.w3.org/2018/credentials/v1'],
-            id: 'https://example.com/id/1234324',
-            type: ['VerifiableCredential', 'TonomyMessage'],
-            issuer: {
-                id: issuer.did,
-            },
-            issuanceDate: new Date().toISOString(),
-            credentialSubject: {
-                message,
-            },
-        };
+    static async signMessageWithoutRecipient<AuthenticationMessagePayload>(
+        message: AuthenticationMessagePayload,
+        issuer: Issuer,
+        options?: { subject?: string | undefined }
+    ) {
+        const vc = await super.signMessageWithRecipient(message as any, issuer, '', options);
 
-        // add recipient to vc if given
-        if (recipient) vc.credentialSubject.id = recipient;
-        if (type) vc.credentialSubject.type = type;
-
-        const result = await issue(vc, {
-            issuer: issuer,
-            outputType: OutputType.JWT,
-        });
-
-        return new Message(result);
+        return new AuthenticationMessage(vc);
     }
+}
 
-    constructor(public jwt: string) {
-        this.decodedJwt = decodeJWT(jwt);
-        this.jwt = jwt;
-    }
-
-    // Returns the sender of the message (iss property of the signed VC)
-    getSender(): string {
-        return this.decodedJwt.payload.iss as string;
-    }
-    // Returns the recipient of the message (sub property of the signed VC)
-    getRecipient(): string {
-        return this.decodedJwt.payload.sub as string;
-    }
-
-    // Returns the original unsigned payload
-    getPayload(): any {
-        return this.decodedJwt.payload.vc.credentialSubject.message;
-    }
-
+// empty object
+export type IdentifyMessagePayload = Record<string, never>;
+export class IdentifyMessage extends Message<IdentifyMessagePayload> {
     /**
-     * Returns the message type This is used to determine what kind of message it is
-     * @returns {string} the message type
+     * Alternative constructor that returns type IdentifyMessage
      */
-    getType(): any {
-        return this.decodedJwt.payload.vc.credentialSubject.type;
+    static async signMessage(
+        message: IdentifyMessagePayload,
+        issuer: Issuer,
+        recipient: DIDurl,
+        options: { subject?: URL } = {}
+    ) {
+        const vc = await super.signMessageWithRecipient<IdentifyMessagePayload>(message, issuer, recipient, options);
+
+        return new IdentifyMessage(vc);
     }
+}
 
-    /* Verifies the VC. True if valid
-     * this is setup to resolve did:antelope and did:jwk DIDs
+export type LoginRequestsMessagePayload = {
+    requests: LoginRequest[];
+};
+
+export class LoginRequestsMessage extends Message<LoginRequestsMessagePayload> {
+    /**
+     * @override the Message constructor to decode the payload of type LoginRequestsMessagePayload
      */
-    async verify(): Promise<boolean> {
-        const settings = getSettings();
+    constructor(
+        vc: LoginRequestsMessage | Message<LoginRequestsMessagePayload> | VCWithTypeType<LoginRequestsMessagePayload>
+    ) {
+        super(vc);
+        const payload = this.getVc().getPayload().vc.credentialSubject.payload;
 
-        //TODO: use compatible resolver for the didjwk resolver
-        const jwkResolver: any = {
-            resolve,
-        };
-        // const resolver = {
-        //     resolve: new AntelopeDID({ fetch: crossFetch, antelopeChainUrl: settings.blockchainUrl }).resolve,
-        // };
-        const resolver = new Resolver({
-            ...getResolver({ antelopeChainUrl: settings.blockchainUrl, fetch: crossFetch as any }),
-        });
-
-        try {
-            const result = await Promise.any([
-                verifyCredential(this.jwt, { resolve: jwkResolver.resolve }),
-                verifyCredential(this.jwt, resolver),
-            ]);
-
-            return result.verified;
-        } catch (e) {
-            return false;
+        if (!payload.requests) {
+            throw new Error('LoginRequestsMessage must have a requests property');
         }
+
+        this.decodedPayload = { requests: payload.requests.map((request: string) => new LoginRequest(request)) };
+    }
+
+    /**
+     * Alternative constructor that returns type LoginRequestsMessage
+     */
+    static async signMessage(
+        message: LoginRequestsMessagePayload,
+        issuer: Issuer,
+        recipient: DIDurl,
+        options: { subject?: URL } = {}
+    ) {
+        const vc = await super.signMessageWithRecipient<LoginRequestsMessagePayload>(
+            message,
+            issuer,
+            recipient,
+            options
+        );
+
+        return new LoginRequestsMessage(vc);
+    }
+}
+
+export type LoginRequestResponseMessagePayload = {
+    success: boolean;
+    error?: {
+        code: SdkErrors;
+        reason: string;
+    };
+    requests?: LoginRequest[];
+    accountName?: Name;
+    username?: TonomyUsername;
+};
+export class LoginRequestResponseMessage extends Message<LoginRequestResponseMessagePayload> {
+    /**
+     * @override the Message constructor to decode the payload of type LoginRequestResponseMessagePayload
+     */
+    constructor(
+        vc:
+            | LoginRequestResponseMessage
+            | Message<LoginRequestResponseMessagePayload>
+            | VCWithTypeType<LoginRequestResponseMessagePayload>
+    ) {
+        super(vc);
+        const payload = this.getVc().getPayload().vc.credentialSubject.payload;
+
+        if (payload.success) {
+            if (!payload.requests) {
+                throw new Error('LoginRequestsMessage must have a requests property');
+            }
+
+            this.decodedPayload = {
+                ...payload,
+                requests: payload.requests.map((request: string) => new LoginRequest(request)),
+                accountName: Name.from(payload.accountName),
+                username: payload.username.username
+                    ? new TonomyUsername(payload.username.username)
+                    : new TonomyUsername(payload.username),
+            };
+        }
+    }
+
+    /**
+     * Alternative constructor that returns type LoginRequestResponseMessage
+     */
+    static async signMessage(
+        message: LoginRequestResponseMessagePayload,
+        issuer: Issuer,
+        recipient: DIDurl,
+        options: { subject?: URL } = {}
+    ) {
+        const vc = await super.signMessageWithRecipient<LoginRequestResponseMessagePayload>(
+            message,
+            issuer,
+            recipient,
+            options
+        );
+
+        return new LoginRequestResponseMessage(vc);
     }
 }

@@ -1,7 +1,7 @@
 import { io, Socket } from 'socket.io-client';
 import { CommunicationError, createSdkError, SdkErrors } from '../../util/errors';
-import { getSettings } from '../../settings';
-import { Message } from '../../services/communication/message';
+import { getSettings } from '../../util/settings';
+import { AuthenticationMessage, Message } from '../../services/communication/message';
 
 export type Subscriber = (message: Message) => void;
 
@@ -54,7 +54,7 @@ export class Communication {
         return await new Promise((resolve, reject) => {
             const resolved = false;
 
-            this.socketServer.emit(event, { message: message.jwt }, (response: any) => {
+            this.socketServer.emit(event, { message: message.toString() }, (response: any) => {
                 if (response.error) {
                     if (response.exception?.name === 'HttpException') {
                         const communicationError = new CommunicationError(response);
@@ -84,11 +84,11 @@ export class Communication {
 
     /**
      * connects to the Tonomy Communication server, authenticates with it's DID
-     * subscribes to any messages that are sent by `sendMessage` by providing a callback function executed every time a message is received
-     * should send a read receipt when messages are received
+     * @param {AuthenticationMessage} authorization - the VC the user sent
+     *
      * @returns {boolean} - true if successful
      */
-    async login(authorization: Message): Promise<boolean> {
+    async login(authorization: AuthenticationMessage): Promise<boolean> {
         await this.connect();
 
         return await this.emitMessage('login', authorization);
@@ -98,8 +98,8 @@ export class Communication {
      * create a Message object from the message argument
      * the message is used as the `vc` property of a VC signed by the User's key
      */
-    sendMessage(message: Message): Promise<boolean> {
-        return this.emitMessage('message', message);
+    async sendMessage(message: Message): Promise<boolean> {
+        return await this.emitMessage('message', message);
     }
 
     /**

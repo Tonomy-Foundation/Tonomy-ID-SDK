@@ -1,6 +1,7 @@
 import { PublicKey } from '@greymass/eosio';
-import { toElliptic } from './crypto';
-import { b64ToUtf8, bnToBase64Url, utf8ToB64 } from './base64';
+import { toElliptic } from '../crypto';
+import { b64ToUtf8, bnToBase64Url, utf8ToB64 } from '../base64';
+import { ResolverRegistry, ParsedDID, DIDResolutionResult, DIDDocument } from '@tonomy/did-resolver';
 
 export function createJWK(publicKey: PublicKey) {
     const ecPubKey = toElliptic(publicKey);
@@ -29,7 +30,7 @@ export function toDid(jwk: any) {
 }
 
 // reference https://github.com/OR13/did-jwk/blob/main/src/index.js#L128
-export function toDidDocument(jwk: any) {
+export function toDidDocument(jwk: any): DIDDocument {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const getPublicOperationsFromPrivate = (keyOps: any) => {
         if (keyOps.includes('sign')) {
@@ -74,17 +75,39 @@ export function toDidDocument(jwk: any) {
         '@context': ['https://www.w3.org/ns/did/v1', { '@vocab': 'https://www.iana.org/assignments/jose#' }],
         id: did,
         verificationMethod: [vm],
-    };
+    } as DIDDocument;
 
     return didDocument;
 }
 
 // reference https://github.com/OR13/did-jwk/blob/main/src/index.js#L177
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function resolve(did: any, options = {}) {
+export async function resolve(did: any, options = {}): Promise<DIDResolutionResult> {
     if (options) options = {};
     const decoded = b64ToUtf8(did.split(':').pop().split('#')[0]);
     const jwk = JSON.parse(decoded.toString());
 
-    return toDidDocument(jwk);
+    const didDoc = toDidDocument(jwk);
+
+    return {
+        didResolutionMetadata: { contentType: 'application/did+ld+json' },
+        didDocument: didDoc,
+        didDocumentMetadata: {},
+    };
+}
+
+export function getResolver(): ResolverRegistry {
+    return {
+        jwk: (
+            did: string,
+            // @ts-expect-error(TS6133 declared but never used)
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            parsed: ParsedDID,
+            // @ts-expect-error(TS6133 declared but never used)
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            resolver: Resolvable
+        ) => {
+            return resolve(did);
+        },
+    } as any;
 }

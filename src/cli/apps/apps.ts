@@ -1,5 +1,5 @@
 import { PublicKey } from '@greymass/eosio';
-import { setSettings } from '../../sdk/settings';
+import { setSettings } from '../../sdk/util/settings';
 import { App, AppCreateOptions } from '../../sdk/controllers/app';
 
 export default async function apps(args: string[]) {

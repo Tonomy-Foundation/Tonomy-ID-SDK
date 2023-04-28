@@ -2,6 +2,7 @@
 
 This architecture sets forward the structure of the SDK library.
 
+```bash
        Controllers
       /     |     \
      /      |      \
@@ -11,6 +12,7 @@ This architecture sets forward the structure of the SDK library.
       \     |     /
        v    v    v
         Utilities
+```
 
 This is what we should work towards!
 

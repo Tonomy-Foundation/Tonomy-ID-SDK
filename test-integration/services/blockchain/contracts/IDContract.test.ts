@@ -15,7 +15,7 @@ describe('IDContract class', () => {
         const { user } = await createRandomID();
 
         const accountName = await user.storage.accountName;
-        const username = await user.storage.username;
+        const username = await user.getUsername();
         const salt = await user.storage.salt;
 
         // get by account name

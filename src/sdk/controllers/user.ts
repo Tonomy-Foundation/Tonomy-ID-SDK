@@ -13,9 +13,8 @@ import { SdkErrors, throwError, SdkError } from '../util/errors';
 import { AccountType, TonomyUsername } from '../util/username';
 import { validatePassword } from '../util/passwords';
 import { UserApps } from './userApps';
-import { getSettings } from '../settings';
+import { getSettings } from '../util/settings';
 import { Communication } from '../services/communication/communication';
-import { Message } from '../services/communication//message';
 import { Issuer } from '@tonomy/did-jwt-vc';
 import { createVCSigner, generateRandomKeyPair } from '../util/crypto';
 
@@ -99,7 +98,16 @@ export class User {
     }
 
     async getUsername(): Promise<TonomyUsername> {
-        return await this.storage.username;
+        const storage = await this.storage.username;
+
+        if (!storage) throwError('Username not set', SdkErrors.InvalidData);
+        else if (storage instanceof TonomyUsername) {
+            return storage;
+        } else if (typeof storage === 'string') {
+            return new TonomyUsername(storage);
+        } else {
+            throwError('Username not in expected format', SdkErrors.InvalidData);
+        }
     }
 
     async getDid(): Promise<string> {
@@ -229,7 +237,7 @@ export class User {
 
     async createPerson(): Promise<PushTransactionResponse> {
         const { keyManager } = this;
-        const username = await this.storage.username;
+        const username = await this.getUsername();
 
         const usernameHash = username.usernameHash;
 
@@ -497,16 +505,15 @@ export class User {
         }
     }
 
-    async signMessage(payload: any, options: { recipient?: string; type?: string } = {}): Promise<Message> {
+    async getIssuer(): Promise<Issuer> {
+        const did = await this.getDid();
         const signer = createVCSigner(this.keyManager, KeyManagerLevel.LOCAL);
 
-        const issuer: Issuer = {
-            did: (await this.getDid()) + '#local',
+        return {
+            did: did + '#local',
             signer: signer.sign as any,
             alg: 'ES256K-R',
         };
-
-        return await Message.sign(payload, issuer, options.recipient, options.type);
     }
 
     /**

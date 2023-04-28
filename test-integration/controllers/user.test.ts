@@ -101,7 +101,7 @@ describe('User class', () => {
     test('login() logs in with password', async () => {
         const { user, password } = await createRandomID();
 
-        const username = await user.storage.username;
+        const username = await user.getUsername();
 
         const newKeyManager = new JsKeyManager();
         const userLogin = createUserObject(newKeyManager, jsStorageFactory);
@@ -114,7 +114,7 @@ describe('User class', () => {
         expect(idInfo.username_hash.toString()).toBe(username.usernameHash);
         expect(userLogin.keyManager.getKey({ level: KeyManagerLevel.PASSWORD })).resolves.toBeDefined();
         expect(await userLogin.storage.accountName).toBeDefined();
-        expect(await userLogin.storage.username.username).toBe(username.username);
+        expect((await userLogin.getUsername()).username).toBe(username.username);
         expect(userLogin.isLoggedIn()).toBeTruthy();
 
         // Close connections
@@ -125,7 +125,7 @@ describe('User class', () => {
     test('login() fails with wrong password', async () => {
         const { user } = await createRandomID();
 
-        const username = await user.storage.username;
+        const username = await user.getUsername();
 
         const newKeyManager = new JsKeyManager();
         const userLogin = createUserObject(newKeyManager, jsStorageFactory);
@@ -226,14 +226,14 @@ describe('User class', () => {
         const { user } = await createRandomID();
 
         // get by account name
-        let userInfo = await User.getAccountInfo(await user.storage.accountName);
+        let userInfo = await User.getAccountInfo(await user.getAccountName());
 
-        expect(userInfo.account_name).toEqual(await user.storage.accountName);
+        expect(userInfo.account_name).toEqual(await user.getAccountName());
 
         // get by username
-        userInfo = await User.getAccountInfo(await user.storage.username);
+        userInfo = await User.getAccountInfo(await user.getUsername());
 
-        expect(userInfo.account_name).toEqual(await user.storage.accountName);
+        expect(userInfo.account_name).toEqual(await user.getAccountName());
 
         // Close connections
         await user.logout();

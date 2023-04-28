@@ -5,16 +5,27 @@
 
 // need to use API types from inside tonomy-id-sdk, otherwise type compatibility issues
 import {
+    App,
+    setSettings,
+    User,
+    KeyManager,
+    StorageFactory,
+    STORAGE_NAMESPACE,
+    IdentifyMessage,
+    LoginRequestResponseMessage,
+} from '../src/sdk/index';
+import URL from 'jsdom-url';
+import { JsKeyManager } from '../src/sdk/storage/jsKeyManager';
+
+// helpers
+import {
     createRandomApp,
     createRandomID,
     loginToTonomyCommunication,
     scanQrAndAck,
     setupLoginRequestSubscriber,
 } from './helpers/user';
-import { App, setSettings, User, KeyManager, StorageFactory, STORAGE_NAMESPACE, MessageType } from '../src/sdk/index';
 import settings from './helpers/settings';
-import URL from 'jsdom-url';
-import { JsKeyManager } from '../src/sdk/storage/jsKeyManager';
 import { sleep } from './helpers/sleep';
 import {
     externalWebsiteOnCallback,
@@ -28,6 +39,7 @@ import {
     externalWebsiteOnLogout,
 } from './helpers/externalUser';
 import { createStorageFactory } from './helpers/storageFactory';
+import { strToBase64Url } from '../src/sdk/util/base64';
 
 // @ts-expect-error - type error on global
 global.URL = URL;
@@ -90,7 +102,7 @@ describe('External User class', () => {
 
     describe('SSO login full end-to-end flow', () => {
         test('User succeeds at login to external website', async () => {
-            expect.assertions(33);
+            expect.assertions(35);
 
             const appsFound = [false, false];
 
@@ -139,7 +151,7 @@ describe('External User class', () => {
             expect(TONOMY_LOGIN_WEBSITE_communication.socketServer.listeners('message').length).toBe(0);
             const TONOMY_LOGIN_WEBSITE_subscription = TONOMY_LOGIN_WEBSITE_communication.subscribeMessage(
                 TONOMY_LOGIN_WEBSITE_messageSubscriber,
-                MessageType.IDENTIFY
+                IdentifyMessage.getType()
             );
 
             expect(TONOMY_LOGIN_WEBSITE_communication.socketServer.listeners('message').length).toBe(1);
@@ -163,13 +175,13 @@ describe('External User class', () => {
             // wait for the ack message to confirm Tonomy ID is connected
             const connectionMessageFromTonomyId = await TONOMY_LOGIN_WEBSITE_ackMessagePromise;
 
-            expect(connectionMessageFromTonomyId.message.getSender()).toBe(TONOMY_ID_did + '#local');
+            expect(connectionMessageFromTonomyId.getSender()).toBe(TONOMY_ID_did + '#local');
 
             await sendLoginRequestsMessage(
                 TONOMY_LOGIN_WEBSITE_jwtRequests,
                 TONOMY_LOGIN_WEBSITE_jsKeyManager,
                 TONOMY_LOGIN_WEBSITE_communication,
-                connectionMessageFromTonomyId.message.getSender(),
+                connectionMessageFromTonomyId.getSender(),
                 log
             );
 
@@ -182,7 +194,7 @@ describe('External User class', () => {
             TONOMY_LOGIN_WEBSITE_communication.unsubscribeMessage(TONOMY_LOGIN_WEBSITE_subscription);
             const TONOMY_LOGIN_WEBSITE_subscription2 = TONOMY_LOGIN_WEBSITE_communication.subscribeMessage(
                 TONOMY_LOGIN_WEBSITE_messageSubscriber2,
-                MessageType.LOGIN_REQUEST_RESPONSE
+                LoginRequestResponseMessage.getType()
             );
 
             expect(TONOMY_LOGIN_WEBSITE_communication.socketServer.listeners('message').length).toBe(1);
@@ -206,24 +218,23 @@ describe('External User class', () => {
             TONOMY_LOGIN_WEBSITE_communication.unsubscribeMessage(TONOMY_LOGIN_WEBSITE_subscription2);
             expect(TONOMY_LOGIN_WEBSITE_communication.socketServer.listeners('message').length).toBe(0);
 
-            const payload = requestConfirmedMessageFromTonomyId.message.getPayload();
-            const TONOMY_LOGIN_WEBSITE_requests = JSON.parse(payload.requests) as string[];
+            const payload = requestConfirmedMessageFromTonomyId.getPayload();
 
             expect(payload).toBeDefined();
+            expect(payload.success).toBe(true);
             expect(payload.requests).toBeDefined();
             expect(payload.accountName).toBeDefined();
 
-            expect(TONOMY_LOGIN_WEBSITE_requests.length).toBe(2);
-            expect(payload.accountName).toBe(await (await TONOMY_ID_user.getAccountName()).toString());
+            expect(payload.requests?.length).toBe(2);
+            expect(payload.accountName?.toString()).toBe(await (await TONOMY_ID_user.getAccountName()).toString());
+            expect(payload.username?.toString()).toBe((await TONOMY_ID_user.getUsername()).username);
 
-            // TODO uncomment when we have username
-            // expect(payload.username).toBe((await TONOMY_ID_user.getUsername()).username);
             if (log) console.log('TONOMY_LOGIN_WEBSITE/login: sending to callback page');
+            const TONOMY_LOGIN_WEBSITE_base64UrlPayload = strToBase64Url(JSON.stringify(payload));
+
             // @ts-expect-error - cannot find name jsdom
             jsdom.reconfigure({
-                url:
-                    tonomyLoginApp.origin +
-                    `/callback?requests=${payload.requests}&accountName=${payload.accountName}&username=nousername`,
+                url: tonomyLoginApp.origin + `/callback?payload=${TONOMY_LOGIN_WEBSITE_base64UrlPayload}`,
             });
 
             const {
@@ -238,13 +249,21 @@ describe('External User class', () => {
 
             const redirectJwtPayload = TONOMY_LOGIN_WEBSITE_redirectJwt?.getPayload();
 
+            const EXTERNAL_WEBSITE_base64UrlPayload = strToBase64Url(
+                JSON.stringify({
+                    success: true,
+                    requests: [TONOMY_LOGIN_WEBSITE_redirectJwt],
+                    username: TONOMY_LOGIN_WEBSITE_username,
+                    accountName: TONOMY_LOGIN_WEBSITE_accountName,
+                })
+            );
+
             // @ts-expect-error - cannot find name jsdom
             jsdom.reconfigure({
                 url:
                     redirectJwtPayload.origin +
                     redirectJwtPayload.callbackPath +
-                    `?username=${TONOMY_LOGIN_WEBSITE_username}&accountName=${TONOMY_LOGIN_WEBSITE_accountName.toString()}&requests=` +
-                    JSON.stringify([TONOMY_LOGIN_WEBSITE_redirectJwt?.jwt]),
+                    `?payload=${EXTERNAL_WEBSITE_base64UrlPayload}`,
             });
 
             // #####External website user (callback page) #####
