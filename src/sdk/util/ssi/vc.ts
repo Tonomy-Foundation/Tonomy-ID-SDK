@@ -201,9 +201,14 @@ export class VerifiableCredential<T extends object = object> {
     }
 
     /**
-     * Returns the JWT string, called by JSON.stringify
+     * Returns the JSON string representation of the object - which is the jwt string
      *
-     * @returns {string} the JWT string
+     * @description This is used in JSON.stringify(). It is not recommended to use this method directly.
+     * Only the jwt is returned, not the full object. This is all that is needed to reconstruct the
+     * full object in the constructor, and thus minimizes the size of the JSON string.
+     *
+     * @override Serializable.toJSON
+     * @returns {string} the jwt
      */
     toJSON(): string {
         return this.toString();
@@ -359,11 +364,14 @@ export class VerifiableCredentialWithType<T extends object = object> implements 
     }
 
     /**
-     * Returns the JWT string, called by JSON.stringify
+     * Returns the JSON string representation of the object - which is the jwt string
      *
-     * @overrides Serializable
+     * @description This is used in JSON.stringify(). It is not recommended to use this method directly.
+     * Only the jwt is returned, not the full object. This is all that is needed to reconstruct the
+     * full object in the constructor, and thus minimizes the size of the JSON string.
      *
-     * @returns {string} the JWT string
+     * @override Serializable.toJSON
+     * @returns {string} the jwt
      */
     toJSON(): string {
         return this.toString();

@@ -3,7 +3,7 @@
  */
 export interface Serializable {
     /**
-     * Returns the a JSON representation of the object
+     * Returns the a JSON string representation of the object
      *
      * @returns {string} the JSON string
      */

@@ -87,9 +87,14 @@ export class TonomyUsername implements Serializable {
     }
 
     /**
-     * Used in JSON.stringify
-     * @returns the username
+     * Returns the JSON string representation of the object - which is the username string
      *
+     * @description This is used in JSON.stringify(). It is not recommended to use this method directly.
+     * Only the username is returned, not the full object. This is all that is needed to reconstruct the
+     * full object in the constructor, and thus minimizes the size of the JSON string.
+     *
+     * @override Serializable.toJSON
+     * @returns {string} the username
      * @throws Error if username is not set
      */
     toJSON(): string {
