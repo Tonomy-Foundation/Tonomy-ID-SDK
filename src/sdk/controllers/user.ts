@@ -238,7 +238,6 @@ export class User {
     async createPerson(): Promise<PushTransactionResponse> {
         const { keyManager } = this;
         const username = await this.getUsername();
-
         const usernameHash = username.usernameHash;
 
         const passwordKey = await keyManager.getKey({
