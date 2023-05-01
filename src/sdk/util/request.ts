@@ -10,6 +10,8 @@ export type LoginRequestPayload = {
 };
 
 export class LoginRequest extends VerifiableCredentialWithType<LoginRequestPayload> {
+    protected static type = 'LoginRequest';
+
     /**
      * @override the VerifiableCredentialWithType constructor to decode the payload of type LoginRequestPayload
      */
