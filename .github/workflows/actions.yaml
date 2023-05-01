@@ -12,15 +12,16 @@ jobs:
       - name: Run lint and test
         uses: actions/setup-node@v3
         with:
-          node-version: 16.4.1
-      - run: npm install
+          node-version: 18.12.1
+      - run: npm ci
+      - run: npm run build
       - run: npm run lint
-      - run: npm test
+      - run: npm run test:unit
 
   compile-contracts:
     name: Compiles contracts needed for bootstrap script
     runs-on: ubuntu-20.04
-    container: eosio/eosio.cdt:v1.8.1
+    container: tonomy/antelope
     steps:
       - uses: actions/checkout@v3
         with:
@@ -46,7 +47,6 @@ jobs:
   integration-test:
     needs: compile-contracts
     runs-on: ubuntu-20.04
-
     services:
       blockchain:
         image: tonomy/blockchain:initialized-development
@@ -54,6 +54,8 @@ jobs:
           - 8888:8888
       communication:
         image: tonomy/communication:development
+        env:
+          BLOCKCHAIN_URL: "http://blockchain:8888"
         ports:
           - 5000:5000
 
@@ -72,12 +74,13 @@ jobs:
       - name: Install SDK and Bootstrap blockchain
         uses: actions/setup-node@v3
         with:
-          node-version: 16.4.1
-      - run: npm i
-      - run: npm run bootstrap
+          node-version: 18.12.1
+      - run: npm ci
+      - run: npm run build:cli
+      - run: npm run cli bootstrap
 
       - name: Run integration tests
         uses: actions/setup-node@v3
         with:
-          node-version: 16.4.1
+          node-version: 18.12.1
       - run: npm run test:integration

@@ -5,5 +5,17 @@
     ],
     "editor.codeActionsOnSave": {
         "source.fixAll.eslint": true
-    }
+    },
+    "cSpell.words": [
+        "tonomy"
+    ],
+    "jest.autoRun": {
+        "onSave": false,
+        "onStartup": false
+    },
+    "jest.debugMode": false,
+    "jest.jestCommandLine": "npm run test",
+    "jest.testExplorer": {
+        "enabled": true
+    },
 }
