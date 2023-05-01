@@ -276,7 +276,9 @@ export class VerifiableCredentialWithType<T extends object = object> implements 
         issuer: Issuer,
         options: VerifiableCredentialOptions = {}
     ): Promise<VerifiableCredentialWithType<T>> {
-        if (this.type === 'VerifiableCredentialWithType' || this.type === '') {
+        const payloadType = this.type;
+
+        if (payloadType === 'VerifiableCredentialWithType' || payloadType === '') {
             throw new Error('class should be a derived class of VerifiableCredentialWithType to use the type property');
         }
 
