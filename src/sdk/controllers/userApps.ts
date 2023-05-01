@@ -11,7 +11,7 @@ import { TonomyUsername } from '../util/username';
 import { LoginRequest } from '../util/request';
 import { LoginRequestsMessagePayload } from '../services/communication/message';
 import { LoginRequestResponseMessagePayload } from '../services/communication/message';
-import { base64UrlToStr } from '../util/base64';
+import { base64UrlToObj } from '../util/base64';
 
 const idContract = IDContract.Instance;
 
@@ -101,7 +101,7 @@ export class UserApps {
 
         if (!base64UrlPayload) throwError("payload parameter doesn't exists", SdkErrors.MissingParams);
 
-        const parsedPayload = JSON.parse(base64UrlToStr(base64UrlPayload));
+        const parsedPayload = base64UrlToObj(base64UrlPayload);
 
         if (!parsedPayload || !parsedPayload.requests)
             throwError('No requests found in payload', SdkErrors.MissingParams);
@@ -123,7 +123,7 @@ export class UserApps {
 
         if (!base64UrlPayload) throwError("payload parameter doesn't exists", SdkErrors.MissingParams);
 
-        const parsedPayload = JSON.parse(base64UrlToStr(base64UrlPayload));
+        const parsedPayload = base64UrlToObj(base64UrlPayload);
 
         if (!parsedPayload.success) throwError("success parameter doesn't exists", SdkErrors.MissingParams);
 
