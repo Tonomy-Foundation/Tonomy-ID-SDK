@@ -15,6 +15,7 @@ import { generatePrivateKeyFromPassword } from '../../src/cli/bootstrap/keys';
 import { privateKey } from './eosio';
 import { createUser } from '../../src/cli/bootstrap/user';
 import { LoginRequest } from '../../src/sdk/util/request';
+import { DIDurl, URL } from '../../src/sdk/util/ssi/types';
 
 export { createUser };
 
@@ -86,7 +87,12 @@ export async function scanQrAndAck(user: User, qrCodeData: string, log = false) 
     expect(sendMessageResponse).toBe(true);
 }
 
-export async function setupLoginRequestSubscriber(user: User, log = false) {
+export async function setupLoginRequestSubscriber(
+    user: User,
+    tonomyLoginOrigin: URL,
+    tonomyLoginDid: DIDurl,
+    log = false
+) {
     // Setup a promise that resolves when the subscriber executes
     // This emulates the Tonomy ID app, which waits for the user requests
     return new Promise((resolve) => {
@@ -106,16 +112,23 @@ export async function setupLoginRequestSubscriber(user: User, log = false) {
 
             const acceptArray: { app: App; request: LoginRequest }[] = [];
 
+            let receiverDid = '';
+
             for (const request of verifiedRequests) {
                 const payload = request.getPayload();
+
+                if (payload.origin === tonomyLoginOrigin) receiverDid = request.getIssuer();
                 const loginApp = await App.getApp(payload.origin);
 
                 acceptArray.push({ app: loginApp, request });
             }
 
+            expect(receiverDid).toBe(tonomyLoginDid);
+            expect(receiverDid).toBe(loginRequestMessage.getSender());
+
             if (log)
                 console.log('TONOMY_ID/SSO: accepting login requests and sending confirmation to Tonomy Login Website');
-            await user.apps.acceptLoginRequest(acceptArray, 'mobile', loginRequestMessage.getSender());
+            await user.apps.acceptLoginRequest(acceptArray, 'browser', receiverDid);
 
             resolve(true);
         }, LoginRequestsMessage.getType());

@@ -102,7 +102,7 @@ describe('External User class', () => {
 
     describe('SSO login full end-to-end flow', () => {
         test('User succeeds at login to external website', async () => {
-            expect.assertions(34);
+            expect.assertions(36);
 
             // #####External website user (login page) #####
             // ################################
@@ -160,7 +160,12 @@ describe('External User class', () => {
 
             // #####Tonomy Login App website user (login page) #####
             // ########################################
-            const TONOMY_ID_requestSubscriber = setupLoginRequestSubscriber(TONOMY_ID_user, log);
+            const TONOMY_ID_requestSubscriber = setupLoginRequestSubscriber(
+                TONOMY_ID_user,
+                tonomyLoginApp.origin,
+                TONOMY_LOGIN_WEBSITE_did,
+                log
+            );
 
             // wait for the ack message to confirm Tonomy ID is connected
             const connectionMessageFromTonomyId = await TONOMY_LOGIN_WEBSITE_ackMessagePromise;
