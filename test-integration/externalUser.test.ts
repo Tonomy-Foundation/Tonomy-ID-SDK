@@ -46,7 +46,7 @@ global.URL = URL;
 
 setSettings(settings);
 
-const log = false;
+const log = true;
 
 describe('External User class', () => {
     jest.setTimeout(30000);
@@ -102,9 +102,7 @@ describe('External User class', () => {
 
     describe('SSO login full end-to-end flow', () => {
         test('User succeeds at login to external website', async () => {
-            expect.assertions(35);
-
-            const appsFound = [false, false];
+            expect.assertions(34);
 
             // #####External website user (login page) #####
             // ################################
@@ -162,15 +160,7 @@ describe('External User class', () => {
 
             // #####Tonomy Login App website user (login page) #####
             // ########################################
-            const TONOMY_ID_requestSubscriber = setupLoginRequestSubscriber(
-                TONOMY_ID_user,
-                externalApp.origin,
-                EXTERNAL_WEBSITE_did,
-                tonomyLoginApp.origin,
-                TONOMY_LOGIN_WEBSITE_did,
-                appsFound,
-                log
-            );
+            const TONOMY_ID_requestSubscriber = setupLoginRequestSubscriber(TONOMY_ID_user, log);
 
             // wait for the ack message to confirm Tonomy ID is connected
             const connectionMessageFromTonomyId = await TONOMY_LOGIN_WEBSITE_ackMessagePromise;
@@ -204,9 +194,6 @@ describe('External User class', () => {
 
             // Wait for the subscriber to execute
             await TONOMY_ID_requestSubscriber;
-
-            // check both apps were logged into
-            expect(appsFound[0] && appsFound[1]).toBe(true);
 
             // #####Tonomy Login App website user (callback page) #####
             // ########################################

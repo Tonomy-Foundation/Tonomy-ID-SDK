@@ -16,7 +16,7 @@ import { SdkErrors } from '../../util/errors';
  *
  * @example see an example of the above in the LoginRequestMessage class
  */
-export class Message<T extends object = object> extends VerifiableCredentialWithType<T> {
+export class Message<T extends object = any> extends VerifiableCredentialWithType<T> {
     protected static type = 'Message';
 
     /**

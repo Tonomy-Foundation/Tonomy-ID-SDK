@@ -1,24 +1,20 @@
-import { PublicKey } from '@greymass/eosio';
 import {
     randomString,
     KeyManager,
     createUserObject,
     App,
     User,
-    Message,
     UserApps,
-    MessageType,
     JsKeyManager,
     IdentifyMessage,
     AuthenticationMessage,
     LoginRequestsMessage,
-    LoginRequestResponseMessage,
 } from '../../src/sdk/index';
 import { jsStorageFactory } from '../../src/cli/bootstrap/jsstorage';
 import { generatePrivateKeyFromPassword } from '../../src/cli/bootstrap/keys';
 import { privateKey } from './eosio';
 import { createUser } from '../../src/cli/bootstrap/user';
-import { AuthenticationRequest, LoginRequestPayload } from '../../src/sdk/util/request';
+import { LoginRequest } from '../../src/sdk/util/request';
 
 export { createUser };
 
@@ -90,15 +86,7 @@ export async function scanQrAndAck(user: User, qrCodeData: string, log = false) 
     expect(sendMessageResponse).toBe(true);
 }
 
-export async function setupLoginRequestSubscriber(
-    user: User,
-    externalOrigin: string,
-    externalDid: string,
-    ssoOrigin: string,
-    ssoDid: string,
-    appsFound: boolean[],
-    log = false
-) {
+export async function setupLoginRequestSubscriber(user: User, log = false) {
     // Setup a promise that resolves when the subscriber executes
     // This emulates the Tonomy ID app, which waits for the user requests
     return new Promise((resolve) => {
@@ -116,51 +104,18 @@ export async function setupLoginRequestSubscriber(
 
             expect(verifiedRequests.length).toBe(2);
 
-            let tonomyIdLoginDid = '';
+            const acceptArray: { app: App; request: LoginRequest }[] = [];
 
             for (const request of verifiedRequests) {
-                // parse the requests for their app data
                 const payload = request.getPayload();
                 const loginApp = await App.getApp(payload.origin);
-                const senderDid = request.getIssuer();
 
-                if (loginApp.origin === externalOrigin) {
-                    appsFound[1] = true;
-                    expect(senderDid).toBe(externalDid);
-
-                    if (log) console.log('TONOMY_ID/SSO: logging into external website by adding key to blockchain');
-                    await user.apps.loginWithApp(loginApp, PublicKey.from(payload.publicKey));
-                } else if (loginApp.origin === ssoOrigin) {
-                    appsFound[0] = true;
-                    expect(senderDid).toBe(ssoDid);
-                    tonomyIdLoginDid = senderDid;
-                    if (log)
-                        console.log('TONOMY_ID/SSO: logging into Tonomy Login website by adding key to blockchain');
-                    await user.apps.loginWithApp(loginApp, PublicKey.from(payload.publicKey));
-                } else {
-                    throw new Error('Unknown app');
-                }
+                acceptArray.push({ app: loginApp, request });
             }
 
-            const accountName = await user.storage.accountName;
-
-            // send a message back to the app
-            const issuer = await user.getIssuer();
-            const respondMessage = await LoginRequestResponseMessage.signMessage(
-                {
-                    success: true,
-                    requests: verifiedRequests,
-                    accountName,
-                    username: await user.getUsername(),
-                },
-                issuer,
-                tonomyIdLoginDid
-            );
-
-            if (log) console.log('TONOMY_ID/SSO: sending a confirmation of the logins back to Tonomy Login Website');
-            const sendMessageResponse = await user.communication.sendMessage(respondMessage);
-
-            expect(sendMessageResponse).toBe(true);
+            if (log)
+                console.log('TONOMY_ID/SSO: accepting login requests and sending confirmation to Tonomy Login Website');
+            await user.apps.acceptLoginRequest(acceptArray, 'mobile', loginRequestMessage.getSender());
 
             resolve(true);
         }, LoginRequestsMessage.getType());

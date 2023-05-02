@@ -9,9 +9,11 @@ import { SdkErrors, throwError } from '../util/errors';
 import { App, AppStatus } from './app';
 import { TonomyUsername } from '../util/username';
 import { LoginRequest } from '../util/request';
-import { LoginRequestsMessagePayload } from '../services/communication/message';
+import { LoginRequestResponseMessage, LoginRequestsMessagePayload } from '../services/communication/message';
 import { LoginRequestResponseMessagePayload } from '../services/communication/message';
-import { base64UrlToObj } from '../util/base64';
+import { base64UrlToObj, objToBase64Url } from '../util/base64';
+import { getSettings } from '../util/settings';
+import { DID, URL as URLtype } from '../util/ssi/types';
 
 const idContract = IDContract.Instance;
 
@@ -72,6 +74,76 @@ export class UserApps {
         appRecord.status = AppStatus.READY;
         this.storage.appRecords = apps;
         await this.storage.appRecords;
+    }
+
+    async acceptLoginRequest(
+        requests: { request: LoginRequest; app: App }[],
+        platform: 'mobile' | 'browser',
+        messageRecipient?: DID
+    ): Promise<void | URLtype> {
+        const accountName = await this.user.getAccountName();
+        const username = await this.user.getUsername();
+
+        for (const loginRequest of requests) {
+            const { app, request } = loginRequest;
+
+            await this.user.apps.loginWithApp(app, request.getPayload().publicKey);
+        }
+
+        const responsePayload = {
+            success: true,
+            requests: requests.map((loginRequest) => loginRequest.request),
+            accountName,
+            username,
+        };
+
+        if (platform === 'mobile') {
+            let callbackUrl = getSettings().ssoWebsiteOrigin + '/callback?';
+
+            callbackUrl += 'payload=' + objToBase64Url(responsePayload);
+
+            return callbackUrl;
+        } else {
+            if (!messageRecipient) throwError('Missing message recipient', SdkErrors.MissingParams);
+            const issuer = await this.user.getIssuer();
+            const message = await LoginRequestResponseMessage.signMessage(responsePayload, issuer, messageRecipient);
+
+            await this.user.communication.sendMessage(message);
+        }
+    }
+
+    async terminateLoginRequest(
+        loginRequests: LoginRequest[],
+        platform: 'mobile' | 'browser',
+        code: SdkErrors,
+        messageRecipient?: DID
+    ): Promise<void | URLtype> {
+        let reason = 'User cancelled login from Tonomy ID';
+
+        if (code === SdkErrors.UserLogout) reason = 'User logged out of Tonomy Login website';
+
+        const responsePayload = {
+            success: false,
+            requests: loginRequests,
+            error: {
+                code,
+                reason,
+            },
+        };
+
+        if (platform === 'mobile') {
+            let callbackUrl = getSettings().ssoWebsiteOrigin + '/callback?';
+
+            callbackUrl += 'payload=' + objToBase64Url(responsePayload);
+
+            return callbackUrl;
+        } else {
+            if (!messageRecipient) throwError('Missing message recipient', SdkErrors.MissingParams);
+            const issuer = await this.user.getIssuer();
+            const message = await LoginRequestResponseMessage.signMessage(responsePayload, issuer, messageRecipient);
+
+            await this.user.communication.sendMessage(message);
+        }
     }
 
     /**
