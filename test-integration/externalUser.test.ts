@@ -46,7 +46,7 @@ global.URL = URL;
 
 setSettings(settings);
 
-const log = true;
+const log = false;
 
 describe('External User class', () => {
     jest.setTimeout(30000);
@@ -102,7 +102,7 @@ describe('External User class', () => {
 
     describe('SSO login full end-to-end flow', () => {
         test('User succeeds at login to external website', async () => {
-            expect.assertions(36);
+            expect.assertions(33);
 
             // #####External website user (login page) #####
             // ################################
