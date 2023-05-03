@@ -115,20 +115,16 @@ export class UserApps {
     async terminateLoginRequest(
         loginRequests: LoginRequest[],
         platform: 'mobile' | 'browser',
-        code: SdkErrors,
+        error: {
+            code: SdkErrors;
+            reason: string;
+        },
         messageRecipient?: DID
     ): Promise<void | URLtype> {
-        let reason = 'User cancelled login from Tonomy ID';
-
-        if (code === SdkErrors.UserLogout) reason = 'User logged out of Tonomy Login website';
-
         const responsePayload = {
             success: false,
             requests: loginRequests,
-            error: {
-                code,
-                reason,
-            },
+            error,
         };
 
         if (platform === 'mobile') {
