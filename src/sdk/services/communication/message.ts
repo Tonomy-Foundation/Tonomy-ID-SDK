@@ -183,14 +183,14 @@ export class LoginRequestResponseMessage extends Message<LoginRequestResponseMes
         super(vc);
         const payload = this.getVc().getPayload().vc.credentialSubject.payload;
 
-        if (payload.success) {
-            if (!payload.requests) {
-                throw new Error('LoginRequestsMessage must have a requests property');
-            }
+        this.decodedPayload = {
+            ...payload,
+            requests: payload.requests.map((request: string) => new LoginRequest(request)),
+        };
 
+        if (payload.success) {
             this.decodedPayload = {
-                ...payload,
-                requests: payload.requests.map((request: string) => new LoginRequest(request)),
+                ...this.decodedPayload,
                 accountName: Name.from(payload.accountName),
                 username: payload.username.username
                     ? new TonomyUsername(payload.username.username)

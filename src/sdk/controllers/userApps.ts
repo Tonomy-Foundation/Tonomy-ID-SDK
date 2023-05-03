@@ -203,7 +203,8 @@ export class UserApps {
 
         const parsedPayload = base64UrlToObj(base64UrlPayload);
 
-        if (!parsedPayload.success) throwError("success parameter doesn't exists", SdkErrors.MissingParams);
+        if (parsedPayload.success !== true && parsedPayload.success !== false)
+            throwError("success parameter doesn't exists", SdkErrors.MissingParams);
 
         const { requests } = this.getLoginRequestFromUrl();
 
