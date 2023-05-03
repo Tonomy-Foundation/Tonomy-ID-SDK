@@ -14,6 +14,7 @@ import { LoginRequestResponseMessagePayload } from '../services/communication/me
 import { base64UrlToObj, objToBase64Url } from '../util/base64';
 import { getSettings } from '../util/settings';
 import { DID, URL as URLtype } from '../util/ssi/types';
+import { Issuer } from '@tonomy/did-jwt-vc';
 
 const idContract = IDContract.Instance;
 
@@ -112,33 +113,42 @@ export class UserApps {
         }
     }
 
-    async terminateLoginRequest(
+    static async terminateLoginRequest(
         loginRequests: LoginRequest[],
-        platform: 'mobile' | 'browser',
+        returnType: 'url' | 'message',
         error: {
             code: SdkErrors;
             reason: string;
         },
-        messageRecipient?: DID
-    ): Promise<void | URLtype> {
+        options: {
+            callbackOrigin?: string;
+            callbackPath?: URLtype;
+            issuer?: Issuer;
+            messageRecipient?: DID;
+        }
+    ): Promise<LoginRequestResponseMessage | URLtype> {
         const responsePayload = {
             success: false,
             requests: loginRequests,
             error,
         };
 
-        if (platform === 'mobile') {
-            let callbackUrl = getSettings().ssoWebsiteOrigin + '/callback?';
+        if (returnType === 'url') {
+            if (!options.callbackOrigin || !options.callbackPath)
+                throwError('Missing callback origin or path', SdkErrors.MissingParams);
+            let callbackUrl = options.callbackOrigin + options.callbackPath + '?';
 
             callbackUrl += 'payload=' + objToBase64Url(responsePayload);
 
             return callbackUrl;
         } else {
-            if (!messageRecipient) throwError('Missing message recipient', SdkErrors.MissingParams);
-            const issuer = await this.user.getIssuer();
-            const message = await LoginRequestResponseMessage.signMessage(responsePayload, issuer, messageRecipient);
-
-            await this.user.communication.sendMessage(message);
+            if (!options.messageRecipient || !options.issuer)
+                throwError('Missing message recipient or issuer', SdkErrors.MissingParams);
+            return await LoginRequestResponseMessage.signMessage(
+                responsePayload,
+                options.issuer,
+                options.messageRecipient
+            );
         }
     }
 
