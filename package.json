@@ -1,5 +1,5 @@
 {
-    "version": "0.3.47",
+    "version": "0.3.48",
     "license": "Apache-2.0",
     "type": "module",
     "source": "src/sdk/index.ts",
