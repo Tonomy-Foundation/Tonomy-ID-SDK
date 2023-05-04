@@ -16,7 +16,7 @@ import { SdkErrors } from '../../util/errors';
  *
  * @example see an example of the above in the LoginRequestMessage class
  */
-export class Message<T extends object = object> extends VerifiableCredentialWithType<T> {
+export class Message<T extends object = any> extends VerifiableCredentialWithType<T> {
     protected static type = 'Message';
 
     /**
@@ -164,7 +164,7 @@ export type LoginRequestResponseMessagePayload = {
         code: SdkErrors;
         reason: string;
     };
-    requests?: LoginRequest[];
+    requests: LoginRequest[];
     accountName?: Name;
     username?: TonomyUsername;
 };
@@ -183,14 +183,14 @@ export class LoginRequestResponseMessage extends Message<LoginRequestResponseMes
         super(vc);
         const payload = this.getVc().getPayload().vc.credentialSubject.payload;
 
-        if (payload.success) {
-            if (!payload.requests) {
-                throw new Error('LoginRequestsMessage must have a requests property');
-            }
+        this.decodedPayload = {
+            ...payload,
+            requests: payload.requests.map((request: string) => new LoginRequest(request)),
+        };
 
+        if (payload.success) {
             this.decodedPayload = {
-                ...payload,
-                requests: payload.requests.map((request: string) => new LoginRequest(request)),
+                ...this.decodedPayload,
                 accountName: Name.from(payload.accountName),
                 username: payload.username.username
                     ? new TonomyUsername(payload.username.username)

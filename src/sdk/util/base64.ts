@@ -101,10 +101,18 @@ export function b64ToUtf8(str: string) {
     }
 }
 
-export function strToBase64Url(str: string) {
+export function strToBase64Url(str: string): string {
     return encode(str);
 }
 
-export function base64UrlToStr(str: string) {
+export function objToBase64Url(obj: object): string {
+    return encode(JSON.stringify(obj));
+}
+
+export function base64UrlToStr(str: string): string {
     return decode(str);
+}
+
+export function base64UrlToObj(str: string): object | any {
+    return JSON.parse(decode(str));
 }

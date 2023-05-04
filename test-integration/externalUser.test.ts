@@ -39,7 +39,7 @@ import {
     externalWebsiteOnLogout,
 } from './helpers/externalUser';
 import { createStorageFactory } from './helpers/storageFactory';
-import { strToBase64Url } from '../src/sdk/util/base64';
+import { objToBase64Url } from '../src/sdk/util/base64';
 
 // @ts-expect-error - type error on global
 global.URL = URL;
@@ -102,9 +102,7 @@ describe('External User class', () => {
 
     describe('SSO login full end-to-end flow', () => {
         test('User succeeds at login to external website', async () => {
-            expect.assertions(35);
-
-            const appsFound = [false, false];
+            expect.assertions(33);
 
             // #####External website user (login page) #####
             // ################################
@@ -164,11 +162,8 @@ describe('External User class', () => {
             // ########################################
             const TONOMY_ID_requestSubscriber = setupLoginRequestSubscriber(
                 TONOMY_ID_user,
-                externalApp.origin,
-                EXTERNAL_WEBSITE_did,
                 tonomyLoginApp.origin,
                 TONOMY_LOGIN_WEBSITE_did,
-                appsFound,
                 log
             );
 
@@ -205,9 +200,6 @@ describe('External User class', () => {
             // Wait for the subscriber to execute
             await TONOMY_ID_requestSubscriber;
 
-            // check both apps were logged into
-            expect(appsFound[0] && appsFound[1]).toBe(true);
-
             // #####Tonomy Login App website user (callback page) #####
             // ########################################
 
@@ -230,7 +222,7 @@ describe('External User class', () => {
             expect(payload.username?.toString()).toBe((await TONOMY_ID_user.getUsername()).username);
 
             if (log) console.log('TONOMY_LOGIN_WEBSITE/login: sending to callback page');
-            const TONOMY_LOGIN_WEBSITE_base64UrlPayload = strToBase64Url(JSON.stringify(payload));
+            const TONOMY_LOGIN_WEBSITE_base64UrlPayload = objToBase64Url(payload);
 
             // @ts-expect-error - cannot find name jsdom
             jsdom.reconfigure({
@@ -249,14 +241,12 @@ describe('External User class', () => {
 
             const redirectJwtPayload = TONOMY_LOGIN_WEBSITE_redirectJwt?.getPayload();
 
-            const EXTERNAL_WEBSITE_base64UrlPayload = strToBase64Url(
-                JSON.stringify({
-                    success: true,
-                    requests: [TONOMY_LOGIN_WEBSITE_redirectJwt],
-                    username: TONOMY_LOGIN_WEBSITE_username,
-                    accountName: TONOMY_LOGIN_WEBSITE_accountName,
-                })
-            );
+            const EXTERNAL_WEBSITE_base64UrlPayload = objToBase64Url({
+                success: true,
+                requests: [TONOMY_LOGIN_WEBSITE_redirectJwt],
+                username: TONOMY_LOGIN_WEBSITE_username,
+                accountName: TONOMY_LOGIN_WEBSITE_accountName,
+            });
 
             // @ts-expect-error - cannot find name jsdom
             jsdom.reconfigure({

@@ -5,7 +5,7 @@ import URL from 'jsdom-url';
 import { setSettings } from '../../src/sdk';
 import { ExternalUser, LoginWithTonomyMessages } from '../../src/api/externalUser';
 import { LoginRequest } from '../../src/sdk/util/request';
-import { strToBase64Url } from '../../src/sdk/util/base64';
+import { objToBase64Url } from '../../src/sdk/util/base64';
 
 // @ts-expect-error - URL type on global does not match
 global.URL = URL;
@@ -36,7 +36,7 @@ describe('logging in', () => {
         const payload = {
             requests: [loginRequest],
         };
-        const base64UrlPayload = strToBase64Url(JSON.stringify(payload));
+        const base64UrlPayload = objToBase64Url(payload);
         const url = 'http://localhost/login?payload=' + base64UrlPayload;
 
         jest.spyOn(document, 'referrer', 'get').mockReturnValue('http://localhost');

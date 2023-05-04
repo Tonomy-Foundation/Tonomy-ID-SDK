@@ -27,7 +27,7 @@
         "node": ">=10"
     },
     "scripts": {
-        "start": "microbundle watch  -i ./src/src/index.ts -o build/sdk/index.js",
+        "start": "microbundle watch  -i ./src/sdk/index.ts -o build/sdk/index.js",
         "build:sdk": "microbundle --compress=false -i ./src/sdk/index.ts -o build/sdk/index.js",
         "build:cli": "microbundle --compress=false --target=node -f cjs -i ./src/cli/index.ts -o build/cli/index.js",
         "build:api": "mkdir -p ./build/api && cp ./src/api/tonomy.css ./build/api/tonomy.css",
