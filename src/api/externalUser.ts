@@ -5,7 +5,7 @@ import { ES256KSigner } from '@tonomy/did-jwt';
 import { Issuer } from '@tonomy/did-jwt-vc';
 import { createJWK, toDid } from '../sdk/util/ssi/did-jwk';
 import { getSettings } from '../sdk/util/settings';
-import { SdkErrors, throwError } from '../sdk/util/errors';
+import { SdkError, SdkErrors, throwError } from '../sdk/util/errors';
 import { createStorage, PersistentStorageClean, StorageFactory, STORAGE_NAMESPACE } from '../sdk/storage/storage';
 import { Checksum256, Name } from '@greymass/eosio';
 import { TonomyUsername } from '../sdk/util/username';
@@ -92,10 +92,12 @@ export class ExternalUser {
             if (result) {
                 return user;
             } else {
-                throw throwError('User Not loggedIn', SdkErrors.UserNotLoggedIn);
+                throwError('User Not loggedIn', SdkErrors.UserNotLoggedIn);
             }
         } catch (e) {
             await user.logout();
+            if (e instanceof SdkError && e.code === SdkErrors.KeyNotFound)
+                throwError('User Not loggedIn', SdkErrors.UserNotLoggedIn);
             throw e;
         }
     }
