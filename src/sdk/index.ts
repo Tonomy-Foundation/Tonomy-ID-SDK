@@ -10,6 +10,8 @@ export * from './controllers/userApps';
 import * as Eosio from './services/blockchain/eosio/eosio';
 import * as Transaction from './services/blockchain/eosio/transaction';
 
+export { AntelopePushTransactionError } from './services/blockchain/eosio/transaction';
+
 const EosioUtil = { ...Eosio, ...Transaction };
 
 export { EosioUtil };
