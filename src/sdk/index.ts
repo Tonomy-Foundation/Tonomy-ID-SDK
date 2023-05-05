@@ -35,7 +35,6 @@ export * from './storage/storage';
 export * from './storage/browserStorage';
 export * from './storage/jsKeyManager';
 // Other
-export { createSigner } from '@tonomy/antelope-ssi-toolkit';
 export { ES256KSigner } from '@tonomy/did-jwt';
 
 // API

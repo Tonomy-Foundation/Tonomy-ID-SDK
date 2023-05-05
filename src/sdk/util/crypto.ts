@@ -3,6 +3,7 @@ import rb from '@consento/sync-randombytes';
 import elliptic from 'elliptic';
 import { SdkErrors, throwError } from './errors';
 import { KeyManager, KeyManagerLevel } from '../storage/keymanager';
+import { ES256KSigner, ES256Signer, Signer } from '@tonomy/did-jwt';
 
 const secp256k1 = new elliptic.ec('secp256k1');
 
@@ -16,6 +17,25 @@ function validateKey(keyPair: elliptic.ec.KeyPair) {
     if (!result.result) {
         throwError(`Key not valid with reason ${result.reason}`, SdkErrors.InvalidKey);
     }
+}
+
+/*
+
+/* Creates a signer from a private key that can be used to sign a JWT
+ *
+ * @param privateKey the private key to use to sign the JWT
+ * @returns a signer (function) that can be used to sign a JWT
+ */
+export function createSigner(privateKey: PrivateKey): Signer {
+    if (privateKey.type === KeyType.K1) {
+        return ES256KSigner(privateKey.data.array, true);
+    }
+
+    if (privateKey.type === KeyType.R1 || privateKey.type === KeyType.WA) {
+        return ES256Signer(privateKey.data.array);
+    }
+
+    throw new Error('Unsupported key type');
 }
 
 export function toElliptic(key: PrivateKey | PublicKey): elliptic.ec.KeyPair {
