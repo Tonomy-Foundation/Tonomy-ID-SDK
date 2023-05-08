@@ -7,6 +7,7 @@ export class HttpError extends Error {
         html?: string;
         text?: string;
     };
+    code?: number;
     line?: number;
     column?: number;
     sourceURL?: string;
@@ -30,6 +31,7 @@ export class HttpError extends Error {
         if (httpError.line) this.line = httpError.line;
         if (httpError.column) this.line = httpError.column;
         if (httpError.sourceURL) this.sourceURL = httpError.sourceURL;
+        if (httpError.code) this.code = httpError.code;
     }
 }
 

@@ -1,6 +1,5 @@
 import { PrivateKey } from '@greymass/eosio';
-import { createSigner } from '@tonomy/antelope-ssi-toolkit';
-import { ES256KSigner, generateRandomKeyPair, setSettings } from '../../../src/sdk';
+import { ES256KSigner, generateRandomKeyPair, setSettings, createSigner } from '../../../src/sdk';
 import { IdentifyMessage } from '../../../src/sdk/services/communication/message';
 import { Issuer } from '@tonomy/did-jwt-vc';
 import { createJWK, toDid } from '../../../src/sdk/util/ssi/did-jwk';

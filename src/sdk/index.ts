@@ -10,6 +10,8 @@ export * from './controllers/userApps';
 import * as Eosio from './services/blockchain/eosio/eosio';
 import * as Transaction from './services/blockchain/eosio/transaction';
 
+export { AntelopePushTransactionError } from './services/blockchain/eosio/transaction';
+
 const EosioUtil = { ...Eosio, ...Transaction };
 
 export { EosioUtil };
@@ -35,7 +37,6 @@ export * from './storage/storage';
 export * from './storage/browserStorage';
 export * from './storage/jsKeyManager';
 // Other
-export { createSigner } from '@tonomy/antelope-ssi-toolkit';
 export { ES256KSigner } from '@tonomy/did-jwt';
 
 // API
