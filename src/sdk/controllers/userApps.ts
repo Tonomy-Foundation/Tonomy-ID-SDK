@@ -258,13 +258,15 @@ export class UserApps {
      * @param accountName {string} - the account name to check the key on
      * @param keyManager {KeyManager} - the key manager to check the key in
      * @param keyManagerLevel {KeyManagerLevel=BROWSER_LOCAL_STORAGE} - the level to check the key in
-     * @returns {Promise<boolean>} - true if the key exists and is authorized, false otherwise
+     * @returns {Promise<Name>} - the name of the permission that the key is authorized on
+     *
+     * @throws {SdkError} - if the key doesn't exist or isn't authorized
      */
     static async verifyKeyExistsForApp(
         accountName: Name,
         keyManager: KeyManager,
         keyManagerLevel: KeyManagerLevel = KeyManagerLevel.BROWSER_LOCAL_STORAGE
-    ): Promise<boolean> {
+    ): Promise<Name> {
         const pubKey = await keyManager.getKey({
             level: keyManagerLevel,
         });
@@ -276,6 +278,8 @@ export class UserApps {
 
         const publickey = account.getPermission(app.accountName).required_auth.keys[0].key;
 
-        return pubKey.toString() === publickey.toString();
+        if (pubKey.toString() !== publickey.toString()) throwError('key not authorized', SdkErrors.KeyNotFound);
+
+        return app.accountName;
     }
 }

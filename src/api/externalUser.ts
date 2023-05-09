@@ -7,19 +7,19 @@ import { createJWK, toDid } from '../sdk/util/ssi/did-jwk';
 import { getSettings } from '../sdk/util/settings';
 import { SdkError, SdkErrors, throwError } from '../sdk/util/errors';
 import { createStorage, PersistentStorageClean, StorageFactory, STORAGE_NAMESPACE } from '../sdk/storage/storage';
-import { Checksum256, Name } from '@greymass/eosio';
+import { Name } from '@greymass/eosio';
 import { TonomyUsername } from '../sdk/util/username';
 import { browserStorageFactory } from '../sdk/storage/browserStorage';
 import { getChainInfo } from '../sdk/services/blockchain/eosio/eosio';
 import { JsKeyManager } from '../sdk/storage/jsKeyManager';
 import { LoginRequest, LoginRequestPayload } from '../sdk/util/request';
-import { AuthenticationMessage, LoginRequestsMessagePayload } from '../sdk';
+import { AuthenticationMessage, IDContract, LoginRequestsMessagePayload } from '../sdk';
 import { objToBase64Url } from '../sdk/util/base64';
 
 export type ExternalUserStorage = {
     accountName: Name;
     username: TonomyUsername;
-    loginRequest: LoginRequestPayload;
+    appPermission: Name;
     did: string;
 };
 
@@ -33,6 +33,8 @@ export type LoginWithTonomyMessages = {
     loginRequest: LoginRequest;
     loginToCommunication: AuthenticationMessage;
 };
+
+const idContract = IDContract.singletonInstance;
 
 /**
  * An external user on a website that is being logged into by a Tonomy ID user
@@ -83,20 +85,24 @@ export class ExternalUser {
             const accountName = await user.getAccountName();
 
             if (!accountName) {
-                await user.logout();
                 throw throwError('accountName not found', SdkErrors.AccountNotFound);
             }
 
-            const result = await UserApps.verifyKeyExistsForApp(accountName, keyManager);
+            const appPermission = await UserApps.verifyKeyExistsForApp(accountName, keyManager);
+            const appPermissionStorage = await user.getAppPermission();
 
-            if (result) {
-                return user;
-            } else {
-                throwError('User Not loggedIn', SdkErrors.UserNotLoggedIn);
-            }
+            if (appPermission !== appPermissionStorage) throwError('App permission has changed', SdkErrors.InvalidData);
+
+            const usernameStorage = await user.getUsername();
+            const accountFromUsername = await idContract.getPerson(usernameStorage);
+
+            if (usernameStorage.toString() !== accountFromUsername.toString())
+                throwError('Username has changed', SdkErrors.InvalidData);
+
+            return user;
         } catch (e) {
             await user.logout();
-            if (e instanceof SdkError && e.code === SdkErrors.KeyNotFound)
+            if (e instanceof SdkError && (e.code === SdkErrors.KeyNotFound || e.code === SdkErrors.InvalidData))
                 throwError('User Not loggedIn', SdkErrors.UserNotLoggedIn);
             throw e;
         }
@@ -112,10 +118,12 @@ export class ExternalUser {
 
         if (!did) {
             const accountName = await (await this.getAccountName()).toString();
-            const chainID = (await getChainInfo()).chain_id as unknown as Checksum256;
+            const chainID = (await getChainInfo()).chain_id.toString();
+            const appPermission = await this.getAppPermission();
 
-            did = `did:antelope:${chainID}:${accountName}#local`;
+            did = `did:antelope:${chainID}:${accountName}#${appPermission}`;
             this.did = did;
+            await this.did;
         }
 
         return did;
@@ -126,7 +134,7 @@ export class ExternalUser {
      *
      * @param {Name} accountName - the account name of the user
      */
-    async setAccountName(accountName: Name): Promise<void> {
+    private async setAccountName(accountName: Name): Promise<void> {
         this.storage.accountName = accountName;
         await this.storage.accountName;
     }
@@ -136,9 +144,19 @@ export class ExternalUser {
      *
      * @param {string} username - the username of the user
      */
-    async setUsername(username: TonomyUsername): Promise<void> {
+    private async setUsername(username: TonomyUsername): Promise<void> {
         this.storage.username = username;
         await this.storage.username;
+    }
+
+    /**
+     * Sets the permission name of the app the user is logged into
+     *
+     * @param {Name} appPermission - the account name of the app
+     */
+    private async setAppPermission(appPermission: Name): Promise<void> {
+        this.storage.appPermission = appPermission;
+        await this.storage.appPermission;
     }
 
     /**
@@ -160,31 +178,21 @@ export class ExternalUser {
     }
 
     /**
-     * Sets the login request
-     *
-     * @param {LoginRequestPayload} loginRequest - the login request
-     */
-    async setLoginRequest(loginRequest: LoginRequestPayload): Promise<void> {
-        this.storage.loginRequest = loginRequest;
-        await this.storage.loginRequest;
-    }
-
-    /**
-     * Gets the login request
-     *
-     * @returns {Promise<LoginRequestPayload>} - the login request
-     */
-    async getLoginRequest(): Promise<LoginRequestPayload> {
-        return await this.storage.loginRequest;
-    }
-
-    /**
      * Gets the account name of the user
      *
      * @returns {Promise<Name>} - the account name of the user
      */
     async getAccountName(): Promise<Name> {
         return await this.storage.accountName;
+    }
+
+    /**
+     * Gets the permission name of the app the user is logged into
+     *
+     * @returns {Promise<Name>} - the account name of the app
+     */
+    async getAppPermission(): Promise<Name> {
+        return await this.storage.appPermission;
     }
 
     /**
@@ -288,38 +296,35 @@ export class ExternalUser {
 
         const { success, error, requests, username, accountName } = UserApps.getLoginRequestResponseFromUrl();
 
-        if (!success) {
-            if (!error) throwError('Unknown error', SdkErrors.MissingParams);
+        if (success === true) {
+            if (!accountName || !username) throwError('No account name found in url', SdkErrors.MissingParams);
+
+            const result = await UserApps.verifyRequests(requests);
+
+            const loginRequest = result.find((r) => r.getPayload().origin === window.location.origin)?.getPayload();
+            const keyFromStorage = await keyManager.getKey({ level: KeyManagerLevel.BROWSER_LOCAL_STORAGE });
+
+            if (!loginRequest) throwError('No login request found for this origin', SdkErrors.OriginMismatch);
+
+            if (loginRequest.publicKey.toString() !== keyFromStorage.toString()) {
+                throwError('Key in request does not match', SdkErrors.KeyNotFound);
+            }
+
+            const myStorageFactory = options.storageFactory || browserStorageFactory;
+            const externalUser = new ExternalUser(keyManager, myStorageFactory);
+
+            if (options.checkKeys) {
+                const permission = await UserApps.verifyKeyExistsForApp(accountName, keyManager);
+
+                await externalUser.setAppPermission(permission);
+            }
+
+            await externalUser.setAccountName(accountName);
+            await externalUser.setUsername(username);
+            return externalUser;
+        } else {
+            if (!error) throwError('No error found in url', SdkErrors.MissingParams);
             throwError(error.reason, error.code);
         }
-
-        if (!requests || !accountName || !username) {
-            throwError('Missing parameters', SdkErrors.MissingParams);
-        }
-
-        const result = await UserApps.verifyRequests(requests);
-
-        const loginRequest = result.find((r) => r.getPayload().origin === window.location.origin)?.getPayload();
-        const keyFromStorage = await keyManager.getKey({ level: KeyManagerLevel.BROWSER_LOCAL_STORAGE });
-
-        if (!loginRequest) throwError('No login request found for this origin', SdkErrors.OriginMismatch);
-
-        if (loginRequest.publicKey.toString() !== keyFromStorage.toString()) {
-            throwError('Key in request does not match', SdkErrors.KeyNotFound);
-        }
-
-        if (options.checkKeys) {
-            const keyExists = await UserApps.verifyKeyExistsForApp(accountName, keyManager);
-
-            if (!keyExists) throwError('Key not found', SdkErrors.KeyNotFound);
-        }
-
-        const myStorageFactory = options.storageFactory || browserStorageFactory;
-        const externalUser = new ExternalUser(keyManager, myStorageFactory);
-
-        await externalUser.setAccountName(accountName);
-        await externalUser.setLoginRequest(loginRequest);
-        await externalUser.setUsername(username);
-        return externalUser;
     }
 }
