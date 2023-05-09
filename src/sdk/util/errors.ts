@@ -122,6 +122,7 @@ enum SdkErrors {
     UsernameTaken = 'UsernameTaken',
     UsernameNotDefined = 'UsernameNotDefined',
     UserNotLoggedIn = 'UserNotLoggedIn',
+    UserNotLoggedInWithThisApp = 'UserNotLoggedInWithThisApp',
     WrongOrigin = 'WrongOrigin',
     UserCancelled = 'UserCancelled',
     UserLogout = 'UserLogout',

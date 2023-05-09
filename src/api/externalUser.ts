@@ -15,6 +15,7 @@ import { JsKeyManager } from '../sdk/storage/jsKeyManager';
 import { LoginRequest, LoginRequestPayload } from '../sdk/util/request';
 import { AuthenticationMessage, IDContract, LoginRequestsMessagePayload } from '../sdk';
 import { objToBase64Url } from '../sdk/util/base64';
+import { DIDurl } from '../sdk/util/ssi/types';
 
 export type ExternalUserStorage = {
     accountName: Name;
@@ -88,7 +89,7 @@ export class ExternalUser {
                 throw throwError('accountName not found', SdkErrors.AccountNotFound);
             }
 
-            const appPermission = await UserApps.verifyKeyExistsForApp(accountName, keyManager);
+            const appPermission = await UserApps.verifyKeyExistsForApp(accountName, { keyManager });
             const appPermissionStorage = await user.getAppPermission();
 
             if (appPermission !== appPermissionStorage) throwError('App permission has changed', SdkErrors.InvalidData);
@@ -109,11 +110,11 @@ export class ExternalUser {
     }
 
     /**
-     * Returns the DID of the user
+     * Returns the DID URL of the logged in user
      *
-     * @returns {Promise<string>} - the DID of the user
+     * @returns {Promise<DIDurl>} - the DID of the user
      */
-    async getDid() {
+    async getDid(): Promise<DIDurl> {
         let did = this.did;
 
         if (!did) {
@@ -127,6 +128,16 @@ export class ExternalUser {
         }
 
         return did;
+    }
+
+    /**
+     * @returns {Promise{DIDurl}} the DID URL of the Tonomy ID wallet with #local fragment
+     */
+    async getWalletDid(): Promise<DIDurl> {
+        const did = await this.getDid();
+        const appPermission = await this.getAppPermission();
+
+        return did.replace(`#${appPermission}`, '#local');
     }
 
     /**
@@ -211,7 +222,7 @@ export class ExternalUser {
         keyManager: KeyManager = new JsKeyManager()
     ): Promise<LoginWithTonomyMessages | void> {
         const issuer = await this.createJwkIssuerAndStore(keyManager);
-        const publicKey = await keyManager.getKey({ level: KeyManagerLevel.BROWSER_LOCAL_STORAGE});
+        const publicKey = await keyManager.getKey({ level: KeyManagerLevel.BROWSER_LOCAL_STORAGE });
 
         const payload: LoginRequestPayload = {
             randomString: randomString(32),
@@ -318,7 +329,7 @@ export class ExternalUser {
             const externalUser = new ExternalUser(keyManager, myStorageFactory);
 
             if (options.checkKeys) {
-                const permission = await UserApps.verifyKeyExistsForApp(accountName, keyManager);
+                const permission = await UserApps.verifyKeyExistsForApp(accountName, { keyManager });
 
                 await externalUser.setAppPermission(permission);
             }

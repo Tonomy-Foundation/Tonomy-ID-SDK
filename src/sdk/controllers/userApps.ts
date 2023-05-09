@@ -5,7 +5,7 @@ import { KeyManager, KeyManagerLevel } from '../storage/keymanager';
 import { createStorage, PersistentStorageClean, StorageFactory, STORAGE_NAMESPACE } from '../storage/storage';
 import { User } from './user';
 import { createKeyManagerSigner } from '../services/blockchain/eosio/transaction';
-import { SdkErrors, throwError } from '../util/errors';
+import { SdkError, SdkErrors, throwError } from '../util/errors';
 import { App, AppStatus } from './app';
 import { TonomyUsername } from '../util/username';
 import { LoginRequest } from '../util/request';
@@ -88,7 +88,20 @@ export class UserApps {
         for (const loginRequest of requests) {
             const { app, request } = loginRequest;
 
-            await this.user.apps.loginWithApp(app, request.getPayload().publicKey);
+            try {
+                await UserApps.verifyKeyExistsForApp(await this.user.getAccountName(), {
+                    publicKey: request.getPayload().publicKey,
+                });
+            } catch (e) {
+                if (
+                    e instanceof SdkError &&
+                    (e.code === SdkErrors.KeyNotFound || e.code === SdkErrors.UserNotLoggedInWithThisApp)
+                ) {
+                    await this.user.apps.loginWithApp(app, request.getPayload().publicKey);
+                } else {
+                    throw e;
+                }
+            }
         }
 
         const responsePayload = {
@@ -264,21 +277,35 @@ export class UserApps {
      */
     static async verifyKeyExistsForApp(
         accountName: Name,
-        keyManager: KeyManager,
-        keyManagerLevel: KeyManagerLevel = KeyManagerLevel.BROWSER_LOCAL_STORAGE
+        options: {
+            publicKey?: PublicKey;
+            keyManager?: KeyManager;
+            keyManagerLevel?: KeyManagerLevel;
+        }
     ): Promise<Name> {
-        const pubKey = await keyManager.getKey({
-            level: keyManagerLevel,
-        });
+        let pubKey = options.publicKey;
+
+        if (!pubKey) {
+            if (!options.keyManager) throwError('Missing key manager', SdkErrors.MissingParams);
+            if (!options.keyManagerLevel) options.keyManagerLevel = KeyManagerLevel.BROWSER_LOCAL_STORAGE;
+            pubKey = await options.keyManager.getKey({ level: options.keyManagerLevel });
+        }
 
         const account = await User.getAccountInfo(accountName);
 
         if (!account) throwError("couldn't fetch account", SdkErrors.AccountNotFound);
         const app = await App.getApp(window.location.origin);
 
-        const publickey = account.getPermission(app.accountName).required_auth.keys[0].key;
+        try {
+            const permission = account.getPermission(app.accountName);
+            const publicKey = permission.required_auth.keys[0].key;
 
-        if (pubKey.toString() !== publickey.toString()) throwError('key not authorized', SdkErrors.KeyNotFound);
+            if (pubKey.toString() !== publicKey.toString()) throwError('key not authorized', SdkErrors.KeyNotFound);
+        } catch (e) {
+            if (e.message.startsWith('Unknown permission '))
+                throwError(`No permission found for app ${app.accountName}`, SdkErrors.UserNotLoggedInWithThisApp);
+            else throw e;
+        }
 
         return app.accountName;
     }
