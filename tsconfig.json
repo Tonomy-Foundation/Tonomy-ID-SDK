@@ -24,6 +24,7 @@
     "noFallthroughCasesInSwitch": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
+    "useUnknownInCatchVariables": false,
     "moduleResolution": "node",
     "esModuleInterop": true,
     "skipLibCheck": true,

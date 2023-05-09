@@ -210,12 +210,8 @@ export class ExternalUser {
         { redirect = true, callbackPath }: OnPressLoginOptions,
         keyManager: KeyManager = new JsKeyManager()
     ): Promise<LoginWithTonomyMessages | void> {
-        const { privateKey, publicKey } = generateRandomKeyPair();
-
-        await keyManager.storeKey({
-            level: KeyManagerLevel.BROWSER_LOCAL_STORAGE,
-            privateKey: privateKey,
-        });
+        const issuer = await this.createJwkIssuerAndStore(keyManager);
+        const publicKey = await keyManager.getKey({ level: KeyManagerLevel.BROWSER_LOCAL_STORAGE});
 
         const payload: LoginRequestPayload = {
             randomString: randomString(32),
@@ -224,16 +220,6 @@ export class ExternalUser {
             callbackPath,
         };
 
-        // TODO use expiresIn to make JWT expire after 5 minutes
-
-        const signer = ES256KSigner(privateKey.data.array, true);
-        const jwk = await createJWK(publicKey);
-
-        const issuer = {
-            did: toDid(jwk),
-            signer: signer as any,
-            alg: 'ES256K-R',
-        };
         const loginRequest = await LoginRequest.signRequest(payload, issuer);
 
         if (redirect) {
@@ -251,7 +237,25 @@ export class ExternalUser {
         }
     }
 
-    static async getDidJwkIssuerFromStorage(keyManager: KeyManager = new JsKeyManager()): Promise<Issuer> {
+    static async createJwkIssuerAndStore(keyManager: KeyManager = new JsKeyManager()): Promise<Issuer> {
+        const { privateKey, publicKey } = generateRandomKeyPair();
+
+        await keyManager.storeKey({
+            level: KeyManagerLevel.BROWSER_LOCAL_STORAGE,
+            privateKey: privateKey,
+        });
+
+        const signer = ES256KSigner(privateKey.data.array, true);
+        const jwk = await createJWK(publicKey);
+
+        return {
+            did: toDid(jwk),
+            signer: signer as any,
+            alg: 'ES256K-R',
+        };
+    }
+
+    static async getJwkIssuerFromStorage(keyManager: KeyManager = new JsKeyManager()): Promise<Issuer> {
         const publicKey = await keyManager.getKey({
             level: KeyManagerLevel.BROWSER_LOCAL_STORAGE,
         });
