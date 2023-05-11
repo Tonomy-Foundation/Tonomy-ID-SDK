@@ -141,7 +141,7 @@ export class VerifiableCredential<T extends object = object> {
 
         const resolver = new Resolver({
             ...getJwkResolver(),
-            ...getResolver({ antelopeChainUrl: settings.blockchainUrl, fetch: crossFetch as any }),
+            ...(getResolver({ antelopeChainUrl: settings.blockchainUrl, fetch: crossFetch as any }) as any),
         });
 
         return verifyCredential(this.jwt, resolver);
