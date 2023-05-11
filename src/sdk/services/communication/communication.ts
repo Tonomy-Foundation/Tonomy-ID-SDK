@@ -51,6 +51,14 @@ export class Communication {
      * @throws {SdkError} - CommunicationTimeout
      */
     private async emitMessage(event: string, message: Message): Promise<boolean> {
+        console.log(
+            'emitMessage',
+            event,
+            `type: ${message.getType()}\n
+            sender: ${message.getSender()}\n
+            recipient: ${message.getRecipient()}\n
+            payload: ${JSON.stringify(message.getPayload(), null, 2)}\n`
+        );
         return await new Promise((resolve, reject) => {
             const resolved = false;
 
@@ -114,6 +122,14 @@ export class Communication {
 
         const messageHandler = (message: any) => {
             const msg = new Message(message);
+
+            console.log(
+                'messageHandler',
+                `type: ${msg.getType()}\n
+                sender: ${msg.getSender()}\n
+                recipient: ${msg.getRecipient()}\n
+                payload: ${JSON.stringify(msg.getPayload(), null, 2)}\n`
+            );
 
             if (!type || msg.getType() === type) {
                 subscriber(msg);
