@@ -14,7 +14,7 @@ import { LoginRequestResponseMessagePayload } from '../services/communication/me
 import { base64UrlToObj, objToBase64Url } from '../util/base64';
 import { getSettings } from '../util/settings';
 import { DID, URL as URLtype } from '../util/ssi/types';
-import { Issuer } from '@tonomy/did-jwt-vc';
+import { Issuer } from 'did-jwt-vc';
 
 const idContract = IDContract.Instance;
 
@@ -231,23 +231,34 @@ export class UserApps {
      * @returns {Promise<LoginRequest>} - the verified login request
      */
     static async onRedirectLogin(): Promise<LoginRequest> {
+        console.log('onRedirectLogin');
+
         const { requests } = this.getLoginRequestFromUrl();
 
-        const verifiedRequests = await UserApps.verifyRequests(requests);
+        const myRequest = requests.find((r) => r.getPayload().origin !== window.location.origin);
 
-        const referrer = new URL(document.referrer);
+        console.log('onRedirectLogin', myRequest);
 
-        const myRequest = verifiedRequests.find((r) => r.getPayload().origin === referrer.origin);
+        const verifiedRequest = await myRequest?.verify();
 
-        if (!myRequest) {
-            const msg =
-                `No origins from: ${verifiedRequests.map((r) => r.getPayload().origin)} ` +
-                `match referrer: ${referrer.origin}`;
+        console.log('verifiedRequest', verifiedRequest);
+        // const verifiedRequests = await UserApps.verifyRequests(requests);
 
-            throwError(msg, SdkErrors.WrongOrigin);
-        }
+        // console.log('2');
 
-        return myRequest;
+        // const referrer = new URL(document.referrer);
+
+        // const myRequest = verifiedRequests.find((r) => r.getPayload().origin === referrer.origin);
+
+        // if (!myRequest) {
+        //     const msg =
+        //         `No origins from: ${verifiedRequests.map((r) => r.getPayload().origin)} ` +
+        //         `match referrer: ${referrer.origin}`;
+
+        //     throwError(msg, SdkErrors.WrongOrigin);
+        // }
+
+        return myRequest as LoginRequest;
     }
 
     /**

@@ -1,18 +1,12 @@
-import { decodeJWT } from '@tonomy/did-jwt';
-import { JWTDecoded, JWTPayload } from '@tonomy/did-jwt/lib/JWT';
+import { decodeJWT } from 'did-jwt';
+import { JWTDecoded, JWTPayload } from 'did-jwt/lib/JWT';
 import { DIDurl, URL, JWT, JWTVCPayload } from './types';
 import { getSettings } from '../settings';
-import { Resolver } from '@tonomy/did-resolver';
+import { Resolver } from 'did-resolver';
 import { getResolver } from '@tonomy/antelope-did-resolver';
 import { getResolver as getJwkResolver } from './did-jwk';
 import crossFetch from 'cross-fetch';
-import {
-    verifyCredential,
-    W3CCredential,
-    Issuer,
-    createVerifiableCredentialJwt,
-    VerifiedCredential,
-} from '@tonomy/did-jwt-vc';
+import { verifyCredential, W3CCredential, Issuer, createVerifiableCredentialJwt, VerifiedCredential } from 'did-jwt-vc';
 import { toDateTime } from '../time';
 import { randomString } from '../crypto';
 import { Serializable } from '../serializable';

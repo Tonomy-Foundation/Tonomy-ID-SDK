@@ -15,7 +15,7 @@ import { validatePassword } from '../util/passwords';
 import { UserApps } from './userApps';
 import { getSettings } from '../util/settings';
 import { Communication } from '../services/communication/communication';
-import { Issuer } from '@tonomy/did-jwt-vc';
+import { Issuer } from 'did-jwt-vc';
 import { createVCSigner, generateRandomKeyPair } from '../util/crypto';
 
 enum UserStatus {

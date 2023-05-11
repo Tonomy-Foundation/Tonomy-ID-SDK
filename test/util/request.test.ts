@@ -1,7 +1,7 @@
 import { LoginRequestsMessage, generateRandomKeyPair, randomString, setSettings } from '../../src/sdk';
 import { createJWK } from '../../src/sdk/util/ssi/did-jwk';
-import { ES256KSigner } from '@tonomy/did-jwt';
-import { Issuer } from '@tonomy/did-jwt-vc';
+import { ES256KSigner } from 'did-jwt';
+import { Issuer } from 'did-jwt-vc';
 import { toDid } from '../../src/sdk/util/ssi/did-jwk';
 import { LoginRequest, LoginRequestPayload } from '../../src/sdk/util/request';
 import { PublicKey } from '@greymass/eosio';

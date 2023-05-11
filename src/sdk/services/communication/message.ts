@@ -1,4 +1,4 @@
-import { Issuer } from '@tonomy/did-jwt-vc';
+import { Issuer } from 'did-jwt-vc';
 import { DIDurl, URL } from '../../util/ssi/types';
 import { VerifiableCredentialWithType, VCWithTypeType } from '../../util/ssi/vc';
 import { LoginRequest } from '../../util/request';

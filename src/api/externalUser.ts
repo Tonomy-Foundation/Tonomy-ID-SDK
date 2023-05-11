@@ -1,8 +1,8 @@
 import { KeyManager, KeyManagerLevel } from '../sdk/storage/keymanager';
 import { OnPressLoginOptions, UserApps } from '../sdk/controllers/userApps';
 import { createVCSigner, generateRandomKeyPair, randomString } from '../sdk/util/crypto';
-import { ES256KSigner } from '@tonomy/did-jwt';
-import { Issuer } from '@tonomy/did-jwt-vc';
+import { ES256KSigner } from 'did-jwt';
+import { Issuer } from 'did-jwt-vc';
 import { createJWK, toDid } from '../sdk/util/ssi/did-jwk';
 import { getSettings } from '../sdk/util/settings';
 import { SdkError, SdkErrors, throwError } from '../sdk/util/errors';

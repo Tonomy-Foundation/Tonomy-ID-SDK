@@ -1,6 +1,6 @@
 import { PublicKey } from '@greymass/eosio';
 import { VCWithTypeType, VerifiableCredentialOptions, VerifiableCredentialWithType } from './ssi/vc';
-import { Issuer } from '@tonomy/did-jwt-vc';
+import { Issuer } from 'did-jwt-vc';
 
 export type LoginRequestPayload = {
     randomString: string;

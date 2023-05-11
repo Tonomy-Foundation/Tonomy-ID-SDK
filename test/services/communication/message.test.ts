@@ -1,7 +1,7 @@
 import { PrivateKey } from '@greymass/eosio';
 import { ES256KSigner, generateRandomKeyPair, setSettings, createSigner } from '../../../src/sdk';
 import { IdentifyMessage } from '../../../src/sdk/services/communication/message';
-import { Issuer } from '@tonomy/did-jwt-vc';
+import { Issuer } from 'did-jwt-vc';
 import { createJWK, toDid } from '../../../src/sdk/util/ssi/did-jwk';
 
 setSettings({
