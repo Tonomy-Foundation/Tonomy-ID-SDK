@@ -28,6 +28,21 @@ describe('logging in', () => {
         expect(typeof loginRequest.toString()).toBe('string');
     });
 
+    it('generates and verifies tonomy login JWT 100 times', async () => {
+        expect.assertions(100);
+
+        for (let i = 0; i < 100; i++) {
+            const { loginRequest } = (await ExternalUser.loginWithTonomy({
+                callbackPath: '/login',
+                redirect: false,
+            })) as LoginWithTonomyMessages;
+
+            const verifiedLoginRequest = await loginRequest.verify();
+
+            expect(verifiedLoginRequest).toBe(true);
+        }
+    });
+
     it('checks login url', async () => {
         const { loginRequest } = (await ExternalUser.loginWithTonomy({
             callbackPath: '/login',

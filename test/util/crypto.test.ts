@@ -1,6 +1,6 @@
 import { Checksum256, PrivateKey } from '@greymass/eosio';
 import { generatePrivateKeyFromPassword } from '../../src/cli/bootstrap/keys';
-import { sha256, randomString, generateRandomKeyPair, randomBytes } from '../../src/sdk/util/crypto';
+import { sha256, randomString, generateRandomKeyPair, randomBytes, toElliptic } from '../../src/sdk/util/crypto';
 import * as argon2 from 'argon2';
 
 describe('crypto sha256()', () => {
@@ -22,6 +22,20 @@ describe('crypto generateRandomKeyPair()', () => {
 
         expect(key1.privateKey.toString()).not.toEqual(key2.privateKey.toString());
         expect(key1.publicKey.toString()).not.toEqual(key2.publicKey.toString());
+    });
+
+    it('uses generateRandomKeyPair() to create 100 valid EC Points', () => {
+        expect.assertions(200);
+
+        for (let i = 0; i < 100; i++) {
+            const { publicKey } = generateRandomKeyPair();
+
+            const ecKey = toElliptic(publicKey);
+            const pubKey = ecKey.getPublic();
+
+            expect(pubKey.getX().toString('hex').length).toBe(64);
+            expect(pubKey.getY().toString('hex').length).toBe(64);
+        }
     });
 });
 
