@@ -1,9 +1,11 @@
+// universal-base64url converts from base64url to utf8 and vice versa
 import { decode, encode } from 'universal-base64url';
 import { BN } from 'bn.js';
 
 // Inspired by https://github.com/davidchambers/Base64.js/blob/master/base64.js
 const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
-const Base64 = {
+
+export const Base64 = {
     btoa: (input = '') => {
         const str = input;
         let output = '';
@@ -59,18 +61,25 @@ if (typeof Buffer === 'undefined') {
 }
 
 export function bnToBase64Url(bn: typeof BN): string {
+    console.log('bnToBase64Url', bn.toString());
+
     if (typeof Buffer !== 'undefined') {
         // nodejs
-        const buffer = (bn as any).toArrayLike(Buffer, 'be');
+        const buffer = (bn as any).toArrayLike(Buffer, 'be') as Buffer;
+        const utf8 = buffer.toString('utf8');
 
-        return Buffer.from(buffer).toString('base64');
+        return encode(utf8);
     } else {
         // browser
-        return hexToBase64((bn as any).toString('hex'));
+        // BN.toString() will PAD with 0s!!!
+        const byteArray = (bn as any).toArrayLike(Uint8Array, 'be') as Uint8Array;
+        const utf8 = new TextDecoder().decode(byteArray);
+
+        return encode(utf8);
     }
 }
 
-function hexToBase64(hexstring: string) {
+export function hexToBase64(hexstring: string) {
     return window.btoa(
         (hexstring as any)
             .match(/\w{2}/g)
