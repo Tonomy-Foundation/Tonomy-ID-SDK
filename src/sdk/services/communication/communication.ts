@@ -7,16 +7,21 @@ export type Subscriber = (message: Message) => void;
 
 export class Communication {
     socketServer: Socket;
+    private static object: Communication;
     private static identifier: 0;
     private subscribers = new Map<number, Subscriber>();
+    private authMessage: AuthenticationMessage;
 
     constructor() {
+        if (Communication.object) return Communication.object;
         const url = getSettings().communicationUrl;
 
         this.socketServer = io(url, {
             transports: ['websocket'],
             autoConnect: false,
         });
+
+        Communication.object = this;
     }
 
     /**
@@ -30,7 +35,11 @@ export class Communication {
 
         this.socketServer.connect();
         await new Promise((resolve, reject) => {
-            this.socketServer.on('connect', () => {
+            this.socketServer.on('connect', async () => {
+                if (this.authMessage) {
+                    await this.login(this.authMessage);
+                }
+
                 resolve(true);
                 return;
             });
@@ -96,7 +105,10 @@ export class Communication {
     async login(authorization: AuthenticationMessage): Promise<boolean> {
         await this.connect();
 
-        return await this.emitMessage('login', authorization);
+        const result = await this.emitMessage('login', authorization);
+
+        if (result) this.authMessage = authorization;
+        return result;
     }
 
     /* sends a message to another DID
