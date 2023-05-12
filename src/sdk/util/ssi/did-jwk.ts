@@ -1,7 +1,10 @@
 import { PublicKey } from '@greymass/eosio';
 import { toElliptic } from '../crypto';
-import { b64ToUtf8, bnToBase64Url, utf8ToB64 } from '../base64';
+import { b64ToUtf8, bnToBase64Url } from '../base64';
+import { utf8ToB64 } from '../base64';
 import { ResolverRegistry, ParsedDID, DIDResolutionResult, DIDDocument } from 'did-resolver';
+
+// import { base64url } from 'jose';
 
 export function createJWK(publicKey: PublicKey) {
     const ecPubKey = toElliptic(publicKey);
@@ -21,8 +24,8 @@ export function createJWK(publicKey: PublicKey) {
 export function toDid(jwk: any) {
     // eslint-disable-next-line no-unused-vars
     const { d, p, q, dp, dq, qi, ...publicKeyJwk } = jwk;
-    // TODO replace with base64url encoder for web
     const id = utf8ToB64(JSON.stringify(publicKeyJwk));
+    // const id = base64url.encode(JSON.stringify(publicKeyJwk));
 
     const did = `did:jwk:${id}`;
 
@@ -85,6 +88,7 @@ export function toDidDocument(jwk: any): DIDDocument {
 export async function resolve(did: any, options = {}): Promise<DIDResolutionResult> {
     if (options) options = {};
     const decoded = b64ToUtf8(did.split(':').pop().split('#')[0]);
+    // const decoded = base64url.decode(did.split(':').pop().split('#')[0]);
     const jwk = JSON.parse(decoded.toString());
 
     const didDoc = toDidDocument(jwk);

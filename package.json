@@ -87,6 +87,7 @@
         "did-jwt-vc": "^3.2.0",
         "did-resolver": "^4.1.0",
         "elliptic": "^6.5.4",
+        "jose": "^4.14.4",
         "socket.io-client": "^4.5.4",
         "universal-base64url": "^1.1.0"
     },

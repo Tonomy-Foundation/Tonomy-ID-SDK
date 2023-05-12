@@ -11,7 +11,7 @@ export function randomBytes(bytes: number): Uint8Array {
     return rb(new Uint8Array(bytes));
 }
 
-function validateKey(keyPair: elliptic.ec.KeyPair) {
+export function validateKey(keyPair: elliptic.ec.KeyPair) {
     const result = keyPair.validate();
 
     if (!result.result) {
@@ -81,12 +81,15 @@ export function decodeHex(hex: string): string {
         .join('');
 }
 
-export function generateRandomKeyPair(): { privateKey: PrivateKey; publicKey: PublicKey } {
+export function generateRandomKeyPair() {
     const bytes = randomBytes(32);
+
+    if (bytes.length !== 32) throwError('Invalid random bytes', SdkErrors.InvalidKey);
+
     const privateKey = new PrivateKey(KeyType.K1, new Bytes(bytes));
     const publicKey = privateKey.toPublic();
 
-    return { privateKey, publicKey };
+    return { privateKey, publicKey, bytes, bytes2: new Bytes(bytes) };
 }
 
 export function createVCSigner(keyManager: KeyManager, level: KeyManagerLevel) {

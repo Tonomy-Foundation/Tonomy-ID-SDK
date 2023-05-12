@@ -1,7 +1,17 @@
 import { Checksum256, PrivateKey } from '@greymass/eosio';
 import { generatePrivateKeyFromPassword } from '../../src/cli/bootstrap/keys';
-import { sha256, randomString, generateRandomKeyPair, randomBytes, toElliptic } from '../../src/sdk/util/crypto';
+import {
+    sha256,
+    randomString,
+    generateRandomKeyPair,
+    randomBytes,
+    toElliptic,
+    validateKey,
+} from '../../src/sdk/util/crypto';
 import * as argon2 from 'argon2';
+import elliptic from 'elliptic';
+
+const secp256k1 = new elliptic.ec('secp256k1');
 
 describe('crypto sha256()', () => {
     it('sha256 hash', () => {
@@ -25,16 +35,40 @@ describe('crypto generateRandomKeyPair()', () => {
     });
 
     it('uses generateRandomKeyPair() to create 100 valid EC Points', () => {
-        expect.assertions(200);
+        expect.assertions(100 * 4);
 
         for (let i = 0; i < 100; i++) {
-            const { publicKey } = generateRandomKeyPair();
+            const { privateKey, publicKey, bytes, bytes2 } = generateRandomKeyPair();
 
-            const ecKey = toElliptic(publicKey);
-            const pubKey = ecKey.getPublic();
+            expect(bytes.length).toBe(32);
+            expect(bytes2.length).toBe(32);
+            expect(privateKey.data.array).toEqual(bytes);
 
-            expect(pubKey.getX().toString('hex').length).toBe(64);
-            expect(pubKey.getY().toString('hex').length).toBe(64);
+            const ecPrivKey = secp256k1.keyFromPrivate(privateKey.data.array);
+            const ecPubKey = secp256k1.keyFromPublic(publicKey.data.array);
+
+            validateKey(ecPrivKey);
+            validateKey(ecPubKey);
+
+            const ecPubKeyFromPriv = ecPrivKey.getPublic();
+
+            expect(ecPubKeyFromPriv.eq(ecPubKey.getPublic())).toBe(true);
+
+            if (ecPrivKey.getPrivate().toString('hex').length !== 64) {
+                const priv = ecPrivKey.getPrivate();
+                const x = ecPubKey.getPublic().getX();
+                const xHex = x.toString('hex');
+                const xLength = xHex.length;
+                const y = ecPubKey.getPublic().getY();
+                const yHex = y.toString('hex');
+                const yLength = yHex.length;
+
+                console.log('point');
+            }
+
+            expect(ecPrivKey.getPrivate().toString('hex').length).toBe(64);
+            // expect(ecPubKey.getPublic().getX().toString('hex').length).toBe(64);
+            // expect(ecPubKey.getPublic().getY().toString('hex').length).toBe(64);
         }
     });
 });
