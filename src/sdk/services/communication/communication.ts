@@ -10,6 +10,15 @@ export class Communication {
     private static identifier: 0;
     private subscribers = new Map<number, Subscriber>();
 
+    constructor() {
+        const url = getSettings().communicationUrl;
+
+        this.socketServer = io(url, {
+            transports: ['websocket'],
+            autoConnect: false,
+        });
+    }
+
     /**
      * Connects to the Tonomy Communication server
      *
@@ -18,12 +27,8 @@ export class Communication {
      */
     private async connect(): Promise<void> {
         if (this.socketServer?.connected) return; // dont override socket if connected
-        const url = getSettings().communicationUrl;
 
-        this.socketServer = io(url, {
-            transports: ['websocket'],
-        });
-
+        this.socketServer.connect();
         await new Promise((resolve, reject) => {
             this.socketServer.on('connect', () => {
                 resolve(true);
