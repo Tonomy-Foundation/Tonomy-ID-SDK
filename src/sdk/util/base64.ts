@@ -66,7 +66,7 @@ export function bnToBase64Url(bn: typeof BN): string {
         return Buffer.from(buffer).toString('base64');
     } else {
         // browser
-        return hexToBase64((bn as any).toString('hex'));
+        return hexToBase64((bn as any).toString('hex').padStart(64, '0'));
     }
 }
 
