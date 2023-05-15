@@ -30,6 +30,8 @@ export * from './util/crypto';
 export * from './util/username';
 export * from './util/request';
 export * from './util/base64';
+export * from './util/ssi/vc';
+export * from './util/ssi/did-jwk';
 
 // Storage
 export * from './storage/keymanager';

@@ -1,5 +1,6 @@
 import { decode, encode } from 'universal-base64url';
 import { BN } from 'bn.js';
+import { bigintToBytes, bytesToBase64 } from './ssi/did-jwt.util';
 
 // Inspired by https://github.com/davidchambers/Base64.js/blob/master/base64.js
 const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
@@ -59,27 +60,33 @@ if (typeof Buffer === 'undefined') {
 }
 
 export function bnToBase64Url(bn: typeof BN): string {
-    if (typeof Buffer !== 'undefined') {
-        // nodejs
-        const buffer = (bn as any).toArrayLike(Buffer, 'be');
+    // if (typeof Buffer !== 'undefined') {
+    //     // nodejs
+    //     const buffer = (bn as any).toArrayLike(Buffer, 'be');
 
-        return Buffer.from(buffer).toString('base64');
-    } else {
-        // browser
-        return hexToBase64((bn as any).toString('hex'));
-    }
+    //     return Buffer.from(buffer).toString('base64');
+    // } else {
+    //     // browser
+    //     return hexToBase64((bn as any).toString('hex'));
+    // }
+
+    const bnString = bn.toString();
+    const bi = BigInt(bnString);
+    const biBytes = bigintToBytes(bi);
+
+    return bytesToBase64(biBytes);
 }
 
-function hexToBase64(hexstring: string) {
-    return window.btoa(
-        (hexstring as any)
-            .match(/\w{2}/g)
-            .map(function (a: string) {
-                return String.fromCharCode(parseInt(a, 16));
-            })
-            .join('')
-    );
-}
+// function hexToBase64(hexstring: string) {
+//     return window.btoa(
+//         (hexstring as any)
+//             .match(/\w{2}/g)
+//             .map(function (a: string) {
+//                 return String.fromCharCode(parseInt(a, 16));
+//             })
+//             .join('')
+//     );
+// }
 
 export function utf8ToB64(str: string) {
     if (typeof Buffer !== 'undefined') {

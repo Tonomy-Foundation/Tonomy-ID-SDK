@@ -4,11 +4,17 @@ import elliptic from 'elliptic';
 import { SdkErrors, throwError } from './errors';
 import { KeyManager, KeyManagerLevel } from '../storage/keymanager';
 import { ES256KSigner, ES256Signer, Signer } from '@tonomy/did-jwt';
+// import crypto from 'crypto';
 
 const secp256k1 = new elliptic.ec('secp256k1');
 
 export function randomBytes(bytes: number): Uint8Array {
-    return rb(new Uint8Array(bytes));
+    const myArray = new Uint8Array(bytes);
+
+    window.crypto.getRandomValues(myArray);
+    // console.log(myArray);
+    return myArray;
+    // return rb(new Uint8Array(bytes));
 }
 
 function validateKey(keyPair: elliptic.ec.KeyPair) {
