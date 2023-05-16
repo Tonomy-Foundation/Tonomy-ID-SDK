@@ -1,5 +1,6 @@
 import { decode, encode } from 'universal-base64url';
 import { BN } from 'bn.js';
+import * as u8a from 'uint8arrays';
 
 // Inspired by https://github.com/davidchambers/Base64.js/blob/master/base64.js
 const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
@@ -59,26 +60,21 @@ if (typeof Buffer === 'undefined') {
 }
 
 export function bnToBase64Url(bn: typeof BN): string {
-    if (typeof Buffer !== 'undefined') {
-        // nodejs
-        const buffer = (bn as any).toArrayLike(Buffer, 'be');
+    const bnString = bn.toString();
+    const bi = BigInt(bnString);
+    const biBytes = bigintToBytes(bi);
 
-        return Buffer.from(buffer).toString('base64');
-    } else {
-        // browser
-        return hexToBase64((bn as any).toString('hex').padStart(64, '0'));
-    }
+    return bytesToBase64(biBytes);
 }
 
-function hexToBase64(hexstring: string) {
-    return window.btoa(
-        (hexstring as any)
-            .match(/\w{2}/g)
-            .map(function (a: string) {
-                return String.fromCharCode(parseInt(a, 16));
-            })
-            .join('')
-    );
+export function bytesToBase64(b: Uint8Array): string {
+    return u8a.toString(b, 'base64pad');
+}
+
+export function bigintToBytes(n: bigint): Uint8Array {
+    const b64 = n.toString(16);
+
+    return u8a.fromString(b64.padStart(64, '0'), 'base16');
 }
 
 export function utf8ToB64(str: string) {
