@@ -235,7 +235,11 @@ export class UserApps {
 
         const verifiedRequests = await UserApps.verifyRequests(requests);
 
-        const referrer = new URL(document.referrer);
+        const docReferrer = document.referrer;
+
+        if (!docReferrer) throwError('No referrer found', SdkErrors.ReferrerEmpty);
+
+        const referrer = new URL(docReferrer);
 
         const myRequest = verifiedRequests.find((r) => r.getPayload().origin === referrer.origin);
 
