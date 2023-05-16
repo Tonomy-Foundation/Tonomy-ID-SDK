@@ -1,4 +1,4 @@
-import { b64ToUtf8, base64UrlToStr, bnToBase64Url, strToBase64Url, utf8ToB64 } from '../../src/sdk';
+import { base64ToStr, base64UrlToStr, bnToBase64Url, strToBase64Url, strToBase64 } from '../../src/sdk';
 import { BN } from 'bn.js';
 
 describe('Base 64()', () => {
@@ -26,14 +26,14 @@ describe('Base 64()', () => {
 
     it('strToBase64Url()', () => {
         const base64url = strToBase64Url(str);
-        const base64 = utf8ToB64(str);
+        const base64 = strToBase64(str);
 
         expect(base64url).toBe(b64url);
         expect(base64).toBe(b64);
     });
 
     it('base64UrlToStr()', () => {
-        const decodedStr1 = b64ToUtf8(b64);
+        const decodedStr1 = base64ToStr(b64);
         const decodedStr2 = base64UrlToStr(b64url);
 
         expect(decodedStr1).toBe(str);

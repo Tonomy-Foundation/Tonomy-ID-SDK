@@ -1,5 +1,5 @@
 // From utf8 to base64url and visa versa
-import { decode, encode } from 'universal-base64url';
+import { decode as b64UrlDecode, encode as b64UrlEncode } from 'universal-base64url';
 import { decode as b64Decode, encode as b64Encode } from 'universal-base64';
 import { BN } from 'bn.js';
 import * as u8a from 'uint8arrays';
@@ -26,29 +26,29 @@ export function bigintToBytes(n: bigint): Uint8Array {
 }
 
 // utf8 string to base64
-export function utf8ToB64(str: string) {
+export function strToBase64(str: string) {
     return b64Encode(str);
 }
 
 // base64 to utf8 string
-export function b64ToUtf8(str: string) {
+export function base64ToStr(str: string) {
     return b64Decode(str);
 }
 
 // utf8 string to base64url
 export function strToBase64Url(str: string): string {
-    return encode(str);
+    return b64UrlEncode(str);
 }
 
 export function objToBase64Url(obj: object): string {
-    return encode(JSON.stringify(obj));
+    return b64UrlEncode(JSON.stringify(obj));
 }
 
 // base64url to utf8 string
 export function base64UrlToStr(str: string): string {
-    return decode(str);
+    return b64UrlDecode(str);
 }
 
 export function base64UrlToObj(str: string): object | any {
-    return JSON.parse(decode(str));
+    return JSON.parse(b64UrlDecode(str));
 }
