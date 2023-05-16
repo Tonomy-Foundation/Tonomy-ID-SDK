@@ -18,11 +18,16 @@ export function bytesToBase64(b: Uint8Array): string {
     return u8a.toString(b, 'base64pad');
 }
 
-// Copied from https://github.com/decentralized-identity/did-jwt/blob/056b2e422896436b781ecab2b466bacf72708d23/src/util.ts
+// Adapted from https://github.com/decentralized-identity/did-jwt/blob/056b2e422896436b781ecab2b466bacf72708d23/src/util.ts
 export function bigintToBytes(n: bigint): Uint8Array {
-    const b64 = n.toString(16);
+    let b64 = n.toString(16);
 
-    return u8a.fromString(b64.padStart(64, '0'), 'base16');
+    // Pad an extra '0' if the hex string is an odd length
+    if (b64.length % 2 !== 0) {
+        b64 = `0${b64}`;
+    }
+
+    return u8a.fromString(b64, 'base16');
 }
 
 // utf8 string to base64
