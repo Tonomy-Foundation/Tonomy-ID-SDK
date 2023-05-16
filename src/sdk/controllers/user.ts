@@ -86,7 +86,7 @@ export class User {
         this.apps = new UserApps(this, _keyManager, storageFactory);
 
         //TODO implement dependency inversion
-        this.communication = new Communication();
+        this.communication = new Communication(false);
     }
 
     async getStatus(): Promise<UserStatus> {

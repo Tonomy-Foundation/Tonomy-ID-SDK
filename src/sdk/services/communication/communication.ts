@@ -12,8 +12,8 @@ export class Communication {
     private subscribers = new Map<number, Subscriber>();
     private authMessage: AuthenticationMessage;
 
-    constructor() {
-        if (Communication.object) return Communication.object;
+    constructor(singleton = true) {
+        if (Communication.object && singleton) return Communication.object;
         const url = getSettings().communicationUrl;
 
         this.socketServer = io(url, {
