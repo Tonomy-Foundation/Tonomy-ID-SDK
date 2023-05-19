@@ -67,23 +67,26 @@ export class ExternalUser {
     /**
      * Retrieves the user from persistent storage if it exists and verifies the keys are valid
      *
+     * @property {boolean} [options.autoLogout] - automatically logsout on error if this key is false
      * @property {StorageFactory} [options.storageFactory=browserStorageFactory] - the storage factory to use for persistent storage
      * @property {KeyManager} [options.keyManager=new JsKeyManager()] - the key manager to use for signing
      * @returns {Promise<ExternalUser>} - the user
      */
     static async getUser(options?: {
+        autoLogout?: boolean;
         storageFactory?: StorageFactory;
         keyManager?: KeyManager;
     }): Promise<ExternalUser> {
-        const keyManager = options?.keyManager || new JsKeyManager();
-        const storageFactory = options?.storageFactory || browserStorageFactory;
+        const keyManager = options?.keyManager ?? new JsKeyManager();
+        const storageFactory = options?.storageFactory ?? browserStorageFactory;
+        const autoLogout = options?.autoLogout ?? true;
+
         const user = new ExternalUser(keyManager, storageFactory);
 
         try {
             const accountName = await user.getAccountName();
 
             if (!accountName) {
-                await user.logout();
                 throw throwError('accountName not found', SdkErrors.AccountNotFound);
             }
 
@@ -95,7 +98,7 @@ export class ExternalUser {
                 throwError('User Not loggedIn', SdkErrors.UserNotLoggedIn);
             }
         } catch (e) {
-            await user.logout();
+            if (autoLogout) await user.logout();
             if (e instanceof SdkError && e.code === SdkErrors.KeyNotFound)
                 throwError('User Not loggedIn', SdkErrors.UserNotLoggedIn);
             throw e;
@@ -209,6 +212,9 @@ export class ExternalUser {
             privateKey: privateKey,
         });
 
+        // console.log(result);
+        // alert(result);
+        // return;
         const payload: LoginRequestPayload = {
             randomString: randomString(32),
             origin: window.location.origin,
