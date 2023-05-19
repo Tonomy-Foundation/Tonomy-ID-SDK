@@ -38,6 +38,14 @@ export type ResponseParams = {
     reason: SdkErrors;
 };
 
+export type CheckedRequest = {
+    request: LoginRequest;
+    app: App;
+    requiresLogin: boolean;
+    ssoApp: boolean;
+    ssoAppDid?: string;
+};
+
 export class UserApps {
     user: User;
     keyManager: KeyManager;
@@ -163,6 +171,41 @@ export class UserApps {
                 options.messageRecipient
             );
         }
+    }
+
+    static async checkRequests(user: User, requests: LoginRequest[]): Promise<CheckedRequest[]> {
+        const response: CheckedRequest[] = [];
+
+        await UserApps.verifyRequests(requests);
+
+        for (const request of requests) {
+            const payload = request.getPayload();
+            const app = await App.getApp(payload.origin);
+
+            let requiresLogin = true;
+
+            try {
+                await UserApps.verifyKeyExistsForApp(await user.getAccountName(), { publicKey: payload.publicKey });
+                requiresLogin = false;
+            } catch (e) {
+                if (e instanceof SdkError && e.code === SdkErrors.UserNotLoggedInWithThisApp) {
+                    // Never consented
+                    requiresLogin = true;
+                } else {
+                    throw e;
+                }
+            }
+
+            response.push({
+                request,
+                app,
+                requiresLogin,
+                ssoApp: payload.origin === getSettings().ssoWebsiteOrigin,
+                ssoAppDid: request.getIssuer(),
+            });
+        }
+
+        return response;
     }
 
     /**
