@@ -212,9 +212,6 @@ export class ExternalUser {
             privateKey: privateKey,
         });
 
-        // console.log(result);
-        // alert(result);
-        // return;
         const payload: LoginRequestPayload = {
             randomString: randomString(32),
             origin: window.location.origin,
