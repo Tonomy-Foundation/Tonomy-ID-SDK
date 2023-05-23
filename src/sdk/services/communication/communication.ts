@@ -8,6 +8,7 @@ export type Subscriber = (message: Message) => void;
 export class Communication {
     socketServer: Socket;
     private static identifier: 0;
+    // TODO fix problem: if server restarts, this will be lost and all clients will need to reconnect
     private subscribers = new Map<number, Subscriber>();
 
     /**
@@ -51,6 +52,7 @@ export class Communication {
      * @throws {SdkError} - CommunicationTimeout
      */
     private async emitMessage(event: string, message: Message): Promise<boolean> {
+        console.log('emitMessage', event, message.getSender(), message.getRecipient(), message.getPayload());
         return await new Promise((resolve, reject) => {
             const resolved = false;
 
@@ -114,6 +116,8 @@ export class Communication {
 
         const messageHandler = (message: any) => {
             const msg = new Message(message);
+
+            console.log('message', msg.getType(), msg.getSender(), msg.getRecipient(), msg.getPayload());
 
             if (!type || msg.getType() === type) {
                 subscriber(msg);

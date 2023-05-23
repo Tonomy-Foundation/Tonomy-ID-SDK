@@ -43,7 +43,7 @@ export type CheckedRequest = {
     app: App;
     requiresLogin: boolean;
     ssoApp: boolean;
-    ssoAppDid?: string;
+    requestDid?: string;
 };
 
 export class UserApps {
@@ -85,8 +85,16 @@ export class UserApps {
         await this.storage.appRecords;
     }
 
+    /** Accepts a login request by authorizing keys on the blockchain (if the are not already authorized)
+     * And sends a response to the requesting app
+     *
+     * @param {{request: LoginRequest, app: App, requiresLogin: boolean}[]} requests - Array of requests to log into
+     * @param {'mobile' | 'browser'} platform - Platform of the request, either 'mobile' or 'browser'
+     * @param {DID} messageRecipient - DID of the recipient of the message
+     * @returns {Promise<void | URLtype>} the callback url if the platform is mobile, or undefined if it is browser
+     */
     async acceptLoginRequest(
-        requests: { request: LoginRequest; app: App }[],
+        requests: { request: LoginRequest; app: App; requiresLogin: boolean }[],
         platform: 'mobile' | 'browser',
         messageRecipient?: DID
     ): Promise<void | URLtype> {
@@ -94,21 +102,10 @@ export class UserApps {
         const username = await this.user.getUsername();
 
         for (const loginRequest of requests) {
-            const { app, request } = loginRequest;
+            const { app, request, requiresLogin } = loginRequest;
 
-            try {
-                await UserApps.verifyKeyExistsForApp(await this.user.getAccountName(), {
-                    publicKey: request.getPayload().publicKey,
-                });
-            } catch (e) {
-                if (
-                    e instanceof SdkError &&
-                    (e.code === SdkErrors.KeyNotFound || e.code === SdkErrors.UserNotLoggedInWithThisApp)
-                ) {
-                    await this.user.apps.loginWithApp(app, request.getPayload().publicKey);
-                } else {
-                    throw e;
-                }
+            if (requiresLogin) {
+                await this.user.apps.loginWithApp(app, request.getPayload().publicKey);
             }
         }
 
@@ -173,7 +170,12 @@ export class UserApps {
         }
     }
 
-    static async checkRequests(user: User, requests: LoginRequest[]): Promise<CheckedRequest[]> {
+    /** Verifies the login requests, and checks if the apps have already been authorized with those keys
+     *
+     * @param {LoginRequest[]} requests - Array of login requests to check
+     * @returns {Promise<CheckedRequest[]>} - Array of requests that have been verified and had authorization checked
+     */
+    async checkRequests(requests: LoginRequest[]): Promise<CheckedRequest[]> {
         const response: CheckedRequest[] = [];
 
         await UserApps.verifyRequests(requests);
@@ -185,7 +187,9 @@ export class UserApps {
             let requiresLogin = true;
 
             try {
-                await UserApps.verifyKeyExistsForApp(await user.getAccountName(), { publicKey: payload.publicKey });
+                await UserApps.verifyKeyExistsForApp(await this.user.getAccountName(), {
+                    publicKey: payload.publicKey,
+                });
                 requiresLogin = false;
             } catch (e) {
                 if (e instanceof SdkError && e.code === SdkErrors.UserNotLoggedInWithThisApp) {
@@ -201,7 +205,7 @@ export class UserApps {
                 app,
                 requiresLogin,
                 ssoApp: payload.origin === getSettings().ssoWebsiteOrigin,
-                ssoAppDid: request.getIssuer(),
+                requestDid: request.getIssuer(),
             });
         }
 
