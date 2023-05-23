@@ -65,7 +65,7 @@ export async function loginWebsiteOnRedirect(externalWebsiteDid: string, keyMana
 
     // Login to the Tonomy Communication as the login app user
     if (log) console.log('TONOMY_LOGIN_WEBSITE/login: connect to Tonomy Communication');
-    const communication = new Communication();
+    const communication = new Communication(false);
     const loginResponse = await communication.login(loginToCommunication);
 
     expect(loginResponse).toBe(true);

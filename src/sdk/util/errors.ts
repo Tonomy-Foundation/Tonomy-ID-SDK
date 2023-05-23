@@ -45,19 +45,19 @@ export class CommunicationError extends Error {
 
     constructor(communicationError: CommunicationError) {
         super('Communication Error');
+        this.message = communicationError.exception.message;
         // Ensure the name of this error is the same as the class name
-        this.name = this.constructor.name;
+        this.name = communicationError.exception.name;
+        this.exception = communicationError.exception;
 
         // This clips the constructor invocation from the stack trace.
         // It's not absolutely essential, but it does make the stack trace a little nicer.
         //  @see Node.js reference (bottom)
         if (Error.captureStackTrace) {
             Error.captureStackTrace(this, this.constructor);
+        } else {
+            this.stack = new Error().stack;
         }
-
-        this.stack = new Error().stack;
-
-        this.exception = communicationError.exception;
     }
 }
 
@@ -115,6 +115,7 @@ enum SdkErrors {
     PasswordInvalid = 'PasswordInvalid',
     PasswordTooCommon = 'PasswordTooCommon',
     PinInvalid = 'PinInvalid',
+    ReferrerEmpty = 'ReferrerEmpty',
     SettingsNotInitialized = 'SettingsNotInitialized',
     UpdateKeysTransactionNoKeys = 'UpdateKeysTransactionNoKeys',
     UserDeactivated = 'UserDeactivated',
@@ -123,6 +124,7 @@ enum SdkErrors {
     UsernameNotDefined = 'UsernameNotDefined',
     UserNotLoggedIn = 'UserNotLoggedIn',
     UserNotLoggedInWithThisApp = 'UserNotLoggedInWithThisApp',
+    UserRefreshed = 'UserRefreshed',
     WrongOrigin = 'WrongOrigin',
     UserCancelled = 'UserCancelled',
     UserLogout = 'UserLogout',

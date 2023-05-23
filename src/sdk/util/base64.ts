@@ -1,118 +1,59 @@
-import { decode, encode } from 'universal-base64url';
+// From utf8 to base64url and visa versa
+import { decode as b64UrlDecode, encode as b64UrlEncode } from 'universal-base64url';
+import { decode as b64Decode, encode as b64Encode } from 'universal-base64';
 import { BN } from 'bn.js';
+import * as u8a from 'uint8arrays';
 
-// Inspired by https://github.com/davidchambers/Base64.js/blob/master/base64.js
-const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
-const Base64 = {
-    btoa: (input = '') => {
-        const str = input;
-        let output = '';
-
-        for (
-            let block = 0, charCode, i = 0, map = chars;
-            str.charAt(i | 0) || ((map = '='), i % 1);
-            output += map.charAt(63 & (block >> (8 - (i % 1) * 8)))
-        ) {
-            charCode = str.charCodeAt((i += 3 / 4));
-
-            if (charCode > 0xff) {
-                throw new Error(
-                    "'btoa' failed: The string to be encoded contains characters outside of the Latin1 range."
-                );
-            }
-
-            block = (block << 8) | charCode;
-        }
-
-        return output;
-    },
-
-    atob: (input = '') => {
-        const str = input.replace(/=+$/, '');
-        let output = '';
-
-        if (str.length % 4 === 1) {
-            throw new Error("'atob' failed: The string to be decoded is not correctly encoded.");
-        }
-
-        for (
-            let bc = 0, bs = 0, buffer, i = 0;
-            (buffer = str.charAt(i++));
-            ~buffer && ((bs = bc % 4 ? bs * 64 + buffer : buffer), bc++ % 4)
-                ? (output += String.fromCharCode(255 & (bs >> ((-2 * bc) & 6))))
-                : 0
-        ) {
-            buffer = chars.indexOf(buffer);
-        }
-
-        return output;
-    },
-};
-
-// Polyfill for React Native which does not have Buffer, or atob/btoa
-// TODO maybe do this at global level?
-if (typeof Buffer === 'undefined') {
-    if (typeof window === 'undefined' || typeof window.atob === 'undefined') {
-        window.atob = Base64.atob;
-        window.btoa = Base64.btoa;
-    }
-}
-
+// Adapted from https://github.com/decentralized-identity/did-jwt/blob/056b2e422896436b781ecab2b466bacf72708d23/src/util.ts
 export function bnToBase64Url(bn: typeof BN): string {
-    if (typeof Buffer !== 'undefined') {
-        // nodejs
-        const buffer = (bn as any).toArrayLike(Buffer, 'be');
+    const bnString = bn.toString();
+    const bi = BigInt(bnString);
+    const biBytes = bigintToBytes(bi);
 
-        return Buffer.from(buffer).toString('base64');
-    } else {
-        // browser
-        return hexToBase64((bn as any).toString('hex'));
+    return bytesToBase64(biBytes);
+}
+
+// Copied from https://github.com/decentralized-identity/did-jwt/blob/056b2e422896436b781ecab2b466bacf72708d23/src/util.ts
+export function bytesToBase64(b: Uint8Array): string {
+    return u8a.toString(b, 'base64pad');
+}
+
+// Adapted from https://github.com/decentralized-identity/did-jwt/blob/056b2e422896436b781ecab2b466bacf72708d23/src/util.ts
+export function bigintToBytes(n: bigint): Uint8Array {
+    let b64 = n.toString(16);
+
+    // Pad an extra '0' if the hex string is an odd length
+    if (b64.length % 2 !== 0) {
+        b64 = `0${b64}`;
     }
+
+    return u8a.fromString(b64, 'base16');
 }
 
-function hexToBase64(hexstring: string) {
-    return window.btoa(
-        (hexstring as any)
-            .match(/\w{2}/g)
-            .map(function (a: string) {
-                return String.fromCharCode(parseInt(a, 16));
-            })
-            .join('')
-    );
+// utf8 string to base64
+export function strToBase64(str: string) {
+    return b64Encode(str);
 }
 
-export function utf8ToB64(str: string) {
-    if (typeof Buffer !== 'undefined') {
-        // nodejs
-        return Buffer.from(str).toString('base64');
-    } else {
-        // browser
-        return window.btoa(unescape(encodeURIComponent(str)));
-    }
+// base64 to utf8 string
+export function base64ToStr(str: string) {
+    return b64Decode(str);
 }
 
-export function b64ToUtf8(str: string) {
-    if (typeof Buffer !== 'undefined') {
-        // nodejs
-        return Buffer.from(str, 'base64').toString('utf8');
-    } else {
-        // browser
-        return decodeURIComponent(escape(window.atob(str)));
-    }
-}
-
+// utf8 string to base64url
 export function strToBase64Url(str: string): string {
-    return encode(str);
+    return b64UrlEncode(str);
 }
 
 export function objToBase64Url(obj: object): string {
-    return encode(JSON.stringify(obj));
+    return b64UrlEncode(JSON.stringify(obj));
 }
 
+// base64url to utf8 string
 export function base64UrlToStr(str: string): string {
-    return decode(str);
+    return b64UrlDecode(str);
 }
 
 export function base64UrlToObj(str: string): object | any {
-    return JSON.parse(decode(str));
+    return JSON.parse(b64UrlDecode(str));
 }
