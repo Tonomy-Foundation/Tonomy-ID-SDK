@@ -96,12 +96,13 @@ export class ExternalUser {
             const appPermission = await UserApps.verifyKeyExistsForApp(accountName, { keyManager });
             const appPermissionStorage = await user.getAppPermission();
 
-            if (appPermission !== appPermissionStorage) throwError('App permission has changed', SdkErrors.InvalidData);
+            if (appPermission.toString() !== appPermissionStorage.toString())
+                throwError('App permission has changed', SdkErrors.InvalidData);
 
             const usernameStorage = await user.getUsername();
-            const accountFromUsername = await idContract.getPerson(usernameStorage);
+            const personData = await idContract.getPerson(usernameStorage);
 
-            if (usernameStorage.toString() !== accountFromUsername.toString())
+            if (accountName.toString() !== personData.account_name.toString())
                 throwError('Username has changed', SdkErrors.InvalidData);
 
             return user;
@@ -228,9 +229,6 @@ export class ExternalUser {
         const issuer = await this.createJwkIssuerAndStore(keyManager);
         const publicKey = await keyManager.getKey({ level: KeyManagerLevel.BROWSER_LOCAL_STORAGE });
 
-        // console.log(result);
-        // alert(result);
-        // return;
         const payload: LoginRequestPayload = {
             randomString: randomString(32),
             origin: window.location.origin,
