@@ -1,5 +1,4 @@
 import { sha256 } from './crypto';
-import { SdkErrors, throwError } from './errors';
 import { Serializable } from './serializable';
 
 enum AccountType {
@@ -45,20 +44,12 @@ namespace AccountType {
 export { AccountType };
 
 export class TonomyUsername implements Serializable {
-    username?: string;
+    username: string;
     usernameHash: string;
 
-    constructor(username: string, hashed = false) {
-        if (hashed) {
-            this.usernameHash = username;
-        } else {
-            this.username = username;
-            this.usernameHash = sha256(this.username);
-        }
-    }
-
-    static fromHash(usernameHash: string): TonomyUsername {
-        return new TonomyUsername(usernameHash, true);
+    constructor(username: string) {
+        this.username = username;
+        this.usernameHash = sha256(this.username);
     }
 
     static fromUsername(username: string, type: AccountType, suffix: string) {
@@ -72,17 +63,13 @@ export class TonomyUsername implements Serializable {
     }
 
     getBaseUsername(): string {
-        if (!this.username) throwError('Username is not set', SdkErrors.UsernameNotDefined);
         return this.username?.split('.')[0];
     }
 
     /**
      * @returns the username hash
-     *
-     * @throws Error if username is not set
      */
     toString(): string {
-        if (!this.username) throwError('Username is not set', SdkErrors.UsernameNotDefined);
         return this.username;
     }
 
@@ -95,7 +82,6 @@ export class TonomyUsername implements Serializable {
      *
      * @override Serializable.toJSON
      * @returns {string} the username
-     * @throws Error if username is not set
      */
     toJSON(): string {
         return this.toString();

@@ -98,6 +98,7 @@ export class UserApps {
         platform: 'mobile' | 'browser',
         messageRecipient?: DID
     ): Promise<void | URLtype> {
+        console.log('acceptLoginRequest', requests, platform, messageRecipient);
         const accountName = await this.user.getAccountName();
         const username = await this.user.getUsername();
 
@@ -178,7 +179,9 @@ export class UserApps {
     async checkRequests(requests: LoginRequest[]): Promise<CheckedRequest[]> {
         const response: CheckedRequest[] = [];
 
+        console.log('checkRequests()');
         await UserApps.verifyRequests(requests);
+        console.log('checkRequests()2');
 
         for (const request of requests) {
             const payload = request.getPayload();
@@ -319,9 +322,10 @@ export class UserApps {
      *
      * @description This is called on the callback page to verify that the user has logged in correctly
      *
-     * @param accountName {string} - the account name to check the key on
-     * @param keyManager {KeyManager} - the key manager to check the key in
-     * @param keyManagerLevel {KeyManagerLevel=BROWSER_LOCAL_STORAGE} - the level to check the key in
+     * @param {string} [accountName] - the account name to check the key on
+     * @param {PublicKey} [publicKey] - the public key to check. if not supplied it will try lookup the app from window.location.origin
+     * @param {KeyManager} [keyManager] - the key manager to check the key in
+     * @param {KeyManagerLevel} [keyManagerLevel=BROWSER_LOCAL_STORAGE] - the level to check the key in
      * @returns {Promise<Name>} - the name of the permission that the key is authorized on
      *
      * @throws {SdkError} - if the key doesn't exist or isn't authorized
@@ -331,33 +335,41 @@ export class UserApps {
         options: {
             publicKey?: PublicKey;
             keyManager?: KeyManager;
-            keyManagerLevel?: KeyManagerLevel;
         }
     ): Promise<Name> {
-        let pubKey = options.publicKey;
-
-        if (!pubKey) {
-            if (!options.keyManager) throwError('Missing key manager', SdkErrors.MissingParams);
-            if (!options.keyManagerLevel) options.keyManagerLevel = KeyManagerLevel.BROWSER_LOCAL_STORAGE;
-            pubKey = await options.keyManager.getKey({ level: options.keyManagerLevel });
-        }
-
         const account = await User.getAccountInfo(accountName);
 
         if (!account) throwError("couldn't fetch account", SdkErrors.AccountNotFound);
-        const app = await App.getApp(window.location.origin);
 
-        try {
-            const permission = account.getPermission(app.accountName);
-            const publicKey = permission.required_auth.keys[0].key;
+        if (options.publicKey) {
+            const pubKey = options.publicKey;
 
-            if (pubKey.toString() !== publicKey.toString()) throwError('key not authorized', SdkErrors.KeyNotFound);
-        } catch (e) {
-            if (e.message.startsWith('Unknown permission '))
-                throwError(`No permission found for app ${app.accountName}`, SdkErrors.UserNotLoggedInWithThisApp);
-            else throw e;
+            const permissionWithKey = account.permissions.find(
+                (p) => p.required_auth.keys[0].key.toString() === pubKey.toString()
+            );
+
+            if (!permissionWithKey)
+                throwError(`No permission found with key ${pubKey}`, SdkErrors.UserNotLoggedInWithThisApp);
+
+            return permissionWithKey.perm_name;
+        } else {
+            if (!options.keyManager) throwError('keyManager missing', SdkErrors.MissingParams);
+            const pubKey = await options.keyManager.getKey({ level: KeyManagerLevel.BROWSER_LOCAL_STORAGE });
+
+            const app = await App.getApp(window.location.origin);
+
+            try {
+                const permission = account.getPermission(app.accountName);
+                const publicKey = permission.required_auth.keys[0].key;
+
+                if (pubKey.toString() !== publicKey.toString()) throwError('key not authorized', SdkErrors.KeyNotFound);
+            } catch (e) {
+                if (e.message.startsWith('Unknown permission '))
+                    throwError(`No permission found for app ${app.accountName}`, SdkErrors.UserNotLoggedInWithThisApp);
+                else throw e;
+            }
+
+            return app.accountName;
         }
-
-        return app.accountName;
     }
 }

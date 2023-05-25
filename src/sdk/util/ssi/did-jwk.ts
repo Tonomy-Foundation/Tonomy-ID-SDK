@@ -9,8 +9,8 @@ export function createJWK(publicKey: PublicKey) {
     const publicKeyJwk = {
         crv: 'secp256k1',
         kty: 'EC',
-        x: bnToBase64Url(ecPubKey.getPublic().getX() as any),
-        y: bnToBase64Url(ecPubKey.getPublic().getY() as any),
+        x: bnToBase64Url(ecPubKey.getPublic().getX()),
+        y: bnToBase64Url(ecPubKey.getPublic().getY()),
         kid: publicKey.toString(),
     };
 
