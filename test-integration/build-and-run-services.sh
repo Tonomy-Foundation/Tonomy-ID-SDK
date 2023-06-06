@@ -25,13 +25,13 @@ function setup {
     # Install dependencies SDK
     cd "${SDK_DIR}"
     if [ ! -d "node_modules" ]; then
-        npm i
+        yarn install
     fi
     if [ ! -d "build" ]; then
-        npm run build
+        yarn run build
     fi
     if [ ! -d "build/cli" ]; then
-        npm run build:cli
+        yarn run build:cli
     fi
 
     # Install dependencies Tonomy Communication
@@ -58,7 +58,7 @@ function start {
 function bootstrap {
     # Run bootstrap script
     cd  "$SDK_DIR"
-    npm run cli bootstrap
+    yarn run cli bootstrap
 }
 
 function stop {
