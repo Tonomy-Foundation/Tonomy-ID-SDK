@@ -145,6 +145,7 @@ export class VerifiableCredential<T extends object = object> {
     async verify(): Promise<VerifiedCredential> {
         const settings = getSettings();
 
+        // @ts-expect-error did-resolver and @tonomy/did-resolver types are not compatible
         const resolver = new Resolver({
             ...getJwkResolver(),
             ...getResolver({ antelopeChainUrl: settings.blockchainUrl, fetch: crossFetch as any }),
