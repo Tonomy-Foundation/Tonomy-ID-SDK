@@ -20,11 +20,11 @@
       "message": "chore(release): ${nextRelease.version}",
       "branches": [
         {
-          "name": "development",
+          "name": "feature/232-sdk-deployment",
           "channel": "next"
         },
         {
-          "name": "main",
+          "name": "master",
           "channel": "latest"
         }
       ]
