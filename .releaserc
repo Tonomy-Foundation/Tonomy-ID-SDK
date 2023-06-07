@@ -17,5 +17,15 @@
     }],
     "@semantic-release/github"
   ],
-  "branches": "development"
+  "branches": [
+    {
+      "name": "feature/232-sdk-deployment",
+      "tag": "test"
+    },
+    {
+      "name": "main",
+      "tag": "latest"
+    }
+  ],
+  "preset": "no-version"
 }
