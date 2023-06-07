@@ -1,6 +1,5 @@
 {
-  "tagFormat": "${version}",
-  "plugins": [
+  "tagFormat": "${branches[0].name === 'feature/232-sdk-deployment' ? 'development-v${version}' : 'v${version}-${branches[0].name}' }",  "plugins": [
     ["@semantic-release/commit-analyzer", {
       "preset": "angular",
       "releaseRules": [
@@ -19,8 +18,7 @@
   ],
   "branches": [
     {
-      "name": "feature/232-sdk-deployment",
-      "channel": "next-test"
+      "name": "feature/232-sdk-deployment"
     },
     {
       "name": "master"
