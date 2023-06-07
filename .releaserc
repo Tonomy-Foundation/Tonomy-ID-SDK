@@ -15,17 +15,19 @@
       "assets": ["CHANGELOG.md", "package.json", "package-lock.json"],
       "message": "chore(release): ${nextRelease.version}"
     }],
-    "@semantic-release/github"
-  ],
-  "branches": [
-    {
-      "name": "feature/232-sdk-deployment",
-      "tag": "test"
-    },
-    {
-      "name": "main",
-      "tag": "latest"
-    }
-  ],
-  "preset": "no-version"
+    ["@semantic-release/github", {
+      "assets": ["CHANGELOG.md", "package.json", "package-lock.json"],
+      "message": "chore(release): ${nextRelease.version}",
+      "branches": [
+        {
+          "name": "development",
+          "channel": "next"
+        },
+        {
+          "name": "main",
+          "channel": "latest"
+        }
+      ]
+    }]
+  ]
 }
