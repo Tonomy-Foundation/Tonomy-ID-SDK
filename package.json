@@ -31,7 +31,7 @@
         "build:sdk": "microbundle --compress=false -i ./src/sdk/index.ts -o build/sdk/index.js",
         "build:cli": "microbundle --compress=false --target=node -f cjs -i ./src/cli/index.ts -o build/cli/index.js",
         "build:api": "mkdir -p ./build/api && cp ./src/api/tonomy.css ./build/api/tonomy.css",
-        "build": "npm run build:sdk && npm run build:cli && npm run build:api",
+        "build": "yarn run build:sdk && yarn run build:cli && yarn run build:api",
         "test:unit": "jest --selectProjects \"Unit tests\"",
         "test:setup": "./test-integration/build-and-run-services.sh start",
         "test:setup-down": "./test-integration/build-and-run-services.sh stop",
@@ -39,11 +39,11 @@
         "test": "jest --detectOpenHandles",
         "cli": "node ./build/cli/index.cjs",
         "lint": "eslint src test --ext .ts --resolve-plugins-relative-to .",
-        "lint:fix": "npm run lint -- --fix",
+        "lint:fix": "yarn run lint -- --fix",
         "release": "semantic-release  --debug",
         "docs:serve": "python -m mkdocs serve",
         "docs:build": "python -m mkdocs build -c",
-        "prepare": "npm run build"
+        "prepare": "yarn run build"
     },
     "name": "@tonomy/tonomy-id-sdk",
     "author": "Jack Tanner",
