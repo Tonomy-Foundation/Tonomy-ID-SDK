@@ -6,7 +6,7 @@ permissions:
 on:
   push:
     branches:
-      - feature/did-antelope-upgrade
+      - development
 
 jobs:
   publish-npm:
