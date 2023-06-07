@@ -2,7 +2,7 @@
   "branches": [
     {
       "name": "feature/232-sdk-deployment",
-      "tagFormat": "development-${version}",
+      "tagFormat": "development",
       "plugins": [
         ["@semantic-release/commit-analyzer", {
           "preset": "angular",
