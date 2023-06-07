@@ -52,7 +52,7 @@ function start {
     cd  "$SDK_DIR/Tonomy-Communication"
     pm2 stop micro || true
     pm2 delete micro || true
-    pm2 start yarn --name "micro" -- run start:dev
+    pm2 start --interpreter /bin/bash yarn --name "micro" -- run start:dev
 }
 
 function bootstrap {
