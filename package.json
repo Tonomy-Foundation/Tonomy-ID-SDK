@@ -1,5 +1,5 @@
 {
-    "version": "0.3.54",
+    "version": "0.3.55",
     "license": "Apache-2.0",
     "type": "module",
     "source": "src/sdk/index.ts",
@@ -45,7 +45,7 @@
         "docs:build": "python -m mkdocs build -c",
         "prepare": "npm run build"
     },
-    "name": "@tonomy/tonomy-id-sdk",
+    "name": "@tonomy/tonomy-id-test",
     "author": "Jack Tanner",
     "devDependencies": {
         "@babel/core": "^7.21.4",
