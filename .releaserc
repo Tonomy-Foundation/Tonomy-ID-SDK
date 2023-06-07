@@ -15,7 +15,9 @@
       "assets": ["CHANGELOG.md", "package.json", "package-lock.json"],
       "message": "chore(release): ${nextRelease.version}"
     }],
-    "@semantic-release/github"
+    ["@semantic-release/github", {
+      "githubToken": "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"
+    }]
   ],
   "branches": [
     {
