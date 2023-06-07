@@ -35,23 +35,23 @@ Documentation:
 
 ## Build
 
-`npm run build`
+`yarn run build`
 
 Build notes:
 
-- Build just the sdk `npm run build:sdk`
-- Build just the cli `npm run build:cli`
+- Build just the sdk `yarn run build:sdk`
+- Build just the cli `yarn run build:cli`
   - Cli has dependency of `argon2` package, which is not needed by SDK and should be moved to a devDependency if these softwares are ever separated.
 
 ## Run
 
 ```bash
-npm start
+yarn start
 ```
 
 This builds to `/build` and runs the project in watch mode so any edits you save inside `src` causes a rebuild to `/build`.
 
-To do a one-off build, use `npm run build`.
+To do a one-off build, use `yarn run build`.
 
 ## Tests
 
@@ -59,7 +59,7 @@ To do a one-off build, use `npm run build`.
 
 Tests individual class and function logic within the SDK.
 
-`npm test:unit`
+`yarn test:unit`
 
 ### Integration tests
 
@@ -67,30 +67,30 @@ Tests end-to-end functions across more than one service.
 
 First run the blockchain or Tonomy Communication service locally.
 
-`npm run test:setup`
+`yarn run test:setup`
 
 Then run the tests
 
-`npm run test:integration`
+`yarn run test:integration`
 
 ### Run all tests in the VS Code debugger
 
 Make sure you install the Jest extension (recommended automatically when you open VS Code)
 
-If you also want to do this with the integration tests then run `npm run test:setup` first
+If you also want to do this with the integration tests then run `yarn run test:setup` first
 
 Then go to any test e.g. `test/app.test.ts` and you can click ▶️ or right click and press "Debug test". You can also look at the Jest Test Explorer in the left-side activity bar.
 
 ## Command line interface
 
-`npm run cli`
+`yarn run cli`
 
 ## Linting
 
 Linting is done with `eslint`. Install the recommended VS Code plugin to see markers in your code.
 
 ```bash
-npm run lint
+yarn run lint
 ```
 
 ## Error handling
@@ -108,6 +108,6 @@ sudo apt-get -y install mkdocs
 pip install mkdocs-material
 ```
 
-Then `npm run docs:serve`
+Then `yarn run docs:serve`
 
 <https://docs.tonomy.foundation>
