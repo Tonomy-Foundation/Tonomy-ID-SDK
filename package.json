@@ -40,7 +40,7 @@
         "cli": "node ./build/cli/index.cjs",
         "lint": "eslint src test --ext .ts --resolve-plugins-relative-to .",
         "lint:fix": "npm run lint -- --fix",
-        "release": "GH_TOKEN=$GH_TOKEN semantic-release",
+        "release": "GH_TOKEN=$GH_TOKEN semantic-release --no-ci",
         "docs:serve": "python -m mkdocs serve",
         "docs:build": "python -m mkdocs build -c",
         "prepare": "npm run build"
