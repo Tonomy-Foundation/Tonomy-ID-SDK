@@ -16,7 +16,7 @@
       "message": "chore(release): ${nextRelease.version}"
     }],
     ["@semantic-release/github", {
-      "githubToken": "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"
+      "githubToken": "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"
     }]
   ],
   "branches": [
