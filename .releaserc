@@ -17,5 +17,5 @@
     }],
     "@semantic-release/github"
   ],
-  "branches": "feature/232-sdk-deployment"
+  "branches": ["feature/*"]
 }
