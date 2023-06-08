@@ -1,5 +1,4 @@
 {
-  "tagFormat": "${version}-${branch}",
   "plugins": [
     ["@semantic-release/commit-analyzer", {
       "preset": "angular",
@@ -13,9 +12,9 @@
     "@semantic-release/npm",
     ["@semantic-release/git", {
       "assets": ["CHANGELOG.md", "package.json", "package-lock.json"],
-      "message": "chore(release): ${nextRelease.version}",
-      "tagFormat": "${version}-${branch}"
+      "message": "chore(release): ${nextRelease.version}"
     }],
+    ["./custom-tag-plugin.js", { "prepare": "prepare" }],
     "@semantic-release/github"
   ],
   "branches": ["feature/232-sdk-deployment"]
