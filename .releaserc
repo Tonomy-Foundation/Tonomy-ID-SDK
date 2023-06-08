@@ -1,4 +1,5 @@
 {
+  "tagFormat": "${version}-devtest",
   "plugins": [
     ["@semantic-release/commit-analyzer", {
       "preset": "angular",
