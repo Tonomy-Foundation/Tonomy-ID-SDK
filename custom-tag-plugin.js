@@ -1,22 +1,16 @@
 import { execSync } from 'child_process';
 
 export const prepare = (pluginConfig, context) => {
-    const { branch, nextRelease, options } = context;
-
+    const { branch, nextRelease } = context;
     let tagFormat;
 
     if (branch.name === 'feature/232-sdk-deployment') {
         tagFormat = `development-${nextRelease.version}`;
     } else {
-        tagFormat = `test${nextRelease.version}`;
+        tagFormat = `v${nextRelease.version}`;
     }
 
     execSync(`git tag -a ${tagFormat} -m "chore(release): ${tagFormat}"`);
 
-    // Modify the nextRelease version directly
-    nextRelease.version = tagFormat;
-
-    return {
-        tagFormat: tagFormat,
-    };
+    nextRelease.gitTag = tagFormat;
 };
