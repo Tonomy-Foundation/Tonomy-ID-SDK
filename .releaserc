@@ -15,7 +15,7 @@
       "message": "chore(release): ${nextRelease.version}"
     }],
     ["@semantic-release/exec", {
-      "prepareCmd": "node semantic-release-scripts/tag-format.js"
+      "prepareCmd": "node ./tag-format.js"
     }],
     "@semantic-release/github"
   ],
