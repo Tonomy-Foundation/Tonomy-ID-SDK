@@ -1,5 +1,5 @@
 {
-  "tagFormat": "${version}-devtest",
+  "tagFormat": "${version}-${branch}",
   "plugins": [
     ["@semantic-release/commit-analyzer", {
       "preset": "angular",
