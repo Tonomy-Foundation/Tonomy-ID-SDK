@@ -98,7 +98,8 @@
   },
   "publishConfig": {
     "access": "public",
-    "registry-url": "https://registry.npmjs.org/"
+    "registry-url": "https://registry.npmjs.org/",
+    "tag": "development"
   },
   "repository": {
     "type": "git",
