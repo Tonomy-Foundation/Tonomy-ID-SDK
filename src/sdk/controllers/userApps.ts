@@ -178,9 +178,7 @@ export class UserApps {
     async checkRequests(requests: LoginRequest[]): Promise<CheckedRequest[]> {
         const response: CheckedRequest[] = [];
 
-        console.log('checkRequests()');
         await UserApps.verifyRequests(requests);
-        console.log('checkRequests()2');
 
         for (const request of requests) {
             const payload = request.getPayload();

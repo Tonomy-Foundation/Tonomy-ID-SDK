@@ -140,7 +140,6 @@ export class ExternalUser {
      * @returns {Promise{DIDurl}} the DID URL of the Tonomy ID wallet with #local fragment
      */
     async getWalletDid(): Promise<DIDurl> {
-        console.log('getWalletDid()');
         const did = await this.getDid();
         const appPermission = await this.getAppPermission();
 
