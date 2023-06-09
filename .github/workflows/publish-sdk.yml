@@ -29,9 +29,13 @@ jobs:
           node-version: 18.12.1
       - run: npm ci
       - run: npm run build
-      - run: |
-          if [[ ${{secrets.BRANCH_NAME}} == "development" ]]; then
+      run: |
+          if [[ "${{ secrets.BRANCH_NAME }}" == "development" ]]; then
+            echo "Variable BRANCH_NAME is set to 'development'"
             npm run change:tag
+          else
+            echo "Variable BRANCH_NAME is not 'development'"
+          fi
       - run: npm run release
         env:
           GITHUB_TOKEN: ${{secrets.MY_GITHUB_PERSONAL_ACCESS_TOKEN}}
