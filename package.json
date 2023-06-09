@@ -45,7 +45,7 @@
         "docs:build": "python -m mkdocs build -c",
         "prepare": "npm run build",
         "build:changeTag": "ts-node changeVersionTag.js",
-        "change-tag": "npm run build:changeTag"
+        "change:tag": "npm run build:changeTag"
 
     },
     "name": "@tonomy/tonomy-id-test",
