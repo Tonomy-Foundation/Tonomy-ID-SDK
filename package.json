@@ -44,7 +44,7 @@
         "docs:serve": "python -m mkdocs serve",
         "docs:build": "python -m mkdocs build -c",
         "prepare": "npm run build",
-        "build:changeTag": "ts-node changeVersionTag.js",
+        "build:changeTag": "node changeVersionTag.js",
         "change:tag": "npm run build:changeTag"
 
     },
