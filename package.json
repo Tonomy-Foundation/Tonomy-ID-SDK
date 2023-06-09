@@ -78,7 +78,7 @@
     },
     "dependencies": {
         "@consento/sync-randombytes": "^1.0.5",
-        "@greymass/eosio": "^0.6.4",
+        "@greymass/eosio": "^0.7.0",
         "@tonomy/antelope-did": "^0.1.5",
         "@tonomy/antelope-did-resolver": "^0.6.2",
         "@tonomy/did-jwt": "^6.10.1",
@@ -101,5 +101,8 @@
     "keywords": [
         "sdk",
         "tonomy"
-    ]
+    ],
+    "resolutions": {
+        "@greymass/eosio": "0.7.0"
+    }
 }
