@@ -29,7 +29,9 @@ jobs:
           node-version: 18.12.1
       - run: npm ci
       - run: npm run build
-      - run: npm run change:tag
+      - run: |
+          if [[ ${{secrets.BRANCH_NAME}} == "development" ]]; then
+            npm run change:tag
       - run: npm run release
         env:
           GITHUB_TOKEN: ${{secrets.MY_GITHUB_PERSONAL_ACCESS_TOKEN}}
