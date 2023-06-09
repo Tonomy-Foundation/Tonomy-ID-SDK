@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { Name, PrivateKey, PublicKey } from '@greymass/eosio';
+import { Checksum256, Name, PrivateKey, PublicKey } from '@greymass/eosio';
 import { IDContract } from '../services/blockchain/contracts/IDContract';
 import { createSigner } from '../services/blockchain/eosio/transaction';
 import { getSettings } from '../util/settings';
@@ -48,7 +48,8 @@ export { AppStatus };
 export interface AppData {
     accountName: Name;
     appName: string;
-    username: TonomyUsername;
+    username?: TonomyUsername;
+    usernameHash?: Checksum256;
     description: string;
     logoUrl: string;
     origin: string;
@@ -68,7 +69,8 @@ export type AppCreateOptions = {
 export class App implements AppData {
     accountName: Name;
     appName: string;
-    username: TonomyUsername;
+    username?: TonomyUsername;
+    usernameHash?: Checksum256;
     description: string;
     logoUrl: string;
     origin: string;
@@ -84,6 +86,14 @@ export class App implements AppData {
         this.origin = options.origin;
         this.version = options.version;
         this.status = options.status;
+
+        if (options.usernameHash) {
+            this.usernameHash = options.usernameHash;
+        } else if (options.username) {
+            this.usernameHash = Checksum256.from(options.username.usernameHash);
+        } else {
+            throw new Error('Either username or usernameHash must be provided');
+        }
     }
 
     static async create(options: AppCreateOptions): Promise<App> {
@@ -123,7 +133,7 @@ export class App implements AppData {
         return new App({
             accountName: contractAppData.account_name,
             appName: contractAppData.app_name,
-            username: TonomyUsername.fromHash(contractAppData.username_hash.toString()),
+            usernameHash: contractAppData.username_hash,
             description: contractAppData.description,
             logoUrl: contractAppData.logo_url,
             origin: contractAppData.origin,

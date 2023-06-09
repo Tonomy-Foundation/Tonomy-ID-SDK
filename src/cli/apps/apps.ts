@@ -22,7 +22,7 @@ export default async function apps(args: string[]) {
 
         const res = await App.create(options);
 
-        console.log('New app created with username: ', res.username.username);
+        console.log('New app created with username: ', res.username?.username);
         console.log('and account name: ', res.accountName.toString());
     } else {
         throw new Error(`Unknown command ${args[0]}`);

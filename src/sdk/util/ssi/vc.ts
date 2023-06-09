@@ -350,6 +350,7 @@ export class VerifiableCredentialWithType<T extends object = object> implements 
      * @throws {Error} if the VC is not signed by the issuer
      */
     async verify(): Promise<boolean> {
+        console.log('Verifying VC', this.getIssuer().toString());
         return (await this.getVc().verify()).verified;
     }
 

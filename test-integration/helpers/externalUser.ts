@@ -120,7 +120,7 @@ export async function sendLoginRequestsMessage(
     recipientDid: string,
     log = false
 ) {
-    const jwkIssuer = await ExternalUser.getDidJwkIssuerFromStorage(keyManager);
+    const jwkIssuer = await ExternalUser.getJwkIssuerFromStorage(keyManager);
 
     const loginRequestMessage = await LoginRequestsMessage.signMessage({ requests }, jwkIssuer, recipientDid);
 

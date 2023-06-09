@@ -5,7 +5,7 @@ import { KeyManager, KeyManagerLevel } from '../storage/keymanager';
 import { createStorage, PersistentStorageClean, StorageFactory, STORAGE_NAMESPACE } from '../storage/storage';
 import { User } from './user';
 import { createKeyManagerSigner } from '../services/blockchain/eosio/transaction';
-import { SdkErrors, throwError } from '../util/errors';
+import { SdkError, SdkErrors, throwError } from '../util/errors';
 import { App, AppStatus } from './app';
 import { TonomyUsername } from '../util/username';
 import { LoginRequest } from '../util/request';
@@ -36,6 +36,14 @@ export type OnPressLoginOptions = {
 export type ResponseParams = {
     success: boolean;
     reason: SdkErrors;
+};
+
+export type CheckedRequest = {
+    request: LoginRequest;
+    app: App;
+    requiresLogin: boolean;
+    ssoApp: boolean;
+    requestDid?: string;
 };
 
 export class UserApps {
@@ -77,18 +85,29 @@ export class UserApps {
         await this.storage.appRecords;
     }
 
+    /** Accepts a login request by authorizing keys on the blockchain (if the are not already authorized)
+     * And sends a response to the requesting app
+     *
+     * @param {{request: LoginRequest, app: App, requiresLogin: boolean}[]} requests - Array of requests to log into
+     * @param {'mobile' | 'browser'} platform - Platform of the request, either 'mobile' or 'browser'
+     * @param {DID} messageRecipient - DID of the recipient of the message
+     * @returns {Promise<void | URLtype>} the callback url if the platform is mobile, or undefined if it is browser
+     */
     async acceptLoginRequest(
-        requests: { request: LoginRequest; app: App }[],
+        requests: { request: LoginRequest; app: App; requiresLogin: boolean }[],
         platform: 'mobile' | 'browser',
         messageRecipient?: DID
     ): Promise<void | URLtype> {
+        console.log('acceptLoginRequest', requests, platform, messageRecipient);
         const accountName = await this.user.getAccountName();
         const username = await this.user.getUsername();
 
         for (const loginRequest of requests) {
-            const { app, request } = loginRequest;
+            const { app, request, requiresLogin } = loginRequest;
 
-            await this.user.apps.loginWithApp(app, request.getPayload().publicKey);
+            if (requiresLogin) {
+                await this.user.apps.loginWithApp(app, request.getPayload().publicKey);
+            }
         }
 
         const responsePayload = {
@@ -150,6 +169,50 @@ export class UserApps {
                 options.messageRecipient
             );
         }
+    }
+
+    /** Verifies the login requests, and checks if the apps have already been authorized with those keys
+     *
+     * @param {LoginRequest[]} requests - Array of login requests to check
+     * @returns {Promise<CheckedRequest[]>} - Array of requests that have been verified and had authorization checked
+     */
+    async checkRequests(requests: LoginRequest[]): Promise<CheckedRequest[]> {
+        const response: CheckedRequest[] = [];
+
+        console.log('checkRequests()');
+        await UserApps.verifyRequests(requests);
+        console.log('checkRequests()2');
+
+        for (const request of requests) {
+            const payload = request.getPayload();
+            const app = await App.getApp(payload.origin);
+
+            let requiresLogin = true;
+
+            try {
+                await UserApps.verifyKeyExistsForApp(await this.user.getAccountName(), {
+                    publicKey: payload.publicKey,
+                });
+                requiresLogin = false;
+            } catch (e) {
+                if (e instanceof SdkError && e.code === SdkErrors.UserNotLoggedInWithThisApp) {
+                    // Never consented
+                    requiresLogin = true;
+                } else {
+                    throw e;
+                }
+            }
+
+            response.push({
+                request,
+                app,
+                requiresLogin,
+                ssoApp: payload.origin === getSettings().ssoWebsiteOrigin,
+                requestDid: request.getIssuer(),
+            });
+        }
+
+        return response;
     }
 
     /**
@@ -259,27 +322,54 @@ export class UserApps {
      *
      * @description This is called on the callback page to verify that the user has logged in correctly
      *
-     * @param accountName {string} - the account name to check the key on
-     * @param keyManager {KeyManager} - the key manager to check the key in
-     * @param keyManagerLevel {KeyManagerLevel=BROWSER_LOCAL_STORAGE} - the level to check the key in
-     * @returns {Promise<boolean>} - true if the key exists and is authorized, false otherwise
+     * @param {string} [accountName] - the account name to check the key on
+     * @param {PublicKey} [publicKey] - the public key to check. if not supplied it will try lookup the app from window.location.origin
+     * @param {KeyManager} [keyManager] - the key manager to check the key in
+     * @param {KeyManagerLevel} [keyManagerLevel=BROWSER_LOCAL_STORAGE] - the level to check the key in
+     * @returns {Promise<Name>} - the name of the permission that the key is authorized on
+     *
+     * @throws {SdkError} - if the key doesn't exist or isn't authorized
      */
     static async verifyKeyExistsForApp(
         accountName: Name,
-        keyManager: KeyManager,
-        keyManagerLevel: KeyManagerLevel = KeyManagerLevel.BROWSER_LOCAL_STORAGE
-    ): Promise<boolean> {
-        const pubKey = await keyManager.getKey({
-            level: keyManagerLevel,
-        });
-
+        options: {
+            publicKey?: PublicKey;
+            keyManager?: KeyManager;
+        }
+    ): Promise<Name> {
         const account = await User.getAccountInfo(accountName);
 
         if (!account) throwError("couldn't fetch account", SdkErrors.AccountNotFound);
-        const app = await App.getApp(window.location.origin);
 
-        const publickey = account.getPermission(app.accountName).required_auth.keys[0].key;
+        if (options.publicKey) {
+            const pubKey = options.publicKey;
 
-        return pubKey.toString() === publickey.toString();
+            const permissionWithKey = account.permissions.find(
+                (p) => p.required_auth.keys[0].key.toString() === pubKey.toString()
+            );
+
+            if (!permissionWithKey)
+                throwError(`No permission found with key ${pubKey}`, SdkErrors.UserNotLoggedInWithThisApp);
+
+            return permissionWithKey.perm_name;
+        } else {
+            if (!options.keyManager) throwError('keyManager missing', SdkErrors.MissingParams);
+            const pubKey = await options.keyManager.getKey({ level: KeyManagerLevel.BROWSER_LOCAL_STORAGE });
+
+            const app = await App.getApp(window.location.origin);
+
+            try {
+                const permission = account.getPermission(app.accountName);
+                const publicKey = permission.required_auth.keys[0].key;
+
+                if (pubKey.toString() !== publicKey.toString()) throwError('key not authorized', SdkErrors.KeyNotFound);
+            } catch (e) {
+                if (e.message.startsWith('Unknown permission '))
+                    throwError(`No permission found for app ${app.accountName}`, SdkErrors.UserNotLoggedInWithThisApp);
+                else throw e;
+            }
+
+            return app.accountName;
+        }
     }
 }
