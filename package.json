@@ -45,7 +45,6 @@
     "docs:build": "python -m mkdocs build -c",
     "prepare": "npm run build",
     "change:tag": "node changeVersionTag.js",
-    "clear:cache": "npm cache clean --force"
   },
   "name": "@tonomy/tonomy-id-test",
   "author": "Jack Tanner",
@@ -100,7 +99,6 @@
   "publishConfig": {
     "access": "public",
     "registry-url": "https://registry.npmjs.org/",
-    "tag": "development"
   },
   "repository": {
     "type": "git",
