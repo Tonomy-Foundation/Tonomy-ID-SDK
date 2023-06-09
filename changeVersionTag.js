@@ -5,7 +5,7 @@ const filePath = './package.json';
 // Read the package.json file
 const packageJson = JSON.parse(fs.readFileSync(filePath, 'utf8'));
 
-// Modify the tag value
+// Modify the tag valuee
 packageJson.publishConfig.tag = 'development';
 
 // Write the updated package.json file
