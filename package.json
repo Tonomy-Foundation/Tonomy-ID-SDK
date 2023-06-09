@@ -44,7 +44,8 @@
     "docs:serve": "python -m mkdocs serve",
     "docs:build": "python -m mkdocs build -c",
     "prepare": "npm run build",
-    "change:tag": "node changeVersionTag.js"
+    "change:tag": "node changeVersionTag.js",
+    "clear:cache": "npm cache clean --force"
   },
   "name": "@tonomy/tonomy-id-test",
   "author": "Jack Tanner",
