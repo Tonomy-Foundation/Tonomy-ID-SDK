@@ -48,14 +48,15 @@ export { AppStatus };
 export interface AppData {
     accountName: Name;
     appName: string;
-    username?: TonomyUsername;
-    usernameHash?: Checksum256;
+    usernameHash: Checksum256;
     description: string;
     logoUrl: string;
     origin: string;
     version: number;
     status: AppStatus;
 }
+
+type AppConstructor = Omit<AppData, 'usernameHash'> & { username?: TonomyUsername; usernameHash?: Checksum256 };
 
 export type AppCreateOptions = {
     usernamePrefix: string;
@@ -70,14 +71,14 @@ export class App implements AppData {
     accountName: Name;
     appName: string;
     username?: TonomyUsername;
-    usernameHash?: Checksum256;
+    usernameHash: Checksum256;
     description: string;
     logoUrl: string;
     origin: string;
     version: number;
     status: AppStatus;
 
-    constructor(options: AppData) {
+    constructor(options: AppConstructor) {
         this.accountName = options.accountName;
         this.appName = options.appName;
         this.username = options.username;

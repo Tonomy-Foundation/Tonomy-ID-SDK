@@ -94,7 +94,7 @@ export class UserApps {
      * @returns {Promise<void | URLtype>} the callback url if the platform is mobile, or undefined if it is browser
      */
     async acceptLoginRequest(
-        requests: { request: LoginRequest; app: App; requiresLogin: boolean }[],
+        requests: { request: LoginRequest; app: App; requiresLogin?: boolean }[],
         platform: 'mobile' | 'browser',
         messageRecipient?: DID
     ): Promise<void | URLtype> {
@@ -104,7 +104,7 @@ export class UserApps {
         for (const loginRequest of requests) {
             const { app, request, requiresLogin } = loginRequest;
 
-            if (requiresLogin) {
+            if (requiresLogin ?? true) {
                 await this.user.apps.loginWithApp(app, request.getPayload().publicKey);
             }
         }
