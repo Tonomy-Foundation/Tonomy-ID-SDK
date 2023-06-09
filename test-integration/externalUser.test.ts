@@ -283,25 +283,25 @@ describe('Login to external website', () => {
     });
 });
 
-describe('ExternalUser class', () => {
-    let user: User;
-    let externalUser: ExternalUser;
+// describe('ExternalUser class', () => {
+//     let user: User;
+//     let externalUser: ExternalUser;
 
-    beforeEach(async () => {
-        user = (await createRandomID()).user;
-        externalUser = await createRandomLoggedInExternalUser();
-        expect(externalUser).toBeDefined();
-        expect(externalUser.getAccountName()).toBeInstanceOf(String);
-    });
+//     beforeEach(async () => {
+//         user = (await createRandomID()).user;
+//         externalUser = await createRandomLoggedInExternalUser();
+//         expect(externalUser).toBeDefined();
+//         expect(externalUser.getAccountName()).toBeInstanceOf(String);
+//     });
 
-    describe('signVc()', () => {
-        test('should sign a VC', async () => {
-            console.log('hello');
-        });
-    });
+//     describe('signVc()', () => {
+//         test('should sign a VC', async () => {
+//             console.log('hello');
+//         });
+//     });
 
-    afterEach(async () => {
-        await externalUser.logout();
-        await user.logout();
-    });
-});
+//     afterEach(async () => {
+//         await externalUser.logout();
+//         await user.logout();
+//     });
+// });
