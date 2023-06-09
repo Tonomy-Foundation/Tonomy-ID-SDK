@@ -66,7 +66,7 @@ export class Communication {
      * @throws {SdkError} - CommunicationTimeout
      */
     private async emitMessage(event: string, message: Message): Promise<boolean> {
-        if (process.env.LOG === 'true')
+        if (getSettings().loggerLevel === 'debug')
             console.log(
                 'emitMessage',
                 message.getType(),
@@ -141,7 +141,7 @@ export class Communication {
         const messageHandler = (message: any) => {
             const msg = new Message(message);
 
-            if (process.env.LOG === 'true')
+            if (getSettings().loggerLevel === 'debug')
                 console.log('receiveMessage', msg.getType(), msg.getSender(), msg.getRecipient(), msg.getPayload());
 
             if (!type || msg.getType() === type) {
