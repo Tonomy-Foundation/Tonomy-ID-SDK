@@ -167,17 +167,21 @@ export class VerifiableCredential<T extends object = object> {
      */
     static async sign<T extends object = object>(
         id: DIDurl,
-        type: string[],
+        type: string | string[],
         credentialSubject: T,
         issuer: Issuer,
         options: {
             subject?: URL;
         } = {}
     ): Promise<VerifiableCredential<T>> {
+        const typeArray = Array.isArray(type) ? type : [type];
+
+        if (!typeArray.includes('VerifiableCredential')) typeArray.push('VerifiableCredential');
+
         const vc: W3CCredential = {
             '@context': ['https://www.w3.org/2018/credentials/v1'],
             id,
-            type,
+            type: typeArray,
             issuer: {
                 id: issuer.did,
             },
@@ -350,7 +354,6 @@ export class VerifiableCredentialWithType<T extends object = object> implements 
      * @throws {Error} if the VC is not signed by the issuer
      */
     async verify(): Promise<boolean> {
-        console.log('Verifying VC', this.getIssuer().toString());
         return (await this.getVc().verify()).verified;
     }
 

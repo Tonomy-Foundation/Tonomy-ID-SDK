@@ -352,7 +352,7 @@ export class ExternalUser {
 
     async signVc<T extends object = object>(
         id: string,
-        type: string[],
+        type: string | string[],
         data: T,
         options: {
             subject?: string;

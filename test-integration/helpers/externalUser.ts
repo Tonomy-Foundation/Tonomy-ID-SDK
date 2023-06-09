@@ -189,12 +189,12 @@ export async function externalWebsiteOnReload(
 export async function externalWebsiteSignVc(externalUser: ExternalUser) {
     const vcData = {
         name: 'Joe',
-        dob: new Date('1990-01-01'),
+        dob: new Date('1990-01-01').toISOString(),
     };
-    const signedVc = await externalUser.signVc('did:example:id:1234', ['ExampleCredential'], vcData);
+    const signedVc = await externalUser.signVc('did:example:id:1234', 'ExampleCredential', vcData);
 
     expect(signedVc).toBeDefined();
-    expect(signedVc.getPayload()).toEqual(vcData);
+    expect(signedVc.getCredentialSubject()).toEqual(vcData);
     const verifiedVc = await signedVc.verify();
 
     expect(verifiedVc.verified).toBe(true);
