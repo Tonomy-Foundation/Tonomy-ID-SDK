@@ -1,5 +1,5 @@
 {
-  "version": "1.0.9",
+  "version": "1.0.10",
   "license": "Apache-2.0",
   "type": "module",
   "source": "src/sdk/index.ts",
@@ -44,7 +44,7 @@
     "docs:serve": "python -m mkdocs serve",
     "docs:build": "python -m mkdocs build -c",
     "prepare": "npm run build",
-    "change:tag": "node changeVersionTag.js",
+    "change:tag": "node changeVersionTag.js"
   },
   "name": "@tonomy/tonomy-id-test",
   "author": "Jack Tanner",
@@ -98,7 +98,7 @@
   },
   "publishConfig": {
     "access": "public",
-    "registry-url": "https://registry.npmjs.org/",
+    "registry-url": "https://registry.npmjs.org/"
   },
   "repository": {
     "type": "git",
