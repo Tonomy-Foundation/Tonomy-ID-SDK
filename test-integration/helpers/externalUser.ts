@@ -194,6 +194,8 @@ export async function externalWebsiteSignVc(externalUser: ExternalUser) {
     const signedVc = await externalUser.signVc('did:example:id:1234', 'ExampleCredential', vcData);
 
     expect(signedVc).toBeDefined();
+    expect(signedVc.getIssuer()).toBe(await externalUser.getDid());
+    expect(signedVc.getIssuer().includes('did:antelope:')).toBe(true);
     expect(signedVc.getCredentialSubject()).toEqual(vcData);
     const verifiedVc = await signedVc.verify();
 

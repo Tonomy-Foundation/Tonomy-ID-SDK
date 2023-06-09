@@ -98,7 +98,6 @@ export class UserApps {
         platform: 'mobile' | 'browser',
         messageRecipient?: DID
     ): Promise<void | URLtype> {
-        console.log('acceptLoginRequest', requests, platform, messageRecipient);
         const accountName = await this.user.getAccountName();
         const username = await this.user.getUsername();
 

@@ -15,6 +15,19 @@ The SDK is written in typescript with jest to run tests.
 
 <a href="https://docs.tonomy.foundation" target="_blank">https://docs.tonomy.foundation</a>
 
+Documentation is in the `./docs` folder and runs with [mkdocs](https://www.mkdocs.org) with [material](https://squidfunk.github.io/mkdocs-material) theme.
+
+Install with
+
+```bash
+sudo apt-get -y install mkdocs
+pip install mkdocs-material
+```
+
+Then `yarn run docs:serve`
+
+<https://docs.tonomy.foundation>
+
 ## Dependencies
 
 - Linux debian distribution (Ubuntu 20.0.4 LTS used)
@@ -28,7 +41,7 @@ Documentation:
 
 - [mkdocs](https://www.mkdocs.org) with [material](https://squidfunk.github.io/mkdocs-material) theme
 
-## Repositories
+## Sub-Repositories
 
 - [Contracts](https://github.com/Tonomy-Foundation/Tonomy-Contracts) (inside SDK repo) - Smart contracts to run the governance, identity, DAO, token and other ecosystem tools. This is used to run the integration tests
 - [Communication](https://github.com/Tonomy-Foundation/Tonomy-Communication) (inside SDK repo) - Service to provide peer-to-peer messaging for Tonomy ID users. This is used to run the integration tests
@@ -54,6 +67,8 @@ This builds to `/build` and runs the project in watch mode so any edits you save
 To do a one-off build, use `yarn run build`.
 
 ## Tests
+
+To show logs during tests `export LOG=true`
 
 ### Unit tests
 
@@ -96,18 +111,3 @@ yarn run lint
 ## Error handling
 
 See [errors.ts](./src/services/errors.ts). All errors have a registered unique enumeration code.
-
-## Documentation
-
-Documentation is in the `./docs` folder and runs with [mkdocs](https://www.mkdocs.org) with [material](https://squidfunk.github.io/mkdocs-material) theme.
-
-Install with
-
-```bash
-sudo apt-get -y install mkdocs
-pip install mkdocs-material
-```
-
-Then `yarn run docs:serve`
-
-<https://docs.tonomy.foundation>
