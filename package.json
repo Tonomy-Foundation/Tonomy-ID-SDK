@@ -1,5 +1,5 @@
 {
-    "version": "0.3.53",
+    "version": "0.4.4",
     "license": "Apache-2.0",
     "type": "module",
     "source": "src/sdk/index.ts",
@@ -31,7 +31,7 @@
         "build:sdk": "microbundle --compress=false -i ./src/sdk/index.ts -o build/sdk/index.js",
         "build:cli": "microbundle --compress=false --target=node -f cjs -i ./src/cli/index.ts -o build/cli/index.js",
         "build:api": "mkdir -p ./build/api && cp ./src/api/tonomy.css ./build/api/tonomy.css",
-        "build": "npm run build:sdk && npm run build:cli && npm run build:api",
+        "build": "yarn run build:sdk && yarn run build:cli && yarn run build:api",
         "test:unit": "jest --selectProjects \"Unit tests\"",
         "test:setup": "./test-integration/build-and-run-services.sh start",
         "test:setup-down": "./test-integration/build-and-run-services.sh stop",
@@ -39,11 +39,11 @@
         "test": "jest --detectOpenHandles",
         "cli": "node ./build/cli/index.cjs",
         "lint": "eslint src test --ext .ts --resolve-plugins-relative-to .",
-        "lint:fix": "npm run lint -- --fix",
+        "lint:fix": "yarn run lint -- --fix",
         "release": "semantic-release  --debug",
         "docs:serve": "python -m mkdocs serve",
         "docs:build": "python -m mkdocs build -c",
-        "prepare": "npm run build"
+        "prepare": "yarn run build"
     },
     "name": "@tonomy/tonomy-id-sdk",
     "author": "Jack Tanner",
@@ -72,14 +72,15 @@
         "prettier": "^2.7.1",
         "semantic-release": "^20.1.1",
         "ts-jest": "^29.0.5",
-        "tslib": "^2.4.0",
-        "typescript": "^4.7.4"
+        "ts-node": "^10.9.1",
+        "tslib": "^2.5.3",
+        "typescript": "^5.1.3"
     },
     "dependencies": {
         "@consento/sync-randombytes": "^1.0.5",
         "@greymass/eosio": "^0.6.4",
         "@tonomy/antelope-did": "^0.1.5",
-        "@tonomy/antelope-did-resolver": "^0.2.2",
+        "@tonomy/antelope-did-resolver": "^0.6.2",
         "@tonomy/did-jwt": "^6.10.1",
         "@tonomy/did-jwt-vc": "^3.1.3",
         "@tonomy/did-resolver": "^4.0.4",
@@ -91,12 +92,11 @@
         "universal-base64url": "^1.1.0"
     },
     "publishConfig": {
-        "access": "public",
-        "registry-url": "https://registry.npmjs.org/"
+        "access": "public"
     },
     "repository": {
         "type": "git",
-        "url": "https://github.com/Tonomy-Foundation/Tonomy-ID-SDK.git"
+        "url": "https://github.com/Tonomy-Foundation/Tonomy-ID-SDK"
     },
     "keywords": [
         "sdk",

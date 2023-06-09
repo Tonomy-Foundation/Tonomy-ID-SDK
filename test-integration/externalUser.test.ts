@@ -13,6 +13,7 @@ import {
     STORAGE_NAMESPACE,
     IdentifyMessage,
     LoginRequestResponseMessage,
+    ExternalUser,
 } from '../src/sdk/index';
 import URL from 'jsdom-url';
 import { JsKeyManager } from '../src/sdk/storage/jsKeyManager';
@@ -37,6 +38,7 @@ import {
     setupTonomyIdIdentifySubscriber,
     setupTonomyIdRequestConfirmSubscriber,
     externalWebsiteOnLogout,
+    createRandomLoggedInExternalUser,
 } from './helpers/externalUser';
 import { createStorageFactory } from './helpers/storageFactory';
 import { objToBase64Url } from '../src/sdk/util/base64';
@@ -48,7 +50,7 @@ setSettings(settings);
 
 const log = false;
 
-describe('External User class', () => {
+describe('Login to external website', () => {
     jest.setTimeout(30000);
 
     // OBJECTS HERE denote the different devices/apps the user is using
@@ -100,7 +102,7 @@ describe('External User class', () => {
         await sleep(500);
     });
 
-    describe('SSO login full end-to-end flow', () => {
+    describe('SSO login full end-to-end flow with external desktop browser (using communication service)', () => {
         test('User succeeds at login to external website', async () => {
             expect.assertions(33);
 
@@ -278,5 +280,28 @@ describe('External User class', () => {
             // cleanup connections
             await TONOMY_LOGIN_WEBSITE_communication.disconnect();
         });
+    });
+});
+
+describe('ExternalUser class', () => {
+    let user: User;
+    let externalUser: ExternalUser;
+
+    beforeEach(async () => {
+        user = (await createRandomID()).user;
+        externalUser = await createRandomLoggedInExternalUser();
+        expect(externalUser).toBeDefined();
+        expect(externalUser.getAccountName()).toBeInstanceOf(String);
+    });
+
+    describe('signVc()', () => {
+        test('should sign a VC', async () => {
+            console.log('hello');
+        });
+    });
+
+    afterEach(async () => {
+        await externalUser.logout();
+        await user.logout();
     });
 });
