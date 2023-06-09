@@ -15,6 +15,7 @@ import { JsKeyManager } from '../sdk/storage/jsKeyManager';
 import { LoginRequest, LoginRequestPayload } from '../sdk/util/request';
 import { AuthenticationMessage, LoginRequestsMessagePayload } from '../sdk';
 import { objToBase64Url } from '../sdk/util/base64';
+import { VerifiableCredential } from '../sdk/util/ssi/vc';
 
 export type ExternalUserStorage = {
     accountName: Name;
@@ -327,5 +328,18 @@ export class ExternalUser {
         await externalUser.setLoginRequest(loginRequest);
         await externalUser.setUsername(username);
         return externalUser;
+    }
+
+    async signVc<T extends object = object>(
+        id: string,
+        type: string[],
+        data: T,
+        options: {
+            subject?: string;
+        } = {}
+    ): Promise<VerifiableCredential<T>> {
+        const issuer = await this.getIssuer();
+
+        return await VerifiableCredential.sign<T>(id, type, data, issuer, options);
     }
 }

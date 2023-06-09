@@ -38,7 +38,7 @@ import {
     setupTonomyIdIdentifySubscriber,
     setupTonomyIdRequestConfirmSubscriber,
     externalWebsiteOnLogout,
-    createRandomLoggedInExternalUser,
+    externalWebsiteSignVc,
 } from './helpers/externalUser';
 import { createStorageFactory } from './helpers/storageFactory';
 import { objToBase64Url } from '../src/sdk/util/base64';
@@ -67,6 +67,7 @@ describe('Login to external website', () => {
     let EXTERNAL_WEBSITE_jsKeyManager: KeyManager;
     let TONOMY_LOGIN_WEBSITE_storage_factory: StorageFactory;
     let EXTERNAL_WEBSITE_storage_factory: StorageFactory;
+    let EXTERNAL_WEBSITE_user: ExternalUser;
 
     beforeEach(async () => {
         // ##### Tonomy ID user #####
@@ -261,7 +262,7 @@ describe('Login to external website', () => {
             // #####External website user (callback page) #####
             // ################################
 
-            await externalWebsiteOnCallback(
+            EXTERNAL_WEBSITE_user = await externalWebsiteOnCallback(
                 EXTERNAL_WEBSITE_jsKeyManager,
                 EXTERNAL_WEBSITE_storage_factory,
                 await TONOMY_ID_user.getAccountName(),
@@ -275,33 +276,12 @@ describe('Login to external website', () => {
                 log
             );
 
+            await externalWebsiteSignVc(EXTERNAL_WEBSITE_user);
+
             await externalWebsiteOnLogout(EXTERNAL_WEBSITE_jsKeyManager, EXTERNAL_WEBSITE_storage_factory);
 
             // cleanup connections
             await TONOMY_LOGIN_WEBSITE_communication.disconnect();
         });
-    });
-});
-
-describe('ExternalUser class', () => {
-    let user: User;
-    let externalUser: ExternalUser;
-
-    beforeEach(async () => {
-        user = (await createRandomID()).user;
-        externalUser = await createRandomLoggedInExternalUser();
-        expect(externalUser).toBeDefined();
-        expect(externalUser.getAccountName()).toBeInstanceOf(String);
-    });
-
-    describe('signVc()', () => {
-        test('should sign a VC', async () => {
-            console.log('hello');
-        });
-    });
-
-    afterEach(async () => {
-        await externalUser.logout();
-        await user.logout();
     });
 });

@@ -14,6 +14,7 @@ import {
 import { ExternalUser, LoginWithTonomyMessages } from '../../src/api/externalUser';
 import { LoginRequest } from '../../src/sdk/util/request';
 import { objToBase64Url } from '../../src/sdk/util/base64';
+import { VerifiableCredential } from '../../src/sdk/util/ssi/vc';
 
 export async function externalWebsiteUserPressLoginToTonomyButton(
     keyManager: KeyManager,
@@ -167,6 +168,8 @@ export async function externalWebsiteOnCallback(
     const tonomyIdAccount = accountName;
 
     expect(externalWebsiteAccount.toString()).toBe(tonomyIdAccount.toString());
+
+    return externalUser;
 }
 
 export async function externalWebsiteOnReload(
@@ -181,6 +184,26 @@ export async function externalWebsiteOnReload(
 
     expect(externalUser).toBeDefined();
     expect((await externalUser.getAccountName()).toString()).toBe(await (await tonomyUser.getAccountName()).toString());
+}
+
+export async function externalWebsiteSignVc(externalUser: ExternalUser) {
+    const vcData = {
+        name: 'Joe',
+        dob: new Date('1990-01-01'),
+    };
+    const signedVc = await externalUser.signVc('did:example:id:1234', ['ExampleCredential'], vcData);
+
+    expect(signedVc).toBeDefined();
+    expect(signedVc.getPayload()).toEqual(vcData);
+    const verifiedVc = await signedVc.verify();
+
+    expect(verifiedVc.verified).toBe(true);
+
+    const jwt = signedVc.toString();
+    const constructedVc = new VerifiableCredential(jwt);
+    const verifiedConstructedVc = await constructedVc.verify();
+
+    expect(verifiedConstructedVc.verified).toBe(true);
 }
 
 export async function externalWebsiteOnLogout(keyManager: KeyManager, storageFactory: StorageFactory) {
