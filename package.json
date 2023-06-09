@@ -1,113 +1,112 @@
 {
-    "version": "0.3.16",
-    "license": "Apache-2.0",
-    "type": "module",
-    "source": "src/sdk/index.ts",
-    "main": "./build/sdk/index.cjs",
-    "module": "./build/sdk/index.module.js",
-    "unpkg": "./build/sdk/index.umd.js",
-    "types": "./build/sdk/types/sdk/index.d.ts",
-    "umd:main": "./build/sdk/index.umd.js",
-    "exports": {
-        ".": {
-            "types": "./build/sdk/types/sdk/index.d.ts",
-            "require": "./build/sdk/index.cjs",
-            "import": "./build/sdk/index.module.js"
-        },
-        "./build/api/tonomy.css": {
-            "import": "./build/api/tonomy.css",
-            "require": "./build/api/tonomy.css"
-        }
+  "version": "0.3.16",
+  "license": "Apache-2.0",
+  "type": "module",
+  "source": "src/sdk/index.ts",
+  "main": "./build/sdk/index.cjs",
+  "module": "./build/sdk/index.module.js",
+  "unpkg": "./build/sdk/index.umd.js",
+  "types": "./build/sdk/types/sdk/index.d.ts",
+  "umd:main": "./build/sdk/index.umd.js",
+  "exports": {
+    ".": {
+      "types": "./build/sdk/types/sdk/index.d.ts",
+      "require": "./build/sdk/index.cjs",
+      "import": "./build/sdk/index.module.js"
     },
-    "files": [
-        "src",
-        "build"
-    ],
-    "engines": {
-        "node": ">=10"
-    },
-    "scripts": {
-        "start": "microbundle watch  -i ./src/sdk/index.ts -o build/sdk/index.js",
-        "build:sdk": "microbundle --compress=false -i ./src/sdk/index.ts -o build/sdk/index.js",
-        "build:cli": "microbundle --compress=false --target=node -f cjs -i ./src/cli/index.ts -o build/cli/index.js",
-        "build:api": "mkdir -p ./build/api && cp ./src/api/tonomy.css ./build/api/tonomy.css",
-        "build": "npm run build:sdk && npm run build:cli && npm run build:api",
-        "test:unit": "jest --selectProjects \"Unit tests\"",
-        "test:setup": "./test-integration/build-and-run-services.sh start",
-        "test:setup-down": "./test-integration/build-and-run-services.sh stop",
-        "test:integration": "jest --detectOpenHandles --selectProjects \"Integration tests\"",
-        "test": "jest --detectOpenHandles",
-        "cli": "node ./build/cli/index.cjs",
-        "lint": "eslint src test --ext .ts --resolve-plugins-relative-to .",
-        "lint:fix": "npm run lint -- --fix",
-        "release": "semantic-release --debug",
-        "docs:serve": "python -m mkdocs serve",
-        "docs:build": "python -m mkdocs build -c",
-        "prepare": "npm run build",
-        "build:changeTag": "node changeVersionTag.js",
-        "change:tag": "npm run build:changeTag"
-
-    },
-    "name": "@tonomy/tonomy-id-test",
-    "author": "Jack Tanner",
-    "devDependencies": {
-        "@babel/core": "^7.21.4",
-        "@babel/node": "^7.20.7",
-        "@babel/preset-env": "^7.21.4",
-        "@babel/preset-typescript": "^7.21.4",
-        "@semantic-release/changelog": "^6.0.3",
-        "@semantic-release/commit-analyzer": "^10.0.1",
-        "@semantic-release/git": "^10.0.1",
-        "@semantic-release/github": "^9.0.2",
-        "@semantic-release/npm": "^10.0.3",
-        "@types/elliptic": "^6.4.14",
-        "@types/jest": "^29.5.0",
-        "@types/randombytes": "^2.0.0",
-        "@typescript-eslint/eslint-plugin": "^5.40.0",
-        "@typescript-eslint/parser": "^5.40.0",
-        "address": "^1.2.2",
-        "babel-jest": "^29.5.0",
-        "eslint": "^8.25.0",
-        "eslint-config-prettier": "^8.5.0",
-        "eslint-plugin-jest": "^27.2.1",
-        "eslint-plugin-prettier": "^3.4.1",
-        "jest": "^29.5.0",
-        "jest-environment-jsdom": "^29.5.0",
-        "jsdom-url": "^3.0.1",
-        "microbundle": "^0.15.1",
-        "prettier": "^2.7.1",
-        "semantic-release": "^20.1.3",
-        "ts-jest": "^29.0.5",
-        "tslib": "^2.4.0",
-        "typescript": "^4.7.4"
-    },
-    "dependencies": {
-        "@consento/sync-randombytes": "^1.0.5",
-        "@greymass/eosio": "^0.6.4",
-        "@semantic-release/exec": "^6.0.3",
-        "@tonomy/antelope-did": "^0.1.5",
-        "@tonomy/antelope-did-resolver": "^0.2.2",
-        "@tonomy/did-jwt": "^6.10.1",
-        "@tonomy/did-jwt-vc": "^3.1.3",
-        "@tonomy/did-resolver": "^4.0.4",
-        "argon2": "^0.30.3",
-        "base64url": "^3.0.1",
-        "child_process": "^1.0.2",
-        "cross-fetch": "^3.1.5",
-        "elliptic": "^6.5.4",
-        "socket.io-client": "^4.5.4",
-        "universal-base64url": "^1.1.0"
-    },
-    "publishConfig": {
-        "access": "public",
-        "registry-url": "https://registry.npmjs.org/"
-    },
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/Tonomy-Foundation/Tonomy-ID-SDK.git"
-    },
-    "keywords": [
-        "sdk",
-        "tonomy"
-    ]
+    "./build/api/tonomy.css": {
+      "import": "./build/api/tonomy.css",
+      "require": "./build/api/tonomy.css"
+    }
+  },
+  "files": [
+    "src",
+    "build"
+  ],
+  "engines": {
+    "node": ">=10"
+  },
+  "scripts": {
+    "start": "microbundle watch  -i ./src/sdk/index.ts -o build/sdk/index.js",
+    "build:sdk": "microbundle --compress=false -i ./src/sdk/index.ts -o build/sdk/index.js",
+    "build:cli": "microbundle --compress=false --target=node -f cjs -i ./src/cli/index.ts -o build/cli/index.js",
+    "build:api": "mkdir -p ./build/api && cp ./src/api/tonomy.css ./build/api/tonomy.css",
+    "build": "npm run build:sdk && npm run build:cli && npm run build:api",
+    "test:unit": "jest --selectProjects \"Unit tests\"",
+    "test:setup": "./test-integration/build-and-run-services.sh start",
+    "test:setup-down": "./test-integration/build-and-run-services.sh stop",
+    "test:integration": "jest --detectOpenHandles --selectProjects \"Integration tests\"",
+    "test": "jest --detectOpenHandles",
+    "cli": "node ./build/cli/index.cjs",
+    "lint": "eslint src test --ext .ts --resolve-plugins-relative-to .",
+    "lint:fix": "npm run lint -- --fix",
+    "release": "semantic-release --debug",
+    "docs:serve": "python -m mkdocs serve",
+    "docs:build": "python -m mkdocs build -c",
+    "prepare": "npm run build",
+    "change:tag": "node changeVersionTag.js"
+  },
+  "name": "@tonomy/tonomy-id-test",
+  "author": "Jack Tanner",
+  "devDependencies": {
+    "@babel/core": "^7.21.4",
+    "@babel/node": "^7.20.7",
+    "@babel/preset-env": "^7.21.4",
+    "@babel/preset-typescript": "^7.21.4",
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/commit-analyzer": "^10.0.1",
+    "@semantic-release/git": "^10.0.1",
+    "@semantic-release/github": "^9.0.2",
+    "@semantic-release/npm": "^10.0.3",
+    "@types/elliptic": "^6.4.14",
+    "@types/jest": "^29.5.0",
+    "@types/randombytes": "^2.0.0",
+    "@typescript-eslint/eslint-plugin": "^5.40.0",
+    "@typescript-eslint/parser": "^5.40.0",
+    "address": "^1.2.2",
+    "babel-jest": "^29.5.0",
+    "eslint": "^8.25.0",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-jest": "^27.2.1",
+    "eslint-plugin-prettier": "^3.4.1",
+    "jest": "^29.5.0",
+    "jest-environment-jsdom": "^29.5.0",
+    "jsdom-url": "^3.0.1",
+    "microbundle": "^0.15.1",
+    "prettier": "^2.7.1",
+    "semantic-release": "^20.1.3",
+    "ts-jest": "^29.0.5",
+    "tslib": "^2.4.0",
+    "typescript": "^4.7.4"
+  },
+  "dependencies": {
+    "@consento/sync-randombytes": "^1.0.5",
+    "@greymass/eosio": "^0.6.4",
+    "@semantic-release/exec": "^6.0.3",
+    "@tonomy/antelope-did": "^0.1.5",
+    "@tonomy/antelope-did-resolver": "^0.2.2",
+    "@tonomy/did-jwt": "^6.10.1",
+    "@tonomy/did-jwt-vc": "^3.1.3",
+    "@tonomy/did-resolver": "^4.0.4",
+    "argon2": "^0.30.3",
+    "base64url": "^3.0.1",
+    "child_process": "^1.0.2",
+    "cross-fetch": "^3.1.5",
+    "elliptic": "^6.5.4",
+    "socket.io-client": "^4.5.4",
+    "universal-base64url": "^1.1.0"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry-url": "https://registry.npmjs.org/",
+    "tag": "development"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Tonomy-Foundation/Tonomy-ID-SDK.git"
+  },
+  "keywords": [
+    "sdk",
+    "tonomy"
+  ]
 }
