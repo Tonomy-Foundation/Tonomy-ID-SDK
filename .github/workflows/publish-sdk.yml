@@ -29,7 +29,7 @@ jobs:
           node-version: 18.12.1
       - run: npm ci
       - run: npm run build
-      run: |
+      - run: |
           if [[ "${{ secrets.BRANCH_NAME }}" == "development" ]]; then
             echo "Variable BRANCH_NAME is set to 'development'"
             npm run change:tag
