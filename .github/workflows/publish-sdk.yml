@@ -36,7 +36,7 @@ jobs:
       - name: Check output
         run: echo ${{ steps.vars.outputs.short_ref }}
       - run: |
-          if [[ ${{ steps.vars.outputs.short_ref }} == "feature/232-sdk-development" ]]; then
+          if [[ ${{ steps.vars.outputs.short_ref }} == "development" ]]; then
             echo "Variable BRANCH_NAME is set to 'development'"
             npm run change:tag
           fi
