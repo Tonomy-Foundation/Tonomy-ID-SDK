@@ -35,7 +35,7 @@ export type LoginWithTonomyMessages = {
     loginToCommunication: AuthenticationMessage;
 };
 
-const idContract = IDContract.singletonInstance;
+const idContract = IDContract.Instance;
 
 /**
  * An external user on a website that is being logged into by a Tonomy ID user

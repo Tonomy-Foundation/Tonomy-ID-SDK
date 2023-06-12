@@ -69,7 +69,7 @@ export class TonomyUsername implements Serializable {
     }
 
     async getAccountName(): Promise<Name> {
-        return (await IDContract.singletonInstance.getPerson(this)).account_name;
+        return (await IDContract.Instance.getPerson(this)).account_name;
     }
 
     /**
