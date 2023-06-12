@@ -8,7 +8,7 @@ import { createStorage, PersistentStorageClean, StorageFactory, STORAGE_NAMESPAC
 import { Name, API, NameType } from '@greymass/eosio';
 import { TonomyUsername } from '../sdk/util/username';
 import { browserStorageFactory } from '../sdk/storage/browserStorage';
-import { getChainInfo } from '../sdk/services/blockchain/eosio/eosio';
+import { getAccount, getChainInfo } from '../sdk/services/blockchain/eosio/eosio';
 import { JsKeyManager } from '../sdk/storage/jsKeyManager';
 import { LoginRequest, LoginRequestPayload } from '../sdk/util/request';
 import { AuthenticationMessage, IDContract, LoginRequestsMessagePayload } from '../sdk';
@@ -370,6 +370,21 @@ export class ExternalUser {
         const actor = await this.getAccountName();
         const permission = await this.getAppPermission();
 
+        // check that the permission is linked to the contract
+        const account = await getAccount(actor);
+        const authorizingPermission = account.permissions.find((p) => p.perm_name.toString() === permission.toString());
+        const linkedAuth = authorizingPermission?.linked_actions?.find(
+            (a) => a.account.equals(contract) && (a.action.equals(action) || a.action.toString() === '*')
+        );
+
+        // If not then link it
+        // This is a hack to get around linked_auth requirements on custom permissions
+        // see https://github.com/AntelopeIO/leap/issues/1131
+        if (!linkedAuth) {
+            // TODO make a request to Tonomy ID wallet to link the permission
+        }
+
+        // Setup the action to sign
         const newAction = {
             name: action.toString(),
             authorization: [
