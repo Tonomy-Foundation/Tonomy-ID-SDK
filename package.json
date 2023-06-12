@@ -44,8 +44,7 @@
     "docs:serve": "python -m mkdocs serve",
     "docs:build": "python -m mkdocs build -c",
     "prepare": "npm run build",
-    "change:tag": "node changeVersionTag.js",
-    "development": "if [ $(git rev-parse --abbrev-ref HEAD) = 'feature/232-sdk-deployment' ]; then npm install --no-lockfile @tonomy/tonomy-id-test@development; fi",
+    "change:tag": "node changeVersionTag.js"
   },
   "name": "@tonomy/tonomy-id-test",
   "author": "Jack Tanner",

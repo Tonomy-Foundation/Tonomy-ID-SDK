@@ -40,7 +40,6 @@ jobs:
           if [[ ${{ steps.vars.outputs.short_ref }} == "feature/232-sdk-deployment" ]]; then
             echo "Variable BRANCH_NAME is set to 'development'"
             npm run change:tag
-            npm run development
           fi
       - run: npm run release
         env:
