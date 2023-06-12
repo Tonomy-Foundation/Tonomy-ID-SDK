@@ -3,7 +3,14 @@ import { KeyManager, KeyManagerLevel } from '../../../storage/keymanager';
 import { HttpError } from '../../../util/errors';
 import { getApi } from './eosio';
 
-type ActionData = {
+/**
+ * Action data for a transaction
+ * @property {string} account - The smart contract account name
+ * @property {string} name - The name of the action (function in the smart contract)
+ * @property {object} data - The data for the action (arguments for the function)
+ * @property {object} authorization - The authorization for the action
+ */
+export type ActionData = {
     authorization: {
         actor: string;
         permission: string;
@@ -112,7 +119,7 @@ async function transact(
     const actionData: Action[] = [];
 
     actions.forEach((data) => {
-        actionData.push(Action.from({ ...data, account: contract }, abi.abi));
+        actionData.push(Action.from({ account: contract, ...data }, abi.abi));
     });
 
     // Construct the transaction

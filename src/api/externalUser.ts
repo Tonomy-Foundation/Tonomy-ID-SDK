@@ -1,13 +1,11 @@
 import { KeyManager, KeyManagerLevel } from '../sdk/storage/keymanager';
 import { OnPressLoginOptions, UserApps } from '../sdk/controllers/userApps';
-import { createVCSigner, generateRandomKeyPair, randomString } from '../sdk/util/crypto';
-import { ES256KSigner } from '@tonomy/did-jwt';
+import { createVCSigner, randomString } from '../sdk/util/crypto';
 import { Issuer } from '@tonomy/did-jwt-vc';
-import { createJWK, toDid } from '../sdk/util/ssi/did-jwk';
 import { getSettings } from '../sdk/util/settings';
 import { SdkError, SdkErrors, throwError } from '../sdk/util/errors';
 import { createStorage, PersistentStorageClean, StorageFactory, STORAGE_NAMESPACE } from '../sdk/storage/storage';
-import { Name } from '@greymass/eosio';
+import { Name, API } from '@greymass/eosio';
 import { TonomyUsername } from '../sdk/util/username';
 import { browserStorageFactory } from '../sdk/storage/browserStorage';
 import { getChainInfo } from '../sdk/services/blockchain/eosio/eosio';
@@ -17,6 +15,7 @@ import { AuthenticationMessage, IDContract, LoginRequestsMessagePayload } from '
 import { objToBase64Url } from '../sdk/util/base64';
 import { VerifiableCredential } from '../sdk/util/ssi/vc';
 import { DIDurl } from '../sdk/util/ssi/types';
+import { Signer, createKeyManagerSigner, transact } from '../sdk/services/blockchain/eosio/transaction';
 
 export type ExternalUserStorage = {
     accountName: Name;
@@ -343,5 +342,46 @@ export class ExternalUser {
         const issuer = await this.getIssuer();
 
         return await VerifiableCredential.sign<T>(id, type, data, issuer, options);
+    }
+
+    /**
+     * Return a signer to use to sign transactions
+     *
+     * @returns {Promise<Signer>} - the signer to use to sign transactions
+     */
+    getTransactionSigner(): Signer {
+        return createKeyManagerSigner(this.keyManager, KeyManagerLevel.BROWSER_LOCAL_STORAGE);
+    }
+
+    /**
+     * Signs a transaction
+     *
+     * Note: this is a convenience method that signs one action on one smart contract with the current
+     * user's account and app permission to sign a more complex transaction, get a signer with
+     * getTransactionSigner() and use eosjs or @greymass/eosio directly
+     *
+     * @param {Name} contract - the smart contract account name
+     * @param {Name} action - the action to sign (function of the smart contract)
+     * @param {object} data - the data to sign
+     *
+     * @returns {Promise<API.v1.PushTransactionResponse>} - the signed transaction
+     */
+    async signTransaction(contract: Name, action: Name, data: object): Promise<API.v1.PushTransactionResponse> {
+        const actor = await this.getAccountName();
+        const permission = await this.getAppPermission();
+
+        const newAction = {
+            name: action.toString(),
+            authorization: [
+                {
+                    actor: actor.toString(),
+                    permission: permission.toString(),
+                },
+            ],
+            data: data,
+        };
+        const signer = this.getTransactionSigner();
+
+        return await transact(contract, [newAction], signer);
     }
 }
