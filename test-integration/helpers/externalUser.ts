@@ -191,7 +191,9 @@ export async function externalWebsiteOnReload(
     expect((await externalUser.getAccountName()).toString()).toBe(await (await tonomyUser.getAccountName()).toString());
 }
 
-export async function externalWebsiteSignVc(externalUser: ExternalUser) {
+export async function externalWebsiteSignVc(externalUser: ExternalUser, log = false) {
+    if (log) console.log('EXTERNAL_WEBSITE/sign-vc: signing verifiable credential');
+
     const vcData = {
         name: 'Joe',
         dob: new Date('1990-01-01').toISOString(),
@@ -213,7 +215,9 @@ export async function externalWebsiteSignVc(externalUser: ExternalUser) {
     expect(verifiedConstructedVc.verified).toBe(true);
 }
 
-export async function externalWebsiteSignTransaction(externalUser: ExternalUser) {
+export async function externalWebsiteSignTransaction(externalUser: ExternalUser, log = false) {
+    if (log) console.log('EXTERNAL_WEBSITE/sign-trx: signing transaction');
+
     const from = await externalUser.getAccountName();
     const to = await TonomyUsername.fromUsername(
         'lovesboost',

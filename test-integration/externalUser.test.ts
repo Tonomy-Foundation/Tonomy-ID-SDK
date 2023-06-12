@@ -106,7 +106,7 @@ describe('Login to external website', () => {
 
     describe('SSO login full end-to-end flow with external desktop browser (using communication service)', () => {
         test('User succeeds at login to external website', async () => {
-            expect.assertions(39);
+            expect.assertions(42);
 
             // #####External website user (login page) #####
             // ################################
@@ -277,9 +277,9 @@ describe('Login to external website', () => {
                 log
             );
 
-            await externalWebsiteSignVc(EXTERNAL_WEBSITE_user);
+            await externalWebsiteSignVc(EXTERNAL_WEBSITE_user, log);
 
-            await externalWebsiteSignTransaction(EXTERNAL_WEBSITE_user);
+            await externalWebsiteSignTransaction(EXTERNAL_WEBSITE_user, log);
 
             await externalWebsiteOnLogout(EXTERNAL_WEBSITE_jsKeyManager, EXTERNAL_WEBSITE_storage_factory);
 
