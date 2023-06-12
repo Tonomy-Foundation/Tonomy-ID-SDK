@@ -227,7 +227,7 @@ export class ExternalUser {
         { redirect = true, callbackPath }: OnPressLoginOptions,
         keyManager: KeyManager = new JsKeyManager()
     ): Promise<LoginWithTonomyMessages | void> {
-        const issuer = await this.createJwkIssuerAndStore(keyManager);
+        const issuer = await UserApps.createJwkIssuerAndStore(keyManager);
         const publicKey = await keyManager.getKey({ level: KeyManagerLevel.BROWSER_LOCAL_STORAGE });
 
         const payload: LoginRequestPayload = {
@@ -252,39 +252,6 @@ export class ExternalUser {
 
             return { loginRequest, loginToCommunication };
         }
-    }
-
-    static async createJwkIssuerAndStore(keyManager: KeyManager = new JsKeyManager()): Promise<Issuer> {
-        const { privateKey, publicKey } = generateRandomKeyPair();
-
-        await keyManager.storeKey({
-            level: KeyManagerLevel.BROWSER_LOCAL_STORAGE,
-            privateKey: privateKey,
-        });
-
-        const signer = ES256KSigner(privateKey.data.array, true);
-        const jwk = await createJWK(publicKey);
-
-        return {
-            did: toDid(jwk),
-            signer: signer as any,
-            alg: 'ES256K-R',
-        };
-    }
-
-    static async getJwkIssuerFromStorage(keyManager: KeyManager = new JsKeyManager()): Promise<Issuer> {
-        const publicKey = await keyManager.getKey({
-            level: KeyManagerLevel.BROWSER_LOCAL_STORAGE,
-        });
-        const signer = createVCSigner(keyManager, KeyManagerLevel.BROWSER_LOCAL_STORAGE);
-
-        const jwk = await createJWK(publicKey);
-
-        return {
-            did: toDid(jwk),
-            signer: signer.sign as any,
-            alg: 'ES256K-R',
-        };
     }
 
     async getIssuer(keyManager: KeyManager = new JsKeyManager()): Promise<Issuer> {

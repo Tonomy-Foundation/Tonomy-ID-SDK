@@ -120,7 +120,7 @@ export async function sendLoginRequestsMessage(
     recipientDid: string,
     log = false
 ) {
-    const jwkIssuer = await ExternalUser.getJwkIssuerFromStorage(keyManager);
+    const jwkIssuer = await UserApps.getJwkIssuerFromStorage(keyManager);
 
     const loginRequestMessage = await LoginRequestsMessage.signMessage({ requests }, jwkIssuer, recipientDid);
 
@@ -191,6 +191,24 @@ export async function externalWebsiteSignVc(externalUser: ExternalUser) {
         name: 'Joe',
         dob: new Date('1990-01-01').toISOString(),
     };
+    const signedVc = await externalUser.signVc('did:example:id:1234', 'ExampleCredential', vcData);
+
+    expect(signedVc).toBeDefined();
+    expect(signedVc.getIssuer()).toBe(await externalUser.getDid());
+    expect(signedVc.getIssuer().includes('did:antelope:')).toBe(true);
+    expect(signedVc.getCredentialSubject()).toEqual(vcData);
+    const verifiedVc = await signedVc.verify();
+
+    expect(verifiedVc.verified).toBe(true);
+
+    const jwt = signedVc.toString();
+    const constructedVc = new VerifiableCredential(jwt);
+    const verifiedConstructedVc = await constructedVc.verify();
+
+    expect(verifiedConstructedVc.verified).toBe(true);
+}
+
+export async function externalWebsiteSignTransaction(externalUser: ExternalUser) {
     const signedVc = await externalUser.signVc('did:example:id:1234', 'ExampleCredential', vcData);
 
     expect(signedVc).toBeDefined();

@@ -39,6 +39,7 @@ import {
     setupTonomyIdRequestConfirmSubscriber,
     externalWebsiteOnLogout,
     externalWebsiteSignVc,
+    externalWebsiteSignTransaction,
 } from './helpers/externalUser';
 import { createStorageFactory } from './helpers/storageFactory';
 import { objToBase64Url } from '../src/sdk/util/base64';
@@ -277,6 +278,8 @@ describe('Login to external website', () => {
             );
 
             await externalWebsiteSignVc(EXTERNAL_WEBSITE_user);
+
+            await externalWebsiteSignTransaction(EXTERNAL_WEBSITE_user);
 
             await externalWebsiteOnLogout(EXTERNAL_WEBSITE_jsKeyManager, EXTERNAL_WEBSITE_storage_factory);
 
