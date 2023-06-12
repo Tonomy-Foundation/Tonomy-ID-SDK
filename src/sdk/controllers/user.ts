@@ -7,7 +7,7 @@ import {
     createKeyManagerSigner,
     createSigner,
 } from '../services/blockchain/eosio/transaction';
-import { getAccount, getApi, getChainInfo } from '../services/blockchain/eosio/eosio';
+import { getAccount, getChainInfo } from '../services/blockchain/eosio/eosio';
 import { createStorage, PersistentStorageClean, StorageFactory, STORAGE_NAMESPACE } from '../storage/storage';
 import { SdkErrors, throwError, SdkError } from '../util/errors';
 import { AccountType, TonomyUsername } from '../util/username';
