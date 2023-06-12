@@ -7,7 +7,7 @@ import {
     createKeyManagerSigner,
     createSigner,
 } from '../services/blockchain/eosio/transaction';
-import { getApi, getChainInfo } from '../services/blockchain/eosio/eosio';
+import { getAccount, getApi, getChainInfo } from '../services/blockchain/eosio/eosio';
 import { createStorage, PersistentStorageClean, StorageFactory, STORAGE_NAMESPACE } from '../storage/storage';
 import { SdkErrors, throwError, SdkError } from '../util/errors';
 import { AccountType, TonomyUsername } from '../util/username';
@@ -481,28 +481,17 @@ export class User {
     }
 
     static async getAccountInfo(account: TonomyUsername | Name): Promise<API.v1.AccountObject> {
-        try {
-            let accountName: Name;
-            const api = await getApi();
+        let accountName: Name;
 
-            if (account instanceof TonomyUsername) {
-                const idData = await idContract.getPerson(account);
+        if (account instanceof TonomyUsername) {
+            const idData = await idContract.getPerson(account);
 
-                accountName = idData.account_name;
-            } else {
-                accountName = account;
-            }
-
-            return await api.v1.chain.get_account(accountName);
-        } catch (e) {
-            const error = e as Error;
-
-            if (error.message === 'Account not found at /v1/chain/get_account') {
-                throwError('Account "' + account.toString() + '" not found', SdkErrors.AccountDoesntExist);
-            } else {
-                throw e;
-            }
+            accountName = idData.account_name;
+        } else {
+            accountName = account;
         }
+
+        return await getAccount(accountName);
     }
 
     async getIssuer(): Promise<Issuer> {

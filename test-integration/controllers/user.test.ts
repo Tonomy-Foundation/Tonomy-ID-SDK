@@ -15,6 +15,7 @@ import { jsStorageFactory } from '../../src/cli/bootstrap/jsstorage';
 import settings from '../helpers/settings';
 import { Checksum256 } from '@greymass/eosio';
 import { generatePrivateKeyFromPassword } from '../../src/cli/bootstrap/keys';
+import { getAccount } from '../../src/sdk/services/blockchain/eosio/eosio';
 
 let auth: KeyManager;
 let user: User;
@@ -65,7 +66,7 @@ describe('User class', () => {
 
         const accountName = await user.storage.accountName;
 
-        const accountInfo = await api.v1.chain.get_account(accountName);
+        const accountInfo = await getAccount(accountName);
 
         expect(accountInfo).toBeDefined();
         expect(accountInfo.account_name.toString()).toBe(accountName.toString());

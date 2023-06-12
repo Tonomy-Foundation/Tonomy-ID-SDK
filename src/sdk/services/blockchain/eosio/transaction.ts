@@ -144,14 +144,12 @@ async function transact(
     try {
         res = await api.v1.chain.push_transaction(signedTransaction);
     } catch (e) {
-        const error = e as any;
-
-        if (error.response && error.response.headers) {
-            if (error.response.json) {
-                throw new AntelopePushTransactionError(error.response.json);
+        if (e.response?.headers) {
+            if (e.response?.json) {
+                throw new AntelopePushTransactionError(e.response.json);
             }
 
-            throw new HttpError(error);
+            throw new HttpError(e);
         }
 
         throw e;

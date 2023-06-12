@@ -1,7 +1,7 @@
 /* eslint-disable camelcase */
 import { API, Checksum256, Name, PublicKey } from '@greymass/eosio';
 import { TonomyUsername } from '../../../util/username';
-import { getApi } from '../eosio/eosio';
+import { getAccount, getApi } from '../eosio/eosio';
 import { Signer, transact } from '../eosio/transaction';
 import { SdkErrors, throwError } from '../../../util/errors';
 import { sha256 } from '../../../util/crypto';
@@ -105,18 +105,7 @@ class IDContract {
         },
         signer: Signer
     ): Promise<API.v1.PushTransactionResponse> {
-        const requestOptions = {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ account_name: account.toString() }),
-        };
-        const url = getSettings().blockchainUrl + '/v1/chain/get_account';
-
-        const accountInfo = (await (await fetch(url, requestOptions)).json()) as any;
-
-        // TODO use @greymass/eosio when it supports linked_actions
-        // const api = await getApi();
-        // const accountInfo = await api.v1.chain.get_account(account);
+        const accountInfo = await getAccount(account);
 
         const actions = [];
 
@@ -132,21 +121,17 @@ class IDContract {
             let link_auth = true;
 
             try {
-                const accountPermission = accountInfo.permissions.find(
-                    (p: any) => p.perm_name === permission.toLowerCase()
-                );
-                // TODO use @greymass/eosio when it supports linked_actions
-                // const accountPermission = accountInfo.getPermission(permission.toLowerCase());
+                const accountPermission = accountInfo.getPermission(permission.toLowerCase());
 
                 if (
                     accountPermission &&
                     accountPermission.linked_actions.find(
-                        (a: any) => a.account === 'id.tonomy' && a.action === 'loginwithapp'
+                        (a) => a.account.toString() === 'id.tonomy' && a.action.toString() === 'loginwithapp'
                     )
                 ) {
                     link_auth = false;
                 }
-            } catch (e: any) {
+            } catch (e) {
                 if (!e.message.startsWith('Unknown permission ')) {
                     throw e;
                 }
