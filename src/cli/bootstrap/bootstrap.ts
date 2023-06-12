@@ -58,14 +58,23 @@ export default async function bootstrap() {
         });
 
         // The Apple app needs to have a test user for their review. That is this user.
-        const password = '1GjGtP%g5UOp2lQ&U5*p';
-        const { user } = await createUser('testuser', password);
-        const username = await user.getUsername();
+        let password = '1GjGtP%g5UOp2lQ&U5*p';
 
-        console.log(`Created user with`);
-        console.log(`  username:    ${username.username}`);
-        console.log(`  usernamHash: ${username.usernameHash}`);
-        console.log(`  password:    ${password}`);
+        await createUser('testuser', password);
+
+        // Create users for the demo website
+        password = 'mrOOR1WW0y#6ot7z%Wbj';
+        await createUser('lovesboost', password);
+        await createUser('sweetkristy', password);
+        await createUser('cheesecakeophobia', password);
+        await createUser('ultimateBeast', password);
+        await createUser('tomtom', password);
+        await createUser('readingpro', password);
+        await createUser('sohappy', password);
+        await createUser('reallychel', password);
+        await createUser('thedudeabides', password);
+        await createUser('4cryingoutloud', password);
+
         console.log('Bootstrap complete');
     } catch (e: any) {
         console.error(e);
