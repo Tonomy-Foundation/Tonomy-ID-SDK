@@ -1,20 +1,25 @@
 /* eslint-disable no-console */
 import { Name } from '@greymass/eosio';
 import {
+    AccountType,
     Communication,
+    IDContract,
     IdentifyMessage,
     KeyManager,
     LoginRequestResponseMessage,
     LoginRequestsMessage,
     StorageFactory,
     Subscriber,
+    TonomyUsername,
     User,
     UserApps,
+    getSettings,
 } from '../../src/sdk';
 import { ExternalUser, LoginWithTonomyMessages } from '../../src/api/externalUser';
 import { LoginRequest } from '../../src/sdk/util/request';
 import { objToBase64Url } from '../../src/sdk/util/base64';
 import { VerifiableCredential } from '../../src/sdk/util/ssi/vc';
+import settings from './settings';
 
 export async function externalWebsiteUserPressLoginToTonomyButton(
     keyManager: KeyManager,
@@ -209,21 +214,21 @@ export async function externalWebsiteSignVc(externalUser: ExternalUser) {
 }
 
 export async function externalWebsiteSignTransaction(externalUser: ExternalUser) {
-    const signedVc = await externalUser.signVc('did:example:id:1234', 'ExampleCredential', vcData);
+    const from = await externalUser.getAccountName();
+    const to = await IDContract.singletonInstance.getPerson(
+        TonomyUsername.fromUsername('lovesboost', AccountType.PERSON, getSettings().accountSuffix)
+    );
 
-    expect(signedVc).toBeDefined();
-    expect(signedVc.getIssuer()).toBe(await externalUser.getDid());
-    expect(signedVc.getIssuer().includes('did:antelope:')).toBe(true);
-    expect(signedVc.getCredentialSubject()).toEqual(vcData);
-    const verifiedVc = await signedVc.verify();
+    const trx = await externalUser.signTransaction(Name.from('eosio.token'), Name.from('transfer'), {
+        from,
+        to,
+        quantity: '1 SYS',
+        memo: 'test',
+    });
 
-    expect(verifiedVc.verified).toBe(true);
-
-    const jwt = signedVc.toString();
-    const constructedVc = new VerifiableCredential(jwt);
-    const verifiedConstructedVc = await constructedVc.verify();
-
-    expect(verifiedConstructedVc.verified).toBe(true);
+    expect(trx).toBeDefined();
+    expect(trx.transaction_id).toBeInstanceOf(String);
+    expect(trx.processed.receipt.status).toBe('executed');
 }
 
 export async function externalWebsiteOnLogout(keyManager: KeyManager, storageFactory: StorageFactory) {

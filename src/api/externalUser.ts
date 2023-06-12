@@ -357,7 +357,7 @@ export class ExternalUser {
      * Signs a transaction
      *
      * Note: this is a convenience method that signs one action on one smart contract with the current
-     * user's account and app permission to sign a more complex transaction, get a signer with
+     * user's account and app permission. To sign a more complex transaction, get a signer with
      * getTransactionSigner() and use eosjs or @greymass/eosio directly
      *
      * @param {Name} contract - the smart contract account name
