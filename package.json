@@ -1,5 +1,5 @@
 {
-  "version": "1.0.11",
+  "version": "1.0.12",
   "license": "Apache-2.0",
   "type": "module",
   "source": "src/sdk/index.ts",
@@ -100,7 +100,8 @@
   },
   "publishConfig": {
     "access": "public",
-    "registry-url": "https://registry.npmjs.org/"
+    "registry-url": "https://registry.npmjs.org/",
+    "tag": "development"
   },
   "repository": {
     "type": "git",
