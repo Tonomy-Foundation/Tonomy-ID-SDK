@@ -1,11 +1,11 @@
 // From utf8 to base64url and visa versa
 import { decode as b64UrlDecode, encode as b64UrlEncode } from 'universal-base64url';
 import { decode as b64Decode, encode as b64Encode } from 'universal-base64';
-import { BN } from 'bn.js';
+import BN from 'bn.js';
 import * as u8a from 'uint8arrays';
 
 // Adapted from https://github.com/decentralized-identity/did-jwt/blob/056b2e422896436b781ecab2b466bacf72708d23/src/util.ts
-export function bnToBase64Url(bn: typeof BN): string {
+export function bnToBase64Url(bn: BN): string {
     const bnString = bn.toString();
     const bi = BigInt(bnString);
     const biBytes = bigintToBytes(bi);
