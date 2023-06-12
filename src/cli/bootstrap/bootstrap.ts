@@ -38,9 +38,9 @@ export default async function bootstrap() {
         );
 
         await createApp({
-            appName: 'Market',
-            usernamePrefix: 'market',
-            description: 'market.com where you can buy and sell stuff ',
+            appName: 'Tonomy Demo',
+            usernamePrefix: 'demo',
+            description: 'Demo of Tonomy ID login and features',
             origin: bootstrapSettings.config.demoWebsiteOrigin,
             logoUrl: bootstrapSettings.config.demoWebsiteLogoUrl,
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
