@@ -215,11 +215,13 @@ export async function externalWebsiteSignVc(externalUser: ExternalUser) {
 
 export async function externalWebsiteSignTransaction(externalUser: ExternalUser) {
     const from = await externalUser.getAccountName();
-    const to = await IDContract.singletonInstance.getPerson(
-        TonomyUsername.fromUsername('lovesboost', AccountType.PERSON, getSettings().accountSuffix)
-    );
+    const to = await TonomyUsername.fromUsername(
+        'lovesboost',
+        AccountType.PERSON,
+        getSettings().accountSuffix
+    ).getAccountName();
 
-    const trx = await externalUser.signTransaction(Name.from('eosio.token'), Name.from('transfer'), {
+    const trx = await externalUser.signTransaction('eosio.token', 'transfer', {
         from,
         to,
         quantity: '1 SYS',

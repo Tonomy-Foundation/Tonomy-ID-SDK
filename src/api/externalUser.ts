@@ -5,7 +5,7 @@ import { Issuer } from '@tonomy/did-jwt-vc';
 import { getSettings } from '../sdk/util/settings';
 import { SdkError, SdkErrors, throwError } from '../sdk/util/errors';
 import { createStorage, PersistentStorageClean, StorageFactory, STORAGE_NAMESPACE } from '../sdk/storage/storage';
-import { Name, API } from '@greymass/eosio';
+import { Name, API, NameType } from '@greymass/eosio';
 import { TonomyUsername } from '../sdk/util/username';
 import { browserStorageFactory } from '../sdk/storage/browserStorage';
 import { getChainInfo } from '../sdk/services/blockchain/eosio/eosio';
@@ -366,7 +366,7 @@ export class ExternalUser {
      *
      * @returns {Promise<API.v1.PushTransactionResponse>} - the signed transaction
      */
-    async signTransaction(contract: Name, action: Name, data: object): Promise<API.v1.PushTransactionResponse> {
+    async signTransaction(contract: NameType, action: NameType, data: object): Promise<API.v1.PushTransactionResponse> {
         const actor = await this.getAccountName();
         const permission = await this.getAppPermission();
 
@@ -382,6 +382,6 @@ export class ExternalUser {
         };
         const signer = this.getTransactionSigner();
 
-        return await transact(contract, [newAction], signer);
+        return await transact(Name.from(contract), [newAction], signer);
     }
 }

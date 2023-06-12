@@ -110,7 +110,14 @@ const accountName = await user.getDid();
 
 ### Sign a blockchain transaction
 
-TODO
+```typescript
+const trx = await user.signTransaction('eosio.token', 'transfer', {
+    from: "me",
+    to: "you",
+    quantity: '1 SYS',
+    memo: 'test memo',
+});
+```
 
 ### Sign a W3C verifiable credential
 
