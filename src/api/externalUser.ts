@@ -254,6 +254,12 @@ export class ExternalUser {
         }
     }
 
+    /**
+     * Returns the issuer of the user for use with did-jwt and VCs
+     *
+     * @param {KeyManager} [keyManager] - the key manager to use to store the keys
+     * @returns {Promise<Issuer>} - the issuer of the user
+     */
     async getIssuer(keyManager: KeyManager = new JsKeyManager()): Promise<Issuer> {
         const did = await this.getDid();
         const signer = createVCSigner(keyManager, KeyManagerLevel.BROWSER_LOCAL_STORAGE);
@@ -316,6 +322,16 @@ export class ExternalUser {
         }
     }
 
+    /**
+     * Signs a Verifiable Credential
+     *
+     * @param {string} id - the id of the VC
+     * @param {string | string[]} type - the type of the VC
+     * @param {object} data - the data of the VC
+     * @property {string} [options.subject] - the subject of the VC
+     *
+     * @returns {Promise<VerifiableCredential>} - the signed VC
+     */
     async signVc<T extends object = object>(
         id: string,
         type: string | string[],
