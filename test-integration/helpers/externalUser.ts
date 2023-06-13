@@ -13,6 +13,7 @@ import {
     TonomyUsername,
     User,
     UserApps,
+    getAccountNameFromUsername,
     getSettings,
 } from '../../src/sdk';
 import { ExternalUser, LoginWithTonomyMessages } from '../../src/api/externalUser';
@@ -219,11 +220,9 @@ export async function externalWebsiteSignTransaction(externalUser: ExternalUser,
     if (log) console.log('EXTERNAL_WEBSITE/sign-trx: signing transaction');
 
     const from = await externalUser.getAccountName();
-    const to = await TonomyUsername.fromUsername(
-        'lovesboost',
-        AccountType.PERSON,
-        getSettings().accountSuffix
-    ).getAccountName();
+    const to = await getAccountNameFromUsername(
+        TonomyUsername.fromUsername('lovesboost', AccountType.PERSON, getSettings().accountSuffix)
+    );
 
     // const trx = await externalUser.signTransaction('eosio.token', 'transfer', {
     //     from,

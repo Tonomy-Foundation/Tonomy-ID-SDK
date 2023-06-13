@@ -352,4 +352,8 @@ class IDContract {
     }
 }
 
+export async function getAccountNameFromUsername(username: TonomyUsername): Promise<Name> {
+    return (await IDContract.Instance.getPerson(username)).account_name;
+}
+
 export { IDContract, GetPersonResponse };

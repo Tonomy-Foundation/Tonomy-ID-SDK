@@ -1,5 +1,3 @@
-import { Name } from '@greymass/eosio';
-import { IDContract } from '..';
 import { sha256 } from './crypto';
 import { Serializable } from './serializable';
 
@@ -66,10 +64,6 @@ export class TonomyUsername implements Serializable {
 
     getBaseUsername(): string {
         return this.username?.split('.')[0];
-    }
-
-    async getAccountName(): Promise<Name> {
-        return (await IDContract.Instance.getPerson(this)).account_name;
     }
 
     /**
