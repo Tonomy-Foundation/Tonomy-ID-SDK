@@ -370,18 +370,24 @@ export class ExternalUser {
         const actor = await this.getAccountName();
         const permission = await this.getAppPermission();
 
-        // check that the permission is linked to the contract
-        const account = await getAccount(actor);
-        const authorizingPermission = account.permissions.find((p) => p.perm_name.toString() === permission.toString());
-        const linkedAuth = authorizingPermission?.linked_actions?.find(
-            (a) => a.account.equals(contract) && (a.action.equals(action) || a.action.toString() === '*')
-        );
-
-        // If not then link it
         // This is a hack to get around linked_auth requirements on custom permissions
-        // see https://github.com/AntelopeIO/leap/issues/1131
-        if (!linkedAuth) {
-            // TODO make a request to Tonomy ID wallet to link the permission
+        // see https://github.com/Tonomy-Foundation/Tonomy-ID/issues/636#issuecomment-1508887362
+        // and https://github.com/AntelopeIO/leap/issues/1131
+        {
+            // Check that the permission is linked to the contract
+            const account = await getAccount(actor);
+            const authorizingPermission = account.permissions.find(
+                (p) => p.perm_name.toString() === permission.toString()
+            );
+            const linkedAuth = authorizingPermission?.linked_actions?.find(
+                // TODO check '' is correct https://github.com/AntelopeIO/leap/pull/991/files
+                (a) => a.account.equals(contract) && (a.action.equals(action) || a.action.toString() === '')
+            );
+
+            // If not then link it
+            if (!linkedAuth) {
+                // TODO make a request to Tonomy ID wallet to link the permission
+            }
         }
 
         // Setup the action to sign

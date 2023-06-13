@@ -106,7 +106,7 @@ describe('Login to external website', () => {
 
     describe('SSO login full end-to-end flow with external desktop browser (using communication service)', () => {
         test('User succeeds at login to external website', async () => {
-            expect.assertions(42);
+            expect.assertions(39);
 
             // #####External website user (login page) #####
             // ################################

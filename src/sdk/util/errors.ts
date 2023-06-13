@@ -116,6 +116,7 @@ enum SdkErrors {
     PasswordTooCommon = 'PasswordTooCommon',
     PinInvalid = 'PinInvalid',
     ReferrerEmpty = 'ReferrerEmpty',
+    SenderNotAuthorized = 'SenderNotAuthorized',
     SettingsNotInitialized = 'SettingsNotInitialized',
     UpdateKeysTransactionNoKeys = 'UpdateKeysTransactionNoKeys',
     UserDeactivated = 'UserDeactivated',

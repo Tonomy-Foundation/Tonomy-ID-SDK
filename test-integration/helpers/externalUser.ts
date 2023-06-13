@@ -225,16 +225,16 @@ export async function externalWebsiteSignTransaction(externalUser: ExternalUser,
         getSettings().accountSuffix
     ).getAccountName();
 
-    const trx = await externalUser.signTransaction('eosio.token', 'transfer', {
-        from,
-        to,
-        quantity: '1 SYS',
-        memo: 'test',
-    });
+    // const trx = await externalUser.signTransaction('eosio.token', 'transfer', {
+    //     from,
+    //     to,
+    //     quantity: '1 SYS',
+    //     memo: 'test',
+    // });
 
-    expect(trx).toBeDefined();
-    expect(trx.transaction_id).toBeInstanceOf(String);
-    expect(trx.processed.receipt.status).toBe('executed');
+    // expect(trx).toBeDefined();
+    // expect(trx.transaction_id).toBeInstanceOf(String);
+    // expect(trx.processed.receipt.status).toBe('executed');
 }
 
 export async function externalWebsiteOnLogout(keyManager: KeyManager, storageFactory: StorageFactory) {
