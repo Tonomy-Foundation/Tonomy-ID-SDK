@@ -17,8 +17,5 @@
     "jest.jestCommandLine": "npm run test",
     "jest.testExplorer": {
         "enabled": true
-    },
-    "conventionalCommits.scopes": [
-        "remove tag leve tag"
-    ],
+    }
 }

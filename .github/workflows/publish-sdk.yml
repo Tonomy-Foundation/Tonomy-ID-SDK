@@ -6,7 +6,7 @@ permissions:
 on:
   push:
     branches:
-      - feature/232-sdk-deployment
+      - development
       - master
 
 jobs:
@@ -30,14 +30,9 @@ jobs:
           node-version: 18.12.1
       - run: npm ci
       - run: npm run build
-      - name: Set output
-        id: vars
-        run: echo ::set-output name=short_ref::${GITHUB_REF#refs/*/}
-
       - name: Check output
-        run: echo ${{ steps.vars.outputs.short_ref }}
       - run: |
-          if [[ ${{ steps.vars.outputs.short_ref }} == "feature/232-sdk-deployment" ]]; then
+          if [[ ${GITHUB_REF#refs/*/} == development" ]]; then
             echo "Variable BRANCH_NAME is set to 'development'"
             npm run change:tag
           fi
