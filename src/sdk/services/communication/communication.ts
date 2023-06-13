@@ -25,6 +25,10 @@ export class Communication {
         Communication.object = this;
     }
 
+    isLoggedIn(): boolean {
+        return !!this.authMessage;
+    }
+
     /**
      * Connects to the Tonomy Communication server
      *
@@ -37,7 +41,7 @@ export class Communication {
         this.socketServer.connect();
         await new Promise((resolve, reject) => {
             this.socketServer.on('connect', async () => {
-                if (this.authMessage) {
+                if (this.isLoggedIn()) {
                     await this.login(this.authMessage);
                 }
 

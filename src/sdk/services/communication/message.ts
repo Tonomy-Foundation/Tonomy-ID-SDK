@@ -245,3 +245,31 @@ export class LinkAuthRequestMessage extends Message<LinkAuthRequestMessagePayloa
         return new LinkAuthRequestMessage(vc);
     }
 }
+
+export type LinkAuthRequestResponseMessagePayload = {
+    request: LinkAuthRequest;
+    success: boolean;
+};
+
+export class LinkAuthRequestResponseMessage extends Message<LinkAuthRequestResponseMessagePayload> {
+    protected static type = 'LinkAuthRequestResponseMessage';
+
+    /**
+     * Alternative constructor that returns type LinkAuthRequestResponseMessage
+     */
+    static async signMessage(
+        message: LinkAuthRequestResponseMessagePayload,
+        issuer: Issuer,
+        recipient: DIDurl,
+        options: { subject?: URL } = {}
+    ) {
+        const vc = await super.signMessageWithRecipient<LinkAuthRequestResponseMessagePayload>(
+            message,
+            issuer,
+            recipient,
+            options
+        );
+
+        return new LinkAuthRequestResponseMessage(vc);
+    }
+}

@@ -3,19 +3,30 @@ import { OnPressLoginOptions, UserApps } from '../sdk/controllers/userApps';
 import { createVCSigner, randomString } from '../sdk/util/crypto';
 import { Issuer } from '@tonomy/did-jwt-vc';
 import { getSettings } from '../sdk/util/settings';
-import { SdkError, SdkErrors, throwError } from '../sdk/util/errors';
+import { SdkError, SdkErrors, createSdkError, throwError } from '../sdk/util/errors';
 import { createStorage, PersistentStorageClean, StorageFactory, STORAGE_NAMESPACE } from '../sdk/storage/storage';
 import { Name, API, NameType } from '@greymass/eosio';
 import { TonomyUsername } from '../sdk/util/username';
 import { browserStorageFactory } from '../sdk/storage/browserStorage';
 import { getAccount, getChainInfo } from '../sdk/services/blockchain/eosio/eosio';
 import { JsKeyManager } from '../sdk/storage/jsKeyManager';
-import { LoginRequest, LoginRequestPayload } from '../sdk/util/request';
-import { AuthenticationMessage, IDContract, LoginRequestsMessagePayload } from '../sdk';
+import { LinkAuthRequest, LoginRequest, LoginRequestPayload } from '../sdk/util/request';
+import {
+    AuthenticationMessage,
+    Communication,
+    IDContract,
+    LinkAuthMessageResponseMessage,
+    LinkAuthRequestMessage,
+    LinkAuthRequestResponseMessage,
+    LoginRequestsMessagePayload,
+    Message,
+    getAccountNameFromDid,
+} from '../sdk';
 import { objToBase64Url } from '../sdk/util/base64';
 import { VerifiableCredential } from '../sdk/util/ssi/vc';
 import { DIDurl } from '../sdk/util/ssi/types';
 import { Signer, createKeyManagerSigner, transact } from '../sdk/services/blockchain/eosio/transaction';
+import { parse } from '@tonomy/did-resolver';
 
 export type ExternalUserStorage = {
     accountName: Name;
@@ -45,6 +56,7 @@ export class ExternalUser {
     keyManager: KeyManager;
     storage: ExternalUserStorage & PersistentStorageClean;
     did: string;
+    communication: Communication;
 
     /**
      * Creates a new external user
@@ -55,6 +67,9 @@ export class ExternalUser {
     constructor(_keyManager: KeyManager, _storageFactory: StorageFactory) {
         this.keyManager = _keyManager;
         this.storage = createStorage<ExternalUserStorage>(STORAGE_NAMESPACE + 'external.user.', _storageFactory);
+        this.communication = new Communication(
+            /* maybe this should be false as we switch from did:jwk to did:antelope? */ true
+        );
     }
 
     /**
@@ -384,12 +399,43 @@ export class ExternalUser {
 
             // If not then link it
             if (!linkedAuth) {
-                // send new linkauth request
-                // const linkAuthRequest = LinkAuthRequest.signRequest(
+                // const linkAuthRequest = await LinkAuthRequest.signRequest(
                 //     { contract: Name.from(contract), action: Name.from('') },
                 //     this.getIssuer()
                 // );
-                // send to Tonomy ID
+                // const linkAuthRequestMessage = await LinkAuthRequestMessage.signMessage(
+                //     {
+                //         request: linkAuthRequest,
+                //     },
+                //     await this.getIssuer(),
+                //     await this.getWalletDid()
+                // );
+                // let subscriberId: number;
+                // const waitForResponse = new Promise<void>((resolve, reject) => {
+                //     subscriberId = this.communication.subscribeMessage(async (message: Message) => {
+                //         setTimeout(() => {
+                //             reject(createSdkError('LinkAuthRequestResponse timeout', SdkErrors.MessageSendError));
+                //         }, 5000);
+                //         if (message.getSender() !== (await this.getWalletDid())) {
+                //             reject(
+                //                 createSdkError(
+                //                     'LinkAuthRequestResponse sender is not wallet',
+                //                     SdkErrors.SenderNotAuthorized
+                //                 )
+                //             );
+                //         }
+                //         const linkedAuthResponseMessage = new LinkAuthRequestResponseMessage(message);
+                //         if (linkedAuthResponseMessage.getPayload().success) {
+                //             resolve();
+                //         } else {
+                //             reject(createSdkError("Couldn't link permission", SdkErrors.LinkAuthFailed));
+                //         }
+                //     }, LinkAuthRequestResponseMessage.getType());
+                // });
+                // await this.sendMessage(linkAuthRequestMessage);
+                // await waitForResponse;
+                // // @ts-expect-error subscriberId is used before it is defined
+                // this.communication.unsubscribeMessage(subscriberId);
             }
         }
 
@@ -407,5 +453,24 @@ export class ExternalUser {
         const signer = this.getTransactionSigner();
 
         return await transact(Name.from(contract), [newAction], signer);
+    }
+
+    /**
+     * Sends a message to another DID
+     *
+     * @param {Message} message - the message to send
+     */
+    async sendMessage(message: Message): Promise<void> {
+        const issuer = await this.getIssuer();
+
+        if (!this.communication.isLoggedIn()) {
+            const authMessage = await AuthenticationMessage.signMessageWithoutRecipient({}, issuer);
+
+            await this.communication.login(authMessage);
+        }
+
+        const res = await this.communication.sendMessage(message);
+
+        if (!res) throwError('Failed to send message', SdkErrors.MessageSendError);
     }
 }

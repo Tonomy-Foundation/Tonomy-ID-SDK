@@ -107,6 +107,8 @@ enum SdkErrors {
     InvalidKeyLevel = 'InvalidKeyLevel',
     JwtNotValid = 'JwtNotValid',
     KeyNotFound = 'KeyNotFound',
+    LinkAuthFailed = 'LinkAuthFailed',
+    MessageSendError = 'MessageSendError',
     MissingChallenge = 'MissingChallenge',
     MissingParams = 'MissingParams',
     OriginNotFound = 'OriginNotFound',
