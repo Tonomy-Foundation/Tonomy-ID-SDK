@@ -1,7 +1,7 @@
 import { Issuer } from '@tonomy/did-jwt-vc';
 import { DIDurl, URL } from '../../util/ssi/types';
 import { VerifiableCredentialWithType, VCWithTypeType } from '../../util/ssi/vc';
-import { LoginRequest } from '../../util/request';
+import { LinkAuthRequest, LoginRequest } from '../../util/request';
 import { TonomyUsername } from '../../util/username';
 import { Name } from '@greymass/eosio';
 import { SdkErrors } from '../../util/errors';
@@ -216,5 +216,32 @@ export class LoginRequestResponseMessage extends Message<LoginRequestResponseMes
         );
 
         return new LoginRequestResponseMessage(vc);
+    }
+}
+
+export type LinkAuthRequestMessagePayload = {
+    request: LinkAuthRequest;
+};
+
+export class LinkAuthRequestMessage extends Message<LinkAuthRequestMessagePayload> {
+    protected static type = 'LinkAuthRequestMessage';
+
+    /**
+     * Alternative constructor that returns type LoginRequestResponseMessage
+     */
+    static async signMessage(
+        message: LinkAuthRequestMessagePayload,
+        issuer: Issuer,
+        recipient: DIDurl,
+        options: { subject?: URL } = {}
+    ) {
+        const vc = await super.signMessageWithRecipient<LinkAuthRequestMessagePayload>(
+            message,
+            issuer,
+            recipient,
+            options
+        );
+
+        return new LinkAuthRequestMessage(vc);
     }
 }

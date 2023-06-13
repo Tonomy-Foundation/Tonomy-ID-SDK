@@ -39,13 +39,6 @@ export class LinkAuthRequest extends VerifiableCredentialWithType<LinkAuthReques
     protected static type = 'LinkAuthRequest';
 
     /**
-     * @override the VerifiableCredentialWithType constructor to decode the payload of type LinkAuthRequestPayload
-     */
-    constructor(vc: LinkAuthRequest | VCWithTypeType<LinkAuthRequestPayload>) {
-        super(vc);
-    }
-
-    /**
      * Alternative constructor that returns type LinkAuthRequest
      */
     static async signRequest(

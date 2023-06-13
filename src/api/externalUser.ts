@@ -10,7 +10,7 @@ import { TonomyUsername } from '../sdk/util/username';
 import { browserStorageFactory } from '../sdk/storage/browserStorage';
 import { getAccount, getChainInfo } from '../sdk/services/blockchain/eosio/eosio';
 import { JsKeyManager } from '../sdk/storage/jsKeyManager';
-import { LinkAuthRequest, LoginRequest, LoginRequestPayload } from '../sdk/util/request';
+import { LoginRequest, LoginRequestPayload } from '../sdk/util/request';
 import { AuthenticationMessage, IDContract, LoginRequestsMessagePayload } from '../sdk';
 import { objToBase64Url } from '../sdk/util/base64';
 import { VerifiableCredential } from '../sdk/util/ssi/vc';
@@ -385,10 +385,10 @@ export class ExternalUser {
             // If not then link it
             if (!linkedAuth) {
                 // send new linkauth request
-                const linkAuthRequest = LinkAuthRequest.signRequest(
-                    { contract: Name.from(contract), action: Name.from('') },
-                    this.getIssuer()
-                );
+                // const linkAuthRequest = LinkAuthRequest.signRequest(
+                //     { contract: Name.from(contract), action: Name.from('') },
+                //     this.getIssuer()
+                // );
                 // send to Tonomy ID
             }
         }
