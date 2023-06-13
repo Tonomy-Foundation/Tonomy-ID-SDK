@@ -125,7 +125,7 @@ export class User {
         );
 
         try {
-            user = (await User.getAccountInfo(fullUsername)) as any; // Throws error if username is taken
+            user = await User.getAccountInfo(fullUsername);
             if (user) throwError('Username is taken', SdkErrors.UsernameTaken);
         } catch (e) {
             if (!(e instanceof SdkError && e.code === SdkErrors.UsernameNotFound)) {
