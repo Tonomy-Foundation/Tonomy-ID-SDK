@@ -30,9 +30,14 @@ jobs:
           node-version: 18.12.1
       - run: npm ci
       - run: npm run build
+      - name: Set output
+        id: vars
+        run: echo ::set-output name=short_ref::${GITHUB_REF#refs/*/}
+
       - name: Check output
+        run: echo ${{ steps.vars.outputs.short_ref }}
       - run: |
-          if [[ ${GITHUB_REF#refs/*/} == development" ]]; then
+          if [[ ${{ steps.vars.outputs.short_ref }} == development" ]]; then
             echo "Variable BRANCH_NAME is set to 'development'"
             npm run change:tag
           fi
