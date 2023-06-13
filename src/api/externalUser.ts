@@ -10,7 +10,7 @@ import { TonomyUsername } from '../sdk/util/username';
 import { browserStorageFactory } from '../sdk/storage/browserStorage';
 import { getAccount, getChainInfo } from '../sdk/services/blockchain/eosio/eosio';
 import { JsKeyManager } from '../sdk/storage/jsKeyManager';
-import { LoginRequest, LoginRequestPayload } from '../sdk/util/request';
+import { LinkAuthRequest, LoginRequest, LoginRequestPayload } from '../sdk/util/request';
 import { AuthenticationMessage, IDContract, LoginRequestsMessagePayload } from '../sdk';
 import { objToBase64Url } from '../sdk/util/base64';
 import { VerifiableCredential } from '../sdk/util/ssi/vc';
@@ -376,9 +376,7 @@ export class ExternalUser {
         {
             // Check that the permission is linked to the contract
             const account = await getAccount(actor);
-            const authorizingPermission = account.permissions.find(
-                (p) => p.perm_name.toString() === permission.toString()
-            );
+            const authorizingPermission = account.permissions.find((p) => p.perm_name.equals(permission));
             const linkedAuth = authorizingPermission?.linked_actions?.find(
                 // TODO check '' is correct https://github.com/AntelopeIO/leap/pull/991/files
                 (a) => a.account.equals(contract) && (a.action.equals(action) || a.action.toString() === '')
@@ -386,7 +384,12 @@ export class ExternalUser {
 
             // If not then link it
             if (!linkedAuth) {
-                // TODO make a request to Tonomy ID wallet to link the permission
+                // send new linkauth request
+                const linkAuthRequest = LinkAuthRequest.signRequest(
+                    { contract: Name.from(contract), action: Name.from('') },
+                    this.getIssuer()
+                );
+                // send to Tonomy ID
             }
         }
 

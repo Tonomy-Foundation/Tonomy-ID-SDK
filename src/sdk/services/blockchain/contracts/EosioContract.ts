@@ -121,6 +121,39 @@ class EosioContract {
 
         return await transact(Name.from('eosio'), [action], signer);
     }
+
+    /**
+     * @param account - the permission's owner to be linked and the payer of the RAM needed to store this link,
+     * @param code - the owner of the action to be linked,
+     * @param type - the action to be linked,
+     * @param requirement - the permission to be linked.
+     */
+    async linkAuth(
+        account: string,
+        code: string,
+        type: string,
+        requirement: string,
+        signer: Signer
+    ): Promise<API.v1.PushTransactionResponse> {
+        const action = {
+            authorization: [
+                {
+                    actor: account,
+                    permission: 'active',
+                },
+            ],
+            account: 'eosio',
+            name: 'linkauth',
+            data: {
+                account,
+                code,
+                type,
+                requirement,
+            },
+        };
+
+        return await transact(Name.from('eosio'), [action], signer);
+    }
 }
 
 export { EosioContract };
