@@ -242,5 +242,3 @@ export async function externalWebsiteOnLogout(keyManager: KeyManager, storageFac
     await externalUser.logout();
     expect(await externalUser.getAccountName()).toBe(undefined);
 }
-
-export async function createRandomLoggedInExternalUser(): Promise<ExternalUser> { }
