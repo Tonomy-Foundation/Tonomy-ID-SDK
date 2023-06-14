@@ -15,18 +15,15 @@ import {
     AuthenticationMessage,
     Communication,
     IDContract,
-    LinkAuthMessageResponseMessage,
     LinkAuthRequestMessage,
     LinkAuthRequestResponseMessage,
     LoginRequestsMessagePayload,
     Message,
-    getAccountNameFromDid,
 } from '../sdk';
 import { objToBase64Url } from '../sdk/util/base64';
 import { VerifiableCredential } from '../sdk/util/ssi/vc';
 import { DIDurl } from '../sdk/util/ssi/types';
 import { Signer, createKeyManagerSigner, transact } from '../sdk/services/blockchain/eosio/transaction';
-import { parse } from '@tonomy/did-resolver';
 
 export type ExternalUserStorage = {
     accountName: Name;
@@ -399,43 +396,48 @@ export class ExternalUser {
 
             // If not then link it
             if (!linkedAuth) {
-                // const linkAuthRequest = await LinkAuthRequest.signRequest(
-                //     { contract: Name.from(contract), action: Name.from('') },
-                //     this.getIssuer()
-                // );
-                // const linkAuthRequestMessage = await LinkAuthRequestMessage.signMessage(
-                //     {
-                //         request: linkAuthRequest,
-                //     },
-                //     await this.getIssuer(),
-                //     await this.getWalletDid()
-                // );
-                // let subscriberId: number;
-                // const waitForResponse = new Promise<void>((resolve, reject) => {
-                //     subscriberId = this.communication.subscribeMessage(async (message: Message) => {
-                //         setTimeout(() => {
-                //             reject(createSdkError('LinkAuthRequestResponse timeout', SdkErrors.MessageSendError));
-                //         }, 5000);
-                //         if (message.getSender() !== (await this.getWalletDid())) {
-                //             reject(
-                //                 createSdkError(
-                //                     'LinkAuthRequestResponse sender is not wallet',
-                //                     SdkErrors.SenderNotAuthorized
-                //                 )
-                //             );
-                //         }
-                //         const linkedAuthResponseMessage = new LinkAuthRequestResponseMessage(message);
-                //         if (linkedAuthResponseMessage.getPayload().success) {
-                //             resolve();
-                //         } else {
-                //             reject(createSdkError("Couldn't link permission", SdkErrors.LinkAuthFailed));
-                //         }
-                //     }, LinkAuthRequestResponseMessage.getType());
-                // });
-                // await this.sendMessage(linkAuthRequestMessage);
-                // await waitForResponse;
-                // // @ts-expect-error subscriberId is used before it is defined
-                // this.communication.unsubscribeMessage(subscriberId);
+                // TODO move following logic to private function
+                const linkAuthRequest = await LinkAuthRequest.signRequest(
+                    { contract: Name.from(contract), action: Name.from('') },
+                    await this.getIssuer()
+                );
+                const linkAuthRequestMessage = await LinkAuthRequestMessage.signMessage(
+                    {
+                        request: linkAuthRequest,
+                    },
+                    await this.getIssuer(),
+                    await this.getWalletDid()
+                );
+                let subscriberId: number;
+                const waitForResponse = new Promise<void>((resolve, reject) => {
+                    subscriberId = this.communication.subscribeMessage(async (message: Message) => {
+                        setTimeout(() => {
+                            reject(createSdkError('LinkAuthRequestResponse timeout', SdkErrors.MessageSendError));
+                        }, 5000);
+
+                        if (message.getSender() !== (await this.getWalletDid())) {
+                            reject(
+                                createSdkError(
+                                    'LinkAuthRequestResponse sender is not wallet',
+                                    SdkErrors.SenderNotAuthorized
+                                )
+                            );
+                        }
+
+                        const linkedAuthResponseMessage = new LinkAuthRequestResponseMessage(message);
+
+                        if (linkedAuthResponseMessage.getPayload().success) {
+                            resolve();
+                        } else {
+                            reject(createSdkError("Couldn't link permission", SdkErrors.LinkAuthFailed));
+                        }
+                    }, LinkAuthRequestResponseMessage.getType());
+                });
+
+                await this.sendMessage(linkAuthRequestMessage);
+                await waitForResponse;
+                // @ts-expect-error subscriberId is used before it is defined
+                this.communication.unsubscribeMessage(subscriberId);
             }
         }
 
