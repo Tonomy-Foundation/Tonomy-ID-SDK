@@ -34,6 +34,7 @@ export class JsKeyManager implements KeyManager {
         };
 
         switch (options.level) {
+            case KeyManagerLevel.ACTIVE:
             case KeyManagerLevel.LOCAL:
             case KeyManagerLevel.BIOMETRIC:
                 break;

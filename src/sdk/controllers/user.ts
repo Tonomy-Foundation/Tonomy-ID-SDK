@@ -17,14 +17,9 @@ import { getSettings } from '../util/settings';
 import { Communication } from '../services/communication/communication';
 import { Issuer } from '@tonomy/did-jwt-vc';
 import { createVCSigner, generateRandomKeyPair } from '../util/crypto';
-import {
-    EosioContract,
-    LinkAuthRequestMessage,
-    LinkAuthRequestResponseMessage,
-    Message,
-    getAccountNameFromDid,
-    parseDid,
-} from '..';
+import { EosioContract } from '../services/blockchain/contracts/EosioContract';
+import { Message, LinkAuthRequestMessage, LinkAuthRequestResponseMessage } from '../services/communication/message';
+import { getAccountNameFromDid, parseDid } from '../util/ssi/did';
 
 enum UserStatus {
     CREATING_ACCOUNT = 'CREATING_ACCOUNT',
