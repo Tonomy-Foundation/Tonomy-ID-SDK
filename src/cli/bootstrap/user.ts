@@ -10,6 +10,7 @@ export async function createUser(username: string, password: string) {
     await user.savePassword(password, { keyFromPasswordFn: generatePrivateKeyFromPassword });
 
     await user.createPerson();
+    console.log('Created user:', username);
 
     return { user, password, auth };
 }

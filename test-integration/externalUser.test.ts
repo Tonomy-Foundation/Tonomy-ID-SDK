@@ -13,6 +13,7 @@ import {
     STORAGE_NAMESPACE,
     IdentifyMessage,
     LoginRequestResponseMessage,
+    ExternalUser,
 } from '../src/sdk/index';
 import URL from 'jsdom-url';
 import { JsKeyManager } from '../src/sdk/storage/jsKeyManager';
@@ -37,6 +38,7 @@ import {
     setupTonomyIdIdentifySubscriber,
     setupTonomyIdRequestConfirmSubscriber,
     externalWebsiteOnLogout,
+    externalWebsiteSignVc,
 } from './helpers/externalUser';
 import { createStorageFactory } from './helpers/storageFactory';
 import { objToBase64Url } from '../src/sdk/util/base64';
@@ -46,9 +48,9 @@ global.URL = URL;
 
 setSettings(settings);
 
-const log = false;
+const log = process.env.LOG === 'true';
 
-describe('External User class', () => {
+describe('Login to external website', () => {
     jest.setTimeout(30000);
 
     // OBJECTS HERE denote the different devices/apps the user is using
@@ -65,6 +67,7 @@ describe('External User class', () => {
     let EXTERNAL_WEBSITE_jsKeyManager: KeyManager;
     let TONOMY_LOGIN_WEBSITE_storage_factory: StorageFactory;
     let EXTERNAL_WEBSITE_storage_factory: StorageFactory;
+    let EXTERNAL_WEBSITE_user: ExternalUser;
 
     beforeEach(async () => {
         // ##### Tonomy ID user #####
@@ -100,9 +103,9 @@ describe('External User class', () => {
         await sleep(500);
     });
 
-    describe('SSO login full end-to-end flow', () => {
+    describe('SSO login full end-to-end flow with external desktop browser (using communication service)', () => {
         test('User succeeds at login to external website', async () => {
-            expect.assertions(33);
+            expect.assertions(39);
 
             // #####External website user (login page) #####
             // ################################
@@ -259,7 +262,7 @@ describe('External User class', () => {
             // #####External website user (callback page) #####
             // ################################
 
-            await externalWebsiteOnCallback(
+            EXTERNAL_WEBSITE_user = await externalWebsiteOnCallback(
                 EXTERNAL_WEBSITE_jsKeyManager,
                 EXTERNAL_WEBSITE_storage_factory,
                 await TONOMY_ID_user.getAccountName(),
@@ -272,6 +275,8 @@ describe('External User class', () => {
                 TONOMY_ID_user,
                 log
             );
+
+            await externalWebsiteSignVc(EXTERNAL_WEBSITE_user);
 
             await externalWebsiteOnLogout(EXTERNAL_WEBSITE_jsKeyManager, EXTERNAL_WEBSITE_storage_factory);
 

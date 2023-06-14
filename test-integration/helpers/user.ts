@@ -120,7 +120,7 @@ export async function setupLoginRequestSubscriber(
                 if (payload.origin === tonomyLoginOrigin) receiverDid = request.getIssuer();
                 const loginApp = await App.getApp(payload.origin);
 
-                acceptArray.push({ app: loginApp, request });
+                acceptArray.push({ app: loginApp, request, requiresLogin: true });
             }
 
             expect(receiverDid).toBe(tonomyLoginDid);

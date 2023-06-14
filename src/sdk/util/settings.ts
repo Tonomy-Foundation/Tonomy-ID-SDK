@@ -5,6 +5,7 @@ export type SettingsType = {
     ssoWebsiteOrigin: string;
     accountSuffix: string;
     communicationUrl: string;
+    loggerLevel: 'emergency' | 'alert' | 'critical' | 'error' | 'warning' | 'notice' | 'info' | 'debug';
 };
 
 let settings: SettingsType;

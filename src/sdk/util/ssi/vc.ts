@@ -145,6 +145,7 @@ export class VerifiableCredential<T extends object = object> {
     async verify(): Promise<VerifiedCredential> {
         const settings = getSettings();
 
+        // @ts-expect-error did-resolver and @tonomy/did-resolver types are not compatible
         const resolver = new Resolver({
             ...getJwkResolver(),
             ...getResolver({ antelopeChainUrl: settings.blockchainUrl, fetch: crossFetch as any }),
@@ -166,17 +167,21 @@ export class VerifiableCredential<T extends object = object> {
      */
     static async sign<T extends object = object>(
         id: DIDurl,
-        type: string[],
+        type: string | string[],
         credentialSubject: T,
         issuer: Issuer,
         options: {
             subject?: URL;
         } = {}
     ): Promise<VerifiableCredential<T>> {
+        const typeArray = Array.isArray(type) ? type : [type];
+
+        if (!typeArray.includes('VerifiableCredential')) typeArray.push('VerifiableCredential');
+
         const vc: W3CCredential = {
             '@context': ['https://www.w3.org/2018/credentials/v1'],
             id,
-            type,
+            type: typeArray,
             issuer: {
                 id: issuer.did,
             },
