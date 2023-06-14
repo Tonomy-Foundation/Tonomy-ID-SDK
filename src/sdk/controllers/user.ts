@@ -17,6 +17,14 @@ import { getSettings } from '../util/settings';
 import { Communication } from '../services/communication/communication';
 import { Issuer } from '@tonomy/did-jwt-vc';
 import { createVCSigner, generateRandomKeyPair } from '../util/crypto';
+import {
+    EosioContract,
+    LinkAuthRequestMessage,
+    LinkAuthRequestResponseMessage,
+    Message,
+    getAccountNameFromDid,
+    parseDid,
+} from '..';
 
 enum UserStatus {
     CREATING_ACCOUNT = 'CREATING_ACCOUNT',
@@ -71,6 +79,7 @@ export type UserStorage = {
 };
 
 const idContract = IDContract.Instance;
+const eosioContract = EosioContract.Instance;
 
 export class User {
     private chainID!: Checksum256;
@@ -528,6 +537,64 @@ export class User {
             return await this.checkKeysStillValid();
         } else {
             throwError('Account "' + accountName + '" not found', SdkErrors.AccountDoesntExist);
+        }
+    }
+
+    async handleLinkAuthRequestMessage(message: Message) {
+        const linkAuthRequestMessage = new LinkAuthRequestMessage(message);
+
+        try {
+            if (!getAccountNameFromDid(message.getSender()).equals(await this.getAccountName()))
+                throwError('Message not sent from authorized account', SdkErrors.SenderNotAuthorized);
+
+            const payload = linkAuthRequestMessage.getPayload();
+
+            const contract = payload.contract;
+            const action = payload.action;
+
+            const permission = parseDid(message.getSender()).fragment;
+
+            if (permission !== contract.toString())
+                throwError('Link Auth request must come from the app that is requested', SdkErrors.SenderNotAuthorized);
+
+            await idContract.getApp(contract);
+            // Throws SdkErrors.DataQueryNoRowDataFound error if app does not exist
+            // which cannot happen in theory, as the user is already logged in
+
+            const signer = createKeyManagerSigner(this.keyManager, KeyManagerLevel.ACTIVE);
+
+            await eosioContract.linkAuth(
+                (await this.getAccountName()).toString(),
+                contract.toString(),
+                action.toString(),
+                permission,
+                signer
+            );
+
+            const linkAuthRequestResponseMessage = await LinkAuthRequestResponseMessage.signMessage(
+                {
+                    request: linkAuthRequestMessage.getPayload(),
+                    success: true,
+                },
+                await this.getIssuer(),
+                linkAuthRequestMessage.getSender()
+            );
+
+            await this.communication.sendMessage(linkAuthRequestResponseMessage);
+        } catch (e) {
+            if (e instanceof SdkError) {
+                switch (e.code) {
+                    case SdkErrors.SenderNotAuthorized:
+                        // somebody may be trying to DoS the user, drop
+                        return;
+                    default:
+                        // all other errors are Tonomy software errors, so throw to bubble up
+                        throw e;
+                }
+            } else {
+                // all other errors are Tonomy software errors, so throw to bubble up
+                throw e;
+            }
         }
     }
 }

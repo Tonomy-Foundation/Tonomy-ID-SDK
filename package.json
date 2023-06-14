@@ -19,7 +19,7 @@
             "require": "./build/api/tonomy.css"
         },
         "./api": {
-            "types": "./build/sdk/types/api/index.d.ts",
+            "types": "./build/sdk/types/sdk/api/index.d.ts",
             "require": "./build/api/index.cjs",
             "import": "./build/api/index.module.js"
         }

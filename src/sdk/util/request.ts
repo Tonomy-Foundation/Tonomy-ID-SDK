@@ -29,25 +29,3 @@ export class LoginRequest extends VerifiableCredentialWithType<LoginRequestPaylo
         return new LoginRequest(vc);
     }
 }
-
-export type LinkAuthRequestPayload = {
-    contract: Name; //code in the eosio contract
-    action: Name; //type in the eosio contract
-};
-
-export class LinkAuthRequest extends VerifiableCredentialWithType<LinkAuthRequestPayload> {
-    protected static type = 'LinkAuthRequest';
-
-    /**
-     * Alternative constructor that returns type LinkAuthRequest
-     */
-    static async signRequest(
-        payload: LinkAuthRequestPayload,
-        issuer: Issuer,
-        options: VerifiableCredentialOptions = {}
-    ) {
-        const vc = await super.sign<LinkAuthRequestPayload>(payload, issuer, options);
-
-        return new LinkAuthRequest(vc);
-    }
-}

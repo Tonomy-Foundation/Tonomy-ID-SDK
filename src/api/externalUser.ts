@@ -10,7 +10,7 @@ import { TonomyUsername } from '../sdk/util/username';
 import { browserStorageFactory } from '../sdk/storage/browserStorage';
 import { getAccount, getChainInfo } from '../sdk/services/blockchain/eosio/eosio';
 import { JsKeyManager } from '../sdk/storage/jsKeyManager';
-import { LinkAuthRequest, LoginRequest, LoginRequestPayload } from '../sdk/util/request';
+import { LoginRequest, LoginRequestPayload } from '../sdk/util/request';
 import {
     AuthenticationMessage,
     Communication,
@@ -366,9 +366,12 @@ export class ExternalUser {
     }
 
     /**
-     * Signs a transaction
+     * Signs a transaction and send it to the blockchain
      *
-     * Note: this is a convenience method that signs one action on one smart contract with the current
+     * Note: It is signed with the permission of the current app
+     * e.g. if user signed into app "marketcom", this will be the name of the permission used to sign the transaction
+     *
+     * Note: This is a convenience method that signs one action on one smart contract with the current
      * user's account and app permission. To sign a more complex transaction, get a signer with
      * getTransactionSigner() and use eosjs or @greymass/eosio directly
      *
@@ -386,6 +389,8 @@ export class ExternalUser {
         // see https://github.com/Tonomy-Foundation/Tonomy-ID/issues/636#issuecomment-1508887362
         // and https://github.com/AntelopeIO/leap/issues/1131
         {
+            // TODO move following logic to private function
+
             // Check that the permission is linked to the contract
             const account = await getAccount(actor);
             const authorizingPermission = account.permissions.find((p) => p.perm_name.equals(permission));
@@ -396,15 +401,8 @@ export class ExternalUser {
 
             // If not then link it
             if (!linkedAuth) {
-                // TODO move following logic to private function
-                const linkAuthRequest = await LinkAuthRequest.signRequest(
-                    { contract: Name.from(contract), action: Name.from('') },
-                    await this.getIssuer()
-                );
                 const linkAuthRequestMessage = await LinkAuthRequestMessage.signMessage(
-                    {
-                        request: linkAuthRequest,
-                    },
+                    { contract: Name.from(contract), action: Name.from('') },
                     await this.getIssuer(),
                     await this.getWalletDid()
                 );

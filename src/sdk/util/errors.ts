@@ -102,6 +102,7 @@ enum SdkErrors {
     CommunicationTimeout = 'CommunicationTimeout',
     CouldntCreateApi = 'CouldntCreateApi',
     DataQueryNoRowDataFound = 'DataQueryNoRowDataFound',
+    InvalidLinkAuthRequest = 'InvalidLinkAuthRequest',
     InvalidData = 'InvalidData',
     InvalidKey = 'InvalidKey',
     InvalidKeyLevel = 'InvalidKeyLevel',

@@ -1,7 +1,7 @@
 import { Issuer } from '@tonomy/did-jwt-vc';
 import { DIDurl, URL } from '../../util/ssi/types';
 import { VerifiableCredentialWithType, VCWithTypeType } from '../../util/ssi/vc';
-import { LinkAuthRequest, LoginRequest } from '../../util/request';
+import { LoginRequest } from '../../util/request';
 import { TonomyUsername } from '../../util/username';
 import { Name } from '@greymass/eosio';
 import { SdkErrors } from '../../util/errors';
@@ -220,7 +220,8 @@ export class LoginRequestResponseMessage extends Message<LoginRequestResponseMes
 }
 
 export type LinkAuthRequestMessagePayload = {
-    request: LinkAuthRequest;
+    contract: Name; //code in the eosio contract
+    action: Name; //type in the eosio contract
 };
 
 export class LinkAuthRequestMessage extends Message<LinkAuthRequestMessagePayload> {
@@ -247,7 +248,7 @@ export class LinkAuthRequestMessage extends Message<LinkAuthRequestMessagePayloa
 }
 
 export type LinkAuthRequestResponseMessagePayload = {
-    request: LinkAuthRequest;
+    request: LinkAuthRequestMessagePayload;
     success: boolean;
 };
 
