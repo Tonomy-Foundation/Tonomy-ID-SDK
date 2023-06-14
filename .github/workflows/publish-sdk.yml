@@ -31,7 +31,7 @@ jobs:
       - name: Check branch name
         run: echo ${GITHUB_REF#refs/*/}
       - run: |
-          if [[ ${GITHUB_REF#refs/*/} == development" ]]; then
+          if [[ ${GITHUB_REF#refs/*/} == "development" ]]; then
             echo "Variable BRANCH_NAME is set to 'development'"
             yarn run change:tag
           fi
