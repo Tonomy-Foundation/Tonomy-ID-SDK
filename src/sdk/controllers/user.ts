@@ -204,6 +204,11 @@ export class User {
             privateKey,
             challenge: password,
         });
+
+        await this.keyManager.storeKey({
+            level: KeyManagerLevel.ACTIVE,
+            privateKey,
+        });
     }
 
     async savePIN(pin: string) {

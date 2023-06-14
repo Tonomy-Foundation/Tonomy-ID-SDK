@@ -2,6 +2,7 @@ import { Checksum256, PrivateKey, PublicKey, Signature } from '@greymass/eosio';
 
 enum KeyManagerLevel {
     PASSWORD = 'PASSWORD',
+    ACTIVE = 'ACTIVE',
     PIN = 'PIN',
     BIOMETRIC = 'BIOMETRIC',
     LOCAL = 'LOCAL',

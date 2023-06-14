@@ -1,4 +1,4 @@
-import { PublicKey, Name } from '@greymass/eosio';
+import { PublicKey } from '@greymass/eosio';
 import { VCWithTypeType, VerifiableCredentialOptions, VerifiableCredentialWithType } from './ssi/vc';
 import { Issuer } from '@tonomy/did-jwt-vc';
 
