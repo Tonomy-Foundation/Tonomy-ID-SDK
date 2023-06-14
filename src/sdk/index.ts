@@ -7,14 +7,9 @@ export * from './controllers/app';
 export * from './controllers/userApps';
 
 // Services
-import * as Eosio from './services/blockchain/eosio/eosio';
-import * as Transaction from './services/blockchain/eosio/transaction';
+export * as EosioUtil from './services/blockchain';
 
 export { AntelopePushTransactionError } from './services/blockchain/eosio/transaction';
-
-const EosioUtil = { ...Eosio, ...Transaction };
-
-export { EosioUtil };
 
 export * from './services/blockchain/eosio/authority';
 export * from './services/blockchain/contracts/IDContract';
@@ -31,6 +26,7 @@ export * from './util/username';
 export * from './util/request';
 export * from './util/base64';
 export * from './util/ssi/did';
+export * as lib from './util'; // this is trying something out to see if it works. will move this to an export file later
 
 // Storage
 export * from './storage/keymanager';
