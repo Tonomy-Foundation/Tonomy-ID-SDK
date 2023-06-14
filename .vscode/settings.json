@@ -17,5 +17,5 @@
     "jest.jestCommandLine": "npm run test",
     "jest.testExplorer": {
         "enabled": true
-    },
+    }
 }
