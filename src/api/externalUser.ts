@@ -382,69 +382,20 @@ export class ExternalUser {
      * @returns {Promise<API.v1.PushTransactionResponse>} - the signed transaction
      */
     async signTransaction(contract: NameType, action: NameType, data: object): Promise<API.v1.PushTransactionResponse> {
-        const actor = await this.getAccountName();
+        const account = await this.getAccountName();
         const permission = await this.getAppPermission();
 
         // This is a hack to get around linked_auth requirements on custom permissions
         // see https://github.com/Tonomy-Foundation/Tonomy-ID/issues/636#issuecomment-1508887362
         // and https://github.com/AntelopeIO/leap/issues/1131
-        {
-            // TODO move following logic to private function
-
-            // Check that the permission is linked to the contract
-            const account = await getAccount(actor);
-            const authorizingPermission = account.permissions.find((p) => p.perm_name.equals(permission));
-            const linkedAuth = authorizingPermission?.linked_actions?.find(
-                // TODO check '' is correct https://github.com/AntelopeIO/leap/pull/991/files
-                (a) => a.account.equals(contract) && (a.action.equals(action) || a.action.toString() === '')
-            );
-
-            // If not then link it
-            if (!linkedAuth) {
-                const linkAuthRequestMessage = await LinkAuthRequestMessage.signMessage(
-                    { contract: Name.from(contract), action: Name.from('') },
-                    await this.getIssuer(),
-                    await this.getWalletDid()
-                );
-                let subscriberId: number;
-                const waitForResponse = new Promise<void>((resolve, reject) => {
-                    subscriberId = this.communication.subscribeMessage(async (message: Message) => {
-                        setTimeout(() => {
-                            reject(createSdkError('LinkAuthRequestResponse timeout', SdkErrors.MessageSendError));
-                        }, 5000);
-
-                        if (message.getSender() !== (await this.getWalletDid())) {
-                            reject(
-                                createSdkError(
-                                    'LinkAuthRequestResponse sender is not wallet',
-                                    SdkErrors.SenderNotAuthorized
-                                )
-                            );
-                        }
-
-                        const linkedAuthResponseMessage = new LinkAuthRequestResponseMessage(message);
-
-                        if (linkedAuthResponseMessage.getPayload().success) {
-                            resolve();
-                        } else {
-                            reject(createSdkError("Couldn't link permission", SdkErrors.LinkAuthFailed));
-                        }
-                    }, LinkAuthRequestResponseMessage.getType());
-                });
-
-                await this.sendMessage(linkAuthRequestMessage);
-                await waitForResponse;
-                // @ts-expect-error subscriberId is used before it is defined
-                this.communication.unsubscribeMessage(subscriberId);
-            }
-        }
+        await this.checkLinkAuthRequirements(account, permission, contract, action);
 
         // Setup the action to sign
         const newAction = {
             name: action.toString(),
             authorization: [
                 {
-                    actor: actor.toString(),
+                    actor: account.toString(),
                     permission: permission.toString(),
                 },
             ],
@@ -453,6 +404,60 @@ export class ExternalUser {
         const signer = this.getTransactionSigner();
 
         return await transact(Name.from(contract), [newAction], signer);
+    }
+
+    private async checkLinkAuthRequirements(
+        actor: NameType,
+        permission: NameType,
+        contract: NameType,
+        action: NameType
+    ) {
+        // Check that the permission is linked to the contract
+        const account = await getAccount(actor);
+        const authorizingPermission = account.permissions.find((p) => p.perm_name.equals(permission));
+        const linkedAuth = authorizingPermission?.linked_actions?.find(
+            // TODO check '' is correct https://github.com/AntelopeIO/leap/pull/991/files
+            (a) => a.account.equals(contract) && (a.action.equals(action) || a.action.toString() === '')
+        );
+
+        // If not then link it
+        if (!linkedAuth) {
+            const linkAuthRequestMessage = await LinkAuthRequestMessage.signMessage(
+                { contract: Name.from(contract), action: Name.from('') },
+                await this.getIssuer(),
+                await this.getWalletDid()
+            );
+            let subscriberId: number;
+            const waitForResponse = new Promise<void>((resolve, reject) => {
+                subscriberId = this.communication.subscribeMessage(async (message: Message) => {
+                    setTimeout(() => {
+                        reject(createSdkError('LinkAuthRequestResponse timeout', SdkErrors.MessageSendError));
+                    }, 5000);
+
+                    if (message.getSender() !== (await this.getWalletDid())) {
+                        reject(
+                            createSdkError(
+                                'LinkAuthRequestResponse sender is not wallet',
+                                SdkErrors.SenderNotAuthorized
+                            )
+                        );
+                    }
+
+                    const linkedAuthResponseMessage = new LinkAuthRequestResponseMessage(message);
+
+                    if (linkedAuthResponseMessage.getPayload().success) {
+                        resolve();
+                    } else {
+                        reject(createSdkError("Couldn't link permission", SdkErrors.LinkAuthFailed));
+                    }
+                }, LinkAuthRequestResponseMessage.getType());
+            });
+
+            await this.sendMessage(linkAuthRequestMessage);
+            await waitForResponse;
+            // @ts-expect-error subscriberId is used before it is defined
+            this.communication.unsubscribeMessage(subscriberId);
+        }
     }
 
     /**

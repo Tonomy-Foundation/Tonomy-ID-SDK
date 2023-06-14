@@ -234,6 +234,19 @@ export async function externalWebsiteSignTransaction(externalUser: ExternalUser,
     // expect(trx).toBeDefined();
     // expect(trx.transaction_id).toBeInstanceOf(String);
     // expect(trx.processed.receipt.status).toBe('executed');
+    // // TODO check action trace for action and the link auth
+
+    // const trx = await externalUser.signTransaction('eosio.token', 'transfer', {
+    //     from,
+    //     to,
+    //     quantity: '1 SYS',
+    //     memo: 'test',
+    // });
+
+    // expect(trx).toBeDefined();
+    // expect(trx.transaction_id).toBeInstanceOf(String);
+    // expect(trx.processed.receipt.status).toBe('executed');
+    // // TODO check action trace for action and the does not contain link auth
 }
 
 export async function externalWebsiteOnLogout(keyManager: KeyManager, storageFactory: StorageFactory) {
