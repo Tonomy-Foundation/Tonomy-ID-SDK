@@ -248,7 +248,7 @@ export class LinkAuthRequestMessage extends Message<LinkAuthRequestMessagePayloa
 }
 
 export type LinkAuthRequestResponseMessagePayload = {
-    request: LinkAuthRequestMessagePayload;
+    requestId: string;
     success: boolean;
 };
 

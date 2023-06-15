@@ -445,7 +445,10 @@ export class ExternalUser {
 
                     const linkedAuthResponseMessage = new LinkAuthRequestResponseMessage(message);
 
-                    if (linkedAuthResponseMessage.getPayload().success) {
+                    if (
+                        linkedAuthResponseMessage.getPayload().requestId === linkAuthRequestMessage.getVc().getId() &&
+                        linkedAuthResponseMessage.getPayload().success
+                    ) {
                         resolve();
                     } else {
                         reject(createSdkError("Couldn't link permission", SdkErrors.LinkAuthFailed));

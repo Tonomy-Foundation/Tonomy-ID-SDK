@@ -53,7 +53,7 @@ export function toElliptic(key: PrivateKey | PublicKey): elliptic.ec.KeyPair {
 }
 
 export function randomString(bytes: number): string {
-    const random = rb(new Uint8Array(bytes));
+    const random = randomBytes(bytes);
 
     return Array.from(random).map(int2hex).join('');
 }

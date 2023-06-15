@@ -573,7 +573,7 @@ export class User {
 
             const linkAuthRequestResponseMessage = await LinkAuthRequestResponseMessage.signMessage(
                 {
-                    request: linkAuthRequestMessage.getPayload(),
+                    requestId: linkAuthRequestMessage.getVc().getId() as string,
                     success: true,
                 },
                 await this.getIssuer(),
