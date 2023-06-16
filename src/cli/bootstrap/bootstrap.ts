@@ -47,8 +47,7 @@ export default async function bootstrap() {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             publicKey: publicKey as any,
         });
-
-        console.log(demo.accountName.toString());
+        // action to add demo permission to token contract
         const actions: ActionData[] = [
             {
                 account: 'eosio.token',
@@ -66,6 +65,7 @@ export default async function bootstrap() {
             },
         ];
 
+        // add demo permission to token contract
         await transact(Name.from('eosio.token'), actions, signer);
 
         await createApp({
