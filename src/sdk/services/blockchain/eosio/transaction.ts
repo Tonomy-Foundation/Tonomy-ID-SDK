@@ -3,7 +3,7 @@ import { KeyManager, KeyManagerLevel } from '../../../storage/keymanager';
 import { HttpError } from '../../../util/errors';
 import { getApi } from './eosio';
 
-type ActionData = {
+export type ActionData = {
     authorization: {
         actor: string;
         permission: string;
