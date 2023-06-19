@@ -23,6 +23,7 @@ export default async function bootstrap() {
             signer
         );
         await eosioTokenContract.create('1000000000 SYS', signer);
+        await eosioTokenContract.issue('1000000000 SYS', signer);
 
         await createAccount({ account: 'id.tonomy' }, signer);
         await deployContract(
