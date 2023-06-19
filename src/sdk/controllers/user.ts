@@ -17,7 +17,6 @@ import { getSettings } from '../util/settings';
 import { Communication } from '../services/communication/communication';
 import { Issuer } from '@tonomy/did-jwt-vc';
 import { createVCSigner, generateRandomKeyPair } from '../util/crypto';
-import { EosioContract } from '../services/blockchain/contracts/EosioContract';
 import { Message, LinkAuthRequestMessage, LinkAuthRequestResponseMessage } from '../services/communication/message';
 import { getAccountNameFromDid, parseDid } from '../util/ssi/did';
 
@@ -74,7 +73,6 @@ export type UserStorage = {
 };
 
 const idContract = IDContract.Instance;
-const eosioContract = EosioContract.Instance;
 
 export class User {
     private chainID!: Checksum256;
@@ -554,16 +552,15 @@ export class User {
 
             const permission = parseDid(message.getSender()).fragment;
 
-            if (permission !== contract.toString())
-                throwError('Link Auth request must come from the app that is requested', SdkErrors.SenderNotAuthorized);
+            if (!permission) throwError('DID does not contain fragment', SdkErrors.MissingParams);
 
-            await idContract.getApp(contract);
+            await idContract.getApp(Name.from(permission));
             // Throws SdkErrors.DataQueryNoRowDataFound error if app does not exist
             // which cannot happen in theory, as the user is already logged in
 
             const signer = createKeyManagerSigner(this.keyManager, KeyManagerLevel.ACTIVE);
 
-            await eosioContract.linkAuth(
+            await idContract.linkAuth(
                 (await this.getAccountName()).toString(),
                 contract.toString(),
                 action.toString(),
