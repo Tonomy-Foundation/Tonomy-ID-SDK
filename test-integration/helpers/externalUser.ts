@@ -224,29 +224,35 @@ export async function externalWebsiteSignTransaction(externalUser: ExternalUser,
         TonomyUsername.fromUsername('lovesboost', AccountType.PERSON, getSettings().accountSuffix)
     );
 
-    // const trx = await externalUser.signTransaction('eosio.token', 'transfer', {
-    //     from,
-    //     to,
-    //     quantity: '1 SYS',
-    //     memo: 'test',
-    // });
+    let trx = await externalUser.signTransaction('eosio.token', 'selfissue', {
+        to,
+        quantity: '1 SYS',
+        memo: 'test',
+    });
 
-    // expect(trx).toBeDefined();
-    // expect(trx.transaction_id).toBeInstanceOf(String);
-    // expect(trx.processed.receipt.status).toBe('executed');
-    // // TODO check action trace for action and the link auth
+    trx = await externalUser.signTransaction('eosio.token', 'transfer', {
+        from,
+        to,
+        quantity: '1 SYS',
+        memo: 'test',
+    });
 
-    // const trx = await externalUser.signTransaction('eosio.token', 'transfer', {
-    //     from,
-    //     to,
-    //     quantity: '1 SYS',
-    //     memo: 'test',
-    // });
+    expect(trx).toBeDefined();
+    expect(trx.transaction_id).toBeInstanceOf(String);
+    expect(trx.processed.receipt.status).toBe('executed');
+    // TODO check action trace for action and the link auth
 
-    // expect(trx).toBeDefined();
-    // expect(trx.transaction_id).toBeInstanceOf(String);
-    // expect(trx.processed.receipt.status).toBe('executed');
-    // // TODO check action trace for action and the does not contain link auth
+    trx = await externalUser.signTransaction('eosio.token', 'transfer', {
+        from,
+        to,
+        quantity: '1 SYS',
+        memo: 'test',
+    });
+
+    expect(trx).toBeDefined();
+    expect(trx.transaction_id).toBeInstanceOf(String);
+    expect(trx.processed.receipt.status).toBe('executed');
+    // TODO check action trace for action and the does not contain link auth
 }
 
 export async function externalWebsiteOnLogout(keyManager: KeyManager, storageFactory: StorageFactory) {
