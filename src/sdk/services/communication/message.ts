@@ -228,6 +228,24 @@ export class LinkAuthRequestMessage extends Message<LinkAuthRequestMessagePayloa
     protected static type = 'LinkAuthRequestMessage';
 
     /**
+     * @override the Message constructor to decode the payload of type LinkAuthRequestMessagePayload
+     */
+    constructor(
+        vc:
+            | LinkAuthRequestMessage
+            | Message<LinkAuthRequestMessagePayload>
+            | VCWithTypeType<LinkAuthRequestMessagePayload>
+    ) {
+        super(vc);
+        const payload = this.getVc().getPayload().vc.credentialSubject.payload;
+
+        this.decodedPayload = {
+            contract: Name.from(payload.contract),
+            action: Name.from(payload.action),
+        };
+    }
+
+    /**
      * Alternative constructor that returns type LoginRequestResponseMessage
      */
     static async signMessage(

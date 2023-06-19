@@ -40,6 +40,7 @@ import {
     externalWebsiteOnLogout,
     externalWebsiteSignVc,
     externalWebsiteSignTransaction,
+    setupLinkAuthSubscriber,
 } from './helpers/externalUser';
 import { createStorageFactory } from './helpers/storageFactory';
 import { objToBase64Url } from '../src/sdk/util/base64';
@@ -106,7 +107,7 @@ describe('Login to external website', () => {
 
     describe('SSO login full end-to-end flow with external desktop browser (using communication service)', () => {
         test('User succeeds at login to external website', async () => {
-            expect.assertions(39);
+            expect.assertions(45);
 
             // #####External website user (login page) #####
             // ################################
@@ -162,14 +163,15 @@ describe('Login to external website', () => {
             // ##########################
             await scanQrAndAck(TONOMY_ID_user, TONOMY_LOGIN_WEBSITE_did, log);
 
-            // #####Tonomy Login App website user (login page) #####
-            // ########################################
             const TONOMY_ID_requestSubscriber = setupLoginRequestSubscriber(
                 TONOMY_ID_user,
                 tonomyLoginApp.origin,
                 TONOMY_LOGIN_WEBSITE_did,
                 log
             );
+
+            // #####Tonomy Login App website user (login page) #####
+            // ########################################
 
             // wait for the ack message to confirm Tonomy ID is connected
             const connectionMessageFromTonomyId = await TONOMY_LOGIN_WEBSITE_ackMessagePromise;
@@ -279,7 +281,16 @@ describe('Login to external website', () => {
 
             await externalWebsiteSignVc(EXTERNAL_WEBSITE_user, log);
 
+            // ##### Tonomy ID user (storage container) #####
+            // ##########################
+
+            const TONOMY_ID_linkAuthSubscriber = setupLinkAuthSubscriber(TONOMY_ID_user, log);
+
+            // #####External website user (callback page) #####
+            // ################################
+
             await externalWebsiteSignTransaction(EXTERNAL_WEBSITE_user, log);
+            await TONOMY_ID_linkAuthSubscriber;
 
             await externalWebsiteOnLogout(EXTERNAL_WEBSITE_jsKeyManager, EXTERNAL_WEBSITE_storage_factory);
 
