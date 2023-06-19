@@ -64,9 +64,7 @@ export class ExternalUser {
     constructor(_keyManager: KeyManager, _storageFactory: StorageFactory) {
         this.keyManager = _keyManager;
         this.storage = createStorage<ExternalUserStorage>(STORAGE_NAMESPACE + 'external.user.', _storageFactory);
-        this.communication = new Communication(
-            /* maybe this should be false as we switch from did:jwk to did:antelope? */ true
-        );
+        this.communication = new Communication(false);
     }
 
     /**
@@ -117,6 +115,7 @@ export class ExternalUser {
             if (accountName.toString() !== personData.account_name.toString())
                 throwError('Username has changed', SdkErrors.InvalidData);
 
+            await user.loginToCommunication();
             return user;
         } catch (e) {
             if (autoLogout) await user.logout();
@@ -326,6 +325,8 @@ export class ExternalUser {
 
             await externalUser.setAccountName(accountName);
             await externalUser.setUsername(username);
+            await externalUser.loginToCommunication();
+
             return externalUser;
         } else {
             if (!error) throwError('No error found in url', SdkErrors.MissingParams);
@@ -430,30 +431,30 @@ export class ExternalUser {
             let subscriberId: number;
             const waitForResponse = new Promise<void>((resolve, reject) => {
                 subscriberId = this.communication.subscribeMessage(async (message: Message) => {
-                    setTimeout(() => {
-                        reject(createSdkError('LinkAuthRequestResponse timeout', SdkErrors.MessageSendError));
-                    }, 5000);
+                    try {
+                        if (message.getSender() !== (await this.getWalletDid())) {
+                            throwError('LinkAuthRequestResponse sender is not wallet', SdkErrors.SenderNotAuthorized);
+                        }
 
-                    if (message.getSender() !== (await this.getWalletDid())) {
-                        reject(
-                            createSdkError(
-                                'LinkAuthRequestResponse sender is not wallet',
-                                SdkErrors.SenderNotAuthorized
-                            )
-                        );
-                    }
+                        const linkedAuthResponseMessage = new LinkAuthRequestResponseMessage(message);
 
-                    const linkedAuthResponseMessage = new LinkAuthRequestResponseMessage(message);
-
-                    if (
-                        linkedAuthResponseMessage.getPayload().requestId === linkAuthRequestMessage.getVc().getId() &&
-                        linkedAuthResponseMessage.getPayload().success
-                    ) {
-                        resolve();
-                    } else {
-                        reject(createSdkError("Couldn't link permission", SdkErrors.LinkAuthFailed));
+                        if (
+                            linkedAuthResponseMessage.getPayload().requestId ===
+                            linkAuthRequestMessage.getVc().getId() &&
+                            linkedAuthResponseMessage.getPayload().success
+                        ) {
+                            resolve();
+                        } else {
+                            throwError("Couldn't link permission", SdkErrors.LinkAuthFailed);
+                        }
+                    } catch (e) {
+                        reject(e);
                     }
                 }, LinkAuthRequestResponseMessage.getType());
+
+                setTimeout(() => {
+                    reject(createSdkError('LinkAuthRequestResponse timeout', SdkErrors.MessageSendError));
+                }, 5000);
             });
 
             await this.sendMessage(linkAuthRequestMessage);
@@ -469,16 +470,18 @@ export class ExternalUser {
      * @param {Message} message - the message to send
      */
     async sendMessage(message: Message): Promise<void> {
-        const issuer = await this.getIssuer();
+        await this.loginToCommunication();
+        const res = await this.communication.sendMessage(message);
 
+        if (!res) throwError('Failed to send message', SdkErrors.MessageSendError);
+    }
+
+    private async loginToCommunication(): Promise<void> {
         if (!this.communication.isLoggedIn()) {
+            const issuer = await this.getIssuer();
             const authMessage = await AuthenticationMessage.signMessageWithoutRecipient({}, issuer);
 
             await this.communication.login(authMessage);
         }
-
-        const res = await this.communication.sendMessage(message);
-
-        if (!res) throwError('Failed to send message', SdkErrors.MessageSendError);
     }
 }

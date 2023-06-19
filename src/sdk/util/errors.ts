@@ -99,6 +99,7 @@ enum SdkErrors {
     AccountDoesntExist = 'AccountDoesntExist',
     AccountNotFound = 'AccountNotFound',
     CommunicationNotConnected = 'CommunicationNotConnected',
+    CommunicationNotLoggedIn = 'CommunicationNotLoggedIn',
     CommunicationTimeout = 'CommunicationTimeout',
     CouldntCreateApi = 'CouldntCreateApi',
     DataQueryNoRowDataFound = 'DataQueryNoRowDataFound',

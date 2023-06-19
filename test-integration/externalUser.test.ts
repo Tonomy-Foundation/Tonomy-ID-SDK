@@ -272,7 +272,7 @@ describe('Login to external website', () => {
                 log
             );
 
-            await externalWebsiteOnReload(
+            EXTERNAL_WEBSITE_user = await externalWebsiteOnReload(
                 EXTERNAL_WEBSITE_jsKeyManager,
                 EXTERNAL_WEBSITE_storage_factory,
                 TONOMY_ID_user,

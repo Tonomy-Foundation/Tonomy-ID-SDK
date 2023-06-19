@@ -20,7 +20,6 @@ import { ExternalUser, LoginWithTonomyMessages } from '../../src/api/externalUse
 import { LoginRequest } from '../../src/sdk/util/request';
 import { objToBase64Url } from '../../src/sdk/util/base64';
 import { VerifiableCredential } from '../../src/sdk/util/ssi/vc';
-import settings from './settings';
 
 export async function externalWebsiteUserPressLoginToTonomyButton(
     keyManager: KeyManager,
@@ -190,6 +189,7 @@ export async function externalWebsiteOnReload(
 
     expect(externalUser).toBeDefined();
     expect((await externalUser.getAccountName()).toString()).toBe(await (await tonomyUser.getAccountName()).toString());
+    return externalUser;
 }
 
 export async function externalWebsiteSignVc(externalUser: ExternalUser, log = false) {
@@ -217,19 +217,19 @@ export async function externalWebsiteSignVc(externalUser: ExternalUser, log = fa
 }
 
 export async function externalWebsiteSignTransaction(externalUser: ExternalUser, log = false) {
-    if (log) console.log('EXTERNAL_WEBSITE/sign-trx: signing transaction');
-
     const from = await externalUser.getAccountName();
     const to = await getAccountNameFromUsername(
         TonomyUsername.fromUsername('lovesboost', AccountType.PERSON, getSettings().accountSuffix)
     );
 
+    if (log) console.log('EXTERNAL_WEBSITE/sign-trx: signing transaction selfissue()');
     let trx = await externalUser.signTransaction('eosio.token', 'selfissue', {
         to,
         quantity: '1 SYS',
         memo: 'test',
     });
 
+    if (log) console.log('EXTERNAL_WEBSITE/sign-trx: signing transaction transfer()');
     trx = await externalUser.signTransaction('eosio.token', 'transfer', {
         from,
         to,
@@ -242,6 +242,7 @@ export async function externalWebsiteSignTransaction(externalUser: ExternalUser,
     expect(trx.processed.receipt.status).toBe('executed');
     // TODO check action trace for action and the link auth
 
+    if (log) console.log('EXTERNAL_WEBSITE/sign-trx: signing transaction transfer() again)');
     trx = await externalUser.signTransaction('eosio.token', 'transfer', {
         from,
         to,
@@ -260,6 +261,8 @@ export async function setupLinkAuthSubscriber(user: User, log = false): Promise<
     // This emulates the Tonomy ID app, which waits for LinkAuth requests and executes them
     return new Promise((resolve, reject) => {
         user.communication.subscribeMessage(async (message) => {
+            if (log) console.log('TONOMY_ID/storage: LinkAuth request received');
+
             try {
                 await user.handleLinkAuthRequestMessage(message);
                 resolve();
@@ -267,6 +270,8 @@ export async function setupLinkAuthSubscriber(user: User, log = false): Promise<
                 reject(e);
             }
         }, LinkAuthRequestMessage.getType());
+
+        setTimeout(() => reject(new Error('LinkAuth request not received')), 5000);
     });
 }
 

@@ -1,5 +1,5 @@
 import { io, Socket } from 'socket.io-client';
-import { CommunicationError, createSdkError, SdkErrors } from '../../util/errors';
+import { CommunicationError, createSdkError, SdkErrors, throwError } from '../../util/errors';
 import { getSettings } from '../../util/settings';
 import { AuthenticationMessage, Message } from '../../services/communication/message';
 
@@ -129,6 +129,10 @@ export class Communication {
      * the message is used as the `vc` property of a VC signed by the User's key
      */
     async sendMessage(message: Message): Promise<boolean> {
+        if (!this.isLoggedIn()) {
+            throwError('You need to login before sending a messages', SdkErrors.CommunicationNotLoggedIn);
+        }
+
         return await this.emitMessage('message', message);
     }
 
@@ -140,6 +144,10 @@ export class Communication {
      * @returns {number} - identifier which will be used for unsubscribe
      */
     subscribeMessage(subscriber: Subscriber, type?: string): number {
+        if (!this.isLoggedIn()) {
+            throwError('You need to login before subscribing to messages', SdkErrors.CommunicationNotLoggedIn);
+        }
+
         Communication.identifier++;
 
         const messageHandler = (message: any) => {
