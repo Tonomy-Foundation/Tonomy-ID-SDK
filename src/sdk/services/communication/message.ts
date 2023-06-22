@@ -11,11 +11,14 @@ import { SdkErrors } from '../../util/errors';
  *
  * @inheritdoc signMessageWithRecipient() is a protected alternative constructor. In child classes,
  * a new alternative constructor called signMessage() should be created which returns the child class type.
+ * @inheritdoc protected "type" property should be overridden in child classes with the name of the class
  * @inheritdoc if the payload type requires ad-hoc decoding, override the constructor and decode the payload
  *
  * @example see an example of the above in the LoginRequestMessage class
  */
-export class Message<T extends object = object> extends VerifiableCredentialWithType<T> {
+export class Message<T extends object = any> extends VerifiableCredentialWithType<T> {
+    protected static type = 'Message';
+
     /**
      * @inheritdoc override me if the payload type requires ad-hoc decoding
      */
@@ -41,9 +44,7 @@ export class Message<T extends object = object> extends VerifiableCredentialWith
         recipient: DIDurl,
         options: { subject?: URL } = {}
     ): Promise<Message<T>> {
-        const payloadType = this.name;
-
-        if (payloadType === Message.name || payloadType === 'Message') {
+        if (this.type === 'Message') {
             throw new Error('class should be a derived class of Message to use the type property');
         }
 
@@ -76,7 +77,10 @@ export class Message<T extends object = object> extends VerifiableCredentialWith
 
 // empty object
 export type AuthenticationMessagePayload = Record<string, never>;
+
 export class AuthenticationMessage extends Message<AuthenticationMessagePayload> {
+    protected static type = 'AuthenticationMessage';
+
     /**
      * Alternative constructor that returns type AuthenticationMessage
      */
@@ -94,6 +98,8 @@ export class AuthenticationMessage extends Message<AuthenticationMessagePayload>
 // empty object
 export type IdentifyMessagePayload = Record<string, never>;
 export class IdentifyMessage extends Message<IdentifyMessagePayload> {
+    protected static type = 'IdentifyMessage';
+
     /**
      * Alternative constructor that returns type IdentifyMessage
      */
@@ -114,6 +120,8 @@ export type LoginRequestsMessagePayload = {
 };
 
 export class LoginRequestsMessage extends Message<LoginRequestsMessagePayload> {
+    protected static type = 'LoginRequestsMessage';
+
     /**
      * @override the Message constructor to decode the payload of type LoginRequestsMessagePayload
      */
@@ -156,11 +164,13 @@ export type LoginRequestResponseMessagePayload = {
         code: SdkErrors;
         reason: string;
     };
-    requests?: LoginRequest[];
+    requests: LoginRequest[];
     accountName?: Name;
     username?: TonomyUsername;
 };
 export class LoginRequestResponseMessage extends Message<LoginRequestResponseMessagePayload> {
+    protected static type = 'LoginRequestResponseMessage';
+
     /**
      * @override the Message constructor to decode the payload of type LoginRequestResponseMessagePayload
      */
@@ -173,14 +183,14 @@ export class LoginRequestResponseMessage extends Message<LoginRequestResponseMes
         super(vc);
         const payload = this.getVc().getPayload().vc.credentialSubject.payload;
 
-        if (payload.success) {
-            if (!payload.requests) {
-                throw new Error('LoginRequestsMessage must have a requests property');
-            }
+        this.decodedPayload = {
+            ...payload,
+            requests: payload.requests.map((request: string) => new LoginRequest(request)),
+        };
 
+        if (payload.success) {
             this.decodedPayload = {
-                ...payload,
-                requests: payload.requests.map((request: string) => new LoginRequest(request)),
+                ...this.decodedPayload,
                 accountName: Name.from(payload.accountName),
                 username: payload.username.username
                     ? new TonomyUsername(payload.username.username)

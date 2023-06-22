@@ -6,6 +6,8 @@ import { signer, publicKey } from './keys';
 import bootstrapSettings from './settings';
 import settings from './settings';
 import { createUser } from './user';
+import { ActionData, transact } from '../../sdk/services/blockchain/eosio/transaction';
+import { Name } from '@greymass/eosio';
 
 setSettings(settings.config);
 const eosioTokenContract = EosioTokenContract.Instance;
@@ -21,7 +23,6 @@ export default async function bootstrap() {
             signer
         );
         await eosioTokenContract.create('1000000000 SYS', signer);
-        await eosioTokenContract.issue('100000000 SYS', signer);
 
         await createAccount({ account: 'id.tonomy' }, signer);
         await deployContract(
@@ -37,15 +38,35 @@ export default async function bootstrap() {
             signer
         );
 
-        await createApp({
-            appName: 'Market',
-            usernamePrefix: 'market',
-            description: 'market.com where you can buy and sell stuff ',
+        const demo = await createApp({
+            appName: 'Tonomy Demo',
+            usernamePrefix: 'demo',
+            description: 'Demo of Tonomy ID login and features',
             origin: bootstrapSettings.config.demoWebsiteOrigin,
             logoUrl: bootstrapSettings.config.demoWebsiteLogoUrl,
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             publicKey: publicKey as any,
         });
+        // action to add demo permission to token contract
+        const actions: ActionData[] = [
+            {
+                account: 'eosio.token',
+                name: 'addperm',
+                authorization: [
+                    {
+                        actor: 'eosio.token',
+                        permission: 'active',
+                    },
+                ],
+                data: {
+                    // eslint-disable-next-line camelcase
+                    per: Name.from(demo.accountName),
+                },
+            },
+        ];
+
+        // add demo permission to token contract
+        await transact(Name.from('eosio.token'), actions, signer);
 
         await createApp({
             appName: 'Tonomy Website',
@@ -58,14 +79,23 @@ export default async function bootstrap() {
         });
 
         // The Apple app needs to have a test user for their review. That is this user.
-        const password = '1GjGtP%g5UOp2lQ&U5*p';
-        const { user } = await createUser('testuser', password);
-        const username = await user.getUsername();
+        let password = '1GjGtP%g5UOp2lQ&U5*p';
 
-        console.log(`Created user with`);
-        console.log(`  username:    ${username.username}`);
-        console.log(`  usernamHash: ${username.usernameHash}`);
-        console.log(`  password:    ${password}`);
+        await createUser('testuser', password);
+
+        // Create users for the demo website
+        password = 'mrOOR1WW0y#6ot7z%Wbj';
+        await createUser('lovesboost', password);
+        await createUser('sweetkristy', password);
+        await createUser('cheesecakeophobia', password);
+        await createUser('ultimateBeast', password);
+        await createUser('tomtom', password);
+        await createUser('readingpro', password);
+        await createUser('sohappy', password);
+        await createUser('reallychel', password);
+        await createUser('thedudeabides', password);
+        await createUser('4cryingoutloud', password);
+
         console.log('Bootstrap complete');
     } catch (e: any) {
         console.error(e);

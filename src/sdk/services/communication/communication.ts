@@ -7,8 +7,23 @@ export type Subscriber = (message: Message) => void;
 
 export class Communication {
     socketServer: Socket;
+    private static object: Communication;
     private static identifier: 0;
+    // TODO fix problem: if server restarts, this will be lost and all clients will need to reconnect
     private subscribers = new Map<number, Subscriber>();
+    private authMessage: AuthenticationMessage;
+
+    constructor(singleton = true) {
+        if (Communication.object && singleton) return Communication.object;
+        const url = getSettings().communicationUrl;
+
+        this.socketServer = io(url, {
+            transports: ['websocket'],
+            autoConnect: false,
+        });
+
+        Communication.object = this;
+    }
 
     /**
      * Connects to the Tonomy Communication server
@@ -18,14 +33,14 @@ export class Communication {
      */
     private async connect(): Promise<void> {
         if (this.socketServer?.connected) return; // dont override socket if connected
-        const url = getSettings().communicationUrl;
 
-        this.socketServer = io(url, {
-            transports: ['websocket'],
-        });
-
+        this.socketServer.connect();
         await new Promise((resolve, reject) => {
-            this.socketServer.on('connect', () => {
+            this.socketServer.on('connect', async () => {
+                if (this.authMessage) {
+                    await this.login(this.authMessage);
+                }
+
                 resolve(true);
                 return;
             });
@@ -51,6 +66,14 @@ export class Communication {
      * @throws {SdkError} - CommunicationTimeout
      */
     private async emitMessage(event: string, message: Message): Promise<boolean> {
+        if (getSettings().loggerLevel === 'debug')
+            console.log(
+                'emitMessage',
+                message.getType(),
+                message.getSender(),
+                message.getRecipient(),
+                message.getPayload()
+            );
         return await new Promise((resolve, reject) => {
             const resolved = false;
 
@@ -91,7 +114,10 @@ export class Communication {
     async login(authorization: AuthenticationMessage): Promise<boolean> {
         await this.connect();
 
-        return await this.emitMessage('login', authorization);
+        const result = await this.emitMessage('login', authorization);
+
+        if (result) this.authMessage = authorization;
+        return result;
     }
 
     /* sends a message to another DID
@@ -114,6 +140,9 @@ export class Communication {
 
         const messageHandler = (message: any) => {
             const msg = new Message(message);
+
+            if (getSettings().loggerLevel === 'debug')
+                console.log('receiveMessage', msg.getType(), msg.getSender(), msg.getRecipient(), msg.getPayload());
 
             if (!type || msg.getType() === type) {
                 subscriber(msg);

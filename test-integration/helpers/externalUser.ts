@@ -13,7 +13,8 @@ import {
 } from '../../src/sdk';
 import { ExternalUser, LoginWithTonomyMessages } from '../../src/api/externalUser';
 import { LoginRequest } from '../../src/sdk/util/request';
-import { strToBase64Url } from '../../src/sdk/util/base64';
+import { objToBase64Url } from '../../src/sdk/util/base64';
+import { VerifiableCredential } from '../../src/sdk/util/ssi/vc';
 
 export async function externalWebsiteUserPressLoginToTonomyButton(
     keyManager: KeyManager,
@@ -38,7 +39,7 @@ export async function externalWebsiteUserPressLoginToTonomyButton(
     const payload = {
         requests: [loginRequest],
     };
-    const base64UrlPayload = strToBase64Url(JSON.stringify(payload));
+    const base64UrlPayload = objToBase64Url(payload);
     const redirectUrl = loginAppOrigin + '/login?payload=' + base64UrlPayload;
 
     return { did, redirectUrl };
@@ -65,7 +66,7 @@ export async function loginWebsiteOnRedirect(externalWebsiteDid: string, keyMana
 
     // Login to the Tonomy Communication as the login app user
     if (log) console.log('TONOMY_LOGIN_WEBSITE/login: connect to Tonomy Communication');
-    const communication = new Communication();
+    const communication = new Communication(false);
     const loginResponse = await communication.login(loginToCommunication);
 
     expect(loginResponse).toBe(true);
@@ -119,7 +120,7 @@ export async function sendLoginRequestsMessage(
     recipientDid: string,
     log = false
 ) {
-    const jwkIssuer = await ExternalUser.getDidJwkIssuerFromStorage(keyManager);
+    const jwkIssuer = await ExternalUser.getJwkIssuerFromStorage(keyManager);
 
     const loginRequestMessage = await LoginRequestsMessage.signMessage({ requests }, jwkIssuer, recipientDid);
 
@@ -167,6 +168,8 @@ export async function externalWebsiteOnCallback(
     const tonomyIdAccount = accountName;
 
     expect(externalWebsiteAccount.toString()).toBe(tonomyIdAccount.toString());
+
+    return externalUser;
 }
 
 export async function externalWebsiteOnReload(
@@ -183,9 +186,33 @@ export async function externalWebsiteOnReload(
     expect((await externalUser.getAccountName()).toString()).toBe(await (await tonomyUser.getAccountName()).toString());
 }
 
+export async function externalWebsiteSignVc(externalUser: ExternalUser) {
+    const vcData = {
+        name: 'Joe',
+        dob: new Date('1990-01-01').toISOString(),
+    };
+    const signedVc = await externalUser.signVc('did:example:id:1234', 'ExampleCredential', vcData);
+
+    expect(signedVc).toBeDefined();
+    expect(signedVc.getIssuer()).toBe(await externalUser.getDid());
+    expect(signedVc.getIssuer().includes('did:antelope:')).toBe(true);
+    expect(signedVc.getCredentialSubject()).toEqual(vcData);
+    const verifiedVc = await signedVc.verify();
+
+    expect(verifiedVc.verified).toBe(true);
+
+    const jwt = signedVc.toString();
+    const constructedVc = new VerifiableCredential(jwt);
+    const verifiedConstructedVc = await constructedVc.verify();
+
+    expect(verifiedConstructedVc.verified).toBe(true);
+}
+
 export async function externalWebsiteOnLogout(keyManager: KeyManager, storageFactory: StorageFactory) {
     const externalUser = await ExternalUser.getUser({ keyManager, storageFactory });
 
     await externalUser.logout();
     expect(await externalUser.getAccountName()).toBe(undefined);
 }
+
+export async function createRandomLoggedInExternalUser(): Promise<ExternalUser> { }

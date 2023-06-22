@@ -5,13 +5,16 @@ import { KeyManager, KeyManagerLevel } from '../storage/keymanager';
 import { createStorage, PersistentStorageClean, StorageFactory, STORAGE_NAMESPACE } from '../storage/storage';
 import { User } from './user';
 import { createKeyManagerSigner } from '../services/blockchain/eosio/transaction';
-import { SdkErrors, throwError } from '../util/errors';
+import { SdkError, SdkErrors, throwError } from '../util/errors';
 import { App, AppStatus } from './app';
 import { TonomyUsername } from '../util/username';
 import { LoginRequest } from '../util/request';
-import { LoginRequestsMessagePayload } from '../services/communication/message';
+import { LoginRequestResponseMessage, LoginRequestsMessagePayload } from '../services/communication/message';
 import { LoginRequestResponseMessagePayload } from '../services/communication/message';
-import { base64UrlToStr } from '../util/base64';
+import { base64UrlToObj, objToBase64Url } from '../util/base64';
+import { getSettings } from '../util/settings';
+import { DID, URL as URLtype } from '../util/ssi/types';
+import { Issuer } from '@tonomy/did-jwt-vc';
 
 const idContract = IDContract.Instance;
 
@@ -33,6 +36,14 @@ export type OnPressLoginOptions = {
 export type ResponseParams = {
     success: boolean;
     reason: SdkErrors;
+};
+
+export type CheckedRequest = {
+    request: LoginRequest;
+    app: App;
+    requiresLogin: boolean;
+    ssoApp: boolean;
+    requestDid?: string;
 };
 
 export class UserApps {
@@ -74,6 +85,133 @@ export class UserApps {
         await this.storage.appRecords;
     }
 
+    /** Accepts a login request by authorizing keys on the blockchain (if the are not already authorized)
+     * And sends a response to the requesting app
+     *
+     * @param {{request: LoginRequest, app: App, requiresLogin: boolean}[]} requests - Array of requests to log into
+     * @param {'mobile' | 'browser'} platform - Platform of the request, either 'mobile' or 'browser'
+     * @param {DID} messageRecipient - DID of the recipient of the message
+     * @returns {Promise<void | URLtype>} the callback url if the platform is mobile, or undefined if it is browser
+     */
+    async acceptLoginRequest(
+        requests: { request: LoginRequest; app: App; requiresLogin?: boolean }[],
+        platform: 'mobile' | 'browser',
+        messageRecipient?: DID
+    ): Promise<void | URLtype> {
+        const accountName = await this.user.getAccountName();
+        const username = await this.user.getUsername();
+
+        for (const loginRequest of requests) {
+            const { app, request, requiresLogin } = loginRequest;
+
+            if (requiresLogin ?? true) {
+                await this.user.apps.loginWithApp(app, request.getPayload().publicKey);
+            }
+        }
+
+        const responsePayload = {
+            success: true,
+            requests: requests.map((loginRequest) => loginRequest.request),
+            accountName,
+            username,
+        };
+
+        if (platform === 'mobile') {
+            let callbackUrl = getSettings().ssoWebsiteOrigin + '/callback?';
+
+            callbackUrl += 'payload=' + objToBase64Url(responsePayload);
+
+            return callbackUrl;
+        } else {
+            if (!messageRecipient) throwError('Missing message recipient', SdkErrors.MissingParams);
+            const issuer = await this.user.getIssuer();
+            const message = await LoginRequestResponseMessage.signMessage(responsePayload, issuer, messageRecipient);
+
+            await this.user.communication.sendMessage(message);
+        }
+    }
+
+    static async terminateLoginRequest(
+        loginRequests: LoginRequest[],
+        returnType: 'url' | 'message',
+        error: {
+            code: SdkErrors;
+            reason: string;
+        },
+        options: {
+            callbackOrigin?: string;
+            callbackPath?: URLtype;
+            issuer?: Issuer;
+            messageRecipient?: DID;
+        }
+    ): Promise<LoginRequestResponseMessage | URLtype> {
+        const responsePayload = {
+            success: false,
+            requests: loginRequests,
+            error,
+        };
+
+        if (returnType === 'url') {
+            if (!options.callbackOrigin || !options.callbackPath)
+                throwError('Missing callback origin or path', SdkErrors.MissingParams);
+            let callbackUrl = options.callbackOrigin + options.callbackPath + '?';
+
+            callbackUrl += 'payload=' + objToBase64Url(responsePayload);
+
+            return callbackUrl;
+        } else {
+            if (!options.messageRecipient || !options.issuer)
+                throwError('Missing message recipient or issuer', SdkErrors.MissingParams);
+            return await LoginRequestResponseMessage.signMessage(
+                responsePayload,
+                options.issuer,
+                options.messageRecipient
+            );
+        }
+    }
+
+    /** Verifies the login requests, and checks if the apps have already been authorized with those keys
+     *
+     * @param {LoginRequest[]} requests - Array of login requests to check
+     * @returns {Promise<CheckedRequest[]>} - Array of requests that have been verified and had authorization checked
+     */
+    async checkRequests(requests: LoginRequest[]): Promise<CheckedRequest[]> {
+        const response: CheckedRequest[] = [];
+
+        await UserApps.verifyRequests(requests);
+
+        for (const request of requests) {
+            const payload = request.getPayload();
+            const app = await App.getApp(payload.origin);
+
+            let requiresLogin = true;
+
+            try {
+                await UserApps.verifyKeyExistsForApp(await this.user.getAccountName(), {
+                    publicKey: payload.publicKey,
+                });
+                requiresLogin = false;
+            } catch (e) {
+                if (e instanceof SdkError && e.code === SdkErrors.UserNotLoggedInWithThisApp) {
+                    // Never consented
+                    requiresLogin = true;
+                } else {
+                    throw e;
+                }
+            }
+
+            response.push({
+                request,
+                app,
+                requiresLogin,
+                ssoApp: payload.origin === getSettings().ssoWebsiteOrigin,
+                requestDid: request.getIssuer(),
+            });
+        }
+
+        return response;
+    }
+
     /**
      * Verifies the login request are valid requests signed by valid DIDs
      *
@@ -101,7 +239,7 @@ export class UserApps {
 
         if (!base64UrlPayload) throwError("payload parameter doesn't exists", SdkErrors.MissingParams);
 
-        const parsedPayload = JSON.parse(base64UrlToStr(base64UrlPayload));
+        const parsedPayload = base64UrlToObj(base64UrlPayload);
 
         if (!parsedPayload || !parsedPayload.requests)
             throwError('No requests found in payload', SdkErrors.MissingParams);
@@ -123,9 +261,10 @@ export class UserApps {
 
         if (!base64UrlPayload) throwError("payload parameter doesn't exists", SdkErrors.MissingParams);
 
-        const parsedPayload = JSON.parse(base64UrlToStr(base64UrlPayload));
+        const parsedPayload = base64UrlToObj(base64UrlPayload);
 
-        if (!parsedPayload.success) throwError("success parameter doesn't exists", SdkErrors.MissingParams);
+        if (parsedPayload.success !== true && parsedPayload.success !== false)
+            throwError("success parameter doesn't exists", SdkErrors.MissingParams);
 
         const { requests } = this.getLoginRequestFromUrl();
 
@@ -156,7 +295,11 @@ export class UserApps {
 
         const verifiedRequests = await UserApps.verifyRequests(requests);
 
-        const referrer = new URL(document.referrer);
+        const docReferrer = document.referrer;
+
+        if (!docReferrer) throwError('No referrer found', SdkErrors.ReferrerEmpty);
+
+        const referrer = new URL(docReferrer);
 
         const myRequest = verifiedRequests.find((r) => r.getPayload().origin === referrer.origin);
 
@@ -176,27 +319,54 @@ export class UserApps {
      *
      * @description This is called on the callback page to verify that the user has logged in correctly
      *
-     * @param accountName {string} - the account name to check the key on
-     * @param keyManager {KeyManager} - the key manager to check the key in
-     * @param keyManagerLevel {KeyManagerLevel=BROWSER_LOCAL_STORAGE} - the level to check the key in
-     * @returns {Promise<boolean>} - true if the key exists and is authorized, false otherwise
+     * @param {string} [accountName] - the account name to check the key on
+     * @param {PublicKey} [publicKey] - the public key to check. if not supplied it will try lookup the app from window.location.origin
+     * @param {KeyManager} [keyManager] - the key manager to check the key in
+     * @param {KeyManagerLevel} [keyManagerLevel=BROWSER_LOCAL_STORAGE] - the level to check the key in
+     * @returns {Promise<Name>} - the name of the permission that the key is authorized on
+     *
+     * @throws {SdkError} - if the key doesn't exist or isn't authorized
      */
     static async verifyKeyExistsForApp(
         accountName: Name,
-        keyManager: KeyManager,
-        keyManagerLevel: KeyManagerLevel = KeyManagerLevel.BROWSER_LOCAL_STORAGE
-    ): Promise<boolean> {
-        const pubKey = await keyManager.getKey({
-            level: keyManagerLevel,
-        });
-
+        options: {
+            publicKey?: PublicKey;
+            keyManager?: KeyManager;
+        }
+    ): Promise<Name> {
         const account = await User.getAccountInfo(accountName);
 
         if (!account) throwError("couldn't fetch account", SdkErrors.AccountNotFound);
-        const app = await App.getApp(window.location.origin);
 
-        const publickey = account.getPermission(app.accountName).required_auth.keys[0].key;
+        if (options.publicKey) {
+            const pubKey = options.publicKey;
 
-        return pubKey.toString() === publickey.toString();
+            const permissionWithKey = account.permissions.find(
+                (p) => p.required_auth.keys[0].key.toString() === pubKey.toString()
+            );
+
+            if (!permissionWithKey)
+                throwError(`No permission found with key ${pubKey}`, SdkErrors.UserNotLoggedInWithThisApp);
+
+            return permissionWithKey.perm_name;
+        } else {
+            if (!options.keyManager) throwError('keyManager missing', SdkErrors.MissingParams);
+            const pubKey = await options.keyManager.getKey({ level: KeyManagerLevel.BROWSER_LOCAL_STORAGE });
+
+            const app = await App.getApp(window.location.origin);
+
+            try {
+                const permission = account.getPermission(app.accountName);
+                const publicKey = permission.required_auth.keys[0].key;
+
+                if (pubKey.toString() !== publicKey.toString()) throwError('key not authorized', SdkErrors.KeyNotFound);
+            } catch (e) {
+                if (e.message.startsWith('Unknown permission '))
+                    throwError(`No permission found for app ${app.accountName}`, SdkErrors.UserNotLoggedInWithThisApp);
+                else throw e;
+            }
+
+            return app.accountName;
+        }
     }
 }

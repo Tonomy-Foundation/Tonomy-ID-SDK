@@ -25,13 +25,13 @@ function setup {
     # Install dependencies SDK
     cd "${SDK_DIR}"
     if [ ! -d "node_modules" ]; then
-        npm i
+        yarn install
     fi
     if [ ! -d "build" ]; then
-        npm run build
+        yarn run build
     fi
     if [ ! -d "build/cli" ]; then
-        npm run build:cli
+        yarn run build:cli
     fi
 
     # Install dependencies Tonomy Communication
@@ -52,13 +52,13 @@ function start {
     cd  "$SDK_DIR/Tonomy-Communication"
     pm2 stop micro || true
     pm2 delete micro || true
-    pm2 start yarn --name "micro" -- run start:dev
+    pm2 start --interpreter /bin/bash yarn --name "micro" -- run start:dev
 }
 
 function bootstrap {
     # Run bootstrap script
     cd  "$SDK_DIR"
-    npm run cli bootstrap
+    yarn run cli bootstrap
 }
 
 function stop {

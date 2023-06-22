@@ -145,6 +145,7 @@ export class VerifiableCredential<T extends object = object> {
     async verify(): Promise<VerifiedCredential> {
         const settings = getSettings();
 
+        // @ts-expect-error did-resolver and @tonomy/did-resolver types are not compatible
         const resolver = new Resolver({
             ...getJwkResolver(),
             ...getResolver({ antelopeChainUrl: settings.blockchainUrl, fetch: crossFetch as any }),
@@ -166,17 +167,21 @@ export class VerifiableCredential<T extends object = object> {
      */
     static async sign<T extends object = object>(
         id: DIDurl,
-        type: string[],
+        type: string | string[],
         credentialSubject: T,
         issuer: Issuer,
         options: {
             subject?: URL;
         } = {}
     ): Promise<VerifiableCredential<T>> {
+        const typeArray = Array.isArray(type) ? type : [type];
+
+        if (!typeArray.includes('VerifiableCredential')) typeArray.push('VerifiableCredential');
+
         const vc: W3CCredential = {
             '@context': ['https://www.w3.org/2018/credentials/v1'],
             id,
-            type,
+            type: typeArray,
             issuer: {
                 id: issuer.did,
             },
@@ -232,6 +237,7 @@ export type VCWithTypeType<T extends object = object> =
  *
  * @inheritdoc sign() is a protected alternative constructor. In child classes, a new alternative constructor
  * should be created which returns the child class type.
+ * @inheritdoc protected "type" property should be overridden in child classes with the name of the class
  * @inheritdoc if the payload type requires ad-hoc decoding, override the constructor and decode the payload
  *
  * @example see an example of the above in the LoginRequestMessage class in `../..services/communication/messages.ts`
@@ -239,6 +245,7 @@ export type VCWithTypeType<T extends object = object> =
 export class VerifiableCredentialWithType<T extends object = object> implements Serializable {
     private vc: VerifiableCredential<{ payload: T; type: string }>;
     protected decodedPayload: T;
+    protected static type = 'VerifiableCredentialWithType';
 
     /**
      *
@@ -274,13 +281,9 @@ export class VerifiableCredentialWithType<T extends object = object> implements 
         issuer: Issuer,
         options: VerifiableCredentialOptions = {}
     ): Promise<VerifiableCredentialWithType<T>> {
-        const payloadType = this.name;
+        const payloadType = this.type;
 
-        if (
-            payloadType === VerifiableCredentialWithType.name ||
-            payloadType === 'VerifiableCredentialWithType' ||
-            payloadType === ''
-        ) {
+        if (payloadType === 'VerifiableCredentialWithType' || payloadType === '') {
             throw new Error('class should be a derived class of VerifiableCredentialWithType to use the type property');
         }
 
@@ -309,7 +312,7 @@ export class VerifiableCredentialWithType<T extends object = object> implements 
      * @returns {string} the class type of the VC
      */
     static getType(): string {
-        return this.name;
+        return this.type;
     }
 
     /**

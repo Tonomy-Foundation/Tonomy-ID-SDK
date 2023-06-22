@@ -13,6 +13,7 @@ import {
     STORAGE_NAMESPACE,
     IdentifyMessage,
     LoginRequestResponseMessage,
+    ExternalUser,
 } from '../src/sdk/index';
 import URL from 'jsdom-url';
 import { JsKeyManager } from '../src/sdk/storage/jsKeyManager';
@@ -37,18 +38,19 @@ import {
     setupTonomyIdIdentifySubscriber,
     setupTonomyIdRequestConfirmSubscriber,
     externalWebsiteOnLogout,
+    externalWebsiteSignVc,
 } from './helpers/externalUser';
 import { createStorageFactory } from './helpers/storageFactory';
-import { strToBase64Url } from '../src/sdk/util/base64';
+import { objToBase64Url } from '../src/sdk/util/base64';
 
 // @ts-expect-error - type error on global
 global.URL = URL;
 
 setSettings(settings);
 
-const log = false;
+const log = process.env.LOG === 'true';
 
-describe('External User class', () => {
+describe('Login to external website', () => {
     jest.setTimeout(30000);
 
     // OBJECTS HERE denote the different devices/apps the user is using
@@ -65,6 +67,7 @@ describe('External User class', () => {
     let EXTERNAL_WEBSITE_jsKeyManager: KeyManager;
     let TONOMY_LOGIN_WEBSITE_storage_factory: StorageFactory;
     let EXTERNAL_WEBSITE_storage_factory: StorageFactory;
+    let EXTERNAL_WEBSITE_user: ExternalUser;
 
     beforeEach(async () => {
         // ##### Tonomy ID user #####
@@ -100,11 +103,9 @@ describe('External User class', () => {
         await sleep(500);
     });
 
-    describe('SSO login full end-to-end flow', () => {
+    describe('SSO login full end-to-end flow with external desktop browser (using communication service)', () => {
         test('User succeeds at login to external website', async () => {
-            expect.assertions(35);
-
-            const appsFound = [false, false];
+            expect.assertions(39);
 
             // #####External website user (login page) #####
             // ################################
@@ -164,11 +165,8 @@ describe('External User class', () => {
             // ########################################
             const TONOMY_ID_requestSubscriber = setupLoginRequestSubscriber(
                 TONOMY_ID_user,
-                externalApp.origin,
-                EXTERNAL_WEBSITE_did,
                 tonomyLoginApp.origin,
                 TONOMY_LOGIN_WEBSITE_did,
-                appsFound,
                 log
             );
 
@@ -205,9 +203,6 @@ describe('External User class', () => {
             // Wait for the subscriber to execute
             await TONOMY_ID_requestSubscriber;
 
-            // check both apps were logged into
-            expect(appsFound[0] && appsFound[1]).toBe(true);
-
             // #####Tonomy Login App website user (callback page) #####
             // ########################################
 
@@ -230,7 +225,7 @@ describe('External User class', () => {
             expect(payload.username?.toString()).toBe((await TONOMY_ID_user.getUsername()).username);
 
             if (log) console.log('TONOMY_LOGIN_WEBSITE/login: sending to callback page');
-            const TONOMY_LOGIN_WEBSITE_base64UrlPayload = strToBase64Url(JSON.stringify(payload));
+            const TONOMY_LOGIN_WEBSITE_base64UrlPayload = objToBase64Url(payload);
 
             // @ts-expect-error - cannot find name jsdom
             jsdom.reconfigure({
@@ -249,14 +244,12 @@ describe('External User class', () => {
 
             const redirectJwtPayload = TONOMY_LOGIN_WEBSITE_redirectJwt?.getPayload();
 
-            const EXTERNAL_WEBSITE_base64UrlPayload = strToBase64Url(
-                JSON.stringify({
-                    success: true,
-                    requests: [TONOMY_LOGIN_WEBSITE_redirectJwt],
-                    username: TONOMY_LOGIN_WEBSITE_username,
-                    accountName: TONOMY_LOGIN_WEBSITE_accountName,
-                })
-            );
+            const EXTERNAL_WEBSITE_base64UrlPayload = objToBase64Url({
+                success: true,
+                requests: [TONOMY_LOGIN_WEBSITE_redirectJwt],
+                username: TONOMY_LOGIN_WEBSITE_username,
+                accountName: TONOMY_LOGIN_WEBSITE_accountName,
+            });
 
             // @ts-expect-error - cannot find name jsdom
             jsdom.reconfigure({
@@ -269,7 +262,7 @@ describe('External User class', () => {
             // #####External website user (callback page) #####
             // ################################
 
-            await externalWebsiteOnCallback(
+            EXTERNAL_WEBSITE_user = await externalWebsiteOnCallback(
                 EXTERNAL_WEBSITE_jsKeyManager,
                 EXTERNAL_WEBSITE_storage_factory,
                 await TONOMY_ID_user.getAccountName(),
@@ -282,6 +275,8 @@ describe('External User class', () => {
                 TONOMY_ID_user,
                 log
             );
+
+            await externalWebsiteSignVc(EXTERNAL_WEBSITE_user);
 
             await externalWebsiteOnLogout(EXTERNAL_WEBSITE_jsKeyManager, EXTERNAL_WEBSITE_storage_factory);
 

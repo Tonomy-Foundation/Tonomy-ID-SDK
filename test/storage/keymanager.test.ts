@@ -4,10 +4,9 @@ import argon2 from 'argon2';
 import { jsStorageFactory } from '../../src/cli/bootstrap/jsstorage';
 import { createUserObject } from '../../src/sdk/controllers/user';
 import { KeyManagerLevel } from '../../src/sdk/storage/keymanager';
-import { randomBytes, generateRandomKeyPair, createVCSigner } from '../../src/sdk/util/crypto';
+import { randomBytes, generateRandomKeyPair, createVCSigner, createSigner } from '../../src/sdk/util/crypto';
 import { setSettings } from '../../src/sdk';
 import { generatePrivateKeyFromPassword } from '../../src/cli/bootstrap/keys';
-import { createSigner } from '@tonomy/antelope-ssi-toolkit';
 
 const keyManager = new JsKeyManager();
 

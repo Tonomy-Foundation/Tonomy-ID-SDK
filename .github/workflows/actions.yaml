@@ -13,10 +13,9 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 18.12.1
-      - run: npm ci
-      - run: npm run build
-      - run: npm run lint
-      - run: npm run test:unit
+      - run: yarn install --frozen-lockfile
+      - run: yarn run lint
+      - run: yarn run test:unit
 
   compile-contracts:
     name: Compiles contracts needed for bootstrap script
@@ -75,12 +74,11 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 18.12.1
-      - run: npm ci
-      - run: npm run build:cli
-      - run: npm run cli bootstrap
+      - run: yarn install
+      - run: yarn run cli bootstrap
 
       - name: Run integration tests
         uses: actions/setup-node@v3
         with:
           node-version: 18.12.1
-      - run: npm run test:integration
+      - run: yarn run test:integration

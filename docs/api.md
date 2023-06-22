@@ -76,12 +76,18 @@ import { api, SdkError, SdkErrors } from '@tonomy/tonomy-id-sdk';
 
 // call this when the page loads
 // e.g. in useEffect() in Reactjs
-let user;
 try {
-    user = await api.ExternalUser.getUser();
+    const user = await api.ExternalUser.getUser();
 } catch (e) {
-    if (e instanceof SdkError && e.code === SdkErrors.AccountNotFound) {
-        // User has not logged in yet
+    if (e instanceof SdkError) {
+        switch (e.code) {
+            case SdkErrors.AccountNotFound:
+                // User has not logged in yet
+            case SdkErrors.UserNotLoggedIn:
+                // User logged in but key has expired. User needs to login again
+            default:
+                // unexpected error!
+        }
     }
 }
 ```
@@ -108,7 +114,14 @@ TODO
 
 ### Sign a W3C verifiable credential
 
-TODO
+```typescript
+const vc = await user.signVc("https://example.com/example-vc/1234", "NameAndDob", {
+    name: "Joe Somebody",
+    dob: new Date('1999-06-04')
+});
+
+const verifiedVc = await vc.verify();
+```
 
 ### Send a peer-to-peer message to another Tonomy identity
 

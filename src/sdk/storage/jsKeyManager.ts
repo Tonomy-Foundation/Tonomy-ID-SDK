@@ -1,4 +1,4 @@
-import { sha256, randomString } from '../util/crypto';
+import { sha256, randomString, createSigner } from '../util/crypto';
 import {
     KeyManager,
     KeyManagerLevel,
@@ -8,7 +8,6 @@ import {
     CheckKeyOptions,
 } from './keymanager';
 import { Checksum256, PrivateKey, PublicKey, Signature } from '@greymass/eosio';
-import { createSigner } from '@tonomy/antelope-ssi-toolkit';
 import { SdkErrors, throwError } from '../util/errors';
 import { STORAGE_NAMESPACE } from './storage';
 

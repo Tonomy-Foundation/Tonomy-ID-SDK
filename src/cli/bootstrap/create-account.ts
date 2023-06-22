@@ -15,8 +15,10 @@ export async function createAccount({ account }: { account: string }, signer: Si
     await eosioContract.newaccount('eosio', account, ownerAuth, activeAuth, signer);
 }
 
-export async function createApp(options: AppCreateOptions) {
+export async function createApp(options: AppCreateOptions): Promise<App> {
     const res = await App.create(options);
 
-    console.log('New app created with username: ', res.username.username);
+    console.log('New app created with username: ', res.username?.username);
+
+    return res;
 }
