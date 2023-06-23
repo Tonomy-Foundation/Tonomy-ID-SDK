@@ -2,7 +2,16 @@
   "tagFormat": "${version}",
   "plugins": [
     [
-      "@semantic-release/commit-analyzer"
+      "@semantic-release/commit-analyzer",{
+        "preset": "angular",
+        "releaseRule": [
+          {"type": "feat", "release": "minor"},
+          {"type": "fix", "release": "patch"},
+          {"type": "chore", "release": "patch"},
+          {"type": "test", "release": "patch"}
+
+        ]
+      }
     ],
     [
       "@semantic-release/changelog",
