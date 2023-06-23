@@ -1,5 +1,10 @@
 {
   "tagFormat": "${version}",
+  "branches": [
+    { "name": "master", "prerelease": false },
+    { "name": "development", "prerelease": "beta" },
+    { "name": "feature/*", "prerelease": "alpha" }
+  ],
   "plugins": [
     [
       "@semantic-release/commit-analyzer",{
@@ -32,6 +37,5 @@
       }
     ],
     "@semantic-release/github"
-  ],
-  "branches": ["development", "master"]
+  ]
 }
