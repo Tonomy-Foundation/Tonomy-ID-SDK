@@ -3,7 +3,7 @@
   "branches": [
     { "name": "master", "prerelease": false },
     { "name": "development", "prerelease": "beta" },
-    { "name": "feature/*", "prerelease": "alpha" }
+    { "name": "feature/232-sdk-deployment", "prerelease": "alpha" }
   ],
   "plugins": [
     [

@@ -46,7 +46,7 @@
     "prepare": "yarn run build",
     "change:tag": "node changeVersionTag.js"
   },
-  "name": "@tonomy/tonomy-id-sdk",
+  "name": "@tonomy/tonomy-id-testsdk",
   "author": "Jack Tanner",
   "devDependencies": {
     "@babel/core": "^7.21.4",
