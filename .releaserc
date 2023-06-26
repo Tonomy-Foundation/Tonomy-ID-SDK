@@ -2,8 +2,7 @@
   "tagFormat": "${version}",
   "branches": [
     { "name": "master", "prerelease": false },
-    { "name": "feature/232-sdk-deployment", "prerelease": false },
-    { "name": "development", "prerelease": "alpha" }
+    { "name": "feature/232-sdk-deployment", "prerelease": true }
   ],
   "plugins": [
     [
