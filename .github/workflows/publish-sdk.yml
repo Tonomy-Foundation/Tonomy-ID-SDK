@@ -6,7 +6,8 @@ permissions:
 on:
   push:
     branches:
-      - feature/232-sdk-deployment
+      - development
+      - master
 
 jobs:
   publish-npm:
