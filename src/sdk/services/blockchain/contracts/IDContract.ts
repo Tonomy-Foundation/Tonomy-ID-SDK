@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { API, Checksum256, Name, PublicKey } from '@greymass/eosio';
+import { API, Checksum256, Name, PublicKey } from '@wharfkit/antelope';
 import { TonomyUsername } from '../../../util/username';
 import { getAccount, getApi } from '../eosio/eosio';
 import { Signer, transact } from '../eosio/transaction';

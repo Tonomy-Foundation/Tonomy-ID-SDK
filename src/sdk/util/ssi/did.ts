@@ -1,4 +1,4 @@
-import { Name } from '@greymass/eosio';
+import { Name } from '@wharfkit/antelope';
 import { DIDurl } from './types';
 import { ParsedDID, parse } from '@tonomy/did-resolver';
 

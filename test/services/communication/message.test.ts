@@ -1,4 +1,4 @@
-import { PrivateKey } from '@greymass/eosio';
+import { PrivateKey } from '@wharfkit/antelope';
 import { ES256KSigner, generateRandomKeyPair, setSettings, createSigner } from '../../../src/sdk';
 import { IdentifyMessage } from '../../../src/sdk/services/communication/message';
 import { Issuer } from '@tonomy/did-jwt-vc';

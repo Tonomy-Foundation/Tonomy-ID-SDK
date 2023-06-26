@@ -7,7 +7,7 @@ import {
     StoreKeyOptions,
     CheckKeyOptions,
 } from './keymanager';
-import { Checksum256, PrivateKey, PublicKey, Signature } from '@greymass/eosio';
+import { Checksum256, PrivateKey, PublicKey, Signature } from '@wharfkit/antelope';
 import { SdkErrors, throwError } from '../util/errors';
 import { STORAGE_NAMESPACE } from './storage';
 

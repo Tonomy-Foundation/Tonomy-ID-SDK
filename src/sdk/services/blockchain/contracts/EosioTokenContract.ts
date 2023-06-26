@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { API, Name } from '@greymass/eosio';
+import { API, Name } from '@wharfkit/antelope';
 import { Signer, transact } from '../eosio/transaction';
 
 class EosioTokenContract {
@@ -44,7 +44,7 @@ class EosioTokenContract {
                 data: {
                     to: 'eosio.token',
                     quantity,
-                    memo: '',
+                    memo: 'issued',
                 },
             },
         ];

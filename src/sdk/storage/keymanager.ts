@@ -1,4 +1,4 @@
-import { Checksum256, PrivateKey, PublicKey, Signature } from '@greymass/eosio';
+import { Checksum256, PrivateKey, PublicKey, Signature } from '@wharfkit/antelope';
 
 enum KeyManagerLevel {
     PASSWORD = 'PASSWORD',

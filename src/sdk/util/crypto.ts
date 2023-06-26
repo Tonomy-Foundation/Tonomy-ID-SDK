@@ -1,4 +1,4 @@
-import { Bytes, Checksum256, KeyType, PrivateKey, PublicKey } from '@greymass/eosio';
+import { Bytes, Checksum256, KeyType, PrivateKey, PublicKey } from '@wharfkit/antelope';
 import rb from '@consento/sync-randombytes';
 import elliptic from 'elliptic';
 import { SdkErrors, throwError } from './errors';

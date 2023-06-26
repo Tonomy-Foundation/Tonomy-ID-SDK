@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { ABI, API, Name, Serializer } from '@greymass/eosio';
+import { ABI, API, Name, Serializer } from '@wharfkit/antelope';
 import { Authority } from '../eosio/authority';
 import { Signer, transact } from '../eosio/transaction';
 

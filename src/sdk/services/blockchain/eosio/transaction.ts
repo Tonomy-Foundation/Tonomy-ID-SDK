@@ -1,4 +1,13 @@
-import { Action, API, Transaction, SignedTransaction, Signature, Checksum256, Name, PrivateKey } from '@greymass/eosio';
+import {
+    Action,
+    API,
+    Transaction,
+    SignedTransaction,
+    Signature,
+    Checksum256,
+    Name,
+    PrivateKey,
+} from '@wharfkit/antelope';
 import { KeyManager, KeyManagerLevel } from '../../../storage/keymanager';
 import { HttpError } from '../../../util/errors';
 import { getApi } from './eosio';

@@ -1,4 +1,4 @@
-import { APIClient, FetchProvider, NameType, API } from '@greymass/eosio';
+import { APIClient, FetchProvider, NameType, API } from '@wharfkit/antelope';
 import { GetInfoResponse } from '@greymass/eosio/src/api/v1/types';
 import fetch from 'cross-fetch';
 import { getSettings } from '../../../util/settings';

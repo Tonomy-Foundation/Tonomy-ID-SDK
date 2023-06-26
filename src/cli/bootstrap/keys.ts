@@ -1,4 +1,4 @@
-import { Bytes, KeyType, PrivateKey, Checksum256 } from '@greymass/eosio';
+import { Bytes, KeyType, PrivateKey, Checksum256 } from '@wharfkit/antelope';
 import argon2 from 'argon2';
 import { randomBytes } from '../../sdk/util/crypto';
 import { EosioUtil } from '../../sdk';

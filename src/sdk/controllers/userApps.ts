@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { Name, PublicKey } from '@greymass/eosio';
+import { Name, PublicKey } from '@wharfkit/antelope';
 import { IDContract } from '../services/blockchain/contracts/IDContract';
 import { KeyManager, KeyManagerLevel } from '../storage/keymanager';
 import { createStorage, PersistentStorageClean, StorageFactory, STORAGE_NAMESPACE } from '../storage/storage';

@@ -5,7 +5,7 @@ import { Issuer } from '@tonomy/did-jwt-vc';
 import { getSettings } from '../sdk/util/settings';
 import { SdkError, SdkErrors, createSdkError, throwError } from '../sdk/util/errors';
 import { createStorage, PersistentStorageClean, StorageFactory, STORAGE_NAMESPACE } from '../sdk/storage/storage';
-import { Name, API, NameType } from '@greymass/eosio';
+import { Name, API, NameType } from '@wharfkit/antelope';
 import { TonomyUsername } from '../sdk/util/username';
 import { browserStorageFactory } from '../sdk/storage/browserStorage';
 import { getAccount, getChainInfo } from '../sdk/services/blockchain/eosio/eosio';
@@ -404,6 +404,8 @@ export class ExternalUser {
         };
         const signer = this.getTransactionSigner();
 
+        console.log(newAction);
+
         return await transact(Name.from(contract), [newAction], signer);
     }
 
@@ -440,7 +442,7 @@ export class ExternalUser {
 
                         if (
                             linkedAuthResponseMessage.getPayload().requestId ===
-                            linkAuthRequestMessage.getVc().getId() &&
+                                linkAuthRequestMessage.getVc().getId() &&
                             linkedAuthResponseMessage.getPayload().success
                         ) {
                             resolve();

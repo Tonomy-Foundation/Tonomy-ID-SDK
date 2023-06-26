@@ -1,5 +1,5 @@
 /* eslint-disable no-console */
-import { Name } from '@greymass/eosio';
+import { Name } from '@wharfkit/antelope';
 import {
     AccountType,
     Communication,

@@ -3,7 +3,7 @@ import { DIDurl, URL } from '../../util/ssi/types';
 import { VerifiableCredentialWithType, VCWithTypeType } from '../../util/ssi/vc';
 import { LoginRequest } from '../../util/request';
 import { TonomyUsername } from '../../util/username';
-import { Name } from '@greymass/eosio';
+import { Name } from '@wharfkit/antelope';
 import { SdkErrors } from '../../util/errors';
 
 /**
