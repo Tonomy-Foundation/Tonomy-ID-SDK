@@ -2,19 +2,12 @@
   "tagFormat": "${version}",
   "branches": [
     { "name": "master", "prerelease": false },
-    { "name": "development", "prerelease": "staging" }
+    { "name": "development", "prerelease": "development" }
   ],
   "plugins": [
     [
-      "@semantic-release/commit-analyzer",{
-        "preset": "angular",
-        "releaseRule": [
-          {"type": "feat", "release": "minor"},
-          {"type": "fix", "release": "patch"},
-          {"type": "chore", "release": "patch"},
-          {"type": "test", "release": "patch"}
-
-        ]
+      "@semantic-release/commit-analyzer", {
+        "preset": "angular"
       }
     ],
     [
