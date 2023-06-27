@@ -45,7 +45,7 @@
     "docs:build": "python -m mkdocs build -c",
     "prepare": "yarn run build",
     "change:tag": "node changeVersionTag.js"
-  },
+    },
   "name": "@tonomy/tonomy-id-sdk",
   "author": "Jack Tanner",
   "devDependencies": {
@@ -93,8 +93,7 @@
     "universal-base64url": "^1.1.0"
   },
   "publishConfig": {
-    "access": "public",
-    "tag": "development"
+    "access": "public"
   },
   "repository": {
     "type": "git",
