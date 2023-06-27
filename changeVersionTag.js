@@ -11,4 +11,4 @@ packageJson.publishConfig.tag = 'development';
 // Write the updated package.json file
 fs.writeFileSync(filePath, JSON.stringify(packageJson, null, 2));
 
-console.log('Version tag changed successfully.');
+console.log('Version tag changed successfully to development.');
