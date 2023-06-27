@@ -70,3 +70,4 @@ UserApp is used to manage the relationship between each Tonomy ID user and the a
 ### ExternalUser
 
 This is the main API for external applications to use the SSO and integration features.
+
