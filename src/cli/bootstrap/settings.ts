@@ -20,7 +20,7 @@ const defaultConfig = {
     demoWebsiteOrigin: `http://${ipAddress}:3001`,
     demoWebsiteLogoUrl: `http://${ipAddress}:3001//market.com.png`,
     blockchainUrl: `http://${ipAddress}:8888`,
-    accountSuffix: '.test.tonomy.id',
+    accountSuffix: '.stag.tonomy.id',
     communicationUrl: 'ws://localhost:5000',
 };
 
@@ -40,7 +40,7 @@ const demoConfig = {
     demoWebsiteOrigin: `https://demo.demo.tonomy.foundation`,
     demoWebsiteLogoUrl: `https://demo.demo.tonomy.foundation/market.com.png`,
     blockchainUrl: `https://blockchain-api-demo.tonomy.foundation`,
-    accountSuffix: '.stag.tonomy.id',
+    accountSuffix: '.demo.tonomy.id',
     communicationUrl: 'wss://communication.demo.tonomy.foundation',
 };
 
