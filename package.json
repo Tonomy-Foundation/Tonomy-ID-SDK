@@ -93,9 +93,8 @@
     "universal-base64url": "^1.1.0"
   },
   "publishConfig": {
-    "access": "public",
-    "tag": "development"
-  },
+    "access": "public"
+    },
   "repository": {
     "type": "git",
     "url": "https://github.com/Tonomy-Foundation/Tonomy-ID-SDK"
