@@ -1,8 +1,14 @@
 {
   "tagFormat": "${version}",
+  "branches": [
+    { "name": "master", "prerelease": false },
+    { "name": "development", "prerelease": "development" }
+  ],
   "plugins": [
     [
-      "@semantic-release/commit-analyzer"
+      "@semantic-release/commit-analyzer", {
+        "preset": "angular"
+      }
     ],
     [
       "@semantic-release/changelog",
@@ -23,6 +29,5 @@
       }
     ],
     "@semantic-release/github"
-  ],
-  "branches": ["development", "master"]
+  ]
 }
