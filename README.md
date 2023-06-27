@@ -111,3 +111,5 @@ yarn run lint
 ## Error handling
 
 See [errors.ts](./src/services/errors.ts). All errors have a registered unique enumeration code.
+
+## End of file
