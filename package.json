@@ -43,9 +43,7 @@
     "release": "semantic-release  --debug",
     "docs:serve": "python -m mkdocs serve",
     "docs:build": "python -m mkdocs build -c",
-    "prepare": "yarn run build",
-    "change:tag": "node changeVersionTag.js",
-    "remove:tag": "node removeDevelopmentTag.js"
+    "prepare": "yarn run build"
   },
   "name": "@tonomy/tonomy-id-sdk",
   "author": "Jack Tanner",
