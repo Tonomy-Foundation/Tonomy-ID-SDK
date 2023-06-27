@@ -33,12 +33,9 @@ jobs:
       - run: |
           if [[ ${GITHUB_REF#refs/*/} == "development" ]]; then
             echo "Variable BRANCH_NAME is set to 'development'"
-            yarn run change:tag
+            yarn config set tag development
           fi
-      - run: |
-          if [[ ${GITHUB_REF#refs/*/} == "master" ]]; then
-            yarn run remove:tag
-          fi
+     
       - run: yarn install
       - run: yarn run release
         env:
