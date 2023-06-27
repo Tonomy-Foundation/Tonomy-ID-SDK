@@ -1,5 +1,5 @@
 {
-  "version": "0.9.2",
+  "version": "0.10.0-development.1",
   "license": "Apache-2.0",
   "type": "module",
   "source": "src/sdk/index.ts",
@@ -45,7 +45,7 @@
     "docs:build": "python -m mkdocs build -c",
     "prepare": "yarn run build",
     "change:tag": "node changeVersionTag.js"
-    },
+  },
   "name": "@tonomy/tonomy-id-sdk",
   "author": "Jack Tanner",
   "devDependencies": {
@@ -93,7 +93,8 @@
     "universal-base64url": "^1.1.0"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "tag": "development"
   },
   "repository": {
     "type": "git",
