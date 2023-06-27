@@ -1,5 +1,5 @@
 {
-  "version": "0.10.0",
+  "version": "1.1.0-development.4",
   "license": "Apache-2.0",
   "type": "module",
   "source": "src/sdk/index.ts",
@@ -44,7 +44,8 @@
     "docs:serve": "python -m mkdocs serve",
     "docs:build": "python -m mkdocs build -c",
     "prepare": "yarn run build",
-    "change:tag": "node changeVersionTag.js"
+    "change:tag": "node changeVersionTag.js",
+    "remove:tag": "node removeDevelopmentTag.js"
   },
   "name": "@tonomy/tonomy-id-sdk",
   "author": "Jack Tanner",
