@@ -1,5 +1,5 @@
 {
-  "version": "0.11.0",
+  "version": "1.1.0-development.2",
   "license": "Apache-2.0",
   "type": "module",
   "source": "src/sdk/index.ts",
@@ -93,8 +93,9 @@
     "universal-base64url": "^1.1.0"
   },
   "publishConfig": {
-    "access": "public"
-    },
+    "access": "public",
+    "tag": "development"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/Tonomy-Foundation/Tonomy-ID-SDK"
