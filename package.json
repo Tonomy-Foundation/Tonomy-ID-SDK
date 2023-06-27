@@ -44,7 +44,8 @@
     "docs:serve": "python -m mkdocs serve",
     "docs:build": "python -m mkdocs build -c",
     "prepare": "yarn run build",
-    "change:tag": "node changeVersionTag.js"
+    "change:tag": "node changeVersionTag.js",
+    "change:master-tag": "node changeMasterVersionTag.js"
   },
   "name": "@tonomy/tonomy-id-sdk",
   "author": "Jack Tanner",

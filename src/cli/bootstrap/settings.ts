@@ -56,9 +56,7 @@ switch (env) {
         config = stagingConfig;
         break;
     case 'production':
-        config = defaultConfig;
-        // TODO add production config when ready
-        break;
+        throw new Error('Production config not implemented yet');
     default:
         throw new Error('Unknown environment: ' + env);
 }
