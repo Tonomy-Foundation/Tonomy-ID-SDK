@@ -25,13 +25,23 @@ const defaultConfig = {
 };
 
 const stagingConfig = {
-    ssoWebsiteOrigin: `https://sso.staging.tonomy.foundation`,
-    ssoWebsiteLogoUrl: `https://sso.staging.tonomy.foundation/tonomy-logo1024.png`,
+    ssoWebsiteOrigin: `https://accounts.staging.tonomy.foundation`,
+    ssoWebsiteLogoUrl: `https://accounts.staging.tonomy.foundation/tonomy-logo1024.png`,
     demoWebsiteOrigin: `https://demo.staging.tonomy.foundation`,
     demoWebsiteLogoUrl: `https://demo.staging.tonomy.foundation/market.com.png`,
     blockchainUrl: `https://blockchain-api-staging.tonomy.foundation`,
     accountSuffix: '.stag.tonomy.id',
-    communicationUrl: 'wss://communication-api-staging.tonomy.foundation',
+    communicationUrl: 'wss://communication.staging.tonomy.foundation',
+};
+
+const demoConfig = {
+    ssoWebsiteOrigin: `https://accounts.demo.tonomy.foundation`,
+    ssoWebsiteLogoUrl: `https://accounts.demo.tonomy.foundation/tonomy-logo1024.png`,
+    demoWebsiteOrigin: `https://demo.demo.tonomy.foundation`,
+    demoWebsiteLogoUrl: `https://demo.demo.tonomy.foundation/market.com.png`,
+    blockchainUrl: `https://blockchain-api-demo.tonomy.foundation`,
+    accountSuffix: '.stag.tonomy.id',
+    communicationUrl: 'wss://communication.demo.tonomy.foundation',
 };
 
 type SettingsType = {
@@ -54,6 +64,9 @@ switch (env) {
         break;
     case 'staging':
         config = stagingConfig;
+        break;
+    case 'demo':
+        config = demoConfig;
         break;
     case 'production':
         throw new Error('Production config not implemented yet');
