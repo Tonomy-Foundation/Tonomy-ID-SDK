@@ -2,7 +2,7 @@
 import { API, Checksum256, Name, PublicKey } from '@wharfkit/antelope';
 import { TonomyUsername } from '../../../util/username';
 import { getAccount, getApi } from '../eosio/eosio';
-import { Signer, transact } from '../eosio/transaction';
+import { ActionData, Signer, transact } from '../eosio/transaction';
 import { SdkErrors, throwError } from '../../../util/errors';
 import { sha256 } from '../../../util/crypto';
 
@@ -287,23 +287,24 @@ class IDContract {
         requirement: string,
         signer: Signer
     ): Promise<API.v1.PushTransactionResponse> {
-        const action = {
+        const action: ActionData = {
+            account: 'id.tonomy',
+            name: 'linkauth',
             authorization: [
                 {
                     actor: account,
                     permission: 'active',
                 },
             ],
-            account: 'id.tonomy',
-            name: 'linkauth',
             data: {
                 account,
                 code,
                 type,
-                requirement,
+                req: requirement,
             },
         };
 
+        console.log(action);
         return await transact(Name.from('id.tonomy'), [action], signer);
     }
 
