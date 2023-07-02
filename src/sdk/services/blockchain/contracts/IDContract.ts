@@ -300,7 +300,7 @@ class IDContract {
                 account,
                 code,
                 type,
-                req: requirement,
+                requirement,
             },
         };
 

@@ -223,7 +223,7 @@ export async function externalWebsiteSignTransaction(externalUser: ExternalUser,
     );
 
     if (log) console.log('EXTERNAL_WEBSITE/sign-trx: signing transaction selfissue()');
-    const trx = await externalUser.signTransaction('eosio.token', 'selfissue', {
+    let trx = await externalUser.signTransaction('eosio.token', 'selfissue', {
         to,
         quantity: '1 SYS',
         memo: 'test',
