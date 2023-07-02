@@ -20,7 +20,7 @@ Examples below are for a Reactjs website.
 
 ### 1. Register your app
 
-See [/cli/#register-a-tonomy-app](/cli/#register-a-tonomy-app)
+See [Register a Tonomy App](/cli/#register-a-tonomy-app) using the CLI.
 
 ### 2. Set the network
 
