@@ -27,15 +27,17 @@ See [Register a Tonomy App](/cli/#register-a-tonomy-app) using the CLI.
 ```typescript
 import { api } from '@tonomy/tonomy-id-sdk';
 
-// Configure to use a specific network (in this case, the Tonomy staging network)
-// Best to run this on the root app provider (e.g. App.tsx in Reactjs)
+// Configure to use a specific network (in this case, the Tonomy demo network)
+// Run this at the root of your app (e.g. App.tsx in Reactjs) so they are set before used
 api.setSettings({
-    ssoWebsiteOrigin: "https://tonomy-id-staging.tonomy.foundation",
-    blockchainUrl: "https://blockchain-api-staging.tonomy.foundation"
+    ssoWebsiteOrigin: "https://accounts.demo.tonomy.foundation",
+    blockchainUrl: "https://blockchain-api-demo.tonomy.foundation"
 });
 ```
 
 ### 3. Login page
+
+On your login page add the "Login with Tonomy ID" button and set it to call the api when pressed. Set your `/callback` page path.
 
 ```typescript
 async function onButtonPress() {
@@ -52,7 +54,7 @@ async function onButtonPress() {
 To use the Tonomy login button styles, import the stylesheet and use the class `tonomy-login-button` on your button.
 
 ```typescript
-import "@tonomy/tonomy-id-sdk/build/api/tonomy.css";
+import "@tonomy/tonomy-id-sdk/api/tonomy.css";
 ```
 
 or
@@ -63,6 +65,8 @@ or
 
 ### 4. Callback page
 
+On your `/callback` page, call the API when the page renders. This will catch the login parameters from the URL and return a logged in user object.
+
 ```typescript
 // call this when the page loads
 // e.g. in useEffect() in Reactjs
@@ -70,6 +74,8 @@ const user = await api.ExternalUser.verifyLoginRequest();
 ```
 
 ### 5. Home page
+
+On your home page, check if the user is already logged in when you load the page.
 
 ```typescript
 import { api, SdkError, SdkErrors } from '@tonomy/tonomy-id-sdk';
@@ -96,13 +102,20 @@ try {
 
 With a logged in user you can do the following
 
-### Get the account information
+### Get the anonymous account ID
 
 ```typescript
 const accountName = await user.getAccountName().toString();
 ```
 
-### Get your DID
+### Get the username
+
+```typescript
+const username = await user.getUsername();
+const shortUsername = username.getBaseUsername();
+```
+
+### Get the DID
 
 ```typescript
 const accountName = await user.getDid();

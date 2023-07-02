@@ -14,7 +14,7 @@
             "require": "./build/sdk/index.cjs",
             "import": "./build/sdk/index.module.js"
         },
-        "./build/api/tonomy.css": {
+        "./api/tonomy.css": {
             "import": "./build/api/tonomy.css",
             "require": "./build/api/tonomy.css"
         },
