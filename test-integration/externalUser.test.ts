@@ -14,6 +14,7 @@ import {
     IdentifyMessage,
     LoginRequestResponseMessage,
     ExternalUser,
+    EosioTokenContract,
 } from '../src/sdk/index';
 import URL from 'jsdom-url';
 import { JsKeyManager } from '../src/sdk/storage/jsKeyManager';
@@ -44,9 +45,13 @@ import {
 } from './helpers/externalUser';
 import { createStorageFactory } from './helpers/storageFactory';
 import { objToBase64Url } from '../src/sdk/util/base64';
+import { createSigner } from '../src/sdk/services/blockchain';
+import { privateKey } from './helpers/eosio';
 
 // @ts-expect-error - type error on global
 global.URL = URL;
+
+const eosioTokenContract = EosioTokenContract.Instance;
 
 setSettings(settings);
 
@@ -90,6 +95,8 @@ describe('Login to external website', () => {
         // setup KeyManagers for the external website and tonomy login website
         TONOMY_LOGIN_WEBSITE_jsKeyManager = new JsKeyManager();
         EXTERNAL_WEBSITE_jsKeyManager = new JsKeyManager();
+
+        await eosioTokenContract.addPerm(externalApp.accountName, createSigner(privateKey));
 
         // setup storage factories for the external website and tonomy login website
         TONOMY_LOGIN_WEBSITE_storage_factory = createStorageFactory(STORAGE_NAMESPACE + 'login-website.');
@@ -234,6 +241,7 @@ describe('Login to external website', () => {
             jsdom.reconfigure({
                 url: tonomyLoginApp.origin + `/callback?payload=${TONOMY_LOGIN_WEBSITE_base64UrlPayload}`,
             });
+            console.log('origin', window.location.origin, tonomyLoginApp.origin);
 
             const {
                 redirectJwt: TONOMY_LOGIN_WEBSITE_redirectJwt,
@@ -254,6 +262,8 @@ describe('Login to external website', () => {
                 accountName: TONOMY_LOGIN_WEBSITE_accountName,
             });
 
+            // #####External website user (callback page) #####
+            // ################################
             // @ts-expect-error - cannot find name jsdom
             jsdom.reconfigure({
                 url:
@@ -261,9 +271,7 @@ describe('Login to external website', () => {
                     redirectJwtPayload.callbackPath +
                     `?payload=${EXTERNAL_WEBSITE_base64UrlPayload}`,
             });
-
-            // #####External website user (callback page) #####
-            // ################################
+            console.log('origin', window.location.origin, externalApp.origin);
 
             EXTERNAL_WEBSITE_user = await externalWebsiteOnCallback(
                 EXTERNAL_WEBSITE_jsKeyManager,
@@ -288,7 +296,6 @@ describe('Login to external website', () => {
 
             // #####External website user (callback page) #####
             // ################################
-
             await externalWebsiteSignTransaction(EXTERNAL_WEBSITE_user, log);
             await TONOMY_ID_linkAuthSubscriber;
 

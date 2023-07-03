@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { API, Name } from '@wharfkit/antelope';
+import { API, Name, NameType } from '@wharfkit/antelope';
 import { Signer, transact } from '../eosio/transaction';
 
 class EosioTokenContract {
@@ -50,6 +50,48 @@ class EosioTokenContract {
         ];
 
         return await transact(Name.from('eosio.token'), actions, signer);
+    }
+
+    async selfIssue(to: Name, quantity: string, signer: Signer): Promise<API.v1.PushTransactionResponse> {
+        const actions = [
+            {
+                account: 'eosio.token',
+                name: 'issue',
+                authorization: [
+                    {
+                        actor: 'eosio.token',
+                        permission: 'active',
+                    },
+                ],
+                data: {
+                    to,
+                    quantity,
+                    memo: 'self issued',
+                },
+            },
+        ];
+
+        return await transact(Name.from('eosio.token'), actions, signer);
+    }
+
+    async addPerm(permission: NameType, signer: Signer) {
+        const actions = [
+            {
+                account: 'eosio.token',
+                name: 'addperm',
+                authorization: [
+                    {
+                        actor: 'eosio.token',
+                        permission: 'active',
+                    },
+                ],
+                data: {
+                    per: permission,
+                },
+            },
+        ];
+
+        await transact(Name.from('eosio.token'), actions, signer);
     }
 }
 
