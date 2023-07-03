@@ -131,38 +131,14 @@ const accountName = await user.getDid();
 
 ```c++
 #include <id.tonomy/id.tonomy.hpp>
-
-// TODO: make helper functions to fetch the App name exported from id.tonomy.hpp
-const name get_app_permission_by_origin(string origin) {
-    id::apps_table _apps = id::apps_table("id.tonomy"_n, ("id.tonomy"_n).value);
-    auto apps_by_origin_hash_itr = _apps.get_index<"originhash"_n>();
-
-    eosio::checksum256 origin_hash = eosio::sha256(origin.c_str(), std::strlen(origin.c_str()));
-    const auto origin_itr = apps_by_origin_hash_itr.find(origin_hash);
-    check(origin_itr == apps_by_origin_hash_itr.end(), "No app with this origin found");
-
-    return origin_itr->account_name;
-}
-
-const name get_app_permission_by_username(string username) {
-    id::apps_table _apps = id::apps_table("id.tonomy"_n, ("id.tonomy"_n).value);
-    auto apps_by_username_hash_itr = _apps.get_index<"usernamehash"_n>();
-    
-    eosio::checksum256 username_hash = eosio::sha256(username.c_str(), std::strlen(username.c_str()));
-    const auto username_itr = apps_by_username_hash_itr.find(username_hash);
-    check(username_itr == apps_by_username_hash_itr.end(), "No app with this username found");
-
-    return username_itr->account_name;
-}
-
 token::transfer(const name &from,
                         const name &to,
                         const asset &quantity,
                         const string &memo)
 {
-    require_auth({to, get_app_permission_by_origin("https://yourregisteredapp.com")});
+    require_auth({to, idtonomy::id::get_app_permission_by_origin("https://your-registered-app.com")});
     // or
-    require_auth({to, get_app_permission_by_username("yourregisteredapp.apps.test.tonomy.id")});
+    require_auth({to, idtonomy::id::get_app_permission_by_username("your-registered-app.app.demo.tonomy.id")});
     ...
 }
 ```
