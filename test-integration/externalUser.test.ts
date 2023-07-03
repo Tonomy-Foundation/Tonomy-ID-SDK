@@ -241,7 +241,6 @@ describe('Login to external website', () => {
             jsdom.reconfigure({
                 url: tonomyLoginApp.origin + `/callback?payload=${TONOMY_LOGIN_WEBSITE_base64UrlPayload}`,
             });
-            console.log('origin', window.location.origin, tonomyLoginApp.origin);
 
             const {
                 redirectJwt: TONOMY_LOGIN_WEBSITE_redirectJwt,
@@ -271,7 +270,6 @@ describe('Login to external website', () => {
                     redirectJwtPayload.callbackPath +
                     `?payload=${EXTERNAL_WEBSITE_base64UrlPayload}`,
             });
-            console.log('origin', window.location.origin, externalApp.origin);
 
             EXTERNAL_WEBSITE_user = await externalWebsiteOnCallback(
                 EXTERNAL_WEBSITE_jsKeyManager,

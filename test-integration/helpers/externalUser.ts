@@ -271,7 +271,7 @@ export async function externalWebsiteSignTransaction(externalUser: ExternalUser,
     trx = await externalUser.signTransaction('eosio.token', 'transfer', {
         from,
         to,
-        quantity: '1 SYS',
+        quantity: '2 SYS',
         memo: 'test',
     });
 

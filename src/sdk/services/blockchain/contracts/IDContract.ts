@@ -304,7 +304,6 @@ class IDContract {
             },
         };
 
-        console.log(action);
         return await transact(Name.from('id.tonomy'), [action], signer);
     }
 
