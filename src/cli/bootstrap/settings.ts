@@ -21,7 +21,7 @@ const defaultConfig = {
     demoWebsiteLogoUrl: `http://${ipAddress}:3001//market.com.png`,
     blockchainUrl: `http://${ipAddress}:8888`,
     accountSuffix: '.stag.tonomy.id',
-    communicationUrl: `ws://${ipAddress}:5000`,
+    communicationUrl: 'ws://localhost:5000',
 };
 
 const stagingConfig = {
@@ -32,6 +32,16 @@ const stagingConfig = {
     blockchainUrl: `https://blockchain-api-staging.tonomy.foundation`,
     accountSuffix: '.stag.tonomy.id',
     communicationUrl: 'wss://communication.staging.tonomy.foundation',
+};
+
+const demoConfig = {
+    ssoWebsiteOrigin: `https://accounts.demo.tonomy.foundation`,
+    ssoWebsiteLogoUrl: `https://accounts.demo.tonomy.foundation/tonomy-logo1024.png`,
+    demoWebsiteOrigin: `https://demo.demo.tonomy.foundation`,
+    demoWebsiteLogoUrl: `https://demo.demo.tonomy.foundation/market.com.png`,
+    blockchainUrl: `https://blockchain-api-demo.tonomy.foundation`,
+    accountSuffix: '.demo.tonomy.id',
+    communicationUrl: 'wss://communication.demo.tonomy.foundation',
 };
 
 type SettingsType = {
@@ -55,10 +65,11 @@ switch (env) {
     case 'staging':
         config = stagingConfig;
         break;
-    case 'production':
-        config = defaultConfig;
-        // TODO add production config when ready
+    case 'demo':
+        config = demoConfig;
         break;
+    case 'production':
+        throw new Error('Production config not implemented yet');
     default:
         throw new Error('Unknown environment: ' + env);
 }
