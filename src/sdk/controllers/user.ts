@@ -201,6 +201,8 @@ export class User {
         await this.keyManager.storeKey({
             level: KeyManagerLevel.ACTIVE,
             privateKey,
+            // eventually this should be different than the password key, but for now Antelope protocol doesn't support it
+            // ideally we would have a different structure, and active key will be linked to local key
         });
     }
 
