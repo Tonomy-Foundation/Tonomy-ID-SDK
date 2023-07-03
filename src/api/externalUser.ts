@@ -404,9 +404,6 @@ export class ExternalUser {
         };
         const signer = this.getTransactionSigner();
 
-        const myAccount = await getAccount(account);
-
-        console.log(myAccount, permission);
         return await transact(Name.from(contract), [newAction], signer);
     }
 
@@ -420,8 +417,8 @@ export class ExternalUser {
         const account = await getAccount(actor);
         const authorizingPermission = account.permissions.find((p) => p.perm_name.equals(permission));
         const linkedAuth = authorizingPermission?.linked_actions?.find(
-            // TODO check '' is correct https://github.com/AntelopeIO/leap/pull/991/files
-            (a) => a.account.equals(contract) && (a.action.equals(action) || a.action.toString() === '')
+            // a.action is undefined for all actions, or the specific action
+            (a) => a.account.equals(contract) && (!a.action || a.action.equals(action))
         );
 
         // If not then link it

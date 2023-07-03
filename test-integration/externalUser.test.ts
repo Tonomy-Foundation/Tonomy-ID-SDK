@@ -114,7 +114,7 @@ describe('Login to external website', () => {
 
     describe('SSO login full end-to-end flow with external desktop browser (using communication service)', () => {
         test('User succeeds at login to external website', async () => {
-            expect.assertions(45);
+            expect.assertions(49);
 
             // #####External website user (login page) #####
             // ################################
@@ -296,7 +296,7 @@ describe('Login to external website', () => {
 
             // #####External website user (callback page) #####
             // ################################
-            await externalWebsiteSignTransaction(EXTERNAL_WEBSITE_user, log);
+            await externalWebsiteSignTransaction(EXTERNAL_WEBSITE_user, externalApp, log);
             await TONOMY_ID_linkAuthSubscriber;
 
             await externalWebsiteOnLogout(EXTERNAL_WEBSITE_jsKeyManager, EXTERNAL_WEBSITE_storage_factory);

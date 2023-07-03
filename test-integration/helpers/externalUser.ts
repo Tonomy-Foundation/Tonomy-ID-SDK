@@ -1,7 +1,8 @@
 /* eslint-disable no-console */
-import { Name } from '@wharfkit/antelope';
+import { Name, API } from '@wharfkit/antelope';
 import {
     AccountType,
+    App,
     Communication,
     IdentifyMessage,
     KeyManager,
@@ -20,6 +21,7 @@ import { ExternalUser, LoginWithTonomyMessages } from '../../src/api/externalUse
 import { LoginRequest } from '../../src/sdk/util/request';
 import { objToBase64Url } from '../../src/sdk/util/base64';
 import { VerifiableCredential } from '../../src/sdk/util/ssi/vc';
+import { getAccount } from '../../src/sdk/services/blockchain';
 
 export async function externalWebsiteUserPressLoginToTonomyButton(
     keyManager: KeyManager,
@@ -216,18 +218,41 @@ export async function externalWebsiteSignVc(externalUser: ExternalUser, log = fa
     expect(verifiedConstructedVc.verified).toBe(true);
 }
 
-export async function externalWebsiteSignTransaction(externalUser: ExternalUser, log = false) {
+async function getLinkedActionsForPermission(
+    accountName: Name,
+    permissionName: Name
+): Promise<API.v1.AccountLinkedAction> {
+    const accountObject = await getAccount(accountName);
+    const accountAppPermission = accountObject.permissions.find((permission) =>
+        permission.perm_name.equals(permissionName)
+    );
+
+    if (!accountAppPermission) throw new Error(`Permission ${permissionName} not found for account ${accountName}`);
+    return accountAppPermission.linked_actions[0];
+}
+
+export async function externalWebsiteSignTransaction(externalUser: ExternalUser, externalApp: App, log = false) {
     const from = await externalUser.getAccountName();
     const to = await getAccountNameFromUsername(
         TonomyUsername.fromUsername('lovesboost', AccountType.PERSON, getSettings().accountSuffix)
     );
 
+    let linkedActions = await getLinkedActionsForPermission(from, externalApp.accountName);
+
+    expect(linkedActions).toBeUndefined();
+
     if (log) console.log('EXTERNAL_WEBSITE/sign-trx: signing transaction selfissue()');
     let trx = await externalUser.signTransaction('eosio.token', 'selfissue', {
         to: from,
-        quantity: '1 SYS',
+        quantity: '10 SYS',
         memo: 'test',
     });
+
+    linkedActions = await getLinkedActionsForPermission(from, externalApp.accountName);
+
+    expect(linkedActions).toBeDefined();
+    expect(linkedActions.account.equals('eosio.token')).toBe(true);
+    expect(linkedActions.action).toBeNull();
 
     if (log) console.log('EXTERNAL_WEBSITE/sign-trx: signing transaction transfer()');
     trx = await externalUser.signTransaction('eosio.token', 'transfer', {
@@ -238,7 +263,7 @@ export async function externalWebsiteSignTransaction(externalUser: ExternalUser,
     });
 
     expect(trx).toBeDefined();
-    expect(trx.transaction_id).toBeInstanceOf(String);
+    expect(typeof trx.transaction_id).toBe('string');
     expect(trx.processed.receipt.status).toBe('executed');
     // TODO check action trace for action and the link auth
 
@@ -251,7 +276,7 @@ export async function externalWebsiteSignTransaction(externalUser: ExternalUser,
     });
 
     expect(trx).toBeDefined();
-    expect(trx.transaction_id).toBeInstanceOf(String);
+    expect(typeof trx.transaction_id).toBe('string');
     expect(trx.processed.receipt.status).toBe('executed');
     // TODO check action trace for action and the does not contain link auth
 }
