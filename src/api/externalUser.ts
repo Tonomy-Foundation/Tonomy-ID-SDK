@@ -404,8 +404,6 @@ export class ExternalUser {
         };
         const signer = this.getTransactionSigner();
 
-        console.log(newAction);
-
         return await transact(Name.from(contract), [newAction], signer);
     }
 
@@ -442,7 +440,7 @@ export class ExternalUser {
 
                         if (
                             linkedAuthResponseMessage.getPayload().requestId ===
-                                linkAuthRequestMessage.getVc().getId() &&
+                            linkAuthRequestMessage.getVc().getId() &&
                             linkedAuthResponseMessage.getPayload().success
                         ) {
                             resolve();

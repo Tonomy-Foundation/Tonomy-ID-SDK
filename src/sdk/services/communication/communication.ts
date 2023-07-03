@@ -7,14 +7,14 @@ export type Subscriber = (message: Message) => void;
 
 export class Communication {
     socketServer: Socket;
-    private static object: Communication;
+    private static singleton: Communication;
     private static identifier: 0;
     // TODO fix problem: if server restarts, this will be lost and all clients will need to reconnect
     private subscribers = new Map<number, Subscriber>();
     private authMessage: AuthenticationMessage;
 
     constructor(singleton = true) {
-        if (Communication.object && singleton) return Communication.object;
+        if (Communication.singleton && singleton) return Communication.singleton;
         const url = getSettings().communicationUrl;
 
         this.socketServer = io(url, {
@@ -22,7 +22,7 @@ export class Communication {
             autoConnect: false,
         });
 
-        Communication.object = this;
+        Communication.singleton = this;
     }
 
     isLoggedIn(): boolean {
