@@ -374,7 +374,7 @@ export class ExternalUser {
      *
      * Note: This is a convenience method that signs one action on one smart contract with the current
      * user's account and app permission. To sign a more complex transaction, get a signer with
-     * getTransactionSigner() and use eosjs or @greymass/eosio directly
+     * getTransactionSigner() and use eosjs or @wharfkit/antelope directly
      *
      * @param {Name} contract - the smart contract account name
      * @param {Name} action - the action to sign (function of the smart contract)
@@ -404,6 +404,9 @@ export class ExternalUser {
         };
         const signer = this.getTransactionSigner();
 
+        const myAccount = await getAccount(account);
+
+        console.log(myAccount, permission);
         return await transact(Name.from(contract), [newAction], signer);
     }
 
@@ -429,6 +432,7 @@ export class ExternalUser {
                 await this.getWalletDid()
             );
             let subscriberId: number;
+            // TODO: abstract the request response dynamic into a function...
             const waitForResponse = new Promise<void>((resolve, reject) => {
                 subscriberId = this.communication.subscribeMessage(async (message: Message) => {
                     try {

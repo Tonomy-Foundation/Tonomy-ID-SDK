@@ -1,5 +1,5 @@
 import { APIClient, FetchProvider, NameType, API } from '@wharfkit/antelope';
-import { GetInfoResponse } from '@greymass/eosio/src/api/v1/types';
+import { GetInfoResponse } from '@wharfkit/antelope/src/api/v1/types';
 import fetch from 'cross-fetch';
 import { getSettings } from '../../../util/settings';
 import { throwError, SdkErrors } from '../../../util/errors';

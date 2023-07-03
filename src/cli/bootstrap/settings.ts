@@ -20,18 +20,18 @@ const defaultConfig = {
     demoWebsiteOrigin: `http://${ipAddress}:3001`,
     demoWebsiteLogoUrl: `http://${ipAddress}:3001//market.com.png`,
     blockchainUrl: `http://${ipAddress}:8888`,
-    accountSuffix: '.test.tonomy.id',
-    communicationUrl: 'ws://localhost:5000',
+    accountSuffix: '.stag.tonomy.id',
+    communicationUrl: `ws://${ipAddress}:5000`,
 };
 
 const stagingConfig = {
-    ssoWebsiteOrigin: `https://sso.staging.tonomy.foundation`,
-    ssoWebsiteLogoUrl: `https://sso.staging.tonomy.foundation/tonomy-logo1024.png`,
+    ssoWebsiteOrigin: `https://accounts.staging.tonomy.foundation`,
+    ssoWebsiteLogoUrl: `https://accounts.staging.tonomy.foundation/tonomy-logo1024.png`,
     demoWebsiteOrigin: `https://demo.staging.tonomy.foundation`,
     demoWebsiteLogoUrl: `https://demo.staging.tonomy.foundation/market.com.png`,
     blockchainUrl: `https://blockchain-api-staging.tonomy.foundation`,
     accountSuffix: '.stag.tonomy.id',
-    communicationUrl: 'wss://communication-api-staging.tonomy.foundation',
+    communicationUrl: 'wss://communication.staging.tonomy.foundation',
 };
 
 type SettingsType = {

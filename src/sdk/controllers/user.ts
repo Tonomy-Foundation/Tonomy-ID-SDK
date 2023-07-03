@@ -1,5 +1,5 @@
 import { Name, PrivateKey, API, Checksum256 } from '@wharfkit/antelope';
-import { PushTransactionResponse } from '@greymass/eosio/src/api/v1/types';
+import { PushTransactionResponse } from '@wharfkit/antelope/src/api/v1/types';
 import { KeyManager, KeyManagerLevel } from '../storage/keymanager';
 import { GetPersonResponse, IDContract } from '../services/blockchain/contracts/IDContract';
 import {
