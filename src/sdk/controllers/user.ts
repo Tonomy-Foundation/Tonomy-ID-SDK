@@ -581,15 +581,9 @@ export class User {
 
             await this.communication.sendMessage(linkAuthRequestResponseMessage);
         } catch (e) {
-            if (e instanceof SdkError) {
-                switch (e.code) {
-                    case SdkErrors.SenderNotAuthorized:
-                        // somebody may be trying to DoS the user, drop
-                        return;
-                    default:
-                        // all other errors are Tonomy software errors, so throw to bubble up
-                        throw e;
-                }
+            if (e instanceof SdkError && e.code === SdkErrors.SenderNotAuthorized) {
+                // somebody may be trying to DoS the user, drop
+                return;
             } else {
                 // all other errors are Tonomy software errors, so throw to bubble up
                 throw e;
