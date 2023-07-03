@@ -124,7 +124,7 @@ class IDContract {
                 if (
                     accountPermission &&
                     accountPermission.linked_actions.find(
-                        (a) => a.account.toString() === 'id.tonomy' && a.action.toString() === 'loginwithapp'
+                        (a) => a.account.equals('id.tonomy') && a.action.equals('loginwithapp')
                     )
                 ) {
                     link_auth = false;
