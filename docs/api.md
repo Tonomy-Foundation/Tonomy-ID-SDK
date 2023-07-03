@@ -4,7 +4,7 @@ The Tonomy API allow existing applications to login and interact with Tonomy ide
 
 See a full example Reactjs website with Tonomy ID login here:
 
-<a href="https://demo.staging.tonomy.foundation" target="_blank">Demo website</a>
+<a href="https://demo.demo.tonomy.foundation" target="_blank">Demo website</a>
 
 ## Login steps
 
@@ -121,7 +121,9 @@ const shortUsername = username.getBaseUsername();
 const accountName = await user.getDid();
 ```
 
-### Sign a blockchain transaction with one-click signature
+### Signatures
+
+#### Sign a blockchain transaction
 
 **Step 1.** Modify your smart contract to accept signatures from users signed into your registered app (see [Register your app](/cli/#register-a-tonomy-app))
 
@@ -178,7 +180,7 @@ const trx = await user.signTransaction('eosio.token', 'transfer', {
 });
 ```
 
-### Sign a W3C verifiable credential with one-click signature
+#### Sign a W3C verifiable credential
 
 ```typescript
 const vc = await user.signVc("https://example.com/example-vc/1234", "NameAndDob", {
@@ -189,7 +191,7 @@ const vc = await user.signVc("https://example.com/example-vc/1234", "NameAndDob"
 const verifiedVc = await vc.verify();
 ```
 
-### Send a peer-to-peer message to another Tonomy identity
+#### Send a peer-to-peer message
 
 ```typescript
 const msg = new Message.signMessage(
