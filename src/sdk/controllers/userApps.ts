@@ -217,16 +217,17 @@ export class UserApps {
     static async createJwkIssuerAndStore(keyManager: KeyManager = new JsKeyManager()): Promise<Issuer> {
         const { privateKey, publicKey } = generateRandomKeyPair();
 
+        const signer = ES256KSigner(privateKey.data.array, true);
+        const jwk = await createJWK(publicKey);
+        const did = toDid(jwk);
+
         await keyManager.storeKey({
             level: KeyManagerLevel.BROWSER_LOCAL_STORAGE,
             privateKey: privateKey,
         });
 
-        const signer = ES256KSigner(privateKey.data.array, true);
-        const jwk = await createJWK(publicKey);
-
         return {
-            did: toDid(jwk),
+            did,
             signer: signer as any,
             alg: 'ES256K-R',
         };

@@ -48,6 +48,7 @@ export default async function bootstrap() {
         });
 
         // action to add demo permission to token contract
+        console.log('Adding demo permission to token contract');
         eosioTokenContract.addPerm(demo.accountName, signer);
 
         await createApp({

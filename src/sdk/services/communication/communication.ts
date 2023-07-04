@@ -144,10 +144,6 @@ export class Communication {
      * @returns {number} - identifier which will be used for unsubscribe
      */
     subscribeMessage(subscriber: Subscriber, type?: string): number {
-        if (!this.isLoggedIn()) {
-            throwError('You need to login before subscribing to messages', SdkErrors.CommunicationNotLoggedIn);
-        }
-
         Communication.identifier++;
 
         const messageHandler = (message: any) => {
