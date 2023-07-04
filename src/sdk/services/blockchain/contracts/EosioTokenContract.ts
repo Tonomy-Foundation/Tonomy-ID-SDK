@@ -1,6 +1,7 @@
 /* eslint-disable camelcase */
-import { API, Name, NameType } from '@wharfkit/antelope';
+import { API, Name, NameType, Asset } from '@wharfkit/antelope';
 import { Signer, transact } from '../eosio/transaction';
+import { getApi } from '../eosio/eosio';
 
 class EosioTokenContract {
     static singletonInstande: EosioTokenContract;
@@ -92,6 +93,12 @@ class EosioTokenContract {
         ];
 
         await transact(Name.from('eosio.token'), actions, signer);
+    }
+
+    async getBalance(account: NameType): Promise<Asset> {
+        const assets = await (await getApi()).v1.chain.get_currency_balance('eosio.token', account);
+
+        return assets[0];
     }
 }
 
