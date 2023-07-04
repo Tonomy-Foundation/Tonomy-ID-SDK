@@ -1,4 +1,4 @@
-import { APIClient, FetchProvider, PrivateKey } from '@greymass/eosio';
+import { APIClient, FetchProvider, PrivateKey } from '@wharfkit/antelope';
 import fetch from 'cross-fetch';
 
 const privateKey = PrivateKey.from('PVT_K1_2bfGi9rYsXQSXXTvJbDAPhHLQUojjaNLomdm3cEJ1XTzMqUt3V');

@@ -1,5 +1,5 @@
 import { io, Socket } from 'socket.io-client';
-import { CommunicationError, createSdkError, SdkErrors } from '../../util/errors';
+import { CommunicationError, createSdkError, SdkErrors, throwError } from '../../util/errors';
 import { getSettings } from '../../util/settings';
 import { AuthenticationMessage, Message } from '../../services/communication/message';
 
@@ -7,22 +7,27 @@ export type Subscriber = (message: Message) => void;
 
 export class Communication {
     socketServer: Socket;
-    private static object: Communication;
+    private static singleton: Communication;
     private static identifier: 0;
     // TODO fix problem: if server restarts, this will be lost and all clients will need to reconnect
     private subscribers = new Map<number, Subscriber>();
     private authMessage: AuthenticationMessage;
+    private url: string;
 
     constructor(singleton = true) {
-        if (Communication.object && singleton) return Communication.object;
-        const url = getSettings().communicationUrl;
+        if (Communication.singleton && singleton) return Communication.singleton;
+        this.url = getSettings().communicationUrl;
 
-        this.socketServer = io(url, {
+        this.socketServer = io(this.url, {
             transports: ['websocket'],
             autoConnect: false,
         });
 
-        Communication.object = this;
+        Communication.singleton = this;
+    }
+
+    isLoggedIn(): boolean {
+        return this.authMessage !== undefined && typeof this.authMessage === 'object';
     }
 
     /**
@@ -37,7 +42,7 @@ export class Communication {
         this.socketServer.connect();
         await new Promise((resolve, reject) => {
             this.socketServer.on('connect', async () => {
-                if (this.authMessage) {
+                if (this.isLoggedIn()) {
                     await this.login(this.authMessage);
                 }
 
@@ -125,6 +130,10 @@ export class Communication {
      * the message is used as the `vc` property of a VC signed by the User's key
      */
     async sendMessage(message: Message): Promise<boolean> {
+        if (!this.isLoggedIn()) {
+            throwError('You need to login before sending a messages', SdkErrors.CommunicationNotLoggedIn);
+        }
+
         return await this.emitMessage('message', message);
     }
 

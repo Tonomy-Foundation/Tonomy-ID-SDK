@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { Checksum256, Name, PrivateKey, PublicKey } from '@greymass/eosio';
+import { Checksum256, Name, PrivateKey, PublicKey } from '@wharfkit/antelope';
 import { IDContract } from '../services/blockchain/contracts/IDContract';
 import { createSigner } from '../services/blockchain/eosio/transaction';
 import { getSettings } from '../util/settings';

@@ -1,4 +1,4 @@
-import { PublicKey } from '@greymass/eosio';
+import { PublicKey } from '@wharfkit/antelope';
 import { toElliptic } from '../crypto';
 import { base64ToStr, bnToBase64Url, strToBase64 } from '../base64';
 import { ResolverRegistry, ParsedDID, DIDResolutionResult, DIDDocument } from '@tonomy/did-resolver';

@@ -1,22 +1,29 @@
 import { KeyManager, KeyManagerLevel } from '../sdk/storage/keymanager';
 import { OnPressLoginOptions, UserApps } from '../sdk/controllers/userApps';
-import { createVCSigner, generateRandomKeyPair, randomString } from '../sdk/util/crypto';
-import { ES256KSigner } from '@tonomy/did-jwt';
+import { createVCSigner, randomString } from '../sdk/util/crypto';
 import { Issuer } from '@tonomy/did-jwt-vc';
-import { createJWK, toDid } from '../sdk/util/ssi/did-jwk';
 import { getSettings } from '../sdk/util/settings';
-import { SdkError, SdkErrors, throwError } from '../sdk/util/errors';
+import { SdkError, SdkErrors, createSdkError, throwError } from '../sdk/util/errors';
 import { createStorage, PersistentStorageClean, StorageFactory, STORAGE_NAMESPACE } from '../sdk/storage/storage';
-import { Name } from '@greymass/eosio';
+import { Name, API, NameType } from '@wharfkit/antelope';
 import { TonomyUsername } from '../sdk/util/username';
 import { browserStorageFactory } from '../sdk/storage/browserStorage';
-import { getChainInfo } from '../sdk/services/blockchain/eosio/eosio';
+import { getAccount, getChainInfo } from '../sdk/services/blockchain/eosio/eosio';
 import { JsKeyManager } from '../sdk/storage/jsKeyManager';
 import { LoginRequest, LoginRequestPayload } from '../sdk/util/request';
-import { AuthenticationMessage, IDContract, LoginRequestsMessagePayload } from '../sdk';
+import {
+    AuthenticationMessage,
+    Communication,
+    IDContract,
+    LinkAuthRequestMessage,
+    LinkAuthRequestResponseMessage,
+    LoginRequestsMessagePayload,
+    Message,
+} from '../sdk';
 import { objToBase64Url } from '../sdk/util/base64';
 import { VerifiableCredential } from '../sdk/util/ssi/vc';
 import { DIDurl } from '../sdk/util/ssi/types';
+import { Signer, createKeyManagerSigner, transact } from '../sdk/services/blockchain/eosio/transaction';
 
 export type ExternalUserStorage = {
     accountName: Name;
@@ -36,7 +43,7 @@ export type LoginWithTonomyMessages = {
     loginToCommunication: AuthenticationMessage;
 };
 
-const idContract = IDContract.singletonInstance;
+const idContract = IDContract.Instance;
 
 /**
  * An external user on a website that is being logged into by a Tonomy ID user
@@ -46,6 +53,7 @@ export class ExternalUser {
     keyManager: KeyManager;
     storage: ExternalUserStorage & PersistentStorageClean;
     did: string;
+    communication: Communication;
 
     /**
      * Creates a new external user
@@ -56,6 +64,7 @@ export class ExternalUser {
     constructor(_keyManager: KeyManager, _storageFactory: StorageFactory) {
         this.keyManager = _keyManager;
         this.storage = createStorage<ExternalUserStorage>(STORAGE_NAMESPACE + 'external.user.', _storageFactory);
+        this.communication = new Communication(false);
     }
 
     /**
@@ -105,7 +114,6 @@ export class ExternalUser {
 
             if (accountName.toString() !== personData.account_name.toString())
                 throwError('Username has changed', SdkErrors.InvalidData);
-
             return user;
         } catch (e) {
             if (autoLogout) await user.logout();
@@ -227,7 +235,7 @@ export class ExternalUser {
         { redirect = true, callbackPath }: OnPressLoginOptions,
         keyManager: KeyManager = new JsKeyManager()
     ): Promise<LoginWithTonomyMessages | void> {
-        const issuer = await this.createJwkIssuerAndStore(keyManager);
+        const issuer = await UserApps.createJwkIssuerAndStore(keyManager);
         const publicKey = await keyManager.getKey({ level: KeyManagerLevel.BROWSER_LOCAL_STORAGE });
 
         const payload: LoginRequestPayload = {
@@ -254,39 +262,12 @@ export class ExternalUser {
         }
     }
 
-    static async createJwkIssuerAndStore(keyManager: KeyManager = new JsKeyManager()): Promise<Issuer> {
-        const { privateKey, publicKey } = generateRandomKeyPair();
-
-        await keyManager.storeKey({
-            level: KeyManagerLevel.BROWSER_LOCAL_STORAGE,
-            privateKey: privateKey,
-        });
-
-        const signer = ES256KSigner(privateKey.data.array, true);
-        const jwk = await createJWK(publicKey);
-
-        return {
-            did: toDid(jwk),
-            signer: signer as any,
-            alg: 'ES256K-R',
-        };
-    }
-
-    static async getJwkIssuerFromStorage(keyManager: KeyManager = new JsKeyManager()): Promise<Issuer> {
-        const publicKey = await keyManager.getKey({
-            level: KeyManagerLevel.BROWSER_LOCAL_STORAGE,
-        });
-        const signer = createVCSigner(keyManager, KeyManagerLevel.BROWSER_LOCAL_STORAGE);
-
-        const jwk = await createJWK(publicKey);
-
-        return {
-            did: toDid(jwk),
-            signer: signer.sign as any,
-            alg: 'ES256K-R',
-        };
-    }
-
+    /**
+     * Returns the issuer of the user for use with did-jwt and VCs
+     *
+     * @param {KeyManager} [keyManager] - the key manager to use to store the keys
+     * @returns {Promise<Issuer>} - the issuer of the user
+     */
     async getIssuer(keyManager: KeyManager = new JsKeyManager()): Promise<Issuer> {
         const did = await this.getDid();
         const signer = createVCSigner(keyManager, KeyManagerLevel.BROWSER_LOCAL_STORAGE);
@@ -342,6 +323,7 @@ export class ExternalUser {
 
             await externalUser.setAccountName(accountName);
             await externalUser.setUsername(username);
+
             return externalUser;
         } else {
             if (!error) throwError('No error found in url', SdkErrors.MissingParams);
@@ -349,6 +331,16 @@ export class ExternalUser {
         }
     }
 
+    /**
+     * Signs a Verifiable Credential
+     *
+     * @param {string} id - the id of the VC
+     * @param {string | string[]} type - the type of the VC
+     * @param {object} data - the data of the VC
+     * @property {string} [options.subject] - the subject of the VC
+     *
+     * @returns {Promise<VerifiableCredential>} - the signed VC
+     */
     async signVc<T extends object = object>(
         id: string,
         type: string | string[],
@@ -360,5 +352,133 @@ export class ExternalUser {
         const issuer = await this.getIssuer();
 
         return await VerifiableCredential.sign<T>(id, type, data, issuer, options);
+    }
+
+    /**
+     * Return a signer to use to sign transactions
+     *
+     * @returns {Promise<Signer>} - the signer to use to sign transactions
+     */
+    getTransactionSigner(): Signer {
+        return createKeyManagerSigner(this.keyManager, KeyManagerLevel.BROWSER_LOCAL_STORAGE);
+    }
+
+    /**
+     * Signs a transaction and send it to the blockchain
+     *
+     * Note: It is signed with the permission of the current app
+     * e.g. if user signed into app "marketcom", this will be the name of the permission used to sign the transaction
+     *
+     * Note: This is a convenience method that signs one action on one smart contract with the current
+     * user's account and app permission. To sign a more complex transaction, get a signer with
+     * getTransactionSigner() and use eosjs or @wharfkit/antelope directly
+     *
+     * @param {Name} contract - the smart contract account name
+     * @param {Name} action - the action to sign (function of the smart contract)
+     * @param {object} data - the data to sign
+     *
+     * @returns {Promise<API.v1.PushTransactionResponse>} - the signed transaction
+     */
+    async signTransaction(contract: NameType, action: NameType, data: object): Promise<API.v1.PushTransactionResponse> {
+        const account = await this.getAccountName();
+        const permission = await this.getAppPermission();
+
+        // This is a hack to get around linked_auth requirements on custom permissions
+        // see https://github.com/Tonomy-Foundation/Tonomy-ID/issues/636#issuecomment-1508887362
+        // and https://github.com/AntelopeIO/leap/issues/1131
+        await this.checkLinkAuthRequirements(account, permission, contract, action);
+
+        // Setup the action to sign
+        const newAction = {
+            name: action.toString(),
+            authorization: [
+                {
+                    actor: account.toString(),
+                    permission: permission.toString(),
+                },
+            ],
+            data: data,
+        };
+        const signer = this.getTransactionSigner();
+
+        return await transact(Name.from(contract), [newAction], signer);
+    }
+
+    private async checkLinkAuthRequirements(
+        actor: NameType,
+        permission: NameType,
+        contract: NameType,
+        action: NameType
+    ) {
+        // Check that the permission is linked to the contract
+        const account = await getAccount(actor);
+        const authorizingPermission = account.permissions.find((p) => p.perm_name.equals(permission));
+        const linkedAuth = authorizingPermission?.linked_actions?.find(
+            // a.action is undefined for all actions, or the specific action
+            (a) => a.account.equals(contract) && (!a.action || a.action.equals(action))
+        );
+
+        // If not then link it
+        if (!linkedAuth) {
+            const linkAuthRequestMessage = await LinkAuthRequestMessage.signMessage(
+                { contract: Name.from(contract), action: Name.from('') },
+                await this.getIssuer(),
+                await this.getWalletDid()
+            );
+            let subscriberId: number;
+            // TODO: abstract the request response dynamic into a function...
+            const waitForResponse = new Promise<void>((resolve, reject) => {
+                subscriberId = this.communication.subscribeMessage(async (message: Message) => {
+                    try {
+                        if (message.getSender() !== (await this.getWalletDid())) {
+                            throwError('LinkAuthRequestResponse sender is not wallet', SdkErrors.SenderNotAuthorized);
+                        }
+
+                        const linkedAuthMsg = new LinkAuthRequestResponseMessage(message);
+
+                        if (
+                            linkAuthRequestMessage.getVc().getId() === linkedAuthMsg.getPayload().requestId &&
+                            linkedAuthMsg.getPayload().success
+                        ) {
+                            resolve();
+                        } else {
+                            throwError("Couldn't link permission", SdkErrors.LinkAuthFailed);
+                        }
+                    } catch (e) {
+                        reject(e);
+                    }
+                }, LinkAuthRequestResponseMessage.getType());
+
+                setTimeout(() => {
+                    reject(createSdkError('LinkAuthRequestResponse timeout', SdkErrors.MessageSendError));
+                }, 5000);
+            });
+
+            await this.sendMessage(linkAuthRequestMessage);
+            await waitForResponse;
+            // @ts-expect-error subscriberId is used before it is defined
+            this.communication.unsubscribeMessage(subscriberId);
+        }
+    }
+
+    /**
+     * Sends a message to another DID
+     *
+     * @param {Message} message - the message to send
+     */
+    async sendMessage(message: Message): Promise<void> {
+        await this.loginToCommunication();
+        const res = await this.communication.sendMessage(message);
+
+        if (!res) throwError('Failed to send message', SdkErrors.MessageSendError);
+    }
+
+    private async loginToCommunication(): Promise<void> {
+        if (!this.communication.isLoggedIn()) {
+            const issuer = await this.getIssuer();
+            const authMessage = await AuthenticationMessage.signMessageWithoutRecipient({}, issuer);
+
+            await this.communication.login(authMessage);
+        }
     }
 }

@@ -14,6 +14,7 @@ import {
     IdentifyMessage,
     LoginRequestResponseMessage,
     ExternalUser,
+    EosioTokenContract,
 } from '../src/sdk/index';
 import URL from 'jsdom-url';
 import { JsKeyManager } from '../src/sdk/storage/jsKeyManager';
@@ -39,12 +40,18 @@ import {
     setupTonomyIdRequestConfirmSubscriber,
     externalWebsiteOnLogout,
     externalWebsiteSignVc,
+    externalWebsiteSignTransaction,
+    setupLinkAuthSubscriber,
 } from './helpers/externalUser';
 import { createStorageFactory } from './helpers/storageFactory';
 import { objToBase64Url } from '../src/sdk/util/base64';
+import { createSigner } from '../src/sdk/services/blockchain';
+import { privateKey } from './helpers/eosio';
 
 // @ts-expect-error - type error on global
 global.URL = URL;
+
+const eosioTokenContract = EosioTokenContract.Instance;
 
 setSettings(settings);
 
@@ -89,6 +96,8 @@ describe('Login to external website', () => {
         TONOMY_LOGIN_WEBSITE_jsKeyManager = new JsKeyManager();
         EXTERNAL_WEBSITE_jsKeyManager = new JsKeyManager();
 
+        await eosioTokenContract.addPerm(externalApp.accountName, createSigner(privateKey));
+
         // setup storage factories for the external website and tonomy login website
         TONOMY_LOGIN_WEBSITE_storage_factory = createStorageFactory(STORAGE_NAMESPACE + 'login-website.');
         EXTERNAL_WEBSITE_storage_factory = createStorageFactory(STORAGE_NAMESPACE + 'external-website.');
@@ -105,7 +114,7 @@ describe('Login to external website', () => {
 
     describe('SSO login full end-to-end flow with external desktop browser (using communication service)', () => {
         test('User succeeds at login to external website', async () => {
-            expect.assertions(39);
+            expect.assertions(49);
 
             // #####External website user (login page) #####
             // ################################
@@ -161,14 +170,15 @@ describe('Login to external website', () => {
             // ##########################
             await scanQrAndAck(TONOMY_ID_user, TONOMY_LOGIN_WEBSITE_did, log);
 
-            // #####Tonomy Login App website user (login page) #####
-            // ########################################
             const TONOMY_ID_requestSubscriber = setupLoginRequestSubscriber(
                 TONOMY_ID_user,
                 tonomyLoginApp.origin,
                 TONOMY_LOGIN_WEBSITE_did,
                 log
             );
+
+            // #####Tonomy Login App website user (login page) #####
+            // ########################################
 
             // wait for the ack message to confirm Tonomy ID is connected
             const connectionMessageFromTonomyId = await TONOMY_LOGIN_WEBSITE_ackMessagePromise;
@@ -251,6 +261,8 @@ describe('Login to external website', () => {
                 accountName: TONOMY_LOGIN_WEBSITE_accountName,
             });
 
+            // #####External website user (callback page) #####
+            // ################################
             // @ts-expect-error - cannot find name jsdom
             jsdom.reconfigure({
                 url:
@@ -259,9 +271,6 @@ describe('Login to external website', () => {
                     `?payload=${EXTERNAL_WEBSITE_base64UrlPayload}`,
             });
 
-            // #####External website user (callback page) #####
-            // ################################
-
             EXTERNAL_WEBSITE_user = await externalWebsiteOnCallback(
                 EXTERNAL_WEBSITE_jsKeyManager,
                 EXTERNAL_WEBSITE_storage_factory,
@@ -269,19 +278,32 @@ describe('Login to external website', () => {
                 log
             );
 
-            await externalWebsiteOnReload(
+            await EXTERNAL_WEBSITE_user.communication.disconnect();
+
+            EXTERNAL_WEBSITE_user = await externalWebsiteOnReload(
                 EXTERNAL_WEBSITE_jsKeyManager,
                 EXTERNAL_WEBSITE_storage_factory,
                 TONOMY_ID_user,
                 log
             );
 
-            await externalWebsiteSignVc(EXTERNAL_WEBSITE_user);
+            await externalWebsiteSignVc(EXTERNAL_WEBSITE_user, log);
+
+            // ##### Tonomy ID user (storage container) #####
+            // ##########################
+
+            const TONOMY_ID_linkAuthSubscriber = setupLinkAuthSubscriber(TONOMY_ID_user, log);
+
+            // #####External website user (callback page) #####
+            // ################################
+            await externalWebsiteSignTransaction(EXTERNAL_WEBSITE_user, externalApp, log);
+            await TONOMY_ID_linkAuthSubscriber;
 
             await externalWebsiteOnLogout(EXTERNAL_WEBSITE_jsKeyManager, EXTERNAL_WEBSITE_storage_factory);
 
             // cleanup connections
             await TONOMY_LOGIN_WEBSITE_communication.disconnect();
+            await EXTERNAL_WEBSITE_user.communication.disconnect();
         });
     });
 });

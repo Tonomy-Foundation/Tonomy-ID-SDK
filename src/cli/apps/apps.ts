@@ -1,4 +1,4 @@
-import { PublicKey } from '@greymass/eosio';
+import { PublicKey } from '@wharfkit/antelope';
 import { setSettings } from '../../sdk/util/settings';
 import { App, AppCreateOptions } from '../../sdk/controllers/app';
 

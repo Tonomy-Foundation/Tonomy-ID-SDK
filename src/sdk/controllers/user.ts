@@ -1,5 +1,5 @@
-import { Name, PrivateKey, API, Checksum256 } from '@greymass/eosio';
-import { PushTransactionResponse } from '@greymass/eosio/src/api/v1/types';
+import { Name, PrivateKey, API, Checksum256 } from '@wharfkit/antelope';
+import { PushTransactionResponse } from '@wharfkit/antelope/src/api/v1/types';
 import { KeyManager, KeyManagerLevel } from '../storage/keymanager';
 import { GetPersonResponse, IDContract } from '../services/blockchain/contracts/IDContract';
 import {
@@ -7,7 +7,7 @@ import {
     createKeyManagerSigner,
     createSigner,
 } from '../services/blockchain/eosio/transaction';
-import { getApi, getChainInfo } from '../services/blockchain/eosio/eosio';
+import { getAccount, getChainInfo } from '../services/blockchain/eosio/eosio';
 import { createStorage, PersistentStorageClean, StorageFactory, STORAGE_NAMESPACE } from '../storage/storage';
 import { SdkErrors, throwError, SdkError } from '../util/errors';
 import { AccountType, TonomyUsername } from '../util/username';
@@ -17,6 +17,8 @@ import { getSettings } from '../util/settings';
 import { Communication } from '../services/communication/communication';
 import { Issuer } from '@tonomy/did-jwt-vc';
 import { createVCSigner, generateRandomKeyPair } from '../util/crypto';
+import { Message, LinkAuthRequestMessage, LinkAuthRequestResponseMessage } from '../services/communication/message';
+import { getAccountNameFromDid, parseDid } from '../util/ssi/did';
 
 enum UserStatus {
     CREATING_ACCOUNT = 'CREATING_ACCOUNT',
@@ -125,7 +127,7 @@ export class User {
         );
 
         try {
-            user = (await User.getAccountInfo(fullUsername)) as any; // Throws error if username is taken
+            user = await User.getAccountInfo(fullUsername);
             if (user) throwError('Username is taken', SdkErrors.UsernameTaken);
         } catch (e) {
             if (!(e instanceof SdkError && e.code === SdkErrors.UsernameNotFound)) {
@@ -194,6 +196,13 @@ export class User {
             level: KeyManagerLevel.PASSWORD,
             privateKey,
             challenge: password,
+        });
+
+        await this.keyManager.storeKey({
+            level: KeyManagerLevel.ACTIVE,
+            privateKey,
+            // eventually this should be different than the password key, but for now Antelope protocol doesn't support it
+            // ideally we would have a different structure, and active key will be linked to local key
         });
     }
 
@@ -481,28 +490,17 @@ export class User {
     }
 
     static async getAccountInfo(account: TonomyUsername | Name): Promise<API.v1.AccountObject> {
-        try {
-            let accountName: Name;
-            const api = await getApi();
+        let accountName: Name;
 
-            if (account instanceof TonomyUsername) {
-                const idData = await idContract.getPerson(account);
+        if (account instanceof TonomyUsername) {
+            const idData = await idContract.getPerson(account);
 
-                accountName = idData.account_name;
-            } else {
-                accountName = account;
-            }
-
-            return await api.v1.chain.get_account(accountName);
-        } catch (e) {
-            const error = e as Error;
-
-            if (error.message === 'Account not found at /v1/chain/get_account') {
-                throwError('Account "' + account.toString() + '" not found', SdkErrors.AccountDoesntExist);
-            } else {
-                throw e;
-            }
+            accountName = idData.account_name;
+        } else {
+            accountName = account;
         }
+
+        return await getAccount(accountName);
     }
 
     async getIssuer(): Promise<Issuer> {
@@ -539,6 +537,57 @@ export class User {
             return await this.checkKeysStillValid();
         } else {
             throwError('Account "' + accountName + '" not found', SdkErrors.AccountDoesntExist);
+        }
+    }
+
+    async handleLinkAuthRequestMessage(message: Message) {
+        const linkAuthRequestMessage = new LinkAuthRequestMessage(message);
+
+        try {
+            if (!getAccountNameFromDid(message.getSender()).equals(await this.getAccountName()))
+                throwError('Message not sent from authorized account', SdkErrors.SenderNotAuthorized);
+
+            const payload = linkAuthRequestMessage.getPayload();
+
+            const contract = payload.contract;
+            const action = payload.action;
+
+            const permission = parseDid(message.getSender()).fragment;
+
+            if (!permission) throwError('DID does not contain fragment', SdkErrors.MissingParams);
+
+            await idContract.getApp(Name.from(permission));
+            // Throws SdkErrors.DataQueryNoRowDataFound error if app does not exist
+            // which cannot happen in theory, as the user is already logged in
+
+            const signer = createKeyManagerSigner(this.keyManager, KeyManagerLevel.ACTIVE);
+
+            await idContract.linkAuth(
+                (await this.getAccountName()).toString(),
+                contract.toString(),
+                action.toString(),
+                permission,
+                signer
+            );
+
+            const linkAuthRequestResponseMessage = await LinkAuthRequestResponseMessage.signMessage(
+                {
+                    requestId: linkAuthRequestMessage.getVc().getId() as string,
+                    success: true,
+                },
+                await this.getIssuer(),
+                linkAuthRequestMessage.getSender()
+            );
+
+            await this.communication.sendMessage(linkAuthRequestResponseMessage);
+        } catch (e) {
+            if (e instanceof SdkError && e.code === SdkErrors.SenderNotAuthorized) {
+                // somebody may be trying to DoS the user, drop
+                return;
+            } else {
+                // all other errors are Tonomy software errors, so throw to bubble up
+                throw e;
+            }
         }
     }
 }

@@ -1,12 +1,10 @@
 /* eslint-disable camelcase */
-import { API, Checksum256, Name, PublicKey } from '@greymass/eosio';
+import { API, Checksum256, Name, PublicKey } from '@wharfkit/antelope';
 import { TonomyUsername } from '../../../util/username';
-import { getApi } from '../eosio/eosio';
-import { Signer, transact } from '../eosio/transaction';
+import { getAccount, getApi } from '../eosio/eosio';
+import { ActionData, Signer, transact } from '../eosio/transaction';
 import { SdkErrors, throwError } from '../../../util/errors';
 import { sha256 } from '../../../util/crypto';
-import { getSettings } from '../../../util/settings';
-import fetch from 'cross-fetch';
 
 enum PermissionLevel {
     OWNER = 'OWNER',
@@ -105,18 +103,7 @@ class IDContract {
         },
         signer: Signer
     ): Promise<API.v1.PushTransactionResponse> {
-        const requestOptions = {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ account_name: account.toString() }),
-        };
-        const url = getSettings().blockchainUrl + '/v1/chain/get_account';
-
-        const accountInfo = (await (await fetch(url, requestOptions)).json()) as any;
-
-        // TODO use @greymass/eosio when it supports linked_actions
-        // const api = await getApi();
-        // const accountInfo = await api.v1.chain.get_account(account);
+        const accountInfo = await getAccount(account);
 
         const actions = [];
 
@@ -132,21 +119,17 @@ class IDContract {
             let link_auth = true;
 
             try {
-                const accountPermission = accountInfo.permissions.find(
-                    (p: any) => p.perm_name === permission.toLowerCase()
-                );
-                // TODO use @greymass/eosio when it supports linked_actions
-                // const accountPermission = accountInfo.getPermission(permission.toLowerCase());
+                const accountPermission = accountInfo.getPermission(permission.toLowerCase());
 
                 if (
                     accountPermission &&
                     accountPermission.linked_actions.find(
-                        (a: any) => a.account === 'id.tonomy' && a.action === 'loginwithapp'
+                        (a) => a.account.equals('id.tonomy') && a.action.equals('loginwithapp')
                     )
                 ) {
                     link_auth = false;
                 }
-            } catch (e: any) {
+            } catch (e) {
                 if (!e.message.startsWith('Unknown permission ')) {
                     throw e;
                 }
@@ -291,6 +274,39 @@ class IDContract {
         };
     }
 
+    /**
+     * @param account - the permission's owner to be linked and the payer of the RAM needed to store this link,
+     * @param code - the owner of the action to be linked,
+     * @param type - the action to be linked,
+     * @param requirement - the permission to be linked.
+     */
+    async linkAuth(
+        account: string,
+        code: string,
+        type: string,
+        requirement: string,
+        signer: Signer
+    ): Promise<API.v1.PushTransactionResponse> {
+        const action: ActionData = {
+            account: 'id.tonomy',
+            name: 'linkauth',
+            authorization: [
+                {
+                    actor: account,
+                    permission: 'active',
+                },
+            ],
+            data: {
+                account,
+                code,
+                type,
+                requirement,
+            },
+        };
+
+        return await transact(Name.from('id.tonomy'), [action], signer);
+    }
+
     async getApp(account: TonomyUsername | Name | string): Promise<AppTableRecord> {
         let data;
         const api = await getApi();
@@ -367,6 +383,10 @@ class IDContract {
             version: idData.version,
         };
     }
+}
+
+export async function getAccountNameFromUsername(username: TonomyUsername): Promise<Name> {
+    return (await IDContract.Instance.getPerson(username)).account_name;
 }
 
 export { IDContract, GetPersonResponse };

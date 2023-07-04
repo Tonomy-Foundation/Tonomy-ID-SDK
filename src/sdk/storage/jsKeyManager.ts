@@ -7,7 +7,7 @@ import {
     StoreKeyOptions,
     CheckKeyOptions,
 } from './keymanager';
-import { Checksum256, PrivateKey, PublicKey, Signature } from '@greymass/eosio';
+import { Checksum256, PrivateKey, PublicKey, Signature } from '@wharfkit/antelope';
 import { SdkErrors, throwError } from '../util/errors';
 import { STORAGE_NAMESPACE } from './storage';
 
@@ -34,6 +34,7 @@ export class JsKeyManager implements KeyManager {
         };
 
         switch (options.level) {
+            case KeyManagerLevel.ACTIVE:
             case KeyManagerLevel.LOCAL:
             case KeyManagerLevel.BIOMETRIC:
                 break;

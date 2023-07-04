@@ -3,7 +3,7 @@ import { DIDurl, URL } from '../../util/ssi/types';
 import { VerifiableCredentialWithType, VCWithTypeType } from '../../util/ssi/vc';
 import { LoginRequest } from '../../util/request';
 import { TonomyUsername } from '../../util/username';
-import { Name } from '@greymass/eosio';
+import { Name } from '@wharfkit/antelope';
 import { SdkErrors } from '../../util/errors';
 
 /**
@@ -216,5 +216,79 @@ export class LoginRequestResponseMessage extends Message<LoginRequestResponseMes
         );
 
         return new LoginRequestResponseMessage(vc);
+    }
+}
+
+export type LinkAuthRequestMessagePayload = {
+    contract: Name; //code in the eosio contract
+    action: Name; //type in the eosio contract
+};
+
+export class LinkAuthRequestMessage extends Message<LinkAuthRequestMessagePayload> {
+    protected static type = 'LinkAuthRequestMessage';
+
+    /**
+     * @override the Message constructor to decode the payload of type LinkAuthRequestMessagePayload
+     */
+    constructor(
+        vc:
+            | LinkAuthRequestMessage
+            | Message<LinkAuthRequestMessagePayload>
+            | VCWithTypeType<LinkAuthRequestMessagePayload>
+    ) {
+        super(vc);
+        const payload = this.getVc().getPayload().vc.credentialSubject.payload;
+
+        this.decodedPayload = {
+            contract: Name.from(payload.contract),
+            action: Name.from(payload.action),
+        };
+    }
+
+    /**
+     * Alternative constructor that returns type LoginRequestResponseMessage
+     */
+    static async signMessage(
+        message: LinkAuthRequestMessagePayload,
+        issuer: Issuer,
+        recipient: DIDurl,
+        options: { subject?: URL } = {}
+    ) {
+        const vc = await super.signMessageWithRecipient<LinkAuthRequestMessagePayload>(
+            message,
+            issuer,
+            recipient,
+            options
+        );
+
+        return new LinkAuthRequestMessage(vc);
+    }
+}
+
+export type LinkAuthRequestResponseMessagePayload = {
+    requestId: string;
+    success: boolean;
+};
+
+export class LinkAuthRequestResponseMessage extends Message<LinkAuthRequestResponseMessagePayload> {
+    protected static type = 'LinkAuthRequestResponseMessage';
+
+    /**
+     * Alternative constructor that returns type LinkAuthRequestResponseMessage
+     */
+    static async signMessage(
+        message: LinkAuthRequestResponseMessagePayload,
+        issuer: Issuer,
+        recipient: DIDurl,
+        options: { subject?: URL } = {}
+    ) {
+        const vc = await super.signMessageWithRecipient<LinkAuthRequestResponseMessagePayload>(
+            message,
+            issuer,
+            recipient,
+            options
+        );
+
+        return new LinkAuthRequestResponseMessage(vc);
     }
 }
