@@ -34,7 +34,7 @@ jobs:
       - run: |
           if [[ ${GITHUB_REF#refs/*/} == "feature/224-sign-transaction" ]]; then
             echo "Variable BRANCH_NAME is set to 'feature/224-sign-transaction'"
-            yarn config set tag feature/224-sign-transaction
+            yarn config set tag development
           fi
      
       - run: yarn install
