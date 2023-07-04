@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { API, Name, NameType, Asset } from '@wharfkit/antelope';
+import { API, Name, NameType } from '@wharfkit/antelope';
 import { Signer, transact } from '../eosio/transaction';
 import { getApi } from '../eosio/eosio';
 
@@ -95,10 +95,10 @@ class EosioTokenContract {
         await transact(Name.from('eosio.token'), actions, signer);
     }
 
-    async getBalance(account: NameType): Promise<Asset> {
-        const assets = await (await getApi()).v1.chain.get_currency_balance('eosio.token', account);
+    async getBalance(account: NameType): Promise<number> {
+        const assets = await (await getApi()).v1.chain.get_currency_balance('eosio.token', account, 'SYS');
 
-        return assets[0];
+        return assets[0].value;
     }
 }
 

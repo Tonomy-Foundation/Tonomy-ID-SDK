@@ -9,11 +9,6 @@
   "types": "./build/sdk/types/sdk/index.d.ts",
   "umd:main": "./build/sdk/index.umd.js",
   "exports": {
-    ".": {
-      "types": "./build/sdk/types/sdk/index.d.ts",
-      "require": "./build/sdk/index.cjs",
-      "import": "./build/sdk/index.module.js"
-    },
     "./api/tonomy.css": {
       "import": "./build/api/tonomy.css",
       "require": "./build/api/tonomy.css"
@@ -22,6 +17,11 @@
       "types": "./build/sdk/types/sdk/api/index.d.ts",
       "require": "./build/api/index.cjs",
       "import": "./build/api/index.module.js"
+    },
+    ".": {
+      "types": "./build/sdk/types/sdk/index.d.ts",
+      "require": "./build/sdk/index.cjs",
+      "import": "./build/sdk/index.module.js"
     }
   },
   "files": [
