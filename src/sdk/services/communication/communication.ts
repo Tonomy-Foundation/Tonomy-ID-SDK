@@ -12,12 +12,13 @@ export class Communication {
     // TODO fix problem: if server restarts, this will be lost and all clients will need to reconnect
     private subscribers = new Map<number, Subscriber>();
     private authMessage: AuthenticationMessage;
+    private url: string;
 
     constructor(singleton = true) {
         if (Communication.singleton && singleton) return Communication.singleton;
-        const url = getSettings().communicationUrl;
+        this.url = getSettings().communicationUrl;
 
-        this.socketServer = io(url, {
+        this.socketServer = io(this.url, {
             transports: ['websocket'],
             autoConnect: false,
         });
@@ -26,7 +27,7 @@ export class Communication {
     }
 
     isLoggedIn(): boolean {
-        return !!this.authMessage;
+        return this.authMessage !== undefined && typeof this.authMessage === 'object';
     }
 
     /**

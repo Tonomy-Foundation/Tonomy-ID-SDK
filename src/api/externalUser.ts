@@ -114,8 +114,6 @@ export class ExternalUser {
 
             if (accountName.toString() !== personData.account_name.toString())
                 throwError('Username has changed', SdkErrors.InvalidData);
-
-            await user.loginToCommunication();
             return user;
         } catch (e) {
             if (autoLogout) await user.logout();
