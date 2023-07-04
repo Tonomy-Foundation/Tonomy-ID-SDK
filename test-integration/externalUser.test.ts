@@ -278,6 +278,8 @@ describe('Login to external website', () => {
                 log
             );
 
+            await EXTERNAL_WEBSITE_user.communication.disconnect();
+
             EXTERNAL_WEBSITE_user = await externalWebsiteOnReload(
                 EXTERNAL_WEBSITE_jsKeyManager,
                 EXTERNAL_WEBSITE_storage_factory,
@@ -301,6 +303,7 @@ describe('Login to external website', () => {
 
             // cleanup connections
             await TONOMY_LOGIN_WEBSITE_communication.disconnect();
+            await EXTERNAL_WEBSITE_user.communication.disconnect();
         });
     });
 });

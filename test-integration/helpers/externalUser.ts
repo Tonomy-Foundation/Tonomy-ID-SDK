@@ -284,7 +284,7 @@ export async function externalWebsiteSignTransaction(externalUser: ExternalUser,
 export async function setupLinkAuthSubscriber(user: User, log = false): Promise<void> {
     // Setup a promise that resolves when the subscriber executes
     // This emulates the Tonomy ID app, which waits for LinkAuth requests and executes them
-    return new Promise((resolve, reject) => {
+    return new Promise<void>((resolve, reject) => {
         user.communication.subscribeMessage(async (message) => {
             if (log) console.log('TONOMY_ID/storage: LinkAuth request received');
 

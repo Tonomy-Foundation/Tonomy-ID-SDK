@@ -323,7 +323,6 @@ export class ExternalUser {
 
             await externalUser.setAccountName(accountName);
             await externalUser.setUsername(username);
-            await externalUser.loginToCommunication();
 
             return externalUser;
         } else {
@@ -435,12 +434,11 @@ export class ExternalUser {
                             throwError('LinkAuthRequestResponse sender is not wallet', SdkErrors.SenderNotAuthorized);
                         }
 
-                        const linkedAuthResponseMessage = new LinkAuthRequestResponseMessage(message);
+                        const linkedAuthMsg = new LinkAuthRequestResponseMessage(message);
 
                         if (
-                            linkedAuthResponseMessage.getPayload().requestId ===
-                            linkAuthRequestMessage.getVc().getId() &&
-                            linkedAuthResponseMessage.getPayload().success
+                            linkAuthRequestMessage.getVc().getId() === linkedAuthMsg.getPayload().requestId &&
+                            linkedAuthMsg.getPayload().success
                         ) {
                             resolve();
                         } else {
