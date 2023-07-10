@@ -1,4 +1,4 @@
-# Tonomy Command Line Interface (CLI)
+# Manage SSO Applications (CLI)
 
 The Tonomy CLI is used to create and manage Tonomy Apps that can interact with Tonomy identities.
 

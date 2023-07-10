@@ -2,7 +2,7 @@ site_name: Tonomy SDK
 nav:
     - Home: index.md
     - Interact with identities (API): api.md
-    - Manage Tonomy Apps (CLI): cli.md
+    - Manage SSO Applications (CLI): cli.md
     - Build smart wallets (SDK): sdk.md
 theme:
   name: material

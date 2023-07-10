@@ -1,6 +1,8 @@
-# Tonomy Application Programming Interface (API)
+# Interact with identities (API)
 
 The Tonomy API allow existing applications to login and interact with Tonomy identities. This is through a familiar [Single Sign-On](https://en.wikipedia.org/wiki/Single_sign-on) (SSO) flow like with oAuth 2.0 or OpenIdConnect.
+
+**Integration with an existing Tonomy network for a new app is expected to take < 30 minutes**
 
 See a full example Reactjs website with Tonomy ID login here:
 

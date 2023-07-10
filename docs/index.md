@@ -2,17 +2,22 @@
 
 The Tonomy SDK manages all the business logic, cryptography and interactions between identities and applications.
 
+**Tonomy ID - White Paper**:
+<https://www.canva.com/design/DAFnktNOWKU/Ps1zXw3XICaEMiB0R4Ghkg/view>
+
 ## Installation
 
 ```bash
 npm install @tonomy/tonomy-id-sdk
+# or
+yarn add @tonomy/tonomy-id-sdk
 ```
 
 ## Usage
 
-- [Integrate with Tonomy ID](/api): API to manage single sign-on (SSO) and other interactions with Tonomy identities such as signature requests, transactions and messaging for web and mobile apps
-- [Command line interface](/cli): CLI to manage Tonomy Apps for use in SSO
-- [Build apps like Tonomy ID using the SDK](/sdk): SDK for building smart wallet applications like Tonomy ID
+- [Interact with identities](/api): API to manage single sign-on (SSO) and other interactions with Tonomy identities such as signature requests, transactions and messaging for web and mobile apps
+- [Manage SSO Applications](/cli): CLI to manage Tonomy Apps for use in SSO
+- [Build smart wallets](/sdk): SDK for building smart wallet applications like Tonomy ID
 
 ### Compatibility
 
