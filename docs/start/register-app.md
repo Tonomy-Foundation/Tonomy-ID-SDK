@@ -4,7 +4,7 @@ You need to register your application details so that they can be displayed to t
 
 ## Creating a key
 
-A private key is used to manage a Tonomy App
+A private key is used to manage a Tonomy App. Save this key in a safe place.
 
 ```bash
 npm run cli keys create

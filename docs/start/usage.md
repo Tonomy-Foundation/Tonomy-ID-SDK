@@ -2,20 +2,22 @@
 
 With a logged in user you can do the following:
 
-## Get the anonymous account ID
+## User information
+
+### Get the anonymous account ID
 
 ```typescript
 const accountName = await user.getAccountName().toString();
 ```
 
-## Get the username
+### Get the username
 
 ```typescript
 const username = await user.getUsername();
 const shortUsername = username.getBaseUsername();
 ```
 
-## Get the DID
+### Get the DID
 
 ```typescript
 const accountName = await user.getDid();
