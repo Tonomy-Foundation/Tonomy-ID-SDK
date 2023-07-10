@@ -8,6 +8,14 @@ See a full example Reactjs website with Tonomy ID login here:
 
 <a href="https://demo.demo.tonomy.foundation" target="_blank">Demo website</a>
 
+## Installation
+
+```bash
+npm install @tonomy/tonomy-id-sdk
+# or
+yarn add @tonomy/tonomy-id-sdk
+```
+
 ## Login steps
 
 Follow these steps to allow a Tonomy identity to log into your application.

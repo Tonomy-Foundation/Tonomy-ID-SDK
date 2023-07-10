@@ -1,11 +1,31 @@
-site_name: Tonomy SDK
+site_name: Tonomy Developer Documentation
 nav:
-    - Home: index.md
-    - Interact with identities (API): api.md
-    - Manage SSO Applications (CLI): cli.md
-    - Build smart wallets (SDK): sdk.md
+    - Introduction:
+      - Welcome: welcome/welcome.md
+      - Features: welcome/features.md
+      - Environment support: welcome/environment.md
+    - Get started:
+      - Start: start/start.md
+      - Register your application: start/register.md
+      - Installation: start/installation.md
+      - Configuration: start/configuration.md
+      - Usage and data signing: start/usage.md
+    - Guides:
+      - Deploy Tonomy ID: guides/deploy.md
+      - Deploy a web wallet with the SDK: guides/deploy_wallet.md
+    - Reference:
+      - ExternalUser: reference/api.md
+      - Command Line Interface: reference/cli.md
+      - Software Development Kit: reference/sdk.md
+    - Example Applications: examples.md
 theme:
   name: material
+  logo: images/logo48.png
+  favicon: images/favicon.ico
+  features:
+    - navigation.instant
+    - navigation.sections
+    - navigation.tabs
 markdown_extensions:
   - pymdownx.highlight:
       anchor_linenums: true

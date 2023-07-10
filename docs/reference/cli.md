@@ -4,6 +4,14 @@ The Tonomy CLI is used to create and manage Tonomy Apps that can interact with T
 
 This is a temporary solution while we build the Tonomy Developer Console where Tonomy Apps can be managed through a web interface.
 
+## Installation
+
+```bash
+npm install @tonomy/tonomy-id-sdk
+# or
+yarn add @tonomy/tonomy-id-sdk
+```
+
 ## Creating a key
 
 A private key is used to manage a Tonomy App
