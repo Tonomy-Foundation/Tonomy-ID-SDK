@@ -1,23 +1,23 @@
 site_name: Tonomy Developer Documentation
 nav:
-    - Introduction:
-      - Welcome: welcome/welcome.md
-      - Features: welcome/features.md
-      - Environment support: welcome/environment.md
-    - Get started:
-      - Start: start/start.md
-      - Register your application: start/register.md
-      - Installation: start/installation.md
-      - Configuration: start/configuration.md
-      - Usage and data signing: start/usage.md
-    - Guides:
-      - Deploy Tonomy ID: guides/deploy.md
-      - Deploy a web wallet with the SDK: guides/deploy_wallet.md
-    - Reference:
-      - ExternalUser: reference/api.md
-      - Command Line Interface: reference/cli.md
-      - Software Development Kit: reference/sdk.md
-    - Example Applications: examples.md
+  - Introduction:
+    - Welcome: index.md
+    - Features: welcome/features.md
+    - Environment support: welcome/environment.md
+  - Get started:
+    - Start: start/start.md
+    - 1. Instal the API: start/installation.md
+    - 2. Register your application: start/register-app.md
+    - 3. Single sign-on: start/single-sign-on.md
+    - 4. Usage and signing data: start/usage.md
+  - Guides:
+    - Deploy Tonomy ID: guides/deploy.md
+    - Deploy a web wallet with the SDK: guides/deploy-wallet.md
+  - Reference:
+    - Application Interface: reference/api.md
+    - Command Line Interface: reference/cli.md
+    - Software Development Kit: reference/sdk.md
+  - Example Applications: examples.md
 theme:
   name: material
   logo: images/logo48.png

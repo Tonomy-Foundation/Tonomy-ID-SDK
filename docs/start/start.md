@@ -1,17 +1,16 @@
 # Start
 
-## Integrate your app with a Tonomy ID user
+The Tonomy API allow existing applications to login and interact with Tonomy identities. This is through a familiar [Single Sign-On](https://en.wikipedia.org/wiki/Single_sign-on) (SSO) flow like with oAuth 2.0 or OpenIdConnect.
 
-Quick start try it out.
+**Integration with an existing Tonomy network for a new app is expected to take 10-30 minutes**
 
-- [Integrate your app with a Tonomy ID user](/api): Manage single sign-on (SSO) and other interactions with Tonomy identities such as signature requests, transactions and messaging for web and mobile apps
+See a demo Reactjs website use SSO to log in with Tonomy ID and sign data here:
 
-## [Manage SSO Applications in an existing ecosystem](/cli)
+<a href="https://demo.demo.tonomy.foundation" target="_blank">Demo website</a>
 
-CLI to manage Tonomy Apps for use in SSO
+## Prerequisites
 
-## [Deploying Tonomy ID in a new system](/deploy)
+To integrate with Tonomy ID, you must already have a deployed Tonomy ID ecosystem.
 
-How to deploy a white-labelled Tonomy ID in your system
-
-## [Build web/mobile wallets with the Tonomy SDK](/)
+- Use the Tonomy ID Demo network to try out integrating for the first time (this tutorial will use the demo network).
+- To deploy your own white-labelled Tonomy ID identity system see [Deploy Tonomy ID](../../guides/deploy.md).
