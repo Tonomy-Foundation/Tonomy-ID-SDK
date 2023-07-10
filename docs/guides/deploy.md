@@ -2,7 +2,7 @@
 
 **Deployment of the full Tonomy ID involves several integrated services and is expected to take several hours at least for someone not familiar with the system**
 
-Want the Tonomy Foundation to assist in your on-site deployment, or run a fully managed service with updates? Please [contact us](https://tonomy.io/contact)
+Want the Tonomy Foundation to assist in your on-site deployment, or run a fully managed service with updates? Please [contact us](https://tonomy.io/contact).
 
 ## Prerequisites
 
@@ -13,7 +13,7 @@ Want the Tonomy Foundation to assist in your on-site deployment, or run a fully 
 
 - Tonomy ID (React Native mobile wallet)
 - Tonomy Account Website (Reactjs)
-- Blockchain (Antelope protocol)
+- Blockchain and smart contracts (Antelope protocol)
 - Tonomy Communication (nestjs)
 
 ## Deployment
@@ -26,4 +26,11 @@ Want the Tonomy Foundation to assist in your on-site deployment, or run a fully 
 
 ### Antelope
 
+Having trouble running or using the blockchain node?
+
+- [Official Documentation](https://docs.eosnetwork.com/)
+- [Telegram support channel](https://t.me/antelopedevs)
+
 ### Tonomy ID / SDK
+
+- [Find us on Discord](https://www.discord.gg/QqVJz5XF8d)
