@@ -2,7 +2,7 @@
 
 Deployment of the full Tonomy ID involves several integrated services and is **expected to take several hours at least for someone not familiar with the system**
 
-Want the Tonomy Foundation to assist in your on-site deployment, or run a fully managed service with updates? Please [contact us](https://tonomy.io/contact).
+Want the Tonomy Foundation to assist in your on-site deployment, or run a fully managed service with updates? Please <a href="https://tonomy.io/contact" target="_blank">contact us</a>.
 
 ## Prerequisites
 
@@ -41,11 +41,11 @@ Read the `README.md` for each of the services before you start!
 
 Then you will need to deploy each service, with configuration so that they connect with each other:
 
-1. Deploy an and initialize an Antelope blockchain - see the <a href="hhttps://docs.eosnetwork.com/docs/latest/node-operation/getting-started/" target="_blank">official Antelope node guide</a>
+1. Deploy an and initialize an Antelope blockchain - see the <a href="https://docs.eosnetwork.com/docs/latest/node-operation/getting-started/" target="_blank">official Antelope node guide</a>
 
     - For a production grade network, we suggest 3 nodes if run by the same entity, or 5 nodes if run by separate entities
     - For maximum scaleability, run using bare-metal servers.
-    - Please [contact us](https://tonomy.io/contact) for assistance running a production Antelope network or setting up governance.
+    - Please <a href="https://tonomy.io/contact" target="_blank">contact us</a> for assistance running a production Antelope network or setting up governance.
 
 2. Create the `id.tonomy` account on the blockchain
 3. Deploy the <a href="https://github.com/Tonomy-Foundation/Tonomy-Contracts/tree/master/contracts/id.tonomy" target="_blank">id.tonomy</a> contract to the `id.tonomy` account on the blockchain
