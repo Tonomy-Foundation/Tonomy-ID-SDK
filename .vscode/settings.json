@@ -17,5 +17,9 @@
     "jest.jestCommandLine": "npm run test",
     "jest.testExplorer": {
         "enabled": true
+    },
+    "markdownlint.config": {
+        "default": true,
+        "MD033": false
     }
 }
