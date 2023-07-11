@@ -36,6 +36,26 @@ const vc = await user.signVc("https://example.com/example-vc/1234", "NameAndDob"
 const verifiedVc = await vc.verify();
 ```
 
+### Authenticate to your server
+
+`client-authentication.ts`
+
+```typescript
+const vc = await user.signVc("https://example.com/user-authorization/1234", "UserAuth", {
+    accountName: await user.getAccountName.toString()
+});
+```
+
+`server-verification.ts`
+
+```typescript
+const verifiedVc = await vc.verify();
+const userDid = vc.getIssuer();
+// save userDid as the account unique user ID
+```
+
+You can also use the same flow above to send all requests, which adds integrity protection and non-repudiation to all requests to your server.
+
 ### Sign a document
 
 TODO

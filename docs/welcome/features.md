@@ -20,6 +20,7 @@ associated to the app the signature was made in.
 Sign:
 
 - W3C Verifiable Credentials
+- Package authentication to your server
 - Documents (PDFs)
 - Smart Contract Transactions
 - Use provable Multi-factor authentication
