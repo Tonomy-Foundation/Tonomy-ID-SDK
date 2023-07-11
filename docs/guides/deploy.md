@@ -1,6 +1,6 @@
 # Deploy Tonomy ID
 
-**Deployment of the full Tonomy ID involves several integrated services and is expected to take several hours at least for someone not familiar with the system**
+Deployment of the full Tonomy ID involves several integrated services and is **expected to take several hours at least for someone not familiar with the system**
 
 Want the Tonomy Foundation to assist in your on-site deployment, or run a fully managed service with updates? Please [contact us](https://tonomy.io/contact).
 
@@ -77,23 +77,3 @@ To run the [Demo website](../../examples/#tonomy-demo-integration-application) i
 2. Deploy the <a href="https://github.com/Tonomy-Foundation/Tonomy-Contracts/tree/master/contracts/eosio.token" target="_blank">eosio.token</a> contract to the `eosio.token` account (or modify the Demo website to connect to a different account)
 3. Call `addperm()` function with the account name of the registered Demo application (Step 1)
 4. Create dummy accounts as shown in the <a href="https://github.com/Tonomy-Foundation/Tonomy-ID-SDK/blob/9061250ffceeddbbbf183a6ea03dfe7d5e1685c0/src/cli/bootstrap/bootstrap.ts#L88" target="_blank">bootstrap script here</a>
-
-## Troubleshooting
-
-### Antelope blockchain
-
-Having trouble running or using the blockchain node?
-
-- [Official Documentation](https://docs.eosnetwork.com/)
-- [Telegram support channel](https://t.me/antelopedevs)
-
-### Expo (React Native)
-
-Having trouble running or building the Tonomy ID app using expo?
-
-- [Official Documentation](https://docs.expo.dev)
-
-### Tonomy ID / SDK
-
-- [Contact us](https://tonomy.io/contact) for support
-- [Find us on Discord](https://www.discord.gg/QqVJz5XF8d)

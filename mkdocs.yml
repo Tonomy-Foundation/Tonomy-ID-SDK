@@ -13,6 +13,11 @@ nav:
   - Guides:
     - Deploy Tonomy ID: guides/deploy.md
     - Deploy a web wallet with the SDK: guides/deploy-wallet.md
+  - Reference:
+    - API: reference/api.md
+    - SDK: reference/sdk.md
+    - CLI: reference/cli.md
+  - Troubleshooting: troubleshooting.md
   - Example Applications: examples.md
 theme:
   name: material
