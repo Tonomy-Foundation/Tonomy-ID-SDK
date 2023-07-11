@@ -1,9 +1,9 @@
 # Single Sign-On
 
-1. Configuration
-2. `/login` page
-3. `/callback` page
-4. `/` page to check for logged in users
+1. Configuration - Set the network
+2. `/login` page - add login button and send to Tonomy ID
+3. `/callback` page - receive callback
+4. `/` home page - check for logged in users
 
 Examples below are for a Reactjs website.
 
@@ -60,7 +60,7 @@ const user = await api.ExternalUser.verifyLoginRequest();
 
 ## 4. Home page
 
-On your home page or when your app first loads, check if the user is already logged in.
+On your home page or when your app first loads (App.tsx in reactjs), check if the user is already logged in.
 
 ```typescript
 import { api, SdkError, SdkErrors } from '@tonomy/tonomy-id-sdk';

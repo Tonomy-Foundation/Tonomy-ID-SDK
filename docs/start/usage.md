@@ -1,6 +1,6 @@
 # Usage and signing data
 
-With a logged in user you can do the following:
+After you have a logged in `user` object from the callback or home page, you can do the following:
 
 ## User information
 
@@ -20,7 +20,7 @@ const shortUsername = username.getBaseUsername();
 ### Get the DID
 
 ```typescript
-const accountName = await user.getDid();
+const accountDid = await user.getDid();
 ```
 
 ## Signatures
@@ -42,7 +42,7 @@ TODO
 
 ### Sign a blockchain transaction
 
-**Step 1.** Modify your smart contract to accept signatures from users signed into your registered app (see [Register your app](/cli/#register-a-tonomy-app))
+**Step 1.** Modify your [Antelope smart contract](../../guides/deploy/#antelope) to accept signatures from users signed into your registered app (see [Register your app](/cli/#register-a-tonomy-app))
 
 `eosio.token.cpp`
 
@@ -61,7 +61,7 @@ token::transfer(const name &from,
 }
 ```
 
-**Step 2.** Use the SDK to sign the transaction
+**Step 2.** Use the API to sign the transaction
 
 ```typescript
 const trx = await user.signTransaction('eosio.token', 'transfer', {

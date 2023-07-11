@@ -1,6 +1,6 @@
 # Register your application
 
-You need to register your application details so that they can be displayed to the user when they sign into your application.
+You need to register your application details so that they can be displayed to the user when they sign into your application. You can currently do this with the Tonomy CLI. In the future you shall be able to do this through the Tonomy Developer Console.
 
 ## Creating a key
 

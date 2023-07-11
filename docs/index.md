@@ -9,3 +9,5 @@ Read the White Paper to understand Tonomy ID features and how it works:
 ## Try it out now
 
 Integrate your existing app in less then 10 minutes. Follow the [Quick start](/start/start) with the Demo network (default).
+
+Check out how it works by using the Demo integration app on the Demo network. <a href="https://demo.demo.tonomy.foundation" target="_blank">Click here</a>
