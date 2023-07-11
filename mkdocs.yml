@@ -29,6 +29,23 @@ theme:
     - navigation.tabs
     - navigation.tabs.sticky
     - navigation.footer
+  icon:
+    repo: fontawesome/brands/github
+repo_url: https://github.com/Tonomy-Foundation/Tonomy-ID
+repo_name: Tonomy-ID
+extra:
+  social:
+    - icon: fontawesome/solid/globe
+      link: https://tonomy.foundation
+      name: Website
+    - icon: fontawesome/brands/twitter
+      link: https://twitter.com/TonomyF
+    - icon: fontawesome/brands/linkedin
+      link: https://www.linkedin.com/company/tonomy-foundation
+    - icon: fontawesome/brands/discord
+      link: https://www.discord.gg/QqVJz5XF8d
+    - icon: fontawesome/brands/github
+      link: https://github.com/Tonomy-Foundation
 markdown_extensions:
   - pymdownx.highlight:
       anchor_linenums: true
