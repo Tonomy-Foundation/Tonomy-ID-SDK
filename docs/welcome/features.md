@@ -2,7 +2,7 @@
 
 Tonomy ID supports the following developer features. Take advantage of these features in your applications by integrating with the Tonomy SDK.
 
-Read the White Paper for more details: <a href="https://www.canva.com/design/DAFnktNOWKU/Ps1zXw3XICaEMiB0R4Ghkg/view" target="_blank">Click here</a>Tonomy ID - White Paper</a>
+Read the White Paper for more details: <a href="https://www.canva.com/design/DAFnktNOWKU/Ps1zXw3XICaEMiB0R4Ghkg/view" target="_blank">Tonomy ID - White Paper</a>
 
 ## Single Sign On
 

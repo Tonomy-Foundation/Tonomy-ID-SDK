@@ -4,7 +4,7 @@ Welcome to the Tonomy developer documentation. Tonomy ID is a self-sovereign ide
 
 Read the White Paper to understand Tonomy ID features and how it works:
 
-<a href="https://www.canva.com/design/DAFnktNOWKU/Ps1zXw3XICaEMiB0R4Ghkg/view" target="_blank">Click here</a>**Tonomy ID - White Paper**</a>
+<a href="https://www.canva.com/design/DAFnktNOWKU/Ps1zXw3XICaEMiB0R4Ghkg/view" target="_blank">**Tonomy ID - White Paper**</a>
 
 ## Try it out now
 

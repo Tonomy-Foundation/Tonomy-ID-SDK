@@ -47,17 +47,18 @@ Then you will need to deploy each service, with configuration so that they conne
     - For maximum scaleability, run using bare-metal servers.
     - Please [contact us](https://tonomy.io/contact) for assistance running a production Antelope network or setting up governance.
 
-2. Create the `id.tonomy` account
-3. Deploy the <a href="https://github.com/Tonomy-Foundation/Tonomy-Contracts/tree/master/contracts/id.tonomy" target="_blank">id.tonomy</a> contract to the `id.tonomy` account
+2. Create the `id.tonomy` account on the blockchain
+3. Deploy the <a href="https://github.com/Tonomy-Foundation/Tonomy-Contracts/tree/master/contracts/id.tonomy" target="_blank">id.tonomy</a> contract to the `id.tonomy` account on the blockchain
 4. [Register your applications](../../start/register-app) that you wish to connect to Tonomy ID
 5. Configure the software with the `config.json` file in the repository so that they are connected correctly using your domains, and to white-label the applications:
 
+    - Copy the following files and use environment variables to change which configuration file is used
     - <a href="https://github.com/Tonomy-Foundation/Tonomy-ID/blob/master/src/config/config.json" target="_blank">Tonomy ID config.json</a>
     - <a href="https://github.com/Tonomy-Foundation/Tonomy-App-Websites/blob/master/src/common/config/config.json" target="_blank">Tonomy App Websites config.json</a>
     - <a href="https://github.com/Tonomy-Foundation/Tonomy-Communication/blob/master/src/config/config.json" target="_blank">Tonomy Communication config.json</a>
 
 6. Create a new Google Play store and Apple App store listing.
-7. Use <a href="https://expo.dev" target="_blank">Expo</a> or <a href="https://expo.dev/eas" target="_blank">Expo Application Services</a> build Tonomy ID and submit it to your app store listings.
+7. Use <a href="https://expo.dev" target="_blank">Expo</a> or <a href="https://expo.dev/eas" target="_blank">Expo Application Services</a> to build Tonomy ID and submit it to your app store listings.
 8. Deploy <a href="https://github.com/Tonomy-Foundation/Tonomy-App-Websites" target="_blank">Tonomy App Websites</a>
 
     - You need to use the `accounts.` subdomain to run the Tonomy Accounts website

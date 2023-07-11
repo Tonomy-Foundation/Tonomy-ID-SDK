@@ -12,4 +12,4 @@ Tonomy API lets you connect your apps to Tonomy ID in the following ways:
 
 Tonomy ID is available on Android and iOS as native applications. It can be deployed as a white label product.
 
-Support for browser extensions or web wallets can be done directly by using the Tonomy SDK (see [Deploy a web wallet with the SDK](../../guides/deploy_wallet.md) for more details).
+Support for browser extensions or web wallets can be done directly by using the Tonomy SDK (see [Deploy a web wallet with the SDK](../../guides/deploy-wallet) for more details).
