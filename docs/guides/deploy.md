@@ -2,7 +2,7 @@
 
 Deployment of the full Tonomy ID involves several integrated services and is **expected to take several hours for someone not familiar with the system**
 
-Want the Tonomy Foundation to assist in your on-site deployment, or run a fully managed service with updates? Please <a href="https://tonomy.io/contact" target="_blank">contact us</a>.
+Please <a href="https://tonomy.io/contact" target="_blank">contact us</a> for assistance in your on-site deployment, or to help run a fully managed service with updates.
 
 ## Prerequisites
 

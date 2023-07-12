@@ -4,6 +4,7 @@ nav:
     - Welcome: index.md
     - Features: welcome/features.md
     - Environment support: welcome/environment.md
+    - Requirements: welcome/requirements.md
   - Get started:
     - Start: start/start.md
     - 1. Instal the API: start/installation.md
