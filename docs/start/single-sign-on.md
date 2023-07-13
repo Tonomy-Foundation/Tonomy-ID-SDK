@@ -39,7 +39,7 @@ async function onButtonPress() {
 To use the Tonomy login button styles, import the stylesheet and use the class `tonomy-login-button` on your button.
 
 ```typescript
-import "@tonomy/tonomy-id-sdk/api/tonomy.css";
+import "@tonomy/tonomy-id-sdk/build/api/tonomy.css";
 ```
 
 or

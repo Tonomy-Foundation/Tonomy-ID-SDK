@@ -19,7 +19,7 @@
       "require": "./build/api/index.cjs",
       "import": "./build/api/index.module.js"
     },
-    "./api/tonomy.css": {
+    "./build/api/tonomy.css": {
       "import": "./build/api/tonomy.css",
       "require": "./build/api/tonomy.css"
     }
