@@ -11,6 +11,7 @@ import {
 import { KeyManager, KeyManagerLevel } from '../../../storage/keymanager';
 import { HttpError } from '../../../util/errors';
 import { getApi } from './eosio';
+import { getSettings } from '../../../util';
 
 /**
  * Action data for a transaction
@@ -151,6 +152,8 @@ async function transact(
     let res;
 
     try {
+        if (getSettings().loggerLevel === 'debug')
+            console.debug('Pushing transaction', JSON.stringify(actions, null, 2));
         res = await api.v1.chain.push_transaction(signedTransaction);
     } catch (e) {
         if (e.response?.headers) {
