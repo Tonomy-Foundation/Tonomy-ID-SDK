@@ -6,8 +6,6 @@ import { signer, publicKey } from './keys';
 import bootstrapSettings from './settings';
 import settings from './settings';
 import { createUser } from './user';
-import { ActionData, transact } from '../../sdk/services/blockchain/eosio/transaction';
-import { Name } from '@greymass/eosio';
 
 setSettings(settings.config);
 const eosioTokenContract = EosioTokenContract.Instance;
@@ -23,6 +21,7 @@ export default async function bootstrap() {
             signer
         );
         await eosioTokenContract.create('1000000000 SYS', signer);
+        await eosioTokenContract.issue('10000 SYS', signer);
 
         await createAccount({ account: 'id.tonomy' }, signer);
         await deployContract(
@@ -47,26 +46,10 @@ export default async function bootstrap() {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             publicKey: publicKey as any,
         });
-        // action to add demo permission to token contract
-        const actions: ActionData[] = [
-            {
-                account: 'eosio.token',
-                name: 'addperm',
-                authorization: [
-                    {
-                        actor: 'eosio.token',
-                        permission: 'active',
-                    },
-                ],
-                data: {
-                    // eslint-disable-next-line camelcase
-                    per: Name.from(demo.accountName),
-                },
-            },
-        ];
 
-        // add demo permission to token contract
-        await transact(Name.from('eosio.token'), actions, signer);
+        // action to add demo permission to token contract
+        console.log('Adding demo permission to token contract');
+        eosioTokenContract.addPerm(demo.accountName, signer);
 
         await createApp({
             appName: 'Tonomy Website',
@@ -99,6 +82,7 @@ export default async function bootstrap() {
         console.log('Bootstrap complete');
     } catch (e: any) {
         console.error(e);
+        if (e.error?.details) console.log(e.error.details);
         process.exit(1);
     }
 }

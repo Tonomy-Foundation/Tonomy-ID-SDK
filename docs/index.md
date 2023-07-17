@@ -1,26 +1,13 @@
-# Tonomy SDK
+# Tonomy ID Documentation
 
-This Tonomy SDK has three components:
+Welcome to the Tonomy developer documentation. Tonomy ID is a self-sovereign identity and single-sign on system with the ability to use end-to-end cryptography in user devices.
 
-- [API](/api): application programming interface to manage single sign-on (SSO) and other interactions with Tonomy identities for web and mobile apps
-- [CLI](/cli): command line interface to manage Tonomy Apps for use in SSO
-- [SDK](/sdk): software development kit for building smart wallet applications like Tonomy ID
+Read the White Paper to understand Tonomy ID features and how it works:
 
-It manages all the business logic, cryptography and interactions between identities and applications.
+<a href="https://www.canva.com/design/DAFnktNOWKU/Ps1zXw3XICaEMiB0R4Ghkg/view" target="_blank">**Tonomy ID - White Paper**</a>
 
-## Installation
+## Try it out now
 
-```bash
-npm install @tonomy/tonomy-id-sdk
-```
+Integrate your existing app in less then 10 minutes. Follow the [Quick start](/start/start) with the Demo network (default).
 
-### Compatibility
-
-The SDK has been tested with nodejs v18.12.1+.
-
-### Sample Applications
-
-Applications that illustrate how to use the SDK:
-
-1. <a href="https://github.com/Tonomy-Foundation/Tonomy-App-Websites/tree/development/src/demo" target="_blank">Tonomy Demo (uses the API)</a>
-2. <a href="https://github.com/Tonomy-Foundation/Tonomy-ID/tree/development" target="_blank">Tonomy ID smart wallet (uses the SDK)</a>
+Check out how it works by using the Demo integration app on the Demo network. <a href="https://demo.demo.tonomy.foundation" target="_blank">Click here</a>

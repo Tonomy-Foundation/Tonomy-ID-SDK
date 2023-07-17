@@ -1,11 +1,57 @@
-site_name: Tonomy SDK
+site_name: Tonomy Developer Documentation
 nav:
-    - Home: index.md
-    - API - Interact with identities: api.md
-    - CLI - Manage Tonomy Apps: cli.md
-    - SDK - Build smart wallets: sdk.md
+  - Welcome:
+    - Welcome: index.md
+    - Features: welcome/features.md
+    - Environment support: welcome/environment.md
+    - Requirements: welcome/requirements.md
+  - Get started:
+    - Start: start/start.md
+    - 1. Instal the API: start/installation.md
+    - 2. Register your application: start/register-app.md
+    - 3. Single sign-on: start/single-sign-on.md
+    - 4. Usage and signing data: start/usage.md
+  - Guides:
+    - Deploy Tonomy ID: guides/deploy.md
+    - Deploy a web wallet with the SDK: guides/deploy-wallet.md
+  - Reference:
+    - API: reference/api.md
+    - SDK: reference/sdk.md
+    - CLI: reference/cli.md
+  - Troubleshooting: troubleshooting.md
+  - Example Applications: examples.md
 theme:
   name: material
+  logo: images/logo48.png
+  favicon: images/favicon.ico
+  features:
+    - navigation.instant
+    - navigation.sections
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.footer
+  icon:
+    repo: fontawesome/brands/github
+  palette:
+    primary: custom
+    accent: custom
+extra_css:
+  - stylesheets/extra.css
+repo_url: https://github.com/Tonomy-Foundation/Tonomy-ID
+repo_name: Tonomy-ID
+extra:
+  social:
+    - icon: fontawesome/solid/globe
+      link: https://tonomy.foundation
+      name: Website
+    - icon: fontawesome/brands/twitter
+      link: https://twitter.com/TonomyF
+    - icon: fontawesome/brands/linkedin
+      link: https://www.linkedin.com/company/tonomy-foundation
+    - icon: fontawesome/brands/discord
+      link: https://www.discord.gg/QqVJz5XF8d
+    - icon: fontawesome/brands/github
+      link: https://github.com/Tonomy-Foundation
 markdown_extensions:
   - pymdownx.highlight:
       anchor_linenums: true

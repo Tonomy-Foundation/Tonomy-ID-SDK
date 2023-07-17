@@ -1,4 +1,4 @@
-import { PrivateKey, PublicKey } from '@greymass/eosio';
+import { PrivateKey, PublicKey } from '@wharfkit/antelope';
 import { UserApps } from '../../src/sdk/controllers/userApps';
 import { generateRandomKeyPair } from '../../src/sdk/util/crypto';
 import URL from 'jsdom-url';

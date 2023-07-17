@@ -1,20 +1,27 @@
 /* eslint-disable no-console */
-import { Name } from '@greymass/eosio';
+import { Name, API } from '@wharfkit/antelope';
 import {
+    AccountType,
+    App,
     Communication,
     IdentifyMessage,
     KeyManager,
+    LinkAuthRequestMessage,
     LoginRequestResponseMessage,
     LoginRequestsMessage,
     StorageFactory,
     Subscriber,
+    TonomyUsername,
     User,
     UserApps,
+    getAccountNameFromUsername,
+    getSettings,
 } from '../../src/sdk';
 import { ExternalUser, LoginWithTonomyMessages } from '../../src/api/externalUser';
 import { LoginRequest } from '../../src/sdk/util/request';
 import { objToBase64Url } from '../../src/sdk/util/base64';
 import { VerifiableCredential } from '../../src/sdk/util/ssi/vc';
+import { getAccount } from '../../src/sdk/services/blockchain';
 
 export async function externalWebsiteUserPressLoginToTonomyButton(
     keyManager: KeyManager,
@@ -120,7 +127,7 @@ export async function sendLoginRequestsMessage(
     recipientDid: string,
     log = false
 ) {
-    const jwkIssuer = await ExternalUser.getJwkIssuerFromStorage(keyManager);
+    const jwkIssuer = await UserApps.getJwkIssuerFromStorage(keyManager);
 
     const loginRequestMessage = await LoginRequestsMessage.signMessage({ requests }, jwkIssuer, recipientDid);
 
@@ -184,9 +191,12 @@ export async function externalWebsiteOnReload(
 
     expect(externalUser).toBeDefined();
     expect((await externalUser.getAccountName()).toString()).toBe(await (await tonomyUser.getAccountName()).toString());
+    return externalUser;
 }
 
-export async function externalWebsiteSignVc(externalUser: ExternalUser) {
+export async function externalWebsiteSignVc(externalUser: ExternalUser, log = false) {
+    if (log) console.log('EXTERNAL_WEBSITE/sign-vc: signing verifiable credential');
+
     const vcData = {
         name: 'Joe',
         dob: new Date('1990-01-01').toISOString(),
@@ -208,11 +218,91 @@ export async function externalWebsiteSignVc(externalUser: ExternalUser) {
     expect(verifiedConstructedVc.verified).toBe(true);
 }
 
+async function getLinkedActionsForPermission(
+    accountName: Name,
+    permissionName: Name
+): Promise<API.v1.AccountLinkedAction> {
+    const accountObject = await getAccount(accountName);
+    const accountAppPermission = accountObject.permissions.find((permission) =>
+        permission.perm_name.equals(permissionName)
+    );
+
+    if (!accountAppPermission) throw new Error(`Permission ${permissionName} not found for account ${accountName}`);
+    return accountAppPermission.linked_actions[0];
+}
+
+export async function externalWebsiteSignTransaction(externalUser: ExternalUser, externalApp: App, log = false) {
+    const from = await externalUser.getAccountName();
+    const to = await getAccountNameFromUsername(
+        TonomyUsername.fromUsername('lovesboost', AccountType.PERSON, getSettings().accountSuffix)
+    );
+
+    let linkedActions = await getLinkedActionsForPermission(from, externalApp.accountName);
+
+    expect(linkedActions).toBeUndefined();
+
+    if (log) console.log('EXTERNAL_WEBSITE/sign-trx: signing transaction selfissue()');
+    let trx = await externalUser.signTransaction('eosio.token', 'selfissue', {
+        to: from,
+        quantity: '10 SYS',
+        memo: 'test',
+    });
+
+    linkedActions = await getLinkedActionsForPermission(from, externalApp.accountName);
+
+    expect(linkedActions).toBeDefined();
+    expect(linkedActions.account.equals('eosio.token')).toBe(true);
+    expect(linkedActions.action).toBeNull();
+
+    if (log) console.log('EXTERNAL_WEBSITE/sign-trx: signing transaction transfer()');
+    trx = await externalUser.signTransaction('eosio.token', 'transfer', {
+        from,
+        to,
+        quantity: '1 SYS',
+        memo: 'test',
+    });
+
+    expect(trx).toBeDefined();
+    expect(typeof trx.transaction_id).toBe('string');
+    expect(trx.processed.receipt.status).toBe('executed');
+    // TODO check action trace for action and the link auth
+
+    if (log) console.log('EXTERNAL_WEBSITE/sign-trx: signing transaction transfer() again)');
+    trx = await externalUser.signTransaction('eosio.token', 'transfer', {
+        from,
+        to,
+        quantity: '2 SYS',
+        memo: 'test',
+    });
+
+    expect(trx).toBeDefined();
+    expect(typeof trx.transaction_id).toBe('string');
+    expect(trx.processed.receipt.status).toBe('executed');
+    // TODO check action trace for action and the does not contain link auth
+}
+
+export async function setupLinkAuthSubscriber(user: User, log = false): Promise<void> {
+    // Setup a promise that resolves when the subscriber executes
+    // This emulates the Tonomy ID app, which waits for LinkAuth requests and executes them
+    return new Promise<void>((resolve, reject) => {
+        user.communication.subscribeMessage(async (message) => {
+            if (log) console.log('TONOMY_ID/storage: LinkAuth request received');
+
+            try {
+                await user.handleLinkAuthRequestMessage(message);
+                resolve();
+            } catch (e) {
+                reject(e);
+            }
+        }, LinkAuthRequestMessage.getType());
+
+        setTimeout(() => reject(new Error('LinkAuth request not received')), 5000);
+    });
+}
+
 export async function externalWebsiteOnLogout(keyManager: KeyManager, storageFactory: StorageFactory) {
     const externalUser = await ExternalUser.getUser({ keyManager, storageFactory });
 
     await externalUser.logout();
     expect(await externalUser.getAccountName()).toBe(undefined);
 }
-
-export async function createRandomLoggedInExternalUser(): Promise<ExternalUser> { }

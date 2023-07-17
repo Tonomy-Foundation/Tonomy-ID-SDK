@@ -2,7 +2,7 @@
 
 import fs from 'fs';
 import path from 'path';
-import { Name } from '@greymass/eosio';
+import { Name } from '@wharfkit/antelope';
 import { EosioContract } from '../../sdk/index';
 import { Signer } from '../../sdk/services/blockchain/eosio/transaction';
 

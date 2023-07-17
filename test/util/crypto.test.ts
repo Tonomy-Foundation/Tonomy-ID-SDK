@@ -1,4 +1,4 @@
-import { Checksum256, PrivateKey } from '@greymass/eosio';
+import { Checksum256, PrivateKey } from '@wharfkit/antelope';
 import { generatePrivateKeyFromPassword } from '../../src/cli/bootstrap/keys';
 import { sha256, randomString, generateRandomKeyPair, randomBytes } from '../../src/sdk/util/crypto';
 import * as argon2 from 'argon2';

@@ -2,31 +2,9 @@
 
 The Software Development Kit is used in the Tonomy ID ecosystems to interact with Tonomy identities and services.
 
-It has four outputs:
-
-- **SDK**: `./src/sdk` The SDK which acts as the business logic in Tonomy ID wallet. This is the main output.
-- **API**: `./src/api` The API library used by integrators to interact with Tonomy ID users and to do single sign-on, share credentials and sign transactions. (currently bundled in the SDK package but intended for external bundle later. see <https://github.com/Tonomy-Foundation/Tonomy-ID-SDK/pull/196#issuecomment-1497478858>)
-- **Bootstrap CLI**: `./src/cli/bootstrap` A script used to initialize the blockchain with the Tonomy Contracts and starting accounts.
-- **Apps CLI**: `./src/cli/apps` A CLI tool to create, update and delete Tonomy Apps.
+**See <https://docs.tonomy.foundation> for documentation.**
 
 The SDK is written in typescript with jest to run tests.
-
-## Documentation
-
-<a href="https://docs.tonomy.foundation" target="_blank">https://docs.tonomy.foundation</a>
-
-Documentation is in the `./docs` folder and runs with [mkdocs](https://www.mkdocs.org) with [material](https://squidfunk.github.io/mkdocs-material) theme.
-
-Install with
-
-```bash
-sudo apt-get -y install mkdocs
-pip install mkdocs-material
-```
-
-Then `yarn run docs:serve`
-
-<https://docs.tonomy.foundation>
 
 ## Dependencies
 
@@ -112,4 +90,15 @@ yarn run lint
 
 See [errors.ts](./src/services/errors.ts). All errors have a registered unique enumeration code.
 
-## End of file
+## Documentation
+
+Documentation is in the `./docs` folder and runs with [mkdocs](https://www.mkdocs.org) with [material](https://squidfunk.github.io/mkdocs-material) theme.
+
+Install with
+
+```bash
+sudo apt-get -y install mkdocs
+pip install mkdocs-material
+```
+
+Then `yarn run docs:serve`

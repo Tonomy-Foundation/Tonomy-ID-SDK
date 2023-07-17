@@ -1,8 +1,25 @@
-import { Action, API, Transaction, SignedTransaction, Signature, Checksum256, Name, PrivateKey } from '@greymass/eosio';
+import {
+    Action,
+    API,
+    Transaction,
+    SignedTransaction,
+    Signature,
+    Checksum256,
+    Name,
+    PrivateKey,
+} from '@wharfkit/antelope';
 import { KeyManager, KeyManagerLevel } from '../../../storage/keymanager';
 import { HttpError } from '../../../util/errors';
 import { getApi } from './eosio';
+import { getSettings } from '../../../util';
 
+/**
+ * Action data for a transaction
+ * @property {string} account - The smart contract account name
+ * @property {string} name - The name of the action (function in the smart contract)
+ * @property {object} data - The data for the action (arguments for the function)
+ * @property {object} authorization - The authorization for the action
+ */
 export type ActionData = {
     authorization: {
         actor: string;
@@ -112,7 +129,7 @@ async function transact(
     const actionData: Action[] = [];
 
     actions.forEach((data) => {
-        actionData.push(Action.from({ ...data, account: contract }, abi.abi));
+        actionData.push(Action.from({ account: contract, ...data }, abi.abi));
     });
 
     // Construct the transaction
@@ -135,16 +152,16 @@ async function transact(
     let res;
 
     try {
+        if (getSettings().loggerLevel === 'debug')
+            console.debug('Pushing transaction', JSON.stringify(actions, null, 2));
         res = await api.v1.chain.push_transaction(signedTransaction);
     } catch (e) {
-        const error = e as any;
-
-        if (error.response && error.response.headers) {
-            if (error.response.json) {
-                throw new AntelopePushTransactionError(error.response.json);
+        if (e.response?.headers) {
+            if (e.response?.json) {
+                throw new AntelopePushTransactionError(e.response.json);
             }
 
-            throw new HttpError(error);
+            throw new HttpError(e);
         }
 
         throw e;

@@ -1,4 +1,4 @@
-import { PublicKey } from '@greymass/eosio';
+import { PublicKey } from '@wharfkit/antelope';
 import { VCWithTypeType, VerifiableCredentialOptions, VerifiableCredentialWithType } from './ssi/vc';
 import { Issuer } from '@tonomy/did-jwt-vc';
 
