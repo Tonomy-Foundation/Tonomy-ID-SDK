@@ -5,6 +5,7 @@ export type SettingsType = {
     ssoWebsiteOrigin: string;
     accountSuffix: string;
     communicationUrl: string;
+    tonomyIdSchema: string;
     loggerLevel: 'emergency' | 'alert' | 'critical' | 'error' | 'warning' | 'notice' | 'info' | 'debug';
 };
 
