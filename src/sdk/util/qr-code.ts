@@ -8,7 +8,7 @@ import { getSettings } from './settings';
  *
  * @throws if QR code is invalid
  */
-export async function validateQrCode(qrCode: string): Promise<string> {
+export function validateQrCode(qrCode: string): string {
     if (!qrCode) {
         throwError('QR code is empty', SdkErrors.InvalidQrCode);
     }
@@ -26,14 +26,20 @@ export async function validateQrCode(qrCode: string): Promise<string> {
         throwError('QR path is not correct', SdkErrors.InvalidQrCode);
     }
 
-    if (query.indexOf('did=') === -1) {
+    if (!query || query.indexOf('did=') === -1) {
         throwError('QR did param not found', SdkErrors.InvalidQrCode);
     }
 
-    return query.split('did=')[1];
+    const did = query.split('did=')[1];
+
+    if (!did) {
+        throwError('QR did param is empty', SdkErrors.InvalidQrCode);
+    }
+
+    return did;
 }
 
-export async function createLoginQrCode(did: string) {
+export function createLoginQrCode(did: string): string {
     const schema = getSettings().tonomyIdSchema;
 
     return schema + 'UserHome?did=' + did;
