@@ -27,6 +27,7 @@ export * from './util/request';
 export * from './util/base64';
 export * from './util/ssi/did';
 export * as lib from './util'; // this is trying something out to see if it works. will move this to an export file later
+export * from './util/qr-code';
 
 // Storage
 export * from './storage/keymanager';

@@ -13,6 +13,7 @@ let settings: SettingsType;
 let initialized = false;
 
 export function setSettings(newSettings: Partial<SettingsType>) {
+    if (newSettings.loggerLevel === 'debug') console.debug('setSettings', newSettings);
     settings = newSettings as SettingsType;
     initialized = true;
 }
