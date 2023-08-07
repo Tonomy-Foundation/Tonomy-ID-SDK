@@ -5,6 +5,7 @@ export type SettingsType = {
     ssoWebsiteOrigin: string;
     accountSuffix: string;
     communicationUrl: string;
+    tonomyIdSchema: string;
     loggerLevel: 'emergency' | 'alert' | 'critical' | 'error' | 'warning' | 'notice' | 'info' | 'debug';
 };
 
@@ -12,6 +13,7 @@ let settings: SettingsType;
 let initialized = false;
 
 export function setSettings(newSettings: Partial<SettingsType>) {
+    if (newSettings.loggerLevel === 'debug') console.debug('setSettings', newSettings);
     settings = newSettings as SettingsType;
     initialized = true;
 }
