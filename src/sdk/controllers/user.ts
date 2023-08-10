@@ -286,6 +286,14 @@ export class User {
         await this.storage.status;
         await this.createDid();
 
+        if (getSettings().loggerLevel === 'debug') {
+            console.log('Created account', {
+                accountName: await this.storage.accountName,
+                username: (await this.getUsername()).getBaseUsername(),
+                did: await this.getDid(),
+            });
+        }
+
         return res;
     }
 
@@ -475,10 +483,15 @@ export class User {
 
     async logout(): Promise<void> {
         // remove all keys
-        await this.keyManager.removeKey({ level: KeyManagerLevel.PASSWORD });
-        await this.keyManager.removeKey({ level: KeyManagerLevel.PIN });
-        await this.keyManager.removeKey({ level: KeyManagerLevel.BIOMETRIC });
-        await this.keyManager.removeKey({ level: KeyManagerLevel.LOCAL });
+        for (const level of Object.keys(KeyManagerLevel)) {
+            try {
+                await this.keyManager.getKey({ level: KeyManagerLevel.from(level) });
+                this.keyManager.removeKey({ level: KeyManagerLevel.from(level) });
+            } catch (e) {
+                if (!(e instanceof SdkError) || e.code !== SdkErrors.KeyNotFound) throw e;
+            }
+        }
+
         // clear storage data
         this.storage.clear();
 
