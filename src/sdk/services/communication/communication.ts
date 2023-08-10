@@ -152,7 +152,7 @@ export class Communication {
      * function that adds a new subscriber, which is called every time a message is received
      *
      * @param {Subscriber} subscriber - the message object
-     * @param {string} [type] - shows itsan optional parameters
+     * @param {string} [type] - the type of message to subscribe to
      * @returns {number} - identifier which will be used for unsubscribe
      */
     subscribeMessage(subscriber: Subscriber, type?: string): number {
