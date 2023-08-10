@@ -11,7 +11,8 @@ export class Communication {
     private static identifier: 0;
     // TODO fix problem: if server restarts, this will be lost and all clients will need to reconnect
     private subscribers = new Map<number, Subscriber>();
-    private authMessage: AuthenticationMessage;
+    private authMessage?: AuthenticationMessage;
+    private loggedIn = false;
     private url: string;
 
     constructor(singleton = true) {
@@ -26,8 +27,12 @@ export class Communication {
         Communication.singleton = this;
     }
 
+    isConnected(): boolean {
+        return this.socketServer && this.socketServer.connected;
+    }
+
     isLoggedIn(): boolean {
-        return this.authMessage !== undefined && typeof this.authMessage === 'object';
+        return this.loggedIn && this.authMessage !== undefined && typeof this.authMessage === 'object';
     }
 
     /**
@@ -37,20 +42,21 @@ export class Communication {
      * @throws {SdkError} CommunicationNotConnected
      */
     private async connect(): Promise<void> {
-        if (this.socketServer?.connected) return; // dont override socket if connected
+        if (this.isConnected()) return;
 
         this.socketServer.connect();
+
         await new Promise((resolve, reject) => {
             this.socketServer.on('connect', async () => {
                 if (this.isLoggedIn()) {
-                    await this.login(this.authMessage);
+                    await this.login(this.authMessage as AuthenticationMessage);
                 }
 
                 resolve(true);
                 return;
             });
             setTimeout(() => {
-                if (this.socketServer.connected) return;
+                if (this.isConnected()) return;
 
                 reject(
                     createSdkError(
@@ -74,6 +80,7 @@ export class Communication {
         if (getSettings().loggerLevel === 'debug')
             console.log(
                 'emitMessage',
+                event,
                 message.getType(),
                 message.getSender(),
                 message.getRecipient(),
@@ -121,7 +128,11 @@ export class Communication {
 
         const result = await this.emitMessage('login', authorization);
 
-        if (result) this.authMessage = authorization;
+        if (result) {
+            this.loggedIn = true;
+            this.authMessage = authorization;
+        }
+
         return result;
     }
 
@@ -181,7 +192,10 @@ export class Communication {
     }
 
     disconnect() {
-        if (this.socketServer?.connected) {
+        this.loggedIn = false;
+        delete this.authMessage;
+
+        if (this.isConnected()) {
             this.socketServer.disconnect();
         }
     }
