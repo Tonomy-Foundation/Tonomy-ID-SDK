@@ -2,14 +2,15 @@ import { PrivateKey, PublicKey } from '@wharfkit/antelope';
 import { UserApps } from '../../src/sdk/controllers/userApps';
 import { generateRandomKeyPair } from '../../src/sdk/util/crypto';
 import URL from 'jsdom-url';
-import { setSettings } from '../../src/sdk';
 import { ExternalUser, LoginWithTonomyMessages } from '../../src/api/externalUser';
 import { LoginRequest } from '../../src/sdk/util/request';
 import { objToBase64Url } from '../../src/sdk/util/base64';
+import { setTestSettings } from '../../test-integration/helpers/settings';
 
 // @ts-expect-error - URL type on global does not match
 global.URL = URL;
-setSettings({});
+
+setTestSettings();
 
 describe('logging in', () => {
     it('generates random key pair', () => {

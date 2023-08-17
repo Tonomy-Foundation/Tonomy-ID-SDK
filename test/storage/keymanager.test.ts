@@ -5,12 +5,13 @@ import { jsStorageFactory } from '../../src/cli/bootstrap/jsstorage';
 import { createUserObject } from '../../src/sdk/controllers/user';
 import { KeyManagerLevel } from '../../src/sdk/storage/keymanager';
 import { randomBytes, generateRandomKeyPair, createVCSigner, createSigner } from '../../src/sdk/util/crypto';
-import { setSettings } from '../../src/sdk';
 import { generatePrivateKeyFromPassword } from '../../src/cli/bootstrap/keys';
+import { setTestSettings } from '../../test-integration/helpers/settings';
+
+setTestSettings();
 
 const keyManager = new JsKeyManager();
 
-setSettings({});
 const user = createUserObject(keyManager, jsStorageFactory);
 
 describe('Keymanager class', () => {

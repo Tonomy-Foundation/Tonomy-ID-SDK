@@ -1,12 +1,11 @@
 import { PrivateKey } from '@wharfkit/antelope';
-import { ES256KSigner, generateRandomKeyPair, setSettings, createSigner } from '../../../src/sdk';
+import { ES256KSigner, generateRandomKeyPair, createSigner } from '../../../src/sdk';
 import { IdentifyMessage } from '../../../src/sdk/services/communication/message';
 import { Issuer } from '@tonomy/did-jwt-vc';
 import { createJWK, toDid } from '../../../src/sdk/util/ssi/did-jwk';
+import { setTestSettings } from '../../../test-integration/helpers/settings';
 
-setSettings({
-    blockchainUrl: 'localhost:8888',
-});
+setTestSettings();
 
 describe('Message class', () => {
     let issuer: Issuer;

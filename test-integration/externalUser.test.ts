@@ -3,10 +3,8 @@
 /* eslint-disable camelcase */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
-// need to use API types from inside tonomy-id-sdk, otherwise type compatibility issues
 import {
     App,
-    setSettings,
     User,
     KeyManager,
     StorageFactory,
@@ -27,7 +25,6 @@ import {
     scanQrAndAck,
     setupLoginRequestSubscriber,
 } from './helpers/user';
-import settings from './helpers/settings';
 import { sleep } from './helpers/sleep';
 import {
     externalWebsiteOnCallback,
@@ -47,13 +44,14 @@ import { createStorageFactory } from './helpers/storageFactory';
 import { objToBase64Url } from '../src/sdk/util/base64';
 import { createSigner } from '../src/sdk/services/blockchain';
 import { privateKey } from './helpers/eosio';
+import { setTestSettings } from './helpers/settings';
+
+setTestSettings();
 
 // @ts-expect-error - type error on global
 global.URL = URL;
 
 const eosioTokenContract = EosioTokenContract.Instance;
-
-setSettings(settings);
 
 const log = process.env.LOG === 'true';
 
