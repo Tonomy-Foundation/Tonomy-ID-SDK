@@ -15,7 +15,7 @@ export type CreateAccountResponse = {
 };
 
 export async function createAccount(data: CreateAccountRequest): Promise<CreateAccountResponse> {
-    const url = getSettings().communicationUrl;
+    const url = getSettings().accountsServiceUrl;
 
     const response = await fetch(`${url}/accounts`, {
         method: 'POST',
@@ -25,5 +25,10 @@ export async function createAccount(data: CreateAccountRequest): Promise<CreateA
         body: JSON.stringify(data),
     });
 
-    return await response.json();
+    const resData = await response.json();
+
+    return {
+        transactionId: resData.transactionId,
+        accountName: Name.from(resData.accountName),
+    };
 }
