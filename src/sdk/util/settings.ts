@@ -1,6 +1,7 @@
 import { SdkErrors, throwError } from './errors';
 
 export type SettingsType = {
+    environment: string;
     blockchainUrl: string;
     ssoWebsiteOrigin: string;
     accountSuffix: string;
@@ -25,4 +26,12 @@ export function getSettings(): SettingsType {
     }
 
     return settings;
+}
+
+export function isProduction(): boolean {
+    if (!initialized) {
+        throwError('Settings not yet initialized', SdkErrors.SettingsNotInitialized);
+    }
+
+    return ['production', 'staging', 'demo'].includes(settings.environment);
 }

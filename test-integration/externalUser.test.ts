@@ -42,8 +42,7 @@ import {
 } from './helpers/externalUser';
 import { createStorageFactory } from './helpers/storageFactory';
 import { objToBase64Url } from '../src/sdk/util/base64';
-import { createSigner } from '../src/sdk/services/blockchain';
-import { privateKey } from './helpers/eosio';
+import { createSigner, defaultAntelopePrivateKey } from '../src/sdk/services/blockchain';
 import { setTestSettings } from './helpers/settings';
 
 setTestSettings();
@@ -94,7 +93,7 @@ describe('Login to external website', () => {
         TONOMY_LOGIN_WEBSITE_jsKeyManager = new JsKeyManager();
         EXTERNAL_WEBSITE_jsKeyManager = new JsKeyManager();
 
-        await eosioTokenContract.addPerm(externalApp.accountName, createSigner(privateKey));
+        await eosioTokenContract.addPerm(externalApp.accountName, createSigner(defaultAntelopePrivateKey));
 
         // setup storage factories for the external website and tonomy login website
         TONOMY_LOGIN_WEBSITE_storage_factory = createStorageFactory(STORAGE_NAMESPACE + 'login-website.');

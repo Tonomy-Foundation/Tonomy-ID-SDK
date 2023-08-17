@@ -12,10 +12,10 @@ import {
 } from '../../src/sdk/index';
 import { jsStorageFactory } from '../../src/cli/bootstrap/jsstorage';
 import { generatePrivateKeyFromPassword } from '../../src/cli/bootstrap/keys';
-import { privateKey } from './eosio';
 import { createUser } from '../../src/cli/bootstrap/user';
 import { LoginRequest } from '../../src/sdk/util/request';
 import { DIDurl, URL } from '../../src/sdk/util/ssi/types';
+import { defaultAntelopePublicKey } from '../../src/sdk/services/blockchain/eosio/eosio';
 
 export const HCAPCHA_CI_RESPONSE_TOKEN = '10000000-aaaa-bbbb-cccc-000000000001';
 
@@ -56,8 +56,7 @@ export async function createRandomApp(logoUrl?: string, origin?: string): Promis
         description: description,
         logoUrl,
         origin,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        publicKey: privateKey.toPublic() as any,
+        publicKey: defaultAntelopePublicKey,
     });
 }
 

@@ -6,15 +6,20 @@ const env = process.env.NODE_ENV || 'development';
 console.log(`NODE_ENV=${env}`);
 
 type ConfigType = {
+    environment: string;
+    blockchainUrl: string;
     ssoWebsiteOrigin: string;
-    ssoWebsiteLogoUrl: string;
-    demoWebsiteOrigin: string;
-    demoWebsiteLogoUrl: string;
+    accountSuffix: string;
+    communicationUrl: string;
+    accountsServiceUrl: string;
+    tonomyIdSchema: string;
+    loggerLevel: string;
 };
 
 const ipAddress = address.ip();
 
 const defaultConfig = {
+    environment: 'development',
     ssoWebsiteOrigin: `http://${ipAddress}:3000`,
     ssoWebsiteLogoUrl: `http://${ipAddress}:3000/tonomy-logo1024.png`,
     demoWebsiteOrigin: `http://${ipAddress}:3001`,
@@ -28,6 +33,7 @@ const defaultConfig = {
 };
 
 const stagingConfig = {
+    environment: 'staging',
     ssoWebsiteOrigin: `https://accounts.staging.tonomy.foundation`,
     ssoWebsiteLogoUrl: `https://accounts.staging.tonomy.foundation/tonomy-logo1024.png`,
     demoWebsiteOrigin: `https://demo.staging.tonomy.foundation`,
@@ -41,6 +47,7 @@ const stagingConfig = {
 };
 
 const demoConfig = {
+    environment: 'demo',
     ssoWebsiteOrigin: `https://accounts.demo.tonomy.foundation`,
     ssoWebsiteLogoUrl: `https://accounts.demo.tonomy.foundation/tonomy-logo1024.png`,
     demoWebsiteOrigin: `https://demo.demo.tonomy.foundation`,

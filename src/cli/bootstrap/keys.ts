@@ -3,6 +3,7 @@ import argon2 from 'argon2';
 import { randomBytes } from '../../sdk/util/crypto';
 import { EosioUtil, EosioContract } from '../../sdk';
 import { Authority } from '../../sdk/services/blockchain/eosio/authority';
+import { defaultAntelopePrivateKey } from '../../sdk/services/blockchain';
 
 const eosioContract = EosioContract.Instance;
 
@@ -34,13 +35,7 @@ export async function generatePrivateKeyFromPassword(
     };
 }
 
-// This is the default private key used by an Antelope node when it is first started
-export const privateKey = PrivateKey.from('PVT_K1_2bfGi9rYsXQSXXTvJbDAPhHLQUojjaNLomdm3cEJ1XTzMqUt3V');
-export const publicKey = privateKey.toPublic();
-// PUB_K1_6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5BoDq63
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const signer = EosioUtil.createSigner(privateKey as any);
+export const signer = EosioUtil.createSigner(defaultAntelopePrivateKey);
 
 export async function updateAccountKey(account: NameType, newPublicKey: PublicKeyType, addCodePermission = false) {
     const authority = Authority.fromKey(newPublicKey.toString());

@@ -2,7 +2,7 @@ import deployContract from './deploy-contract';
 import path from 'path';
 import { createAntelopeAccount, createApp } from './create-account';
 import { EosioTokenContract, EosioUtil, setSettings } from '../../sdk/index';
-import { signer, publicKey, updateAccountKey } from './keys';
+import { signer, updateAccountKey } from './keys';
 import bootstrapSettings from './settings';
 import settings from './settings';
 import { createUser, mockCreateAccount, restoreCreateAccountFromMock } from './user';
@@ -16,6 +16,7 @@ export default async function bootstrap(args: string[]) {
     if (!args[0]) throw new Error('Missing public key argument');
 
     const newPrivateKey = PrivateKey.from(args[0]);
+    const newPublicKey = newPrivateKey.toPublic();
 
     try {
         await createAntelopeAccount({ account: 'eosio.token' }, signer);
@@ -41,8 +42,7 @@ export default async function bootstrap(args: string[]) {
             description: 'Demo of Tonomy ID login and features',
             origin: bootstrapSettings.config.demoWebsiteOrigin,
             logoUrl: bootstrapSettings.config.demoWebsiteLogoUrl,
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            publicKey: publicKey as any,
+            publicKey: newPublicKey,
         });
 
         // action to add demo permission to token contract
@@ -55,8 +55,7 @@ export default async function bootstrap(args: string[]) {
             description: 'Tonomy website to manager your ID and Data',
             origin: bootstrapSettings.config.ssoWebsiteOrigin,
             logoUrl: bootstrapSettings.config.ssoWebsiteLogoUrl,
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            publicKey: publicKey as any,
+            publicKey: newPublicKey,
         });
 
         // The Apple app needs to have a test user for their review. That is this user.
@@ -79,8 +78,6 @@ export default async function bootstrap(args: string[]) {
         await createUser('4cryingoutloud', password);
 
         restoreCreateAccountFromMock();
-
-        const newPublicKey = newPrivateKey.toPublic();
 
         console.log('Change the key of the accounts to the new key', newPublicKey.toString());
         await updateAccountKey('id.tonomy', newPublicKey, true);
