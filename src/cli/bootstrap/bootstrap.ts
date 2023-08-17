@@ -1,6 +1,6 @@
 import deployContract from './deploy-contract';
 import path from 'path';
-import { createAccount, createApp } from './create-account';
+import { createAntelopeAccount, createApp } from './create-account';
 import { EosioTokenContract, setSettings } from '../../sdk/index';
 import { signer, publicKey } from './keys';
 import bootstrapSettings from './settings';
@@ -8,11 +8,16 @@ import settings from './settings';
 import { createUser } from './user';
 
 setSettings(settings.config);
+
 const eosioTokenContract = EosioTokenContract.Instance;
 
-export default async function bootstrap() {
+export default async function bootstrap(args: string[]) {
+    const newPublicKey = args[0];
+
+    if (!newPublicKey) throw new Error('Missing public key argument');
+
     try {
-        await createAccount({ account: 'eosio.token' }, signer);
+        await createAntelopeAccount({ account: 'eosio.token' }, signer);
         await deployContract(
             {
                 account: 'eosio.token',
@@ -23,7 +28,7 @@ export default async function bootstrap() {
         await eosioTokenContract.create('1000000000 SYS', signer);
         await eosioTokenContract.issue('10000 SYS', signer);
 
-        await createAccount({ account: 'id.tonomy' }, signer);
+        await createAntelopeAccount({ account: 'id.tonomy' }, signer);
         await deployContract(
             { account: 'id.tonomy', contractDir: path.join(__dirname, '../../Tonomy-Contracts/contracts/id.tonomy') },
             signer
@@ -78,6 +83,8 @@ export default async function bootstrap() {
         await createUser('reallychel', password);
         await createUser('thedudeabides', password);
         await createUser('4cryingoutloud', password);
+
+        // TODO change key to new key
 
         console.log('Bootstrap complete');
     } catch (e: any) {

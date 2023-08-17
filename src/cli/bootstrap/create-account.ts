@@ -4,7 +4,7 @@ import { Signer } from '../../sdk/services/blockchain/eosio/transaction';
 
 const eosioContract: EosioContract = EosioContract.Instance;
 
-export async function createAccount({ account }: { account: string }, signer: Signer) {
+export async function createAntelopeAccount({ account }: { account: string }, signer: Signer) {
     const ownerAuth = Authority.fromKey(publicKey.toString());
 
     const activeAuth = Authority.fromKey(publicKey.toString());

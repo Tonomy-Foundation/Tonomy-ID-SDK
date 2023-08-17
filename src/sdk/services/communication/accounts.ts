@@ -17,6 +17,7 @@ export type CreateAccountResponse = {
 export async function createAccount(data: CreateAccountRequest): Promise<CreateAccountResponse> {
     const url = getSettings().accountsServiceUrl;
 
+    console.log(`${url}/accounts`);
     const response = await fetch(`${url}/accounts`, {
         method: 'POST',
         headers: {
