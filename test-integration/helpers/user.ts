@@ -17,6 +17,8 @@ import { createUser } from '../../src/cli/bootstrap/user';
 import { LoginRequest } from '../../src/sdk/util/request';
 import { DIDurl, URL } from '../../src/sdk/util/ssi/types';
 
+export const HCAPCHA_CI_RESPONSE_TOKEN = '10000000-aaaa-bbbb-cccc-000000000001';
+
 export { createUser };
 
 export async function createRandomID(checkKeys = true) {
@@ -32,7 +34,7 @@ export async function createRandomID(checkKeys = true) {
     checkKeys && (await user.savePIN(pin));
     checkKeys && (await user.saveFingerprint());
     await user.saveLocal();
-
+    await user.saveCaptchaToken(HCAPCHA_CI_RESPONSE_TOKEN);
     await user.createPerson();
     await user.updateKeys(password);
 
