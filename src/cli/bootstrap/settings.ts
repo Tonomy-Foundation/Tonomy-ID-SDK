@@ -23,6 +23,8 @@ const defaultConfig = {
     accountSuffix: '.test.tonomy.id',
     communicationUrl: 'ws://localhost:5000',
     accountsServiceUrl: 'http://localhost:5000',
+    tonomyIdSchema: 'tonomy-id-development://',
+    loggerLevel: 'info',
 };
 
 const stagingConfig = {
@@ -34,6 +36,8 @@ const stagingConfig = {
     accountSuffix: '.stag.tonomy.id',
     communicationUrl: 'wss://communication.staging.tonomy.foundation',
     accountsServiceUrl: 'http://communication.staging.tonomy.foundation',
+    tonomyIdSchema: 'tonomy-id-staging://',
+    loggerLevel: 'info',
 };
 
 const demoConfig = {
@@ -45,6 +49,8 @@ const demoConfig = {
     accountSuffix: '.demo.tonomy.id',
     communicationUrl: 'wss://communication.demo.tonomy.foundation',
     accountsServiceUrl: 'http://communication.demo.tonomy.foundation',
+    tonomyIdSchema: 'tonomy-id-demo://',
+    loggerLevel: 'info',
 };
 
 type SettingsType = {

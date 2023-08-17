@@ -287,7 +287,7 @@ export class User {
 
         if (getSettings().loggerLevel === 'debug') {
             console.log('Created account', {
-                accountName: await this.storage.accountName,
+                accountName: (await this.storage.accountName).toString(),
                 username: (await this.getUsername()).getBaseUsername(),
                 did: await this.getDid(),
             });

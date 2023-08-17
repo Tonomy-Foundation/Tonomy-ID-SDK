@@ -5,7 +5,7 @@ import { EosioTokenContract, setSettings } from '../../sdk/index';
 import { signer, publicKey } from './keys';
 import bootstrapSettings from './settings';
 import settings from './settings';
-import { createUser } from './user';
+import { createUser, mockCreateAccount, restoreCreateAccount } from './user';
 
 setSettings(settings.config);
 
@@ -69,6 +69,7 @@ export default async function bootstrap(args: string[]) {
         // The Apple app needs to have a test user for their review. That is this user.
         let password = '1GjGtP%g5UOp2lQ&U5*p';
 
+        mockCreateAccount();
         await createUser('testuser', password);
 
         // Create users for the demo website
@@ -84,7 +85,9 @@ export default async function bootstrap(args: string[]) {
         await createUser('thedudeabides', password);
         await createUser('4cryingoutloud', password);
 
+        restoreCreateAccount();
         // TODO change key to new key
+        // heah;
 
         console.log('Bootstrap complete');
     } catch (e: any) {
