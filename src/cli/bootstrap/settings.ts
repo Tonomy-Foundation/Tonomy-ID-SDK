@@ -24,7 +24,7 @@ const defaultConfig = {
     communicationUrl: 'ws://localhost:5000',
     accountsServiceUrl: 'http://localhost:5000',
     tonomyIdSchema: 'tonomy-id-development://',
-    loggerLevel: 'debug',
+    loggerLevel: 'info',
 };
 
 const stagingConfig = {

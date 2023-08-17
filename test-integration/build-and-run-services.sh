@@ -58,7 +58,7 @@ function start {
 function bootstrap {
     # Run bootstrap script
     cd  "$SDK_DIR"
-    yarn run cli bootstrap PUB_K1_6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5BoDq63
+    yarn run cli bootstrap PVT_K1_2bfGi9rYsXQSXXTvJbDAPhHLQUojjaNLomdm3cEJ1XTzMqUt3V
 }
 
 function stop {

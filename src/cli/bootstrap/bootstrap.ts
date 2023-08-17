@@ -1,20 +1,21 @@
 import deployContract from './deploy-contract';
 import path from 'path';
 import { createAntelopeAccount, createApp } from './create-account';
-import { EosioTokenContract, setSettings } from '../../sdk/index';
+import { EosioTokenContract, EosioUtil, setSettings } from '../../sdk/index';
 import { signer, publicKey, updateAccountKey } from './keys';
 import bootstrapSettings from './settings';
 import settings from './settings';
 import { createUser, mockCreateAccount, restoreCreateAccountFromMock } from './user';
+import { PrivateKey } from '@wharfkit/antelope';
 
 setSettings(settings.config);
 
 const eosioTokenContract = EosioTokenContract.Instance;
 
 export default async function bootstrap(args: string[]) {
-    const newPublicKey = args[0];
+    if (!args[0]) throw new Error('Missing public key argument');
 
-    if (!newPublicKey) throw new Error('Missing public key argument');
+    const newPrivateKey = PrivateKey.from(args[0]);
 
     try {
         await createAntelopeAccount({ account: 'eosio.token' }, signer);
@@ -79,10 +80,14 @@ export default async function bootstrap(args: string[]) {
 
         restoreCreateAccountFromMock();
 
-        console.log('Change the key of the accounts to the new key');
-        await updateAccountKey('id.tonomy', 'PUB_K1_66F4SKg8F9jXSqtDrjyHWKC2tCjcvPrvqLoYGuvVaTsKtTGXRj', true);
-        await updateAccountKey('eosio.token', 'PUB_K1_66F4SKg8F9jXSqtDrjyHWKC2tCjcvPrvqLoYGuvVaTsKtTGXRj', true);
-        // updateAccountKey('eosio', newPublicKey);
+        const newPublicKey = newPrivateKey.toPublic();
+
+        console.log('Change the key of the accounts to the new key', newPublicKey.toString());
+        await updateAccountKey('id.tonomy', newPublicKey, true);
+        await updateAccountKey('eosio.token', newPublicKey, true);
+        await updateAccountKey('eosio', newPublicKey);
+
+        // TODO change the block signing key as well
 
         console.log('Deploy Tonomy bios contract, which limits access to system actions');
         await deployContract(
@@ -90,7 +95,7 @@ export default async function bootstrap(args: string[]) {
                 account: 'eosio',
                 contractDir: path.join(__dirname, '../../Tonomy-Contracts/contracts/eosio.bios.tonomy'),
             },
-            signer
+            EosioUtil.createSigner(newPrivateKey)
         );
 
         console.log('Bootstrap complete');
