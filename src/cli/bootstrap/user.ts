@@ -10,6 +10,7 @@ const idContract = IDContract.Instance;
 const defaultCreateAccount = accounts.createAccount;
 
 // Mock the createAccount function to not directly create the account, and thus bypass the hCaptcha requirement
+// createAccount() is called during user.createPerson()
 export function mockCreateAccount() {
     console.log('Mocking createAccount()');
 
@@ -36,8 +37,8 @@ export function mockCreateAccount() {
     };
 }
 
-export function restoreCreateAccount() {
-    console.log('Restoring createAccount()');
+export function restoreCreateAccountFromMock() {
+    console.log('Restoring createAccount() to original function');
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     accounts.createAccount = defaultCreateAccount;
@@ -50,7 +51,7 @@ export async function createUser(username: string, password: string) {
     await user.saveUsername(username);
     await user.savePassword(password, { keyFromPasswordFn: generatePrivateKeyFromPassword });
 
-    await user.createPerson(); // TODO NEED TO SOLVE THIS ONE!
+    await user.createPerson();
     console.log('Created user:', username);
 
     return { user, password, auth };

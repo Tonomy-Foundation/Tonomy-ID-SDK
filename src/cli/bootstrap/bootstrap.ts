@@ -2,10 +2,10 @@ import deployContract from './deploy-contract';
 import path from 'path';
 import { createAntelopeAccount, createApp } from './create-account';
 import { EosioTokenContract, setSettings } from '../../sdk/index';
-import { signer, publicKey } from './keys';
+import { signer, publicKey, updateAccountKey } from './keys';
 import bootstrapSettings from './settings';
 import settings from './settings';
-import { createUser, mockCreateAccount, restoreCreateAccount } from './user';
+import { createUser, mockCreateAccount, restoreCreateAccountFromMock } from './user';
 
 setSettings(settings.config);
 
@@ -31,14 +31,6 @@ export default async function bootstrap(args: string[]) {
         await createAntelopeAccount({ account: 'id.tonomy' }, signer);
         await deployContract(
             { account: 'id.tonomy', contractDir: path.join(__dirname, '../../Tonomy-Contracts/contracts/id.tonomy') },
-            signer
-        );
-
-        await deployContract(
-            {
-                account: 'eosio',
-                contractDir: path.join(__dirname, '../../Tonomy-Contracts/contracts/eosio.bios.tonomy'),
-            },
             signer
         );
 
@@ -85,9 +77,21 @@ export default async function bootstrap(args: string[]) {
         await createUser('thedudeabides', password);
         await createUser('4cryingoutloud', password);
 
-        restoreCreateAccount();
-        // TODO change key to new key
-        // heah;
+        restoreCreateAccountFromMock();
+
+        console.log('Change the key of the accounts to the new key');
+        await updateAccountKey('id.tonomy', 'PUB_K1_66F4SKg8F9jXSqtDrjyHWKC2tCjcvPrvqLoYGuvVaTsKtTGXRj', true);
+        await updateAccountKey('eosio.token', 'PUB_K1_66F4SKg8F9jXSqtDrjyHWKC2tCjcvPrvqLoYGuvVaTsKtTGXRj', true);
+        // updateAccountKey('eosio', newPublicKey);
+
+        console.log('Deploy Tonomy bios contract, which limits access to system actions');
+        await deployContract(
+            {
+                account: 'eosio',
+                contractDir: path.join(__dirname, '../../Tonomy-Contracts/contracts/eosio.bios.tonomy'),
+            },
+            signer
+        );
 
         console.log('Bootstrap complete');
     } catch (e: any) {
