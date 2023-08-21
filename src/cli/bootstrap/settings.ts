@@ -1,6 +1,6 @@
 import address from 'address';
 
-// cannot use NODE_ENV as it is always "production" on `npm run build`
+// cannot use NODE_ENV as it is always "production" on `yarn run build`
 const env = process.env.NODE_ENV || 'development';
 
 console.log(`NODE_ENV=${env}`);
