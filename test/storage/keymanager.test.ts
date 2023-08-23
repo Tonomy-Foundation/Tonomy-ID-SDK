@@ -124,6 +124,8 @@ describe('Keymanager class', () => {
         expect(() => KeyManagerLevel.validate(KeyManagerLevel.PASSWORD)).not.toThrow();
         expect(() => KeyManagerLevel.validate(KeyManagerLevel.ACTIVE)).not.toThrow();
         expect(() => KeyManagerLevel.validate('INVALID' as any)).toThrow();
+        expect(() => KeyManagerLevel.validate(KeyManagerLevel.from('PASSWORD'))).not.toThrow();
+        expect(() => KeyManagerLevel.validate(KeyManagerLevel.from('INVALID'))).toThrow();
     });
 
     it('validates arguments correctly', async () => {

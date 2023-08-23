@@ -499,7 +499,11 @@ export class User {
                 await this.keyManager.getKey({ level: KeyManagerLevel.from(level) });
                 this.keyManager.removeKey({ level: KeyManagerLevel.from(level) });
             } catch (e) {
-                if (!(e instanceof SdkError) || e.code !== SdkErrors.KeyNotFound) throw e;
+                if (
+                    !(e instanceof SdkError) ||
+                    (e.code !== SdkErrors.KeyNotFound && e.code !== SdkErrors.InvalidKeyLevel)
+                )
+                    throw e;
             }
         }
 
