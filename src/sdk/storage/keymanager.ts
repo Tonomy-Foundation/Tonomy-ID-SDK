@@ -1,4 +1,5 @@
 import { Checksum256, PrivateKey, PublicKey, Signature } from '@wharfkit/antelope';
+import { SdkErrors, throwError, toElliptic } from '../util';
 
 enum KeyManagerLevel {
     PASSWORD = 'PASSWORD',
@@ -37,6 +38,12 @@ namespace KeyManagerLevel {
 
         return Object.values(KeyManagerLevel)[index] as KeyManagerLevel;
     }
+
+    export function validate(value: KeyManagerLevel): void {
+        if (KeyManagerLevel.indexFor(value) === -1) {
+            throwError('Invalid level', SdkErrors.InvalidKeyLevel);
+        }
+    }
 }
 
 /**
@@ -44,11 +51,22 @@ namespace KeyManagerLevel {
  * @param {PrivateKey} privateKey - The private key to be stored
  * @param {string} [challenge] - A challenge that needs to be presented in order for the key to be used
  */
-type StoreKeyOptions = {
+class StoreKeyOptions {
     level: KeyManagerLevel;
     privateKey: PrivateKey;
     challenge?: string;
-};
+
+    static validate(options: StoreKeyOptions): void {
+        toElliptic(options.privateKey); // throws if key not valid
+        KeyManagerLevel.validate(options.level); // throws if level not valid
+
+        if (options.challenge) {
+            if (typeof options.challenge !== 'string' || options.challenge.length === 0) {
+                throwError('Invalid challenge', SdkErrors.InvalidChallenge);
+            }
+        }
+    }
+}
 
 /**
  * @param {KeyManagerLevel} level - The security level of the key
@@ -56,28 +74,58 @@ type StoreKeyOptions = {
  * @param {string} [challenge] - A challenge that needs to be presented in order for the key to be used
  * @param {'jwt' | 'transaction'} [outputType] - The type of output to return
  */
-type SignDataOptions = {
+class SignDataOptions {
     level: KeyManagerLevel;
     data: string | Checksum256;
     challenge?: string;
     outputType?: 'jwt' | 'transaction';
-};
+
+    static validate(options: SignDataOptions): void {
+        KeyManagerLevel.validate(options.level); // throws if level not valid
+
+        if (options.challenge) {
+            if (typeof options.challenge !== 'string' || options.challenge.length === 0) {
+                throwError('Invalid challenge', SdkErrors.InvalidChallenge);
+            }
+        }
+
+        if (options.outputType) {
+            if (options.outputType !== 'jwt' && options.outputType !== 'transaction') {
+                throwError('Invalid output type', SdkErrors.InvalidData);
+            }
+        }
+    }
+}
 
 /**
  * @param {KeyManagerLevel} level - The security level of the key
  */
-type GetKeyOptions = {
+class GetKeyOptions {
     level: KeyManagerLevel;
-};
+
+    static validate(options: GetKeyOptions): void {
+        KeyManagerLevel.validate(options.level); // throws if level not valid
+    }
+}
 
 /**
  * @param {KeyManagerLevel} level - The security level of the key
  * @param {string} challenge - the challenge to check
  */
-type CheckKeyOptions = {
+class CheckKeyOptions {
     level: KeyManagerLevel;
     challenge: string;
-};
+
+    static validate(options: CheckKeyOptions): void {
+        KeyManagerLevel.validate(options.level); // throws if level not valid
+
+        if (options.challenge) {
+            if (typeof options.challenge !== 'string' || options.challenge.length === 0) {
+                throwError('Invalid challenge', SdkErrors.InvalidChallenge);
+            }
+        }
+    }
+}
 
 interface KeyManager {
     /**

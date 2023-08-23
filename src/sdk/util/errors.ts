@@ -104,6 +104,7 @@ enum SdkErrors {
     CouldntCreateApi = 'CouldntCreateApi',
     DataQueryNoRowDataFound = 'DataQueryNoRowDataFound',
     InvalidLinkAuthRequest = 'InvalidLinkAuthRequest',
+    InvalidChallenge = 'InvalidChallenge',
     InvalidData = 'InvalidData',
     InvalidKey = 'InvalidKey',
     InvalidKeyLevel = 'InvalidKeyLevel',
