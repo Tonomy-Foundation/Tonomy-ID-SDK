@@ -388,7 +388,7 @@ export class User {
             keyFromPasswordFn: KeyFromPasswordFn;
         }
     ): Promise<GetPersonResponse> {
-        this.validateUsername(username.username);
+        this.validateUsername(username.getBaseUsername());
         const { keyManager } = this;
 
         const idData = await idContract.getPerson(username);
