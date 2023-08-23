@@ -109,6 +109,7 @@ enum SdkErrors {
     InvalidKey = 'InvalidKey',
     InvalidKeyLevel = 'InvalidKeyLevel',
     InvalidQrCode = 'InvalidQrCode',
+    InvalidUsername = 'InvalidUsername',
     JwtNotValid = 'JwtNotValid',
     KeyNotFound = 'KeyNotFound',
     LinkAuthFailed = 'LinkAuthFailed',
