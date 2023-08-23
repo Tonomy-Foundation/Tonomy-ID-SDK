@@ -14,11 +14,11 @@ describe('User class', () => {
         });
 
         it('validates a correct username', async () => {
-            user['validateUsername']('test');
-            user['validateUsername']('test1234');
-            user['validateUsername']('testTEST');
-            user['validateUsername']('test-_');
-            user['validateUsername']('testTEST1234-_');
+            expect(() => user['validateUsername']('test')).not.toThrowError();
+            expect(() => user['validateUsername']('test1234')).not.toThrowError();
+            expect(() => user['validateUsername']('testTEST')).not.toThrowError();
+            expect(() => user['validateUsername']('test-_')).not.toThrowError();
+            expect(() => user['validateUsername']('testTEST1234-_')).not.toThrowError();
         });
 
         it('fails validates an incorrect username', async () => {

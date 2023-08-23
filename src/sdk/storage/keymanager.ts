@@ -60,7 +60,7 @@ class StoreKeyOptions {
         toElliptic(options.privateKey); // throws if key not valid
         KeyManagerLevel.validate(options.level); // throws if level not valid
 
-        if (options.challenge) {
+        if (options.challenge !== undefined) {
             if (typeof options.challenge !== 'string' || options.challenge.length === 0) {
                 throwError('Invalid challenge', SdkErrors.InvalidChallenge);
             }
@@ -83,7 +83,7 @@ class SignDataOptions {
     static validate(options: SignDataOptions): void {
         KeyManagerLevel.validate(options.level); // throws if level not valid
 
-        if (options.challenge) {
+        if (options.challenge !== undefined) {
             if (typeof options.challenge !== 'string' || options.challenge.length === 0) {
                 throwError('Invalid challenge', SdkErrors.InvalidChallenge);
             }
@@ -119,7 +119,7 @@ class CheckKeyOptions {
     static validate(options: CheckKeyOptions): void {
         KeyManagerLevel.validate(options.level); // throws if level not valid
 
-        if (options.challenge) {
+        if (options.challenge !== undefined) {
             if (typeof options.challenge !== 'string' || options.challenge.length === 0) {
                 throwError('Invalid challenge', SdkErrors.InvalidChallenge);
             }
