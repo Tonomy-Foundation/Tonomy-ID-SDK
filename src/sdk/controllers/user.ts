@@ -145,7 +145,7 @@ export class User {
             throwError('Username must be a string', SdkErrors.InvalidData);
 
         // Allow only letters, numbers, underscore and dash (1 to 50 characters)
-        if (/^[A-Za-z0-9_-]{1,100}$/g.test(username))
+        if (!/^[A-Za-z0-9_-]{1,100}$/g.test(username))
             throwError('Username contains invalid characters', SdkErrors.InvalidUsername);
     }
 
