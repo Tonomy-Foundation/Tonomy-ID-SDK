@@ -1,5 +1,7 @@
 import { SdkErrors, throwError } from './errors';
 
+export type LoggerLevel = 'emergency' | 'alert' | 'critical' | 'error' | 'warning' | 'notice' | 'info' | 'debug';
+
 export type SettingsType = {
     environment: string;
     blockchainUrl: string;
@@ -8,7 +10,7 @@ export type SettingsType = {
     communicationUrl: string;
     accountsServiceUrl: string;
     tonomyIdSchema: string;
-    loggerLevel: 'emergency' | 'alert' | 'critical' | 'error' | 'warning' | 'notice' | 'info' | 'debug';
+    loggerLevel: LoggerLevel;
 };
 
 let settings: SettingsType;
