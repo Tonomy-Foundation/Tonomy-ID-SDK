@@ -41,7 +41,7 @@ export default async function bootstrap(args: string[]) {
             usernamePrefix: 'demo',
             description: 'Demo of Tonomy ID login and features',
             origin: bootstrapSettings.config.demoWebsiteOrigin,
-            logoUrl: bootstrapSettings.config.demoWebsiteLogoUrl,
+            logoUrl: bootstrapSettings.config.demoWebsiteOrigin + '/market.com.png',
             publicKey: newPublicKey,
         });
 
@@ -54,7 +54,7 @@ export default async function bootstrap(args: string[]) {
             usernamePrefix: 'tonomy',
             description: 'Tonomy website to manager your ID and Data',
             origin: bootstrapSettings.config.ssoWebsiteOrigin,
-            logoUrl: bootstrapSettings.config.ssoWebsiteLogoUrl,
+            logoUrl: bootstrapSettings.config.ssoWebsiteOrigin + '/tonomy-logo1024.png',
             publicKey: newPublicKey,
         });
 
