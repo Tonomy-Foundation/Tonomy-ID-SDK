@@ -117,6 +117,7 @@ export class User {
     }
 
     async saveUsername(username: string) {
+        this.validateUsername(username);
         const normalizedUsername = username.normalize('NFKC');
 
         let user: API.v1.AccountObject;
@@ -137,6 +138,15 @@ export class User {
 
         this.storage.username = fullUsername;
         await this.storage.username;
+    }
+
+    private validateUsername(username: string) {
+        if (typeof username !== 'string' || username.length === 0)
+            throwError('Username must be a string', SdkErrors.InvalidData);
+
+        // Allow only letters, numbers, underscore and dash (1 to 50 characters)
+        if (!/^[A-Za-z0-9_-]{1,100}$/g.test(username))
+            throwError('Username contains invalid characters', SdkErrors.InvalidUsername);
     }
 
     /**
@@ -378,6 +388,7 @@ export class User {
             keyFromPasswordFn: KeyFromPasswordFn;
         }
     ): Promise<GetPersonResponse> {
+        this.validateUsername(username.getBaseUsername());
         const { keyManager } = this;
 
         const idData = await idContract.getPerson(username);
@@ -488,7 +499,11 @@ export class User {
                 await this.keyManager.getKey({ level: KeyManagerLevel.from(level) });
                 this.keyManager.removeKey({ level: KeyManagerLevel.from(level) });
             } catch (e) {
-                if (!(e instanceof SdkError) || e.code !== SdkErrors.KeyNotFound) throw e;
+                if (
+                    !(e instanceof SdkError) ||
+                    (e.code !== SdkErrors.KeyNotFound && e.code !== SdkErrors.InvalidKeyLevel)
+                )
+                    throw e;
             }
         }
 

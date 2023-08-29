@@ -3,7 +3,13 @@ import { JsKeyManager } from '../../src/sdk/storage/jsKeyManager';
 import argon2 from 'argon2';
 import { jsStorageFactory } from '../../src/cli/bootstrap/jsstorage';
 import { createUserObject } from '../../src/sdk/controllers/user';
-import { KeyManagerLevel } from '../../src/sdk/storage/keymanager';
+import {
+    CheckKeyOptions,
+    GetKeyOptions,
+    KeyManagerLevel,
+    SignDataOptions,
+    StoreKeyOptions,
+} from '../../src/sdk/storage/keymanager';
 import { randomBytes, generateRandomKeyPair, createVCSigner, createSigner } from '../../src/sdk/util/crypto';
 import { setSettings } from '../../src/sdk';
 import { generatePrivateKeyFromPassword } from '../../src/cli/bootstrap/keys';
@@ -112,5 +118,30 @@ describe('Keymanager class', () => {
         expect(signedWithTonomy).toBeTruthy();
         expect(signedWithAntelopeToolKit).toBeTruthy();
         expect(signedWithTonomy).toEqual(signedWithAntelopeToolKit);
+    });
+
+    it('validates KeyManagerLevel correctly', async () => {
+        expect(() => KeyManagerLevel.validate(KeyManagerLevel.PASSWORD)).not.toThrow();
+        expect(() => KeyManagerLevel.validate(KeyManagerLevel.ACTIVE)).not.toThrow();
+        expect(() => KeyManagerLevel.validate('INVALID' as any)).toThrow();
+        expect(() => KeyManagerLevel.validate(KeyManagerLevel.from('PASSWORD'))).not.toThrow();
+        expect(() => KeyManagerLevel.validate(KeyManagerLevel.from('INVALID'))).toThrow();
+    });
+
+    it('validates arguments correctly', async () => {
+        expect(() =>
+            StoreKeyOptions.validate({ level: KeyManagerLevel.ACTIVE, privateKey: generateRandomKeyPair().privateKey })
+        ).not.toThrow();
+        expect(() =>
+            StoreKeyOptions.validate({ level: 'INVALID' as any, privateKey: generateRandomKeyPair().privateKey })
+        ).toThrow();
+        expect(() =>
+            StoreKeyOptions.validate({ level: KeyManagerLevel.ACTIVE, privateKey: 'not a private key' as any })
+        ).toThrow();
+        expect(() => GetKeyOptions.validate({ level: KeyManagerLevel.ACTIVE })).not.toThrow();
+        expect(() => CheckKeyOptions.validate({ level: KeyManagerLevel.ACTIVE, challenge: 'hi' })).not.toThrow();
+        expect(() => CheckKeyOptions.validate({ level: KeyManagerLevel.ACTIVE, challenge: '' })).toThrow();
+        expect(() => CheckKeyOptions.validate({ level: KeyManagerLevel.ACTIVE, challenge: 1 as any })).toThrow();
+        expect(() => SignDataOptions.validate({ level: KeyManagerLevel.ACTIVE, data: 'hi' })).not.toThrow();
     });
 });
