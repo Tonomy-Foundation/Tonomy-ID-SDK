@@ -6,7 +6,8 @@ const settings: Partial<SettingsType> = {
     accountSuffix: '.test.tonomy.id',
     communicationUrl: 'ws://localhost:5000',
     accountsServiceUrl: 'http://localhost:5000',
-    tonomyIdSchema: 'tonomy-id-development://',
+    tonomyIdSchema: 'tonomy-id-test://',
+    loggerLevel: 'info',
 };
 
 export default settings;
