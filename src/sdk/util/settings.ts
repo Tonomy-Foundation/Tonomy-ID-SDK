@@ -39,8 +39,7 @@ export function getSettings(): SettingsType {
             }
 
             throw new Error(
-                'Tonomy SDK settings has not been initialized using setSettings() with property for variable: ' +
-                name.toString()
+                `Tonomy SDK settings has not been initialized using setSettings() with property for variable: ${name.toString()}`
             );
         },
     });
