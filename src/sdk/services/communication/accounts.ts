@@ -1,6 +1,7 @@
 import { getSettings } from '../../util/settings';
 import { Checksum256Type, Name, PublicKeyType } from '@wharfkit/antelope';
 import fetch from 'cross-fetch';
+import { SdkErrors, throwError } from '../../util';
 
 export type CreateAccountRequest = {
     usernameHash: Checksum256Type;
@@ -26,6 +27,13 @@ export async function createAccount(data: CreateAccountRequest): Promise<CreateA
     });
 
     const resData = await response.json();
+
+    if (response.status !== 200) {
+        throwError(
+            'Communication Service error: ' + resData.message + ', status: ' + response.status,
+            SdkErrors.AccountServiceError
+        );
+    }
 
     return {
         transactionId: resData.transactionId,
