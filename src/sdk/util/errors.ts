@@ -98,6 +98,7 @@ export function throwError(message: string, code?: SdkErrors): never {
 enum SdkErrors {
     AccountDoesntExist = 'AccountDoesntExist',
     AccountNotFound = 'AccountNotFound',
+    AccountServiceError = 'AccountServiceError',
     CommunicationNotConnected = 'CommunicationNotConnected',
     CommunicationNotLoggedIn = 'CommunicationNotLoggedIn',
     CommunicationTimeout = 'CommunicationTimeout',

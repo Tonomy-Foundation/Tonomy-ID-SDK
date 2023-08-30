@@ -1,9 +1,8 @@
 import { AccountType, TonomyUsername } from '../../src/sdk/util/username';
-import { getSettings, setSettings } from '../../src/sdk/util/settings';
+import { getSettings } from '../../src/sdk/util/settings';
+import { setTestSettings } from '../../test-integration/helpers/settings';
 
-setSettings({
-    accountSuffix: '.test.tonomy.id',
-});
+setTestSettings();
 
 describe('TonomyUsername', () => {
     it('creates a username correctly', () => {

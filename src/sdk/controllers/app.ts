@@ -1,9 +1,10 @@
 /* eslint-disable camelcase */
-import { Checksum256, Name, PrivateKey, PublicKey } from '@wharfkit/antelope';
+import { Checksum256, Name, PublicKey } from '@wharfkit/antelope';
 import { IDContract } from '../services/blockchain/contracts/IDContract';
 import { createSigner } from '../services/blockchain/eosio/transaction';
 import { getSettings } from '../util/settings';
 import { AccountType, TonomyUsername } from '../util/username';
+import { defaultAntelopePrivateKey } from '../services/blockchain';
 
 const idContract = IDContract.Instance;
 
@@ -105,7 +106,7 @@ export class App implements AppData {
         );
 
         // TODO remove this
-        const privateKey = PrivateKey.from('PVT_K1_2bfGi9rYsXQSXXTvJbDAPhHLQUojjaNLomdm3cEJ1XTzMqUt3V');
+        const privateKey = defaultAntelopePrivateKey;
 
         const res = await idContract.newapp(
             options.appName,

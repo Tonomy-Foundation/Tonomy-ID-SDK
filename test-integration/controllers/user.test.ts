@@ -1,26 +1,17 @@
-import { api } from '../helpers/eosio';
 import { createRandomID } from '../helpers/user';
-import {
-    KeyManager,
-    KeyManagerLevel,
-    TonomyUsername,
-    User,
-    createUserObject,
-    setSettings,
-    EosioUtil,
-} from '../../src/sdk/index';
+import { KeyManager, KeyManagerLevel, TonomyUsername, User, createUserObject, EosioUtil } from '../../src/sdk/index';
 import { SdkErrors } from '../../src/sdk/index';
 import { JsKeyManager } from '../../src/sdk/storage/jsKeyManager';
 import { jsStorageFactory } from '../../src/cli/bootstrap/jsstorage';
-import settings from '../helpers/settings';
 import { Checksum256 } from '@wharfkit/antelope';
 import { generatePrivateKeyFromPassword } from '../../src/cli/bootstrap/keys';
 import { getAccount } from '../../src/sdk/services/blockchain/eosio/eosio';
+import { setTestSettings } from '../helpers/settings';
+
+setTestSettings();
 
 let auth: KeyManager;
 let user: User;
-
-setSettings(settings);
 
 describe('User class', () => {
     beforeEach((): void => {

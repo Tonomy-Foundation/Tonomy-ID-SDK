@@ -1,12 +1,21 @@
+'use strict';
 import { SdkErrors, throwError } from './errors';
 
+if (typeof Proxy === 'undefined') {
+    throw new Error("This browser doesn't support Proxy");
+}
+
+export type LoggerLevel = 'emergency' | 'alert' | 'critical' | 'error' | 'warning' | 'notice' | 'info' | 'debug';
+
 export type SettingsType = {
+    environment: string;
     blockchainUrl: string;
     ssoWebsiteOrigin: string;
     accountSuffix: string;
     communicationUrl: string;
+    accountsServiceUrl: string;
     tonomyIdSchema: string;
-    loggerLevel: 'emergency' | 'alert' | 'critical' | 'error' | 'warning' | 'notice' | 'info' | 'debug';
+    loggerLevel: LoggerLevel;
 };
 
 let settings: SettingsType;
@@ -23,5 +32,25 @@ export function getSettings(): SettingsType {
         throwError('Settings not yet initialized', SdkErrors.SettingsNotInitialized);
     }
 
-    return settings;
+    const proxy = new Proxy(settings, {
+        get(target, name, receiver) {
+            if (Reflect.has(target, name)) {
+                return Reflect.get(target, name, receiver);
+            }
+
+            throw new Error(
+                `Tonomy SDK settings has not been initialized using setSettings() with property for variable: ${name.toString()}`
+            );
+        },
+    });
+
+    return proxy;
+}
+
+export function isProduction(): boolean {
+    if (!initialized) {
+        throwError('Settings not yet initialized', SdkErrors.SettingsNotInitialized);
+    }
+
+    return ['production', 'staging', 'demo'].includes(settings.environment);
 }

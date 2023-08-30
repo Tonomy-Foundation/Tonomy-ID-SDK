@@ -1,9 +1,9 @@
 import { jsStorageFactory } from '../../src/cli/bootstrap/jsstorage';
 import { JsKeyManager } from '../../src/sdk/storage/jsKeyManager';
 import { User } from '../../src/sdk/controllers/user';
-import { setSettings } from '../../src/sdk';
+import { setTestSettings } from '../../test-integration/helpers/settings';
 
-setSettings({});
+setTestSettings();
 
 describe('User class', () => {
     describe('validateUsername()', () => {

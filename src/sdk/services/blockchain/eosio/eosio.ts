@@ -1,4 +1,4 @@
-import { APIClient, FetchProvider, NameType, API } from '@wharfkit/antelope';
+import { APIClient, FetchProvider, NameType, API, PrivateKey } from '@wharfkit/antelope';
 import { GetInfoResponse } from '@wharfkit/antelope/src/api/v1/types';
 import fetch from 'cross-fetch';
 import { getSettings } from '../../../util/settings';
@@ -38,3 +38,17 @@ export async function getAccount(account: NameType): Promise<API.v1.AccountObjec
         }
     }
 }
+
+function getDefaultAntelopePrivateKey() {
+    // if (isProduction()) {
+    //     throw new Error('Cannot use default private key in production');
+    // }
+
+    return PrivateKey.from('PVT_K1_2bfGi9rYsXQSXXTvJbDAPhHLQUojjaNLomdm3cEJ1XTzMqUt3V');
+}
+
+// This is the default private key used by an Antelope node when it is first started
+export const defaultAntelopePrivateKey = getDefaultAntelopePrivateKey();
+
+export const defaultAntelopePublicKey = defaultAntelopePrivateKey.toPublic();
+// PUB_K1_6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5BoDq63

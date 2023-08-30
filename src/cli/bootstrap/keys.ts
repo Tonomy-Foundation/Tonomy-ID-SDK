@@ -1,7 +1,11 @@
-import { Bytes, KeyType, PrivateKey, Checksum256 } from '@wharfkit/antelope';
+import { NameType, Bytes, KeyType, PrivateKey, PublicKeyType, Checksum256 } from '@wharfkit/antelope';
 import argon2 from 'argon2';
 import { randomBytes } from '../../sdk/util/crypto';
-import { EosioUtil } from '../../sdk';
+import { EosioUtil, EosioContract } from '../../sdk';
+import { Authority } from '../../sdk/services/blockchain/eosio/authority';
+import { defaultAntelopePrivateKey } from '../../sdk/services/blockchain';
+
+const eosioContract = EosioContract.Instance;
 
 /**
  * creates a key based on secure (hashing) key generation algorithm Argon2
@@ -31,10 +35,13 @@ export async function generatePrivateKeyFromPassword(
     };
 }
 
-const privateKey = PrivateKey.from('PVT_K1_2bfGi9rYsXQSXXTvJbDAPhHLQUojjaNLomdm3cEJ1XTzMqUt3V');
-const publicKey = privateKey.toPublic();
-// PUB_K1_6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5BoDq63
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const signer = EosioUtil.createSigner(privateKey as any);
+export const signer = EosioUtil.createSigner(defaultAntelopePrivateKey);
 
-export { privateKey, publicKey, signer };
+export async function updateAccountKey(account: NameType, newPublicKey: PublicKeyType, addCodePermission = false) {
+    const authority = Authority.fromKey(newPublicKey.toString());
+
+    if (addCodePermission) authority.addCodePermission(account.toString());
+
+    await eosioContract.updateauth(account.toString(), 'active', 'owner', authority, signer);
+    await eosioContract.updateauth(account.toString(), 'owner', 'owner', authority, signer);
+}

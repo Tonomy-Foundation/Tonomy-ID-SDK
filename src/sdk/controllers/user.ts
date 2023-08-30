@@ -1,12 +1,7 @@
 import { Name, PrivateKey, API, Checksum256 } from '@wharfkit/antelope';
-import { PushTransactionResponse } from '@wharfkit/antelope/src/api/v1/types';
 import { KeyManager, KeyManagerLevel } from '../storage/keymanager';
 import { GetPersonResponse, IDContract } from '../services/blockchain/contracts/IDContract';
-import {
-    AntelopePushTransactionError,
-    createKeyManagerSigner,
-    createSigner,
-} from '../services/blockchain/eosio/transaction';
+import { createKeyManagerSigner } from '../services/blockchain/eosio/transaction';
 import { getAccount, getChainInfo } from '../services/blockchain/eosio/eosio';
 import { createStorage, PersistentStorageClean, StorageFactory, STORAGE_NAMESPACE } from '../storage/storage';
 import { SdkErrors, throwError, SdkError } from '../util/errors';
@@ -19,6 +14,7 @@ import { Issuer } from '@tonomy/did-jwt-vc';
 import { createVCSigner, generateRandomKeyPair } from '../util/crypto';
 import { Message, LinkAuthRequestMessage, LinkAuthRequestResponseMessage } from '../services/communication/message';
 import { getAccountNameFromDid, parseDid } from '../util/ssi/did';
+import { createAccount } from '../services/communication/accounts';
 
 enum UserStatus {
     CREATING_ACCOUNT = 'CREATING_ACCOUNT',
@@ -69,6 +65,7 @@ export type UserStorage = {
     username: TonomyUsername;
     salt: Checksum256;
     did: string;
+    captchaToken: string;
     // TODO update to have all data from blockchain
 };
 
@@ -114,6 +111,10 @@ export class User {
 
     async getDid(): Promise<string> {
         return await this.storage.did;
+    }
+
+    async getCaptchaToken(): Promise<string> {
+        return await this.storage.captchaToken;
     }
 
     async saveUsername(username: string) {
@@ -254,42 +255,40 @@ export class User {
         });
     }
 
-    async createPerson(): Promise<PushTransactionResponse> {
+    async saveCaptchaToken(captchaToken: string) {
+        this.storage.captchaToken = captchaToken;
+        await this.storage.captchaToken;
+    }
+
+    async createPerson() {
         const { keyManager } = this;
         const username = await this.getUsername();
 
         const usernameHash = username.usernameHash;
 
-        const passwordKey = await keyManager.getKey({
+        const publicKey = await keyManager.getKey({
             level: KeyManagerLevel.PASSWORD,
         });
-
-        // TODO this needs to change to the actual key used, from settings
-        const idTonomyActiveKey = PrivateKey.from('PVT_K1_2bfGi9rYsXQSXXTvJbDAPhHLQUojjaNLomdm3cEJ1XTzMqUt3V');
-
         const salt = await this.storage.salt;
-        let res: PushTransactionResponse;
+        const captchaToken = await this.storage.captchaToken;
 
         try {
-            res = await idContract.newperson(
-                usernameHash.toString(),
-                passwordKey.toString(),
-                salt.toString(),
-                createSigner(idTonomyActiveKey)
-            );
+            const res = await createAccount({
+                usernameHash: usernameHash,
+                publicKey,
+                salt,
+                captchaToken,
+            });
+
+            this.storage.accountName = res.accountName;
         } catch (e) {
-            if (e instanceof AntelopePushTransactionError) {
-                if (e.hasErrorCode(3050003) && e.hasTonomyErrorCode('TCON1000')) {
-                    throw throwError('Username is taken', SdkErrors.UsernameTaken);
-                }
+            if (e.status === 400 && e.message === 'Username is taken') {
+                throwError('Username is taken', SdkErrors.UsernameTaken);
             }
 
             throw e;
         }
 
-        const newAccountAction = res.processed.action_traces[0].inline_traces[0].act;
-
-        this.storage.accountName = Name.from(newAccountAction.data.name);
         await this.storage.accountName;
 
         this.storage.status = UserStatus.CREATING_ACCOUNT;
@@ -298,13 +297,11 @@ export class User {
 
         if (getSettings().loggerLevel === 'debug') {
             console.log('Created account', {
-                accountName: await this.storage.accountName,
+                accountName: (await this.storage.accountName).toString(),
                 username: (await this.getUsername()).getBaseUsername(),
                 did: await this.getDid(),
             });
         }
-
-        return res;
     }
 
     async updateKeys(password: string) {
