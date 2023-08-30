@@ -28,6 +28,8 @@ export class JsKeyManager implements KeyManager {
 
     // creates a new secure key and returns the public key
     async storeKey(options: StoreKeyOptions): Promise<PublicKey> {
+        StoreKeyOptions.validate(options);
+
         const keyStore: KeyStorage = {
             privateKey: options.privateKey,
             publicKey: options.privateKey.toPublic(),
@@ -59,6 +61,7 @@ export class JsKeyManager implements KeyManager {
     }
 
     private fetchKey(options: GetKeyOptions): KeyStorage {
+        GetKeyOptions.validate(options);
         const keyStore = this.keyStorage[options.level];
 
         if (keyStore) return keyStore;
@@ -90,6 +93,7 @@ export class JsKeyManager implements KeyManager {
     }
 
     async signData(options: SignDataOptions): Promise<string | Signature> {
+        SignDataOptions.validate(options);
         const keyStore = this.fetchKey(options);
 
         if (options.level === KeyManagerLevel.PASSWORD || options.level === KeyManagerLevel.PIN) {
@@ -125,12 +129,14 @@ export class JsKeyManager implements KeyManager {
     }
 
     async getKey(options: GetKeyOptions): Promise<PublicKey> {
+        GetKeyOptions.validate(options);
         const keyStore = this.fetchKey(options);
 
         return keyStore.publicKey;
     }
 
     async checkKey(options: CheckKeyOptions): Promise<boolean> {
+        CheckKeyOptions.validate(options);
         const keyStore = this.fetchKey(options);
 
         if (options.level === KeyManagerLevel.PIN || options.level === KeyManagerLevel.PASSWORD) {
@@ -143,6 +149,7 @@ export class JsKeyManager implements KeyManager {
     }
 
     async removeKey(options: GetKeyOptions): Promise<void> {
+        GetKeyOptions.validate(options);
         delete this.keyStorage[options.level];
 
         if (

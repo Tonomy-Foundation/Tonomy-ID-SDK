@@ -7,7 +7,7 @@ The CLI is used
 
 ```bash
 Usage:
-    npm run cli [commands]
+    yarn run cli [commands]
     
     Commands:
         apps create appName usernamePrefix description logoUrl origin publicKey blockchainUrl

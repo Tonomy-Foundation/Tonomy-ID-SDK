@@ -16,7 +16,7 @@ async function main() {
     } else {
         console.log(`
 Usage:
-    npm run cli [commands]
+    yarn run cli [commands]
     
     Commands:
         apps create appName usernamePrefix description logoUrl origin publicKey blockchainUrl

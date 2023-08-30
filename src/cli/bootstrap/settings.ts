@@ -1,7 +1,7 @@
 import address from 'address';
 import { LoggerLevel } from '../../sdk/util/settings';
 
-// cannot use NODE_ENV as it is always "production" on `npm run build`
+// cannot use NODE_ENV as it is always "production" on `yarn run build`
 const env = process.env.NODE_ENV || 'development';
 
 console.log(`NODE_ENV=${env}`);
