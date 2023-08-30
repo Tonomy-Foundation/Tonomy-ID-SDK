@@ -28,7 +28,7 @@ export async function createAccount(data: CreateAccountRequest): Promise<CreateA
 
     const resData = await response.json();
 
-    if (response.status !== 200) {
+    if (response.status !== 201) {
         if (response.status === 400) {
             return throwError(
                 'Communication Service error: ' + resData.message + ', errors: ' + resData.errors,
