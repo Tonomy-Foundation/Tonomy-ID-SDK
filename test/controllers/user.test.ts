@@ -40,7 +40,7 @@ describe('User class', () => {
         });
 
         it('generates random passphrase words', async () => {
-            const generatedKeywords = await user.generateRandomPassphrase(6);
+            const generatedKeywords = await user.generateRandomPassphrase();
 
             expect(generatedKeywords).toHaveLength(6);
         });

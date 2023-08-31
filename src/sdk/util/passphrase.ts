@@ -4,10 +4,10 @@ import path from 'path';
 const wordListPath = path.join(__dirname, '..', 'passphraseWords.txt');
 const wordList = fs.readFileSync(wordListPath, 'utf8').split('\n');
 
-export function generateRandomKeywords(numKeywords = 6): string[] {
+export function generateRandomKeywords(): string[] {
     const randomIndices: number[] = [];
 
-    while (randomIndices.length < numKeywords) {
+    while (randomIndices.length < 6) {
         const randomIndex = Math.floor(Math.random() * wordList.length);
 
         if (!randomIndices.includes(randomIndex)) {
