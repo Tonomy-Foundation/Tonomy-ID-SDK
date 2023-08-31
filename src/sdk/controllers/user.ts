@@ -7,7 +7,7 @@ import { createStorage, PersistentStorageClean, StorageFactory, STORAGE_NAMESPAC
 import { SdkErrors, throwError, SdkError } from '../util/errors';
 import { AccountType, TonomyUsername } from '../util/username';
 import { validatePassword } from '../util/passwords';
-import { generateRandomKeywords } from '../util/passphrase';
+import { generateRandomKeywords, generateAutoSuggestions } from '../util/passphrase';
 import { UserApps } from './userApps';
 import { getSettings } from '../util/settings';
 import { Communication } from '../services/communication/communication';
@@ -621,6 +621,12 @@ export class User {
         const randomWords = generateRandomKeywords();
 
         return randomWords;
+    }
+
+    async suggestPassphraseWord(inputWord: string): Promise<string[]> {
+        const suggestedWords = generateAutoSuggestions(inputWord);
+
+        return suggestedWords;
     }
 }
 

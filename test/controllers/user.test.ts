@@ -39,10 +39,18 @@ describe('User class', () => {
             user = new User(new JsKeyManager(), jsStorageFactory);
         });
 
-        it('generates random keywords', async () => {
+        it('generates random passphrase words', async () => {
             const generatedKeywords = await user.generateRandomPassphrase(6);
 
             expect(generatedKeywords).toHaveLength(6);
+        });
+
+        it('generates suggested passphrase words', async () => {
+            const suggestedWords = await user.suggestPassphraseWord('cap');
+
+            suggestedWords.forEach((word) => {
+                expect(word).toContain('cap');
+            });
         });
     });
 });
