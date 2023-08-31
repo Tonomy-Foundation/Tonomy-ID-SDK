@@ -32,4 +32,17 @@ describe('User class', () => {
             ).toThrowError();
         });
     });
+    describe('generateKeywords()', () => {
+        let user: User;
+
+        beforeEach(() => {
+            user = new User(new JsKeyManager(), jsStorageFactory);
+        });
+
+        it('generates random keywords', async () => {
+            const generatedKeywords = await user.generateRandomPassphrase(6);
+
+            expect(generatedKeywords).toHaveLength(6);
+        });
+    });
 });
