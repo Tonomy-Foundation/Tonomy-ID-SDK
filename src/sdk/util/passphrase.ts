@@ -20,16 +20,20 @@ export function generateRandomKeywords(): string[] {
     return randomKeywords;
 }
 
-// Convert a byte array to a number
-function byteArrayToNumber(byteArray: Uint8Array): number {
-    return byteArray.reduce((value, byte) => value * 256 + byte, 0);
-}
-
 export function generateAutoSuggestions(inputString: string): string[] {
+    if (inputString.trim() === '') {
+        return []; // Return an empty array for empty input
+    }
+
     inputString = inputString.toLowerCase();
     const matchingSuggestions: string[] = topPasswords
         .filter((word: string) => word.toLowerCase().includes(inputString))
         .slice(0, 4);
 
     return matchingSuggestions;
+}
+
+// Convert a byte array to a number
+function byteArrayToNumber(byteArray: Uint8Array): number {
+    return byteArray.reduce((value, byte) => value * 256 + byte, 0);
 }

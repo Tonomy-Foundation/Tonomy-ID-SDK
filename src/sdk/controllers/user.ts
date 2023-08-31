@@ -617,16 +617,12 @@ export class User {
         }
     }
 
-    async generateRandomPassphrase(): Promise<string[]> {
-        const randomWords = generateRandomKeywords();
-
-        return randomWords;
+    generateRandomPassphrase(): string[] {
+        return generateRandomKeywords();
     }
 
-    async suggestPassphraseWord(inputWord: string): Promise<string[]> {
-        const suggestedWords = generateAutoSuggestions(inputWord);
-
-        return suggestedWords;
+    suggestPassphraseWord(inputWord: string): string[] {
+        return generateAutoSuggestions(inputWord);
     }
 }
 
