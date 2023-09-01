@@ -11,6 +11,17 @@ export function randomBytes(bytes: number): Uint8Array {
     return rb(new Uint8Array(bytes));
 }
 
+export function randomNumber(min: number, max: number): number {
+    if (min > max) {
+        throwError('Min value cannot be greater than max value');
+    }
+
+    const range = max - min + 1;
+    const randomBytesArray = randomBytes(1);
+
+    return (randomBytesArray[0] % range) + min;
+}
+
 function validateKey(keyPair: elliptic.ec.KeyPair) {
     const result = keyPair.validate();
 

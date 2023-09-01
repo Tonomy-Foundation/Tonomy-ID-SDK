@@ -1,39 +1,40 @@
-import { topPasswords } from '../topPassphrases';
-import { randomBytes } from './crypto';
+import { englistPassphaseWords } from '../englistPassphaseWords';
+import { randomNumber } from './crypto';
 
+/**
+ * Generates an array of random keywords.
+ * @returns An array of random keywords with a maximum of 6 words.
+ */
 export function generateRandomKeywords(): string[] {
     const randomIndices: number[] = [];
-    const maxIndex = topPasswords.length;
 
     while (randomIndices.length < 6) {
-        // Generate a random 4-byte number
-        const randomBytesArray = randomBytes(4);
-        const randomIndex = byteArrayToNumber(randomBytesArray) % maxIndex;
+        const randomIndex = randomNumber(1, 2050);
 
         if (!randomIndices.includes(randomIndex)) {
             randomIndices.push(randomIndex);
         }
     }
 
-    const randomKeywords: string[] = randomIndices.map((index) => topPasswords[index]);
+    const randomKeywords: string[] = randomIndices.map((index) => englistPassphaseWords[index]);
 
     return randomKeywords;
 }
 
+/**
+ * Generates auto-suggestions based on the input string.
+ * @param inputString - The input string for which auto-suggestions are generated.
+ * @returns An array of auto-suggestions with a maximum of 4 words.
+ */
 export function generateAutoSuggestions(inputString: string): string[] {
     if (inputString.trim() === '') {
         return []; // Return an empty array for empty input
     }
 
     inputString = inputString.toLowerCase();
-    const matchingSuggestions: string[] = topPasswords
+    const matchingSuggestions: string[] = englistPassphaseWords
         .filter((word: string) => word.toLowerCase().includes(inputString))
         .slice(0, 4);
 
     return matchingSuggestions;
-}
-
-// Convert a byte array to a number
-function byteArrayToNumber(byteArray: Uint8Array): number {
-    return byteArray.reduce((value, byte) => value * 256 + byte, 0);
 }
