@@ -17,7 +17,7 @@ export function randomNumber(min: number, max: number): number {
     }
 
     const range = max - min + 1;
-    const randomBytesArray = randomBytes(1);
+    const randomBytesArray = randomBytes(12);
 
     return (randomBytesArray[0] % range) + min;
 }
