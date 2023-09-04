@@ -17,9 +17,9 @@ export function randomNumber(min: number, max: number): number {
     }
 
     const range = max - min + 1;
-    const randomBytesArray = randomBytes(12);
+    const randomValue = Math.floor(Math.random() * range) + min;
 
-    return (randomBytesArray[0] % range) + min;
+    return randomValue;
 }
 
 function validateKey(keyPair: elliptic.ec.KeyPair) {
