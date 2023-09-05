@@ -26,7 +26,7 @@ export function randomNumber(min: number, max: number): number {
         throwError('Min value cannot be greater than max value');
     }
 
-    const range = max - min + 1;
+    const range = max - min;
     const calculateByte = Math.floor(Math.log(range) / Math.log(256)) + 1;
 
     const randomBytesArray = randomBytes(calculateByte);
