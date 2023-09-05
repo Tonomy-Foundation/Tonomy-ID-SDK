@@ -2,7 +2,7 @@ import { englistPassphaseWords } from '../englistPassphaseWords';
 import { randomNumber } from './crypto';
 
 /**
- * Generates an array of random keywords.
+ * Generates an array of random keywords passphrase.
  * @returns An array of random keywords with a maximum of 6 words.
  */
 export function generateRandomKeywords(): string[] {
