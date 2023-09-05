@@ -17,7 +17,10 @@ export function randomNumber(min: number, max: number): number {
     }
 
     const range = max - min + 1;
-    const randomValue = Math.floor(Math.random() * range) + min;
+    const randomBytesArray = randomBytes(4);
+
+    const buffer = Buffer.from(randomBytesArray);
+    const randomValue = (buffer.readUInt32BE(0) % range) + min;
 
     return randomValue;
 }
