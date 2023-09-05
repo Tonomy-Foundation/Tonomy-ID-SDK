@@ -6,13 +6,12 @@ import { setTestSettings } from '../../test-integration/helpers/settings';
 setTestSettings();
 
 describe('User class', () => {
+    let user: User;
+
+    beforeEach(() => {
+        user = new User(new JsKeyManager(), jsStorageFactory);
+    });
     describe('validateUsername()', () => {
-        let user: User;
-
-        beforeEach(() => {
-            user = new User(new JsKeyManager(), jsStorageFactory);
-        });
-
         it('validates a correct username', async () => {
             expect(() => user['validateUsername']('test')).not.toThrowError();
             expect(() => user['validateUsername']('test1234')).not.toThrowError();
@@ -30,6 +29,34 @@ describe('User class', () => {
                     '012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789'
                 )
             ).toThrowError();
+        });
+    });
+    describe('generateRandomPassphrase()', () => {
+        it('generates random passphrase words', () => {
+            const generatedKeywords = user.generateRandomPassphrase();
+
+            expect(generatedKeywords).toHaveLength(6);
+        });
+    });
+    describe('suggestPassphraseWord()', () => {
+        it('generates suggestions for a non-empty input', () => {
+            const suggestedWords = user.suggestPassphraseWord('cap');
+
+            suggestedWords.forEach((word) => {
+                expect(word.toLowerCase()).toContain('cap');
+            });
+        });
+
+        it('returns an empty array for an empty input', () => {
+            const suggestedWords = user.suggestPassphraseWord('');
+
+            expect(suggestedWords).toEqual([]);
+        });
+
+        it('returns an empty array for an input not in the list', () => {
+            const suggestedWords = user.suggestPassphraseWord('xyz');
+
+            expect(suggestedWords).toEqual([]);
         });
     });
 });
