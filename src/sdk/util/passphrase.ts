@@ -9,7 +9,7 @@ export function generateRandomKeywords(): string[] {
     const randomIndices: number[] = [];
 
     while (randomIndices.length < 6) {
-        const randomIndex = randomNumber(1, 2047);
+        const randomIndex = randomNumber(0, 2047);
 
         if (!randomIndices.includes(randomIndex)) {
             randomIndices.push(randomIndex);

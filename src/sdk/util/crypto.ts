@@ -11,16 +11,27 @@ export function randomBytes(bytes: number): Uint8Array {
     return rb(new Uint8Array(bytes));
 }
 
+function byteArrayToNumber(byteArray: Uint8Array) {
+    let result = 0;
+
+    for (let i = 0; i < byteArray.length; i++) {
+        result += byteArray[i] << (i * 8);
+    }
+
+    return result;
+}
+
 export function randomNumber(min: number, max: number): number {
     if (min > max) {
         throwError('Min value cannot be greater than max value');
     }
 
     const range = max - min + 1;
-    const randomBytesArray = randomBytes(4);
+    const calculateByte = Math.floor(Math.log(range) / Math.log(256)) + 1;
 
-    const buffer = Buffer.from(randomBytesArray);
-    const randomValue = (buffer.readUInt32BE(0) % range) + min;
+    const randomBytesArray = randomBytes(calculateByte);
+
+    const randomValue = (byteArrayToNumber(randomBytesArray) % range) + min;
 
     return randomValue;
 }
