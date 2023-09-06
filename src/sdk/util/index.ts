@@ -4,6 +4,7 @@ export * from './errors';
 export * from './objects';
 export * from './request';
 export * from './serializable';
+export * from './passphrase';
 export * from './settings';
 export * from './ssi/did';
 export * from './ssi/did-jwk';
