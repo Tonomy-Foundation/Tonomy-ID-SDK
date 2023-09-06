@@ -1,4 +1,4 @@
-import { englistPassphaseWords } from '../englistPassphaseWords';
+import { englishPassphraseWords } from './passphraseWordsEnglish';
 import { randomNumber } from './crypto';
 
 /**
@@ -16,7 +16,7 @@ export function generateRandomKeywords(): string[] {
         }
     }
 
-    const randomKeywords: string[] = randomIndices.map((index) => englistPassphaseWords[index]);
+    const randomKeywords: string[] = randomIndices.map((index) => englishPassphraseWords[index]);
 
     return randomKeywords;
 }
@@ -32,7 +32,7 @@ export function generateAutoSuggestions(inputString: string): string[] {
     }
 
     inputString = inputString.toLowerCase();
-    const matchingSuggestions: string[] = englistPassphaseWords
+    const matchingSuggestions: string[] = englishPassphraseWords
         .filter((word: string) => word.toLowerCase().includes(inputString))
         .slice(0, 4);
 

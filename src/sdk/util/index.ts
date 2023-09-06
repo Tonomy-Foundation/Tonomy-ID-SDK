@@ -2,7 +2,6 @@ export * from './base64';
 export * from './crypto';
 export * from './errors';
 export * from './objects';
-export * from './passwords';
 export * from './request';
 export * from './serializable';
 export * from './settings';
