@@ -28,7 +28,7 @@ export function generateRandomKeywords(): string[] {
  */
 export function generateAutoSuggestions(inputString: string): string[] {
     if (inputString.trim() === '') {
-        return []; // Return an empty array for empty input
+        return []; // Return an empty array for empty input string
     }
 
     inputString = inputString.toLowerCase();
