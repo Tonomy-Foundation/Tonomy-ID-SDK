@@ -1,5 +1,5 @@
 import { io, Socket } from 'socket.io-client';
-import { CommunicationError, SdkErrors, throwError } from '../../util/errors';
+import { CommunicationError, createSdkError, SdkErrors, throwError } from '../../util/errors';
 import { getSettings } from '../../util/settings';
 import { AuthenticationMessage, Message } from '../../services/communication/message';
 
@@ -55,7 +55,7 @@ export class Communication {
         this.socketServer.connect();
 
         await new Promise((resolve, reject) => {
-            this.socketServer.timeout(SOCKET_TIMEOUT).on('connect', async () => {
+            this.socketServer.on('connect', async () => {
                 if (this.isLoggedIn()) {
                     await this.login(this.authMessage as AuthenticationMessage);
                 }
@@ -63,6 +63,17 @@ export class Communication {
                 resolve(true);
                 return;
             });
+
+            setTimeout(() => {
+                if (this.isConnected()) return;
+
+                reject(
+                    createSdkError(
+                        'Could not connect to Tonomy Communication server',
+                        SdkErrors.CommunicationNotConnected
+                    )
+                );
+            }, SOCKET_TIMEOUT);
         });
     }
 
