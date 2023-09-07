@@ -100,13 +100,27 @@ export class Communication {
                         return;
                     }
 
+                    if (error) {
+                        reject(error);
+                        return;
+                    }
+
                     resolve(response);
                     return;
                 });
         });
 
         if (ack.status !== 200) {
-            throw new CommunicationError(ack.error);
+            throw new CommunicationError({
+                exception: {
+                    response: ack.error,
+                    name: 'HttpException',
+                    status: ack.status,
+                    message: ack.error,
+                },
+                name: 'CommunicationError',
+                message: ack.error,
+            });
         }
 
         return ack.details;
