@@ -1,9 +1,17 @@
 import { io, Socket } from 'socket.io-client';
-import { CommunicationError, createSdkError, SdkErrors, throwError } from '../../util/errors';
+import { CommunicationError, SdkErrors, throwError } from '../../util/errors';
 import { getSettings } from '../../util/settings';
 import { AuthenticationMessage, Message } from '../../services/communication/message';
 
 export type Subscriber = (message: Message) => void;
+
+export const SOCKET_TIMEOUT = 5000;
+
+export type WebsocketReturnType = {
+    status: number;
+    details?: any;
+    error?: any;
+};
 
 export class Communication {
     socketServer: Socket;
@@ -47,7 +55,7 @@ export class Communication {
         this.socketServer.connect();
 
         await new Promise((resolve, reject) => {
-            this.socketServer.on('connect', async () => {
+            this.socketServer.timeout(SOCKET_TIMEOUT).on('connect', async () => {
                 if (this.isLoggedIn()) {
                     await this.login(this.authMessage as AuthenticationMessage);
                 }
@@ -55,16 +63,6 @@ export class Communication {
                 resolve(true);
                 return;
             });
-            setTimeout(() => {
-                if (this.isConnected()) return;
-
-                reject(
-                    createSdkError(
-                        'Could not connect to Tonomy Communication server',
-                        SdkErrors.CommunicationNotConnected
-                    )
-                );
-            }, 5000);
         });
     }
 
@@ -86,35 +84,32 @@ export class Communication {
                 message.getRecipient(),
                 message.getPayload()
             );
-        return await new Promise((resolve, reject) => {
-            const resolved = false;
+        const ack = await new Promise<WebsocketReturnType>((resolve, reject) => {
+            this.socketServer
+                .timeout(SOCKET_TIMEOUT)
+                .emit(event, { message: message.toString() }, (error: any, response: any) => {
+                    if (response.error) {
+                        if (response.exception?.name === 'HttpException') {
+                            const communicationError = new CommunicationError(response);
 
-            this.socketServer.emit(event, { message: message.toString() }, (response: any) => {
-                if (response.error) {
-                    if (response.exception?.name === 'HttpException') {
-                        const communicationError = new CommunicationError(response);
+                            reject(communicationError);
+                            return;
+                        }
 
-                        reject(communicationError);
+                        reject(response);
                         return;
                     }
 
-                    reject(response);
+                    resolve(response);
                     return;
-                }
-
-                resolve(response);
-                return;
-            });
-            setTimeout(() => {
-                if (resolved) return;
-                reject(
-                    createSdkError(
-                        'Connection timed out to Tonomy Communication server',
-                        SdkErrors.CommunicationTimeout
-                    )
-                );
-            }, 5000);
+                });
         });
+
+        if (ack.status !== 200) {
+            throw new CommunicationError(ack.error);
+        }
+
+        return ack.details;
     }
 
     /**
