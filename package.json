@@ -1,5 +1,5 @@
 {
-  "version": "0.15.0-development.4",
+  "version": "0.15.0-development.3",
   "license": "Apache-2.0",
   "type": "module",
   "source": "src/sdk/index.ts",
@@ -15,13 +15,18 @@
       "import": "./build/sdk/index.module.js"
     },
     "./api": {
-      "types": "./build/sdk/types/sdk/api/index.d.ts",
+      "types": "./build/api/types/api/index.d.ts",
       "require": "./build/api/index.cjs",
       "import": "./build/api/index.module.js"
     },
     "./build/api/tonomy.css": {
       "import": "./build/api/tonomy.css",
       "require": "./build/api/tonomy.css"
+    },
+    "./util": {
+      "types": "./build/util/types/util/index.d.ts",
+      "require": "./build/util/index.cjs",
+      "import": "./build/util/index.module.js"
     }
   },
   "files": [
@@ -34,9 +39,10 @@
   "scripts": {
     "start": "microbundle watch  -i ./src/sdk/index.ts -o build/sdk/index.js",
     "build:sdk": "microbundle --compress=false -i ./src/sdk/index.ts -o build/sdk/index.js",
+    "build:util": "microbundle --compress=false -i ./src/sdk/util/index.ts -o build/util/index.js --tsconfig ./tsconfig.util.json",
     "build:cli": "microbundle --compress=false --target=node -f cjs -i ./src/cli/index.ts -o build/cli/index.js",
-    "build:api": "microbundle --compress=false -i ./src/api/index.ts -o build/api/index.js && cp ./src/api/tonomy.css ./build/api/tonomy.css",
-    "build": "yarn run build:sdk && yarn run build:cli && yarn run build:api",
+    "build:api": "microbundle --compress=false -i ./src/api/index.ts -o build/api/index.js --tsconfig ./tsconfig.api.json && cp ./src/api/tonomy.css ./build/api/tonomy.css",
+    "build": "yarn run build:sdk && yarn run build:cli && yarn run build:api && yarn run build:util",
     "test:unit": "jest --selectProjects \"Unit tests\"",
     "test:setup": "./test-integration/build-and-run-services.sh start",
     "test:setup-down": "./test-integration/build-and-run-services.sh stop",
