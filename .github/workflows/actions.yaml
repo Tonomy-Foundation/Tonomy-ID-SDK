@@ -74,7 +74,7 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 18.12.1
-      - run: yarn install
+      - run: yarn install --immutable
       - run: yarn run cli bootstrap PVT_K1_2bfGi9rYsXQSXXTvJbDAPhHLQUojjaNLomdm3cEJ1XTzMqUt3V
 
       - name: Run integration tests
