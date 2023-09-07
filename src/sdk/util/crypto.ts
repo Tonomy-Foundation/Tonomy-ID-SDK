@@ -31,7 +31,7 @@ export function randomNumber(min: number, max: number): number {
 
     const randomBytesArray = randomBytes(calculateByte);
 
-    const randomValue = (byteArrayToNumber(randomBytesArray) % range) + min;
+    const randomValue = (byteArrayToNumber(randomBytesArray) % (range + 1)) + min;
 
     return randomValue;
 }
