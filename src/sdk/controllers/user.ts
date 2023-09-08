@@ -613,14 +613,6 @@ export class User {
             }
         }
     }
-
-    generateRandomPassphrase(): string[] {
-        return generateRandomKeywords();
-    }
-
-    suggestPassphraseWord(inputWord: string): string[] {
-        return generateAutoSuggestions(inputWord);
-    }
 }
 
 /**
