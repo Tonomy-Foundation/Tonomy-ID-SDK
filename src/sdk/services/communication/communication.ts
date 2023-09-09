@@ -5,6 +5,14 @@ import { AuthenticationMessage, Message } from '../../services/communication/mes
 
 export type Subscriber = (message: Message) => void;
 
+export const SOCKET_TIMEOUT = 5000;
+
+export type WebsocketReturnType = {
+    status: number;
+    details?: any;
+    error?: any;
+};
+
 export class Communication {
     socketServer: Socket;
     private static singleton: Communication;
@@ -55,6 +63,7 @@ export class Communication {
                 resolve(true);
                 return;
             });
+
             setTimeout(() => {
                 if (this.isConnected()) return;
 
@@ -64,7 +73,7 @@ export class Communication {
                         SdkErrors.CommunicationNotConnected
                     )
                 );
-            }, 5000);
+            }, SOCKET_TIMEOUT);
         });
     }
 
@@ -86,35 +95,46 @@ export class Communication {
                 message.getRecipient(),
                 message.getPayload()
             );
-        return await new Promise((resolve, reject) => {
-            const resolved = false;
+        const ack = await new Promise<WebsocketReturnType>((resolve, reject) => {
+            this.socketServer
+                .timeout(SOCKET_TIMEOUT)
+                .emit(event, { message: message.toString() }, (error: any, response: any) => {
+                    if (response.error) {
+                        if (response.exception?.name === 'HttpException') {
+                            const communicationError = new CommunicationError(response);
 
-            this.socketServer.emit(event, { message: message.toString() }, (response: any) => {
-                if (response.error) {
-                    if (response.exception?.name === 'HttpException') {
-                        const communicationError = new CommunicationError(response);
+                            reject(communicationError);
+                            return;
+                        }
 
-                        reject(communicationError);
+                        reject(response);
                         return;
                     }
 
-                    reject(response);
-                    return;
-                }
+                    if (error) {
+                        reject(error);
+                        return;
+                    }
 
-                resolve(response);
-                return;
-            });
-            setTimeout(() => {
-                if (resolved) return;
-                reject(
-                    createSdkError(
-                        'Connection timed out to Tonomy Communication server',
-                        SdkErrors.CommunicationTimeout
-                    )
-                );
-            }, 5000);
+                    resolve(response);
+                    return;
+                });
         });
+
+        if (ack.status !== 200) {
+            throw new CommunicationError({
+                exception: {
+                    response: ack.error,
+                    name: 'HttpException',
+                    status: ack.status,
+                    message: ack.error,
+                },
+                name: 'CommunicationError',
+                message: ack.error,
+            });
+        }
+
+        return ack.details;
     }
 
     /**
