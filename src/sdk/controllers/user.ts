@@ -217,6 +217,29 @@ export class User {
             // ideally we would have a different structure, and active key will be linked to local key
         });
     }
+    async savePassphrase(
+        password: string,
+        options: {
+            keyFromPasswordFn: KeyFromPasswordFn;
+        }
+    ) {
+        const res = await options.keyFromPasswordFn(password);
+
+        const privateKey = res.privateKey;
+
+        await this.keyManager.storeKey({
+            level: KeyManagerLevel.PASSWORD,
+            privateKey,
+            challenge: password,
+        });
+
+        await this.keyManager.storeKey({
+            level: KeyManagerLevel.ACTIVE,
+            privateKey,
+            // eventually this should be different than the password key, but for now Antelope protocol doesn't support it
+            // ideally we would have a different structure, and active key will be linked to local key
+        });
+    }
 
     async savePIN(pin: string) {
         const privateKey = generateRandomKeyPair().privateKey;
