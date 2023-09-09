@@ -9,6 +9,7 @@ enum KeyManagerLevel {
     LOCAL = 'LOCAL',
     BROWSER_LOCAL_STORAGE = 'BROWSER_LOCAL_STORAGE',
     BROWSER_SESSION_STORAGE = 'BROWSER_SESSION_STORAGE',
+    PASSPHRASE = 'PASSPHRASE',
 }
 
 // eslint-disable-next-line @typescript-eslint/no-namespace

@@ -36,13 +36,12 @@ describe('User class', () => {
 
     test('savePassphrase() generates and saves new private key', async () => {
         expect(user.savePassphrase).toBeDefined();
-
-        expect(() => user.keyManager.getKey({ level: KeyManagerLevel.PASSWORD })).rejects.toThrowError(Error);
+        expect(() => user.keyManager.getKey({ level: KeyManagerLevel.PASSPHRASE })).rejects.toThrowError(Error);
         expect(await user.storage.salt).not.toBeDefined();
         await user.savePassword('absurd aunt author love sport sun', {
             keyFromPasswordFn: generatePrivateKeyFromPassword,
         });
-        expect(user.keyManager.getKey({ level: KeyManagerLevel.PASSWORD })).resolves.toBeDefined();
+        expect(user.keyManager.getKey({ level: KeyManagerLevel.PASSPHRASE })).resolves.toBeDefined();
     });
 
     test('savePIN() saves new private key', async () => {

@@ -228,7 +228,7 @@ export class User {
         const privateKey = res.privateKey;
 
         await this.keyManager.storeKey({
-            level: KeyManagerLevel.PASSWORD,
+            level: KeyManagerLevel.PASSPHRASE,
             privateKey,
             challenge: password,
         });
@@ -291,7 +291,7 @@ export class User {
         const usernameHash = username.usernameHash;
 
         const publicKey = await keyManager.getKey({
-            level: KeyManagerLevel.PASSWORD,
+            level: KeyManagerLevel.PASSPHRASE,
         });
         const salt = await this.storage.salt;
         const captchaToken = await this.storage.captchaToken;
