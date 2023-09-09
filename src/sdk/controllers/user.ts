@@ -6,7 +6,6 @@ import { getAccount, getChainInfo } from '../services/blockchain/eosio/eosio';
 import { createStorage, PersistentStorageClean, StorageFactory, STORAGE_NAMESPACE } from '../storage/storage';
 import { SdkErrors, throwError, SdkError } from '../util/errors';
 import { AccountType, TonomyUsername } from '../util/username';
-import { validatePassword } from '../util/passwords';
 import { generateRandomKeywords, generateAutoSuggestions } from '../util/passphrase';
 import { UserApps } from './userApps';
 import { getSettings } from '../util/settings';
