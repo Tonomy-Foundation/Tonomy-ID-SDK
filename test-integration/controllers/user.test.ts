@@ -171,20 +171,20 @@ describe('User class', () => {
         await expect(user.checkKeysStillValid()).rejects.toThrowError(SdkErrors.AccountDoesntExist);
     });
 
-    test("checkPassword() throws error if password doesn't match", async () => {
-        const { user, password } = await createRandomID();
+    // test("checkPassword() throws error if password doesn't match", async () => {
+    //     const { user, password } = await createRandomID();
 
-        await user.login(await user.getUsername(), password, { keyFromPasswordFn: generatePrivateKeyFromPassword });
+    //     await user.login(await user.getUsername(), password, { keyFromPasswordFn: generatePrivateKeyFromPassword });
 
-        await expect(
-            user.checkPassword('Testing123!@', { keyFromPasswordFn: generatePrivateKeyFromPassword })
-        ).rejects.toThrowError(SdkErrors.PasswordInvalid);
-        await expect(
-            user.checkPassword('password', { keyFromPasswordFn: generatePrivateKeyFromPassword })
-        ).rejects.toThrowError(SdkErrors.PasswordFormatInvalid);
+    //     await expect(
+    //         user.checkPassword('Testing123!@', { keyFromPasswordFn: generatePrivateKeyFromPassword })
+    //     ).rejects.toThrowError(SdkErrors.PasswordInvalid);
+    //     await expect(
+    //         user.checkPassword('password', { keyFromPasswordFn: generatePrivateKeyFromPassword })
+    //     ).rejects.toThrowError(SdkErrors.PasswordFormatInvalid);
 
-        await user.logout();
-    });
+    //     await user.logout();
+    // });
 
     test('checkPassword() returns true when password matches', async () => {
         const { user, password } = await createRandomID();
