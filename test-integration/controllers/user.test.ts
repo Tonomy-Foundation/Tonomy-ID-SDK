@@ -29,7 +29,9 @@ describe('User class', () => {
 
         expect(() => user.keyManager.getKey({ level: KeyManagerLevel.PASSWORD })).rejects.toThrowError(Error);
         expect(await user.storage.salt).not.toBeDefined();
-        await user.savePassword('n4RR8mj!cC$VaG907bq4', { keyFromPasswordFn: generatePrivateKeyFromPassword });
+        await user.savePassword('actual zoo topple expire paper follow', {
+            keyFromPasswordFn: generatePrivateKeyFromPassword,
+        });
         expect(user.keyManager.getKey({ level: KeyManagerLevel.PASSWORD })).resolves.toBeDefined();
         expect(await user.storage.salt).toBeDefined();
     });
@@ -177,12 +179,8 @@ describe('User class', () => {
         await user.login(await user.getUsername(), password, { keyFromPasswordFn: generatePrivateKeyFromPassword });
 
         await expect(
-            user.checkPassword('Testing123!@', { keyFromPasswordFn: generatePrivateKeyFromPassword })
+            user.checkPassword('verify earn dad end easily earn', { keyFromPasswordFn: generatePrivateKeyFromPassword })
         ).rejects.toThrowError(SdkErrors.PasswordInvalid);
-        await expect(
-            user.checkPassword('password', { keyFromPasswordFn: generatePrivateKeyFromPassword })
-        ).rejects.toThrowError(SdkErrors.PasswordFormatInvalid);
-
         await user.logout();
     });
 

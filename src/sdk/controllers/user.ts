@@ -6,7 +6,6 @@ import { getAccount, getChainInfo } from '../services/blockchain/eosio/eosio';
 import { createStorage, PersistentStorageClean, StorageFactory, STORAGE_NAMESPACE } from '../storage/storage';
 import { SdkErrors, throwError, SdkError } from '../util/errors';
 import { AccountType, TonomyUsername } from '../util/username';
-import { validatePassword } from '../util/passwords';
 import { generateRandomKeywords, generateAutoSuggestions } from '../util/passphrase';
 import { UserApps } from './userApps';
 import { getSettings } from '../util/settings';
@@ -184,18 +183,16 @@ export class User {
             salt?: Checksum256;
         }
     ) {
-        const password = validatePassword(masterPassword);
-
         let privateKey: PrivateKey;
         let salt: Checksum256;
 
         if (options.salt) {
             salt = options.salt;
-            const res = await options.keyFromPasswordFn(password, salt);
+            const res = await options.keyFromPasswordFn(masterPassword, salt);
 
             privateKey = res.privateKey;
         } else {
-            const res = await options.keyFromPasswordFn(password);
+            const res = await options.keyFromPasswordFn(masterPassword);
 
             privateKey = res.privateKey;
             salt = res.salt;
@@ -207,7 +204,7 @@ export class User {
         await this.keyManager.storeKey({
             level: KeyManagerLevel.PASSWORD,
             privateKey,
-            challenge: password,
+            challenge: masterPassword,
         });
 
         await this.keyManager.storeKey({
