@@ -181,10 +181,6 @@ describe('User class', () => {
         await expect(
             user.checkPassword('verify earn dad end easily earn', { keyFromPasswordFn: generatePrivateKeyFromPassword })
         ).rejects.toThrowError(SdkErrors.PasswordInvalid);
-        // await expect(
-        //     user.checkPassword('password', { keyFromPasswordFn: generatePrivateKeyFromPassword })
-        // ).rejects.toThrowError(SdkErrors.PasswordFormatInvalid);
-
         await user.logout();
     });
 

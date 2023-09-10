@@ -187,27 +187,17 @@ export class User {
         let salt: Checksum256;
 
         if (options.salt) {
-            console.log('iffff');
             salt = options.salt;
             const res = await options.keyFromPasswordFn(masterPassword, salt);
 
             privateKey = res.privateKey;
         } else {
-            console.log('ifff');
             const res = await options.keyFromPasswordFn(masterPassword);
 
             privateKey = res.privateKey;
             salt = res.salt;
         }
 
-        console.log(
-            'iffff',
-            await this.keyManager.storeKey({
-                level: KeyManagerLevel.PASSWORD,
-                privateKey,
-                challenge: masterPassword,
-            })
-        );
         this.storage.salt = salt;
         await this.storage.salt; // wait for magic setter on storage
 
@@ -279,8 +269,6 @@ export class User {
         });
         const salt = await this.storage.salt;
         const captchaToken = await this.storage.captchaToken;
-
-        console.log('publickeyPass', publicKey);
 
         try {
             const res = await createAccount({
@@ -379,11 +367,9 @@ export class User {
             level: KeyManagerLevel.PASSWORD,
         });
 
-        console.log('passkey', passwordKey);
         const accountData = await User.getAccountInfo(idData.account_name);
         const onchainKey = accountData.getPermission('owner').required_auth.keys[0].key; // TODO change to active/other permissions when we make the change
 
-        console.log('passKEy', passwordKey, onchainKey);
         if (passwordKey.toString() !== onchainKey.toString())
             throwError('Password is incorrect', SdkErrors.PasswordInvalid);
 
