@@ -38,3 +38,7 @@ export function generateAutoSuggestions(inputString: string): string[] {
 
     return matchingSuggestions;
 }
+
+export function isKeyword(word: string): boolean {
+    return englishPassphraseWords.includes(word);
+}
