@@ -3,7 +3,7 @@ import { randomNumber } from './crypto';
 
 /**
  * Generates an array of random keywords.
- * @returns An array of random keywords with a maximum of 6 words.
+ * @returns {string[]} An array of 6 random keywords.
  */
 export function generateRandomKeywords(): string[] {
     const randomIndices: number[] = [];
@@ -23,8 +23,8 @@ export function generateRandomKeywords(): string[] {
 
 /**
  * Generates auto-suggestions based on the input string.
- * @param inputString - The input string for which auto-suggestions are generated.
- * @returns An array of auto-suggestions with a maximum of 4 words.
+ * @param {string} inputString - The input string for which auto-suggestions are generated.
+ * @returns {string[]} An array of auto-suggestions with a maximum of 4 words.
  */
 export function generateAutoSuggestions(inputString: string): string[] {
     if (inputString.trim() === '') {
@@ -39,6 +39,11 @@ export function generateAutoSuggestions(inputString: string): string[] {
     return matchingSuggestions;
 }
 
+/**
+ * Checks if the input string is a valid keyword.
+ * @param {string} word - The input string to be checked.
+ * @returns {boolean} True if the input string is a valid keyword, false otherwise.
+ */
 export function isKeyword(word: string): boolean {
     return englishPassphraseWords.includes(word);
 }
