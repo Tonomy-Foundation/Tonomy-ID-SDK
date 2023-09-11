@@ -16,6 +16,7 @@ import { createUser } from '../../src/cli/bootstrap/user';
 import { LoginRequest } from '../../src/sdk/util/request';
 import { DIDurl, URL } from '../../src/sdk/util/ssi/types';
 import { defaultAntelopePublicKey } from '../../src/sdk/services/blockchain/eosio/eosio';
+import { generateRandomKeywords } from '../../src/sdk/util';
 
 export const HCAPCHA_CI_RESPONSE_TOKEN = '10000000-aaaa-bbbb-cccc-000000000001';
 
@@ -26,7 +27,7 @@ export async function createRandomID(checkKeys = true) {
     const user = createUserObject(auth, jsStorageFactory);
 
     const username = randomString(8);
-    const password = randomString(8) + 'aA0!';
+    const password = generateRandomKeywords().join(' ');
     const pin = Math.floor(Math.random() * 5).toString();
 
     await user.saveUsername(username);
