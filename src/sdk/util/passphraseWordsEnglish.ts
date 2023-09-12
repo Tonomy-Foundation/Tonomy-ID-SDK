@@ -1,5 +1,5 @@
 // reference links is https://github.com/bitcoin/bips/blob/master/bip-0039/english.txt
-export const englistPassphaseWords = [
+export const englishPassphraseWords = [
     'abandon',
     'ability',
     'able',

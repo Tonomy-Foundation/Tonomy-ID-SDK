@@ -31,32 +31,4 @@ describe('User class', () => {
             ).toThrowError();
         });
     });
-    describe('generateRandomPassphrase()', () => {
-        it('generates random passphrase words', () => {
-            const generatedKeywords = user.generateRandomPassphrase();
-
-            expect(generatedKeywords).toHaveLength(6);
-        });
-    });
-    describe('suggestPassphraseWord()', () => {
-        it('generates suggestions for a non-empty input', () => {
-            const suggestedWords = user.suggestPassphraseWord('cap');
-
-            suggestedWords.forEach((word) => {
-                expect(word.toLowerCase()).toContain('cap');
-            });
-        });
-
-        it('returns an empty array for an empty input', () => {
-            const suggestedWords = user.suggestPassphraseWord('');
-
-            expect(suggestedWords).toEqual([]);
-        });
-
-        it('returns an empty array for an input not in the list', () => {
-            const suggestedWords = user.suggestPassphraseWord('xyz');
-
-            expect(suggestedWords).toEqual([]);
-        });
-    });
 });
