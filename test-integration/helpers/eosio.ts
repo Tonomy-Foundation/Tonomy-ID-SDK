@@ -1,13 +1,8 @@
-import { APIClient, FetchProvider, PrivateKey } from '@wharfkit/antelope';
+import { APIClient, FetchProvider } from '@wharfkit/antelope';
 import fetch from 'cross-fetch';
+import { getSettings } from '../../src/sdk';
 
-const privateKey = PrivateKey.from('PVT_K1_2bfGi9rYsXQSXXTvJbDAPhHLQUojjaNLomdm3cEJ1XTzMqUt3V');
-const publicKey = privateKey.toPublic();
-// PUB_K1_6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5BoDq63
-
-const api = new APIClient({
-    url: 'http://localhost:8888',
-    provider: new FetchProvider('http://localhost:8888', { fetch }),
+export const api = new APIClient({
+    url: getSettings().blockchainUrl,
+    provider: new FetchProvider(getSettings().blockchainUrl, { fetch }),
 });
-
-export { api, privateKey, publicKey };

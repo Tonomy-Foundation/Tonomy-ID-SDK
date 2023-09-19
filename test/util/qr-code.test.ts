@@ -1,11 +1,10 @@
-import { SdkErrors, setSettings } from '../../src/sdk';
+import { SdkErrors } from '../../src/sdk';
 import { createLoginQrCode, validateQrCode } from '../../src/sdk/util/qr-code';
+import settings, { setTestSettings } from '../../test-integration/helpers/settings';
 
-const tonomyIdSchema = 'tonomyid://';
+setTestSettings();
 
-setSettings({
-    tonomyIdSchema,
-});
+const tonomyIdSchema = settings.tonomyIdSchema;
 
 describe('createLoginQrCode()', () => {
     const did = 'antelope:example:1234';

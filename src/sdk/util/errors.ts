@@ -45,9 +45,8 @@ export class CommunicationError extends Error {
 
     constructor(communicationError: CommunicationError) {
         super('Communication Error');
+        this.name = 'CommunicationError';
         this.message = communicationError.exception.message;
-        // Ensure the name of this error is the same as the class name
-        this.name = communicationError.exception.name;
         this.exception = communicationError.exception;
 
         // This clips the constructor invocation from the stack trace.
@@ -98,16 +97,19 @@ export function throwError(message: string, code?: SdkErrors): never {
 enum SdkErrors {
     AccountDoesntExist = 'AccountDoesntExist',
     AccountNotFound = 'AccountNotFound',
+    AccountServiceError = 'AccountServiceError',
     CommunicationNotConnected = 'CommunicationNotConnected',
     CommunicationNotLoggedIn = 'CommunicationNotLoggedIn',
     CommunicationTimeout = 'CommunicationTimeout',
     CouldntCreateApi = 'CouldntCreateApi',
     DataQueryNoRowDataFound = 'DataQueryNoRowDataFound',
     InvalidLinkAuthRequest = 'InvalidLinkAuthRequest',
+    InvalidChallenge = 'InvalidChallenge',
     InvalidData = 'InvalidData',
     InvalidKey = 'InvalidKey',
     InvalidKeyLevel = 'InvalidKeyLevel',
     InvalidQrCode = 'InvalidQrCode',
+    InvalidUsername = 'InvalidUsername',
     JwtNotValid = 'JwtNotValid',
     KeyNotFound = 'KeyNotFound',
     LinkAuthFailed = 'LinkAuthFailed',

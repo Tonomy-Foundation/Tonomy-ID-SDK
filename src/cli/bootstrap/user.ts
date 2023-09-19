@@ -1,6 +1,48 @@
 import { jsStorageFactory } from './jsstorage';
-import { generatePrivateKeyFromPassword } from './keys';
-import { JsKeyManager, KeyManager, createUserObject } from '../../sdk';
+import { generatePrivateKeyFromPassword, signer } from './keys';
+import { IDContract, JsKeyManager, KeyManager, createUserObject } from '../../sdk';
+import { CreateAccountRequest, CreateAccountResponse } from '../../sdk/services/communication/accounts';
+import * as accounts from '../../sdk/services/communication/accounts';
+import { Name } from '@wharfkit/antelope';
+
+const idContract = IDContract.Instance;
+
+const defaultCreateAccount = accounts.createAccount;
+
+// Mock the createAccount function to not directly create the account, and thus bypass the hCaptcha requirement
+// createAccount() is called during user.createPerson()
+export function mockCreateAccount() {
+    console.log('Mocking createAccount()');
+
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    accounts.createAccount = async function (data: CreateAccountRequest): Promise<CreateAccountResponse> {
+        console.log('Calling mocked createAccount()');
+
+        const res = await idContract.newperson(
+            data.usernameHash.toString(),
+            data.publicKey.toString(),
+            data.salt.toString(),
+            signer
+        );
+
+        const newAccountAction = res.processed.action_traces[0].inline_traces[0].act;
+
+        const accountName = Name.from(newAccountAction.data.name);
+
+        return {
+            transactionId: res.transaction_id,
+            accountName,
+        };
+    };
+}
+
+export function restoreCreateAccountFromMock() {
+    console.log('Restoring createAccount() to original function');
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    accounts.createAccount = defaultCreateAccount;
+}
 
 export async function createUser(username: string, password: string) {
     const auth: KeyManager = new JsKeyManager();

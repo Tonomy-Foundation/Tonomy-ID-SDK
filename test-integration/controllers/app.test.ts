@@ -1,9 +1,9 @@
 // need to use API types from inside tonomy-id-sdk, otherwise type compatibility issues
 import { createRandomApp, createRandomID } from '../helpers/user';
-import { setSettings, User, AppStatus, generateRandomKeyPair } from '../../src/sdk/index';
-import settings from '../helpers/settings';
+import { User, AppStatus, generateRandomKeyPair } from '../../src/sdk/index';
+import { setTestSettings } from '../helpers/settings';
 
-setSettings(settings);
+setTestSettings();
 
 describe('App class', () => {
     test('loginWithApp(): Logs into new app', async () => {

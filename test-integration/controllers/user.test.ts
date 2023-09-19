@@ -1,26 +1,17 @@
-import { api } from '../helpers/eosio';
 import { createRandomID } from '../helpers/user';
-import {
-    KeyManager,
-    KeyManagerLevel,
-    TonomyUsername,
-    User,
-    createUserObject,
-    setSettings,
-    EosioUtil,
-} from '../../src/sdk/index';
+import { KeyManager, KeyManagerLevel, TonomyUsername, User, createUserObject, EosioUtil } from '../../src/sdk/index';
 import { SdkErrors } from '../../src/sdk/index';
 import { JsKeyManager } from '../../src/sdk/storage/jsKeyManager';
 import { jsStorageFactory } from '../../src/cli/bootstrap/jsstorage';
-import settings from '../helpers/settings';
 import { Checksum256 } from '@wharfkit/antelope';
 import { generatePrivateKeyFromPassword } from '../../src/cli/bootstrap/keys';
 import { getAccount } from '../../src/sdk/services/blockchain/eosio/eosio';
+import { setTestSettings } from '../helpers/settings';
+
+setTestSettings();
 
 let auth: KeyManager;
 let user: User;
-
-setSettings(settings);
 
 describe('User class', () => {
     beforeEach((): void => {
@@ -38,7 +29,9 @@ describe('User class', () => {
 
         expect(() => user.keyManager.getKey({ level: KeyManagerLevel.PASSWORD })).rejects.toThrowError(Error);
         expect(await user.storage.salt).not.toBeDefined();
-        await user.savePassword('n4RR8mj!cC$VaG907bq4', { keyFromPasswordFn: generatePrivateKeyFromPassword });
+        await user.savePassword('actual zoo topple expire paper follow', {
+            keyFromPasswordFn: generatePrivateKeyFromPassword,
+        });
         expect(user.keyManager.getKey({ level: KeyManagerLevel.PASSWORD })).resolves.toBeDefined();
         expect(await user.storage.salt).toBeDefined();
     });
@@ -186,12 +179,8 @@ describe('User class', () => {
         await user.login(await user.getUsername(), password, { keyFromPasswordFn: generatePrivateKeyFromPassword });
 
         await expect(
-            user.checkPassword('Testing123!@', { keyFromPasswordFn: generatePrivateKeyFromPassword })
+            user.checkPassword('verify earn dad end easily earn', { keyFromPasswordFn: generatePrivateKeyFromPassword })
         ).rejects.toThrowError(SdkErrors.PasswordInvalid);
-        await expect(
-            user.checkPassword('password', { keyFromPasswordFn: generatePrivateKeyFromPassword })
-        ).rejects.toThrowError(SdkErrors.PasswordFormatInvalid);
-
         await user.logout();
     });
 

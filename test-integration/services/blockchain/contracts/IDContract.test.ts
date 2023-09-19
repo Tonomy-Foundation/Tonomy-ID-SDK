@@ -1,8 +1,8 @@
-import { IDContract, setSettings } from '../../../../src/sdk/index';
+import { IDContract } from '../../../../src/sdk/index';
+import { setTestSettings } from '../../../helpers/settings';
 import { createRandomID, createRandomApp } from '../../../helpers/user';
-import settings from '../../../helpers/settings';
 
-setSettings(settings);
+setTestSettings();
 
 const idContract = IDContract.Instance;
 

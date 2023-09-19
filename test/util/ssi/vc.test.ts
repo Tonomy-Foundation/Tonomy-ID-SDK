@@ -1,17 +1,18 @@
 import { VerifiableCredential, VerifiableCredentialWithType } from '../../../src/sdk/util/ssi/vc';
-import { generateRandomKeyPair, randomString, setSettings } from '../../../src/sdk';
+import { generateRandomKeyPair, randomString } from '../../../src/sdk';
 import { createJWK } from '../../../src/sdk/util/ssi/did-jwk';
 import { ES256KSigner } from '@tonomy/did-jwt';
 import { Issuer } from '@tonomy/did-jwt-vc';
 import { toDid } from '../../../src/sdk/util/ssi/did-jwk';
 import { LoginRequest, LoginRequestPayload } from '../../../src/sdk/util/request';
+import { setTestSettings } from '../../../test-integration/helpers/settings';
+
+setTestSettings();
 
 type TestObject = {
     name: string;
     dob: number;
 };
-
-setSettings({});
 
 describe('VerifiableCredential class', () => {
     let vc: VerifiableCredential;

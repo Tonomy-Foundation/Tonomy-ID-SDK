@@ -12,10 +12,13 @@ import {
 } from '../../src/sdk/index';
 import { jsStorageFactory } from '../../src/cli/bootstrap/jsstorage';
 import { generatePrivateKeyFromPassword } from '../../src/cli/bootstrap/keys';
-import { privateKey } from './eosio';
 import { createUser } from '../../src/cli/bootstrap/user';
 import { LoginRequest } from '../../src/sdk/util/request';
 import { DIDurl, URL } from '../../src/sdk/util/ssi/types';
+import { defaultAntelopePublicKey } from '../../src/sdk/services/blockchain/eosio/eosio';
+import { generateRandomKeywords } from '../../src/sdk/util';
+
+export const HCAPCHA_CI_RESPONSE_TOKEN = '10000000-aaaa-bbbb-cccc-000000000001';
 
 export { createUser };
 
@@ -24,7 +27,7 @@ export async function createRandomID(checkKeys = true) {
     const user = createUserObject(auth, jsStorageFactory);
 
     const username = randomString(8);
-    const password = randomString(8) + 'aA0!';
+    const password = generateRandomKeywords().join(' ');
     const pin = Math.floor(Math.random() * 5).toString();
 
     await user.saveUsername(username);
@@ -32,7 +35,7 @@ export async function createRandomID(checkKeys = true) {
     checkKeys && (await user.savePIN(pin));
     checkKeys && (await user.saveFingerprint());
     await user.saveLocal();
-
+    await user.saveCaptchaToken(HCAPCHA_CI_RESPONSE_TOKEN);
     await user.createPerson();
     await user.updateKeys(password);
 
@@ -54,8 +57,7 @@ export async function createRandomApp(logoUrl?: string, origin?: string): Promis
         description: description,
         logoUrl,
         origin,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        publicKey: privateKey.toPublic() as any,
+        publicKey: defaultAntelopePublicKey,
     });
 }
 
