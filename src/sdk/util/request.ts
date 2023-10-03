@@ -1,12 +1,14 @@
 import { PublicKey } from '@wharfkit/antelope';
 import { VCWithTypeType, VerifiableCredentialOptions, VerifiableCredentialWithType } from './ssi/vc';
 import { Issuer } from '@tonomy/did-jwt-vc';
+import { DataSharingRequest } from './dataSharingRequest';
 
 export type LoginRequestPayload = {
     randomString: string;
     origin: string;
     publicKey: PublicKey;
     callbackPath: string;
+    dataSharingRequest?: DataSharingRequest;
 };
 
 export class LoginRequest extends VerifiableCredentialWithType<LoginRequestPayload> {

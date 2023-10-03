@@ -253,6 +253,7 @@ export class ExternalUser {
             origin: window.location.origin,
             publicKey: publicKey,
             callbackPath,
+            ...(dataSharingRequest && { dataSharingRequest }),
         };
 
         const loginRequest = await LoginRequest.signRequest(payload, issuer);
@@ -261,10 +262,6 @@ export class ExternalUser {
             const payload: LoginRequestsMessagePayload = {
                 requests: [loginRequest],
             };
-
-            if (dataSharingRequest) {
-                payload.requests.push(dataSharingRequest);
-            }
 
             const base64UrlPayload = objToBase64Url(payload);
 
