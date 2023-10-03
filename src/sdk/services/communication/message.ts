@@ -117,8 +117,7 @@ export class IdentifyMessage extends Message<IdentifyMessagePayload> {
 }
 
 export type LoginRequestsMessagePayload = {
-    requests: LoginRequest[];
-    dataSharingRequests?: DataSharingRequest[];
+    requests: (LoginRequest | DataSharingRequest)[];
 };
 
 export class LoginRequestsMessage extends Message<LoginRequestsMessagePayload> {
