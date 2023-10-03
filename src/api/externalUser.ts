@@ -260,11 +260,8 @@ export class ExternalUser {
         if (redirect) {
             const payload: LoginRequestsMessagePayload = {
                 requests: [loginRequest],
+                ...(dataSharingRequest && { dataSharingRequests: [dataSharingRequest] }),
             };
-
-            if (dataSharingRequest) {
-                payload.requests.push(dataSharingRequest);
-            }
 
             const base64UrlPayload = objToBase64Url(payload);
 

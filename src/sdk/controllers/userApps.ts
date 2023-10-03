@@ -17,7 +17,6 @@ import { DID, URL as URLtype } from '../util/ssi/types';
 import { Issuer } from '@tonomy/did-jwt-vc';
 import { ES256KSigner, JsKeyManager, createVCSigner, generateRandomKeyPair } from '..';
 import { createJWK, toDid } from '../util/ssi/did-jwk';
-import { DataSharingRequest } from '../util';
 
 const idContract = IDContract.Instance;
 
@@ -286,9 +285,7 @@ export class UserApps {
 
         const loginRequests = parsedPayload.requests.map((r: string) => new LoginRequest(r));
 
-        const dataSharingRequests = parsedPayload.requests.map((r: string) => new DataSharingRequest(r));
-
-        return { requests: loginRequests, dataSharingRequests };
+        return { requests: loginRequests };
     }
 
     /**
