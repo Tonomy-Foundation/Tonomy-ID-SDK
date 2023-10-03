@@ -2,6 +2,7 @@ import { Issuer } from '@tonomy/did-jwt-vc';
 import { DIDurl, URL } from '../../util/ssi/types';
 import { VerifiableCredentialWithType, VCWithTypeType } from '../../util/ssi/vc';
 import { LoginRequest } from '../../util/request';
+import { DataSharingRequest } from '../../util';
 import { TonomyUsername } from '../../util/username';
 import { Name } from '@wharfkit/antelope';
 import { SdkErrors } from '../../util/errors';
@@ -116,7 +117,7 @@ export class IdentifyMessage extends Message<IdentifyMessagePayload> {
 }
 
 export type LoginRequestsMessagePayload = {
-    requests: LoginRequest[];
+    requests: (LoginRequest | DataSharingRequest)[];
 };
 
 export class LoginRequestsMessage extends Message<LoginRequestsMessagePayload> {
