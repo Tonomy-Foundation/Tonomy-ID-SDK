@@ -33,6 +33,9 @@ export type UserAppStorage = {
 export type OnPressLoginOptions = {
     callbackPath: string;
     redirect?: boolean;
+    dataRequest?: {
+        username?: boolean;
+    };
 };
 
 export type ResponseParams = {

@@ -11,6 +11,7 @@ import { browserStorageFactory } from '../sdk/storage/browserStorage';
 import { getAccount, getChainInfo } from '../sdk/services/blockchain/eosio/eosio';
 import { JsKeyManager } from '../sdk/storage/jsKeyManager';
 import { LoginRequest, LoginRequestPayload } from '../sdk/util/request';
+import { DataSharingRequest, DataSharingRequestPayload } from '../sdk/util';
 import {
     AuthenticationMessage,
     Communication,
@@ -232,17 +233,27 @@ export class ExternalUser {
      * @returns {Promise<LoginWithTonomyMessages | void>} - if redirect is true, returns void, if redirect is false, returns the login request in the form of a JWT token
      */
     static async loginWithTonomy(
-        { redirect = true, callbackPath }: OnPressLoginOptions,
+        { redirect = true, callbackPath, dataRequest }: OnPressLoginOptions,
         keyManager: KeyManager = new JsKeyManager()
     ): Promise<LoginWithTonomyMessages | void> {
         const issuer = await UserApps.createJwkIssuerAndStore(keyManager);
         const publicKey = await keyManager.getKey({ level: KeyManagerLevel.BROWSER_LOCAL_STORAGE });
+        let dataSharingRequest;
+
+        if (dataRequest) {
+            const dataSharingPayload: DataSharingRequestPayload = {
+                username: dataRequest?.username || false,
+            };
+
+            dataSharingRequest = await DataSharingRequest.signRequest(dataSharingPayload, issuer);
+        }
 
         const payload: LoginRequestPayload = {
             randomString: randomString(32),
             origin: window.location.origin,
             publicKey: publicKey,
             callbackPath,
+            ...(dataSharingRequest && { dataSharingRequest }),
         };
 
         const loginRequest = await LoginRequest.signRequest(payload, issuer);
@@ -251,6 +262,7 @@ export class ExternalUser {
             const payload: LoginRequestsMessagePayload = {
                 requests: [loginRequest],
             };
+
             const base64UrlPayload = objToBase64Url(payload);
 
             window.location.href = `${getSettings().ssoWebsiteOrigin}/login?payload=${base64UrlPayload}`;
