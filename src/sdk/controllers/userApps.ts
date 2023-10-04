@@ -8,7 +8,7 @@ import { createKeyManagerSigner } from '../services/blockchain/eosio/transaction
 import { SdkError, SdkErrors, throwError } from '../util/errors';
 import { App, AppStatus } from './app';
 import { TonomyUsername } from '../util/username';
-import { LoginRequest } from '../util/request';
+import { LoginRequest, LoginRequestPayload } from '../util/request';
 import { LoginRequestResponseMessage, LoginRequestsMessagePayload } from '../services/communication/message';
 import { Request, LoginRequestResponseMessagePayload } from '../services/communication/message';
 import { base64UrlToObj, objToBase64Url } from '../util/base64';
@@ -45,7 +45,7 @@ export type ResponseParams = {
 };
 
 export type CheckedRequest = {
-    request: LoginRequest;
+    request: Request;
     app: App;
     requiresLogin: boolean;
     ssoApp: boolean;
@@ -181,14 +181,14 @@ export class UserApps {
      * @param {LoginRequest[]} requests - Array of login requests to check
      * @returns {Promise<CheckedRequest[]>} - Array of requests that have been verified and had authorization checked
      */
-    async checkRequests(requests: Request[]): Promise<CheckedRequest[]> {
+    async checkLoginRequests(requests: Request[]): Promise<CheckedRequest[]> {
         const response: CheckedRequest[] = [];
 
         await UserApps.verifyRequests(requests);
 
         for (const request of requests) {
-            if (request instanceof LoginRequest) {
-                const payload = request.getPayload();
+            if (request.getType() === 'LoginRequest') {
+                const payload = request.getPayload() as LoginRequestPayload;
 
                 const app = await App.getApp(payload.origin);
 
@@ -215,8 +215,6 @@ export class UserApps {
                     ssoApp: payload.origin === getSettings().ssoWebsiteOrigin,
                     requestDid: request.getIssuer(),
                 });
-            } else if (request instanceof DataSharingRequest) {
-                // Handle DataSharingRequest logic here
             }
         }
 
@@ -265,12 +263,17 @@ export class UserApps {
      */
     static async verifyRequests(requests: Request[]): Promise<Request[]> {
         for (const request of requests) {
-            if (request instanceof LoginRequest) {
-                if (!(await request.verify())) {
-                    throwError(`Invalid request for ${request.getPayload().origin}`, SdkErrors.JwtNotValid);
+            if (!(await request.verify())) {
+                if (request.getType() === 'LoginRequest') {
+                    throwError(
+                        `Invalid request for ${request.getType()} ${
+                            (request.getPayload() as LoginRequestPayload).origin
+                        }`,
+                        SdkErrors.JwtNotValid
+                    );
+                } else if (request.getType() === 'DataSharingRequest') {
+                    throwError(`Invalid request for ${request.getType()} `, SdkErrors.JwtNotValid);
                 }
-            } else if (request instanceof DataSharingRequest) {
-                // Handle DataSharingRequest verification logic here
             }
         }
 
@@ -294,9 +297,11 @@ export class UserApps {
         if (!parsedPayload || !parsedPayload.requests)
             throwError('No requests found in payload', SdkErrors.MissingParams);
 
-        const loginRequests = parsedPayload.requests.map((r: string) => {
-            return new LoginRequest(r);
-        });
+        const loginRequests = parsedPayload.requests
+            .filter((r: Request) => r.getType() === 'LoginRequest')
+            .map((loginRequest: Request) => {
+                return loginRequest as LoginRequest;
+            });
 
         return { requests: loginRequests };
     }
@@ -354,28 +359,20 @@ export class UserApps {
         const referrer = new URL(docReferrer);
 
         const myRequest = verifiedRequests.find((r) => {
-            if (r instanceof LoginRequest) {
-                return r.getPayload().origin === referrer.origin;
-            } else if (r instanceof DataSharingRequest) {
-                // Handle DataSharingRequest logic here
-                return false; // Or provide the  logic for DataSharingRequest
+            if (r.getType() === 'LoginRequestPayload') {
+                const loginRequest = r.getPayload() as LoginRequestPayload;
+
+                return loginRequest.origin === referrer.origin;
             }
 
-            return;
+            return false;
         });
 
         if (!myRequest) {
             const msg =
-                `No origins from: ${verifiedRequests.map((r) => {
-                    if (r instanceof LoginRequest) {
-                        return r.getPayload().origin;
-                    } else if (r instanceof DataSharingRequest) {
-                        // Handle DataSharingRequest logic here
-                        return ''; // Or provide the appropriate logic for DataSharingRequest
-                    }
-
-                    return;
-                })} ` + `match referrer: ${referrer.origin}`;
+                `No origins from: ${verifiedRequests.find(
+                    (r) => r.getType() === 'LoginRequestPayload' && (r.getPayload() as LoginRequestPayload).origin
+                )} ` + `match referrer: ${referrer.origin}`;
 
             throwError(msg, SdkErrors.WrongOrigin);
         }
