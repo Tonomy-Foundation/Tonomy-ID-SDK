@@ -41,6 +41,7 @@ export type VerifyLoginOptions = {
 
 export type LoginWithTonomyMessages = {
     loginRequest: LoginRequest;
+    dataSharingRequest?: DataSharingRequest;
     loginToCommunication: AuthenticationMessage;
 };
 
@@ -273,7 +274,7 @@ export class ExternalUser {
         } else {
             const loginToCommunication = await AuthenticationMessage.signMessageWithoutRecipient({}, issuer);
 
-            return { loginRequest, loginToCommunication };
+            return { loginRequest, dataSharingRequest, loginToCommunication };
         }
     }
 

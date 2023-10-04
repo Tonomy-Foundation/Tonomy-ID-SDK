@@ -1,6 +1,5 @@
 /* eslint-disable camelcase */
 import { Name, PublicKey } from '@wharfkit/antelope';
-import { decodeJWT } from '@tonomy/did-jwt';
 import { IDContract } from '../services/blockchain/contracts/IDContract';
 import { KeyManager, KeyManagerLevel } from '../storage/keymanager';
 import { createStorage, PersistentStorageClean, StorageFactory, STORAGE_NAMESPACE } from '../storage/storage';
@@ -289,21 +288,32 @@ export class UserApps {
     static getLoginRequestFromUrl(): LoginRequestsMessagePayload {
         const params = new URLSearchParams(window.location.search);
 
-        console.log('paramsss', params);
         const base64UrlPayload = params.get('payload');
-
-        console.log('paramsss', base64UrlPayload);
 
         if (!base64UrlPayload) throwError("payload parameter doesn't exist", SdkErrors.MissingParams);
 
         const parsedPayload = base64UrlToObj(base64UrlPayload);
 
-        console.log('paramsss', parsedPayload);
-
         if (!parsedPayload || !parsedPayload.requests)
             throwError('No requests found in payload', SdkErrors.MissingParams);
 
-        const loginRequests = parsedPayload.requests.map((r: string) => new LoginRequest(r));
+        // const loginRequests = parsedPayload.requests.map((r: string) => new LoginRequest(r));
+        parsedPayload.requests = parsedPayload.requests.filter((request: string) => request !== null);
+
+        const loginRequests = parsedPayload.requests.map((request: string) => {
+            const [headerB64Url, payloadB64Url] = request.split('.');
+            const payloadObj = base64UrlToObj(payloadB64Url);
+
+            const type = payloadObj.vc.credentialSubject.type;
+
+            if (type === 'LoginRequest') {
+                return new LoginRequest(request);
+            } else if (type === 'DataSharingRequest') {
+                return new DataSharingRequest(request);
+            } else {
+                throwError('Invalid Request Type');
+            }
+        });
 
         return { requests: loginRequests };
     }
