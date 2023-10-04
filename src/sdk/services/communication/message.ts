@@ -166,7 +166,7 @@ export type LoginRequestResponseMessagePayload = {
         code: SdkErrors;
         reason: string;
     };
-    requests: LoginRequest[];
+    requests: Request[];
     accountName?: Name;
     username?: TonomyUsername;
 };

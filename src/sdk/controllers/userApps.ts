@@ -10,13 +10,14 @@ import { App, AppStatus } from './app';
 import { TonomyUsername } from '../util/username';
 import { LoginRequest } from '../util/request';
 import { LoginRequestResponseMessage, LoginRequestsMessagePayload } from '../services/communication/message';
-import { LoginRequestResponseMessagePayload } from '../services/communication/message';
+import { Request, LoginRequestResponseMessagePayload } from '../services/communication/message';
 import { base64UrlToObj, objToBase64Url } from '../util/base64';
 import { getSettings } from '../util/settings';
 import { DID, URL as URLtype } from '../util/ssi/types';
 import { Issuer } from '@tonomy/did-jwt-vc';
 import { ES256KSigner, JsKeyManager, createVCSigner, generateRandomKeyPair } from '..';
 import { createJWK, toDid } from '../util/ssi/did-jwk';
+import { DataSharingRequest } from '../util';
 
 const idContract = IDContract.Instance;
 
@@ -180,38 +181,43 @@ export class UserApps {
      * @param {LoginRequest[]} requests - Array of login requests to check
      * @returns {Promise<CheckedRequest[]>} - Array of requests that have been verified and had authorization checked
      */
-    async checkRequests(requests: LoginRequest[]): Promise<CheckedRequest[]> {
+    async checkRequests(requests: Request[]): Promise<CheckedRequest[]> {
         const response: CheckedRequest[] = [];
 
         await UserApps.verifyRequests(requests);
 
         for (const request of requests) {
-            const payload = request.getPayload();
-            const app = await App.getApp(payload.origin);
+            if (request instanceof LoginRequest) {
+                const payload = request.getPayload();
 
-            let requiresLogin = true;
+                const app = await App.getApp(payload.origin);
 
-            try {
-                await UserApps.verifyKeyExistsForApp(await this.user.getAccountName(), {
-                    publicKey: payload.publicKey,
-                });
-                requiresLogin = false;
-            } catch (e) {
-                if (e instanceof SdkError && e.code === SdkErrors.UserNotLoggedInWithThisApp) {
-                    // Never consented
-                    requiresLogin = true;
-                } else {
-                    throw e;
+                let requiresLogin = true;
+
+                try {
+                    await UserApps.verifyKeyExistsForApp(await this.user.getAccountName(), {
+                        publicKey: payload.publicKey,
+                    });
+                    requiresLogin = false;
+                } catch (e) {
+                    if (e instanceof SdkError && e.code === SdkErrors.UserNotLoggedInWithThisApp) {
+                        // Never consented
+                        requiresLogin = true;
+                    } else {
+                        throw e;
+                    }
                 }
-            }
 
-            response.push({
-                request,
-                app,
-                requiresLogin,
-                ssoApp: payload.origin === getSettings().ssoWebsiteOrigin,
-                requestDid: request.getIssuer(),
-            });
+                response.push({
+                    request,
+                    app,
+                    requiresLogin,
+                    ssoApp: payload.origin === getSettings().ssoWebsiteOrigin,
+                    requestDid: request.getIssuer(),
+                });
+            } else if (request instanceof DataSharingRequest) {
+                // Handle DataSharingRequest logic here
+            }
         }
 
         return response;
@@ -252,15 +258,20 @@ export class UserApps {
     }
 
     /**
-     * Verifies the login request are valid requests signed by valid DIDs
+     * Verifies the login requests are valid requests signed by valid DIDs
      *
-     * @param {LoginRequest[]} requests - an array of login requests
-     * @returns {Promise<LoginRequest[]>} - an array of verified login requests
+     * @param {Request[]} requests - an array of login requests (LoginRequest or DataSharingRequest)
+     * @returns {Promise<Request[]>} - an array of verified login requests
      */
-    static async verifyRequests(requests: LoginRequest[]): Promise<LoginRequest[]> {
+    static async verifyRequests(requests: Request[]): Promise<Request[]> {
         for (const request of requests) {
-            if (!(await request.verify()))
-                throwError(`Invalid request for ${request.getPayload().origin}`, SdkErrors.JwtNotValid);
+            if (request instanceof LoginRequest) {
+                if (!(await request.verify())) {
+                    throwError(`Invalid request for ${request.getPayload().origin}`, SdkErrors.JwtNotValid);
+                }
+            } else if (request instanceof DataSharingRequest) {
+                // Handle DataSharingRequest verification logic here
+            }
         }
 
         return requests;
@@ -276,14 +287,16 @@ export class UserApps {
 
         const base64UrlPayload = params.get('payload');
 
-        if (!base64UrlPayload) throwError("payload parameter doesn't exists", SdkErrors.MissingParams);
+        if (!base64UrlPayload) throwError("payload parameter doesn't exist", SdkErrors.MissingParams);
 
         const parsedPayload = base64UrlToObj(base64UrlPayload);
 
         if (!parsedPayload || !parsedPayload.requests)
             throwError('No requests found in payload', SdkErrors.MissingParams);
 
-        const loginRequests = parsedPayload.requests.map((r: string) => new LoginRequest(r));
+        const loginRequests = parsedPayload.requests.map((r: string) => {
+            return new LoginRequest(r);
+        });
 
         return { requests: loginRequests };
     }
@@ -327,9 +340,9 @@ export class UserApps {
      *
      * @description should be called in the callback page of the SSO Login website
      *
-     * @returns {Promise<LoginRequest>} - the verified login request
+     * @returns {Promise<Request>} - the verified login request
      */
-    static async onRedirectLogin(): Promise<LoginRequest> {
+    static async onRedirectLogin(): Promise<Request> {
         const { requests } = this.getLoginRequestFromUrl();
 
         const verifiedRequests = await UserApps.verifyRequests(requests);
@@ -340,12 +353,29 @@ export class UserApps {
 
         const referrer = new URL(docReferrer);
 
-        const myRequest = verifiedRequests.find((r) => r.getPayload().origin === referrer.origin);
+        const myRequest = verifiedRequests.find((r) => {
+            if (r instanceof LoginRequest) {
+                return r.getPayload().origin === referrer.origin;
+            } else if (r instanceof DataSharingRequest) {
+                // Handle DataSharingRequest logic here
+                return false; // Or provide the  logic for DataSharingRequest
+            }
+
+            return;
+        });
 
         if (!myRequest) {
             const msg =
-                `No origins from: ${verifiedRequests.map((r) => r.getPayload().origin)} ` +
-                `match referrer: ${referrer.origin}`;
+                `No origins from: ${verifiedRequests.map((r) => {
+                    if (r instanceof LoginRequest) {
+                        return r.getPayload().origin;
+                    } else if (r instanceof DataSharingRequest) {
+                        // Handle DataSharingRequest logic here
+                        return ''; // Or provide the appropriate logic for DataSharingRequest
+                    }
+
+                    return;
+                })} ` + `match referrer: ${referrer.origin}`;
 
             throwError(msg, SdkErrors.WrongOrigin);
         }
