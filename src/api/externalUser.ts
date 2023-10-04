@@ -318,13 +318,25 @@ export class ExternalUser {
 
             const result = await UserApps.verifyRequests(requests);
 
-            const loginRequest = result.find((r) => r.getPayload().origin === window.location.origin)?.getPayload();
+            const loginRequest = result.find((r) => {
+                if (r instanceof LoginRequest) {
+                    const payload = r.getPayload();
+
+                    if (payload && payload.origin === window.location.origin) {
+                        return true;
+                    }
+                }
+
+                return false;
+            });
             const keyFromStorage = await keyManager.getKey({ level: KeyManagerLevel.BROWSER_LOCAL_STORAGE });
 
             if (!loginRequest) throwError('No login request found for this origin', SdkErrors.OriginMismatch);
 
-            if (loginRequest.publicKey.toString() !== keyFromStorage.toString()) {
-                throwError('Key in request does not match', SdkErrors.KeyNotFound);
+            if (loginRequest instanceof LoginRequest) {
+                if (loginRequest.getPayload().publicKey.toString() !== keyFromStorage.toString()) {
+                    throwError('Key in request does not match', SdkErrors.KeyNotFound);
+                }
             }
 
             const myStorageFactory = options.storageFactory || browserStorageFactory;
