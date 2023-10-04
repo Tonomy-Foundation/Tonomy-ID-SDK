@@ -301,7 +301,7 @@ export class UserApps {
         parsedPayload.requests = parsedPayload.requests.filter((request: string) => request !== null);
 
         const loginRequests = parsedPayload.requests.map((request: string) => {
-            const [headerB64Url, payloadB64Url] = request.split('.');
+            const [, payloadB64Url] = request.split('.');
             const payloadObj = base64UrlToObj(payloadB64Url);
 
             const type = payloadObj.vc.credentialSubject.type;
