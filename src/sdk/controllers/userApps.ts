@@ -298,9 +298,7 @@ export class UserApps {
 
         const loginRequests = parsedPayload.requests
             .filter((r: Request) => r.getType() === 'LoginRequest')
-            .map((loginRequest: Request) => {
-                return loginRequest as LoginRequest;
-            });
+            .map((loginRequest: string) => new LoginRequest(loginRequest));
 
         return { requests: loginRequests };
     }
