@@ -115,10 +115,10 @@ export class IdentifyMessage extends Message<IdentifyMessagePayload> {
         return new IdentifyMessage(vc);
     }
 }
+export type Request = LoginRequest | DataSharingRequest;
 
 export type LoginRequestsMessagePayload = {
-    requests: LoginRequest[];
-    dataSharingRequests?: DataSharingRequest[];
+    requests: Request[];
 };
 
 export class LoginRequestsMessage extends Message<LoginRequestsMessagePayload> {
