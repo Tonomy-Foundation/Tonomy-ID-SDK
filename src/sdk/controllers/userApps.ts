@@ -296,9 +296,7 @@ export class UserApps {
         if (!parsedPayload || !parsedPayload.requests)
             throwError('No requests found in payload', SdkErrors.MissingParams);
 
-        const loginRequests = parsedPayload.requests
-            .filter((r: Request) => r.getType() === 'LoginRequest')
-            .map((loginRequest: string) => new LoginRequest(loginRequest));
+        const loginRequests = parsedPayload.requests.map((r: string) => new LoginRequest(r));
 
         return { requests: loginRequests };
     }
