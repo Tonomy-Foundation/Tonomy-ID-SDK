@@ -1,5 +1,6 @@
 /* eslint-disable camelcase */
 import { Name, PublicKey } from '@wharfkit/antelope';
+import { decodeJWT } from '@tonomy/did-jwt';
 import { IDContract } from '../services/blockchain/contracts/IDContract';
 import { KeyManager, KeyManagerLevel } from '../storage/keymanager';
 import { createStorage, PersistentStorageClean, StorageFactory, STORAGE_NAMESPACE } from '../storage/storage';
@@ -17,6 +18,7 @@ import { DID, URL as URLtype } from '../util/ssi/types';
 import { Issuer } from '@tonomy/did-jwt-vc';
 import { ES256KSigner, JsKeyManager, createVCSigner, generateRandomKeyPair } from '..';
 import { createJWK, toDid } from '../util/ssi/did-jwk';
+import { DataSharingRequest } from '../util';
 
 const idContract = IDContract.Instance;
 
@@ -287,11 +289,16 @@ export class UserApps {
     static getLoginRequestFromUrl(): LoginRequestsMessagePayload {
         const params = new URLSearchParams(window.location.search);
 
+        console.log('paramsss', params);
         const base64UrlPayload = params.get('payload');
+
+        console.log('paramsss', base64UrlPayload);
 
         if (!base64UrlPayload) throwError("payload parameter doesn't exist", SdkErrors.MissingParams);
 
         const parsedPayload = base64UrlToObj(base64UrlPayload);
+
+        console.log('paramsss', parsedPayload);
 
         if (!parsedPayload || !parsedPayload.requests)
             throwError('No requests found in payload', SdkErrors.MissingParams);
@@ -354,7 +361,7 @@ export class UserApps {
         const referrer = new URL(docReferrer);
 
         const myRequest = verifiedRequests.find((r) => {
-            if (r.getType() === 'LoginRequestPayload') {
+            if (r.getType() === 'LoginRequest') {
                 const loginRequest = r.getPayload() as LoginRequestPayload;
 
                 return loginRequest.origin === referrer.origin;
