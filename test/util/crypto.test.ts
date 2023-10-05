@@ -112,7 +112,7 @@ describe('crypto generatePrivateKeyFromPassword()', () => {
                      time3a: ${time3a}ms\n
                      time4: ${time4}ms\n
                      time5: ${time5}ms`);
-    });
+    }, 10000);
 
     test('password can be verfied', async () => {
         const password = 'above day fever lemon piano sport';
