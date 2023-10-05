@@ -320,8 +320,8 @@ export class ExternalUser {
             const result = await UserApps.verifyRequests(requests);
 
             const loginRequest = result.find((r) => {
-                if (r.getType() === 'LoginRequest') {
-                    const payload = r.getPayload() as LoginRequestPayload;
+                if (r.getType() === 'LoginRequest' && r instanceof LoginRequest) {
+                    const payload = r.getPayload();
 
                     if (payload && payload.origin === window.location.origin) {
                         return true;
@@ -334,8 +334,8 @@ export class ExternalUser {
 
             if (!loginRequest) throwError('No login request found for this origin', SdkErrors.OriginMismatch);
 
-            if (loginRequest.getType() === 'LoginRequest') {
-                const payload = loginRequest.getPayload() as LoginRequestPayload;
+            if (loginRequest.getType() === 'LoginRequest' && loginRequest instanceof LoginRequest) {
+                const payload = loginRequest.getPayload();
 
                 if (payload.publicKey.toString() !== keyFromStorage.toString()) {
                     throwError('Key in request does not match', SdkErrors.KeyNotFound);

@@ -8,7 +8,7 @@ import { createKeyManagerSigner } from '../services/blockchain/eosio/transaction
 import { SdkError, SdkErrors, throwError } from '../util/errors';
 import { App, AppStatus } from './app';
 import { TonomyUsername } from '../util/username';
-import { LoginRequest, LoginRequestPayload } from '../util/request';
+import { LoginRequest } from '../util/request';
 import { LoginRequestResponseMessage, LoginRequestsMessagePayload } from '../services/communication/message';
 import { Request, LoginRequestResponseMessagePayload } from '../services/communication/message';
 import { base64UrlToObj, objToBase64Url } from '../util/base64';
@@ -187,8 +187,8 @@ export class UserApps {
         await UserApps.verifyRequests(requests);
 
         for (const request of requests) {
-            if (request.getType() === 'LoginRequest') {
-                const payload = request.getPayload() as LoginRequestPayload;
+            if (request.getType() === 'LoginRequest' && request instanceof LoginRequest) {
+                const payload = request.getPayload();
 
                 const app = await App.getApp(payload.origin);
 
@@ -262,16 +262,16 @@ export class UserApps {
      * @returns {Promise<Request[]>} - an array of verified login requests
      */
     static async verifyRequests(requests: Request[]): Promise<Request[]> {
+        requests = requests.filter((request) => request !== null);
+
         for (const request of requests) {
             if (!(await request.verify())) {
-                if (request.getType() === 'LoginRequest') {
+                if (request.getType() === 'LoginRequest' && request instanceof LoginRequest) {
                     throwError(
-                        `Invalid request for ${request.getType()} ${
-                            (request.getPayload() as LoginRequestPayload).origin
-                        }`,
+                        `Invalid request for ${request.getType()} ${request.getPayload().origin}`,
                         SdkErrors.JwtNotValid
                     );
-                } else if (request.getType() === 'DataSharingRequest') {
+                } else if (request.getType() === 'DataSharingRequest' && request instanceof DataSharingRequest) {
                     throwError(`Invalid request for ${request.getType()} `, SdkErrors.JwtNotValid);
                 }
             }
@@ -294,11 +294,10 @@ export class UserApps {
 
         const parsedPayload = base64UrlToObj(base64UrlPayload);
 
+        parsedPayload.requests = parsedPayload.requests.filter((request: string) => request !== null);
+
         if (!parsedPayload || !parsedPayload.requests)
             throwError('No requests found in payload', SdkErrors.MissingParams);
-
-        // const loginRequests = parsedPayload.requests.map((r: string) => new LoginRequest(r));
-        parsedPayload.requests = parsedPayload.requests.filter((request: string) => request !== null);
 
         const loginRequests = parsedPayload.requests.map((request: string) => {
             const [, payloadB64Url] = request.split('.');
@@ -370,9 +369,9 @@ export class UserApps {
 
         const referrer = new URL(docReferrer);
 
-        const myRequest = verifiedRequests.find((r) => {
-            if (r.getType() === 'LoginRequest') {
-                const loginRequest = r.getPayload() as LoginRequestPayload;
+        const myRequest = verifiedRequests.find((request) => {
+            if (request.getType() === 'LoginRequest' && request instanceof LoginRequest) {
+                const loginRequest = request.getPayload();
 
                 return loginRequest.origin === referrer.origin;
             }
@@ -383,7 +382,7 @@ export class UserApps {
         if (!myRequest) {
             const msg =
                 `No origins from: ${verifiedRequests.find(
-                    (r) => r.getType() === 'LoginRequestPayload' && (r.getPayload() as LoginRequestPayload).origin
+                    (r) => r.getType() === 'LoginRequest' && r instanceof LoginRequest && r.getPayload().origin
                 )} ` + `match referrer: ${referrer.origin}`;
 
             throwError(msg, SdkErrors.WrongOrigin);
