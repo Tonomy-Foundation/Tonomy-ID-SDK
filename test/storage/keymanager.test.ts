@@ -49,6 +49,7 @@ describe('Keymanager class', () => {
             hashLength: 32,
             type: argon2.argon2id,
             raw: true,
+            timeCost: 16,
             memoryCost: 16384,
             parallelism: 1,
         };
