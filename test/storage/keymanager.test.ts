@@ -34,22 +34,22 @@ describe('Keymanager class', () => {
     });
 
     test('generatePrivateKeyFromPassword() returns privatekey', async () => {
-        const password = '123';
+        const password = 'above day fever lemon piano sport';
         const { privateKey, salt } = await generatePrivateKeyFromPassword(password);
 
         expect(privateKey).toBeInstanceOf(PrivateKey);
+        console.log('privateKey', privateKey);
         expect(salt).toBeDefined();
     });
 
     test('time hashing in generatePrivateKeyFromPassword() function', async () => {
-        const password = '123';
+        const password = 'above day fever lemon piano sport';
         const salt = Checksum256.from(randomBytes(32));
         const options = {
             salt: Buffer.from(salt.hexString, 'hex'),
             hashLength: 32,
             type: argon2.argon2id,
             raw: true,
-            timeCost: 16,
             memoryCost: 16384,
             parallelism: 1,
         };
@@ -85,11 +85,12 @@ describe('Keymanager class', () => {
     });
 
     test('generatePrivateKeyFromPassword() password can be verfied', async () => {
-        const password = '123';
+        const password = 'above day fever lemon piano sport';
         const { privateKey, salt } = await generatePrivateKeyFromPassword(password);
 
         const { privateKey: privateKey2 } = await generatePrivateKeyFromPassword(password, salt);
 
+        console.log('orivateKey', privateKey);
         expect(privateKey).toEqual(privateKey2);
     });
 

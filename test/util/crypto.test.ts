@@ -43,17 +43,18 @@ describe('crypto generatePrivateKeyFromPassword()', () => {
 
     it('generatePrivateKeyFromPassword() creates the same private key from a password and salt as what happens in Tonomy ID', async () => {
         // See equivalent test in RNKeyManager.ts in Tonomy ID
-        const password = 'testpassword';
+        const password = 'above day fever lemon piano sport';
+
         const saltInput = Checksum256.from(sha256('testsalt'));
 
         const { privateKey, salt } = await generatePrivateKeyFromPassword(password, saltInput);
 
         expect(salt.toString()).toBe('4edf07edc95b2fdcbcaf2378fd12d8ac212c2aa6e326c59c3e629be3039d6432');
-        expect(privateKey.toString()).toEqual('PVT_K1_NXkZkJyhrPzSCpfe2uXbaw8xcKH95e9Gw5LdhkrzMSJwoZL6x');
+        expect(privateKey.toString()).toEqual('PVT_K1_4oczB1ZY3D3APBnBssisodTKm7gpa6y2pu2aLHReLcDptwUn3');
     });
 
     it('argon2 generates the same value as with https://argon2.online', async () => {
-        const password = 'testpassword';
+        const password = 'above day fever lemon piano cap';
         const saltInput = Checksum256.from(sha256('testsalt'));
         // 4edf07edc95b2fdcbcaf2378fd12d8ac212c2aa6e326c59c3e629be3039d6432
 
@@ -67,11 +68,11 @@ describe('crypto generatePrivateKeyFromPassword()', () => {
             hashLength: 32,
         });
 
-        expect(hash.toString('hex')).toEqual('30e30e19f23a98bdb2e932d8c0e40ca4471cc02bb39cc4b508afe30921b44573');
+        expect(hash.toString('hex')).toEqual('91ebfc28c7ca4865d417eca203eff4eb79b5fb9868048b159dad3f843dcf5173');
     });
 
     test('time hashing in generatePrivateKeyFromPassword() function', async () => {
-        const password = '123';
+        const password = 'above day fever lemon piano sport';
         const salt = Checksum256.from(randomBytes(32));
         const options = {
             salt: Buffer.from(salt.hexString),
@@ -114,7 +115,7 @@ describe('crypto generatePrivateKeyFromPassword()', () => {
     });
 
     test('password can be verfied', async () => {
-        const password = '123';
+        const password = 'above day fever lemon piano sport';
         const { privateKey, salt } = await generatePrivateKeyFromPassword(password);
 
         const { privateKey: privateKey2 } = await generatePrivateKeyFromPassword(password, salt);
