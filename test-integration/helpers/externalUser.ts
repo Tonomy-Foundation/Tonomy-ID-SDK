@@ -52,6 +52,35 @@ export async function externalWebsiteUserPressLoginToTonomyButton(
     return { did, redirectUrl };
 }
 
+export async function externalWebsiteUserPressLoginToTonomyButtonRequestDataSharing(
+    keyManager: KeyManager,
+    loginAppOrigin: string,
+    log = false
+) {
+    if (log) console.log('EXTERNAL_WEBSITE/login: create did:jwk and login request with data sharing');
+
+    const { loginRequest } = (await ExternalUser.loginWithTonomy(
+        { callbackPath: '/callback', redirect: false, dataRequest: { username: true } },
+        keyManager
+    )) as LoginWithTonomyMessages;
+
+    expect(typeof loginRequest.toString()).toBe('string');
+
+    const did = loginRequest.getIssuer();
+
+    expect(did).toContain('did:jwk:');
+
+    if (log) console.log('EXTERNAL_WEBSITE/login: redirect to Tonomy Login Website');
+
+    const payload = {
+        requests: [loginRequest],
+    };
+    const base64UrlPayload = objToBase64Url(payload);
+    const redirectUrl = loginAppOrigin + '/login?payload=' + base64UrlPayload;
+
+    return { did, redirectUrl };
+}
+
 export async function loginWebsiteOnRedirect(externalWebsiteDid: string, keyManager: KeyManager, log = false) {
     if (log) console.log('TONOMY_LOGIN_WEBSITE/login: collect external website token from URL');
 
