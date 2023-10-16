@@ -100,7 +100,7 @@ export class UserApps {
      * @returns {Promise<void | URLtype>} the callback url if the platform is mobile, or undefined if it is browser
      */
     async acceptLoginRequest(
-        requests: { request: LoginRequest; app: App; requiresLogin?: boolean }[],
+        requests: { request: Request; app: App; requiresLogin?: boolean }[],
         platform: 'mobile' | 'browser',
         messageRecipient?: DID
     ): Promise<void | URLtype> {
@@ -111,7 +111,9 @@ export class UserApps {
             const { app, request, requiresLogin } = loginRequest;
 
             if (requiresLogin ?? true) {
-                await this.user.apps.loginWithApp(app, request.getPayload().publicKey);
+                if (request instanceof LoginRequest) {
+                    await this.user.apps.loginWithApp(app, request.getPayload().publicKey);
+                }
             }
         }
 
@@ -119,7 +121,7 @@ export class UserApps {
             success: true,
             requests: requests.map((loginRequest) => loginRequest.request),
             accountName,
-            username,
+            ...(requests.some((r) => r.request.getType() === 'DataSharingRequest') && { username }),
         };
 
         if (platform === 'mobile') {
