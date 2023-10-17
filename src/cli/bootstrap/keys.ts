@@ -20,7 +20,7 @@ export async function generatePrivateKeyFromPassword(
         type: argon2.argon2id,
         raw: true,
         timeCost: 16,
-        memoryCost: 16384,
+        memoryCost: 64 * 1024,
         parallelism: 1,
         hashLength: 32,
     });

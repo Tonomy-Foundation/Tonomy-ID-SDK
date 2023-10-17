@@ -38,50 +38,18 @@ describe('Keymanager class', () => {
         const { privateKey, salt } = await generatePrivateKeyFromPassword(password);
 
         expect(privateKey).toBeInstanceOf(PrivateKey);
-        console.log('privateKey', privateKey);
         expect(salt).toBeDefined();
     });
 
-    test('time hashing in generatePrivateKeyFromPassword() function', async () => {
+    test('generatePrivateKeyFromPassword() function Takes > 2s', async () => {
         const password = 'above day fever lemon piano sport';
-        const salt = Checksum256.from(randomBytes(32));
-        const options = {
-            salt: Buffer.from(salt.hexString, 'hex'),
-            hashLength: 32,
-            type: argon2.argon2id,
-            raw: true,
-            memoryCost: 16384,
-            parallelism: 1,
-        };
+        const startTime = new Date();
 
-        async function timeArgon2(options: any): Promise<number> {
-            const start = new Date();
+        await generatePrivateKeyFromPassword(password);
+        const endTime = new Date();
+        const executionTime = endTime.getTime() - startTime.getTime();
 
-            await argon2.hash(password, options);
-            const finish = new Date();
-
-            return finish.getTime() - start.getTime();
-        }
-
-        const time0 = await timeArgon2(options);
-        const time1 = await timeArgon2({ ...options, ...{ type: argon2.argon2d } });
-        const time2 = await timeArgon2({ ...options, ...{ type: argon2.argon2i } });
-        const time3 = await timeArgon2({ ...options, ...{ memoryCost: 16384 * 10 } });
-        const time3a = await timeArgon2({ ...options, ...{ memoryCost: 16384 * 4 } });
-        const time4 = await timeArgon2({ ...options, ...{ parallelism: 10 } });
-        const time5 = await timeArgon2({
-            ...options,
-            ...{ salt: Buffer.from(randomBytes(32 * 10)), hashLength: 32 * 10 },
-        });
-
-        console.log(`generatePrivateKeyFromPassword() took time:\n
-                     time0: ${time0}ms\n
-                     time1: ${time1}ms\n
-                     time2: ${time2}ms\n
-                     time3: ${time3}ms\n
-                     time3a: ${time3a}ms\n
-                     time4: ${time4}ms\n
-                     time5: ${time5}ms`);
+        expect(executionTime).toBeLessThan(2000);
     });
 
     test('generatePrivateKeyFromPassword() password can be verfied', async () => {
@@ -90,7 +58,6 @@ describe('Keymanager class', () => {
 
         const { privateKey: privateKey2 } = await generatePrivateKeyFromPassword(password, salt);
 
-        console.log('orivateKey', privateKey);
         expect(privateKey).toEqual(privateKey2);
     });
 

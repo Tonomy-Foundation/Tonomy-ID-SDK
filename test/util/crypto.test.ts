@@ -50,7 +50,7 @@ describe('crypto generatePrivateKeyFromPassword()', () => {
         const { privateKey, salt } = await generatePrivateKeyFromPassword(password, saltInput);
 
         expect(salt.toString()).toBe('4edf07edc95b2fdcbcaf2378fd12d8ac212c2aa6e326c59c3e629be3039d6432');
-        expect(privateKey.toString()).toEqual('PVT_K1_4oczB1ZY3D3APBnBssisodTKm7gpa6y2pu2aLHReLcDptwUn3');
+        expect(privateKey.toString()).toEqual('PVT_K1_B5mNBH9QM3V3ff9tJfXQYVKRkaCPa7diuuEf25ofUhUXSQtKe');
     });
 
     it('argon2 generates the same value as with https://argon2.online', async () => {
@@ -63,12 +63,12 @@ describe('crypto generatePrivateKeyFromPassword()', () => {
             type: argon2.argon2id,
             raw: true,
             timeCost: 16,
-            memoryCost: 16384,
+            memoryCost: 64 * 1024,
             parallelism: 1,
             hashLength: 32,
         });
 
-        expect(hash.toString('hex')).toEqual('91ebfc28c7ca4865d417eca203eff4eb79b5fb9868048b159dad3f843dcf5173');
+        expect(hash.toString('hex')).toEqual('0b11c968ba8250fb793d7f0abde0b354b8403b56488f69bf1b7c39b02ec70653');
     });
 
     test('time hashing in generatePrivateKeyFromPassword() function', async () => {
@@ -79,7 +79,7 @@ describe('crypto generatePrivateKeyFromPassword()', () => {
             type: argon2.argon2id,
             raw: true,
             timeCost: 16,
-            memoryCost: 16384,
+            memoryCost: 64 * 1024,
             parallelism: 1,
             hashLength: 32,
         };
@@ -112,7 +112,7 @@ describe('crypto generatePrivateKeyFromPassword()', () => {
                      time3a: ${time3a}ms\n
                      time4: ${time4}ms\n
                      time5: ${time5}ms`);
-    }, 10000);
+    }, 15000);
 
     test('password can be verfied', async () => {
         const password = 'above day fever lemon piano sport';
