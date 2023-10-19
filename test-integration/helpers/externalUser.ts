@@ -73,8 +73,7 @@ export async function loginWebsiteOnRedirect(
         {
             callbackPath: '/callback',
             redirect: false,
-            dataRequest: { username: false },
-            // CHANGE to see if username sent
+            dataRequest: { username: true },
         },
         keyManager
     )) as LoginWithTonomyMessages;
