@@ -17,6 +17,7 @@ import {
     getAccountNameFromUsername,
     getSettings,
     TonomyRequest,
+    LoginRequestsMessagePayload,
 } from '../../src/sdk';
 import { ExternalUser, LoginWithTonomyMessages } from '../../src/api/externalUser';
 import { LoginRequest } from '../../src/sdk/util/request';
@@ -31,7 +32,7 @@ export async function externalWebsiteUserPressLoginToTonomyButton(
 ) {
     if (log) console.log('EXTERNAL_WEBSITE/login: create did:jwk and login request');
 
-    const { loginRequest } = (await ExternalUser.loginWithTonomy(
+    const { loginRequest, dataSharingRequest } = (await ExternalUser.loginWithTonomy(
         { callbackPath: '/callback', redirect: false },
         keyManager
     )) as LoginWithTonomyMessages;
@@ -44,9 +45,12 @@ export async function externalWebsiteUserPressLoginToTonomyButton(
 
     if (log) console.log('EXTERNAL_WEBSITE/login: redirect to Tonomy Login Website');
 
-    const payload = {
+    const payload: LoginRequestsMessagePayload = {
         requests: [loginRequest],
     };
+
+    if (dataSharingRequest) payload.requests.push(dataSharingRequest);
+
     const base64UrlPayload = objToBase64Url(payload);
     const redirectUrl = loginAppOrigin + '/login?payload=' + base64UrlPayload;
 

@@ -35,7 +35,6 @@ export class TonomyRequest<T extends object = any> extends VerifiableCredentialW
         const vc = await super.sign<T>(payload, issuer, options);
 
         return new TonomyRequest<T>(vc);
-        // return new TonomyRequest<T>(vc.getVc());
     }
 }
 

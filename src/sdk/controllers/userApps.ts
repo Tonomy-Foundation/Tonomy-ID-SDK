@@ -94,7 +94,7 @@ export class UserApps {
     /** Accepts a login request by authorizing keys on the blockchain (if the are not already authorized)
      * And sends a response to the requesting app
      *
-     * @param {{request: LoginRequest, app: App, requiresLogin: boolean}[]} requestsWithMetadata - Array of requests to log into
+     * @param {{request: TonomyRequest, app?: App, requiresLogin?: boolean}[]} requestsWithMetadata - Array of requests to fulfill (login or data sharing requests)
      * @param {DataSharingRequest} [dataSharingRequest] - Data sharing request to accept
      * @param {'mobile' | 'browser'} platform - Platform of the request, either 'mobile' or 'browser'
      * @param {DID} messageRecipient - DID of the recipient of the message
@@ -187,44 +187,41 @@ export class UserApps {
 
     /** Verifies the login requests, and checks if the apps have already been authorized with those keys
      *
-     * @param {LoginRequest[]} requests - Array of login requests to check
+     * @param {LoginRequest[]} requests - Array of LoginRequest to check
      * @returns {Promise<CheckedRequest[]>} - Array of requests that have been verified and had authorization checked
      */
-    async checkLoginRequests(requests: TonomyRequest[]): Promise<CheckedRequest[]> {
+    async checkLoginRequests(requests: LoginRequest[]): Promise<CheckedRequest[]> {
+        await UserApps.verifyRequests(requests);
         const response: CheckedRequest[] = [];
 
-        await UserApps.verifyRequests(requests);
-
         for (const request of requests) {
-            if (request.getType() === 'LoginRequest' && request instanceof LoginRequest) {
-                const payload = request.getPayload();
+            const payload = request.getPayload();
 
-                const app = await App.getApp(payload.origin);
+            const app = await App.getApp(payload.origin);
 
-                let requiresLogin = true;
+            let requiresLogin = true;
 
-                try {
-                    await UserApps.verifyKeyExistsForApp(await this.user.getAccountName(), {
-                        publicKey: payload.publicKey,
-                    });
-                    requiresLogin = false;
-                } catch (e) {
-                    if (e instanceof SdkError && e.code === SdkErrors.UserNotLoggedInWithThisApp) {
-                        // Never consented
-                        requiresLogin = true;
-                    } else {
-                        throw e;
-                    }
-                }
-
-                response.push({
-                    request,
-                    app,
-                    requiresLogin,
-                    ssoApp: payload.origin === getSettings().ssoWebsiteOrigin,
-                    requestDid: request.getIssuer(),
+            try {
+                await UserApps.verifyKeyExistsForApp(await this.user.getAccountName(), {
+                    publicKey: payload.publicKey,
                 });
+                requiresLogin = false;
+            } catch (e) {
+                if (e instanceof SdkError && e.code === SdkErrors.UserNotLoggedInWithThisApp) {
+                    // Never consented
+                    requiresLogin = true;
+                } else {
+                    throw e;
+                }
             }
+
+            response.push({
+                request,
+                app,
+                requiresLogin,
+                ssoApp: payload.origin === getSettings().ssoWebsiteOrigin,
+                requestDid: request.getIssuer(),
+            });
         }
 
         return response;
@@ -265,9 +262,9 @@ export class UserApps {
     }
 
     /**
-     * Verifies the login requests are valid requests signed by valid DIDs
+     * Verifies the TonomyRequests are valid requests signed by valid DIDs
      *
-     * @param {TonomyRequest[]} requests - an array of login requests (LoginRequest or DataSharingRequest)
+     * @param {TonomyRequest[]} requests - an array of TonomyRequests (LoginRequest or DataSharingRequest)
      * @returns {Promise<TonomyRequest[]>} - an array of verified login requests
      */
     static async verifyRequests(requests: TonomyRequest[]): Promise<TonomyRequest[]> {
@@ -275,12 +272,12 @@ export class UserApps {
 
         for (const request of requests) {
             if (!(await request.verify())) {
-                if (request.getType() === 'LoginRequest' && request instanceof LoginRequest) {
+                if (request.getType() === LoginRequest.getType()) {
                     throwError(
                         `Invalid request for ${request.getType()} ${request.getPayload().origin}`,
                         SdkErrors.JwtNotValid
                     );
-                } else if (request.getType() === 'DataSharingRequest' && request instanceof DataSharingRequest) {
+                } else if (request.getType() === DataSharingRequest.getType()) {
                     throwError(`Invalid request for ${request.getType()} `, SdkErrors.JwtNotValid);
                 }
             }
@@ -290,7 +287,7 @@ export class UserApps {
     }
 
     /**
-     * Extracts the login requests from the URL
+     * Extracts the TonomyRequests from the URL
      *
      * @returns {LoginRequestsMessagePayload} the requests, username and accountName
      */
@@ -301,29 +298,34 @@ export class UserApps {
 
         if (!base64UrlPayload) throwError("payload parameter doesn't exist", SdkErrors.MissingParams);
 
-        const parsedPayload = base64UrlToObj(base64UrlPayload);
+        // get unparsed LoginRequestsMessagePayload object
+        const unparsedLoginRequestMessagePayload = base64UrlToObj(base64UrlPayload);
 
-        parsedPayload.requests = parsedPayload.requests.filter((request: string) => request !== null);
-
-        if (!parsedPayload || !parsedPayload.requests)
+        if (!unparsedLoginRequestMessagePayload.requests)
             throwError('No requests found in payload', SdkErrors.MissingParams);
 
-        const loginRequests = parsedPayload.requests.map((request: string) => {
+        const unparsedRequestStrings = unparsedLoginRequestMessagePayload.requests.filter(
+            (request: string) => request !== null
+        );
+
+        if (!unparsedRequestStrings) throwError('No requests found in payload', SdkErrors.MissingParams);
+
+        const requests = unparsedRequestStrings.map((request: string) => {
             const [, payloadB64Url] = request.split('.');
             const payloadObj = base64UrlToObj(payloadB64Url);
 
-            const type = payloadObj.vc.credentialSubject.type;
+            const tonomyRequest = new TonomyRequest(payloadObj);
 
-            if (type === 'LoginRequest') {
-                return new LoginRequest(request);
-            } else if (type === 'DataSharingRequest') {
-                return new DataSharingRequest(request);
+            if (tonomyRequest.getType() === LoginRequest.getType()) {
+                return new LoginRequest(tonomyRequest);
+            } else if (tonomyRequest.getType() === DataSharingRequest.getType()) {
+                return new DataSharingRequest(tonomyRequest);
             } else {
                 throwError('Invalid TonomyRequest Type');
             }
         });
 
-        return { requests: loginRequests };
+        return { requests };
     }
 
     /**
@@ -346,14 +348,15 @@ export class UserApps {
         const { requests } = this.getLoginRequestFromUrl();
 
         if (parsedPayload.success) {
-            if (!parsedPayload.username) throwError("username parameter doesn't exists", SdkErrors.MissingParams);
             if (!parsedPayload.accountName) throwError("accountName parameter doesn't exists", SdkErrors.MissingParams);
-            return {
+            const res: LoginRequestResponseMessagePayload = {
                 success: true,
                 requests,
-                username: new TonomyUsername(parsedPayload.username),
                 accountName: Name.from(parsedPayload.accountName),
             };
+
+            if (parsedPayload.username) res.username = new TonomyUsername(parsedPayload.username);
+            return res;
         } else {
             if (!parsedPayload.error) throwError("error parameter doesn't exists", SdkErrors.MissingParams);
             return { success: false, requests, error: parsedPayload.error };
@@ -361,11 +364,11 @@ export class UserApps {
     }
 
     /**
-     * Verifies the login request received in the URL were successfully authorized by Tonomy ID
+     * Verifies the TonomyRequest received in the URL were successfully authorized by Tonomy ID
      *
      * @description should be called in the callback page of the SSO Login website
      *
-     * @returns {Promise<TonomyRequest>} - the verified login request
+     * @returns {Promise<TonomyRequest>} - the verified TonomyRequest
      */
     static async onRedirectLogin(): Promise<TonomyRequest> {
         const { requests } = this.getLoginRequestFromUrl();
@@ -379,7 +382,7 @@ export class UserApps {
         const referrer = new URL(docReferrer);
 
         const myRequest = verifiedRequests.find((request) => {
-            if (request.getType() === 'LoginRequest' && request instanceof LoginRequest) {
+            if (request.getType() === LoginRequest.getType()) {
                 const loginRequest = request.getPayload();
 
                 return loginRequest.origin === referrer.origin;
@@ -391,7 +394,7 @@ export class UserApps {
         if (!myRequest) {
             const msg =
                 `No origins from: ${verifiedRequests.find(
-                    (r) => r.getType() === 'LoginRequest' && r instanceof LoginRequest && r.getPayload().origin
+                    (r) => r.getType() === LoginRequest.getType() && r.getPayload().origin
                 )} ` + `match referrer: ${referrer.origin}`;
 
             throwError(msg, SdkErrors.WrongOrigin);
