@@ -22,7 +22,7 @@ api.setSettings({
 
 ## 2. Login page
 
-On your login page add the "Login with Tonomy ID" button and set it to call the `loginWithTonomy` function when pressed. Set your `/callback` page path as shown below. This is where your  the user will be redirect to in your application, after they complete the login process.
+On your login page add the "Login with Tonomy ID" button and set it to call the `ExternalUser.loginWithTonomy` function when pressed. Set your `/callback` page path as shown below. This is where your  the user will be redirect to in your application, after they complete the login process.
 
 ```typescript
 async function onButtonPress() {
@@ -60,7 +60,7 @@ or
 
 ## 3. Callback page
 
-On your `/callback` page, call the API when the page renders. This will catch the login parameters from the URL and return a logged in user object.
+In your `/callback` page, call the `ExternalUser.verifyLoginRequest()` function when the page renders. This will catch the login parameters from the URL and return a logged in user object.
 
 ```typescript
 // call this when the page loads
