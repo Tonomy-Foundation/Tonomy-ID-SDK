@@ -6,6 +6,7 @@ import { ExternalUser, LoginWithTonomyMessages } from '../../src/api/externalUse
 import { LoginRequest, LoginRequestPayload } from '../../src/sdk/util/request';
 import { objToBase64Url } from '../../src/sdk/util/base64';
 import { setTestSettings } from '../../test-integration/helpers/settings';
+import { onRedirectLogin } from '../../src/sdk/helpers/urls';
 
 // @ts-expect-error - URL type on global does not match
 global.URL = URL;
@@ -48,7 +49,7 @@ describe('logging in', () => {
             url,
         });
 
-        const result = await UserApps.onRedirectLogin();
+        const result = await onRedirectLogin();
         const loginRequests = result.getPayload() as LoginRequestPayload;
 
         expect(result).toBeInstanceOf(LoginRequest);

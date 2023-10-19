@@ -27,6 +27,7 @@ import { DIDurl } from '../sdk/util/ssi/types';
 import { Signer, createKeyManagerSigner, transact } from '../sdk/services/blockchain/eosio/transaction';
 import { createJwkIssuerAndStore } from '../sdk/helpers/jwk';
 import { verifyRequests } from '../sdk/helpers/requests';
+import { getLoginRequestResponseFromUrl } from '../sdk/helpers/urls';
 
 /**
  * The storage data for an external user that has logged in with Tonomy ID
@@ -322,7 +323,7 @@ export class ExternalUser {
         if (!options.checkKeys) options.checkKeys = true;
         const keyManager = options.keyManager || new JsKeyManager();
 
-        const { success, error, requests, username, accountName } = UserApps.getLoginRequestResponseFromUrl();
+        const { success, error, requests, username, accountName } = getLoginRequestResponseFromUrl();
 
         if (success === true) {
             if (!accountName || !username) throwError('No account name found in url', SdkErrors.MissingParams);

@@ -26,6 +26,7 @@ import { VerifiableCredential } from '../../src/sdk/util/ssi/vc';
 import { getAccount } from '../../src/sdk/services/blockchain';
 import { getJwkIssuerFromStorage } from '../../src/sdk/helpers/jwk';
 import { verifyRequests } from '../../src/sdk/helpers/requests';
+import { getLoginRequestFromUrl, onRedirectLogin } from '../../src/sdk/helpers/urls';
 
 export async function externalWebsiteUserPressLoginToTonomyButton(
     keyManager: KeyManager,
@@ -70,7 +71,7 @@ export async function loginWebsiteOnRedirect(
 }> {
     if (log) console.log('TONOMY_LOGIN_WEBSITE/login: collect external website token from URL');
 
-    const externalLoginRequest = await UserApps.onRedirectLogin();
+    const externalLoginRequest = await onRedirectLogin();
 
     expect(externalLoginRequest.getIssuer()).toBe(externalWebsiteDid);
 
@@ -167,7 +168,7 @@ export async function loginWebsiteOnCallback(keyManager: KeyManager, storageFact
     });
 
     if (log) console.log('TONOMY_LOGIN_WEBSITE/callback: checking login request of external website');
-    const { requests } = await UserApps.getLoginRequestFromUrl();
+    const { requests } = await getLoginRequestFromUrl();
     const result = await verifyRequests(requests);
     const redirectJwt = result.find((jwtVerified) => jwtVerified.getPayload().origin !== location.origin);
 
