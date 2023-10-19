@@ -53,7 +53,15 @@ export async function externalWebsiteUserPressLoginToTonomyButton(
     return { did, redirectUrl };
 }
 
-export async function loginWebsiteOnRedirect(externalWebsiteDid: string, keyManager: KeyManager, log = false) {
+export async function loginWebsiteOnRedirect(
+    externalWebsiteDid: string,
+    keyManager: KeyManager,
+    log = false
+): Promise<{
+    did: string;
+    requests: TonomyRequest[];
+    communication: Communication;
+}> {
     if (log) console.log('TONOMY_LOGIN_WEBSITE/login: collect external website token from URL');
 
     const externalLoginRequest = await UserApps.onRedirectLogin();
@@ -75,7 +83,9 @@ export async function loginWebsiteOnRedirect(externalWebsiteDid: string, keyMana
     expect(did).toContain('did:jwk:');
     expect(did).not.toEqual(externalWebsiteDid);
 
-    const requests = [loginRequest, dataSharingRequest, externalLoginRequest];
+    const requests = [loginRequest, externalLoginRequest];
+
+    if (dataSharingRequest) requests.push(dataSharingRequest);
 
     // Login to the Tonomy Communication as the login app user
     if (log) console.log('TONOMY_LOGIN_WEBSITE/login: connect to Tonomy Communication');
