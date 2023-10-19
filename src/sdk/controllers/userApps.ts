@@ -94,38 +94,41 @@ export class UserApps {
     /** Accepts a login request by authorizing keys on the blockchain (if the are not already authorized)
      * And sends a response to the requesting app
      *
-     * @param {{request: LoginRequest, app: App, requiresLogin: boolean}[]} loginRequests - Array of requests to log into
+     * @param {{request: LoginRequest, app: App, requiresLogin: boolean}[]} requestsWithMetadata - Array of requests to log into
      * @param {DataSharingRequest} [dataSharingRequest] - Data sharing request to accept
      * @param {'mobile' | 'browser'} platform - Platform of the request, either 'mobile' or 'browser'
      * @param {DID} messageRecipient - DID of the recipient of the message
      * @returns {Promise<void | URLtype>} the callback url if the platform is mobile, or undefined if it is browser
      */
     async acceptLoginRequest(
-        loginRequests: { request: LoginRequest; app: App; requiresLogin?: boolean }[],
-        dataSharingRequest: DataSharingRequest | undefined,
+        requestsWithMetadata: { request: TonomyRequest; app?: App; requiresLogin?: boolean }[],
         platform: 'mobile' | 'browser',
         messageRecipient?: DID
     ): Promise<void | URLtype> {
         const accountName = await this.user.getAccountName();
 
-        for (const loginRequest of loginRequests) {
-            const { app, request, requiresLogin } = loginRequest;
-
-            if (requiresLogin ?? true) {
-                await this.user.apps.loginWithApp(app, request.getPayload().publicKey);
-            }
-        }
-
         const responsePayload: LoginRequestResponseMessagePayload = {
             success: true,
-            requests: loginRequests.map((loginRequest) => loginRequest.request),
+            requests: requestsWithMetadata.map((requestWithMeta) => requestWithMeta.request),
             accountName,
         };
 
-        if (dataSharingRequest?.getPayload().username === true) {
-            const username = await this.user.getUsername();
+        for (const requestWithMeta of requestsWithMetadata) {
+            if (requestWithMeta.request.getType() === LoginRequest.getType()) {
+                const { app, request, requiresLogin } = requestWithMeta;
 
-            responsePayload.username = username;
+                if (!app) throwError('Missing app', SdkErrors.MissingParams);
+
+                if (requiresLogin ?? true) {
+                    await this.user.apps.loginWithApp(app, request.getPayload().publicKey);
+                }
+            } else if (requestWithMeta.request.getType() === DataSharingRequest.getType()) {
+                if (requestWithMeta.request.getPayload().username === true) {
+                    const username = await this.user.getUsername();
+
+                    responsePayload.username = username;
+                }
+            }
         }
 
         if (platform === 'mobile') {
@@ -144,7 +147,7 @@ export class UserApps {
     }
 
     static async terminateLoginRequest(
-        loginRequests: LoginRequest[],
+        requests: TonomyRequest[],
         returnType: 'url' | 'message',
         error: {
             code: SdkErrors;
@@ -159,7 +162,7 @@ export class UserApps {
     ): Promise<LoginRequestResponseMessage | URLtype> {
         const responsePayload = {
             success: false,
-            requests: loginRequests,
+            requests,
             error,
         };
 
