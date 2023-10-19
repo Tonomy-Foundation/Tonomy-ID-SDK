@@ -227,7 +227,7 @@ describe('Login to external website', () => {
             expect(payload.requests).toBeDefined();
             expect(payload.accountName).toBeDefined();
 
-            expect(payload.requests?.length).toBe(2);
+            expect(payload.requests?.length).toBe(3);
             expect(payload.accountName?.toString()).toBe(await (await TONOMY_ID_user.getAccountName()).toString());
             expect(payload.username?.toString()).toBe((await TONOMY_ID_user.getUsername()).username);
 

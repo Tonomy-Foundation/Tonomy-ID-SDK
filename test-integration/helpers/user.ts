@@ -13,7 +13,7 @@ import {
 import { jsStorageFactory } from '../../src/cli/bootstrap/jsstorage';
 import { generatePrivateKeyFromPassword } from '../../src/cli/bootstrap/keys';
 import { createUser } from '../../src/cli/bootstrap/user';
-import { DataSharingRequest, LoginRequest } from '../../src/sdk/util/request';
+import { DataSharingRequest, LoginRequest, TonomyRequest } from '../../src/sdk/util/request';
 import { DIDurl, URL } from '../../src/sdk/util/ssi/types';
 import { defaultAntelopePublicKey } from '../../src/sdk/services/blockchain/eosio/eosio';
 import { generateRandomKeywords } from '../../src/sdk/util';
@@ -112,7 +112,7 @@ export async function setupLoginRequestSubscriber(
 
             expect(verifiedRequests.length).toBe(3);
 
-            const acceptArray: { app: App; request: LoginRequest; requiresLogin?: boolean }[] = [];
+            const acceptArray: { app?: App; request: TonomyRequest; requiresLogin?: boolean }[] = [];
 
             let receiverDid = '';
 
@@ -124,19 +124,19 @@ export async function setupLoginRequestSubscriber(
                     const loginApp = await App.getApp(payload.origin);
 
                     acceptArray.push({ app: loginApp, request, requiresLogin: true });
+                } else if (request.getType() === DataSharingRequest.getType()) {
+                    acceptArray.push({ request });
+                } else {
+                    throw new Error('Unknown request type');
                 }
             }
 
             expect(receiverDid).toBe(tonomyLoginDid);
             expect(receiverDid).toBe(loginRequestMessage.getSender());
 
-            const dataSharingRequest = verifiedRequests.find(
-                (request) => request.getType() === DataSharingRequest.getType()
-            );
-
             if (log)
                 console.log('TONOMY_ID/SSO: accepting login requests and sending confirmation to Tonomy Login Website');
-            await user.apps.acceptLoginRequest(acceptArray, dataSharingRequest, 'browser', receiverDid);
+            await user.apps.acceptLoginRequest(acceptArray, 'browser', receiverDid);
 
             resolve(true);
         }, LoginRequestsMessage.getType());

@@ -311,17 +311,14 @@ export class UserApps {
         if (!unparsedRequestStrings) throwError('No requests found in payload', SdkErrors.MissingParams);
 
         const requests = unparsedRequestStrings.map((request: string) => {
-            const [, payloadB64Url] = request.split('.');
-            const payloadObj = base64UrlToObj(payloadB64Url);
-
-            const tonomyRequest = new TonomyRequest(payloadObj);
+            const tonomyRequest = new TonomyRequest(request);
 
             if (tonomyRequest.getType() === LoginRequest.getType()) {
                 return new LoginRequest(tonomyRequest);
             } else if (tonomyRequest.getType() === DataSharingRequest.getType()) {
                 return new DataSharingRequest(tonomyRequest);
             } else {
-                throwError('Invalid TonomyRequest Type');
+                throwError('Invalid TonomyRequest Type', SdkErrors.InvalidRequestType);
             }
         });
 
