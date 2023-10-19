@@ -73,7 +73,7 @@ export async function loginWebsiteOnRedirect(
         {
             callbackPath: '/callback',
             redirect: false,
-            dataRequest: { username: true },
+            dataRequest: { username: false },
             // CHANGE to see if username sent
         },
         keyManager

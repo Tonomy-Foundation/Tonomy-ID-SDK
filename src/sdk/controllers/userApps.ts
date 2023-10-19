@@ -94,20 +94,21 @@ export class UserApps {
     /** Accepts a login request by authorizing keys on the blockchain (if the are not already authorized)
      * And sends a response to the requesting app
      *
-     * @param {{request: LoginRequest, app: App, requiresLogin: boolean}[]} requests - Array of requests to log into
+     * @param {{request: LoginRequest, app: App, requiresLogin: boolean}[]} loginRequests - Array of requests to log into
+     * @param {DataSharingRequest} [dataSharingRequest] - Data sharing request to accept
      * @param {'mobile' | 'browser'} platform - Platform of the request, either 'mobile' or 'browser'
      * @param {DID} messageRecipient - DID of the recipient of the message
      * @returns {Promise<void | URLtype>} the callback url if the platform is mobile, or undefined if it is browser
      */
     async acceptLoginRequest(
-        requests: { request: LoginRequest; app: App; requiresLogin?: boolean }[],
+        loginRequests: { request: LoginRequest; app: App; requiresLogin?: boolean }[],
+        dataSharingRequest: DataSharingRequest | undefined,
         platform: 'mobile' | 'browser',
         messageRecipient?: DID
     ): Promise<void | URLtype> {
         const accountName = await this.user.getAccountName();
-        const username = await this.user.getUsername();
 
-        for (const loginRequest of requests) {
+        for (const loginRequest of loginRequests) {
             const { app, request, requiresLogin } = loginRequest;
 
             if (requiresLogin ?? true) {
@@ -115,12 +116,17 @@ export class UserApps {
             }
         }
 
-        const responsePayload = {
+        const responsePayload: LoginRequestResponseMessagePayload = {
             success: true,
-            requests: requests.map((loginRequest) => loginRequest.request),
+            requests: loginRequests.map((loginRequest) => loginRequest.request),
             accountName,
-            username,
         };
+
+        if (dataSharingRequest?.getPayload().username === true) {
+            const username = await this.user.getUsername();
+
+            responsePayload.username = username;
+        }
 
         if (platform === 'mobile') {
             let callbackUrl = getSettings().ssoWebsiteOrigin + '/callback?';
