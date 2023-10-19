@@ -1,11 +1,11 @@
 import { Issuer } from '@tonomy/did-jwt-vc';
 import { DIDurl, URL } from '../../util/ssi/types';
 import { VerifiableCredentialWithType, VCWithTypeType } from '../../util/ssi/vc';
-import { LoginRequest } from '../../util/request';
+import { DataSharingRequest, LoginRequest } from '../../util/request';
 import { TonomyRequest } from '../../util';
 import { TonomyUsername } from '../../util/username';
 import { Name } from '@wharfkit/antelope';
-import { SdkErrors } from '../../util/errors';
+import { SdkErrors, throwError } from '../../util/errors';
 
 /**
  * A message that can be sent between two Tonomy identities
@@ -184,19 +184,35 @@ export class LoginRequestResponseMessage extends Message<LoginRequestResponseMes
         super(vc);
         const payload = this.getVc().getPayload().vc.credentialSubject.payload;
 
+        const requests = payload.requests.map((request: string) => new TonomyRequest(request));
+
         this.decodedPayload = {
             ...payload,
-            requests: payload.requests.map((request: string) => new LoginRequest(request)),
+            requests: requests.map((request: TonomyRequest) => {
+                if (request.getType() === LoginRequest.getType()) {
+                    return new LoginRequest(request);
+                } else if (request.getType() === DataSharingRequest.getType()) {
+                    return new DataSharingRequest(request);
+                } else {
+                    throwError(
+                        "Request type must be 'LoginRequest' or 'DataSharingRequest'",
+                        SdkErrors.InvalidRequestType
+                    );
+                }
+            }),
         };
 
         if (payload.success) {
             this.decodedPayload = {
                 ...this.decodedPayload,
                 accountName: Name.from(payload.accountName),
-                username: payload.username.username
-                    ? new TonomyUsername(payload.username.username)
-                    : new TonomyUsername(payload.username),
             };
+
+            if (payload.username) {
+                this.decodedPayload.username = payload.username.username
+                    ? new TonomyUsername(payload.username.username)
+                    : new TonomyUsername(payload.username);
+            }
         }
     }
 
