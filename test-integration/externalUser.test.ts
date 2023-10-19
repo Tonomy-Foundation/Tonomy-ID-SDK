@@ -230,7 +230,7 @@ describe('Login to external website', () => {
             expect(payload.requests?.length).toBe(3);
             expect(payload.accountName?.toString()).toBe(await (await TONOMY_ID_user.getAccountName()).toString());
             expect(payload.username?.toString()).toBe((await TONOMY_ID_user.getUsername()).username);
-
+            // check me
             if (log) console.log('TONOMY_LOGIN_WEBSITE/login: sending to callback page');
             const TONOMY_LOGIN_WEBSITE_base64UrlPayload = objToBase64Url(payload);
 

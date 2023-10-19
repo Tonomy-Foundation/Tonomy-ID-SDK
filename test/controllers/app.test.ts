@@ -1,5 +1,5 @@
 import { PrivateKey, PublicKey } from '@wharfkit/antelope';
-import { UserApps } from '../../src/sdk/controllers/userApps';
+import { UserApps } from '../../src/sdk/helpers/userApps';
 import { generateRandomKeyPair } from '../../src/sdk/util/crypto';
 import URL from 'jsdom-url';
 import { ExternalUser, LoginWithTonomyMessages } from '../../src/api/externalUser';

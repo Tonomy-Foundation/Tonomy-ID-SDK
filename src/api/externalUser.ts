@@ -1,5 +1,5 @@
 import { KeyManager, KeyManagerLevel } from '../sdk/storage/keymanager';
-import { OnPressLoginOptions, UserApps } from '../sdk/controllers/userApps';
+import { OnPressLoginOptions, UserApps } from '../sdk/helpers/userApps';
 import { createVCSigner, randomString } from '../sdk/util/crypto';
 import { Issuer } from '@tonomy/did-jwt-vc';
 import { getSettings } from '../sdk/util/settings';
