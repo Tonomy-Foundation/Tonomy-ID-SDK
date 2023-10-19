@@ -145,7 +145,7 @@ describe('Login to external website', () => {
             // Setup a request for the login app
             const {
                 did: TONOMY_LOGIN_WEBSITE_did,
-                jwtRequests: TONOMY_LOGIN_WEBSITE_jwtRequests,
+                requests: TONOMY_LOGIN_WEBSITE_requests,
                 communication: TONOMY_LOGIN_WEBSITE_communication,
             } = await loginWebsiteOnRedirect(EXTERNAL_WEBSITE_did, TONOMY_LOGIN_WEBSITE_jsKeyManager, log);
 
@@ -183,7 +183,7 @@ describe('Login to external website', () => {
             expect(connectionMessageFromTonomyId.getSender()).toBe(TONOMY_ID_did + '#local');
 
             await sendLoginRequestsMessage(
-                TONOMY_LOGIN_WEBSITE_jwtRequests,
+                TONOMY_LOGIN_WEBSITE_requests,
                 TONOMY_LOGIN_WEBSITE_jsKeyManager,
                 TONOMY_LOGIN_WEBSITE_communication,
                 connectionMessageFromTonomyId.getSender(),
@@ -230,6 +230,7 @@ describe('Login to external website', () => {
             expect(payload.requests?.length).toBe(2);
             expect(payload.accountName?.toString()).toBe(await (await TONOMY_ID_user.getAccountName()).toString());
             expect(payload.username?.toString()).toBe((await TONOMY_ID_user.getUsername()).username);
+            // CHANGE to see if username sent
 
             if (log) console.log('TONOMY_LOGIN_WEBSITE/login: sending to callback page');
             const TONOMY_LOGIN_WEBSITE_base64UrlPayload = objToBase64Url(payload);

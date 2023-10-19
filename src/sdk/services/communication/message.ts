@@ -2,7 +2,7 @@ import { Issuer } from '@tonomy/did-jwt-vc';
 import { DIDurl, URL } from '../../util/ssi/types';
 import { VerifiableCredentialWithType, VCWithTypeType } from '../../util/ssi/vc';
 import { LoginRequest } from '../../util/request';
-import { DataSharingRequest } from '../../util';
+import { TonomyRequest } from '../../util';
 import { TonomyUsername } from '../../util/username';
 import { Name } from '@wharfkit/antelope';
 import { SdkErrors } from '../../util/errors';
@@ -115,10 +115,9 @@ export class IdentifyMessage extends Message<IdentifyMessagePayload> {
         return new IdentifyMessage(vc);
     }
 }
-export type Request = LoginRequest | DataSharingRequest;
 
 export type LoginRequestsMessagePayload = {
-    requests: Request[];
+    requests: TonomyRequest[];
 };
 
 export class LoginRequestsMessage extends Message<LoginRequestsMessagePayload> {
@@ -137,7 +136,7 @@ export class LoginRequestsMessage extends Message<LoginRequestsMessagePayload> {
             throw new Error('LoginRequestsMessage must have a requests property');
         }
 
-        this.decodedPayload = { requests: payload.requests.map((request: string) => new LoginRequest(request)) };
+        this.decodedPayload = { requests: payload.requests.map((request: string) => new TonomyRequest(request)) };
     }
 
     /**
@@ -166,7 +165,7 @@ export type LoginRequestResponseMessagePayload = {
         code: SdkErrors;
         reason: string;
     };
-    requests: Request[];
+    requests: TonomyRequest[];
     accountName?: Name;
     username?: TonomyUsername;
 };

@@ -26,9 +26,17 @@ import { VerifiableCredential } from '../sdk/util/ssi/vc';
 import { DIDurl } from '../sdk/util/ssi/types';
 import { Signer, createKeyManagerSigner, transact } from '../sdk/services/blockchain/eosio/transaction';
 
+/**
+ * The storage data for an external user that has logged in with Tonomy ID
+ *
+ * @param {Name} accountName - the account name of the user
+ * @param {TonomyUsername} [username] - the username of the user
+ * @param {Name} appPermission - the account name of the app the user is logged in with
+ * @param {string} did - the DID of the user
+ */
 export type ExternalUserStorage = {
     accountName: Name;
-    username: TonomyUsername;
+    username?: TonomyUsername;
     appPermission: Name;
     did: string;
 };

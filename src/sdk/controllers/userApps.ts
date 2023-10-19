@@ -8,9 +8,9 @@ import { createKeyManagerSigner } from '../services/blockchain/eosio/transaction
 import { SdkError, SdkErrors, throwError } from '../util/errors';
 import { App, AppStatus } from './app';
 import { TonomyUsername } from '../util/username';
-import { LoginRequest } from '../util/request';
+import { LoginRequest, TonomyRequest } from '../util/request';
 import { LoginRequestResponseMessage, LoginRequestsMessagePayload } from '../services/communication/message';
-import { Request, LoginRequestResponseMessagePayload } from '../services/communication/message';
+import { LoginRequestResponseMessagePayload } from '../services/communication/message';
 import { base64UrlToObj, objToBase64Url } from '../util/base64';
 import { getSettings } from '../util/settings';
 import { DID, URL as URLtype } from '../util/ssi/types';
@@ -45,7 +45,7 @@ export type ResponseParams = {
 };
 
 export type CheckedRequest = {
-    request: Request;
+    request: TonomyRequest;
     app: App;
     requiresLogin: boolean;
     ssoApp: boolean;
@@ -181,7 +181,7 @@ export class UserApps {
      * @param {LoginRequest[]} requests - Array of login requests to check
      * @returns {Promise<CheckedRequest[]>} - Array of requests that have been verified and had authorization checked
      */
-    async checkLoginRequests(requests: Request[]): Promise<CheckedRequest[]> {
+    async checkLoginRequests(requests: TonomyRequest[]): Promise<CheckedRequest[]> {
         const response: CheckedRequest[] = [];
 
         await UserApps.verifyRequests(requests);
@@ -258,10 +258,10 @@ export class UserApps {
     /**
      * Verifies the login requests are valid requests signed by valid DIDs
      *
-     * @param {Request[]} requests - an array of login requests (LoginRequest or DataSharingRequest)
-     * @returns {Promise<Request[]>} - an array of verified login requests
+     * @param {TonomyRequest[]} requests - an array of login requests (LoginRequest or DataSharingRequest)
+     * @returns {Promise<TonomyRequest[]>} - an array of verified login requests
      */
-    static async verifyRequests(requests: Request[]): Promise<Request[]> {
+    static async verifyRequests(requests: TonomyRequest[]): Promise<TonomyRequest[]> {
         requests = requests.filter((request) => request !== null);
 
         for (const request of requests) {
@@ -310,7 +310,7 @@ export class UserApps {
             } else if (type === 'DataSharingRequest') {
                 return new DataSharingRequest(request);
             } else {
-                throwError('Invalid Request Type');
+                throwError('Invalid TonomyRequest Type');
             }
         });
 
@@ -356,9 +356,9 @@ export class UserApps {
      *
      * @description should be called in the callback page of the SSO Login website
      *
-     * @returns {Promise<Request>} - the verified login request
+     * @returns {Promise<TonomyRequest>} - the verified login request
      */
-    static async onRedirectLogin(): Promise<Request> {
+    static async onRedirectLogin(): Promise<TonomyRequest> {
         const { requests } = this.getLoginRequestFromUrl();
 
         const verifiedRequests = await UserApps.verifyRequests(requests);

@@ -16,6 +16,7 @@ import {
     UserApps,
     getAccountNameFromUsername,
     getSettings,
+    TonomyRequest,
 } from '../../src/sdk';
 import { ExternalUser, LoginWithTonomyMessages } from '../../src/api/externalUser';
 import { LoginRequest } from '../../src/sdk/util/request';
@@ -60,8 +61,13 @@ export async function loginWebsiteOnRedirect(externalWebsiteDid: string, keyMana
     expect(externalLoginRequest.getIssuer()).toBe(externalWebsiteDid);
 
     if (log) console.log('TONOMY_LOGIN_WEBSITE/login: create did:jwk and login request');
-    const { loginRequest, loginToCommunication } = (await ExternalUser.loginWithTonomy(
-        { callbackPath: '/callback', redirect: false },
+    const { loginRequest, dataSharingRequest, loginToCommunication } = (await ExternalUser.loginWithTonomy(
+        {
+            callbackPath: '/callback',
+            redirect: false,
+            dataRequest: { username: true },
+            // CHANGE to see if username sent
+        },
         keyManager
     )) as LoginWithTonomyMessages;
     const did = loginRequest.getIssuer();
@@ -69,7 +75,7 @@ export async function loginWebsiteOnRedirect(externalWebsiteDid: string, keyMana
     expect(did).toContain('did:jwk:');
     expect(did).not.toEqual(externalWebsiteDid);
 
-    const jwtRequests = [loginRequest, externalLoginRequest];
+    const requests = [loginRequest, dataSharingRequest, externalLoginRequest];
 
     // Login to the Tonomy Communication as the login app user
     if (log) console.log('TONOMY_LOGIN_WEBSITE/login: connect to Tonomy Communication');
@@ -78,7 +84,7 @@ export async function loginWebsiteOnRedirect(externalWebsiteDid: string, keyMana
 
     expect(loginResponse).toBe(true);
 
-    return { did, jwtRequests, communication };
+    return { did, requests, communication };
 }
 
 export async function setupTonomyIdIdentifySubscriber(did: string, log = false) {
@@ -121,7 +127,7 @@ export async function setupTonomyIdRequestConfirmSubscriber(did: string, log = f
 }
 
 export async function sendLoginRequestsMessage(
-    requests: LoginRequest[],
+    requests: TonomyRequest[],
     keyManager: KeyManager,
     communication: Communication,
     recipientDid: string,
