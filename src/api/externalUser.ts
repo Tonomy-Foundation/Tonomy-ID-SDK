@@ -25,6 +25,8 @@ import { objToBase64Url } from '../sdk/util/base64';
 import { VerifiableCredential } from '../sdk/util/ssi/vc';
 import { DIDurl } from '../sdk/util/ssi/types';
 import { Signer, createKeyManagerSigner, transact } from '../sdk/services/blockchain/eosio/transaction';
+import { createJwkIssuerAndStore } from '../sdk/helpers/jwk';
+import { verifyRequests } from '../sdk/helpers/requests';
 
 /**
  * The storage data for an external user that has logged in with Tonomy ID
@@ -245,7 +247,7 @@ export class ExternalUser {
         { redirect = true, callbackPath, dataRequest }: OnPressLoginOptions,
         keyManager: KeyManager = new JsKeyManager()
     ): Promise<LoginWithTonomyMessages | void> {
-        const issuer = await UserApps.createJwkIssuerAndStore(keyManager);
+        const issuer = await createJwkIssuerAndStore(keyManager);
         const publicKey = await keyManager.getKey({ level: KeyManagerLevel.BROWSER_LOCAL_STORAGE });
         let dataSharingRequest;
 
@@ -325,7 +327,7 @@ export class ExternalUser {
         if (success === true) {
             if (!accountName || !username) throwError('No account name found in url', SdkErrors.MissingParams);
 
-            const result = await UserApps.verifyRequests(requests);
+            const result = await verifyRequests(requests);
 
             const loginRequest = result.find((r) => {
                 if (r.getType() === LoginRequest.getType()) {

@@ -24,6 +24,8 @@ import { LoginRequest } from '../../src/sdk/util/request';
 import { objToBase64Url } from '../../src/sdk/util/base64';
 import { VerifiableCredential } from '../../src/sdk/util/ssi/vc';
 import { getAccount } from '../../src/sdk/services/blockchain';
+import { getJwkIssuerFromStorage } from '../../src/sdk/helpers/jwk';
+import { verifyRequests } from '../../src/sdk/helpers/requests';
 
 export async function externalWebsiteUserPressLoginToTonomyButton(
     keyManager: KeyManager,
@@ -147,7 +149,7 @@ export async function sendLoginRequestsMessage(
     recipientDid: string,
     log = false
 ) {
-    const jwkIssuer = await UserApps.getJwkIssuerFromStorage(keyManager);
+    const jwkIssuer = await getJwkIssuerFromStorage(keyManager);
 
     const loginRequestMessage = await LoginRequestsMessage.signMessage({ requests }, jwkIssuer, recipientDid);
 
@@ -166,7 +168,7 @@ export async function loginWebsiteOnCallback(keyManager: KeyManager, storageFact
 
     if (log) console.log('TONOMY_LOGIN_WEBSITE/callback: checking login request of external website');
     const { requests } = await UserApps.getLoginRequestFromUrl();
-    const result = await UserApps.verifyRequests(requests);
+    const result = await verifyRequests(requests);
     const redirectJwt = result.find((jwtVerified) => jwtVerified.getPayload().origin !== location.origin);
 
     expect(redirectJwt).toBeDefined();

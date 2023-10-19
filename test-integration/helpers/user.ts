@@ -17,6 +17,7 @@ import { DataSharingRequest, LoginRequest, TonomyRequest } from '../../src/sdk/u
 import { DIDurl, URL } from '../../src/sdk/util/ssi/types';
 import { defaultAntelopePublicKey } from '../../src/sdk/services/blockchain/eosio/eosio';
 import { generateRandomKeywords } from '../../src/sdk/util';
+import { verifyRequests } from '../../src/sdk/helpers/requests';
 
 export const HCAPCHA_CI_RESPONSE_TOKEN = '10000000-aaaa-bbbb-cccc-000000000001';
 
@@ -108,7 +109,7 @@ export async function setupLoginRequestSubscriber(
 
             // TODO check this throws an error if requests are not valid, or not signed correctly
             if (log) console.log('TONOMY_ID/SSO: verifying login request');
-            const verifiedRequests = await UserApps.verifyRequests(requests);
+            const verifiedRequests = await verifyRequests(requests);
 
             expect(verifiedRequests.length).toBe(3);
 

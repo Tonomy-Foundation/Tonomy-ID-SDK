@@ -18,6 +18,7 @@ import { Issuer } from '@tonomy/did-jwt-vc';
 import { ES256KSigner, JsKeyManager, createVCSigner, generateRandomKeyPair } from '..';
 import { createJWK, toDid } from '../util/ssi/did-jwk';
 import { DataSharingRequest } from '../util';
+import { verifyRequests } from './requests';
 
 const idContract = IDContract.Instance;
 
@@ -191,7 +192,7 @@ export class UserApps {
      * @returns {Promise<CheckedRequest[]>} - Array of requests that have been verified and had authorization checked
      */
     async checkLoginRequests(requests: LoginRequest[]): Promise<CheckedRequest[]> {
-        await UserApps.verifyRequests(requests);
+        await verifyRequests(requests);
         const response: CheckedRequest[] = [];
 
         for (const request of requests) {
@@ -225,65 +226,6 @@ export class UserApps {
         }
 
         return response;
-    }
-
-    static async createJwkIssuerAndStore(keyManager: KeyManager = new JsKeyManager()): Promise<Issuer> {
-        const { privateKey, publicKey } = generateRandomKeyPair();
-
-        const signer = ES256KSigner(privateKey.data.array, true);
-        const jwk = await createJWK(publicKey);
-        const did = toDid(jwk);
-
-        await keyManager.storeKey({
-            level: KeyManagerLevel.BROWSER_LOCAL_STORAGE,
-            privateKey: privateKey,
-        });
-
-        return {
-            did,
-            signer: signer as any,
-            alg: 'ES256K-R',
-        };
-    }
-
-    static async getJwkIssuerFromStorage(keyManager: KeyManager = new JsKeyManager()): Promise<Issuer> {
-        const publicKey = await keyManager.getKey({
-            level: KeyManagerLevel.BROWSER_LOCAL_STORAGE,
-        });
-        const signer = createVCSigner(keyManager, KeyManagerLevel.BROWSER_LOCAL_STORAGE);
-
-        const jwk = await createJWK(publicKey);
-
-        return {
-            did: toDid(jwk),
-            signer: signer.sign as any,
-            alg: 'ES256K-R',
-        };
-    }
-
-    /**
-     * Verifies the TonomyRequests are valid requests signed by valid DIDs
-     *
-     * @param {TonomyRequest[]} requests - an array of TonomyRequests (LoginRequest or DataSharingRequest)
-     * @returns {Promise<TonomyRequest[]>} - an array of verified login requests
-     */
-    static async verifyRequests(requests: TonomyRequest[]): Promise<TonomyRequest[]> {
-        requests = requests.filter((request) => request !== null);
-
-        for (const request of requests) {
-            if (!(await request.verify())) {
-                if (request.getType() === LoginRequest.getType()) {
-                    throwError(
-                        `Invalid request for ${request.getType()} ${request.getPayload().origin}`,
-                        SdkErrors.JwtNotValid
-                    );
-                } else if (request.getType() === DataSharingRequest.getType()) {
-                    throwError(`Invalid request for ${request.getType()} `, SdkErrors.JwtNotValid);
-                }
-            }
-        }
-
-        return requests;
     }
 
     /**
@@ -370,7 +312,7 @@ export class UserApps {
     static async onRedirectLogin(): Promise<TonomyRequest> {
         const { requests } = this.getLoginRequestFromUrl();
 
-        const verifiedRequests = await UserApps.verifyRequests(requests);
+        const verifiedRequests = await verifyRequests(requests);
 
         const docReferrer = document.referrer;
 
