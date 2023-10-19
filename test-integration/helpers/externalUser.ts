@@ -169,8 +169,9 @@ export async function loginWebsiteOnCallback(keyManager: KeyManager, storageFact
 
     if (log) console.log('TONOMY_LOGIN_WEBSITE/callback: checking login request of external website');
     const { requests } = await getLoginRequestFromUrl();
-    const result = await verifyRequests(requests);
-    const redirectJwt = result.find((jwtVerified) => jwtVerified.getPayload().origin !== location.origin);
+
+    await verifyRequests(requests);
+    const redirectJwt = requests.find((jwtVerified) => jwtVerified.getPayload().origin !== location.origin);
 
     expect(redirectJwt).toBeDefined();
 

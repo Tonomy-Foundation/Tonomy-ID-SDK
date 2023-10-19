@@ -109,15 +109,15 @@ export async function setupLoginRequestSubscriber(
 
             // TODO check this throws an error if requests are not valid, or not signed correctly
             if (log) console.log('TONOMY_ID/SSO: verifying login request');
-            const verifiedRequests = await verifyRequests(requests);
+            await verifyRequests(requests);
 
-            expect(verifiedRequests.length).toBe(3);
+            expect(requests.length).toBe(3);
 
             const acceptArray: { app?: App; request: TonomyRequest; requiresLogin?: boolean }[] = [];
 
             let receiverDid = '';
 
-            for (const request of verifiedRequests) {
+            for (const request of requests) {
                 if (request.getType() === LoginRequest.getType()) {
                     const payload = request.getPayload();
 

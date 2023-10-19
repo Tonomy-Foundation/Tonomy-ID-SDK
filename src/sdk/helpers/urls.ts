@@ -93,7 +93,7 @@ export function getLoginRequestResponseFromUrl(): LoginRequestResponseMessagePay
 export async function onRedirectLogin(): Promise<TonomyRequest> {
     const { requests } = getLoginRequestFromUrl();
 
-    const verifiedRequests = await verifyRequests(requests);
+    await verifyRequests(requests);
 
     const docReferrer = document.referrer;
 
@@ -101,7 +101,7 @@ export async function onRedirectLogin(): Promise<TonomyRequest> {
 
     const referrer = new URL(docReferrer);
 
-    const myRequest = verifiedRequests.find((request) => {
+    const myRequest = requests.find((request) => {
         if (request.getType() === LoginRequest.getType()) {
             const loginRequest = request.getPayload();
 
@@ -113,7 +113,7 @@ export async function onRedirectLogin(): Promise<TonomyRequest> {
 
     if (!myRequest) {
         const msg =
-            `No origins from: ${verifiedRequests.find(
+            `No origins from: ${requests.find(
                 (r) => r.getType() === LoginRequest.getType() && r.getPayload().origin
             )} ` + `match referrer: ${referrer.origin}`;
 

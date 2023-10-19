@@ -328,9 +328,9 @@ export class ExternalUser {
         if (success === true) {
             if (!accountName || !username) throwError('No account name found in url', SdkErrors.MissingParams);
 
-            const result = await verifyRequests(requests);
+            verifyRequests(requests);
 
-            const loginRequest = result.find((r) => {
+            const loginRequest = requests.find((r) => {
                 if (r.getType() === LoginRequest.getType()) {
                     const payload = r.getPayload();
 
