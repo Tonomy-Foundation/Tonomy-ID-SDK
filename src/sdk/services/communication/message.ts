@@ -136,7 +136,22 @@ export class LoginRequestsMessage extends Message<LoginRequestsMessagePayload> {
             throw new Error('LoginRequestsMessage must have a requests property');
         }
 
-        this.decodedPayload = { requests: payload.requests.map((request: string) => new TonomyRequest(request)) };
+        const requests = payload.requests.map((request: string) => new TonomyRequest(request));
+
+        this.decodedPayload = {
+            requests: requests.map((request: TonomyRequest) => {
+                if (request.getType() === LoginRequest.getType()) {
+                    return new LoginRequest(request);
+                } else if (request.getType() === DataSharingRequest.getType()) {
+                    return new DataSharingRequest(request);
+                } else {
+                    throwError(
+                        "Request type must be 'LoginRequest' or 'DataSharingRequest'",
+                        SdkErrors.InvalidRequestType
+                    );
+                }
+            }),
+        };
     }
 
     /**
