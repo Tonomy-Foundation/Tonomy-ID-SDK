@@ -122,11 +122,15 @@ export class ExternalUser {
             if (appPermission.toString() !== appPermissionStorage.toString())
                 throwError('App permission has changed', SdkErrors.InvalidData);
 
-            const usernameStorage = await user.getUsername();
-            const personData = await idContract.getPerson(usernameStorage);
+            const username = await user.getUsername();
 
-            if (accountName.toString() !== personData.account_name.toString())
-                throwError('Username has changed', SdkErrors.InvalidData);
+            if (username) {
+                const personData = await idContract.getPerson(username);
+
+                if (accountName.toString() !== personData.account_name.toString())
+                    throwError('Username has changed', SdkErrors.InvalidData);
+            }
+
             return user;
         } catch (e) {
             if (autoLogout) await user.logout();
@@ -202,8 +206,10 @@ export class ExternalUser {
      *
      * @returns {Promise<TonomyUsername>} - the username of the user
      */
-    async getUsername(): Promise<TonomyUsername> {
+    async getUsername(): Promise<TonomyUsername | undefined> {
         const storage = await this.storage.username;
+
+        if (!storage) return;
 
         if (!storage) throwError('Username not set', SdkErrors.InvalidData);
         else if (storage instanceof TonomyUsername) {

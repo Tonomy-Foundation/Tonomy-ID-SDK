@@ -228,7 +228,7 @@ export class LoginRequestResponseMessage extends Message<LoginRequestResponseMes
                 accountName: Name.from(payload.response.accountName),
             };
 
-            if (payload.response.data.username) {
+            if (payload.response.data?.username) {
                 response.data = {
                     username: payload.response.data.username.username
                         ? new TonomyUsername(payload.response.data.username.username)

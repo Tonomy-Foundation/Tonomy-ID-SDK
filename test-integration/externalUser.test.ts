@@ -14,6 +14,8 @@ import {
     ExternalUser,
     EosioTokenContract,
     getSettings,
+    LoginRequestResponseMessagePayload,
+    LoginResponse,
 } from '../src/sdk/index';
 import URL from 'jsdom-url';
 import { JsKeyManager } from '../src/sdk/storage/jsKeyManager';
@@ -45,6 +47,11 @@ import { createStorageFactory } from './helpers/storageFactory';
 import { objToBase64Url } from '../src/sdk/util/base64';
 import { createSigner, defaultAntelopePrivateKey } from '../src/sdk/services/blockchain';
 import { setTestSettings } from './helpers/settings';
+
+export type ExternalUserLoginTestOptions = {
+    dataRequest: boolean;
+    dataRequestUsername?: boolean;
+};
 
 setTestSettings(process.env.LOG === 'true');
 
@@ -110,20 +117,20 @@ describe('Login to external website', () => {
 
     describe('SSO login full end-to-end flow with external desktop browser (using communication service)', () => {
         test('Successful login to external website', async () => {
-            await runExternalUserLoginTest({ requestUsername: false });
+            await runExternalUserLoginTest({ dataRequest: false });
         });
 
-        test('Successful login to external website', async () => {
-            await runExternalUserLoginTest({ requestUsername: true });
+        test('Successful login to external website with empty data request', async () => {
+            await runExternalUserLoginTest({ dataRequest: true });
+        });
+
+        test('Successful login to external website with data request for username', async () => {
+            await runExternalUserLoginTest({ dataRequest: true, dataRequestUsername: true });
         });
     });
 
-    type ExternalUserLoginTestOptions = {
-        requestUsername: boolean;
-    };
-
-    async function runExternalUserLoginTest(options: ExternalUserLoginTestOptions) {
-        expect.assertions(49);
+    async function runExternalUserLoginTest(testOptions: ExternalUserLoginTestOptions) {
+        expect.assertions(testOptions.dataRequest && testOptions.dataRequestUsername ? 49 : 48);
 
         // #####External website user (login page) #####
         // ################################
@@ -155,7 +162,7 @@ describe('Login to external website', () => {
             did: TONOMY_LOGIN_WEBSITE_did,
             requests: TONOMY_LOGIN_WEBSITE_requests,
             communication: TONOMY_LOGIN_WEBSITE_communication,
-        } = await loginWebsiteOnRedirect(EXTERNAL_WEBSITE_did, TONOMY_LOGIN_WEBSITE_jsKeyManager);
+        } = await loginWebsiteOnRedirect(EXTERNAL_WEBSITE_did, TONOMY_LOGIN_WEBSITE_jsKeyManager, testOptions);
 
         // setup subscriber for connection to Tonomy ID acknowledgement
         const { subscriber: TONOMY_LOGIN_WEBSITE_messageSubscriber, promise: TONOMY_LOGIN_WEBSITE_ackMessagePromise } =
@@ -176,7 +183,8 @@ describe('Login to external website', () => {
         const TONOMY_ID_requestSubscriber = setupLoginRequestSubscriber(
             TONOMY_ID_user,
             tonomyLoginApp.origin,
-            TONOMY_LOGIN_WEBSITE_did
+            TONOMY_LOGIN_WEBSITE_did,
+            testOptions
         );
 
         // #####Tonomy Login App website user (login page) #####
@@ -231,12 +239,15 @@ describe('Login to external website', () => {
         expect(payload.requests).toBeDefined();
         expect(payload.response).toBeDefined();
 
-        expect(payload.requests?.length).toBe(3);
+        expect(payload.requests?.length).toBe(testOptions.dataRequest ? 3 : 2);
         expect(payload.response?.accountName?.toString()).toBe(
             await (await TONOMY_ID_user.getAccountName()).toString()
         );
-        expect(payload.response?.data?.username?.toString()).toBe((await TONOMY_ID_user.getUsername()).username);
-        // check me
+
+        if (testOptions.dataRequest && testOptions.dataRequestUsername) {
+            expect(payload.response?.data?.username?.toString()).toBe((await TONOMY_ID_user.getUsername()).username);
+        }
+
         if (getSettings().loggerLevel === 'debug') console.log('TONOMY_LOGIN_WEBSITE/login: sending to callback page');
         const TONOMY_LOGIN_WEBSITE_base64UrlPayload = objToBase64Url(payload);
 
@@ -249,20 +260,33 @@ describe('Login to external website', () => {
             redirectJwt: TONOMY_LOGIN_WEBSITE_redirectJwt,
             username: TONOMY_LOGIN_WEBSITE_username,
             accountName: TONOMY_LOGIN_WEBSITE_accountName,
-        } = await loginWebsiteOnCallback(TONOMY_LOGIN_WEBSITE_jsKeyManager, TONOMY_LOGIN_WEBSITE_storage_factory);
+        } = await loginWebsiteOnCallback(
+            TONOMY_LOGIN_WEBSITE_jsKeyManager,
+            TONOMY_LOGIN_WEBSITE_storage_factory,
+            testOptions
+        );
 
         const redirectJwtPayload = TONOMY_LOGIN_WEBSITE_redirectJwt?.getPayload();
 
-        const EXTERNAL_WEBSITE_base64UrlPayload = objToBase64Url({
+        const EXTERNAL_WEBSITE_loginResponse: LoginResponse = {
+            accountName: TONOMY_LOGIN_WEBSITE_accountName,
+        };
+
+        if (testOptions.dataRequest) {
+            EXTERNAL_WEBSITE_loginResponse.data = {};
+
+            if (testOptions.dataRequestUsername) {
+                EXTERNAL_WEBSITE_loginResponse.data.username = TONOMY_LOGIN_WEBSITE_username;
+            }
+        }
+
+        const EXTERNAL_WEBSITE_loginRequestResponseMessagePayload: LoginRequestResponseMessagePayload = {
             success: true,
             requests: [TONOMY_LOGIN_WEBSITE_redirectJwt],
-            response: {
-                accountName: TONOMY_LOGIN_WEBSITE_accountName,
-                data: {
-                    username: TONOMY_LOGIN_WEBSITE_username,
-                },
-            },
-        });
+            response: EXTERNAL_WEBSITE_loginResponse,
+        };
+
+        const EXTERNAL_WEBSITE_base64UrlPayload = objToBase64Url(EXTERNAL_WEBSITE_loginRequestResponseMessagePayload);
 
         // #####External website user (callback page) #####
         // ################################

@@ -18,6 +18,7 @@ import {
     getSettings,
     TonomyRequest,
     LoginRequestsMessagePayload,
+    OnPressLoginOptions,
 } from '../../src/sdk';
 import { ExternalUser, LoginWithTonomyMessages } from '../../src/api/externalUser';
 import { LoginRequest } from '../../src/sdk/util/request';
@@ -27,6 +28,7 @@ import { getAccount } from '../../src/sdk/services/blockchain';
 import { getJwkIssuerFromStorage } from '../../src/sdk/helpers/jwkStorage';
 import { verifyRequests } from '../../src/sdk/helpers/requests';
 import { getLoginRequestFromUrl, onRedirectLogin } from '../../src/sdk/helpers/urls';
+import { ExternalUserLoginTestOptions } from '../externalUser.test';
 
 export async function externalWebsiteUserPressLoginToTonomyButton(keyManager: KeyManager, loginAppOrigin: string) {
     if (getSettings().loggerLevel === 'debug') console.log('EXTERNAL_WEBSITE/login: create did:jwk and login request');
@@ -59,7 +61,7 @@ export async function externalWebsiteUserPressLoginToTonomyButton(keyManager: Ke
 export async function loginWebsiteOnRedirect(
     externalWebsiteDid: string,
     keyManager: KeyManager,
-    log = false
+    testOptions: ExternalUserLoginTestOptions
 ): Promise<{
     did: string;
     requests: TonomyRequest[];
@@ -74,13 +76,20 @@ export async function loginWebsiteOnRedirect(
 
     if (getSettings().loggerLevel === 'debug')
         console.log('TONOMY_LOGIN_WEBSITE/login: create did:jwk and login request');
+
+    const onPressLoginOptions: OnPressLoginOptions = {
+        callbackPath: '/callback',
+        redirect: false,
+    };
+
+    if (testOptions.dataRequest) {
+        onPressLoginOptions.dataRequest = {};
+
+        if (testOptions.dataRequestUsername) onPressLoginOptions.dataRequest.username = true;
+    }
+
     const { loginRequest, dataSharingRequest, loginToCommunication } = (await ExternalUser.loginWithTonomy(
-        {
-            callbackPath: '/callback',
-            redirect: false,
-            dataRequest: { username: true },
-            // change me
-        },
+        onPressLoginOptions,
         keyManager
     )) as LoginWithTonomyMessages;
     const did = loginRequest.getIssuer();
@@ -148,8 +157,7 @@ export async function sendLoginRequestsMessage(
     requests: TonomyRequest[],
     keyManager: KeyManager,
     communication: Communication,
-    recipientDid: string,
-    log = false
+    recipientDid: string
 ) {
     const jwkIssuer = await getJwkIssuerFromStorage(keyManager);
 
@@ -162,7 +170,11 @@ export async function sendLoginRequestsMessage(
     expect(sendMessageResponse).toBe(true);
 }
 
-export async function loginWebsiteOnCallback(keyManager: KeyManager, storageFactory: StorageFactory, log = true) {
+export async function loginWebsiteOnCallback(
+    keyManager: KeyManager,
+    storageFactory: StorageFactory,
+    testOptions: ExternalUserLoginTestOptions
+) {
     if (getSettings().loggerLevel === 'debug')
         console.log('TONOMY_LOGIN_WEBSITE/callback: fetching response from URL and verifying login');
     const externalUser = await ExternalUser.verifyLoginRequest({
@@ -191,8 +203,7 @@ export async function loginWebsiteOnCallback(keyManager: KeyManager, storageFact
 export async function externalWebsiteOnCallback(
     keyManager: KeyManager,
     storageFactory: StorageFactory,
-    accountName: Name,
-    log = true
+    accountName: Name
 ) {
     if (getSettings().loggerLevel === 'debug') console.log('EXTERNAL_WEBSITE/callback: fetching response from URL');
     const externalUser = await ExternalUser.verifyLoginRequest({
@@ -211,8 +222,7 @@ export async function externalWebsiteOnCallback(
 export async function externalWebsiteOnReload(
     keyManager: KeyManager,
     storageFactory: StorageFactory,
-    tonomyUser: User,
-    log = false
+    tonomyUser: User
 ) {
     if (getSettings().loggerLevel === 'debug') console.log('EXTERNAL_WEBSITE/home: calling get User');
 

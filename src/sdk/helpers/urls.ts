@@ -74,7 +74,7 @@ export function getLoginRequestResponseFromUrl(): LoginRequestResponseMessagePay
             accountName: Name.from(parsedPayload.response.accountName),
         };
 
-        if (parsedPayload.response.data.username) {
+        if (parsedPayload.response.data?.username) {
             response.data = {
                 username: new TonomyUsername(parsedPayload.response.data.username),
             };
