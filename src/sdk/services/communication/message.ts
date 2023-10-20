@@ -174,15 +174,21 @@ export class LoginRequestsMessage extends Message<LoginRequestsMessagePayload> {
     }
 }
 
+export type LoginResponse = {
+    accountName: Name;
+    data?: {
+        username?: TonomyUsername;
+    };
+};
+
 export type LoginRequestResponseMessagePayload = {
     success: boolean;
+    requests: TonomyRequest[];
     error?: {
         code: SdkErrors;
         reason: string;
     };
-    requests: TonomyRequest[];
-    accountName?: Name;
-    username?: TonomyUsername;
+    response?: LoginResponse;
 };
 export class LoginRequestResponseMessage extends Message<LoginRequestResponseMessagePayload> {
     protected static type = 'LoginRequestResponseMessage';
@@ -218,16 +224,22 @@ export class LoginRequestResponseMessage extends Message<LoginRequestResponseMes
         };
 
         if (payload.success) {
-            this.decodedPayload = {
-                ...this.decodedPayload,
-                accountName: Name.from(payload.accountName),
+            const response: LoginResponse = {
+                accountName: Name.from(payload.response.accountName),
             };
 
-            if (payload.username) {
-                this.decodedPayload.username = payload.username.username
-                    ? new TonomyUsername(payload.username.username)
-                    : new TonomyUsername(payload.username);
+            if (payload.response.data.username) {
+                response.data = {
+                    username: payload.response.data.username.username
+                        ? new TonomyUsername(payload.response.data.username.username)
+                        : new TonomyUsername(payload.response.data.username),
+                };
             }
+
+            this.decodedPayload = {
+                ...this.decodedPayload,
+                response,
+            };
         }
     }
 

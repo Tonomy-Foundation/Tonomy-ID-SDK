@@ -3,7 +3,7 @@ import { Name } from '@wharfkit/antelope';
 import { SdkErrors, throwError } from '../util/errors';
 import { TonomyUsername } from '../util/username';
 import { LoginRequest, TonomyRequest } from '../util/request';
-import { LoginRequestsMessagePayload } from '../services/communication/message';
+import { LoginRequestsMessagePayload, LoginResponse } from '../services/communication/message';
 import { LoginRequestResponseMessagePayload } from '../services/communication/message';
 import { base64UrlToObj } from '../util/base64';
 import { DataSharingRequest } from '../util';
@@ -68,15 +68,23 @@ export function getLoginRequestResponseFromUrl(): LoginRequestResponseMessagePay
     const { requests } = getLoginRequestFromUrl();
 
     if (parsedPayload.success) {
-        if (!parsedPayload.accountName) throwError("accountName parameter doesn't exists", SdkErrors.MissingParams);
-        const res: LoginRequestResponseMessagePayload = {
-            success: true,
-            requests,
-            accountName: Name.from(parsedPayload.accountName),
+        if (!parsedPayload.response?.accountName)
+            throwError("accountName parameter doesn't exists", SdkErrors.MissingParams);
+        const response: LoginResponse = {
+            accountName: Name.from(parsedPayload.response.accountName),
         };
 
-        if (parsedPayload.username) res.username = new TonomyUsername(parsedPayload.username);
-        return res;
+        if (parsedPayload.response.data.username) {
+            response.data = {
+                username: new TonomyUsername(parsedPayload.response.data.username),
+            };
+        }
+
+        return {
+            success: true,
+            requests,
+            response,
+        };
     } else {
         if (!parsedPayload.error) throwError("error parameter doesn't exists", SdkErrors.MissingParams);
         return { success: false, requests, error: parsedPayload.error };

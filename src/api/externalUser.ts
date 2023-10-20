@@ -323,10 +323,10 @@ export class ExternalUser {
         if (!options.checkKeys) options.checkKeys = true;
         const keyManager = options.keyManager || new JsKeyManager();
 
-        const { success, error, requests, username, accountName } = getLoginRequestResponseFromUrl();
+        const { success, error, requests, response } = getLoginRequestResponseFromUrl();
 
         if (success === true) {
-            if (!accountName || !username) throwError('No account name found in url', SdkErrors.MissingParams);
+            if (!response?.accountName) throwError('No account name found in url', SdkErrors.MissingParams);
 
             verifyRequests(requests);
 
@@ -357,13 +357,16 @@ export class ExternalUser {
             const externalUser = new ExternalUser(keyManager, myStorageFactory);
 
             if (options.checkKeys) {
-                const permission = await UserApps.verifyKeyExistsForApp(accountName, { keyManager });
+                const permission = await UserApps.verifyKeyExistsForApp(response.accountName, { keyManager });
 
                 await externalUser.setAppPermission(permission);
             }
 
-            await externalUser.setAccountName(accountName);
-            await externalUser.setUsername(username);
+            await externalUser.setAccountName(response.accountName);
+
+            if (response.data?.username) {
+                await externalUser.setUsername(response.data.username);
+            }
 
             return externalUser;
         } else {

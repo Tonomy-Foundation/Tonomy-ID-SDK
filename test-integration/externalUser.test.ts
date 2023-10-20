@@ -225,11 +225,13 @@ describe('Login to external website', () => {
             expect(payload).toBeDefined();
             expect(payload.success).toBe(true);
             expect(payload.requests).toBeDefined();
-            expect(payload.accountName).toBeDefined();
+            expect(payload.response).toBeDefined();
 
             expect(payload.requests?.length).toBe(3);
-            expect(payload.accountName?.toString()).toBe(await (await TONOMY_ID_user.getAccountName()).toString());
-            expect(payload.username?.toString()).toBe((await TONOMY_ID_user.getUsername()).username);
+            expect(payload.response?.accountName?.toString()).toBe(
+                await (await TONOMY_ID_user.getAccountName()).toString()
+            );
+            expect(payload.response?.data?.username?.toString()).toBe((await TONOMY_ID_user.getUsername()).username);
             // check me
             if (log) console.log('TONOMY_LOGIN_WEBSITE/login: sending to callback page');
             const TONOMY_LOGIN_WEBSITE_base64UrlPayload = objToBase64Url(payload);
@@ -254,8 +256,12 @@ describe('Login to external website', () => {
             const EXTERNAL_WEBSITE_base64UrlPayload = objToBase64Url({
                 success: true,
                 requests: [TONOMY_LOGIN_WEBSITE_redirectJwt],
-                username: TONOMY_LOGIN_WEBSITE_username,
-                accountName: TONOMY_LOGIN_WEBSITE_accountName,
+                response: {
+                    accountName: TONOMY_LOGIN_WEBSITE_accountName,
+                    data: {
+                        username: TONOMY_LOGIN_WEBSITE_username,
+                    },
+                },
             });
 
             // #####External website user (callback page) #####

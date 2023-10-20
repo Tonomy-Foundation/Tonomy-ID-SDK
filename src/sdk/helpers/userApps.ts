@@ -8,7 +8,7 @@ import { createKeyManagerSigner } from '../services/blockchain/eosio/transaction
 import { SdkError, SdkErrors, throwError } from '../util/errors';
 import { App, AppStatus } from '../controllers/app';
 import { LoginRequest, TonomyRequest } from '../util/request';
-import { LoginRequestResponseMessage } from '../services/communication/message';
+import { LoginRequestResponseMessage, LoginResponse } from '../services/communication/message';
 import { LoginRequestResponseMessagePayload } from '../services/communication/message';
 import { objToBase64Url } from '../util/base64';
 import { getSettings } from '../util/settings';
@@ -107,9 +107,7 @@ export class UserApps {
     ): Promise<void | URLtype> {
         const accountName = await this.user.getAccountName();
 
-        const responsePayload: LoginRequestResponseMessagePayload = {
-            success: true,
-            requests: requestsWithMetadata.map((requestWithMeta) => requestWithMeta.request),
+        const response: LoginResponse = {
             accountName,
         };
 
@@ -126,10 +124,16 @@ export class UserApps {
                 if (requestWithMeta.request.getPayload().username === true) {
                     const username = await this.user.getUsername();
 
-                    responsePayload.username = username;
+                    response.data = { username };
                 }
             }
         }
+
+        const responsePayload: LoginRequestResponseMessagePayload = {
+            success: true,
+            requests: requestsWithMetadata.map((requestWithMeta) => requestWithMeta.request),
+            response,
+        };
 
         if (platform === 'mobile') {
             if (!options.callbackPath) throwError('Missing callback path', SdkErrors.MissingParams);

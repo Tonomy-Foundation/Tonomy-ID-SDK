@@ -72,9 +72,9 @@ export class SdkError extends Error {
         // It's not absolutely essential, but it does make the stack trace a little nicer.
         if (Error.captureStackTrace) {
             Error.captureStackTrace(this, this.constructor);
+        } else {
+            this.stack = new Error().stack;
         }
-
-        this.stack = new Error().stack;
     }
 }
 
