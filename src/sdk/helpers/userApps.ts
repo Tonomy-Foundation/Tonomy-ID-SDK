@@ -144,7 +144,7 @@ export class UserApps {
         }
     }
 
-    static async terminateLoginRequest(
+    async terminateLoginRequest(
         requests: TonomyRequest[],
         returnType: 'url' | 'message',
         error: {

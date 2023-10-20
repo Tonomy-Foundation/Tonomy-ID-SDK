@@ -25,7 +25,7 @@ import { objToBase64Url } from '../sdk/util/base64';
 import { VerifiableCredential } from '../sdk/util/ssi/vc';
 import { DIDurl } from '../sdk/util/ssi/types';
 import { Signer, createKeyManagerSigner, transact } from '../sdk/services/blockchain/eosio/transaction';
-import { createJwkIssuerAndStore } from '../sdk/helpers/jwk';
+import { createJwkIssuerAndStore } from '../sdk/helpers/jwkStorage';
 import { verifyRequests } from '../sdk/helpers/requests';
 import { getLoginRequestResponseFromUrl } from '../sdk/helpers/urls';
 
