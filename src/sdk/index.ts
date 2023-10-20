@@ -4,7 +4,12 @@
 export * from './controllers/user';
 export * from './helpers/userApps';
 export * from './controllers/app';
+
+// Controller helpers
 export * from './helpers/userApps';
+export * from './helpers/jwkStorage';
+export * from './helpers/requests';
+export * from './helpers/urls';
 
 // Services
 export * as EosioUtil from './services/blockchain';
