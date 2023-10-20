@@ -13,7 +13,6 @@ import { LoginRequestResponseMessagePayload } from '../services/communication/me
 import { objToBase64Url } from '../util/base64';
 import { getSettings } from '../util/settings';
 import { DID, URL as URLtype } from '../util/ssi/types';
-import { Issuer } from '@tonomy/did-jwt-vc';
 import { DataSharingRequest } from '../util';
 import { verifyRequests } from './requests';
 
