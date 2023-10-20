@@ -13,6 +13,7 @@ import {
     LoginRequestResponseMessage,
     ExternalUser,
     EosioTokenContract,
+    getSettings,
 } from '../src/sdk/index';
 import URL from 'jsdom-url';
 import { JsKeyManager } from '../src/sdk/storage/jsKeyManager';
@@ -45,14 +46,12 @@ import { objToBase64Url } from '../src/sdk/util/base64';
 import { createSigner, defaultAntelopePrivateKey } from '../src/sdk/services/blockchain';
 import { setTestSettings } from './helpers/settings';
 
-setTestSettings();
+setTestSettings(process.env.LOG === 'true');
 
 // @ts-expect-error - type error on global
 global.URL = URL;
 
 const eosioTokenContract = EosioTokenContract.Instance;
-
-const log = process.env.LOG === 'true';
 
 describe('Login to external website', () => {
     jest.setTimeout(30000);
@@ -77,13 +76,13 @@ describe('Login to external website', () => {
         // ##### Tonomy ID user #####
         // ##########################
         // Create new Tonomy ID user
-        if (log) console.log('TONOMY_ID: creating new Tonomy ID user');
+        if (getSettings().loggerLevel === 'debug') console.log('TONOMY_ID: creating new Tonomy ID user');
         TONOMY_ID_user = (await createRandomID()).user;
         TONOMY_ID_did = await TONOMY_ID_user.getDid();
 
         expect(TONOMY_ID_did).toContain('did:antelope:');
 
-        await loginToTonomyCommunication(TONOMY_ID_user, log);
+        await loginToTonomyCommunication(TONOMY_ID_user);
 
         // Create two apps which will be logged into
         externalApp = await createRandomApp();
@@ -102,7 +101,7 @@ describe('Login to external website', () => {
 
     afterEach(async () => {
         await TONOMY_ID_user.logout();
-        if (log) console.log('finished test');
+        if (getSettings().loggerLevel === 'debug') console.log('finished test');
 
         // for some reason this is needed to ensure all the code lines execute. Not sure why needed
         // TODO figure out why this is needed and remove issue
@@ -111,15 +110,19 @@ describe('Login to external website', () => {
 
     describe('SSO login full end-to-end flow with external desktop browser (using communication service)', () => {
         test('Successful login to external website', async () => {
-            await runLoginTest();
+            await runExternalUserLoginTest({ requestUsername: false });
         });
 
         test('Successful login to external website', async () => {
-            await runLoginTest();
+            await runExternalUserLoginTest({ requestUsername: true });
         });
     });
 
-    async function runLoginTest() {
+    type ExternalUserLoginTestOptions = {
+        requestUsername: boolean;
+    };
+
+    async function runExternalUserLoginTest(options: ExternalUserLoginTestOptions) {
         expect.assertions(49);
 
         // #####External website user (login page) #####
@@ -135,11 +138,7 @@ describe('Login to external website', () => {
         });
 
         const { did: EXTERNAL_WEBSITE_did, redirectUrl: EXTERNAL_WEBSITE_redirectUrl } =
-            await externalWebsiteUserPressLoginToTonomyButton(
-                EXTERNAL_WEBSITE_jsKeyManager,
-                tonomyLoginApp.origin,
-                log
-            );
+            await externalWebsiteUserPressLoginToTonomyButton(EXTERNAL_WEBSITE_jsKeyManager, tonomyLoginApp.origin);
 
         // #####Tonomy Login App website user (login page) #####
         // ########################################
@@ -156,11 +155,11 @@ describe('Login to external website', () => {
             did: TONOMY_LOGIN_WEBSITE_did,
             requests: TONOMY_LOGIN_WEBSITE_requests,
             communication: TONOMY_LOGIN_WEBSITE_communication,
-        } = await loginWebsiteOnRedirect(EXTERNAL_WEBSITE_did, TONOMY_LOGIN_WEBSITE_jsKeyManager, log);
+        } = await loginWebsiteOnRedirect(EXTERNAL_WEBSITE_did, TONOMY_LOGIN_WEBSITE_jsKeyManager);
 
         // setup subscriber for connection to Tonomy ID acknowledgement
         const { subscriber: TONOMY_LOGIN_WEBSITE_messageSubscriber, promise: TONOMY_LOGIN_WEBSITE_ackMessagePromise } =
-            await setupTonomyIdIdentifySubscriber(TONOMY_ID_did, log);
+            await setupTonomyIdIdentifySubscriber(TONOMY_ID_did);
 
         expect(TONOMY_LOGIN_WEBSITE_communication.socketServer.listeners('message').length).toBe(0);
         const TONOMY_LOGIN_WEBSITE_subscription = TONOMY_LOGIN_WEBSITE_communication.subscribeMessage(
@@ -172,13 +171,12 @@ describe('Login to external website', () => {
 
         // ##### Tonomy ID user (QR code scanner screen) #####
         // ##########################
-        await scanQrAndAck(TONOMY_ID_user, TONOMY_LOGIN_WEBSITE_did, log);
+        await scanQrAndAck(TONOMY_ID_user, TONOMY_LOGIN_WEBSITE_did);
 
         const TONOMY_ID_requestSubscriber = setupLoginRequestSubscriber(
             TONOMY_ID_user,
             tonomyLoginApp.origin,
-            TONOMY_LOGIN_WEBSITE_did,
-            log
+            TONOMY_LOGIN_WEBSITE_did
         );
 
         // #####Tonomy Login App website user (login page) #####
@@ -193,15 +191,14 @@ describe('Login to external website', () => {
             TONOMY_LOGIN_WEBSITE_requests,
             TONOMY_LOGIN_WEBSITE_jsKeyManager,
             TONOMY_LOGIN_WEBSITE_communication,
-            connectionMessageFromTonomyId.getSender(),
-            log
+            connectionMessageFromTonomyId.getSender()
         );
 
         // setup subscriber that waits for the response that the requests are confirmed by Tonomy ID
         const {
             subscriber: TONOMY_LOGIN_WEBSITE_messageSubscriber2,
             promise: TONOMY_LOGIN_WEBSITE_requestsConfirmedMessagePromise,
-        } = await setupTonomyIdRequestConfirmSubscriber(TONOMY_ID_did, log);
+        } = await setupTonomyIdRequestConfirmSubscriber(TONOMY_ID_did);
 
         TONOMY_LOGIN_WEBSITE_communication.unsubscribeMessage(TONOMY_LOGIN_WEBSITE_subscription);
         const TONOMY_LOGIN_WEBSITE_subscription2 = TONOMY_LOGIN_WEBSITE_communication.subscribeMessage(
@@ -240,7 +237,7 @@ describe('Login to external website', () => {
         );
         expect(payload.response?.data?.username?.toString()).toBe((await TONOMY_ID_user.getUsername()).username);
         // check me
-        if (log) console.log('TONOMY_LOGIN_WEBSITE/login: sending to callback page');
+        if (getSettings().loggerLevel === 'debug') console.log('TONOMY_LOGIN_WEBSITE/login: sending to callback page');
         const TONOMY_LOGIN_WEBSITE_base64UrlPayload = objToBase64Url(payload);
 
         // @ts-expect-error - cannot find name jsdom
@@ -252,7 +249,7 @@ describe('Login to external website', () => {
             redirectJwt: TONOMY_LOGIN_WEBSITE_redirectJwt,
             username: TONOMY_LOGIN_WEBSITE_username,
             accountName: TONOMY_LOGIN_WEBSITE_accountName,
-        } = await loginWebsiteOnCallback(TONOMY_LOGIN_WEBSITE_jsKeyManager, TONOMY_LOGIN_WEBSITE_storage_factory, log);
+        } = await loginWebsiteOnCallback(TONOMY_LOGIN_WEBSITE_jsKeyManager, TONOMY_LOGIN_WEBSITE_storage_factory);
 
         const redirectJwtPayload = TONOMY_LOGIN_WEBSITE_redirectJwt?.getPayload();
 
@@ -280,8 +277,7 @@ describe('Login to external website', () => {
         EXTERNAL_WEBSITE_user = await externalWebsiteOnCallback(
             EXTERNAL_WEBSITE_jsKeyManager,
             EXTERNAL_WEBSITE_storage_factory,
-            await TONOMY_ID_user.getAccountName(),
-            log
+            await TONOMY_ID_user.getAccountName()
         );
 
         await EXTERNAL_WEBSITE_user.communication.disconnect();
@@ -289,20 +285,19 @@ describe('Login to external website', () => {
         EXTERNAL_WEBSITE_user = await externalWebsiteOnReload(
             EXTERNAL_WEBSITE_jsKeyManager,
             EXTERNAL_WEBSITE_storage_factory,
-            TONOMY_ID_user,
-            log
+            TONOMY_ID_user
         );
 
-        await externalWebsiteSignVc(EXTERNAL_WEBSITE_user, log);
+        await externalWebsiteSignVc(EXTERNAL_WEBSITE_user);
 
         // ##### Tonomy ID user (storage container) #####
         // ##########################
 
-        const TONOMY_ID_linkAuthSubscriber = setupLinkAuthSubscriber(TONOMY_ID_user, log);
+        const TONOMY_ID_linkAuthSubscriber = setupLinkAuthSubscriber(TONOMY_ID_user);
 
         // #####External website user (callback page) #####
         // ################################
-        await externalWebsiteSignTransaction(EXTERNAL_WEBSITE_user, externalApp, log);
+        await externalWebsiteSignTransaction(EXTERNAL_WEBSITE_user, externalApp);
         await TONOMY_ID_linkAuthSubscriber;
 
         await externalWebsiteOnLogout(EXTERNAL_WEBSITE_jsKeyManager, EXTERNAL_WEBSITE_storage_factory);

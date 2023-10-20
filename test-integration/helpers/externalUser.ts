@@ -28,12 +28,8 @@ import { getJwkIssuerFromStorage } from '../../src/sdk/helpers/jwkStorage';
 import { verifyRequests } from '../../src/sdk/helpers/requests';
 import { getLoginRequestFromUrl, onRedirectLogin } from '../../src/sdk/helpers/urls';
 
-export async function externalWebsiteUserPressLoginToTonomyButton(
-    keyManager: KeyManager,
-    loginAppOrigin: string,
-    log = false
-) {
-    if (log) console.log('EXTERNAL_WEBSITE/login: create did:jwk and login request');
+export async function externalWebsiteUserPressLoginToTonomyButton(keyManager: KeyManager, loginAppOrigin: string) {
+    if (getSettings().loggerLevel === 'debug') console.log('EXTERNAL_WEBSITE/login: create did:jwk and login request');
 
     const { loginRequest, dataSharingRequest } = (await ExternalUser.loginWithTonomy(
         { callbackPath: '/callback', redirect: false },
@@ -46,7 +42,7 @@ export async function externalWebsiteUserPressLoginToTonomyButton(
 
     expect(did).toContain('did:jwk:');
 
-    if (log) console.log('EXTERNAL_WEBSITE/login: redirect to Tonomy Login Website');
+    if (getSettings().loggerLevel === 'debug') console.log('EXTERNAL_WEBSITE/login: redirect to Tonomy Login Website');
 
     const payload: LoginRequestsMessagePayload = {
         requests: [loginRequest],
@@ -69,13 +65,15 @@ export async function loginWebsiteOnRedirect(
     requests: TonomyRequest[];
     communication: Communication;
 }> {
-    if (log) console.log('TONOMY_LOGIN_WEBSITE/login: collect external website token from URL');
+    if (getSettings().loggerLevel === 'debug')
+        console.log('TONOMY_LOGIN_WEBSITE/login: collect external website token from URL');
 
     const externalLoginRequest = await onRedirectLogin();
 
     expect(externalLoginRequest.getIssuer()).toBe(externalWebsiteDid);
 
-    if (log) console.log('TONOMY_LOGIN_WEBSITE/login: create did:jwk and login request');
+    if (getSettings().loggerLevel === 'debug')
+        console.log('TONOMY_LOGIN_WEBSITE/login: create did:jwk and login request');
     const { loginRequest, dataSharingRequest, loginToCommunication } = (await ExternalUser.loginWithTonomy(
         {
             callbackPath: '/callback',
@@ -95,7 +93,8 @@ export async function loginWebsiteOnRedirect(
     if (dataSharingRequest) requests.push(dataSharingRequest);
 
     // Login to the Tonomy Communication as the login app user
-    if (log) console.log('TONOMY_LOGIN_WEBSITE/login: connect to Tonomy Communication');
+    if (getSettings().loggerLevel === 'debug')
+        console.log('TONOMY_LOGIN_WEBSITE/login: connect to Tonomy Communication');
     const communication = new Communication(false);
     const loginResponse = await communication.login(loginToCommunication);
 
@@ -104,7 +103,7 @@ export async function loginWebsiteOnRedirect(
     return { did, requests, communication };
 }
 
-export async function setupTonomyIdIdentifySubscriber(did: string, log = false) {
+export async function setupTonomyIdIdentifySubscriber(did: string) {
     let subscriber: Subscriber;
     const subscriberExecutor = (resolve: any) => {
         subscriber = (receivedMessage) => {
@@ -112,7 +111,8 @@ export async function setupTonomyIdIdentifySubscriber(did: string, log = false) 
 
             expect(receivedIdentifyMessage.getSender()).toContain(did);
 
-            if (log) console.log('TONOMY_LOGIN_WEBSITE/login: receive connection acknowledgement from Tonomy ID');
+            if (getSettings().loggerLevel === 'debug')
+                console.log('TONOMY_LOGIN_WEBSITE/login: receive connection acknowledgement from Tonomy ID');
             resolve(receivedIdentifyMessage);
         };
     };
@@ -123,7 +123,7 @@ export async function setupTonomyIdIdentifySubscriber(did: string, log = false) 
     return { subscriber, promise };
 }
 
-export async function setupTonomyIdRequestConfirmSubscriber(did: string, log = false) {
+export async function setupTonomyIdRequestConfirmSubscriber(did: string) {
     let subscriber: Subscriber;
     const subscriberExecutor = (resolve: any) => {
         subscriber = (receivedMessage) => {
@@ -131,7 +131,8 @@ export async function setupTonomyIdRequestConfirmSubscriber(did: string, log = f
 
             expect(loginRequestResponseMessage.getSender()).toContain(did);
 
-            if (log) console.log('TONOMY_LOGIN_WEBSITE/login: receive receipt of login request from Tonomy ID');
+            if (getSettings().loggerLevel === 'debug')
+                console.log('TONOMY_LOGIN_WEBSITE/login: receive receipt of login request from Tonomy ID');
             // we receive a message after Tonomy ID user confirms consent to the login request
             resolve(loginRequestResponseMessage);
         };
@@ -154,20 +155,23 @@ export async function sendLoginRequestsMessage(
 
     const loginRequestMessage = await LoginRequestsMessage.signMessage({ requests }, jwkIssuer, recipientDid);
 
-    if (log) console.log('TONOMY_LOGIN_WEBSITE/login: sending login request to Tonomy ID app');
+    if (getSettings().loggerLevel === 'debug')
+        console.log('TONOMY_LOGIN_WEBSITE/login: sending login request to Tonomy ID app');
     const sendMessageResponse = await communication.sendMessage(loginRequestMessage);
 
     expect(sendMessageResponse).toBe(true);
 }
 
 export async function loginWebsiteOnCallback(keyManager: KeyManager, storageFactory: StorageFactory, log = true) {
-    if (log) console.log('TONOMY_LOGIN_WEBSITE/callback: fetching response from URL and verifying login');
+    if (getSettings().loggerLevel === 'debug')
+        console.log('TONOMY_LOGIN_WEBSITE/callback: fetching response from URL and verifying login');
     const externalUser = await ExternalUser.verifyLoginRequest({
         keyManager,
         storageFactory,
     });
 
-    if (log) console.log('TONOMY_LOGIN_WEBSITE/callback: checking login request of external website');
+    if (getSettings().loggerLevel === 'debug')
+        console.log('TONOMY_LOGIN_WEBSITE/callback: checking login request of external website');
     const { requests } = await getLoginRequestFromUrl();
 
     await verifyRequests(requests);
@@ -175,7 +179,8 @@ export async function loginWebsiteOnCallback(keyManager: KeyManager, storageFact
 
     expect(redirectJwt).toBeDefined();
 
-    if (log) console.log('TONOMY_LOGIN_WEBSITE/callback: redirecting to external website');
+    if (getSettings().loggerLevel === 'debug')
+        console.log('TONOMY_LOGIN_WEBSITE/callback: redirecting to external website');
 
     const username = await externalUser.getUsername();
     const accountName = await externalUser.getAccountName();
@@ -189,7 +194,7 @@ export async function externalWebsiteOnCallback(
     accountName: Name,
     log = true
 ) {
-    if (log) console.log('EXTERNAL_WEBSITE/callback: fetching response from URL');
+    if (getSettings().loggerLevel === 'debug') console.log('EXTERNAL_WEBSITE/callback: fetching response from URL');
     const externalUser = await ExternalUser.verifyLoginRequest({
         keyManager,
         storageFactory,
@@ -209,7 +214,7 @@ export async function externalWebsiteOnReload(
     tonomyUser: User,
     log = false
 ) {
-    if (log) console.log('EXTERNAL_WEBSITE/home: calling get User');
+    if (getSettings().loggerLevel === 'debug') console.log('EXTERNAL_WEBSITE/home: calling get User');
 
     const externalUser = await ExternalUser.getUser({ keyManager, storageFactory });
 
@@ -218,8 +223,8 @@ export async function externalWebsiteOnReload(
     return externalUser;
 }
 
-export async function externalWebsiteSignVc(externalUser: ExternalUser, log = false) {
-    if (log) console.log('EXTERNAL_WEBSITE/sign-vc: signing verifiable credential');
+export async function externalWebsiteSignVc(externalUser: ExternalUser) {
+    if (getSettings().loggerLevel === 'debug') console.log('EXTERNAL_WEBSITE/sign-vc: signing verifiable credential');
 
     const vcData = {
         name: 'Joe',
@@ -255,7 +260,7 @@ async function getLinkedActionsForPermission(
     return accountAppPermission.linked_actions[0];
 }
 
-export async function externalWebsiteSignTransaction(externalUser: ExternalUser, externalApp: App, log = false) {
+export async function externalWebsiteSignTransaction(externalUser: ExternalUser, externalApp: App) {
     const from = await externalUser.getAccountName();
     const to = await getAccountNameFromUsername(
         TonomyUsername.fromUsername('lovesboost', AccountType.PERSON, getSettings().accountSuffix)
@@ -265,7 +270,8 @@ export async function externalWebsiteSignTransaction(externalUser: ExternalUser,
 
     expect(linkedActions).toBeUndefined();
 
-    if (log) console.log('EXTERNAL_WEBSITE/sign-trx: signing transaction selfissue()');
+    if (getSettings().loggerLevel === 'debug')
+        console.log('EXTERNAL_WEBSITE/sign-trx: signing transaction selfissue()');
     let trx = await externalUser.signTransaction('eosio.token', 'selfissue', {
         to: from,
         quantity: '10 SYS',
@@ -278,7 +284,7 @@ export async function externalWebsiteSignTransaction(externalUser: ExternalUser,
     expect(linkedActions.account.equals('eosio.token')).toBe(true);
     expect(linkedActions.action).toBeNull();
 
-    if (log) console.log('EXTERNAL_WEBSITE/sign-trx: signing transaction transfer()');
+    if (getSettings().loggerLevel === 'debug') console.log('EXTERNAL_WEBSITE/sign-trx: signing transaction transfer()');
     trx = await externalUser.signTransaction('eosio.token', 'transfer', {
         from,
         to,
@@ -291,7 +297,8 @@ export async function externalWebsiteSignTransaction(externalUser: ExternalUser,
     expect(trx.processed.receipt.status).toBe('executed');
     // TODO check action trace for action and the link auth
 
-    if (log) console.log('EXTERNAL_WEBSITE/sign-trx: signing transaction transfer() again)');
+    if (getSettings().loggerLevel === 'debug')
+        console.log('EXTERNAL_WEBSITE/sign-trx: signing transaction transfer() again)');
     trx = await externalUser.signTransaction('eosio.token', 'transfer', {
         from,
         to,
@@ -305,12 +312,12 @@ export async function externalWebsiteSignTransaction(externalUser: ExternalUser,
     // TODO check action trace for action and the does not contain link auth
 }
 
-export async function setupLinkAuthSubscriber(user: User, log = false): Promise<void> {
+export async function setupLinkAuthSubscriber(user: User): Promise<void> {
     // Setup a promise that resolves when the subscriber executes
     // This emulates the Tonomy ID app, which waits for LinkAuth requests and executes them
     return new Promise<void>((resolve, reject) => {
         user.communication.subscribeMessage(async (message) => {
-            if (log) console.log('TONOMY_ID/storage: LinkAuth request received');
+            if (getSettings().loggerLevel === 'debug') console.log('TONOMY_ID/storage: LinkAuth request received');
 
             try {
                 await user.handleLinkAuthRequestMessage(message);
