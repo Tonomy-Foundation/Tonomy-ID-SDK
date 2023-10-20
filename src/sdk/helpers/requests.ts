@@ -24,6 +24,4 @@ export async function verifyRequests(requests: TonomyRequest[]): Promise<void> {
             }
         }
     }
-
-    return requests;
 }

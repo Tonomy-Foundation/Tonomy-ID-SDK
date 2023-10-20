@@ -93,15 +93,17 @@ export class UserApps {
      * And sends a response to the requesting app
      *
      * @param {{request: TonomyRequest, app?: App, requiresLogin?: boolean}[]} requestsWithMetadata - Array of requests to fulfill (login or data sharing requests)
-     * @param {DataSharingRequest} [dataSharingRequest] - Data sharing request to accept
      * @param {'mobile' | 'browser'} platform - Platform of the request, either 'mobile' or 'browser'
-     * @param {DID} messageRecipient - DID of the recipient of the message
-     * @returns {Promise<void | URLtype>} the callback url if the platform is mobile, or undefined if it is browser
+     * @param {{callbackPath?: URLtype, messageRecipient?: DID}} options - Options for the response
+     * @returns {Promise<void | URLtype>} the callback url if the platform is mobile, or undefined if it is browser (a message is sent to the user)
      */
     async acceptLoginRequest(
         requestsWithMetadata: { request: TonomyRequest; app?: App; requiresLogin?: boolean }[],
         platform: 'mobile' | 'browser',
-        messageRecipient?: DID
+        options: {
+            callbackPath?: URLtype;
+            messageRecipient?: DID;
+        }
     ): Promise<void | URLtype> {
         const accountName = await this.user.getAccountName();
 
@@ -130,56 +132,69 @@ export class UserApps {
         }
 
         if (platform === 'mobile') {
-            let callbackUrl = getSettings().ssoWebsiteOrigin + '/callback?';
+            if (!options.callbackPath) throwError('Missing callback path', SdkErrors.MissingParams);
+            let callbackUrl = getSettings().ssoWebsiteOrigin + options.callbackPath + '?';
 
             callbackUrl += 'payload=' + objToBase64Url(responsePayload);
 
             return callbackUrl;
         } else {
-            if (!messageRecipient) throwError('Missing message recipient', SdkErrors.MissingParams);
+            if (!options.messageRecipient) throwError('Missing message recipient', SdkErrors.MissingParams);
             const issuer = await this.user.getIssuer();
-            const message = await LoginRequestResponseMessage.signMessage(responsePayload, issuer, messageRecipient);
+            const message = await LoginRequestResponseMessage.signMessage(
+                responsePayload,
+                issuer,
+                options.messageRecipient
+            );
 
             await this.user.communication.sendMessage(message);
         }
     }
 
+    /**
+     * Rejects a login request by sending a response to the requesting app
+     *
+     * @param {TonomyRequest[]} requests - Array of requests to reject
+     * @param {'mobile' | 'browser'} platform - Platform of the request, either 'mobile' or 'browser'
+     * @param {{ code: SdkErrors, reason: string }} error - Error to send back to the requesting app
+     * @param {{callbackPath?: URLtype, messageRecipient?: DID}} options - Options for the response
+     * @returns {Promise<void | URLtype>} the callback url if the platform is mobile, or undefined if it is browser (a message is sent to the user)
+     */
     async terminateLoginRequest(
         requests: TonomyRequest[],
-        returnType: 'url' | 'message',
+        returnType: 'mobile' | 'browser',
         error: {
             code: SdkErrors;
             reason: string;
         },
         options: {
-            callbackOrigin?: string;
             callbackPath?: URLtype;
-            issuer?: Issuer;
             messageRecipient?: DID;
         }
-    ): Promise<LoginRequestResponseMessage | URLtype> {
-        const responsePayload = {
+    ): Promise<void | URLtype> {
+        const responsePayload: LoginRequestResponseMessagePayload = {
             success: false,
             requests,
             error,
         };
 
-        if (returnType === 'url') {
-            if (!options.callbackOrigin || !options.callbackPath)
-                throwError('Missing callback origin or path', SdkErrors.MissingParams);
-            let callbackUrl = options.callbackOrigin + options.callbackPath + '?';
+        if (returnType === 'mobile') {
+            if (!options.callbackPath) throwError('Missing callback path', SdkErrors.MissingParams);
+            let callbackUrl = getSettings().ssoWebsiteOrigin + options.callbackPath + '?';
 
             callbackUrl += 'payload=' + objToBase64Url(responsePayload);
 
             return callbackUrl;
         } else {
-            if (!options.messageRecipient || !options.issuer)
-                throwError('Missing message recipient or issuer', SdkErrors.MissingParams);
-            return await LoginRequestResponseMessage.signMessage(
+            if (!options.messageRecipient) throwError('Missing message recipient', SdkErrors.MissingParams);
+            const issuer = await this.user.getIssuer();
+            const message = await LoginRequestResponseMessage.signMessage(
                 responsePayload,
-                options.issuer,
+                issuer,
                 options.messageRecipient
             );
+
+            await this.user.communication.sendMessage(message);
         }
     }
 

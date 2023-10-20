@@ -137,7 +137,7 @@ export async function setupLoginRequestSubscriber(
 
             if (log)
                 console.log('TONOMY_ID/SSO: accepting login requests and sending confirmation to Tonomy Login Website');
-            await user.apps.acceptLoginRequest(acceptArray, 'browser', receiverDid);
+            await user.apps.acceptLoginRequest(acceptArray, 'browser', { messageRecipient: receiverDid });
 
             resolve(true);
         }, LoginRequestsMessage.getType());
