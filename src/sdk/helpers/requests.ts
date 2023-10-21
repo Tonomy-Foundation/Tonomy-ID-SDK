@@ -6,18 +6,20 @@ import { DataSharingRequest } from '../util';
 export class RequestManager {
     requests: TonomyRequest[] = [];
 
-    constructor(requests: TonomyRequest[]) {
-        this.setRequests(requests);
+    constructor(requests: TonomyRequest[] | string[]) {
+        if (typeof requests[0] === 'string') {
+            this.fromStrings(requests as string[]);
+        } else {
+            this.from(requests as TonomyRequest[]);
+        }
     }
 
-    setRequests(requests: TonomyRequest[]): void {
-        if (!requests || !Array.isArray(requests) || requests.length === 0) {
-            throwError('No requests found', SdkErrors.RequestsNotFound);
-        }
+    from(requests: TonomyRequest[]): void {
+        const checkedRequests = this.checkArrayAndFilterNull<TonomyRequest>(requests);
 
         const classInitializedRequests: TonomyRequest[] = [];
 
-        for (const request of requests) {
+        for (const request of checkedRequests) {
             if (request.getType() === LoginRequest.getType()) {
                 classInitializedRequests.push(new LoginRequest(request));
             } else if (request.getType() === DataSharingRequest.getType()) {
@@ -28,6 +30,26 @@ export class RequestManager {
         }
 
         this.requests = classInitializedRequests;
+    }
+
+    fromStrings(requests: string[]): void {
+        const checkedRequests = this.checkArrayAndFilterNull<string>(requests);
+
+        this.from(checkedRequests.map((request) => new TonomyRequest(request)));
+    }
+
+    checkArrayAndFilterNull<T>(array: T[]): T[] {
+        if (!array || !Array.isArray(array)) {
+            throwError('No requests found', SdkErrors.RequestsNotFound);
+        }
+
+        const response = array.filter((request) => request !== null);
+
+        if (response.length === 0) {
+            throwError('No requests found in array', SdkErrors.RequestsNotFound);
+        }
+
+        return response;
     }
 
     getRequests(): TonomyRequest[] {

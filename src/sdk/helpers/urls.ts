@@ -2,12 +2,11 @@
 import { Name } from '@wharfkit/antelope';
 import { SdkErrors, throwError } from '../util/errors';
 import { TonomyUsername } from '../util/username';
-import { LoginRequest, TonomyRequest } from '../util/request';
+import { TonomyRequest } from '../util/request';
 import { LoginRequestsMessagePayload, LoginResponse } from '../services/communication/message';
 import { LoginRequestResponseMessagePayload } from '../services/communication/message';
 import { base64UrlToObj } from '../util/base64';
-import { DataSharingRequest } from '../util';
-import { RequestManager, verifyRequests } from './requests';
+import { RequestManager } from './requests';
 
 /**
  * Extracts the TonomyRequests from the URL
@@ -21,31 +20,10 @@ export function getLoginRequestFromUrl(): LoginRequestsMessagePayload {
 
     if (!base64UrlPayload) throwError("payload parameter doesn't exist", SdkErrors.MissingParams);
 
-    // get unparsed LoginRequestsMessagePayload object
     const unparsedLoginRequestMessagePayload = base64UrlToObj(base64UrlPayload);
+    const requests = new RequestManager(unparsedLoginRequestMessagePayload.requests);
 
-    if (!unparsedLoginRequestMessagePayload.requests)
-        throwError('No requests found in payload', SdkErrors.MissingParams);
-
-    const unparsedRequestStrings = unparsedLoginRequestMessagePayload.requests.filter(
-        (request: string) => request !== null
-    );
-
-    if (!unparsedRequestStrings) throwError('No requests found in payload', SdkErrors.MissingParams);
-
-    const requests = unparsedRequestStrings.map((request: string) => {
-        const tonomyRequest = new TonomyRequest(request);
-
-        if (tonomyRequest.getType() === LoginRequest.getType()) {
-            return new LoginRequest(tonomyRequest);
-        } else if (tonomyRequest.getType() === DataSharingRequest.getType()) {
-            return new DataSharingRequest(tonomyRequest);
-        } else {
-            throwError('Invalid TonomyRequest Type', SdkErrors.InvalidRequestType);
-        }
-    });
-
-    return { requests };
+    return { requests: requests.getRequests() };
 }
 
 /**
