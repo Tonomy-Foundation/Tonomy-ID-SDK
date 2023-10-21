@@ -116,7 +116,7 @@ export async function setupLoginRequestSubscriber(
 
             await managedRequests.verify();
 
-            expect(managedRequests.getRequests().length).toBe(testOptions.dataRequest ? 3 : 2);
+            expect(managedRequests.getRequests().length).toBe(testOptions.dataRequest ? 4 : 3);
 
             const acceptArray: { app?: App; request: TonomyRequest; requiresLogin?: boolean }[] = [];
 

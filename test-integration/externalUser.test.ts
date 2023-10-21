@@ -145,7 +145,11 @@ describe('Login to external website', () => {
         });
 
         const { did: EXTERNAL_WEBSITE_did, redirectUrl: EXTERNAL_WEBSITE_redirectUrl } =
-            await externalWebsiteUserPressLoginToTonomyButton(EXTERNAL_WEBSITE_jsKeyManager, tonomyLoginApp.origin);
+            await externalWebsiteUserPressLoginToTonomyButton(
+                EXTERNAL_WEBSITE_jsKeyManager,
+                tonomyLoginApp.origin,
+                testOptions
+            );
 
         // #####Tonomy Login App website user (login page) #####
         // ########################################
@@ -162,7 +166,7 @@ describe('Login to external website', () => {
             did: TONOMY_LOGIN_WEBSITE_did,
             requests: TONOMY_LOGIN_WEBSITE_requests,
             communication: TONOMY_LOGIN_WEBSITE_communication,
-        } = await loginWebsiteOnRedirect(EXTERNAL_WEBSITE_did, TONOMY_LOGIN_WEBSITE_jsKeyManager, testOptions);
+        } = await loginWebsiteOnRedirect(EXTERNAL_WEBSITE_did, TONOMY_LOGIN_WEBSITE_jsKeyManager);
 
         // setup subscriber for connection to Tonomy ID acknowledgement
         const { subscriber: TONOMY_LOGIN_WEBSITE_messageSubscriber, promise: TONOMY_LOGIN_WEBSITE_ackMessagePromise } =
@@ -239,10 +243,8 @@ describe('Login to external website', () => {
         expect(payload.requests).toBeDefined();
         expect(payload.response).toBeDefined();
 
-        expect(payload.requests?.length).toBe(testOptions.dataRequest ? 3 : 2);
-        expect(payload.response?.accountName?.toString()).toBe(
-            await (await TONOMY_ID_user.getAccountName()).toString()
-        );
+        expect(payload.requests?.length).toBe(testOptions.dataRequest ? 4 : 3);
+        expect(payload.response?.accountName?.toString()).toBe((await TONOMY_ID_user.getAccountName()).toString());
 
         if (testOptions.dataRequest && testOptions.dataRequestUsername) {
             expect(payload.response?.data?.username?.toString()).toBe((await TONOMY_ID_user.getUsername()).username);
