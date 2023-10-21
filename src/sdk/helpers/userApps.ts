@@ -14,7 +14,7 @@ import { objToBase64Url } from '../util/base64';
 import { getSettings } from '../util/settings';
 import { DID, URL as URLtype } from '../util/ssi/types';
 import { DataSharingRequest } from '../util';
-import { verifyRequests } from './requests';
+import { verifyRequests } from './requestsManager';
 
 const idContract = IDContract.Instance;
 

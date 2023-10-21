@@ -6,7 +6,7 @@ import { TonomyRequest } from '../util/request';
 import { LoginRequestsMessagePayload, LoginResponse } from '../services/communication/message';
 import { LoginRequestResponseMessagePayload } from '../services/communication/message';
 import { base64UrlToObj } from '../util/base64';
-import { RequestManager } from './requests';
+import { RequestManager } from './requestsManager';
 
 /**
  * Extracts the TonomyRequests from the URL

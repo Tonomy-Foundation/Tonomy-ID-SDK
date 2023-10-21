@@ -17,7 +17,7 @@ import { DataSharingRequest, LoginRequest, TonomyRequest } from '../../src/sdk/u
 import { DIDurl, URL } from '../../src/sdk/util/ssi/types';
 import { defaultAntelopePublicKey } from '../../src/sdk/services/blockchain/eosio/eosio';
 import { generateRandomKeywords, getSettings } from '../../src/sdk/util';
-import { verifyRequests } from '../../src/sdk/helpers/requests';
+import { verifyRequests } from '../../src/sdk/helpers/requestsManager';
 import { ExternalUserLoginTestOptions } from '../externalUser.test';
 
 export const HCAPCHA_CI_RESPONSE_TOKEN = '10000000-aaaa-bbbb-cccc-000000000001';

@@ -26,7 +26,7 @@ import { VerifiableCredential } from '../sdk/util/ssi/vc';
 import { DIDurl } from '../sdk/util/ssi/types';
 import { Signer, createKeyManagerSigner, transact } from '../sdk/services/blockchain/eosio/transaction';
 import { createJwkIssuerAndStore } from '../sdk/helpers/jwkStorage';
-import { verifyRequests } from '../sdk/helpers/requests';
+import { RequestManager, verifyRequests } from '../sdk/helpers/requestsManager';
 import { getLoginRequestResponseFromUrl } from '../sdk/helpers/urls';
 
 /**
@@ -334,19 +334,11 @@ export class ExternalUser {
         if (success === true) {
             if (!response?.accountName) throwError('No account name found in url', SdkErrors.MissingParams);
 
-            verifyRequests(requests);
+            const managedRequests = await new RequestManager(requests);
 
-            const loginRequest = requests.find((r) => {
-                if (r.getType() === LoginRequest.getType()) {
-                    const payload = r.getPayload();
+            await managedRequests.verify();
 
-                    if (payload && payload.origin === window.location.origin) {
-                        return true;
-                    }
-                }
-
-                return false;
-            });
+            const loginRequest = managedRequests.getRequestsWithSameOriginOrThrow();
             const keyFromStorage = await keyManager.getKey({ level: KeyManagerLevel.BROWSER_LOCAL_STORAGE });
 
             if (!loginRequest) throwError('No login request found for this origin', SdkErrors.OriginMismatch);

@@ -68,6 +68,7 @@ export class LoginRequest extends TonomyRequest<LoginRequestPayload> {
 
 export type DataSharingRequestPayload = {
     username: boolean;
+    // origin: string;
 };
 
 export class DataSharingRequest extends TonomyRequest<DataSharingRequestPayload> {
