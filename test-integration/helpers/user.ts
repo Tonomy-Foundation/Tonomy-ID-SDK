@@ -17,7 +17,7 @@ import { DataSharingRequest, LoginRequest, TonomyRequest } from '../../src/sdk/u
 import { DIDurl, URL } from '../../src/sdk/util/ssi/types';
 import { defaultAntelopePublicKey } from '../../src/sdk/services/blockchain/eosio/eosio';
 import { generateRandomKeywords, getSettings } from '../../src/sdk/util';
-import { verifyRequests } from '../../src/sdk/helpers/requestsManager';
+import { RequestManager } from '../../src/sdk/helpers/requestsManager';
 import { ExternalUserLoginTestOptions } from '../externalUser.test';
 
 export const HCAPCHA_CI_RESPONSE_TOKEN = '10000000-aaaa-bbbb-cccc-000000000001';
@@ -112,26 +112,26 @@ export async function setupLoginRequestSubscriber(
 
             // TODO check this throws an error if requests are not valid, or not signed correctly
             if (getSettings().loggerLevel === 'debug') console.log('TONOMY_ID/SSO: verifying login request');
-            await verifyRequests(requests);
+            const managedRequests = new RequestManager(requests);
 
-            expect(requests.length).toBe(testOptions.dataRequest ? 3 : 2);
+            await managedRequests.verify();
+
+            expect(managedRequests.getRequests().length).toBe(testOptions.dataRequest ? 3 : 2);
 
             const acceptArray: { app?: App; request: TonomyRequest; requiresLogin?: boolean }[] = [];
 
             let receiverDid = '';
 
             for (const request of requests) {
-                if (request.getType() === LoginRequest.getType()) {
+                if (request instanceof LoginRequest) {
                     const payload = request.getPayload();
 
                     if (payload.origin === tonomyLoginOrigin) receiverDid = request.getIssuer();
                     const loginApp = await App.getApp(payload.origin);
 
                     acceptArray.push({ app: loginApp, request, requiresLogin: true });
-                } else if (request.getType() === DataSharingRequest.getType()) {
+                } else if (request instanceof DataSharingRequest) {
                     acceptArray.push({ request });
-                } else {
-                    throw new Error('Unknown request type');
                 }
             }
 

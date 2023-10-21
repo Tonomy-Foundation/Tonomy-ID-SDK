@@ -117,12 +117,23 @@ export class RequestManager {
         return response.length > 0 ? response : undefined;
     }
 
-    getRequestsWithSameOriginOrThrow(): TonomyRequest[] {
+    getLoginRequestWithSameOriginOrThrow(): LoginRequest {
         const myOrigin = window.location.origin;
-        const response = this.getLoginRequestsOrThrow().filter((request) => request.getPayload().origin === myOrigin);
+        const response = this.getLoginRequestsOrThrow().find((request) => request.getPayload().origin === myOrigin);
 
-        if (!response || response.length === 0) {
+        if (!response) {
             throwError(`No origin from ${myOrigin} found`, SdkErrors.OriginNotFound);
+        }
+
+        return response;
+    }
+
+    getLoginRequestWithDifferentOriginOrThrow(): LoginRequest {
+        const myOrigin = window.location.origin;
+        const response = this.getLoginRequestsOrThrow().find((request) => request.getPayload().origin !== myOrigin);
+
+        if (!response) {
+            throwError(`No origin different from ${myOrigin} found`, SdkErrors.OriginNotFound);
         }
 
         return response;

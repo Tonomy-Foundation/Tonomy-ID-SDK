@@ -13,7 +13,6 @@ import {
     Subscriber,
     TonomyUsername,
     User,
-    UserApps,
     getAccountNameFromUsername,
     getSettings,
     TonomyRequest,
@@ -21,12 +20,11 @@ import {
     OnPressLoginOptions,
 } from '../../src/sdk';
 import { ExternalUser, LoginWithTonomyMessages } from '../../src/api/externalUser';
-import { LoginRequest } from '../../src/sdk/util/request';
 import { objToBase64Url } from '../../src/sdk/util/base64';
 import { VerifiableCredential } from '../../src/sdk/util/ssi/vc';
 import { getAccount } from '../../src/sdk/services/blockchain';
 import { getJwkIssuerFromStorage } from '../../src/sdk/helpers/jwkStorage';
-import { verifyRequests } from '../../src/sdk/helpers/requestsManager';
+import { RequestManager } from '../../src/sdk/helpers/requestsManager';
 import { getLoginRequestFromUrl, onRedirectLogin } from '../../src/sdk/helpers/urls';
 import { ExternalUserLoginTestOptions } from '../externalUser.test';
 
@@ -186,11 +184,13 @@ export async function loginWebsiteOnCallback(
     if (getSettings().loggerLevel === 'debug')
         console.log('TONOMY_LOGIN_WEBSITE/callback: checking login request of external website');
     const { requests } = await getLoginRequestFromUrl();
+    const managedRequests = new RequestManager(requests);
 
-    await verifyRequests(requests);
-    const redirectJwt = requests.find((jwtVerified) => jwtVerified.getPayload().origin !== location.origin);
+    await managedRequests.verify();
 
-    expect(redirectJwt).toBeDefined();
+    const externalLoginRequest = managedRequests.getLoginRequestWithDifferentOriginOrThrow();
+
+    expect(externalLoginRequest).toBeDefined();
 
     if (getSettings().loggerLevel === 'debug')
         console.log('TONOMY_LOGIN_WEBSITE/callback: redirecting to external website');
@@ -198,7 +198,7 @@ export async function loginWebsiteOnCallback(
     const username = await externalUser.getUsername();
     const accountName = await externalUser.getAccountName();
 
-    return { redirectJwt: redirectJwt as LoginRequest, username, accountName };
+    return { redirectJwt: externalLoginRequest, username, accountName };
 }
 
 export async function externalWebsiteOnCallback(

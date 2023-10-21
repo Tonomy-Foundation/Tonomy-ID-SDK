@@ -26,7 +26,7 @@ import { VerifiableCredential } from '../sdk/util/ssi/vc';
 import { DIDurl } from '../sdk/util/ssi/types';
 import { Signer, createKeyManagerSigner, transact } from '../sdk/services/blockchain/eosio/transaction';
 import { createJwkIssuerAndStore } from '../sdk/helpers/jwkStorage';
-import { RequestManager, verifyRequests } from '../sdk/helpers/requestsManager';
+import { RequestManager } from '../sdk/helpers/requestsManager';
 import { getLoginRequestResponseFromUrl } from '../sdk/helpers/urls';
 
 /**
@@ -338,17 +338,12 @@ export class ExternalUser {
 
             await managedRequests.verify();
 
-            const loginRequest = managedRequests.getRequestsWithSameOriginOrThrow();
+            const loginRequest = managedRequests.getLoginRequestWithSameOriginOrThrow();
             const keyFromStorage = await keyManager.getKey({ level: KeyManagerLevel.BROWSER_LOCAL_STORAGE });
+            const payload = loginRequest.getPayload();
 
-            if (!loginRequest) throwError('No login request found for this origin', SdkErrors.OriginMismatch);
-
-            if (loginRequest.getType() === LoginRequest.getType()) {
-                const payload = loginRequest.getPayload();
-
-                if (payload.publicKey.toString() !== keyFromStorage.toString()) {
-                    throwError('Key in request does not match', SdkErrors.KeyNotFound);
-                }
+            if (payload.publicKey.toString() !== keyFromStorage.toString()) {
+                throwError('Key in request does not match', SdkErrors.KeyNotFound);
             }
 
             const myStorageFactory = options.storageFactory || browserStorageFactory;
