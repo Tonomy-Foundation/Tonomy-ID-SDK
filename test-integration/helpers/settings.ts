@@ -12,6 +12,10 @@ const settings: Partial<SettingsType> = {
 
 export default settings;
 
-export function setTestSettings() {
+export function setTestSettings(debugLogger = false) {
+    if (debugLogger) {
+        settings.loggerLevel = 'debug';
+    }
+
     setSettings(settings);
 }

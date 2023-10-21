@@ -1,11 +1,11 @@
 import { Issuer } from '@tonomy/did-jwt-vc';
 import { DIDurl, URL } from '../../util/ssi/types';
 import { VerifiableCredentialWithType, VCWithTypeType } from '../../util/ssi/vc';
-import { LoginRequest } from '../../util/request';
-import { DataSharingRequest } from '../../util';
+import { DataSharingRequest, LoginRequest } from '../../util/request';
+import { TonomyRequest } from '../../util';
 import { TonomyUsername } from '../../util/username';
 import { Name } from '@wharfkit/antelope';
-import { SdkErrors } from '../../util/errors';
+import { SdkErrors, throwError } from '../../util/errors';
 
 /**
  * A message that can be sent between two Tonomy identities
@@ -115,10 +115,9 @@ export class IdentifyMessage extends Message<IdentifyMessagePayload> {
         return new IdentifyMessage(vc);
     }
 }
-export type Request = LoginRequest | DataSharingRequest;
 
 export type LoginRequestsMessagePayload = {
-    requests: Request[];
+    requests: TonomyRequest[];
 };
 
 export class LoginRequestsMessage extends Message<LoginRequestsMessagePayload> {
@@ -137,7 +136,22 @@ export class LoginRequestsMessage extends Message<LoginRequestsMessagePayload> {
             throw new Error('LoginRequestsMessage must have a requests property');
         }
 
-        this.decodedPayload = { requests: payload.requests.map((request: string) => new LoginRequest(request)) };
+        const requests = payload.requests.map((request: string) => new TonomyRequest(request));
+
+        this.decodedPayload = {
+            requests: requests.map((request: TonomyRequest) => {
+                if (request.getType() === LoginRequest.getType()) {
+                    return new LoginRequest(request);
+                } else if (request.getType() === DataSharingRequest.getType()) {
+                    return new DataSharingRequest(request);
+                } else {
+                    throwError(
+                        "Request type must be 'LoginRequest' or 'DataSharingRequest'",
+                        SdkErrors.InvalidRequestType
+                    );
+                }
+            }),
+        };
     }
 
     /**
@@ -160,15 +174,21 @@ export class LoginRequestsMessage extends Message<LoginRequestsMessagePayload> {
     }
 }
 
+export type LoginResponse = {
+    accountName: Name;
+    data?: {
+        username?: TonomyUsername;
+    };
+};
+
 export type LoginRequestResponseMessagePayload = {
     success: boolean;
+    requests: TonomyRequest[];
     error?: {
         code: SdkErrors;
         reason: string;
     };
-    requests: Request[];
-    accountName?: Name;
-    username?: TonomyUsername;
+    response?: LoginResponse;
 };
 export class LoginRequestResponseMessage extends Message<LoginRequestResponseMessagePayload> {
     protected static type = 'LoginRequestResponseMessage';
@@ -185,18 +205,40 @@ export class LoginRequestResponseMessage extends Message<LoginRequestResponseMes
         super(vc);
         const payload = this.getVc().getPayload().vc.credentialSubject.payload;
 
+        const requests = payload.requests.map((request: string) => new TonomyRequest(request));
+
         this.decodedPayload = {
             ...payload,
-            requests: payload.requests.map((request: string) => new LoginRequest(request)),
+            requests: requests.map((request: TonomyRequest) => {
+                if (request.getType() === LoginRequest.getType()) {
+                    return new LoginRequest(request);
+                } else if (request.getType() === DataSharingRequest.getType()) {
+                    return new DataSharingRequest(request);
+                } else {
+                    throwError(
+                        "Request type must be 'LoginRequest' or 'DataSharingRequest'",
+                        SdkErrors.InvalidRequestType
+                    );
+                }
+            }),
         };
 
         if (payload.success) {
+            const response: LoginResponse = {
+                accountName: Name.from(payload.response.accountName),
+            };
+
+            if (payload.response.data?.username) {
+                response.data = {
+                    username: payload.response.data.username.username
+                        ? new TonomyUsername(payload.response.data.username.username)
+                        : new TonomyUsername(payload.response.data.username),
+                };
+            }
+
             this.decodedPayload = {
                 ...this.decodedPayload,
-                accountName: Name.from(payload.accountName),
-                username: payload.username.username
-                    ? new TonomyUsername(payload.username.username)
-                    : new TonomyUsername(payload.username),
+                response,
             };
         }
     }

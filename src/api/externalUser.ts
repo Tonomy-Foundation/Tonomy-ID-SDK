@@ -1,5 +1,5 @@
 import { KeyManager, KeyManagerLevel } from '../sdk/storage/keymanager';
-import { OnPressLoginOptions, UserApps } from '../sdk/controllers/userApps';
+import { OnPressLoginOptions, UserApps } from '../sdk/helpers/userApps';
 import { createVCSigner, randomString } from '../sdk/util/crypto';
 import { Issuer } from '@tonomy/did-jwt-vc';
 import { getSettings } from '../sdk/util/settings';
@@ -25,10 +25,21 @@ import { objToBase64Url } from '../sdk/util/base64';
 import { VerifiableCredential } from '../sdk/util/ssi/vc';
 import { DIDurl } from '../sdk/util/ssi/types';
 import { Signer, createKeyManagerSigner, transact } from '../sdk/services/blockchain/eosio/transaction';
+import { createJwkIssuerAndStore } from '../sdk/helpers/jwkStorage';
+import { verifyRequests } from '../sdk/helpers/requests';
+import { getLoginRequestResponseFromUrl } from '../sdk/helpers/urls';
 
+/**
+ * The storage data for an external user that has logged in with Tonomy ID
+ *
+ * @param {Name} accountName - the account name of the user
+ * @param {TonomyUsername} [username] - the username of the user
+ * @param {Name} appPermission - the account name of the app the user is logged in with
+ * @param {string} did - the DID of the user
+ */
 export type ExternalUserStorage = {
     accountName: Name;
-    username: TonomyUsername;
+    username?: TonomyUsername;
     appPermission: Name;
     did: string;
 };
@@ -111,11 +122,15 @@ export class ExternalUser {
             if (appPermission.toString() !== appPermissionStorage.toString())
                 throwError('App permission has changed', SdkErrors.InvalidData);
 
-            const usernameStorage = await user.getUsername();
-            const personData = await idContract.getPerson(usernameStorage);
+            const username = await user.getUsername();
 
-            if (accountName.toString() !== personData.account_name.toString())
-                throwError('Username has changed', SdkErrors.InvalidData);
+            if (username) {
+                const personData = await idContract.getPerson(username);
+
+                if (accountName.toString() !== personData.account_name.toString())
+                    throwError('Username has changed', SdkErrors.InvalidData);
+            }
+
             return user;
         } catch (e) {
             if (autoLogout) await user.logout();
@@ -191,8 +206,10 @@ export class ExternalUser {
      *
      * @returns {Promise<TonomyUsername>} - the username of the user
      */
-    async getUsername(): Promise<TonomyUsername> {
+    async getUsername(): Promise<TonomyUsername | undefined> {
         const storage = await this.storage.username;
+
+        if (!storage) return;
 
         if (!storage) throwError('Username not set', SdkErrors.InvalidData);
         else if (storage instanceof TonomyUsername) {
@@ -237,7 +254,7 @@ export class ExternalUser {
         { redirect = true, callbackPath, dataRequest }: OnPressLoginOptions,
         keyManager: KeyManager = new JsKeyManager()
     ): Promise<LoginWithTonomyMessages | void> {
-        const issuer = await UserApps.createJwkIssuerAndStore(keyManager);
+        const issuer = await createJwkIssuerAndStore(keyManager);
         const publicKey = await keyManager.getKey({ level: KeyManagerLevel.BROWSER_LOCAL_STORAGE });
         let dataSharingRequest;
 
@@ -312,15 +329,15 @@ export class ExternalUser {
         if (!options.checkKeys) options.checkKeys = true;
         const keyManager = options.keyManager || new JsKeyManager();
 
-        const { success, error, requests, username, accountName } = UserApps.getLoginRequestResponseFromUrl();
+        const { success, error, requests, response } = getLoginRequestResponseFromUrl();
 
         if (success === true) {
-            if (!accountName || !username) throwError('No account name found in url', SdkErrors.MissingParams);
+            if (!response?.accountName) throwError('No account name found in url', SdkErrors.MissingParams);
 
-            const result = await UserApps.verifyRequests(requests);
+            verifyRequests(requests);
 
-            const loginRequest = result.find((r) => {
-                if (r.getType() === 'LoginRequest' && r instanceof LoginRequest) {
+            const loginRequest = requests.find((r) => {
+                if (r.getType() === LoginRequest.getType()) {
                     const payload = r.getPayload();
 
                     if (payload && payload.origin === window.location.origin) {
@@ -334,7 +351,7 @@ export class ExternalUser {
 
             if (!loginRequest) throwError('No login request found for this origin', SdkErrors.OriginMismatch);
 
-            if (loginRequest.getType() === 'LoginRequest' && loginRequest instanceof LoginRequest) {
+            if (loginRequest.getType() === LoginRequest.getType()) {
                 const payload = loginRequest.getPayload();
 
                 if (payload.publicKey.toString() !== keyFromStorage.toString()) {
@@ -346,13 +363,16 @@ export class ExternalUser {
             const externalUser = new ExternalUser(keyManager, myStorageFactory);
 
             if (options.checkKeys) {
-                const permission = await UserApps.verifyKeyExistsForApp(accountName, { keyManager });
+                const permission = await UserApps.verifyKeyExistsForApp(response.accountName, { keyManager });
 
                 await externalUser.setAppPermission(permission);
             }
 
-            await externalUser.setAccountName(accountName);
-            await externalUser.setUsername(username);
+            await externalUser.setAccountName(response.accountName);
+
+            if (response.data?.username) {
+                await externalUser.setUsername(response.data.username);
+            }
 
             return externalUser;
         } else {

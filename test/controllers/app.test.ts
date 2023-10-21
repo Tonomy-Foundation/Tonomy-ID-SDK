@@ -1,11 +1,13 @@
 import { PrivateKey, PublicKey } from '@wharfkit/antelope';
-import { UserApps } from '../../src/sdk/controllers/userApps';
+import { UserApps } from '../../src/sdk/helpers/userApps';
 import { generateRandomKeyPair } from '../../src/sdk/util/crypto';
 import URL from 'jsdom-url';
 import { ExternalUser, LoginWithTonomyMessages } from '../../src/api/externalUser';
 import { LoginRequest, LoginRequestPayload } from '../../src/sdk/util/request';
 import { objToBase64Url } from '../../src/sdk/util/base64';
 import { setTestSettings } from '../../test-integration/helpers/settings';
+import { onRedirectLogin } from '../../src/sdk/helpers/urls';
+import { TonomyRequest } from '../../build/sdk/types/sdk';
 
 // @ts-expect-error - URL type on global does not match
 global.URL = URL;
@@ -48,14 +50,15 @@ describe('logging in', () => {
             url,
         });
 
-        const result = await UserApps.onRedirectLogin();
-        const loginRequests = result.getPayload() as LoginRequestPayload;
+        const requests = await onRedirectLogin();
 
-        expect(result).toBeInstanceOf(LoginRequest);
-        expect(result).toBeDefined();
-        expect(typeof loginRequests.randomString).toBe('string');
-        expect(loginRequests.publicKey).toBeInstanceOf(PublicKey);
-        expect(loginRequests.origin).toBe('http://localhost');
-        expect(loginRequests.callbackPath).toBe('/login');
+        expect(requests).toBeDefined();
+
+        const receivedLoginRequest = requests[0].getPayload() as LoginRequestPayload;
+
+        expect(typeof receivedLoginRequest.randomString).toBe('string');
+        expect(receivedLoginRequest.publicKey).toBeInstanceOf(PublicKey);
+        expect(receivedLoginRequest.origin).toBe('http://localhost');
+        expect(receivedLoginRequest.callbackPath).toBe('/login');
     });
 });

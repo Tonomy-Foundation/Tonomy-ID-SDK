@@ -13,10 +13,12 @@ import {
 import { jsStorageFactory } from '../../src/cli/bootstrap/jsstorage';
 import { generatePrivateKeyFromPassword } from '../../src/cli/bootstrap/keys';
 import { createUser } from '../../src/cli/bootstrap/user';
-import { LoginRequest } from '../../src/sdk/util/request';
+import { DataSharingRequest, LoginRequest, TonomyRequest } from '../../src/sdk/util/request';
 import { DIDurl, URL } from '../../src/sdk/util/ssi/types';
 import { defaultAntelopePublicKey } from '../../src/sdk/services/blockchain/eosio/eosio';
-import { generateRandomKeywords } from '../../src/sdk/util';
+import { generateRandomKeywords, getSettings } from '../../src/sdk/util';
+import { verifyRequests } from '../../src/sdk/helpers/requests';
+import { ExternalUserLoginTestOptions } from '../externalUser.test';
 
 export const HCAPCHA_CI_RESPONSE_TOKEN = '10000000-aaaa-bbbb-cccc-000000000001';
 
@@ -61,20 +63,20 @@ export async function createRandomApp(logoUrl?: string, origin?: string): Promis
     });
 }
 
-export async function loginToTonomyCommunication(user: User, log = false) {
+export async function loginToTonomyCommunication(user: User) {
     const issuer = await user.getIssuer();
     // Login to Tonomy Communication as the user
     const authMessage = await AuthenticationMessage.signMessageWithoutRecipient({}, issuer);
 
-    if (log) console.log('TONOMY_ID/appStart: connect to Tonomy Communication');
+    if (getSettings().loggerLevel === 'debug') console.log('TONOMY_ID/appStart: connect to Tonomy Communication');
 
     const loginResponse = await user.communication.login(authMessage);
 
     expect(loginResponse).toBe(true);
 }
 
-export async function scanQrAndAck(user: User, qrCodeData: string, log = false) {
-    if (log) console.log('TONOMY_ID/scanQR: Scanning QR code with Tonomy ID app');
+export async function scanQrAndAck(user: User, qrCodeData: string) {
+    if (getSettings().loggerLevel === 'debug') console.log('TONOMY_ID/scanQR: Scanning QR code with Tonomy ID app');
 
     // BarCodeScannerResult. See Tonomy-ID/node_modules/expo-barcode-scanner/src/BarCodeScanner.tsx
     const barcodeScanResults = {
@@ -83,7 +85,8 @@ export async function scanQrAndAck(user: User, qrCodeData: string, log = false) 
 
     const connectMessage = await IdentifyMessage.signMessage({}, await user.getIssuer(), barcodeScanResults.data);
 
-    if (log) console.log("TONOMY_ID/scanQr: connecting to Tonomy Login Website's with their did:jwk from the QR code");
+    if (getSettings().loggerLevel === 'debug')
+        console.log("TONOMY_ID/scanQr: connecting to Tonomy Login Website's with their did:jwk from the QR code");
     const sendMessageResponse = await user.communication.sendMessage(connectMessage);
 
     expect(sendMessageResponse).toBe(true);
@@ -93,7 +96,7 @@ export async function setupLoginRequestSubscriber(
     user: User,
     tonomyLoginOrigin: URL,
     tonomyLoginDid: DIDurl,
-    log = false
+    testOptions: ExternalUserLoginTestOptions
 ) {
     // Setup a promise that resolves when the subscriber executes
     // This emulates the Tonomy ID app, which waits for the user requests
@@ -101,36 +104,43 @@ export async function setupLoginRequestSubscriber(
         user.communication.subscribeMessage(async (message) => {
             const loginRequestMessage = new LoginRequestsMessage(message);
 
-            if (log) console.log('TONOMY_ID/SSO: receive login requests from Tonomy Login Website');
+            if (getSettings().loggerLevel === 'debug')
+                console.log('TONOMY_ID/SSO: receive login requests from Tonomy Login Website');
 
             // receive and verify the requests
             const requests = loginRequestMessage.getPayload().requests;
 
             // TODO check this throws an error if requests are not valid, or not signed correctly
-            if (log) console.log('TONOMY_ID/SSO: verifying login request');
-            const verifiedRequests = await UserApps.verifyRequests(requests);
+            if (getSettings().loggerLevel === 'debug') console.log('TONOMY_ID/SSO: verifying login request');
+            await verifyRequests(requests);
 
-            expect(verifiedRequests.length).toBe(2);
+            expect(requests.length).toBe(testOptions.dataRequest ? 3 : 2);
 
-            const acceptArray: { app: App; request: LoginRequest }[] = [];
+            const acceptArray: { app?: App; request: TonomyRequest; requiresLogin?: boolean }[] = [];
 
             let receiverDid = '';
 
-            for (const request of verifiedRequests) {
-                const payload = request.getPayload();
+            for (const request of requests) {
+                if (request.getType() === LoginRequest.getType()) {
+                    const payload = request.getPayload();
 
-                if (payload.origin === tonomyLoginOrigin) receiverDid = request.getIssuer();
-                const loginApp = await App.getApp(payload.origin);
+                    if (payload.origin === tonomyLoginOrigin) receiverDid = request.getIssuer();
+                    const loginApp = await App.getApp(payload.origin);
 
-                acceptArray.push({ app: loginApp, request, requiresLogin: true });
+                    acceptArray.push({ app: loginApp, request, requiresLogin: true });
+                } else if (request.getType() === DataSharingRequest.getType()) {
+                    acceptArray.push({ request });
+                } else {
+                    throw new Error('Unknown request type');
+                }
             }
 
             expect(receiverDid).toBe(tonomyLoginDid);
             expect(receiverDid).toBe(loginRequestMessage.getSender());
 
-            if (log)
+            if (getSettings().loggerLevel === 'debug')
                 console.log('TONOMY_ID/SSO: accepting login requests and sending confirmation to Tonomy Login Website');
-            await user.apps.acceptLoginRequest(acceptArray, 'browser', receiverDid);
+            await user.apps.acceptLoginRequest(acceptArray, 'browser', { messageRecipient: receiverDid });
 
             resolve(true);
         }, LoginRequestsMessage.getType());
