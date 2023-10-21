@@ -202,6 +202,8 @@ export class UserApps {
     }
 
     /** Verifies the login requests, and checks if the apps have already been authorized with those keys
+     * This function is currently only used in the unfinished feature https://github.com/Tonomy-Foundation/Tonomy-ID/issues/705
+     * See unmerged PR https://github.com/Tonomy-Foundation/Tonomy-ID/pull/744
      *
      * @param {LoginRequest[]} requests - Array of LoginRequest to check
      * @returns {Promise<CheckedRequest[]>} - Array of requests that have been verified and had authorization checked
