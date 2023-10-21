@@ -121,6 +121,7 @@ enum SdkErrors {
     OriginMismatch = 'OriginMismatch',
     PasswordFormatInvalid = 'PasswordFormatInvalid',
     PasswordInvalid = 'PasswordInvalid',
+    RequestsNotFound = 'RequestsNotFound',
     PasswordTooCommon = 'PasswordTooCommon',
     PinInvalid = 'PinInvalid',
     ReferrerEmpty = 'ReferrerEmpty',

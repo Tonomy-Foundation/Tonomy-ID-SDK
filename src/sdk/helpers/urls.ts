@@ -7,7 +7,7 @@ import { LoginRequestsMessagePayload, LoginResponse } from '../services/communic
 import { LoginRequestResponseMessagePayload } from '../services/communication/message';
 import { base64UrlToObj } from '../util/base64';
 import { DataSharingRequest } from '../util';
-import { verifyRequests } from './requests';
+import { RequestManager, verifyRequests } from './requests';
 
 /**
  * Extracts the TonomyRequests from the URL
@@ -101,33 +101,10 @@ export function getLoginRequestResponseFromUrl(): LoginRequestResponseMessagePay
 export async function onRedirectLogin(): Promise<TonomyRequest[]> {
     const { requests } = getLoginRequestFromUrl();
 
-    await verifyRequests(requests);
+    const requestsManager = new RequestManager(requests);
 
-    const docReferrer = document.referrer;
-
-    if (!docReferrer) throwError('No referrer found', SdkErrors.ReferrerEmpty);
-
-    const referrer = new URL(docReferrer);
-
-    // Check that the LoginRequest origin matches the referrer origin
-    const myRequest = requests.find((request) => {
-        if (request.getType() === LoginRequest.getType()) {
-            const loginRequest = request.getPayload();
-
-            return loginRequest.origin === referrer.origin;
-        }
-
-        return false;
-    });
-
-    if (!myRequest) {
-        const msg =
-            `No origins from: ${requests.find(
-                (r) => r.getType() === LoginRequest.getType() && r.getPayload().origin
-            )} ` + `match referrer: ${referrer.origin}`;
-
-        throwError(msg, SdkErrors.WrongOrigin);
-    }
+    await requestsManager.verify();
+    await requestsManager.checkReferrerOrigin();
 
     return requests;
 }
