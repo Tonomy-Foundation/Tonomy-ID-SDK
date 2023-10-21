@@ -156,7 +156,7 @@ export class UserApps {
 
     /**
      * Rejects a login request by sending a response to the requesting app
-     * 
+     *
      * @static function so that it can be used to cancel requests in flows where users are not logged in
      *
      * @param {TonomyRequest[]} requests - Array of requests to reject
@@ -173,8 +173,10 @@ export class UserApps {
             reason: string;
         },
         options: {
+            callbackOrigin?: URLtype;
             callbackPath?: URLtype;
             messageRecipient?: DID;
+            user?: User;
         }
     ): Promise<void | URLtype> {
         const responsePayload: LoginRequestResponseMessagePayload = {
@@ -184,22 +186,24 @@ export class UserApps {
         };
 
         if (returnType === 'mobile') {
-            if (!options.callbackPath) throwError('Missing callback path', SdkErrors.MissingParams);
-            let callbackUrl = getSettings().ssoWebsiteOrigin + options.callbackPath + '?';
+            if (!options.callbackPath || !options.callbackOrigin)
+                throwError('Missing callback path', SdkErrors.MissingParams);
+            let callbackUrl = options.callbackOrigin + options.callbackPath + '?';
 
             callbackUrl += 'payload=' + objToBase64Url(responsePayload);
 
             return callbackUrl;
         } else {
-            if (!options.messageRecipient) throwError('Missing message recipient', SdkErrors.MissingParams);
-            const issuer = await this.user.getIssuer();
+            if (!options.messageRecipient || !options.user)
+                throwError('Missing message recipient', SdkErrors.MissingParams);
+            const issuer = await options.user.getIssuer();
             const message = await LoginRequestResponseMessage.signMessage(
                 responsePayload,
                 issuer,
                 options.messageRecipient
             );
 
-            await this.user.communication.sendMessage(message);
+            await options.user.communication.sendMessage(message);
         }
     }
 

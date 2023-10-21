@@ -92,13 +92,13 @@ export function getLoginRequestResponseFromUrl(): LoginRequestResponseMessagePay
 }
 
 /**
- * Verifies the TonomyRequest received in the URL were successfully authorized by Tonomy ID
+ * Verifies the TonomyRequests received in the URL were successfully authorized by Tonomy ID
  *
  * @description should be called in the callback page of the SSO Login website
  *
- * @returns {Promise<TonomyRequest>} - the verified TonomyRequest
+ * @returns {Promise<TonomyRequest[]>} - the verified TonomyRequests
  */
-export async function onRedirectLogin(): Promise<TonomyRequest> {
+export async function onRedirectLogin(): Promise<TonomyRequest[]> {
     const { requests } = getLoginRequestFromUrl();
 
     await verifyRequests(requests);
@@ -109,6 +109,7 @@ export async function onRedirectLogin(): Promise<TonomyRequest> {
 
     const referrer = new URL(docReferrer);
 
+    // Check that the LoginRequest origin matches the referrer origin
     const myRequest = requests.find((request) => {
         if (request.getType() === LoginRequest.getType()) {
             const loginRequest = request.getPayload();
@@ -128,5 +129,5 @@ export async function onRedirectLogin(): Promise<TonomyRequest> {
         throwError(msg, SdkErrors.WrongOrigin);
     }
 
-    return myRequest;
+    return requests;
 }
