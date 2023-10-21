@@ -11,6 +11,7 @@ import { browserStorageFactory } from '../sdk/storage/browserStorage';
 import { getAccount, getChainInfo } from '../sdk/services/blockchain/eosio/eosio';
 import { JsKeyManager } from '../sdk/storage/jsKeyManager';
 import { LoginRequest, LoginRequestPayload } from '../sdk/util/request';
+import { DataSharingRequest, DataSharingRequestPayload } from '../sdk/util';
 import {
     AuthenticationMessage,
     Communication,
@@ -40,6 +41,7 @@ export type VerifyLoginOptions = {
 
 export type LoginWithTonomyMessages = {
     loginRequest: LoginRequest;
+    dataSharingRequest?: DataSharingRequest;
     loginToCommunication: AuthenticationMessage;
 };
 
@@ -232,11 +234,20 @@ export class ExternalUser {
      * @returns {Promise<LoginWithTonomyMessages | void>} - if redirect is true, returns void, if redirect is false, returns the login request in the form of a JWT token
      */
     static async loginWithTonomy(
-        { redirect = true, callbackPath }: OnPressLoginOptions,
+        { redirect = true, callbackPath, dataRequest }: OnPressLoginOptions,
         keyManager: KeyManager = new JsKeyManager()
     ): Promise<LoginWithTonomyMessages | void> {
         const issuer = await UserApps.createJwkIssuerAndStore(keyManager);
         const publicKey = await keyManager.getKey({ level: KeyManagerLevel.BROWSER_LOCAL_STORAGE });
+        let dataSharingRequest;
+
+        if (dataRequest) {
+            const dataSharingPayload: DataSharingRequestPayload = {
+                username: dataRequest?.username || false,
+            };
+
+            dataSharingRequest = await DataSharingRequest.signRequest(dataSharingPayload, issuer);
+        }
 
         const payload: LoginRequestPayload = {
             randomString: randomString(32),
@@ -251,6 +262,11 @@ export class ExternalUser {
             const payload: LoginRequestsMessagePayload = {
                 requests: [loginRequest],
             };
+
+            if (dataSharingRequest) {
+                payload.requests.push(dataSharingRequest);
+            }
+
             const base64UrlPayload = objToBase64Url(payload);
 
             window.location.href = `${getSettings().ssoWebsiteOrigin}/login?payload=${base64UrlPayload}`;
@@ -258,7 +274,7 @@ export class ExternalUser {
         } else {
             const loginToCommunication = await AuthenticationMessage.signMessageWithoutRecipient({}, issuer);
 
-            return { loginRequest, loginToCommunication };
+            return { loginRequest, dataSharingRequest, loginToCommunication };
         }
     }
 
@@ -303,13 +319,27 @@ export class ExternalUser {
 
             const result = await UserApps.verifyRequests(requests);
 
-            const loginRequest = result.find((r) => r.getPayload().origin === window.location.origin)?.getPayload();
+            const loginRequest = result.find((r) => {
+                if (r.getType() === 'LoginRequest' && r instanceof LoginRequest) {
+                    const payload = r.getPayload();
+
+                    if (payload && payload.origin === window.location.origin) {
+                        return true;
+                    }
+                }
+
+                return false;
+            });
             const keyFromStorage = await keyManager.getKey({ level: KeyManagerLevel.BROWSER_LOCAL_STORAGE });
 
             if (!loginRequest) throwError('No login request found for this origin', SdkErrors.OriginMismatch);
 
-            if (loginRequest.publicKey.toString() !== keyFromStorage.toString()) {
-                throwError('Key in request does not match', SdkErrors.KeyNotFound);
+            if (loginRequest.getType() === 'LoginRequest' && loginRequest instanceof LoginRequest) {
+                const payload = loginRequest.getPayload();
+
+                if (payload.publicKey.toString() !== keyFromStorage.toString()) {
+                    throwError('Key in request does not match', SdkErrors.KeyNotFound);
+                }
             }
 
             const myStorageFactory = options.storageFactory || browserStorageFactory;

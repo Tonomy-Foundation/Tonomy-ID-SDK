@@ -3,7 +3,7 @@ import { UserApps } from '../../src/sdk/controllers/userApps';
 import { generateRandomKeyPair } from '../../src/sdk/util/crypto';
 import URL from 'jsdom-url';
 import { ExternalUser, LoginWithTonomyMessages } from '../../src/api/externalUser';
-import { LoginRequest } from '../../src/sdk/util/request';
+import { LoginRequest, LoginRequestPayload } from '../../src/sdk/util/request';
 import { objToBase64Url } from '../../src/sdk/util/base64';
 import { setTestSettings } from '../../test-integration/helpers/settings';
 
@@ -30,12 +30,12 @@ describe('logging in', () => {
     });
 
     it('checks login url', async () => {
-        const { loginRequest } = (await ExternalUser.loginWithTonomy({
+        const { loginRequest, dataSharingRequest } = (await ExternalUser.loginWithTonomy({
             callbackPath: '/login',
             redirect: false,
         })) as LoginWithTonomyMessages;
         const payload = {
-            requests: [loginRequest],
+            requests: [loginRequest, dataSharingRequest],
         };
         const base64UrlPayload = objToBase64Url(payload);
         const url = 'http://localhost/login?payload=' + base64UrlPayload;
@@ -49,12 +49,13 @@ describe('logging in', () => {
         });
 
         const result = await UserApps.onRedirectLogin();
+        const loginRequests = result.getPayload() as LoginRequestPayload;
 
         expect(result).toBeInstanceOf(LoginRequest);
         expect(result).toBeDefined();
-        expect(typeof result.getPayload().randomString).toBe('string');
-        expect(result.getPayload().publicKey).toBeInstanceOf(PublicKey);
-        expect(result.getPayload().origin).toBe('http://localhost');
-        expect(result.getPayload().callbackPath).toBe('/login');
+        expect(typeof loginRequests.randomString).toBe('string');
+        expect(loginRequests.publicKey).toBeInstanceOf(PublicKey);
+        expect(loginRequests.origin).toBe('http://localhost');
+        expect(loginRequests.callbackPath).toBe('/login');
     });
 });
