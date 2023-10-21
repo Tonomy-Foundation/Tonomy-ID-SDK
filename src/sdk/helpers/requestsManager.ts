@@ -117,6 +117,16 @@ export class RequestManager {
         return response.length > 0 ? response : undefined;
     }
 
+    getDataSharingRequestsOrThrow(): DataSharingRequest[] {
+        const response = this.getDataSharingRequests();
+
+        if (!response) {
+            throwError('No DataSharingRequests found', SdkErrors.RequestsNotFound);
+        }
+
+        return response;
+    }
+
     getLoginRequestWithSameOriginOrThrow(): LoginRequest {
         const myOrigin = window.location.origin;
         const response = this.getLoginRequestsOrThrow().find((request) => request.getPayload().origin === myOrigin);
@@ -137,5 +147,37 @@ export class RequestManager {
         }
 
         return response;
+    }
+
+    getRequestsSameOriginOrThrow(): TonomyRequest[] {
+        const loginRequest = this.getLoginRequestWithSameOriginOrThrow();
+        const issuer = loginRequest.getIssuer();
+
+        // TODO should maybe add origin to the DataRequest object instead of using the issuer?
+        const dataSharingRequest = this.requests.find(
+            (request) => request instanceof DataSharingRequest && request.getIssuer() === issuer
+        );
+
+        if (dataSharingRequest) {
+            return [loginRequest, dataSharingRequest];
+        } else {
+            return [loginRequest];
+        }
+    }
+
+    getRequestsDifferentOriginOrThrow(): TonomyRequest[] {
+        const loginRequest = this.getLoginRequestWithDifferentOriginOrThrow();
+        const issuer = loginRequest.getIssuer();
+
+        // TODO should maybe add origin to the DataRequest object instead of using the issuer?
+        const dataSharingRequest = this.requests.find(
+            (request) => request instanceof DataSharingRequest && request.getIssuer() === issuer
+        );
+
+        if (dataSharingRequest) {
+            return [loginRequest, dataSharingRequest];
+        } else {
+            return [loginRequest];
+        }
     }
 }

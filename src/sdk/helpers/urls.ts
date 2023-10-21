@@ -84,5 +84,5 @@ export async function onRedirectLogin(): Promise<TonomyRequest[]> {
     await requestsManager.verify();
     await requestsManager.checkReferrerOrigin();
 
-    return requests;
+    return requestsManager.getRequests();
 }
