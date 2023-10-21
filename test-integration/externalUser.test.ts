@@ -130,7 +130,7 @@ describe('Login to external website', () => {
     });
 
     async function runExternalUserLoginTest(testOptions: ExternalUserLoginTestOptions) {
-        expect.assertions(testOptions.dataRequest && testOptions.dataRequestUsername ? 49 : 48);
+        expect.assertions(testOptions.dataRequest && testOptions.dataRequestUsername ? 48 : 47);
 
         // #####External website user (login page) #####
         // ################################

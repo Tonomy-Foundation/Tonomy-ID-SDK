@@ -94,7 +94,7 @@ export function getLoginRequestResponseFromUrl(): LoginRequestResponseMessagePay
 /**
  * Verifies the TonomyRequests received in the URL were successfully authorized by Tonomy ID
  *
- * @description should be called in the callback page of the SSO Login website
+ * @description should be called in the callback page of the Tonomy Accounts (SSO) website
  *
  * @returns {Promise<TonomyRequest[]>} - the verified TonomyRequests
  */
