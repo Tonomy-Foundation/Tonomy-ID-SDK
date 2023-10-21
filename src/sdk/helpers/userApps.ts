@@ -156,6 +156,8 @@ export class UserApps {
 
     /**
      * Rejects a login request by sending a response to the requesting app
+     * 
+     * @static function so that it can be used to cancel requests in flows where users are not logged in
      *
      * @param {TonomyRequest[]} requests - Array of requests to reject
      * @param {'mobile' | 'browser'} platform - Platform of the request, either 'mobile' or 'browser'
@@ -163,7 +165,7 @@ export class UserApps {
      * @param {{callbackPath?: URLtype, messageRecipient?: DID}} options - Options for the response
      * @returns {Promise<void | URLtype>} the callback url if the platform is mobile, or undefined if it is browser (a message is sent to the user)
      */
-    async terminateLoginRequest(
+    static async terminateLoginRequest(
         requests: TonomyRequest[],
         returnType: 'mobile' | 'browser',
         error: {
