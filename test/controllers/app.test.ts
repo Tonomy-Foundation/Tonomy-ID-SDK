@@ -7,7 +7,7 @@ import { LoginRequest, LoginRequestPayload } from '../../src/sdk/util/request';
 import { objToBase64Url } from '../../src/sdk/util/base64';
 import { setTestSettings } from '../../test-integration/helpers/settings';
 import { onRedirectLogin } from '../../src/sdk/helpers/urls';
-import { TonomyRequest } from '../../build/sdk/types/sdk';
+import { WalletRequest } from '../../build/sdk/types/sdk';
 
 // @ts-expect-error - URL type on global does not match
 global.URL = URL;

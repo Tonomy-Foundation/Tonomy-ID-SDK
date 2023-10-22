@@ -1,23 +1,23 @@
 /* eslint-disable camelcase */
 import { SdkErrors, throwError } from '../util/errors';
-import { LoginRequest, TonomyRequest } from '../util/request';
+import { LoginRequest, WalletRequest } from '../util/request';
 import { DataSharingRequest } from '../util';
 
 export class RequestsManager {
-    requests: TonomyRequest[] = [];
+    requests: WalletRequest[] = [];
 
-    constructor(requests: TonomyRequest[] | string[]) {
+    constructor(requests: WalletRequest[] | string[]) {
         if (typeof requests[0] === 'string') {
             this.fromStrings(requests as string[]);
         } else {
-            this.from(requests as TonomyRequest[]);
+            this.from(requests as WalletRequest[]);
         }
     }
 
-    from(requests: TonomyRequest[]): void {
-        const checkedRequests = this.checkArrayAndFilterNull<TonomyRequest>(requests);
+    from(requests: WalletRequest[]): void {
+        const checkedRequests = this.checkArrayAndFilterNull<WalletRequest>(requests);
 
-        const classInitializedRequests: TonomyRequest[] = [];
+        const classInitializedRequests: WalletRequest[] = [];
 
         for (const request of checkedRequests) {
             if (request.getType() === LoginRequest.getType()) {
@@ -25,7 +25,7 @@ export class RequestsManager {
             } else if (request.getType() === DataSharingRequest.getType()) {
                 classInitializedRequests.push(new DataSharingRequest(request));
             } else {
-                throwError('Invalid TonomyRequest Type', SdkErrors.InvalidRequestType);
+                throwError('Invalid WalletRequest Type', SdkErrors.InvalidRequestType);
             }
         }
 
@@ -35,7 +35,7 @@ export class RequestsManager {
     fromStrings(requests: string[]): void {
         const checkedRequests = this.checkArrayAndFilterNull<string>(requests);
 
-        this.from(checkedRequests.map((request) => new TonomyRequest(request)));
+        this.from(checkedRequests.map((request) => new WalletRequest(request)));
     }
 
     checkArrayAndFilterNull<T>(array: T[]): T[] {
@@ -52,12 +52,12 @@ export class RequestsManager {
         return response;
     }
 
-    getRequests(): TonomyRequest[] {
+    getRequests(): WalletRequest[] {
         return this.requests;
     }
 
     /**
-     * Verifies the TonomyRequests are valid requests signed by valid DIDs
+     * Verifies the WalletRequests are valid requests signed by valid DIDs
      * @throws if the requests are not valid
      */
     async verify(): Promise<void> {
@@ -149,7 +149,7 @@ export class RequestsManager {
         return response;
     }
 
-    getRequestsSameOriginOrThrow(): TonomyRequest[] {
+    getRequestsSameOriginOrThrow(): WalletRequest[] {
         const loginRequest = this.getLoginRequestWithSameOriginOrThrow();
         const issuer = loginRequest.getIssuer();
 
@@ -165,7 +165,7 @@ export class RequestsManager {
         }
     }
 
-    getRequestsDifferentOriginOrThrow(): TonomyRequest[] {
+    getRequestsDifferentOriginOrThrow(): WalletRequest[] {
         const loginRequest = this.getLoginRequestWithDifferentOriginOrThrow();
         const issuer = loginRequest.getIssuer();
 

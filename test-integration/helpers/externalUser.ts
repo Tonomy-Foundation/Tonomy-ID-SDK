@@ -15,7 +15,7 @@ import {
     User,
     getAccountNameFromUsername,
     getSettings,
-    TonomyRequest,
+    WalletRequest,
     LoginRequestsMessagePayload,
     OnPressLoginOptions,
 } from '../../src/sdk';
@@ -76,7 +76,7 @@ export async function loginWebsiteOnRedirect(
     keyManager: KeyManager
 ): Promise<{
     did: string;
-    requests: TonomyRequest[];
+    requests: WalletRequest[];
     communication: Communication;
 }> {
     if (getSettings().loggerLevel === 'debug')
@@ -103,7 +103,7 @@ export async function loginWebsiteOnRedirect(
     expect(did).toContain('did:jwk:');
     expect(did).not.toEqual(externalWebsiteDid);
 
-    const requests: TonomyRequest[] = [...managedExternalRequests.getRequests(), loginRequest];
+    const requests: WalletRequest[] = [...managedExternalRequests.getRequests(), loginRequest];
 
     if (dataSharingRequest) requests.push(dataSharingRequest);
 
@@ -160,7 +160,7 @@ export async function setupTonomyIdRequestConfirmSubscriber(did: string) {
 }
 
 export async function sendLoginRequestsMessage(
-    requests: TonomyRequest[],
+    requests: WalletRequest[],
     keyManager: KeyManager,
     communication: Communication,
     recipientDid: string

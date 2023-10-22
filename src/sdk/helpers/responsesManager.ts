@@ -1,22 +1,22 @@
 import { App } from '../controllers/app';
 import { User } from '../controllers/user';
-import { DataSharingRequest, LoginRequest, TonomyRequest } from '../util';
+import { DataSharingRequest, LoginRequest, WalletRequest } from '../util';
 import {
     DataRequestResponse,
     DataSharingRequestResponseData,
     LoginRequestResponse,
-    TonomyRequestResponse,
+    WalletRequestResponse,
 } from '../util/response';
 import { RequestsManager } from './requestsManager';
 
 export class TonomyResponseObject {
-    request: TonomyRequest;
+    request: WalletRequest;
     meta: {
         app: App;
     };
-    response: TonomyRequestResponse;
+    response: WalletRequestResponse;
 
-    constructor(request: TonomyRequest) {
+    constructor(request: WalletRequest) {
         this.request = request;
     }
 

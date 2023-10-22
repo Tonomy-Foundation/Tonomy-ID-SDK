@@ -2,7 +2,7 @@ import { Issuer } from '@tonomy/did-jwt-vc';
 import { DIDurl, URL } from '../../util/ssi/types';
 import { VerifiableCredentialWithType, VCWithTypeType } from '../../util/ssi/vc';
 import { DataSharingRequest, LoginRequest } from '../../util/request';
-import { TonomyRequest } from '../../util';
+import { WalletRequest } from '../../util';
 import { TonomyUsername } from '../../util/username';
 import { Name } from '@wharfkit/antelope';
 import { SdkErrors, throwError } from '../../util/errors';
@@ -117,7 +117,7 @@ export class IdentifyMessage extends Message<IdentifyMessagePayload> {
 }
 
 export type LoginRequestsMessagePayload = {
-    requests: TonomyRequest[];
+    requests: WalletRequest[];
 };
 
 export class LoginRequestsMessage extends Message<LoginRequestsMessagePayload> {
@@ -136,10 +136,10 @@ export class LoginRequestsMessage extends Message<LoginRequestsMessagePayload> {
             throw new Error('LoginRequestsMessage must have a requests property');
         }
 
-        const requests = payload.requests.map((request: string) => new TonomyRequest(request));
+        const requests = payload.requests.map((request: string) => new WalletRequest(request));
 
         this.decodedPayload = {
-            requests: requests.map((request: TonomyRequest) => {
+            requests: requests.map((request: WalletRequest) => {
                 if (request.getType() === LoginRequest.getType()) {
                     return new LoginRequest(request);
                 } else if (request.getType() === DataSharingRequest.getType()) {
@@ -183,7 +183,7 @@ export type LoginResponse = {
 
 export type LoginRequestResponseMessagePayload = {
     success: boolean;
-    requests: TonomyRequest[];
+    requests: WalletRequest[];
     error?: {
         code: SdkErrors;
         reason: string;
@@ -205,11 +205,11 @@ export class LoginRequestResponseMessage extends Message<LoginRequestResponseMes
         super(vc);
         const payload = this.getVc().getPayload().vc.credentialSubject.payload;
 
-        const requests = payload.requests.map((request: string) => new TonomyRequest(request));
+        const requests = payload.requests.map((request: string) => new WalletRequest(request));
 
         this.decodedPayload = {
             ...payload,
-            requests: requests.map((request: TonomyRequest) => {
+            requests: requests.map((request: WalletRequest) => {
                 if (request.getType() === LoginRequest.getType()) {
                     return new LoginRequest(request);
                 } else if (request.getType() === DataSharingRequest.getType()) {

@@ -1,9 +1,9 @@
 import { Name } from '@wharfkit/antelope';
 import { TonomyUsername } from './username';
 
-export class TonomyRequestResponse { }
+export class WalletRequestResponse { }
 
-export class LoginRequestResponse extends TonomyRequestResponse {
+export class LoginRequestResponse extends WalletRequestResponse {
     accountName: Name;
 
     constructor(accountName: Name) {
@@ -16,7 +16,7 @@ export type DataSharingRequestResponseData = {
     username?: TonomyUsername;
 };
 
-export class DataRequestResponse extends TonomyRequestResponse {
+export class DataRequestResponse extends WalletRequestResponse {
     data: {
         username?: TonomyUsername;
     };

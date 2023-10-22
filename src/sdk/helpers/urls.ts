@@ -2,14 +2,14 @@
 import { Name } from '@wharfkit/antelope';
 import { SdkErrors, throwError } from '../util/errors';
 import { TonomyUsername } from '../util/username';
-import { TonomyRequest } from '../util/request';
+import { WalletRequest } from '../util/request';
 import { LoginRequestsMessagePayload, LoginResponse } from '../services/communication/message';
 import { LoginRequestResponseMessagePayload } from '../services/communication/message';
 import { base64UrlToObj } from '../util/base64';
 import { RequestsManager } from './requestsManager';
 
 /**
- * Extracts the TonomyRequests from the URL
+ * Extracts the WalletRequests from the URL
  *
  * @returns {LoginRequestsMessagePayload} the requests, username and accountName
  */
@@ -70,13 +70,13 @@ export function getLoginRequestResponseFromUrl(): LoginRequestResponseMessagePay
 }
 
 /**
- * Verifies the TonomyRequests received in the URL were successfully authorized by Tonomy ID
+ * Verifies the WalletRequests received in the URL were successfully authorized by Tonomy ID
  *
  * @description should be called in the callback page of the Tonomy Accounts (SSO) website
  *
- * @returns {Promise<TonomyRequest[]>} - the verified TonomyRequests
+ * @returns {Promise<WalletRequest[]>} - the verified WalletRequests
  */
-export async function onRedirectLogin(): Promise<TonomyRequest[]> {
+export async function onRedirectLogin(): Promise<WalletRequest[]> {
     const { requests } = getLoginRequestFromUrl();
 
     const requestsManager = new RequestsManager(requests);

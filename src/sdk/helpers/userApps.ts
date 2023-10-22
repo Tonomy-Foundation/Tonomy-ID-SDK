@@ -7,7 +7,7 @@ import { User } from '../controllers/user';
 import { createKeyManagerSigner } from '../services/blockchain/eosio/transaction';
 import { SdkError, SdkErrors, throwError } from '../util/errors';
 import { App, AppStatus } from '../controllers/app';
-import { LoginRequest, TonomyRequest } from '../util/request';
+import { LoginRequest, WalletRequest } from '../util/request';
 import { LoginRequestResponseMessage, LoginResponse } from '../services/communication/message';
 import { LoginRequestResponseMessagePayload } from '../services/communication/message';
 import { objToBase64Url } from '../util/base64';
@@ -42,7 +42,7 @@ export type ResponseParams = {
 };
 
 export type CheckedRequest = {
-    request: TonomyRequest;
+    request: WalletRequest;
     app: App;
     requiresLogin: boolean;
     ssoApp: boolean;
@@ -91,13 +91,13 @@ export class UserApps {
     /** Accepts a login request by authorizing keys on the blockchain (if the are not already authorized)
      * And sends a response to the requesting app
      *
-     * @param {{request: TonomyRequest, app?: App, requiresLogin?: boolean}[]} requestsWithMetadata - Array of requests to fulfill (login or data sharing requests)
+     * @param {{request: WalletRequest, app?: App, requiresLogin?: boolean}[]} requestsWithMetadata - Array of requests to fulfill (login or data sharing requests)
      * @param {'mobile' | 'browser'} platform - Platform of the request, either 'mobile' or 'browser'
      * @param {{callbackPath?: URLtype, messageRecipient?: DID}} options - Options for the response
      * @returns {Promise<void | URLtype>} the callback url if the platform is mobile, or undefined if it is browser (a message is sent to the user)
      */
     async acceptLoginRequest(
-        requestsWithMetadata: { request: TonomyRequest; app?: App; requiresLogin?: boolean }[],
+        requestsWithMetadata: { request: WalletRequest; app?: App; requiresLogin?: boolean }[],
         platform: 'mobile' | 'browser',
         options: {
             callbackPath?: URLtype;
@@ -159,14 +159,14 @@ export class UserApps {
      *
      * @static function so that it can be used to cancel requests in flows where users are not logged in
      *
-     * @param {TonomyRequest[]} requests - Array of requests to reject
+     * @param {WalletRequest[]} requests - Array of requests to reject
      * @param {'mobile' | 'browser'} platform - Platform of the request, either 'mobile' or 'browser'
      * @param {{ code: SdkErrors, reason: string }} error - Error to send back to the requesting app
      * @param {{callbackPath?: URLtype, messageRecipient?: DID}} options - Options for the response
      * @returns {Promise<void | URLtype>} the callback url if the platform is mobile, or undefined if it is browser (a message is sent to the user)
      */
     static async terminateLoginRequest(
-        requests: TonomyRequest[],
+        requests: WalletRequest[],
         returnType: 'mobile' | 'browser',
         error: {
             code: SdkErrors;

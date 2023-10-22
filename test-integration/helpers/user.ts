@@ -13,7 +13,7 @@ import {
 import { jsStorageFactory } from '../../src/cli/bootstrap/jsstorage';
 import { generatePrivateKeyFromPassword } from '../../src/cli/bootstrap/keys';
 import { createUser } from '../../src/cli/bootstrap/user';
-import { DataSharingRequest, LoginRequest, TonomyRequest } from '../../src/sdk/util/request';
+import { DataSharingRequest, LoginRequest, WalletRequest } from '../../src/sdk/util/request';
 import { DIDurl, URL } from '../../src/sdk/util/ssi/types';
 import { defaultAntelopePublicKey } from '../../src/sdk/services/blockchain/eosio/eosio';
 import { generateRandomKeywords, getSettings } from '../../src/sdk/util';
@@ -118,7 +118,7 @@ export async function setupLoginRequestSubscriber(
 
             expect(managedRequests.getRequests().length).toBe(testOptions.dataRequest ? 4 : 3);
 
-            const acceptArray: { app?: App; request: TonomyRequest; requiresLogin?: boolean }[] = [];
+            const acceptArray: { app?: App; request: WalletRequest; requiresLogin?: boolean }[] = [];
 
             let receiverDid = '';
 
