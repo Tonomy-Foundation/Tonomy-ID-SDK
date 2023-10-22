@@ -9,6 +9,7 @@ export * from './controllers/app';
 export * from './helpers/userApps';
 export * from './helpers/jwkStorage';
 export * from './helpers/requestsManager';
+export * from './helpers/responsesManager';
 export * from './helpers/urls';
 
 // Services

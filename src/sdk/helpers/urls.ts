@@ -6,7 +6,7 @@ import { TonomyRequest } from '../util/request';
 import { LoginRequestsMessagePayload, LoginResponse } from '../services/communication/message';
 import { LoginRequestResponseMessagePayload } from '../services/communication/message';
 import { base64UrlToObj } from '../util/base64';
-import { RequestManager } from './requestsManager';
+import { RequestsManager } from './requestsManager';
 
 /**
  * Extracts the TonomyRequests from the URL
@@ -21,7 +21,7 @@ export function getLoginRequestFromUrl(): LoginRequestsMessagePayload {
     if (!base64UrlPayload) throwError("payload parameter doesn't exist", SdkErrors.MissingParams);
 
     const unparsedLoginRequestMessagePayload = base64UrlToObj(base64UrlPayload);
-    const requests = new RequestManager(unparsedLoginRequestMessagePayload.requests);
+    const requests = new RequestsManager(unparsedLoginRequestMessagePayload.requests);
 
     return { requests: requests.getRequests() };
 }
@@ -79,7 +79,7 @@ export function getLoginRequestResponseFromUrl(): LoginRequestResponseMessagePay
 export async function onRedirectLogin(): Promise<TonomyRequest[]> {
     const { requests } = getLoginRequestFromUrl();
 
-    const requestsManager = new RequestManager(requests);
+    const requestsManager = new RequestsManager(requests);
 
     await requestsManager.verify();
     await requestsManager.checkReferrerOrigin();

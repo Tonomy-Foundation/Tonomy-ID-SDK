@@ -26,7 +26,7 @@ import { VerifiableCredential } from '../sdk/util/ssi/vc';
 import { DIDurl } from '../sdk/util/ssi/types';
 import { Signer, createKeyManagerSigner, transact } from '../sdk/services/blockchain/eosio/transaction';
 import { createJwkIssuerAndStore } from '../sdk/helpers/jwkStorage';
-import { RequestManager } from '../sdk/helpers/requestsManager';
+import { RequestsManager } from '../sdk/helpers/requestsManager';
 import { getLoginRequestResponseFromUrl } from '../sdk/helpers/urls';
 
 /**
@@ -261,6 +261,7 @@ export class ExternalUser {
         if (dataRequest) {
             const dataSharingPayload: DataSharingRequestPayload = {
                 username: dataRequest?.username || false,
+                origin: window.location.origin,
             };
 
             dataSharingRequest = await DataSharingRequest.signRequest(dataSharingPayload, issuer);
@@ -334,7 +335,7 @@ export class ExternalUser {
         if (success === true) {
             if (!response?.accountName) throwError('No account name found in url', SdkErrors.MissingParams);
 
-            const managedRequests = await new RequestManager(requests);
+            const managedRequests = await new RequestsManager(requests);
 
             await managedRequests.verify();
 

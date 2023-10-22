@@ -3,7 +3,7 @@ import { SdkErrors, throwError } from '../util/errors';
 import { LoginRequest, TonomyRequest } from '../util/request';
 import { DataSharingRequest } from '../util';
 
-export class RequestManager {
+export class RequestsManager {
     requests: TonomyRequest[] = [];
 
     constructor(requests: TonomyRequest[] | string[]) {

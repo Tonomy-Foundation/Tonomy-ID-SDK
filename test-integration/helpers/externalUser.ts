@@ -24,7 +24,7 @@ import { objToBase64Url } from '../../src/sdk/util/base64';
 import { VerifiableCredential } from '../../src/sdk/util/ssi/vc';
 import { getAccount } from '../../src/sdk/services/blockchain';
 import { getJwkIssuerFromStorage } from '../../src/sdk/helpers/jwkStorage';
-import { RequestManager } from '../../src/sdk/helpers/requestsManager';
+import { RequestsManager } from '../../src/sdk/helpers/requestsManager';
 import { getLoginRequestFromUrl, onRedirectLogin } from '../../src/sdk/helpers/urls';
 import { ExternalUserLoginTestOptions } from '../externalUser.test';
 
@@ -82,8 +82,8 @@ export async function loginWebsiteOnRedirect(
     if (getSettings().loggerLevel === 'debug')
         console.log('TONOMY_LOGIN_WEBSITE/login: collect external website token from URL');
 
-    const tonomyRequests = await onRedirectLogin();
-    const managedRequests = new RequestManager(tonomyRequests);
+    const externalRequests = await onRedirectLogin();
+    const managedExternalRequests = new RequestsManager(externalRequests);
 
     if (getSettings().loggerLevel === 'debug')
         console.log('TONOMY_LOGIN_WEBSITE/login: create did:jwk and login request');
@@ -103,7 +103,7 @@ export async function loginWebsiteOnRedirect(
     expect(did).toContain('did:jwk:');
     expect(did).not.toEqual(externalWebsiteDid);
 
-    const requests: TonomyRequest[] = [...managedRequests.getRequests(), loginRequest];
+    const requests: TonomyRequest[] = [...managedExternalRequests.getRequests(), loginRequest];
 
     if (dataSharingRequest) requests.push(dataSharingRequest);
 
@@ -191,7 +191,7 @@ export async function loginWebsiteOnCallback(
     if (getSettings().loggerLevel === 'debug')
         console.log('TONOMY_LOGIN_WEBSITE/callback: checking login request of external website');
     const { requests } = await getLoginRequestFromUrl();
-    const managedRequests = new RequestManager(requests);
+    const managedRequests = new RequestsManager(requests);
 
     await managedRequests.verify();
 

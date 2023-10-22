@@ -14,7 +14,7 @@ import { objToBase64Url } from '../util/base64';
 import { getSettings } from '../util/settings';
 import { DID, URL as URLtype } from '../util/ssi/types';
 import { DataSharingRequest } from '../util';
-import { RequestManager } from './requestsManager';
+import { RequestsManager } from './requestsManager';
 
 const idContract = IDContract.Instance;
 
@@ -215,7 +215,7 @@ export class UserApps {
      * @returns {Promise<CheckedRequest[]>} - Array of requests that have been verified and had authorization checked
      */
     async checkLoginRequests(requests: LoginRequest[]): Promise<CheckedRequest[]> {
-        const managedRequests = new RequestManager(requests);
+        const managedRequests = new RequestsManager(requests);
 
         await managedRequests.verify();
 
