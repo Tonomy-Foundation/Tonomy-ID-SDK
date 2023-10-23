@@ -49,7 +49,6 @@ describe('Keymanager class', () => {
         const endTime = new Date();
         const executionTime = endTime.getTime() - startTime.getTime();
 
-        console.log('executionTime', executionTime);
         expect(executionTime).toBeGreaterThan(2000);
     });
 
@@ -60,7 +59,7 @@ describe('Keymanager class', () => {
         const { privateKey: privateKey2 } = await generatePrivateKeyFromPassword(password, salt);
 
         expect(privateKey).toEqual(privateKey2);
-    });
+    }, 10000);
 
     test('generateRandomKeyPair() generates random key', async () => {
         const r1 = generateRandomKeyPair().privateKey;
