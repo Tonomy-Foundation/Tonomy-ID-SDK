@@ -20,13 +20,7 @@ export class RequestsManager {
         const classInitializedRequests: WalletRequest[] = [];
 
         for (const request of checkedRequests) {
-            if (request.getType() === LoginRequest.getType()) {
-                classInitializedRequests.push(new LoginRequest(request));
-            } else if (request.getType() === DataSharingRequest.getType()) {
-                classInitializedRequests.push(new DataSharingRequest(request));
-            } else {
-                throwError('Invalid WalletRequest Type', SdkErrors.InvalidRequestType);
-            }
+            classInitializedRequests.push(castToWalletRequestSubclass(request));
         }
 
         this.requests = classInitializedRequests;
@@ -63,12 +57,12 @@ export class RequestsManager {
     async verify(): Promise<void> {
         for (const request of this.requests) {
             if (!(await request.verify())) {
-                if (request.getType() === LoginRequest.getType()) {
+                if (request instanceof LoginRequest) {
                     throwError(
                         `Invalid request for ${request.getType()} ${request.getPayload().origin}`,
                         SdkErrors.JwtNotValid
                     );
-                } else if (request.getType() === DataSharingRequest.getType()) {
+                } else if (request instanceof DataSharingRequest) {
                     throwError(`Invalid request for ${request.getType()} `, SdkErrors.JwtNotValid);
                 }
             }
@@ -179,5 +173,15 @@ export class RequestsManager {
         } else {
             return [loginRequest];
         }
+    }
+}
+
+export function castToWalletRequestSubclass(request: WalletRequest): WalletRequest {
+    if (request.getType() === LoginRequest.getType()) {
+        return new LoginRequest(request);
+    } else if (request.getType() === DataSharingRequest.getType()) {
+        return new DataSharingRequest(request);
+    } else {
+        throwError('Invalid WalletRequest Type', SdkErrors.InvalidRequestType);
     }
 }

@@ -1,56 +1,166 @@
 import { App } from '../controllers/app';
 import { User } from '../controllers/user';
-import { DataSharingRequest, LoginRequest, WalletRequest } from '../util';
+import {
+    DIDurl,
+    DataSharingRequest,
+    LoginRequest,
+    SdkError,
+    SdkErrors,
+    Serializable,
+    WalletRequest,
+    getSettings,
+    throwError,
+} from '../util';
 import {
     DataRequestResponse,
     DataSharingRequestResponseData,
     LoginRequestResponse,
     WalletRequestResponse,
+    castToWalletRequestResponseSubclass,
 } from '../util/response';
-import { RequestsManager } from './requestsManager';
+import { RequestsManager, castToWalletRequestSubclass } from './requestsManager';
+import { UserApps } from './userApps';
 
-export class TonomyResponseObject {
+type WalletResponseMeta = {
+    app: App;
+    requiresLogin?: boolean;
+};
+
+export class WalletRequestAndResponseObject implements Serializable {
     request: WalletRequest;
-    meta: {
-        app: App;
-    };
-    response: WalletRequestResponse;
+    meta?: WalletResponseMeta;
+    response?: WalletRequestResponse;
 
-    constructor(request: WalletRequest) {
+    constructor(arg: string | WalletRequest | WalletRequestAndResponse) {
+        if (typeof arg === 'string') {
+            const parsed = JSON.parse(arg);
+            const request = new WalletRequest(parsed.request);
+            const response = new WalletRequestResponse(parsed.response);
+
+            this.setRequest(castToWalletRequestSubclass(request));
+            this.setResponse(castToWalletRequestResponseSubclass(response));
+        } else if (arg instanceof WalletRequestAndResponse) {
+            this.setRequest(arg.request);
+            this.setResponse(arg.response);
+        } else if (arg instanceof WalletRequest) {
+            this.setRequest(arg);
+        } else {
+            throwError('Invalid argument type', SdkErrors.InvalidArgumentType);
+        }
+    }
+
+    setRequest(request: WalletRequest) {
         this.request = request;
+    }
+
+    setMeta(meta: { app: App }) {
+        this.meta = meta;
+    }
+
+    setResponse(response: WalletRequestResponse) {
+        this.response = response;
     }
 
     getRequestType() {
         return this.request.getType();
     }
+
+    getRequest() {
+        return this.request;
+    }
+
+    getMeta(): WalletResponseMeta {
+        if (!this.meta) {
+            throwError('Response meta not set', SdkErrors.ResponsesNotFound);
+        }
+
+        return this.meta;
+    }
+
+    getApp() {
+        return this.getMeta().app;
+    }
+
+    getResponse(): WalletRequestResponse {
+        if (!this.response) {
+            throwError('Response not set', SdkErrors.ResponsesNotFound);
+        }
+
+        return this.response;
+    }
+
+    getRequestAndResponse(): WalletRequestAndResponse {
+        return { request: this.getRequest(), response: this.getResponse() };
+    }
+
+    toString(): string {
+        return JSON.stringify(this.getRequestAndResponse());
+    }
+
+    toJSON(): string {
+        return this.toString();
+    }
 }
 
-export class ResponseManager {
-    responses: TonomyResponseObject[] = [];
+export class WalletRequestAndResponse {
+    request: WalletRequest;
+    response: WalletRequestResponse;
+}
 
-    constructor(requestsManager: RequestsManager) {
+export class ResponsesManager {
+    responses: WalletRequestAndResponseObject[] = [];
+
+    constructor(args: RequestsManager) {
+        this.fromRequestsManager(args);
+    }
+
+    fromRequestsManager(requestsManager: RequestsManager) {
         requestsManager.getRequests().forEach((request) => {
-            this.responses.push(new TonomyResponseObject(request));
+            this.responses.push(new WalletRequestAndResponseObject(request));
         });
     }
 
-    async fetchMeta() {
+    async fetchMeta(user: User) {
         // fetch apps for all requests
         await Promise.all(
             this.responses.map(async (response) => {
-                response.meta = {
-                    app: await App.getApp(response.request.getPayload().origin),
+                const meta: WalletResponseMeta = {
+                    app: await App.getApp(response.getRequest().getPayload().origin),
                 };
+
+                // Check if user is logged in with this app (LoginRequest only)
+                if (response.getRequest() instanceof LoginRequest) {
+                    let requiresLogin = true;
+
+                    try {
+                        await UserApps.verifyKeyExistsForApp(await user.getAccountName(), {
+                            publicKey: response.getRequest().getPayload().publicKey,
+                        });
+                        // User already logged in with this key
+                        requiresLogin = false;
+                    } catch (e) {
+                        if (e instanceof SdkError && e.code === SdkErrors.UserNotLoggedInWithThisApp) {
+                            // Never consented
+                            requiresLogin = true;
+                        } else {
+                            throw e;
+                        }
+                    }
+
+                    meta.requiresLogin = requiresLogin;
+                }
+
+                response.setMeta(meta);
             })
         );
 
         // check that all requests from the same issuers have the same apps
-        const issuers = this.responses.map((response) => response.request.getPayload().issuer);
+        const issuers = this.responses.map((response) => response.getRequest().getPayload().issuer);
 
         for (const issuer of issuers) {
             const apps = this.responses
-                .filter((response) => response.request.getPayload().issuer === issuer)
-                .map((response) => response.meta.app);
+                .filter((response) => response.getRequest().getPayload().issuer === issuer)
+                .map((response) => response.getApp());
 
             if (apps.some((app) => !app.accountName.equals(apps[0].accountName))) {
                 throw new Error(
@@ -60,12 +170,20 @@ export class ResponseManager {
         }
     }
 
-    async createResponses(user: User) {
+    async createResponses(user: User): Promise<WalletRequestAndResponse[]> {
+        const issuer = await user.getIssuer();
+
         for (const response of this.responses) {
-            const request = response.request;
+            const request = response.getRequest();
 
             if (request instanceof LoginRequest) {
-                response.response = new LoginRequestResponse(await user.getAccountName());
+                if (response.getMeta().requiresLogin === true) {
+                    await user.apps.loginWithApp(response.getApp(), request.getPayload().publicKey);
+                }
+
+                response.setResponse(
+                    await LoginRequestResponse.signResponse({ accountName: await user.getAccountName() }, issuer)
+                );
             } else if (request instanceof DataSharingRequest) {
                 const data: DataSharingRequestResponseData = {};
 
@@ -73,8 +191,80 @@ export class ResponseManager {
                     data.username = await user.getUsername();
                 }
 
-                response.response = new DataRequestResponse(data);
+                response.setResponse(await DataRequestResponse.signResponse({ data }, issuer));
             }
         }
+
+        return this.exportFinalResponses();
+    }
+
+    exportFinalResponses(): WalletRequestAndResponse[] {
+        return this.responses.map((response) => response.getRequestAndResponse());
+    }
+
+    getAccountsAppRequestsOrThrow(): WalletRequestAndResponseObject[] {
+        const responses = this.responses.filter(
+            (response) => response.getApp().origin === getSettings().ssoWebsiteOrigin
+        );
+
+        if (responses.length === 0) {
+            throwError('No account app requests found', SdkErrors.ResponsesNotFound);
+        }
+
+        return responses;
+    }
+
+    getExternalAppRequestsOrThrow(): WalletRequestAndResponseObject[] {
+        const responses = this.responses.filter(
+            (response) => response.getApp().origin !== getSettings().ssoWebsiteOrigin
+        );
+
+        if (responses.length === 0) {
+            throwError('No external app requests found', SdkErrors.ResponsesNotFound);
+        }
+
+        return responses;
+    }
+
+    getExternalAppRequestsIssuerOrThrow(): DIDurl {
+        return this.getExternalLoginRequestOrThrow().getIssuer();
+    }
+
+    getAccountsLoginRequestOrThrow(): LoginRequest {
+        const requests = this.getAccountsAppRequestsOrThrow().find(
+            (response) => response.getRequest() instanceof LoginRequest
+        );
+
+        if (!requests) {
+            throwError('No external login request found', SdkErrors.ResponsesNotFound);
+        }
+
+        return requests.getRequest();
+    }
+
+    getExternalLoginRequestOrThrow(): LoginRequest {
+        const requests = this.getExternalAppRequestsOrThrow().find(
+            (response) => response.getRequest() instanceof LoginRequest
+        );
+
+        if (!requests) {
+            throwError('No external login request found', SdkErrors.ResponsesNotFound);
+        }
+
+        return requests.getRequest();
+    }
+
+    getRequests(): WalletRequest[] {
+        return this.responses.map((response) => response.getRequest());
+    }
+}
+
+export function castToWalletRequestResponseSubclass(response: WalletRequestResponse): WalletRequestResponse {
+    if (response.getType() === LoginRequestResponse.getType()) {
+        return new LoginRequestResponse(response);
+    } else if (response.getType() === DataRequestResponse.getType()) {
+        return new DataRequestResponse(response);
+    } else {
+        throwError('Invalid WalletRequestResponse Type', SdkErrors.InvalidRequestResponseType);
     }
 }
