@@ -19,7 +19,7 @@ export async function generatePrivateKeyFromPassword(
         salt: Buffer.from(salt.hexString),
         type: argon2.argon2id,
         raw: true,
-        timeCost: 16,
+        timeCost: 40,
         memoryCost: 64 * 1024,
         parallelism: 1,
         hashLength: 32,

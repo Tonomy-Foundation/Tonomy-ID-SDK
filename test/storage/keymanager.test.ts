@@ -49,7 +49,8 @@ describe('Keymanager class', () => {
         const endTime = new Date();
         const executionTime = endTime.getTime() - startTime.getTime();
 
-        expect(executionTime).toBeLessThan(2000);
+        console.log('executionTime', executionTime);
+        expect(executionTime).toBeGreaterThan(2000);
     });
 
     test('generatePrivateKeyFromPassword() password can be verfied', async () => {
