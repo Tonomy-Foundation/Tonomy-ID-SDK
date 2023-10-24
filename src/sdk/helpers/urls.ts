@@ -1,12 +1,11 @@
 /* eslint-disable camelcase */
-import { Name } from '@wharfkit/antelope';
 import { SdkErrors, throwError } from '../util/errors';
-import { TonomyUsername } from '../util/username';
 import { WalletRequest } from '../util/request';
-import { LoginRequestsMessagePayload, LoginResponse } from '../services/communication/message';
+import { LoginRequestsMessagePayload } from '../services/communication/message';
 import { LoginRequestResponseMessagePayload } from '../services/communication/message';
 import { base64UrlToObj } from '../util/base64';
 import { RequestsManager } from './requestsManager';
+import { WalletRequestAndResponse, WalletRequestAndResponseObject } from './responsesManager';
 
 /**
  * Extracts the WalletRequests from the URL
@@ -43,29 +42,35 @@ export function getLoginRequestResponseFromUrl(): LoginRequestResponseMessagePay
     if (parsedPayload.success !== true && parsedPayload.success !== false)
         throwError("success parameter doesn't exists", SdkErrors.MissingParams);
 
-    const { requests } = getLoginRequestFromUrl();
-
     if (parsedPayload.success) {
-        if (!parsedPayload.response?.accountName)
-            throwError("accountName parameter doesn't exists", SdkErrors.MissingParams);
-        const response: LoginResponse = {
-            accountName: Name.from(parsedPayload.response.accountName),
-        };
-
-        if (parsedPayload.response.data?.username) {
-            response.data = {
-                username: new TonomyUsername(parsedPayload.response.data.username),
-            };
+        if (!parsedPayload.responses) {
+            throw new Error('LoginRequestsResponseMessage must have a responses property');
         }
 
+        const responses: WalletRequestAndResponse[] = parsedPayload.responses.map((response: string) =>
+            new WalletRequestAndResponseObject(response).getRequestAndResponse()
+        );
+
         return {
-            success: true,
-            requests,
-            response,
+            ...parsedPayload,
+            response: responses,
         };
     } else {
-        if (!parsedPayload.error) throwError("error parameter doesn't exists", SdkErrors.MissingParams);
-        return { success: false, requests, error: parsedPayload.error };
+        if (!parsedPayload.error) {
+            throw new Error('LoginRequestsResponseMessage must have an error property');
+        }
+
+        const error = parsedPayload.error;
+        const requests = error.requests.map((request: string) => new WalletRequest(request));
+        const requestsManager = new RequestsManager(requests);
+
+        return {
+            ...parsedPayload,
+            error: {
+                ...error,
+                requests: requestsManager.getRequests(),
+            },
+        };
     }
 }
 

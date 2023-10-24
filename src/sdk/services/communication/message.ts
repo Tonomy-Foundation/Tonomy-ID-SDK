@@ -1,15 +1,12 @@
 import { Issuer } from '@tonomy/did-jwt-vc';
 import { DIDurl, URL } from '../../util/ssi/types';
 import { VerifiableCredentialWithType, VCWithTypeType } from '../../util/ssi/vc';
-import { DataSharingRequest, LoginRequest } from '../../util/request';
 import { WalletRequest } from '../../util';
 import { TonomyUsername } from '../../util/username';
 import { Name } from '@wharfkit/antelope';
-import { SdkErrors, throwError } from '../../util/errors';
+import { SdkErrors } from '../../util/errors';
 import { WalletRequestAndResponse, WalletRequestAndResponseObject } from '../../helpers/responsesManager';
-import { WalletRequestResponse } from '../../util/response';
 import { RequestsManager } from '../../helpers/requestsManager';
-import { ResponseManager } from '../../../../build/sdk/types/sdk';
 
 /**
  * A message that can be sent between two Tonomy identities

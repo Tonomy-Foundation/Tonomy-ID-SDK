@@ -1,14 +1,12 @@
 import { App } from '../controllers/app';
 import { User } from '../controllers/user';
 import {
-    DIDurl,
     DataSharingRequest,
     LoginRequest,
     SdkError,
     SdkErrors,
     Serializable,
     WalletRequest,
-    getSettings,
     throwError,
 } from '../util';
 import {
@@ -16,7 +14,6 @@ import {
     DataSharingRequestResponseData,
     LoginRequestResponse,
     WalletRequestResponse,
-    castToWalletRequestResponseSubclass,
 } from '../util/response';
 import { RequestsManager, castToWalletRequestSubclass } from './requestsManager';
 import { UserApps } from './userApps';
@@ -110,8 +107,12 @@ export class WalletRequestAndResponse {
 export class ResponsesManager {
     responses: WalletRequestAndResponseObject[] = [];
 
-    constructor(args: RequestsManager) {
-        this.fromRequestsManager(args);
+    constructor(args: RequestsManager | WalletRequestAndResponse[]) {
+        if (args instanceof RequestsManager) {
+            this.fromRequestsManager(args);
+        } else {
+            this.responses = args.map((response) => new WalletRequestAndResponseObject(response));
+        }
     }
 
     fromRequestsManager(requestsManager: RequestsManager) {
@@ -198,26 +199,20 @@ export class ResponsesManager {
         return this.exportFinalResponses();
     }
 
+    async verify(): Promise<void> {
+        await Promise.all(
+            this.responses.map(async (response) => {
+                return await Promise.all([response.getRequest().verify(), response.getResponse().verify()]);
+            })
+        );
+    }
+
     exportFinalResponses(): WalletRequestAndResponse[] {
         return this.responses.map((response) => response.getRequestAndResponse());
     }
 
-    getAccountsAppRequestsOrThrow(): WalletRequestAndResponseObject[] {
-        const responses = this.responses.filter(
-            (response) => response.getApp().origin === getSettings().ssoWebsiteOrigin
-        );
-
-        if (responses.length === 0) {
-            throwError('No account app requests found', SdkErrors.ResponsesNotFound);
-        }
-
-        return responses;
-    }
-
-    getExternalAppRequestsOrThrow(): WalletRequestAndResponseObject[] {
-        const responses = this.responses.filter(
-            (response) => response.getApp().origin !== getSettings().ssoWebsiteOrigin
-        );
+    getResponsesWithSameOriginOrThrow(): WalletRequestAndResponseObject[] {
+        const responses = this.responses.filter((response) => response.getApp().origin === window.location.origin);
 
         if (responses.length === 0) {
             throwError('No external app requests found', SdkErrors.ResponsesNotFound);
@@ -226,32 +221,22 @@ export class ResponsesManager {
         return responses;
     }
 
-    getExternalAppRequestsIssuerOrThrow(): DIDurl {
-        return this.getExternalLoginRequestOrThrow().getIssuer();
-    }
-
-    getAccountsLoginRequestOrThrow(): LoginRequest {
-        const requests = this.getAccountsAppRequestsOrThrow().find(
+    getLoginResponsesWithSameOriginOrThrow(): WalletRequestAndResponseObject {
+        const response = this.getResponsesWithSameOriginOrThrow().find(
             (response) => response.getRequest() instanceof LoginRequest
         );
 
-        if (!requests) {
+        if (!response) {
             throwError('No external login request found', SdkErrors.ResponsesNotFound);
         }
 
-        return requests.getRequest();
+        return response;
     }
 
-    getExternalLoginRequestOrThrow(): LoginRequest {
-        const requests = this.getExternalAppRequestsOrThrow().find(
-            (response) => response.getRequest() instanceof LoginRequest
+    getDataSharingResponseWithSame(): WalletRequestAndResponseObject | undefined {
+        return this.getResponsesWithSameOriginOrThrow().find(
+            (response) => response.getRequest() instanceof DataSharingRequest
         );
-
-        if (!requests) {
-            throwError('No external login request found', SdkErrors.ResponsesNotFound);
-        }
-
-        return requests.getRequest();
     }
 
     getRequests(): WalletRequest[] {

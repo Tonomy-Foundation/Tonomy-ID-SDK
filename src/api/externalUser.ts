@@ -20,13 +20,13 @@ import {
     LinkAuthRequestResponseMessage,
     LoginRequestsMessagePayload,
     Message,
+    ResponsesManager,
 } from '../sdk';
 import { objToBase64Url } from '../sdk/util/base64';
 import { VerifiableCredential } from '../sdk/util/ssi/vc';
 import { DIDurl } from '../sdk/util/ssi/types';
 import { Signer, createKeyManagerSigner, transact } from '../sdk/services/blockchain/eosio/transaction';
 import { createJwkIssuerAndStore } from '../sdk/helpers/jwkStorage';
-import { RequestsManager } from '../sdk/helpers/requestsManager';
 import { getLoginRequestResponseFromUrl } from '../sdk/helpers/urls';
 
 /**
@@ -330,18 +330,17 @@ export class ExternalUser {
         if (!options.checkKeys) options.checkKeys = true;
         const keyManager = options.keyManager || new JsKeyManager();
 
-        const { success, error, requests, response } = getLoginRequestResponseFromUrl();
+        const { success, error, response } = getLoginRequestResponseFromUrl();
 
         if (success === true) {
-            if (!response?.accountName) throwError('No account name found in url', SdkErrors.MissingParams);
+            if (!response) throwError('No response found in url', SdkErrors.MissingParams);
+            const managedResponses = new ResponsesManager(response);
 
-            const managedRequests = await new RequestsManager(requests);
+            await managedResponses.verify();
 
-            await managedRequests.verify();
-
-            const loginRequest = managedRequests.getLoginRequestWithSameOriginOrThrow();
+            const loginResponse = managedResponses.getLoginResponsesWithSameOriginOrThrow();
             const keyFromStorage = await keyManager.getKey({ level: KeyManagerLevel.BROWSER_LOCAL_STORAGE });
-            const payload = loginRequest.getPayload();
+            const payload = loginResponse.getRequest().getPayload();
 
             if (payload.publicKey.toString() !== keyFromStorage.toString()) {
                 throwError('Key in request does not match', SdkErrors.KeyNotFound);
@@ -349,17 +348,20 @@ export class ExternalUser {
 
             const myStorageFactory = options.storageFactory || browserStorageFactory;
             const externalUser = new ExternalUser(keyManager, myStorageFactory);
+            const accountName = loginResponse.getResponse().getPayload().accountName;
 
             if (options.checkKeys) {
-                const permission = await UserApps.verifyKeyExistsForApp(response.accountName, { keyManager });
+                const permission = await UserApps.verifyKeyExistsForApp(accountName, { keyManager });
 
                 await externalUser.setAppPermission(permission);
             }
 
-            await externalUser.setAccountName(response.accountName);
+            await externalUser.setAccountName(accountName);
 
-            if (response.data?.username) {
-                await externalUser.setUsername(response.data.username);
+            const dataSharingResponse = managedResponses.getDataSharingResponseWithSame();
+
+            if (dataSharingResponse && dataSharingResponse.getResponse().getPayload().data.username) {
+                await externalUser.setUsername(dataSharingResponse.getResponse().getPayload().data.username);
             }
 
             return externalUser;

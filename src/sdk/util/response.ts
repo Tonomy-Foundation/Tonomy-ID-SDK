@@ -2,7 +2,6 @@ import { Name } from '@wharfkit/antelope';
 import { TonomyUsername } from './username';
 import { VCWithTypeType, VerifiableCredentialOptions, VerifiableCredentialWithType } from './ssi/vc';
 import { Issuer } from '@tonomy/did-jwt-vc';
-import { SdkErrors, throwError } from './errors';
 
 export class WalletRequestResponse<T extends object = any> extends VerifiableCredentialWithType<T> {
     protected static type = 'WalletRequestResponse';
