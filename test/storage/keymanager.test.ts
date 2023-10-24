@@ -33,7 +33,7 @@ describe('Keymanager class', () => {
         expect(user.savePassword).toBeDefined();
     });
 
-    test('generatePrivateKeyFromPassword() returns privatekey', async () => {
+    test('generatePrivateKeyFromPassword() returns privateKey', async () => {
         const password = 'above day fever lemon piano sport';
         const { privateKey, salt } = await generatePrivateKeyFromPassword(password);
 
