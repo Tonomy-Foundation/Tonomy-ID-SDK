@@ -358,7 +358,7 @@ export class ExternalUser {
 
             await externalUser.setAccountName(accountName);
 
-            const dataSharingResponse = managedResponses.getDataSharingResponseWithSame();
+            const dataSharingResponse = managedResponses.getDataSharingResponseWithSameOrigin();
 
             if (dataSharingResponse && dataSharingResponse.getResponse().getPayload().data.username) {
                 await externalUser.setUsername(dataSharingResponse.getResponse().getPayload().data.username);

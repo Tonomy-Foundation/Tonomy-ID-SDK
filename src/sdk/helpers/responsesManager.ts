@@ -7,6 +7,7 @@ import {
     SdkErrors,
     Serializable,
     WalletRequest,
+    getSettings,
     throwError,
 } from '../util';
 import {
@@ -233,7 +234,19 @@ export class ResponsesManager {
         return response;
     }
 
-    getDataSharingResponseWithSame(): WalletRequestAndResponseObject | undefined {
+    getLoginResponseWithDifferentOriginOrThrow(): WalletRequestAndResponseObject {
+        const response = this.getResponsesWithDifferentOrigin().find(
+            (response) => response.getRequest() instanceof LoginRequest
+        );
+
+        if (!response) {
+            throwError('No external login request found', SdkErrors.ResponsesNotFound);
+        }
+
+        return response;
+    }
+
+    getDataSharingResponseWithSameOrigin(): WalletRequestAndResponseObject | undefined {
         return this.getResponsesWithSameOriginOrThrow().find(
             (response) => response.getRequest() instanceof DataSharingRequest
         );
@@ -241,6 +254,19 @@ export class ResponsesManager {
 
     getRequests(): WalletRequest[] {
         return this.responses.map((response) => response.getRequest());
+    }
+
+    getResponsesWithDifferentOrigin(): WalletRequestAndResponseObject[] {
+        return this.responses.filter((response) => response.getApp().origin !== window.location.origin);
+    }
+
+    getExternalAppRequestsIssuerOrThrow(): string {
+        const externalLoginResponse = this.responses.find(
+            (response) => (response.getRequest().getPayload().origin = getSettings().ssoWebsiteOrigin)
+        );
+
+        if (!externalLoginResponse) throwError('No external login request found', SdkErrors.ResponsesNotFound);
+        return externalLoginResponse.getRequest().getPayload().issuer;
     }
 }
 

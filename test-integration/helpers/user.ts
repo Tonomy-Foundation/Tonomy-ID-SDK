@@ -9,6 +9,7 @@ import {
     IdentifyMessage,
     AuthenticationMessage,
     LoginRequestsMessage,
+    ResponsesManager,
 } from '../../src/sdk/index';
 import { jsStorageFactory } from '../../src/cli/bootstrap/jsstorage';
 import { generatePrivateKeyFromPassword } from '../../src/cli/bootstrap/keys';
@@ -118,29 +119,15 @@ export async function setupLoginRequestSubscriber(
 
             expect(managedRequests.getRequests().length).toBe(testOptions.dataRequest ? 4 : 3);
 
-            const acceptArray: { app?: App; request: WalletRequest; requiresLogin?: boolean }[] = [];
-
-            let receiverDid = '';
-
-            for (const request of requests) {
-                if (request instanceof LoginRequest) {
-                    const payload = request.getPayload();
-
-                    if (payload.origin === tonomyLoginOrigin) receiverDid = request.getIssuer();
-                    const loginApp = await App.getApp(payload.origin);
-
-                    acceptArray.push({ app: loginApp, request, requiresLogin: true });
-                } else if (request instanceof DataSharingRequest) {
-                    acceptArray.push({ request });
-                }
-            }
+            const managedResponses = new ResponsesManager(managedRequests);
+            const receiverDid = managedResponses.getExternalAppRequestsIssuerOrThrow();
 
             expect(receiverDid).toBe(tonomyLoginDid);
             expect(receiverDid).toBe(loginRequestMessage.getSender());
 
             if (getSettings().loggerLevel === 'debug')
                 console.log('TONOMY_ID/SSO: accepting login requests and sending confirmation to Tonomy Login Website');
-            await user.apps.acceptLoginRequest(acceptArray, 'browser', { messageRecipient: receiverDid });
+            await user.apps.acceptLoginRequest(managedResponses, 'browser', { messageRecipient: receiverDid });
 
             resolve(true);
         }, LoginRequestsMessage.getType());

@@ -18,6 +18,7 @@ import {
     WalletRequest,
     LoginRequestsMessagePayload,
     OnPressLoginOptions,
+    ResponsesManager,
 } from '../../src/sdk';
 import { ExternalUser, LoginWithTonomyMessages } from '../../src/api/externalUser';
 import { objToBase64Url } from '../../src/sdk/util/base64';
@@ -25,7 +26,7 @@ import { VerifiableCredential } from '../../src/sdk/util/ssi/vc';
 import { getAccount } from '../../src/sdk/services/blockchain';
 import { getJwkIssuerFromStorage } from '../../src/sdk/helpers/jwkStorage';
 import { RequestsManager } from '../../src/sdk/helpers/requestsManager';
-import { getLoginRequestFromUrl, onRedirectLogin } from '../../src/sdk/helpers/urls';
+import { getLoginRequestFromUrl, getLoginRequestResponseFromUrl, onRedirectLogin } from '../../src/sdk/helpers/urls';
 import { ExternalUserLoginTestOptions } from '../externalUser.test';
 
 export async function externalWebsiteUserPressLoginToTonomyButton(
@@ -190,22 +191,19 @@ export async function loginWebsiteOnCallback(
 
     if (getSettings().loggerLevel === 'debug')
         console.log('TONOMY_LOGIN_WEBSITE/callback: checking login request of external website');
-    const { requests } = await getLoginRequestFromUrl();
-    const managedRequests = new RequestsManager(requests);
+    const { response } = await getLoginRequestResponseFromUrl();
 
-    await managedRequests.verify();
+    if (!response) throw new Error('Login request response not found');
+    const managedResponses = new ResponsesManager(response);
 
-    const externalLoginRequest = managedRequests.getLoginRequestWithDifferentOriginOrThrow();
+    await managedResponses.verify();
 
-    expect(externalLoginRequest).toBeDefined();
+    const externalLoginRequest = managedResponses.getLoginResponseWithDifferentOriginOrThrow().getRequest();
 
     if (getSettings().loggerLevel === 'debug')
         console.log('TONOMY_LOGIN_WEBSITE/callback: redirecting to external website');
 
-    const username = await externalUser.getUsername();
-    const accountName = await externalUser.getAccountName();
-
-    return { redirectJwt: externalLoginRequest, username, accountName };
+    return { externalLoginRequest, managedResponses };
 }
 
 export async function externalWebsiteOnCallback(
