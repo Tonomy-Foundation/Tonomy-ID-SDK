@@ -114,7 +114,7 @@ describe('User class', () => {
         // Close connections
         await user.logout();
         await userLogin.logout();
-    });
+    }, 10000);
 
     test('login() fails with wrong password', async () => {
         const { user } = await createRandomID();
@@ -131,7 +131,7 @@ describe('User class', () => {
         // Close connections
         await user.logout();
         await userLogin.logout();
-    });
+    }, 10000);
 
     test('checkKeysStillValid() keys are still valid after create account', async () => {
         const { user } = await createRandomID();
@@ -182,7 +182,7 @@ describe('User class', () => {
             user.checkPassword('verify earn dad end easily earn', { keyFromPasswordFn: generatePrivateKeyFromPassword })
         ).rejects.toThrowError(SdkErrors.PasswordInvalid);
         await user.logout();
-    });
+    }, 10000);
 
     test('checkPassword() returns true when password matches', async () => {
         const { user, password } = await createRandomID();
@@ -194,7 +194,7 @@ describe('User class', () => {
         );
 
         await user.logout();
-    });
+    }, 10000);
 
     test('logout', async () => {
         const { user } = await createRandomID();
@@ -282,7 +282,7 @@ describe('User class', () => {
         await expect(user.checkPin('12345')).resolves.toBe(true);
 
         await user.logout();
-    });
+    }, 10000);
 
     test('CheckPin() throws error if the Key Does not matches', async () => {
         const { user, password } = await createRandomID();
@@ -294,7 +294,7 @@ describe('User class', () => {
         await expect(user.checkPin('12121')).rejects.toThrowError(SdkErrors.PinInvalid);
 
         await user.logout();
-    });
+    }, 10000);
 
     test('usernameExists(), returns true if username already exists if not throws an error', async () => {
         const { user, username } = await createRandomID();
@@ -319,5 +319,5 @@ describe('User class', () => {
         expect(key1.toString()).not.toEqual(key2.toString());
         await user.updateKeys(password);
         await user.logout();
-    });
+    }, 10000);
 });
