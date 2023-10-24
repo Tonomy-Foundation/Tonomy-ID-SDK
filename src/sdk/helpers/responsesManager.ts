@@ -115,13 +115,13 @@ export class ResponsesManager {
         }
     }
 
-    fromRequestsManager(requestsManager: RequestsManager) {
+    fromRequestsManager(requestsManager: RequestsManager): void {
         requestsManager.getRequests().forEach((request) => {
             this.responses.push(new WalletRequestAndResponseObject(request));
         });
     }
 
-    async fetchMeta(user: User) {
+    async fetchMeta(user: User): Promise<void> {
         // fetch apps for all requests
         await Promise.all(
             this.responses.map(async (response) => {

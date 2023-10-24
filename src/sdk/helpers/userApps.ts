@@ -98,7 +98,6 @@ export class UserApps {
      */
     async acceptLoginRequest(
         responsesManager: ResponsesManager,
-        // requestsWithMetadata: { request: WalletRequest; app?: App; requiresLogin?: boolean }[],
         platform: 'mobile' | 'browser',
         options: {
             callbackOrigin?: URLtype;
@@ -106,34 +105,11 @@ export class UserApps {
             messageRecipient?: DID;
         }
     ): Promise<void | URLtype> {
-        await responsesManager.createResponses(this.user);
-        // const accountName = await this.user.getAccountName();
-
-        // const response: LoginResponse = {
-        //     accountName,
-        // };
-
-        // for (const requestWithMeta of requestsWithMetadata) {
-        //     if (requestWithMeta.request.getType() === LoginRequest.getType()) {
-        //         const { app, request, requiresLogin } = requestWithMeta;
-
-        //         if (!app) throwError('Missing app', SdkErrors.MissingParams);
-
-        //         if (requiresLogin ?? true) {
-        //             await this.user.apps.loginWithApp(app, request.getPayload().publicKey);
-        //         }
-        //     } else if (requestWithMeta.request.getType() === DataSharingRequest.getType()) {
-        //         if (requestWithMeta.request.getPayload().username === true) {
-        //             const username = await this.user.getUsername();
-
-        //             response.data = { username };
-        //         }
-        //     }
-        // }
+        const finalResponses = await responsesManager.createResponses(this.user);
 
         const responsePayload: LoginRequestResponseMessagePayload = {
             success: true,
-            response: responsesManager.exportFinalResponses(),
+            response: finalResponses,
         };
 
         if (platform === 'mobile') {
