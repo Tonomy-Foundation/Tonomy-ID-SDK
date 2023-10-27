@@ -84,7 +84,7 @@ export class WalletRequestAndResponseObject implements Serializable {
         return this.meta;
     }
 
-    getApp() {
+    getAppOrThrow() {
         return this.getMetaOrThrow().app;
     }
 
@@ -198,7 +198,7 @@ export class ResponsesManager {
         for (const issuer of issuers) {
             const apps = this.responses
                 .filter((response) => response.getRequest().getIssuer() === issuer)
-                .map((response) => response.getApp());
+                .map((response) => response.getAppOrThrow());
 
             if (apps.some((app) => !app.accountName.equals(apps[0].accountName))) {
                 throw new Error(
@@ -216,7 +216,7 @@ export class ResponsesManager {
 
             if (request instanceof LoginRequest) {
                 if (response.getMetaOrThrow().requiresLogin === true) {
-                    await user.apps.loginWithApp(response.getApp(), request.getPayload().publicKey);
+                    await user.apps.loginWithApp(response.getAppOrThrow(), request.getPayload().publicKey);
                 }
 
                 response.setResponse(
@@ -249,7 +249,9 @@ export class ResponsesManager {
     }
 
     getResponsesWithSameOriginOrThrow(): WalletRequestAndResponseObject[] {
-        const responses = this.responses.filter((response) => response.getApp().origin === window.location.origin);
+        const responses = this.responses.filter(
+            (response) => response.getAppOrThrow().origin === window.location.origin
+        );
 
         if (responses.length === 0) {
             throwError('No external app requests found', SdkErrors.ResponsesNotFound);
@@ -293,10 +295,14 @@ export class ResponsesManager {
     }
 
     getResponsesWithDifferentOrigin(): WalletRequestAndResponseObject[] {
-        return this.responses.filter((response) => response.getApp().origin !== window.location.origin);
+        return this.responses.filter((response) => response.getAppOrThrow().origin !== window.location.origin);
     }
 
     getAccountsLoginRequestsIssuerOrThrow(): string {
+        return this.getAccountsLoginRequestOrThrow().getIssuer();
+    }
+
+    getAccountsLoginRequestOrThrow(): LoginRequest {
         const externalLoginResponse = this.responses.find(
             (response) =>
                 response.getRequest() instanceof LoginRequest &&
@@ -304,7 +310,18 @@ export class ResponsesManager {
         );
 
         if (!externalLoginResponse) throwError('No external login request found', SdkErrors.ResponsesNotFound);
-        return externalLoginResponse.getRequest().getIssuer();
+        return externalLoginResponse.getRequest();
+    }
+
+    getExternalLoginResponseOrThrow(): WalletRequestAndResponseObject {
+        const externalLoginResponse = this.responses.find(
+            (response) =>
+                response.getRequest() instanceof LoginRequest &&
+                response.getRequest().getPayload().origin !== getSettings().ssoWebsiteOrigin
+        );
+
+        if (!externalLoginResponse) throwError('No external login request found', SdkErrors.ResponsesNotFound);
+        return externalLoginResponse;
     }
 }
 
