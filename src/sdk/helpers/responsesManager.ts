@@ -1,5 +1,4 @@
 import { Name } from '@wharfkit/antelope';
-import { ExternalUser } from '..';
 import { App } from '../controllers/app';
 import { User } from '../controllers/user';
 import {
@@ -39,9 +38,14 @@ export class WalletRequestAndResponseObject implements Serializable {
 
             this.setRequest(castToWalletRequestSubclass(request));
             this.setResponse(castToWalletRequestResponseSubclass(response));
-        } else if (arg instanceof WalletRequestAndResponse || WalletRequestAndResponse.isInstance(arg)) {
+        } else if (arg instanceof WalletRequestAndResponse) {
             this.setRequest(castToWalletRequestSubclass(arg.request));
             this.setResponse(castToWalletRequestResponseSubclass(arg.response));
+        } else if (WalletRequestAndResponse.isInstance(arg)) {
+            this.setRequest(castToWalletRequestSubclass((arg as unknown as WalletRequestAndResponse).request));
+            this.setResponse(
+                castToWalletRequestResponseSubclass((arg as unknown as WalletRequestAndResponse).response)
+            );
         } else if (arg instanceof WalletRequest) {
             this.setRequest(castToWalletRequestSubclass(arg));
         } else if (WalletRequestAndResponseStrings.isInstance(arg)) {
