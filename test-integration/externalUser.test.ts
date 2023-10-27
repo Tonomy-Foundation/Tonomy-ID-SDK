@@ -301,7 +301,7 @@ describe('Login to external website', () => {
 
         const EXTERNAL_WEBSITE_loginRequestResponseMessagePayload: LoginRequestResponseMessagePayload = {
             success: true,
-            response: TONOMY_LOGIN_WEBSITE_managedResponses.getResponsesWithDifferentOrigin().map((response) =>
+            response: TONOMY_LOGIN_WEBSITE_managedResponses.getResponsesWithDifferentOriginOrThrow().map((response) =>
                 response.getRequestAndResponse()
             ),
         };

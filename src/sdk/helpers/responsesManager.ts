@@ -273,7 +273,7 @@ export class ResponsesManager {
     }
 
     getLoginResponseWithDifferentOriginOrThrow(): WalletRequestAndResponseObject {
-        const response = this.getResponsesWithDifferentOrigin().find(
+        const response = this.getResponsesWithDifferentOriginOrThrow().find(
             (response) => response.getRequest() instanceof LoginRequest
         );
 
@@ -294,7 +294,7 @@ export class ResponsesManager {
         return this.responses.map((response) => response.getRequest());
     }
 
-    getResponsesWithDifferentOrigin(): WalletRequestAndResponseObject[] {
+    getResponsesWithDifferentOriginOrThrow(): WalletRequestAndResponseObject[] {
         return this.responses.filter((response) => response.getAppOrThrow().origin !== window.location.origin);
     }
 
