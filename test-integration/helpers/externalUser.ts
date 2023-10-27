@@ -197,6 +197,7 @@ export async function loginWebsiteOnCallback(
     const managedResponses = new ResponsesManager(response);
 
     await managedResponses.verify();
+    await managedResponses.fetchMeta({ accountName: await externalUser.getAccountName() });
 
     const externalLoginRequest = managedResponses.getLoginResponseWithDifferentOriginOrThrow().getRequest();
 

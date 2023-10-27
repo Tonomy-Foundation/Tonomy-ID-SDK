@@ -197,13 +197,16 @@ export class LoginRequestResponseMessage extends Message<LoginRequestResponseMes
         super(vc);
         const payload = this.getVc().getPayload().vc.credentialSubject.payload;
 
+        // console.log('LoginRequestResponseMessage', payload);
+
         if (payload.success) {
-            if (!payload.responses) {
-                throw new Error('LoginRequestsResponseMessage must have a responses property');
+            if (!payload.response) {
+                throw new Error('LoginRequestsResponseMessage must have a response property');
             }
 
-            const responses: WalletRequestAndResponse[] = payload.responses.map((response: string) =>
-                new WalletRequestAndResponseObject(response).getRequestAndResponse()
+            const responses: WalletRequestAndResponse[] = payload.response.map(
+                (response: { request: string; response: string }) =>
+                    new WalletRequestAndResponseObject(response).getRequestAndResponse()
             );
 
             this.decodedPayload = {

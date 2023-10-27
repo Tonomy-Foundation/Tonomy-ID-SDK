@@ -43,11 +43,11 @@ export function getLoginRequestResponseFromUrl(): LoginRequestResponseMessagePay
         throwError("success parameter doesn't exists", SdkErrors.MissingParams);
 
     if (parsedPayload.success) {
-        if (!parsedPayload.responses) {
+        if (!parsedPayload.response) {
             throw new Error('LoginRequestsResponseMessage must have a responses property');
         }
 
-        const responses: WalletRequestAndResponse[] = parsedPayload.responses.map((response: string) =>
+        const responses: WalletRequestAndResponse[] = parsedPayload.response.map((response: string) =>
             new WalletRequestAndResponseObject(response).getRequestAndResponse()
         );
 

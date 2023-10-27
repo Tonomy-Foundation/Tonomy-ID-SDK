@@ -337,6 +337,7 @@ export class ExternalUser {
             const managedResponses = new ResponsesManager(response);
 
             await managedResponses.verify();
+            await managedResponses.fetchMeta();
 
             const loginResponse = managedResponses.getLoginResponsesWithSameOriginOrThrow();
             const keyFromStorage = await keyManager.getKey({ level: KeyManagerLevel.BROWSER_LOCAL_STORAGE });

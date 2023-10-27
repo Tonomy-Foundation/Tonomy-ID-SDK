@@ -1,3 +1,5 @@
+import { Name } from '@wharfkit/antelope';
+import { ExternalUser } from '..';
 import { App } from '../controllers/app';
 import { User } from '../controllers/user';
 import {
@@ -29,7 +31,7 @@ export class WalletRequestAndResponseObject implements Serializable {
     meta?: WalletResponseMeta;
     response?: WalletRequestResponse;
 
-    constructor(arg: string | WalletRequest | WalletRequestAndResponse) {
+    constructor(arg: string | WalletRequest | WalletRequestAndResponse | WalletRequestAndResponseStrings) {
         if (typeof arg === 'string') {
             const parsed = JSON.parse(arg);
             const request = new WalletRequest(parsed.request);
@@ -37,11 +39,14 @@ export class WalletRequestAndResponseObject implements Serializable {
 
             this.setRequest(castToWalletRequestSubclass(request));
             this.setResponse(castToWalletRequestResponseSubclass(response));
-        } else if (arg instanceof WalletRequestAndResponse) {
-            this.setRequest(arg.request);
-            this.setResponse(arg.response);
+        } else if (arg instanceof WalletRequestAndResponse || WalletRequestAndResponse.isInstance(arg)) {
+            this.setRequest(castToWalletRequestSubclass(arg.request));
+            this.setResponse(castToWalletRequestResponseSubclass(arg.response));
         } else if (arg instanceof WalletRequest) {
-            this.setRequest(arg);
+            this.setRequest(castToWalletRequestSubclass(arg));
+        } else if (WalletRequestAndResponseStrings.isInstance(arg)) {
+            this.setRequest(castToWalletRequestSubclass(new WalletRequest(arg.request)));
+            this.setResponse(castToWalletRequestResponseSubclass(new WalletRequestResponse(arg.response)));
         } else {
             throwError('Invalid argument type', SdkErrors.InvalidArgumentType);
         }
@@ -67,7 +72,7 @@ export class WalletRequestAndResponseObject implements Serializable {
         return this.request;
     }
 
-    getMeta(): WalletResponseMeta {
+    getMetaOrThrow(): WalletResponseMeta {
         if (!this.meta) {
             throwError('Response meta not set', SdkErrors.ResponsesNotFound);
         }
@@ -76,7 +81,7 @@ export class WalletRequestAndResponseObject implements Serializable {
     }
 
     getApp() {
-        return this.getMeta().app;
+        return this.getMetaOrThrow().app;
     }
 
     getResponse(): WalletRequestResponse {
@@ -103,6 +108,31 @@ export class WalletRequestAndResponseObject implements Serializable {
 export class WalletRequestAndResponse {
     request: WalletRequest;
     response: WalletRequestResponse;
+
+    static isInstance(arg: any): boolean {
+        return (
+            arg instanceof Object &&
+            arg.request &&
+            arg.request instanceof WalletRequest &&
+            arg.response &&
+            arg.response instanceof WalletRequestResponse
+        );
+    }
+}
+
+export class WalletRequestAndResponseStrings {
+    request: string;
+    response: string;
+
+    static isInstance(arg: any): boolean {
+        return (
+            arg instanceof Object &&
+            arg.request &&
+            typeof arg.request === 'string' &&
+            arg.response &&
+            typeof arg.response === 'string'
+        );
+    }
 }
 
 export class ResponsesManager {
@@ -122,7 +152,7 @@ export class ResponsesManager {
         });
     }
 
-    async fetchMeta(user: User): Promise<void> {
+    async fetchMeta(options?: { accountName?: Name }): Promise<void> {
         // fetch apps for all requests
         await Promise.all(
             this.responses.map(async (response) => {
@@ -131,11 +161,11 @@ export class ResponsesManager {
                 };
 
                 // Check if user is logged in with this app (LoginRequest only)
-                if (response.getRequest() instanceof LoginRequest) {
+                if (options?.accountName && response.getRequest() instanceof LoginRequest) {
                     let requiresLogin = true;
 
                     try {
-                        await UserApps.verifyKeyExistsForApp(await user.getAccountName(), {
+                        await UserApps.verifyKeyExistsForApp(options.accountName, {
                             publicKey: response.getRequest().getPayload().publicKey,
                         });
                         // User already logged in with this key
@@ -157,11 +187,13 @@ export class ResponsesManager {
         );
 
         // check that all requests from the same issuers have the same apps
-        const issuers = this.responses.map((response) => response.getRequest().getPayload().issuer);
+        const issuers = new Set<string>();
+
+        this.responses.map((response) => issuers.add(response.getRequest().getIssuer()));
 
         for (const issuer of issuers) {
             const apps = this.responses
-                .filter((response) => response.getRequest().getPayload().issuer === issuer)
+                .filter((response) => response.getRequest().getIssuer() === issuer)
                 .map((response) => response.getApp());
 
             if (apps.some((app) => !app.accountName.equals(apps[0].accountName))) {
@@ -179,7 +211,7 @@ export class ResponsesManager {
             const request = response.getRequest();
 
             if (request instanceof LoginRequest) {
-                if (response.getMeta().requiresLogin === true) {
+                if (response.getMetaOrThrow().requiresLogin === true) {
                     await user.apps.loginWithApp(response.getApp(), request.getPayload().publicKey);
                 }
 
@@ -260,13 +292,15 @@ export class ResponsesManager {
         return this.responses.filter((response) => response.getApp().origin !== window.location.origin);
     }
 
-    getExternalAppRequestsIssuerOrThrow(): string {
+    getAccountsLoginRequestsIssuerOrThrow(): string {
         const externalLoginResponse = this.responses.find(
-            (response) => (response.getRequest().getPayload().origin = getSettings().ssoWebsiteOrigin)
+            (response) =>
+                response.getRequest() instanceof LoginRequest &&
+                response.getRequest().getPayload().origin === getSettings().ssoWebsiteOrigin
         );
 
         if (!externalLoginResponse) throwError('No external login request found', SdkErrors.ResponsesNotFound);
-        return externalLoginResponse.getRequest().getPayload().issuer;
+        return externalLoginResponse.getRequest().getIssuer();
     }
 }
 

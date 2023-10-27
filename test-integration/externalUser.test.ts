@@ -17,6 +17,7 @@ import {
     LoginRequestResponseMessagePayload,
     LoginResponse,
     ResponsesManager,
+    setSettings,
 } from '../src/sdk/index';
 import URL from 'jsdom-url';
 import { JsKeyManager } from '../src/sdk/storage/jsKeyManager';
@@ -47,7 +48,7 @@ import {
 import { createStorageFactory } from './helpers/storageFactory';
 import { objToBase64Url } from '../src/sdk/util/base64';
 import { createSigner, defaultAntelopePrivateKey } from '../src/sdk/services/blockchain';
-import { setTestSettings } from './helpers/settings';
+import { setTestSettings, settings } from './helpers/settings';
 
 export type ExternalUserLoginTestOptions = {
     dataRequest: boolean;
@@ -96,6 +97,11 @@ describe('Login to external website', () => {
         externalApp = await createRandomApp();
         tonomyLoginApp = await createRandomApp();
 
+        setSettings({
+            ...settings,
+            ssoWebsiteOrigin: tonomyLoginApp.origin,
+        });
+
         // setup KeyManagers for the external website and tonomy login website
         TONOMY_LOGIN_WEBSITE_jsKeyManager = new JsKeyManager();
         EXTERNAL_WEBSITE_jsKeyManager = new JsKeyManager();
@@ -131,7 +137,7 @@ describe('Login to external website', () => {
     });
 
     async function runExternalUserLoginTest(testOptions: ExternalUserLoginTestOptions) {
-        let expectedTests = 46;
+        let expectedTests = 45;
 
         if (testOptions.dataRequest) {
             expectedTests += 1;
@@ -236,6 +242,9 @@ describe('Login to external website', () => {
 
         // #####Tonomy Login App website user (callback page) #####
         // ########################################
+        jsdom.reconfigure({
+            url: tonomyLoginApp.origin,
+        });
 
         // Receive the message back, and redirect to the callback
         const requestConfirmedMessageFromTonomyId = await TONOMY_LOGIN_WEBSITE_requestsConfirmedMessagePromise;
@@ -253,7 +262,10 @@ describe('Login to external website', () => {
         expect(payload.response?.length).toBe(testOptions.dataRequest ? 4 : 3);
 
         if (!payload.response) throw new Error('payload.response is undefined');
+
         const managedResponses = new ResponsesManager(payload.response);
+
+        await managedResponses.fetchMeta({ accountName: await TONOMY_ID_user.getAccountName() });
         const loginResponse = managedResponses.getLoginResponsesWithSameOriginOrThrow();
 
         expect(loginResponse.getResponse().getPayload().accountName?.toString()).toBe(

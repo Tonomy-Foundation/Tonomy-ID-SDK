@@ -120,10 +120,12 @@ export async function setupLoginRequestSubscriber(
             expect(managedRequests.getRequests().length).toBe(testOptions.dataRequest ? 4 : 3);
 
             const managedResponses = new ResponsesManager(managedRequests);
-            const receiverDid = managedResponses.getExternalAppRequestsIssuerOrThrow();
+            const receiverDid = managedResponses.getAccountsLoginRequestsIssuerOrThrow();
 
             expect(receiverDid).toBe(tonomyLoginDid);
             expect(receiverDid).toBe(loginRequestMessage.getSender());
+
+            await managedResponses.fetchMeta({ accountName: await user.getAccountName() });
 
             if (getSettings().loggerLevel === 'debug')
                 console.log('TONOMY_ID/SSO: accepting login requests and sending confirmation to Tonomy Login Website');
