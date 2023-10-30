@@ -83,8 +83,7 @@ export async function loginWebsiteOnRedirect(
     if (getSettings().loggerLevel === 'debug')
         console.log('TONOMY_LOGIN_WEBSITE/login: collect external website token from URL');
 
-    const externalRequests = await onRedirectLogin();
-    const managedExternalRequests = new RequestsManager(externalRequests);
+    const managedExternalRequests = await onRedirectLogin();
 
     if (getSettings().loggerLevel === 'debug')
         console.log('TONOMY_LOGIN_WEBSITE/login: create did:jwk and login request');
