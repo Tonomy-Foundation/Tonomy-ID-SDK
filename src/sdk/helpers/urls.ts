@@ -79,9 +79,9 @@ export function getLoginRequestResponseFromUrl(): LoginRequestResponseMessagePay
  *
  * @description should be called in the callback page of the Tonomy Accounts (SSO) website
  *
- * @returns {Promise<WalletRequest[]>} - the verified WalletRequests
+ * @returns {Promise<RequestsManager>} - the managed verified WalletRequests
  */
-export async function onRedirectLogin(): Promise<WalletRequest[]> {
+export async function onRedirectLogin(): Promise<RequestsManager> {
     const { requests } = getLoginRequestFromUrl();
 
     const requestsManager = new RequestsManager(requests);
@@ -89,5 +89,5 @@ export async function onRedirectLogin(): Promise<WalletRequest[]> {
     await requestsManager.verify();
     await requestsManager.checkReferrerOrigin();
 
-    return requestsManager.getRequests();
+    return requestsManager;
 }
