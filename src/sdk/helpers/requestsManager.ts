@@ -143,27 +143,10 @@ export class RequestsManager {
         return response;
     }
 
-    getRequestsSameOriginOrThrow(): WalletRequest[] {
-        const loginRequest = this.getLoginRequestWithSameOriginOrThrow();
-        const issuer = loginRequest.getIssuer();
-
-        // TODO should maybe add origin to the DataRequest object instead of using the issuer?
-        const dataSharingRequest = this.requests.find(
-            (request) => request instanceof DataSharingRequest && request.getIssuer() === issuer
-        );
-
-        if (dataSharingRequest) {
-            return [loginRequest, dataSharingRequest];
-        } else {
-            return [loginRequest];
-        }
-    }
-
     getRequestsDifferentOriginOrThrow(): WalletRequest[] {
         const loginRequest = this.getLoginRequestWithDifferentOriginOrThrow();
         const issuer = loginRequest.getIssuer();
 
-        // TODO should maybe add origin to the DataRequest object instead of using the issuer?
         const dataSharingRequest = this.requests.find(
             (request) => request instanceof DataSharingRequest && request.getIssuer() === issuer
         );
