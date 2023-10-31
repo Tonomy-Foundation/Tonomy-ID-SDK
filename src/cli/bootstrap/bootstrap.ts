@@ -3,7 +3,6 @@ import path from 'path';
 import { createAntelopeAccount, createApp } from './create-account';
 import { EosioTokenContract, EosioUtil, setSettings } from '../../sdk/index';
 import { signer, updateAccountKey } from './keys';
-import bootstrapSettings from './settings';
 import settings from './settings';
 import { createUser, mockCreateAccount, restoreCreateAccountFromMock } from './user';
 import { PrivateKey } from '@wharfkit/antelope';
@@ -40,8 +39,8 @@ export default async function bootstrap(args: string[]) {
             appName: 'Tonomy Demo',
             usernamePrefix: 'demo',
             description: 'Demo of Tonomy ID login and features',
-            origin: bootstrapSettings.config.demoWebsiteOrigin,
-            logoUrl: bootstrapSettings.config.demoWebsiteOrigin + '/market.com.png',
+            origin: settings.config.demoWebsiteOrigin,
+            logoUrl: settings.config.demoWebsiteOrigin + '/market.com.png',
             publicKey: newPublicKey,
         });
 
@@ -53,8 +52,8 @@ export default async function bootstrap(args: string[]) {
             appName: 'Tonomy Website',
             usernamePrefix: 'tonomy',
             description: 'Tonomy website to manager your ID and Data',
-            origin: bootstrapSettings.config.ssoWebsiteOrigin,
-            logoUrl: bootstrapSettings.config.ssoWebsiteOrigin + '/tonomy-logo1024.png',
+            origin: settings.config.ssoWebsiteOrigin,
+            logoUrl: settings.config.ssoWebsiteOrigin + '/tonomy-logo1024.png',
             publicKey: newPublicKey,
         });
 
