@@ -52,7 +52,7 @@ export async function createUser(username: string, password: string) {
     await user.savePassword(password, { keyFromPasswordFn: generatePrivateKeyFromPassword });
 
     await user.createPerson();
-    console.log('Created user:', username);
+    console.log('New user:', (await user.getUsername()).toString());
 
     return { user, password, auth };
 }
