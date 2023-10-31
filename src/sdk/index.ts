@@ -2,9 +2,15 @@
 
 // Controllers
 export * from './controllers/user';
-export * from './controllers/userApps';
+export * from './helpers/userApps';
 export * from './controllers/app';
-export * from './controllers/userApps';
+
+// Controller helpers
+export * from './helpers/userApps';
+export * from './helpers/jwkStorage';
+export * from './helpers/requestsManager';
+export * from './helpers/responsesManager';
+export * from './helpers/urls';
 
 // Services
 export * as EosioUtil from './services/blockchain';

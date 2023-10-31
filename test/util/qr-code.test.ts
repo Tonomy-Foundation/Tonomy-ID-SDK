@@ -1,6 +1,6 @@
 import { SdkErrors } from '../../src/sdk';
 import { createLoginQrCode, validateQrCode } from '../../src/sdk/util/qr-code';
-import settings, { setTestSettings } from '../../test-integration/helpers/settings';
+import { settings, setTestSettings } from '../../test-integration/helpers/settings';
 
 setTestSettings();
 

@@ -22,7 +22,7 @@ api.setSettings({
 
 ## 2. Login page
 
-On your login page add the "Login with Tonomy ID" button and set it to call the api when pressed. Set your `/callback` page path.
+On your login page add the "Login with Tonomy ID" button and set it to call the `ExternalUser.loginWithTonomy` function when pressed. Set your `/callback` page path as shown below. This is where your  the user will be redirect to in your application, after they complete the login process.
 
 ```typescript
 async function onButtonPress() {
@@ -33,6 +33,16 @@ async function onButtonPress() {
 ```html
 <button className="tonomy-login-button" onClick={onButtonPress}>Login with Tonomy ID</button>
 ```
+
+### Request data sharing
+
+During the login process, you can additionally request information from the user account by adding a `dataRequest` object when calling the `loginWithTonomy` function.
+
+```typescript
+await api.ExternalUser.loginWithTonomy({ callbackPath: '/callback', dataRequest: { username: true } });
+```
+
+Currently, only the `username` is able to be requested. We are working on supporting more data sharing options soon including basic personal information (name, date of birth, etc...) and sharing of data between applications.
 
 ### Styling the Tonomy login button
 
@@ -50,7 +60,7 @@ or
 
 ## 3. Callback page
 
-On your `/callback` page, call the API when the page renders. This will catch the login parameters from the URL and return a logged in user object.
+In your `/callback` page, call the `ExternalUser.verifyLoginRequest()` function when the page renders. This will catch the login parameters from the URL and return a logged in user object.
 
 ```typescript
 // call this when the page loads

@@ -14,4 +14,3 @@ export * from './ssi/types';
 export * from './time';
 export * from './username';
 export * from './qr-code';
-export * from './dataSharingRequest';
