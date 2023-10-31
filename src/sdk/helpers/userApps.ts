@@ -7,14 +7,14 @@ import { User } from '../controllers/user';
 import { createKeyManagerSigner } from '../services/blockchain/eosio/transaction';
 import { SdkError, SdkErrors, throwError } from '../util/errors';
 import { App, AppStatus } from '../controllers/app';
-import { LoginRequest, TonomyRequest } from '../util/request';
-import { LoginRequestResponseMessage, LoginResponse } from '../services/communication/message';
+import { LoginRequest, WalletRequest } from '../util/request';
+import { LoginRequestResponseMessage } from '../services/communication/message';
 import { LoginRequestResponseMessagePayload } from '../services/communication/message';
 import { objToBase64Url } from '../util/base64';
 import { getSettings } from '../util/settings';
 import { DID, URL as URLtype } from '../util/ssi/types';
-import { DataSharingRequest } from '../util';
-import { verifyRequests } from './requests';
+import { RequestsManager } from './requestsManager';
+import { ResponsesManager } from './responsesManager';
 
 const idContract = IDContract.Instance;
 
@@ -42,7 +42,7 @@ export type ResponseParams = {
 };
 
 export type CheckedRequest = {
-    request: TonomyRequest;
+    request: WalletRequest;
     app: App;
     requiresLogin: boolean;
     ssoApp: boolean;
@@ -91,52 +91,31 @@ export class UserApps {
     /** Accepts a login request by authorizing keys on the blockchain (if the are not already authorized)
      * And sends a response to the requesting app
      *
-     * @param {{request: TonomyRequest, app?: App, requiresLogin?: boolean}[]} requestsWithMetadata - Array of requests to fulfill (login or data sharing requests)
+     * @param {{request: WalletRequest, app?: App, requiresLogin?: boolean}[]} requestsWithMetadata - Array of requests to fulfill (login or data sharing requests)
      * @param {'mobile' | 'browser'} platform - Platform of the request, either 'mobile' or 'browser'
      * @param {{callbackPath?: URLtype, messageRecipient?: DID}} options - Options for the response
      * @returns {Promise<void | URLtype>} the callback url if the platform is mobile, or undefined if it is browser (a message is sent to the user)
      */
     async acceptLoginRequest(
-        requestsWithMetadata: { request: TonomyRequest; app?: App; requiresLogin?: boolean }[],
+        responsesManager: ResponsesManager,
         platform: 'mobile' | 'browser',
         options: {
+            callbackOrigin?: URLtype;
             callbackPath?: URLtype;
             messageRecipient?: DID;
         }
     ): Promise<void | URLtype> {
-        const accountName = await this.user.getAccountName();
-
-        const response: LoginResponse = {
-            accountName,
-        };
-
-        for (const requestWithMeta of requestsWithMetadata) {
-            if (requestWithMeta.request.getType() === LoginRequest.getType()) {
-                const { app, request, requiresLogin } = requestWithMeta;
-
-                if (!app) throwError('Missing app', SdkErrors.MissingParams);
-
-                if (requiresLogin ?? true) {
-                    await this.user.apps.loginWithApp(app, request.getPayload().publicKey);
-                }
-            } else if (requestWithMeta.request.getType() === DataSharingRequest.getType()) {
-                if (requestWithMeta.request.getPayload().username === true) {
-                    const username = await this.user.getUsername();
-
-                    response.data = { username };
-                }
-            }
-        }
+        const finalResponses = await responsesManager.createResponses(this.user);
 
         const responsePayload: LoginRequestResponseMessagePayload = {
             success: true,
-            requests: requestsWithMetadata.map((requestWithMeta) => requestWithMeta.request),
-            response,
+            response: finalResponses,
         };
 
         if (platform === 'mobile') {
-            if (!options.callbackPath) throwError('Missing callback path', SdkErrors.MissingParams);
-            let callbackUrl = getSettings().ssoWebsiteOrigin + options.callbackPath + '?';
+            if (!options.callbackPath || !options.callbackOrigin)
+                throwError('Missing callback origin or path', SdkErrors.MissingParams);
+            let callbackUrl = options.callbackOrigin + options.callbackPath + '?';
 
             callbackUrl += 'payload=' + objToBase64Url(responsePayload);
 
@@ -159,14 +138,14 @@ export class UserApps {
      *
      * @static function so that it can be used to cancel requests in flows where users are not logged in
      *
-     * @param {TonomyRequest[]} requests - Array of requests to reject
+     * @param {WalletRequest[]} requests - Array of requests to reject
      * @param {'mobile' | 'browser'} platform - Platform of the request, either 'mobile' or 'browser'
      * @param {{ code: SdkErrors, reason: string }} error - Error to send back to the requesting app
      * @param {{callbackPath?: URLtype, messageRecipient?: DID}} options - Options for the response
      * @returns {Promise<void | URLtype>} the callback url if the platform is mobile, or undefined if it is browser (a message is sent to the user)
      */
     static async terminateLoginRequest(
-        requests: TonomyRequest[],
+        responsesManager: ResponsesManager,
         returnType: 'mobile' | 'browser',
         error: {
             code: SdkErrors;
@@ -181,8 +160,10 @@ export class UserApps {
     ): Promise<void | URLtype> {
         const responsePayload: LoginRequestResponseMessagePayload = {
             success: false,
-            requests,
-            error,
+            error: {
+                ...error,
+                requests: responsesManager.getRequests(),
+            },
         };
 
         if (returnType === 'mobile') {
@@ -210,15 +191,19 @@ export class UserApps {
     /** Verifies the login requests, and checks if the apps have already been authorized with those keys
      * This function is currently only used in the unfinished feature https://github.com/Tonomy-Foundation/Tonomy-ID/issues/705
      * See unmerged PR https://github.com/Tonomy-Foundation/Tonomy-ID/pull/744
+     * @depreciated This function is now incorporated in ResponsesManager.fetchMeta()
      *
      * @param {LoginRequest[]} requests - Array of LoginRequest to check
      * @returns {Promise<CheckedRequest[]>} - Array of requests that have been verified and had authorization checked
      */
     async checkLoginRequests(requests: LoginRequest[]): Promise<CheckedRequest[]> {
-        await verifyRequests(requests);
+        const managedRequests = new RequestsManager(requests);
+
+        await managedRequests.verify();
+
         const response: CheckedRequest[] = [];
 
-        for (const request of requests) {
+        for (const request of managedRequests.getLoginRequestsOrThrow()) {
             const payload = request.getPayload();
 
             const app = await App.getApp(payload.origin);

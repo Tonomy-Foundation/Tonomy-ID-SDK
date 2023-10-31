@@ -9,15 +9,16 @@ import {
     IdentifyMessage,
     AuthenticationMessage,
     LoginRequestsMessage,
+    ResponsesManager,
 } from '../../src/sdk/index';
 import { jsStorageFactory } from '../../src/cli/bootstrap/jsstorage';
 import { generatePrivateKeyFromPassword } from '../../src/cli/bootstrap/keys';
 import { createUser } from '../../src/cli/bootstrap/user';
-import { DataSharingRequest, LoginRequest, TonomyRequest } from '../../src/sdk/util/request';
+import { DataSharingRequest, LoginRequest, WalletRequest } from '../../src/sdk/util/request';
 import { DIDurl, URL } from '../../src/sdk/util/ssi/types';
 import { defaultAntelopePublicKey } from '../../src/sdk/services/blockchain/eosio/eosio';
 import { generateRandomKeywords, getSettings } from '../../src/sdk/util';
-import { verifyRequests } from '../../src/sdk/helpers/requests';
+import { RequestsManager } from '../../src/sdk/helpers/requestsManager';
 import { ExternalUserLoginTestOptions } from '../externalUser.test';
 
 export const HCAPCHA_CI_RESPONSE_TOKEN = '10000000-aaaa-bbbb-cccc-000000000001';
@@ -112,35 +113,23 @@ export async function setupLoginRequestSubscriber(
 
             // TODO check this throws an error if requests are not valid, or not signed correctly
             if (getSettings().loggerLevel === 'debug') console.log('TONOMY_ID/SSO: verifying login request');
-            await verifyRequests(requests);
+            const managedRequests = new RequestsManager(requests);
 
-            expect(requests.length).toBe(testOptions.dataRequest ? 3 : 2);
+            await managedRequests.verify();
 
-            const acceptArray: { app?: App; request: TonomyRequest; requiresLogin?: boolean }[] = [];
+            expect(managedRequests.getRequests().length).toBe(testOptions.dataRequest ? 4 : 3);
 
-            let receiverDid = '';
-
-            for (const request of requests) {
-                if (request.getType() === LoginRequest.getType()) {
-                    const payload = request.getPayload();
-
-                    if (payload.origin === tonomyLoginOrigin) receiverDid = request.getIssuer();
-                    const loginApp = await App.getApp(payload.origin);
-
-                    acceptArray.push({ app: loginApp, request, requiresLogin: true });
-                } else if (request.getType() === DataSharingRequest.getType()) {
-                    acceptArray.push({ request });
-                } else {
-                    throw new Error('Unknown request type');
-                }
-            }
+            const managedResponses = new ResponsesManager(managedRequests);
+            const receiverDid = managedResponses.getAccountsLoginRequestsIssuerOrThrow();
 
             expect(receiverDid).toBe(tonomyLoginDid);
             expect(receiverDid).toBe(loginRequestMessage.getSender());
 
+            await managedResponses.fetchMeta({ accountName: await user.getAccountName() });
+
             if (getSettings().loggerLevel === 'debug')
                 console.log('TONOMY_ID/SSO: accepting login requests and sending confirmation to Tonomy Login Website');
-            await user.apps.acceptLoginRequest(acceptArray, 'browser', { messageRecipient: receiverDid });
+            await user.apps.acceptLoginRequest(managedResponses, 'browser', { messageRecipient: receiverDid });
 
             resolve(true);
         }, LoginRequestsMessage.getType());

@@ -16,6 +16,8 @@ import {
     getSettings,
     LoginRequestResponseMessagePayload,
     LoginResponse,
+    ResponsesManager,
+    setSettings,
 } from '../src/sdk/index';
 import URL from 'jsdom-url';
 import { JsKeyManager } from '../src/sdk/storage/jsKeyManager';
@@ -46,7 +48,7 @@ import {
 import { createStorageFactory } from './helpers/storageFactory';
 import { objToBase64Url } from '../src/sdk/util/base64';
 import { createSigner, defaultAntelopePrivateKey } from '../src/sdk/services/blockchain';
-import { setTestSettings } from './helpers/settings';
+import { setTestSettings, settings } from './helpers/settings';
 
 export type ExternalUserLoginTestOptions = {
     dataRequest: boolean;
@@ -95,6 +97,11 @@ describe('Login to external website', () => {
         externalApp = await createRandomApp();
         tonomyLoginApp = await createRandomApp();
 
+        setSettings({
+            ...settings,
+            ssoWebsiteOrigin: tonomyLoginApp.origin,
+        });
+
         // setup KeyManagers for the external website and tonomy login website
         TONOMY_LOGIN_WEBSITE_jsKeyManager = new JsKeyManager();
         EXTERNAL_WEBSITE_jsKeyManager = new JsKeyManager();
@@ -130,7 +137,14 @@ describe('Login to external website', () => {
     });
 
     async function runExternalUserLoginTest(testOptions: ExternalUserLoginTestOptions) {
-        expect.assertions(testOptions.dataRequest && testOptions.dataRequestUsername ? 48 : 47);
+        let expectedTests = 45;
+
+        if (testOptions.dataRequest) {
+            expectedTests += 1;
+            if (testOptions.dataRequestUsername) expectedTests += 1;
+        }
+
+        expect.assertions(expectedTests);
 
         // #####External website user (login page) #####
         // ################################
@@ -145,7 +159,11 @@ describe('Login to external website', () => {
         });
 
         const { did: EXTERNAL_WEBSITE_did, redirectUrl: EXTERNAL_WEBSITE_redirectUrl } =
-            await externalWebsiteUserPressLoginToTonomyButton(EXTERNAL_WEBSITE_jsKeyManager, tonomyLoginApp.origin);
+            await externalWebsiteUserPressLoginToTonomyButton(
+                EXTERNAL_WEBSITE_jsKeyManager,
+                tonomyLoginApp.origin,
+                testOptions
+            );
 
         // #####Tonomy Login App website user (login page) #####
         // ########################################
@@ -162,7 +180,7 @@ describe('Login to external website', () => {
             did: TONOMY_LOGIN_WEBSITE_did,
             requests: TONOMY_LOGIN_WEBSITE_requests,
             communication: TONOMY_LOGIN_WEBSITE_communication,
-        } = await loginWebsiteOnRedirect(EXTERNAL_WEBSITE_did, TONOMY_LOGIN_WEBSITE_jsKeyManager, testOptions);
+        } = await loginWebsiteOnRedirect(EXTERNAL_WEBSITE_did, TONOMY_LOGIN_WEBSITE_jsKeyManager);
 
         // setup subscriber for connection to Tonomy ID acknowledgement
         const { subscriber: TONOMY_LOGIN_WEBSITE_messageSubscriber, promise: TONOMY_LOGIN_WEBSITE_ackMessagePromise } =
@@ -224,6 +242,9 @@ describe('Login to external website', () => {
 
         // #####Tonomy Login App website user (callback page) #####
         // ########################################
+        jsdom.reconfigure({
+            url: tonomyLoginApp.origin,
+        });
 
         // Receive the message back, and redirect to the callback
         const requestConfirmedMessageFromTonomyId = await TONOMY_LOGIN_WEBSITE_requestsConfirmedMessagePromise;
@@ -236,16 +257,31 @@ describe('Login to external website', () => {
 
         expect(payload).toBeDefined();
         expect(payload.success).toBe(true);
-        expect(payload.requests).toBeDefined();
         expect(payload.response).toBeDefined();
 
-        expect(payload.requests?.length).toBe(testOptions.dataRequest ? 3 : 2);
-        expect(payload.response?.accountName?.toString()).toBe(
-            await (await TONOMY_ID_user.getAccountName()).toString()
+        expect(payload.response?.length).toBe(testOptions.dataRequest ? 4 : 3);
+
+        if (!payload.response) throw new Error('payload.response is undefined');
+
+        const managedResponses = new ResponsesManager(payload.response);
+
+        await managedResponses.fetchMeta({ accountName: await TONOMY_ID_user.getAccountName() });
+        const loginResponse = managedResponses.getLoginResponsesWithSameOriginOrThrow();
+
+        expect(loginResponse.getResponse().getPayload().accountName?.toString()).toBe(
+            (await TONOMY_ID_user.getAccountName()).toString()
         );
 
-        if (testOptions.dataRequest && testOptions.dataRequestUsername) {
-            expect(payload.response?.data?.username?.toString()).toBe((await TONOMY_ID_user.getUsername()).username);
+        const dataRequestResponse = managedResponses.getDataSharingResponseWithSameOrigin();
+
+        if (testOptions.dataRequest) {
+            expect(dataRequestResponse).toBeDefined();
+
+            if (testOptions.dataRequestUsername) {
+                expect(dataRequestResponse?.getResponse().getPayload().data?.username?.toString()).toBe(
+                    (await TONOMY_ID_user.getUsername()).username.toString()
+                );
+            }
         }
 
         if (getSettings().loggerLevel === 'debug') console.log('TONOMY_LOGIN_WEBSITE/login: sending to callback page');
@@ -256,34 +292,18 @@ describe('Login to external website', () => {
             url: tonomyLoginApp.origin + `/callback?payload=${TONOMY_LOGIN_WEBSITE_base64UrlPayload}`,
         });
 
-        const {
-            redirectJwt: TONOMY_LOGIN_WEBSITE_redirectJwt,
-            username: TONOMY_LOGIN_WEBSITE_username,
-            accountName: TONOMY_LOGIN_WEBSITE_accountName,
-        } = await loginWebsiteOnCallback(
-            TONOMY_LOGIN_WEBSITE_jsKeyManager,
-            TONOMY_LOGIN_WEBSITE_storage_factory,
-            testOptions
-        );
-
-        const redirectJwtPayload = TONOMY_LOGIN_WEBSITE_redirectJwt?.getPayload();
-
-        const EXTERNAL_WEBSITE_loginResponse: LoginResponse = {
-            accountName: TONOMY_LOGIN_WEBSITE_accountName,
-        };
-
-        if (testOptions.dataRequest) {
-            EXTERNAL_WEBSITE_loginResponse.data = {};
-
-            if (testOptions.dataRequestUsername) {
-                EXTERNAL_WEBSITE_loginResponse.data.username = TONOMY_LOGIN_WEBSITE_username;
-            }
-        }
+        const { externalLoginRequest, managedResponses: TONOMY_LOGIN_WEBSITE_managedResponses } =
+            await loginWebsiteOnCallback(
+                TONOMY_LOGIN_WEBSITE_jsKeyManager,
+                TONOMY_LOGIN_WEBSITE_storage_factory,
+                testOptions
+            );
 
         const EXTERNAL_WEBSITE_loginRequestResponseMessagePayload: LoginRequestResponseMessagePayload = {
             success: true,
-            requests: [TONOMY_LOGIN_WEBSITE_redirectJwt],
-            response: EXTERNAL_WEBSITE_loginResponse,
+            response: TONOMY_LOGIN_WEBSITE_managedResponses.getResponsesWithDifferentOriginOrThrow().map((response) =>
+                response.getRequestAndResponse()
+            ),
         };
 
         const EXTERNAL_WEBSITE_base64UrlPayload = objToBase64Url(EXTERNAL_WEBSITE_loginRequestResponseMessagePayload);
@@ -293,8 +313,8 @@ describe('Login to external website', () => {
         // @ts-expect-error - cannot find name jsdom
         jsdom.reconfigure({
             url:
-                redirectJwtPayload.origin +
-                redirectJwtPayload.callbackPath +
+                externalLoginRequest.getPayload().origin +
+                externalLoginRequest.getPayload().callbackPath +
                 `?payload=${EXTERNAL_WEBSITE_base64UrlPayload}`,
         });
 

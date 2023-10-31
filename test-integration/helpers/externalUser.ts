@@ -13,28 +13,42 @@ import {
     Subscriber,
     TonomyUsername,
     User,
-    UserApps,
     getAccountNameFromUsername,
     getSettings,
-    TonomyRequest,
+    WalletRequest,
     LoginRequestsMessagePayload,
     OnPressLoginOptions,
+    ResponsesManager,
 } from '../../src/sdk';
 import { ExternalUser, LoginWithTonomyMessages } from '../../src/api/externalUser';
-import { LoginRequest } from '../../src/sdk/util/request';
 import { objToBase64Url } from '../../src/sdk/util/base64';
 import { VerifiableCredential } from '../../src/sdk/util/ssi/vc';
 import { getAccount } from '../../src/sdk/services/blockchain';
 import { getJwkIssuerFromStorage } from '../../src/sdk/helpers/jwkStorage';
-import { verifyRequests } from '../../src/sdk/helpers/requests';
-import { getLoginRequestFromUrl, onRedirectLogin } from '../../src/sdk/helpers/urls';
+import { RequestsManager } from '../../src/sdk/helpers/requestsManager';
+import { getLoginRequestFromUrl, getLoginRequestResponseFromUrl, onRedirectLogin } from '../../src/sdk/helpers/urls';
 import { ExternalUserLoginTestOptions } from '../externalUser.test';
 
-export async function externalWebsiteUserPressLoginToTonomyButton(keyManager: KeyManager, loginAppOrigin: string) {
+export async function externalWebsiteUserPressLoginToTonomyButton(
+    keyManager: KeyManager,
+    loginAppOrigin: string,
+    testOptions: ExternalUserLoginTestOptions
+) {
     if (getSettings().loggerLevel === 'debug') console.log('EXTERNAL_WEBSITE/login: create did:jwk and login request');
 
+    const onPressLoginOptions: OnPressLoginOptions = {
+        callbackPath: '/callback',
+        redirect: false,
+    };
+
+    if (testOptions.dataRequest) {
+        onPressLoginOptions.dataRequest = {};
+
+        if (testOptions.dataRequestUsername) onPressLoginOptions.dataRequest.username = true;
+    }
+
     const { loginRequest, dataSharingRequest } = (await ExternalUser.loginWithTonomy(
-        { callbackPath: '/callback', redirect: false },
+        onPressLoginOptions,
         keyManager
     )) as LoginWithTonomyMessages;
 
@@ -60,37 +74,28 @@ export async function externalWebsiteUserPressLoginToTonomyButton(keyManager: Ke
 
 export async function loginWebsiteOnRedirect(
     externalWebsiteDid: string,
-    keyManager: KeyManager,
-    testOptions: ExternalUserLoginTestOptions
+    keyManager: KeyManager
 ): Promise<{
     did: string;
-    requests: TonomyRequest[];
+    requests: WalletRequest[];
     communication: Communication;
 }> {
     if (getSettings().loggerLevel === 'debug')
         console.log('TONOMY_LOGIN_WEBSITE/login: collect external website token from URL');
 
-    const tonomyRequests = await onRedirectLogin();
-    const externalLoginRequest = tonomyRequests.find((request) => request.getIssuer() === externalWebsiteDid);
-
-    if (!externalLoginRequest) throw new Error('External login request not found');
+    const managedExternalRequests = await onRedirectLogin();
 
     if (getSettings().loggerLevel === 'debug')
         console.log('TONOMY_LOGIN_WEBSITE/login: create did:jwk and login request');
 
-    const onPressLoginOptions: OnPressLoginOptions = {
-        callbackPath: '/callback',
-        redirect: false,
-    };
-
-    if (testOptions.dataRequest) {
-        onPressLoginOptions.dataRequest = {};
-
-        if (testOptions.dataRequestUsername) onPressLoginOptions.dataRequest.username = true;
-    }
-
     const { loginRequest, dataSharingRequest, loginToCommunication } = (await ExternalUser.loginWithTonomy(
-        onPressLoginOptions,
+        {
+            callbackPath: '/callback',
+            redirect: false,
+            dataRequest: {
+                username: true,
+            },
+        },
         keyManager
     )) as LoginWithTonomyMessages;
     const did = loginRequest.getIssuer();
@@ -98,7 +103,7 @@ export async function loginWebsiteOnRedirect(
     expect(did).toContain('did:jwk:');
     expect(did).not.toEqual(externalWebsiteDid);
 
-    const requests = [loginRequest, externalLoginRequest];
+    const requests: WalletRequest[] = [...managedExternalRequests.getRequests(), loginRequest];
 
     if (dataSharingRequest) requests.push(dataSharingRequest);
 
@@ -155,7 +160,7 @@ export async function setupTonomyIdRequestConfirmSubscriber(did: string) {
 }
 
 export async function sendLoginRequestsMessage(
-    requests: TonomyRequest[],
+    requests: WalletRequest[],
     keyManager: KeyManager,
     communication: Communication,
     recipientDid: string
@@ -185,20 +190,20 @@ export async function loginWebsiteOnCallback(
 
     if (getSettings().loggerLevel === 'debug')
         console.log('TONOMY_LOGIN_WEBSITE/callback: checking login request of external website');
-    const { requests } = await getLoginRequestFromUrl();
+    const { response } = await getLoginRequestResponseFromUrl();
 
-    await verifyRequests(requests);
-    const redirectJwt = requests.find((jwtVerified) => jwtVerified.getPayload().origin !== location.origin);
+    if (!response) throw new Error('Login request response not found');
+    const managedResponses = new ResponsesManager(response);
 
-    expect(redirectJwt).toBeDefined();
+    await managedResponses.verify();
+    await managedResponses.fetchMeta({ accountName: await externalUser.getAccountName() });
+
+    const externalLoginRequest = managedResponses.getLoginResponseWithDifferentOriginOrThrow().getRequest();
 
     if (getSettings().loggerLevel === 'debug')
         console.log('TONOMY_LOGIN_WEBSITE/callback: redirecting to external website');
 
-    const username = await externalUser.getUsername();
-    const accountName = await externalUser.getAccountName();
-
-    return { redirectJwt: redirectJwt as LoginRequest, username, accountName };
+    return { externalLoginRequest, managedResponses };
 }
 
 export async function externalWebsiteOnCallback(

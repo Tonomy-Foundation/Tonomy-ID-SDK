@@ -1,11 +1,12 @@
 import { Issuer } from '@tonomy/did-jwt-vc';
 import { DIDurl, URL } from '../../util/ssi/types';
 import { VerifiableCredentialWithType, VCWithTypeType } from '../../util/ssi/vc';
-import { DataSharingRequest, LoginRequest } from '../../util/request';
-import { TonomyRequest } from '../../util';
+import { WalletRequest } from '../../util';
 import { TonomyUsername } from '../../util/username';
 import { Name } from '@wharfkit/antelope';
-import { SdkErrors, throwError } from '../../util/errors';
+import { SdkErrors } from '../../util/errors';
+import { WalletRequestAndResponse, WalletRequestAndResponseObject } from '../../helpers/responsesManager';
+import { RequestsManager } from '../../helpers/requestsManager';
 
 /**
  * A message that can be sent between two Tonomy identities
@@ -117,7 +118,7 @@ export class IdentifyMessage extends Message<IdentifyMessagePayload> {
 }
 
 export type LoginRequestsMessagePayload = {
-    requests: TonomyRequest[];
+    requests: WalletRequest[];
 };
 
 export class LoginRequestsMessage extends Message<LoginRequestsMessagePayload> {
@@ -136,21 +137,11 @@ export class LoginRequestsMessage extends Message<LoginRequestsMessagePayload> {
             throw new Error('LoginRequestsMessage must have a requests property');
         }
 
-        const requests = payload.requests.map((request: string) => new TonomyRequest(request));
+        const requests = payload.requests.map((request: string) => new WalletRequest(request));
+        const requestsManager = new RequestsManager(requests);
 
         this.decodedPayload = {
-            requests: requests.map((request: TonomyRequest) => {
-                if (request.getType() === LoginRequest.getType()) {
-                    return new LoginRequest(request);
-                } else if (request.getType() === DataSharingRequest.getType()) {
-                    return new DataSharingRequest(request);
-                } else {
-                    throwError(
-                        "Request type must be 'LoginRequest' or 'DataSharingRequest'",
-                        SdkErrors.InvalidRequestType
-                    );
-                }
-            }),
+            requests: requestsManager.getRequests(),
         };
     }
 
@@ -183,13 +174,14 @@ export type LoginResponse = {
 
 export type LoginRequestResponseMessagePayload = {
     success: boolean;
-    requests: TonomyRequest[];
     error?: {
         code: SdkErrors;
         reason: string;
+        requests: WalletRequest[];
     };
-    response?: LoginResponse;
+    response?: WalletRequestAndResponse[];
 };
+
 export class LoginRequestResponseMessage extends Message<LoginRequestResponseMessagePayload> {
     protected static type = 'LoginRequestResponseMessage';
 
@@ -205,40 +197,37 @@ export class LoginRequestResponseMessage extends Message<LoginRequestResponseMes
         super(vc);
         const payload = this.getVc().getPayload().vc.credentialSubject.payload;
 
-        const requests = payload.requests.map((request: string) => new TonomyRequest(request));
-
-        this.decodedPayload = {
-            ...payload,
-            requests: requests.map((request: TonomyRequest) => {
-                if (request.getType() === LoginRequest.getType()) {
-                    return new LoginRequest(request);
-                } else if (request.getType() === DataSharingRequest.getType()) {
-                    return new DataSharingRequest(request);
-                } else {
-                    throwError(
-                        "Request type must be 'LoginRequest' or 'DataSharingRequest'",
-                        SdkErrors.InvalidRequestType
-                    );
-                }
-            }),
-        };
+        // console.log('LoginRequestResponseMessage', payload);
 
         if (payload.success) {
-            const response: LoginResponse = {
-                accountName: Name.from(payload.response.accountName),
-            };
-
-            if (payload.response.data?.username) {
-                response.data = {
-                    username: payload.response.data.username.username
-                        ? new TonomyUsername(payload.response.data.username.username)
-                        : new TonomyUsername(payload.response.data.username),
-                };
+            if (!payload.response) {
+                throw new Error('LoginRequestsResponseMessage must have a response property');
             }
 
+            const responses: WalletRequestAndResponse[] = payload.response.map(
+                (response: { request: string; response: string }) =>
+                    new WalletRequestAndResponseObject(response).getRequestAndResponse()
+            );
+
             this.decodedPayload = {
-                ...this.decodedPayload,
-                response,
+                ...payload,
+                response: responses,
+            };
+        } else {
+            if (!payload.error) {
+                throw new Error('LoginRequestsResponseMessage must have an error property');
+            }
+
+            const error = payload.error;
+            const requests = error.requests.map((request: string) => new WalletRequest(request));
+            const requestsManager = new RequestsManager(requests);
+
+            this.decodedPayload = {
+                ...payload,
+                error: {
+                    ...error,
+                    requests: requestsManager.getRequests(),
+                },
             };
         }
     }

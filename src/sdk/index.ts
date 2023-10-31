@@ -8,7 +8,8 @@ export * from './controllers/app';
 // Controller helpers
 export * from './helpers/userApps';
 export * from './helpers/jwkStorage';
-export * from './helpers/requests';
+export * from './helpers/requestsManager';
+export * from './helpers/responsesManager';
 export * from './helpers/urls';
 
 // Services

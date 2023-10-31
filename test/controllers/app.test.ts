@@ -1,13 +1,11 @@
 import { PrivateKey, PublicKey } from '@wharfkit/antelope';
-import { UserApps } from '../../src/sdk/helpers/userApps';
 import { generateRandomKeyPair } from '../../src/sdk/util/crypto';
 import URL from 'jsdom-url';
 import { ExternalUser, LoginWithTonomyMessages } from '../../src/api/externalUser';
-import { LoginRequest, LoginRequestPayload } from '../../src/sdk/util/request';
+import { LoginRequestPayload } from '../../src/sdk/util/request';
 import { objToBase64Url } from '../../src/sdk/util/base64';
 import { setTestSettings } from '../../test-integration/helpers/settings';
 import { onRedirectLogin } from '../../src/sdk/helpers/urls';
-import { TonomyRequest } from '../../build/sdk/types/sdk';
 
 // @ts-expect-error - URL type on global does not match
 global.URL = URL;
@@ -54,7 +52,7 @@ describe('logging in', () => {
 
         expect(requests).toBeDefined();
 
-        const receivedLoginRequest = requests[0].getPayload() as LoginRequestPayload;
+        const receivedLoginRequest = requests.getRequests()[0].getPayload() as LoginRequestPayload;
 
         expect(typeof receivedLoginRequest.randomString).toBe('string');
         expect(receivedLoginRequest.publicKey).toBeInstanceOf(PublicKey);

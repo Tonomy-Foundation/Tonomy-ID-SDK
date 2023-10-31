@@ -20,13 +20,13 @@ import {
     LinkAuthRequestResponseMessage,
     LoginRequestsMessagePayload,
     Message,
+    ResponsesManager,
 } from '../sdk';
 import { objToBase64Url } from '../sdk/util/base64';
 import { VerifiableCredential } from '../sdk/util/ssi/vc';
 import { DIDurl } from '../sdk/util/ssi/types';
 import { Signer, createKeyManagerSigner, transact } from '../sdk/services/blockchain/eosio/transaction';
 import { createJwkIssuerAndStore } from '../sdk/helpers/jwkStorage';
-import { verifyRequests } from '../sdk/helpers/requests';
 import { getLoginRequestResponseFromUrl } from '../sdk/helpers/urls';
 
 /**
@@ -261,6 +261,7 @@ export class ExternalUser {
         if (dataRequest) {
             const dataSharingPayload: DataSharingRequestPayload = {
                 username: dataRequest?.username || false,
+                origin: window.location.origin,
             };
 
             dataSharingRequest = await DataSharingRequest.signRequest(dataSharingPayload, issuer);
@@ -329,49 +330,39 @@ export class ExternalUser {
         if (!options.checkKeys) options.checkKeys = true;
         const keyManager = options.keyManager || new JsKeyManager();
 
-        const { success, error, requests, response } = getLoginRequestResponseFromUrl();
+        const { success, error, response } = getLoginRequestResponseFromUrl();
 
         if (success === true) {
-            if (!response?.accountName) throwError('No account name found in url', SdkErrors.MissingParams);
+            if (!response) throwError('No response found in url', SdkErrors.MissingParams);
+            const managedResponses = new ResponsesManager(response);
 
-            verifyRequests(requests);
+            await managedResponses.verify();
+            await managedResponses.fetchMeta();
 
-            const loginRequest = requests.find((r) => {
-                if (r.getType() === LoginRequest.getType()) {
-                    const payload = r.getPayload();
-
-                    if (payload && payload.origin === window.location.origin) {
-                        return true;
-                    }
-                }
-
-                return false;
-            });
+            const loginResponse = managedResponses.getLoginResponsesWithSameOriginOrThrow();
             const keyFromStorage = await keyManager.getKey({ level: KeyManagerLevel.BROWSER_LOCAL_STORAGE });
+            const payload = loginResponse.getRequest().getPayload();
 
-            if (!loginRequest) throwError('No login request found for this origin', SdkErrors.OriginMismatch);
-
-            if (loginRequest.getType() === LoginRequest.getType()) {
-                const payload = loginRequest.getPayload();
-
-                if (payload.publicKey.toString() !== keyFromStorage.toString()) {
-                    throwError('Key in request does not match', SdkErrors.KeyNotFound);
-                }
+            if (payload.publicKey.toString() !== keyFromStorage.toString()) {
+                throwError('Key in request does not match', SdkErrors.KeyNotFound);
             }
 
             const myStorageFactory = options.storageFactory || browserStorageFactory;
             const externalUser = new ExternalUser(keyManager, myStorageFactory);
+            const accountName = loginResponse.getResponse().getPayload().accountName;
 
             if (options.checkKeys) {
-                const permission = await UserApps.verifyKeyExistsForApp(response.accountName, { keyManager });
+                const permission = await UserApps.verifyKeyExistsForApp(accountName, { keyManager });
 
                 await externalUser.setAppPermission(permission);
             }
 
-            await externalUser.setAccountName(response.accountName);
+            await externalUser.setAccountName(accountName);
 
-            if (response.data?.username) {
-                await externalUser.setUsername(response.data.username);
+            const dataSharingResponse = managedResponses.getDataSharingResponseWithSameOrigin();
+
+            if (dataSharingResponse && dataSharingResponse.getResponse().getPayload().data.username) {
+                await externalUser.setUsername(dataSharingResponse.getResponse().getPayload().data.username);
             }
 
             return externalUser;
