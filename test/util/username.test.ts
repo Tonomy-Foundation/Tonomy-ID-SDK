@@ -1,6 +1,6 @@
 import { AccountType, TonomyUsername } from '../../src/sdk/util/username';
 import { getSettings } from '../../src/sdk/util/settings';
-import { setTestSettings } from '../../test-integration/helpers/settings';
+import { setTestSettings, settings } from '../../test-integration/helpers/settings';
 
 setTestSettings();
 
@@ -8,8 +8,8 @@ describe('TonomyUsername', () => {
     it('creates a username correctly', () => {
         const username = TonomyUsername.fromUsername('jack', AccountType.PERSON, getSettings().accountSuffix);
 
-        expect(username.username).toEqual('jack.person.test.tonomy.id');
-        expect(username.usernameHash).toEqual('1599187240569a41cad6b931b911202926fee043811a42f60807dd9ba18dc399');
+        expect(username.username).toEqual('jack.person' + getSettings().accountSuffix);
+        expect(username.usernameHash).toEqual('7ee073679cb687f92f6aa055eef9e82b96f069417a83a485708859377c48989e');
     });
     it('gets the base username', () => {
         const username = TonomyUsername.fromUsername('jack', AccountType.PERSON, getSettings().accountSuffix);
