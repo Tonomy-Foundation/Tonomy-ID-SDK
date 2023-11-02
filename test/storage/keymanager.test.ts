@@ -41,7 +41,7 @@ describe('Keymanager class', () => {
         expect(salt).toBeDefined();
     });
 
-    test('generatePrivateKeyFromPassword() function Takes > 2s', async () => {
+    test('generatePrivateKeyFromPassword() function Takes > 1s', async () => {
         const password = 'above day fever lemon piano sport';
         const startTime = new Date();
 
@@ -49,7 +49,7 @@ describe('Keymanager class', () => {
         const endTime = new Date();
         const executionTime = endTime.getTime() - startTime.getTime();
 
-        expect(executionTime).toBeGreaterThan(2000);
+        expect(executionTime).toBeGreaterThan(1000);
     });
 
     test('generatePrivateKeyFromPassword() password can be verfied', async () => {

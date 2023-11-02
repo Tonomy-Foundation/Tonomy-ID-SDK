@@ -25,7 +25,7 @@ const defaultConfig = {
     ssoWebsiteOrigin: `http://${ipAddress}:3000`,
     demoWebsiteOrigin: `http://${ipAddress}:3001`,
     blockchainUrl: `http://${ipAddress}:8888`,
-    accountSuffix: '.test.tonomy.id',
+    accountSuffix: '.stag.tonomy.id',
     communicationUrl: 'ws://localhost:5000',
     accountsServiceUrl: 'http://localhost:5000',
     tonomyIdSchema: 'tonomy-id-development://',
