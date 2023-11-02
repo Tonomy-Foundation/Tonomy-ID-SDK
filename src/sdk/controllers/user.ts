@@ -6,7 +6,7 @@ import { getAccount, getChainInfo } from '../services/blockchain/eosio/eosio';
 import { createStorage, PersistentStorageClean, StorageFactory, STORAGE_NAMESPACE } from '../storage/storage';
 import { SdkErrors, throwError, SdkError } from '../util/errors';
 import { AccountType, TonomyUsername } from '../util/username';
-import { UserApps } from './userApps';
+import { UserApps } from '../helpers/userApps';
 import { getSettings } from '../util/settings';
 import { Communication } from '../services/communication/communication';
 import { Issuer } from '@tonomy/did-jwt-vc';
@@ -413,7 +413,8 @@ export class User {
 
     async checkKeysStillValid(): Promise<boolean> {
         // Account been created, or has not finished being created yet
-        if (this.storage.status !== UserStatus.READY) throwError('User is not ready', SdkErrors.AccountDoesntExist);
+        if ((await this.getStatus()) !== UserStatus.READY)
+            throwError('User is not ready', SdkErrors.AccountDoesntExist);
 
         const accountInfo = await User.getAccountInfo(await this.storage.accountName);
 

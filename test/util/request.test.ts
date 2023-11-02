@@ -119,7 +119,7 @@ describe('LoginRequestMessage class', () => {
             publicKey: publicKey,
             callbackPath: '/callback',
         };
-        loginRequest = await LoginRequest.sign(request, issuer);
+        loginRequest = await LoginRequest.signRequest(request, issuer);
         loginRequestMessage = await LoginRequestsMessage.signMessage(
             { requests: [loginRequest] },
             issuer,

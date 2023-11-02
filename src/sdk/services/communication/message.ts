@@ -1,10 +1,12 @@
 import { Issuer } from '@tonomy/did-jwt-vc';
 import { DIDurl, URL } from '../../util/ssi/types';
 import { VerifiableCredentialWithType, VCWithTypeType } from '../../util/ssi/vc';
-import { LoginRequest } from '../../util/request';
+import { WalletRequest } from '../../util';
 import { TonomyUsername } from '../../util/username';
 import { Name } from '@wharfkit/antelope';
 import { SdkErrors } from '../../util/errors';
+import { WalletRequestAndResponse, WalletRequestAndResponseObject } from '../../helpers/responsesManager';
+import { RequestsManager } from '../../helpers/requestsManager';
 
 /**
  * A message that can be sent between two Tonomy identities
@@ -116,7 +118,7 @@ export class IdentifyMessage extends Message<IdentifyMessagePayload> {
 }
 
 export type LoginRequestsMessagePayload = {
-    requests: LoginRequest[];
+    requests: WalletRequest[];
 };
 
 export class LoginRequestsMessage extends Message<LoginRequestsMessagePayload> {
@@ -135,7 +137,12 @@ export class LoginRequestsMessage extends Message<LoginRequestsMessagePayload> {
             throw new Error('LoginRequestsMessage must have a requests property');
         }
 
-        this.decodedPayload = { requests: payload.requests.map((request: string) => new LoginRequest(request)) };
+        const requests = payload.requests.map((request: string) => new WalletRequest(request));
+        const requestsManager = new RequestsManager(requests);
+
+        this.decodedPayload = {
+            requests: requestsManager.getRequests(),
+        };
     }
 
     /**
@@ -158,16 +165,23 @@ export class LoginRequestsMessage extends Message<LoginRequestsMessagePayload> {
     }
 }
 
+export type LoginResponse = {
+    accountName: Name;
+    data?: {
+        username?: TonomyUsername;
+    };
+};
+
 export type LoginRequestResponseMessagePayload = {
     success: boolean;
     error?: {
         code: SdkErrors;
         reason: string;
+        requests: WalletRequest[];
     };
-    requests: LoginRequest[];
-    accountName?: Name;
-    username?: TonomyUsername;
+    response?: WalletRequestAndResponse[];
 };
+
 export class LoginRequestResponseMessage extends Message<LoginRequestResponseMessagePayload> {
     protected static type = 'LoginRequestResponseMessage';
 
@@ -183,18 +197,37 @@ export class LoginRequestResponseMessage extends Message<LoginRequestResponseMes
         super(vc);
         const payload = this.getVc().getPayload().vc.credentialSubject.payload;
 
-        this.decodedPayload = {
-            ...payload,
-            requests: payload.requests.map((request: string) => new LoginRequest(request)),
-        };
+        // console.log('LoginRequestResponseMessage', payload);
 
         if (payload.success) {
+            if (!payload.response) {
+                throw new Error('LoginRequestsResponseMessage must have a response property');
+            }
+
+            const responses: WalletRequestAndResponse[] = payload.response.map(
+                (response: { request: string; response: string }) =>
+                    new WalletRequestAndResponseObject(response).getRequestAndResponse()
+            );
+
             this.decodedPayload = {
-                ...this.decodedPayload,
-                accountName: Name.from(payload.accountName),
-                username: payload.username.username
-                    ? new TonomyUsername(payload.username.username)
-                    : new TonomyUsername(payload.username),
+                ...payload,
+                response: responses,
+            };
+        } else {
+            if (!payload.error) {
+                throw new Error('LoginRequestsResponseMessage must have an error property');
+            }
+
+            const error = payload.error;
+            const requests = error.requests.map((request: string) => new WalletRequest(request));
+            const requestsManager = new RequestsManager(requests);
+
+            this.decodedPayload = {
+                ...payload,
+                error: {
+                    ...error,
+                    requests: requestsManager.getRequests(),
+                },
             };
         }
     }

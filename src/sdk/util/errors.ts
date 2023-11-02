@@ -72,9 +72,9 @@ export class SdkError extends Error {
         // It's not absolutely essential, but it does make the stack trace a little nicer.
         if (Error.captureStackTrace) {
             Error.captureStackTrace(this, this.constructor);
+        } else {
+            this.stack = new Error().stack;
         }
-
-        this.stack = new Error().stack;
     }
 }
 
@@ -107,9 +107,12 @@ enum SdkErrors {
     InvalidChallenge = 'InvalidChallenge',
     InvalidData = 'InvalidData',
     InvalidKey = 'InvalidKey',
+    InvalidArgumentType = 'InvalidArgumentType',
     InvalidKeyLevel = 'InvalidKeyLevel',
     InvalidQrCode = 'InvalidQrCode',
     InvalidUsername = 'InvalidUsername',
+    InvalidRequestType = 'InvalidRequestType',
+    InvalidRequestResponseType = 'InvalidRequestResponseType',
     JwtNotValid = 'JwtNotValid',
     KeyNotFound = 'KeyNotFound',
     LinkAuthFailed = 'LinkAuthFailed',
@@ -120,6 +123,8 @@ enum SdkErrors {
     OriginMismatch = 'OriginMismatch',
     PasswordFormatInvalid = 'PasswordFormatInvalid',
     PasswordInvalid = 'PasswordInvalid',
+    RequestsNotFound = 'RequestsNotFound',
+    ResponsesNotFound = 'ResponsesNotFound',
     PasswordTooCommon = 'PasswordTooCommon',
     PinInvalid = 'PinInvalid',
     ReferrerEmpty = 'ReferrerEmpty',

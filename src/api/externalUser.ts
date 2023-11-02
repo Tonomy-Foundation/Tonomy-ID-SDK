@@ -1,5 +1,5 @@
 import { KeyManager, KeyManagerLevel } from '../sdk/storage/keymanager';
-import { OnPressLoginOptions, UserApps } from '../sdk/controllers/userApps';
+import { OnPressLoginOptions, UserApps } from '../sdk/helpers/userApps';
 import { createVCSigner, randomString } from '../sdk/util/crypto';
 import { Issuer } from '@tonomy/did-jwt-vc';
 import { getSettings } from '../sdk/util/settings';
@@ -11,6 +11,7 @@ import { browserStorageFactory } from '../sdk/storage/browserStorage';
 import { getAccount, getChainInfo } from '../sdk/services/blockchain/eosio/eosio';
 import { JsKeyManager } from '../sdk/storage/jsKeyManager';
 import { LoginRequest, LoginRequestPayload } from '../sdk/util/request';
+import { DataSharingRequest, DataSharingRequestPayload } from '../sdk/util';
 import {
     AuthenticationMessage,
     Communication,
@@ -19,15 +20,26 @@ import {
     LinkAuthRequestResponseMessage,
     LoginRequestsMessagePayload,
     Message,
+    ResponsesManager,
 } from '../sdk';
 import { objToBase64Url } from '../sdk/util/base64';
 import { VerifiableCredential } from '../sdk/util/ssi/vc';
 import { DIDurl } from '../sdk/util/ssi/types';
 import { Signer, createKeyManagerSigner, transact } from '../sdk/services/blockchain/eosio/transaction';
+import { createJwkIssuerAndStore } from '../sdk/helpers/jwkStorage';
+import { getLoginRequestResponseFromUrl } from '../sdk/helpers/urls';
 
+/**
+ * The storage data for an external user that has logged in with Tonomy ID
+ *
+ * @param {Name} accountName - the account name of the user
+ * @param {TonomyUsername} [username] - the username of the user
+ * @param {Name} appPermission - the account name of the app the user is logged in with
+ * @param {string} did - the DID of the user
+ */
 export type ExternalUserStorage = {
     accountName: Name;
-    username: TonomyUsername;
+    username?: TonomyUsername;
     appPermission: Name;
     did: string;
 };
@@ -40,6 +52,7 @@ export type VerifyLoginOptions = {
 
 export type LoginWithTonomyMessages = {
     loginRequest: LoginRequest;
+    dataSharingRequest?: DataSharingRequest;
     loginToCommunication: AuthenticationMessage;
 };
 
@@ -109,11 +122,15 @@ export class ExternalUser {
             if (appPermission.toString() !== appPermissionStorage.toString())
                 throwError('App permission has changed', SdkErrors.InvalidData);
 
-            const usernameStorage = await user.getUsername();
-            const personData = await idContract.getPerson(usernameStorage);
+            const username = await user.getUsername();
 
-            if (accountName.toString() !== personData.account_name.toString())
-                throwError('Username has changed', SdkErrors.InvalidData);
+            if (username) {
+                const personData = await idContract.getPerson(username);
+
+                if (accountName.toString() !== personData.account_name.toString())
+                    throwError('Username has changed', SdkErrors.InvalidData);
+            }
+
             return user;
         } catch (e) {
             if (autoLogout) await user.logout();
@@ -189,8 +206,10 @@ export class ExternalUser {
      *
      * @returns {Promise<TonomyUsername>} - the username of the user
      */
-    async getUsername(): Promise<TonomyUsername> {
+    async getUsername(): Promise<TonomyUsername | undefined> {
         const storage = await this.storage.username;
+
+        if (!storage) return;
 
         if (!storage) throwError('Username not set', SdkErrors.InvalidData);
         else if (storage instanceof TonomyUsername) {
@@ -232,11 +251,21 @@ export class ExternalUser {
      * @returns {Promise<LoginWithTonomyMessages | void>} - if redirect is true, returns void, if redirect is false, returns the login request in the form of a JWT token
      */
     static async loginWithTonomy(
-        { redirect = true, callbackPath }: OnPressLoginOptions,
+        { redirect = true, callbackPath, dataRequest }: OnPressLoginOptions,
         keyManager: KeyManager = new JsKeyManager()
     ): Promise<LoginWithTonomyMessages | void> {
-        const issuer = await UserApps.createJwkIssuerAndStore(keyManager);
+        const issuer = await createJwkIssuerAndStore(keyManager);
         const publicKey = await keyManager.getKey({ level: KeyManagerLevel.BROWSER_LOCAL_STORAGE });
+        let dataSharingRequest;
+
+        if (dataRequest) {
+            const dataSharingPayload: DataSharingRequestPayload = {
+                username: dataRequest?.username || false,
+                origin: window.location.origin,
+            };
+
+            dataSharingRequest = await DataSharingRequest.signRequest(dataSharingPayload, issuer);
+        }
 
         const payload: LoginRequestPayload = {
             randomString: randomString(32),
@@ -251,6 +280,11 @@ export class ExternalUser {
             const payload: LoginRequestsMessagePayload = {
                 requests: [loginRequest],
             };
+
+            if (dataSharingRequest) {
+                payload.requests.push(dataSharingRequest);
+            }
+
             const base64UrlPayload = objToBase64Url(payload);
 
             window.location.href = `${getSettings().ssoWebsiteOrigin}/login?payload=${base64UrlPayload}`;
@@ -258,7 +292,7 @@ export class ExternalUser {
         } else {
             const loginToCommunication = await AuthenticationMessage.signMessageWithoutRecipient({}, issuer);
 
-            return { loginRequest, loginToCommunication };
+            return { loginRequest, dataSharingRequest, loginToCommunication };
         }
     }
 
@@ -296,24 +330,26 @@ export class ExternalUser {
         if (!options.checkKeys) options.checkKeys = true;
         const keyManager = options.keyManager || new JsKeyManager();
 
-        const { success, error, requests, username, accountName } = UserApps.getLoginRequestResponseFromUrl();
+        const { success, error, response } = getLoginRequestResponseFromUrl();
 
         if (success === true) {
-            if (!accountName || !username) throwError('No account name found in url', SdkErrors.MissingParams);
+            if (!response) throwError('No response found in url', SdkErrors.MissingParams);
+            const managedResponses = new ResponsesManager(response);
 
-            const result = await UserApps.verifyRequests(requests);
+            await managedResponses.verify();
+            await managedResponses.fetchMeta();
 
-            const loginRequest = result.find((r) => r.getPayload().origin === window.location.origin)?.getPayload();
+            const loginResponse = managedResponses.getLoginResponsesWithSameOriginOrThrow();
             const keyFromStorage = await keyManager.getKey({ level: KeyManagerLevel.BROWSER_LOCAL_STORAGE });
+            const payload = loginResponse.getRequest().getPayload();
 
-            if (!loginRequest) throwError('No login request found for this origin', SdkErrors.OriginMismatch);
-
-            if (loginRequest.publicKey.toString() !== keyFromStorage.toString()) {
+            if (payload.publicKey.toString() !== keyFromStorage.toString()) {
                 throwError('Key in request does not match', SdkErrors.KeyNotFound);
             }
 
             const myStorageFactory = options.storageFactory || browserStorageFactory;
             const externalUser = new ExternalUser(keyManager, myStorageFactory);
+            const accountName = loginResponse.getResponse().getPayload().accountName;
 
             if (options.checkKeys) {
                 const permission = await UserApps.verifyKeyExistsForApp(accountName, { keyManager });
@@ -322,7 +358,12 @@ export class ExternalUser {
             }
 
             await externalUser.setAccountName(accountName);
-            await externalUser.setUsername(username);
+
+            const dataSharingResponse = managedResponses.getDataSharingResponseWithSameOrigin();
+
+            if (dataSharingResponse && dataSharingResponse.getResponse().getPayload().data.username) {
+                await externalUser.setUsername(dataSharingResponse.getResponse().getPayload().data.username);
+            }
 
             return externalUser;
         } else {

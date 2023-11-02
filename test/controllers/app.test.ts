@@ -1,11 +1,11 @@
 import { PrivateKey, PublicKey } from '@wharfkit/antelope';
-import { UserApps } from '../../src/sdk/controllers/userApps';
 import { generateRandomKeyPair } from '../../src/sdk/util/crypto';
 import URL from 'jsdom-url';
 import { ExternalUser, LoginWithTonomyMessages } from '../../src/api/externalUser';
-import { LoginRequest } from '../../src/sdk/util/request';
+import { LoginRequestPayload } from '../../src/sdk/util/request';
 import { objToBase64Url } from '../../src/sdk/util/base64';
 import { setTestSettings } from '../../test-integration/helpers/settings';
+import { onRedirectLogin } from '../../src/sdk/helpers/urls';
 
 // @ts-expect-error - URL type on global does not match
 global.URL = URL;
@@ -30,12 +30,12 @@ describe('logging in', () => {
     });
 
     it('checks login url', async () => {
-        const { loginRequest } = (await ExternalUser.loginWithTonomy({
+        const { loginRequest, dataSharingRequest } = (await ExternalUser.loginWithTonomy({
             callbackPath: '/login',
             redirect: false,
         })) as LoginWithTonomyMessages;
         const payload = {
-            requests: [loginRequest],
+            requests: [loginRequest, dataSharingRequest],
         };
         const base64UrlPayload = objToBase64Url(payload);
         const url = 'http://localhost/login?payload=' + base64UrlPayload;
@@ -48,13 +48,15 @@ describe('logging in', () => {
             url,
         });
 
-        const result = await UserApps.onRedirectLogin();
+        const requests = await onRedirectLogin();
 
-        expect(result).toBeInstanceOf(LoginRequest);
-        expect(result).toBeDefined();
-        expect(typeof result.getPayload().randomString).toBe('string');
-        expect(result.getPayload().publicKey).toBeInstanceOf(PublicKey);
-        expect(result.getPayload().origin).toBe('http://localhost');
-        expect(result.getPayload().callbackPath).toBe('/login');
+        expect(requests).toBeDefined();
+
+        const receivedLoginRequest = requests.getRequests()[0].getPayload() as LoginRequestPayload;
+
+        expect(typeof receivedLoginRequest.randomString).toBe('string');
+        expect(receivedLoginRequest.publicKey).toBeInstanceOf(PublicKey);
+        expect(receivedLoginRequest.origin).toBe('http://localhost');
+        expect(receivedLoginRequest.callbackPath).toBe('/login');
     });
 });
