@@ -1,0 +1,119 @@
+import { Name, PublicKey } from '@wharfkit/antelope';
+import { LoginRequestResponseMessage, LoginRequestResponseMessagePayload } from '../services/communication/message';
+import { AbstractUserBase } from '../types/User';
+import { DID, SdkErrors, objToBase64Url, throwError, URL as URLtype } from '../util';
+import { ResponsesManager } from './responsesManager';
+import { KeyManager, KeyManagerLevel } from '../storage/keymanager';
+import { getAccountInfo } from '../controllers/User';
+import { App } from '../controllers/App';
+
+/**
+ * Rejects a login request by sending a response to the requesting app
+ *
+ * @static function so that it can be used to cancel requests in flows where users are not logged in
+ *
+ * @param {WalletRequest[]} requests - Array of requests to reject
+ * @param {'mobile' | 'browser'} platform - Platform of the request, either 'mobile' or 'browser'
+ * @param {{ code: SdkErrors, reason: string }} error - Error to send back to the requesting app
+ * @param {{callbackPath?: URLtype, messageRecipient?: DID}} options - Options for the response
+ * @returns {Promise<void | URLtype>} the callback url if the platform is mobile, or undefined if it is browser (a message is sent to the user)
+ */
+export async function terminateLoginRequest(
+    responsesManager: ResponsesManager,
+    returnType: 'mobile' | 'browser',
+    error: {
+        code: SdkErrors;
+        reason: string;
+    },
+    options: {
+        callbackOrigin?: URLtype;
+        callbackPath?: URLtype;
+        messageRecipient?: DID;
+        user?: AbstractUserBase;
+    }
+): Promise<void | URLtype> {
+    const responsePayload: LoginRequestResponseMessagePayload = {
+        success: false,
+        error: {
+            ...error,
+            requests: responsesManager.getRequests(),
+        },
+    };
+
+    if (returnType === 'mobile') {
+        if (!options.callbackPath || !options.callbackOrigin)
+            throwError('Missing callback path', SdkErrors.MissingParams);
+        let callbackUrl = options.callbackOrigin + options.callbackPath + '?';
+
+        callbackUrl += 'payload=' + objToBase64Url(responsePayload);
+
+        return callbackUrl;
+    } else {
+        if (!options.messageRecipient || !options.user)
+            throwError('Missing message recipient', SdkErrors.MissingParams);
+        const issuer = await options.user.getIssuer();
+        const message = await LoginRequestResponseMessage.signMessage(
+            responsePayload,
+            issuer,
+            options.messageRecipient
+        );
+
+        await options.user.communication.sendMessage(message);
+    }
+}
+
+/**
+ * Checks that a key exists in the key manager that has been authorized on the DID
+ *
+ * @description This is called on the callback page to verify that the user has logged in correctly
+ *
+ * @param {string} [accountName] - the account name to check the key on
+ * @param {PublicKey} [publicKey] - the public key to check. if not supplied it will try lookup the app from window.location.origin
+ * @param {KeyManager} [keyManager] - the key manager to check the key in
+ * @param {KeyManagerLevel} [keyManagerLevel=BROWSER_LOCAL_STORAGE] - the level to check the key in
+ * @returns {Promise<Name>} - the name of the permission that the key is authorized on
+ *
+ * @throws {SdkError} - if the key doesn't exist or isn't authorized
+ */
+export async function verifyKeyExistsForApp(
+    accountName: Name,
+    options: {
+        publicKey?: PublicKey;
+        keyManager?: KeyManager;
+    }
+): Promise<Name> {
+    const account = await getAccountInfo(accountName);
+
+    if (!account) throwError("couldn't fetch account", SdkErrors.AccountNotFound);
+
+    if (options.publicKey) {
+        const pubKey = options.publicKey;
+
+        const permissionWithKey = account.permissions.find(
+            (p) => p.required_auth.keys[0].key.toString() === pubKey.toString()
+        );
+
+        if (!permissionWithKey)
+            throwError(`No permission found with key ${pubKey}`, SdkErrors.UserNotLoggedInWithThisApp);
+
+        return permissionWithKey.perm_name;
+    } else {
+        if (!options.keyManager) throwError('keyManager missing', SdkErrors.MissingParams);
+        const pubKey = await options.keyManager.getKey({ level: KeyManagerLevel.BROWSER_LOCAL_STORAGE });
+
+        const app = await App.getApp(window.location.origin);
+
+        try {
+            const permission = account.getPermission(app.accountName);
+            const publicKey = permission.required_auth.keys[0].key;
+
+            if (pubKey.toString() !== publicKey.toString()) throwError('key not authorized', SdkErrors.KeyNotFound);
+        } catch (e) {
+            if (e.message.startsWith('Unknown permission '))
+                throwError(`No permission found for app ${app.accountName}`, SdkErrors.UserNotLoggedInWithThisApp);
+            else throw e;
+        }
+
+        return app.accountName;
+    }
+}

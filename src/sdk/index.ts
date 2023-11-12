@@ -2,11 +2,10 @@
 
 // Controllers
 export * from './controllers/User';
-export * from './helpers/userApps';
-export * from './controllers/app';
+export * from './controllers/App';
 
 // Controller helpers
-export * from './helpers/userApps';
+// export * from './helpers/userApps';
 export * from './helpers/jwkStorage';
 export * from './helpers/requestsManager';
 export * from './helpers/responsesManager';

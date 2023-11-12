@@ -1,6 +1,6 @@
 import { Name } from '@wharfkit/antelope';
-import { App } from '../controllers/app';
-import { User } from '../controllers/User';
+import { App } from '../controllers/App';
+import { AbstractUserRequestsManager } from '../controllers/User';
 import {
     DataSharingRequest,
     LoginRequest,
@@ -18,7 +18,7 @@ import {
     WalletRequestResponse,
 } from '../util/response';
 import { RequestsManager, castToWalletRequestSubclass } from './requestsManager';
-import { UserApps } from './userApps';
+import { verifyKeyExistsForApp } from './user';
 
 type WalletResponseMeta = {
     app: App;
@@ -169,7 +169,7 @@ export class ResponsesManager {
                     let requiresLogin = true;
 
                     try {
-                        await UserApps.verifyKeyExistsForApp(options.accountName, {
+                        await verifyKeyExistsForApp(options.accountName, {
                             publicKey: response.getRequest().getPayload().publicKey,
                         });
                         // User already logged in with this key
@@ -208,7 +208,7 @@ export class ResponsesManager {
         }
     }
 
-    async createResponses(user: User): Promise<WalletRequestAndResponse[]> {
+    async createResponses(user: AbstractUserRequestsManager): Promise<WalletRequestAndResponse[]> {
         const issuer = await user.getIssuer();
 
         for (const response of this.responses) {
@@ -216,7 +216,7 @@ export class ResponsesManager {
 
             if (request instanceof LoginRequest) {
                 if (response.getMetaOrThrow().requiresLogin === true) {
-                    await user.apps.loginWithApp(response.getAppOrThrow(), request.getPayload().publicKey);
+                    await user.loginWithApp(response.getAppOrThrow(), request.getPayload().publicKey);
                 }
 
                 response.setResponse(
