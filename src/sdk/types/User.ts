@@ -98,6 +98,12 @@ export interface IUserOnboarding {
     isLoggedIn(): Promise<boolean>;
     createPerson(): Promise<void>;
     saveUsername(username: string): Promise<void>;
+
+    /**
+     * Check if a username already exists
+     * @param {string} username - a string param that represents the username
+     * @returns {boolean} true if username already exists and false if doesn't exists
+     */
     usernameExists(username: string): Promise<boolean>;
     updateKeys(password: string): Promise<void>;
     checkKeysStillValid(): Promise<boolean>;
@@ -112,6 +118,15 @@ import { AppStatusEnum } from './AppStatusEnum';
 export interface IUserRequestsManager {
     handleLinkAuthRequestMessage(message: Message): Promise<void>;
     loginWithApp(app: App, key: PublicKey): Promise<void>;
+
+    /** Accepts a login request by authorizing keys on the blockchain (if the are not already authorized)
+     * And sends a response to the requesting app
+     *
+     * @param {{request: WalletRequest, app?: App, requiresLogin?: boolean}[]} requestsWithMetadata - Array of requests to fulfill (login or data sharing requests)
+     * @param {'mobile' | 'browser'} platform - Platform of the request, either 'mobile' or 'browser'
+     * @param {{callbackPath?: URLtype, messageRecipient?: DID}} options - Options for the response
+     * @returns {Promise<void | URLtype>} the callback url if the platform is mobile, or undefined if it is browser (a message is sent to the user)
+     */
     acceptLoginRequest(
         responsesManager: ResponsesManager,
         platform: 'mobile' | 'browser',
@@ -121,5 +136,14 @@ export interface IUserRequestsManager {
             messageRecipient?: DID;
         }
     ): Promise<void | URLtype>;
+
+    /** Verifies the login requests, and checks if the apps have already been authorized with those keys
+     * This function is currently only used in the unfinished feature https://github.com/Tonomy-Foundation/Tonomy-ID/issues/705
+     * See unmerged PR https://github.com/Tonomy-Foundation/Tonomy-ID/pull/744
+     * @depreciated This function is now incorporated in ResponsesManager.fetchMeta()
+     *
+     * @param {LoginRequest[]} requests - Array of LoginRequest to check
+     * @returns {Promise<CheckedRequest[]>} - Array of requests that have been verified and had authorization checked
+     */
     checkLoginRequests(requests: LoginRequest[]): Promise<ICheckedRequest[]>;
 }

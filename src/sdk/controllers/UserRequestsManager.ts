@@ -101,14 +101,6 @@ export abstract class AbstractUserRequestsManager extends AbstractUserBase imple
         await this.storage.appRecords;
     }
 
-    /** Accepts a login request by authorizing keys on the blockchain (if the are not already authorized)
-     * And sends a response to the requesting app
-     *
-     * @param {{request: WalletRequest, app?: App, requiresLogin?: boolean}[]} requestsWithMetadata - Array of requests to fulfill (login or data sharing requests)
-     * @param {'mobile' | 'browser'} platform - Platform of the request, either 'mobile' or 'browser'
-     * @param {{callbackPath?: URLtype, messageRecipient?: DID}} options - Options for the response
-     * @returns {Promise<void | URLtype>} the callback url if the platform is mobile, or undefined if it is browser (a message is sent to the user)
-     */
     async acceptLoginRequest(
         responsesManager: ResponsesManager,
         platform: 'mobile' | 'browser',
@@ -146,14 +138,6 @@ export abstract class AbstractUserRequestsManager extends AbstractUserBase imple
         }
     }
 
-    /** Verifies the login requests, and checks if the apps have already been authorized with those keys
-     * This function is currently only used in the unfinished feature https://github.com/Tonomy-Foundation/Tonomy-ID/issues/705
-     * See unmerged PR https://github.com/Tonomy-Foundation/Tonomy-ID/pull/744
-     * @depreciated This function is now incorporated in ResponsesManager.fetchMeta()
-     *
-     * @param {LoginRequest[]} requests - Array of LoginRequest to check
-     * @returns {Promise<CheckedRequest[]>} - Array of requests that have been verified and had authorization checked
-     */
     async checkLoginRequests(requests: LoginRequest[]): Promise<ICheckedRequest[]> {
         const managedRequests = new RequestsManager(requests);
 
