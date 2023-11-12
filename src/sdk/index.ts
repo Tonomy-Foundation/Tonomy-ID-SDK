@@ -1,7 +1,7 @@
 // SDK
 
 // Controllers
-export * from './controllers/user';
+export * from './controllers/User';
 export * from './helpers/userApps';
 export * from './controllers/app';
 

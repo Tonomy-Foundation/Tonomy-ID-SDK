@@ -1,6 +1,6 @@
 import { Name } from '@wharfkit/antelope';
 import { App } from '../controllers/app';
-import { User } from '../controllers/user';
+import { User } from '../controllers/User';
 import {
     DataSharingRequest,
     LoginRequest,

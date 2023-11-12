@@ -3,7 +3,7 @@ import { Name, PublicKey } from '@wharfkit/antelope';
 import { IDContract } from '../services/blockchain/contracts/IDContract';
 import { KeyManager, KeyManagerLevel } from '../storage/keymanager';
 import { createStorage, PersistentStorageClean, StorageFactory, STORAGE_NAMESPACE } from '../storage/storage';
-import { User } from '../controllers/user';
+import { User } from '../controllers/User';
 import { createKeyManagerSigner } from '../services/blockchain/eosio/transaction';
 import { SdkError, SdkErrors, throwError } from '../util/errors';
 import { App, AppStatus } from '../controllers/app';
