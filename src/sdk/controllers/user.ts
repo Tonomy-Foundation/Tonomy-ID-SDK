@@ -14,6 +14,7 @@ import { createVCSigner, generateRandomKeyPair } from '../util/crypto';
 import { Message, LinkAuthRequestMessage, LinkAuthRequestResponseMessage } from '../services/communication/message';
 import { getAccountNameFromDid, parseDid } from '../util/ssi/did';
 import { createAccount } from '../services/communication/accounts';
+import { UserStatusEnum } from '../types/UserStatusEnum';
 
 enum UserStatus {
     CREATING_ACCOUNT = 'CREATING_ACCOUNT',
@@ -22,44 +23,13 @@ enum UserStatus {
     DEACTIVATED = 'DEACTIVATED',
 }
 
-// eslint-disable-next-line @typescript-eslint/no-namespace
-namespace UserStatus {
-    /*
-     * Returns the index of the enum value
-     *
-     * @param value The level to get the index of
-     */
-    export function indexFor(value: UserStatus): number {
-        return Object.keys(UserStatus).indexOf(value);
-    }
-
-    /*
-     * Creates an AuthenticatorLevel from a string or index of the level
-     *
-     * @param value The string or index
-     */
-    export function from(value: number | string): UserStatus {
-        let index: number;
-
-        if (typeof value !== 'number') {
-            index = UserStatus.indexFor(value as UserStatus);
-        } else {
-            index = value;
-        }
-
-        return Object.values(UserStatus)[index] as UserStatus;
-    }
-}
-
-export { UserStatus };
-
 type KeyFromPasswordFn = (
     password: string,
     salt?: Checksum256
 ) => Promise<{ privateKey: PrivateKey; salt: Checksum256 }>;
 
 export type UserStorage = {
-    status: UserStatus;
+    status: UserStatusEnum;
     accountName: Name;
     username: TonomyUsername;
     salt: Checksum256;
