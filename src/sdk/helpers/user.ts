@@ -1,11 +1,41 @@
-import { Name, PublicKey } from '@wharfkit/antelope';
+import { Name, API, PublicKey } from '@wharfkit/antelope';
 import { LoginRequestResponseMessage, LoginRequestResponseMessagePayload } from '../services/communication/message';
 import { AbstractUserBase } from '../types/User';
 import { DID, SdkErrors, objToBase64Url, throwError, URL as URLtype } from '../util';
 import { ResponsesManager } from './responsesManager';
 import { KeyManager, KeyManagerLevel } from '../storage/keymanager';
-import { getAccountInfo } from '../controllers/User';
 import { App } from '../controllers/App';
+import { getAccount } from '../services/blockchain/eosio/eosio';
+import { StorageFactory } from '../storage/storage';
+import { TonomyUsername } from '../util/username';
+import { IDContract } from '../services/blockchain';
+import { User } from '../controllers/User';
+
+const idContract = IDContract.Instance;
+
+export async function getAccountInfo(account: TonomyUsername | Name): Promise<API.v1.AccountObject> {
+    let accountName: Name;
+
+    if (account instanceof TonomyUsername) {
+        const idData = await idContract.getPerson(account);
+
+        accountName = idData.account_name;
+    } else {
+        accountName = account;
+    }
+
+    return await getAccount(accountName);
+}
+
+/**
+ * Initialize and return the user object
+ * @param keyManager  the key manager
+ * @param storage  the storage
+ * @returns the user object
+ */
+export function createUserObject(keyManager: KeyManager, storageFactory: StorageFactory): User {
+    return new User(keyManager, storageFactory);
+}
 
 /**
  * Rejects a login request by sending a response to the requesting app

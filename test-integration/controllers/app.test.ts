@@ -2,6 +2,7 @@
 import { createRandomApp, createRandomID } from '../helpers/user';
 import { User, AppStatus, generateRandomKeyPair } from '../../src/sdk/index';
 import { setTestSettings } from '../helpers/settings';
+import { getAccountInfo } from '../../src/sdk/helpers/user';
 
 setTestSettings();
 
@@ -15,7 +16,7 @@ describe('App class', () => {
 
         await user.apps.loginWithApp(app, newKey.toPublic());
 
-        const accountInfo = await User.getAccountInfo(userAccountName);
+        const accountInfo = await getAccountInfo(userAccountName);
 
         const permissions = accountInfo.permissions;
         const appPermission = permissions.find((p) => p.perm_name.toString() === app.accountName.toString());

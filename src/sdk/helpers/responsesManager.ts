@@ -1,6 +1,6 @@
 import { Name } from '@wharfkit/antelope';
 import { App } from '../controllers/App';
-import { AbstractUserRequestsManager } from '../controllers/User';
+import { AbstractUserRequestsManager } from '../controllers/UserRequestsManager';
 import {
     DataSharingRequest,
     LoginRequest,

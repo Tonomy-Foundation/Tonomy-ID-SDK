@@ -7,6 +7,7 @@ import { Checksum256 } from '@wharfkit/antelope';
 import { generatePrivateKeyFromPassword } from '../../src/cli/bootstrap/keys';
 import { getAccount } from '../../src/sdk/services/blockchain/eosio/eosio';
 import { setTestSettings } from '../helpers/settings';
+import { getAccountInfo } from '../../src/sdk/helpers/user';
 
 setTestSettings();
 
@@ -216,12 +217,12 @@ describe('User class', () => {
         const { user } = await createRandomID();
 
         // get by account name
-        let userInfo = await User.getAccountInfo(await user.getAccountName());
+        let userInfo = await getAccountInfo(await user.getAccountName());
 
         expect(userInfo.account_name).toEqual(await user.getAccountName());
 
         // get by username
-        userInfo = await User.getAccountInfo(await user.getUsername());
+        userInfo = await getAccountInfo(await user.getUsername());
 
         expect(userInfo.account_name).toEqual(await user.getAccountName());
 
