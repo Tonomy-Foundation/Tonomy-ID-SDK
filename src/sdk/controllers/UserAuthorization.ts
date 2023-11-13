@@ -3,12 +3,13 @@ import { KeyManagerLevel } from '../storage/keymanager';
 import { IDContract } from '../services/blockchain/contracts/IDContract';
 import { SdkErrors, throwError } from '../util/errors';
 import { generateRandomKeyPair } from '../util/crypto';
-import { AbstractUserBase, ICreateAccountOptions, ILoginOptions, IUserAuthentication } from '../types/User';
+import { ICreateAccountOptions, ILoginOptions, IUserAuthentication } from '../types/User';
 import { getAccountInfo } from '../helpers/user';
+import { UserBase } from './UserBase';
 
 const idContract = IDContract.Instance;
 
-export abstract class AbstractUserAuthorization extends AbstractUserBase implements IUserAuthentication {
+export class UserAuthorization extends UserBase implements IUserAuthentication {
     async savePassword(masterPassword: string, options: ICreateAccountOptions): Promise<void> {
         let privateKey: PrivateKey;
         let salt: Checksum256;

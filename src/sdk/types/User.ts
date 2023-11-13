@@ -9,6 +9,9 @@ import { PersistentStorageClean } from '../storage/storage';
 import { Communication } from '../services/communication/communication';
 import { App } from '../controllers/App';
 import { DID, LoginRequest, WalletRequest, URL as URLtype } from '../util';
+import { PublicKey } from '@wharfkit/antelope';
+import { ResponsesManager } from '../helpers/responsesManager';
+import { AppStatusEnum } from './AppStatusEnum';
 
 type KeyFromPasswordFn = (
     password: string,
@@ -69,7 +72,7 @@ export interface IUserBase {
 export abstract class AbstractUserBase implements IUserBase {
     protected abstract keyManager: KeyManager;
     protected abstract storage: IUserStorage & PersistentStorageClean;
-    // TODO make `communication` this protected!
+    // TODO make `communication` protected
     abstract communication: Communication;
 
     abstract getStatus(): Promise<UserStatusEnum>;
@@ -79,7 +82,7 @@ export abstract class AbstractUserBase implements IUserBase {
     abstract getIssuer(): Promise<Issuer>;
 }
 
-export interface IUserAuthentication {
+export interface IUserAuthentication extends IUserBase {
     savePassword(masterPassword: string, options: ICreateAccountOptions): Promise<void>;
     checkPassword(password: string, options: ILoginOptions): Promise<boolean>;
     savePIN(pin: string): Promise<void>;
@@ -88,12 +91,12 @@ export interface IUserAuthentication {
     saveLocal(): Promise<void>;
 }
 
-export interface IUserHCaptcha {
+export interface IUserHCaptcha extends IUserBase {
     getCaptchaToken(): Promise<string>;
     saveCaptchaToken(captchaToken: string): Promise<void>;
 }
 
-export interface IUserOnboarding {
+export interface IUserOnboarding extends IUserAuthentication {
     login(username: TonomyUsername, password: string, options: ILoginOptions): Promise<GetPersonResponse>;
     isLoggedIn(): Promise<boolean>;
     createPerson(): Promise<void>;
@@ -111,11 +114,7 @@ export interface IUserOnboarding {
     initializeFromStorage(): Promise<boolean>;
 }
 
-import { PublicKey } from '@wharfkit/antelope';
-import { ResponsesManager } from '../helpers/responsesManager';
-import { AppStatusEnum } from './AppStatusEnum';
-
-export interface IUserRequestsManager {
+export interface IUserRequestsManager extends IUserBase {
     handleLinkAuthRequestMessage(message: Message): Promise<void>;
     loginWithApp(app: App, key: PublicKey): Promise<void>;
 

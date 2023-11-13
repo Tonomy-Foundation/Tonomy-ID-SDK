@@ -6,7 +6,7 @@ import { SdkErrors, throwError, SdkError } from '../util/errors';
 import { getSettings } from '../util/settings';
 import { Message, LinkAuthRequestMessage, LinkAuthRequestResponseMessage } from '../services/communication/message';
 import { getAccountNameFromDid, parseDid } from '../util/ssi/did';
-import { AbstractUserBase, ICheckedRequest, IUserAppRecord, IUserRequestsManager } from '../types/User';
+import { ICheckedRequest, IUserAppRecord, IUserRequestsManager } from '../types/User';
 import { PublicKey } from '@wharfkit/antelope';
 import { LoginRequest } from '../util/request';
 import { LoginRequestResponseMessage } from '../services/communication/message';
@@ -18,10 +18,11 @@ import { ResponsesManager } from '../helpers/responsesManager';
 import { App } from './App';
 import { AppStatusEnum } from '../types/AppStatusEnum';
 import { verifyKeyExistsForApp } from '../helpers/user';
+import { UserBase } from './UserBase';
 
 const idContract = IDContract.Instance;
 
-export abstract class AbstractUserRequestsManager extends AbstractUserBase implements IUserRequestsManager {
+export class UserRequestsManager extends UserBase implements IUserRequestsManager {
     async handleLinkAuthRequestMessage(message: Message): Promise<void> {
         const linkAuthRequestMessage = new LinkAuthRequestMessage(message);
 

@@ -1,6 +1,5 @@
 import { Name } from '@wharfkit/antelope';
 import { App } from '../controllers/App';
-import { AbstractUserRequestsManager } from '../controllers/UserRequestsManager';
 import {
     DataSharingRequest,
     LoginRequest,
@@ -19,6 +18,7 @@ import {
 } from '../util/response';
 import { RequestsManager, castToWalletRequestSubclass } from './requestsManager';
 import { verifyKeyExistsForApp } from './user';
+import { IUserRequestsManager } from '../types/User';
 
 type WalletResponseMeta = {
     app: App;
@@ -208,7 +208,7 @@ export class ResponsesManager {
         }
     }
 
-    async createResponses(user: AbstractUserRequestsManager): Promise<WalletRequestAndResponse[]> {
+    async createResponses(user: IUserRequestsManager): Promise<WalletRequestAndResponse[]> {
         const issuer = await user.getIssuer();
 
         for (const response of this.responses) {

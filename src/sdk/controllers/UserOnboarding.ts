@@ -9,12 +9,12 @@ import { getSettings } from '../util/settings';
 import { createAccount } from '../services/communication/accounts';
 import { UserStatusEnum } from '../types/UserStatusEnum';
 import { ILoginOptions, IUserOnboarding } from '../types/User';
-import { AbstractUserAuthorization } from './UserAuthorization';
+import { UserAuthorization } from './UserAuthorization';
 import { getAccountInfo } from '../helpers/user';
 
 const idContract = IDContract.Instance;
 
-export abstract class AbstractUserOnboarding extends AbstractUserAuthorization implements IUserOnboarding {
+export class UserOnboarding extends UserAuthorization implements IUserOnboarding {
     private chainID!: Checksum256;
 
     private validateUsername(username: string): void {
