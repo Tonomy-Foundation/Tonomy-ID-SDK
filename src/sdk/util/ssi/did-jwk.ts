@@ -2,8 +2,30 @@ import { PublicKey } from '@wharfkit/antelope';
 import { toElliptic } from '../crypto';
 import { base64ToStr, bnToBase64Url, strToBase64 } from '../base64';
 import { ResolverRegistry, ParsedDID, DIDResolutionResult, DIDDocument } from '@tonomy/did-resolver';
+import { agent, createDidKeyAgent } from './veramoAgent';
+import { bytesToHex } from '@tonomy/did-jwt/lib/util';
+import { DIDurl } from './types';
 
-export function createJWK(publicKey: PublicKey) {
+export async function publicKeyToDidKey(publicKey: PublicKey): Promise<DIDurl> {
+    const keyHex = bytesToHex(publicKey.data.array);
+
+    const identifier = await agent.didManagerImport({
+        did: 'did:key:1',
+        // alias: 'did:key 1',
+        provider: 'did:key',
+        keys: [
+            {
+                privateKeyHex: keyHex,
+                type: 'Secp256k1',
+                kms: 'local',
+            },
+        ],
+    });
+
+    return identifier.did;
+}
+
+export async function createJWK(publicKey: PublicKey) {
     const ecPubKey = toElliptic(publicKey);
 
     const publicKeyJwk = {

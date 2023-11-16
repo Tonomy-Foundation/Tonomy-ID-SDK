@@ -2,14 +2,13 @@
 import { KeyManager, KeyManagerLevel } from '../storage/keymanager';
 import { Issuer } from '@tonomy/did-jwt-vc';
 import { ES256KSigner, JsKeyManager, createVCSigner, generateRandomKeyPair } from '..';
-import { createJWK, toDid } from '../util/ssi/did-jwk';
+import { publicKeyToDidKey } from '../util/ssi/did-jwk';
 
 export async function createJwkIssuerAndStore(keyManager: KeyManager = new JsKeyManager()): Promise<Issuer> {
     const { privateKey, publicKey } = generateRandomKeyPair();
 
     const signer = ES256KSigner(privateKey.data.array, true);
-    const jwk = await createJWK(publicKey);
-    const did = toDid(jwk);
+    const did = await publicKeyToDidKey(publicKey);
 
     await keyManager.storeKey({
         level: KeyManagerLevel.BROWSER_LOCAL_STORAGE,
@@ -29,10 +28,10 @@ export async function getJwkIssuerFromStorage(keyManager: KeyManager = new JsKey
     });
     const signer = createVCSigner(keyManager, KeyManagerLevel.BROWSER_LOCAL_STORAGE);
 
-    const jwk = await createJWK(publicKey);
+    const did = await publicKeyToDidKey(publicKey);
 
     return {
-        did: toDid(jwk),
+        did,
         signer: signer.sign as any,
         alg: 'ES256K-R',
     };
