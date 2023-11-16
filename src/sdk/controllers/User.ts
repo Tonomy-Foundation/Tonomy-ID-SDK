@@ -8,4 +8,6 @@ import { UserRequestsManager } from './UserRequestsManager';
 
 export class User
     extends Mixin(UserBase, UserAuthorization, UserHCaptcha, UserOnboarding, UserRequestsManager)
-    implements IUser { }
+    implements IUser {
+    // No implementation needed. Stop prettier error
+}
