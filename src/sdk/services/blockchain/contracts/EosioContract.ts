@@ -102,26 +102,26 @@ class EosioContract {
         auth: Authority,
         signer: Signer
     ): Promise<API.v1.PushTransactionResponse> {
-        const action = {
-            authorization: [
-                {
-                    actor: account,
-                    permission: parent, // all higher parents, and permission, work as authorization. though permission is supposed to be the authorization that works
+        const action = [
+            {
+                authorization: [
+                    {
+                        actor: account,
+                        permission: parent, // all higher parents, and permission, work as authorization. though permission is supposed to be the authorization that works
+                    },
+                ],
+                account: 'eosio',
+                name: 'updateauth',
+                data: {
+                    account,
+                    permission,
+                    parent: permission === 'owner' ? '' : parent,
+                    auth,
                 },
-            ],
-            account: 'eosio',
-            name: 'updateauth',
-            data: {
-                account,
-                permission,
-                parent: permission === 'owner' ? '' : parent,
-                auth,
             },
-        };
+        ];
 
-        console.log('action', action);
-
-        return await transact(Name.from('eosio'), [action], signer);
+        return await transact(Name.from('eosio'), action, signer);
     }
 
     /**

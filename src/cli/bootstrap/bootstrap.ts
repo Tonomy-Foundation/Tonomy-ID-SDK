@@ -2,7 +2,7 @@ import deployContract from './deploy-contract';
 import path from 'path';
 import { createAntelopeAccount, createApp } from './create-account';
 import { EosioTokenContract, EosioUtil, setSettings } from '../../sdk/index';
-import { signer, updateAccountKey } from './keys';
+import { signer, updateAccountKey, updateControllAccountKey } from './keys';
 import settings from './settings';
 import { createUser, mockCreateAccount, restoreCreateAccountFromMock } from './user';
 import { PrivateKey } from '@wharfkit/antelope';
@@ -35,7 +35,21 @@ export default async function bootstrap(args: string[]) {
             signer
         );
         await createAntelopeAccount({ account: 'found.tmy' }, signer);
+        // found.tmy should be controlled by the following accounts
         await createAntelopeAccount({ account: 'gov.tmy' }, signer);
+        await createAntelopeAccount({ account: 'team.tmy' }, signer);
+        await createAntelopeAccount({ account: 'prod1.tmy' }, signer);
+        await createAntelopeAccount({ account: 'prod2.tmy' }, signer);
+        await createAntelopeAccount({ account: 'prod3.tmy' }, signer);
+        // gov.tmy should be controlled by the following accounts
+        await createAntelopeAccount({ account: 'ecosys.tmy' }, signer);
+        await createAntelopeAccount({ account: 'private1.tmy' }, signer);
+        await createAntelopeAccount({ account: 'private2.tmy' }, signer);
+        await createAntelopeAccount({ account: 'private3.tmy' }, signer);
+        await createAntelopeAccount({ account: 'public1.tmy' }, signer);
+        await createAntelopeAccount({ account: 'public2.tmy' }, signer);
+        await createAntelopeAccount({ account: 'public3.tmy' }, signer);
+        await createAntelopeAccount({ account: 'opration.tmy' }, signer);
 
         const demo = await createApp({
             appName: 'Tonomy Demo',
@@ -67,7 +81,7 @@ export default async function bootstrap(args: string[]) {
 
         // Create users for the demo website
         password = 'mrOOR1WW0y#6ot7z%Wbj';
-        await createUser('lovesboost1', password);
+        await createUser('lovesboost', password);
         await createUser('sweetkristy', password);
         await createUser('cheesecakeophobia', password);
         await createUser('ultimateBeast', password);
@@ -83,9 +97,25 @@ export default async function bootstrap(args: string[]) {
         console.log('Change the key of the accounts to the new key', newPublicKey.toString());
         await updateAccountKey('id.tmy', newPublicKey, true);
         await updateAccountKey('eosio.token', newPublicKey, true);
-        await updateAccountKey('eosio', newPublicKey);
+        // accounts controlled by found.tmy
         await updateAccountKey('found.tmy', newPublicKey, true);
-        await updateAccountKey('gov.tmy', newPublicKey, true, 'found.tmy');
+        await updateControllAccountKey('gov.tmy', 'found.tmy');
+        await updateControllAccountKey('team.tmy', 'found.tmy');
+        await updateControllAccountKey('prod1.tmy', 'found.tmy');
+        await updateControllAccountKey('prod2.tmy', 'found.tmy');
+        await updateControllAccountKey('prod3.tmy', 'found.tmy');
+        //accounts controlled by gov.tmy
+        await updateControllAccountKey('eosio', 'gov.tmy');
+        await updateControllAccountKey('id.tmy', 'gov.tmy');
+        await updateControllAccountKey('ecosys.tmy', 'gov.tmy');
+        await updateControllAccountKey('private1.tmy', 'gov.tmy');
+        await updateControllAccountKey('private2.tmy', 'gov.tmy');
+        await updateControllAccountKey('private3.tmy', 'gov.tmy');
+        await updateControllAccountKey('public1.tmy', 'gov.tmy');
+        await updateControllAccountKey('public2.tmy', 'gov.tmy');
+        await updateControllAccountKey('public3.tmy', 'gov.tmy');
+        await updateControllAccountKey('opration.tmy', 'gov.tmy');
+
         // TODO change the block signing key as well
 
         console.log('Deploy Tonomy bios contract, which limits access to system actions');
