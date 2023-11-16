@@ -1,8 +1,7 @@
 import { LoginRequestsMessage, generateRandomKeyPair, randomString } from '../../src/sdk';
-import { createJWK } from '../../src/sdk/util/ssi/did-jwk';
+import { publicKeyToDidKey } from '../../src/sdk/util/ssi/did-jwk';
 import { ES256KSigner } from '@tonomy/did-jwt';
 import { Issuer } from '@tonomy/did-jwt-vc';
-import { toDid } from '../../src/sdk/util/ssi/did-jwk';
 import { LoginRequest, LoginRequestPayload } from '../../src/sdk/util/request';
 import { PublicKey } from '@wharfkit/antelope';
 import { setTestSettings } from '../../test-integration/helpers/settings';
@@ -16,8 +15,7 @@ describe('Request class', () => {
     beforeEach(async () => {
         const { privateKey, publicKey } = generateRandomKeyPair();
         const signer = ES256KSigner(privateKey.data.array, true);
-        const jwk = await createJWK(publicKey);
-        const did = toDid(jwk);
+        const did = await publicKeyToDidKey(publicKey);
 
         issuer = {
             did,
@@ -67,8 +65,7 @@ describe('LoginRequest class', () => {
 
         myPublicKey = publicKey;
         const signer = ES256KSigner(privateKey.data.array, true);
-        const jwk = await createJWK(publicKey);
-        const did = toDid(jwk);
+        const did = await publicKeyToDidKey(publicKey);
 
         issuer = {
             did,
@@ -105,8 +102,7 @@ describe('LoginRequestMessage class', () => {
 
         myPublicKey = publicKey;
         const signer = ES256KSigner(privateKey.data.array, true);
-        const jwk = await createJWK(publicKey);
-        const did = toDid(jwk);
+        const did = await publicKeyToDidKey(publicKey);
 
         issuer = {
             did,

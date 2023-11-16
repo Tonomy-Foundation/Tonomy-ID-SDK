@@ -2,7 +2,7 @@ import { PrivateKey } from '@wharfkit/antelope';
 import { ES256KSigner, generateRandomKeyPair, createSigner } from '../../../src/sdk';
 import { IdentifyMessage } from '../../../src/sdk/services/communication/message';
 import { Issuer } from '@tonomy/did-jwt-vc';
-import { createJWK, toDid } from '../../../src/sdk/util/ssi/did-jwk';
+import { publicKeyToDidKey } from '../../../src/sdk/util/ssi/did-jwk';
 import { setTestSettings } from '../../../test-integration/helpers/settings';
 
 setTestSettings();
@@ -14,8 +14,7 @@ describe('Message class', () => {
     beforeEach(async () => {
         const { privateKey, publicKey } = generateRandomKeyPair();
         const signer = ES256KSigner(privateKey.data.array, true);
-        const jwk = await createJWK(publicKey);
-        const did = toDid(jwk);
+        const did = await publicKeyToDidKey(publicKey);
 
         issuer = {
             did,

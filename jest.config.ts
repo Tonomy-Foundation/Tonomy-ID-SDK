@@ -8,6 +8,9 @@ const baseConfig: Config = {
     },
     transformIgnorePatterns: [],
     roots: ['<rootDir>'],
+    moduleNameMapper: {
+        uint8arrays: '<rootDir>/../node_modules/uint8arrays',
+    },
     testMatch: ['**/*.test.ts'],
 };
 
