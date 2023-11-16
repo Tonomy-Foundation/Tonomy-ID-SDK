@@ -95,18 +95,17 @@ export default async function bootstrap(args: string[]) {
         restoreCreateAccountFromMock();
 
         console.log('Change the key of the accounts to the new key', newPublicKey.toString());
-        await updateAccountKey('id.tmy', newPublicKey, true);
         await updateAccountKey('eosio.token', newPublicKey, true);
         // accounts controlled by found.tmy
         await updateAccountKey('found.tmy', newPublicKey, true);
-        await updateControllAccountKey('gov.tmy', 'found.tmy');
-        await updateControllAccountKey('team.tmy', 'found.tmy');
-        await updateControllAccountKey('prod1.tmy', 'found.tmy');
-        await updateControllAccountKey('prod2.tmy', 'found.tmy');
-        await updateControllAccountKey('prod3.tmy', 'found.tmy');
+        await updateControllAccountKey('gov.tmy', 'found.tmy', true);
+        await updateControllAccountKey('team.tmy', 'found.tmy', true);
+        await updateControllAccountKey('prod1.tmy', 'found.tmy', true);
+        await updateControllAccountKey('prod2.tmy', 'found.tmy', true);
+        await updateControllAccountKey('prod3.tmy', 'found.tmy', true);
         //accounts controlled by gov.tmy
-        await updateControllAccountKey('eosio', 'gov.tmy');
-        await updateControllAccountKey('id.tmy', 'gov.tmy');
+        await updateAccountKey('eosio', 'gov.tmy');
+        await updateControllAccountKey('id.tmy', 'gov.tmy', true);
         await updateControllAccountKey('ecosys.tmy', 'gov.tmy');
         await updateControllAccountKey('private1.tmy', 'gov.tmy');
         await updateControllAccountKey('private2.tmy', 'gov.tmy');
