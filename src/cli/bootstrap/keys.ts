@@ -37,11 +37,17 @@ export async function generatePrivateKeyFromPassword(
 
 export const signer = EosioUtil.createSigner(defaultAntelopePrivateKey);
 
-export async function updateAccountKey(account: NameType, newPublicKey: PublicKeyType, addCodePermission = false) {
+export async function updateAccountKey(
+    account: NameType,
+    newPublicKey: PublicKeyType,
+    addCodePermission = false,
+    owner?: string
+) {
     const authority = Authority.fromKey(newPublicKey.toString());
 
     if (addCodePermission) authority.addCodePermission(account.toString());
 
+    console.log('owner', owner);
     await eosioContract.updateauth(account.toString(), 'active', 'owner', authority, signer);
-    await eosioContract.updateauth(account.toString(), 'owner', 'owner', authority, signer);
+    await eosioContract.updateauth(account.toString(), 'owner', owner ? owner : 'owner', authority, signer);
 }

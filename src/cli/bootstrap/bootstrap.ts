@@ -29,11 +29,13 @@ export default async function bootstrap(args: string[]) {
         await eosioTokenContract.create('1000000000 SYS', signer);
         await eosioTokenContract.issue('10000 SYS', signer);
 
-        await createAntelopeAccount({ account: 'id.tonomy' }, signer);
+        await createAntelopeAccount({ account: 'id.tonomy1' }, signer);
         await deployContract(
-            { account: 'id.tonomy', contractDir: path.join(__dirname, '../../Tonomy-Contracts/contracts/id.tonomy') },
+            { account: 'id.tonomy1', contractDir: path.join(__dirname, '../../Tonomy-Contracts/contracts/id.tonomy') },
             signer
         );
+        await createAntelopeAccount({ account: 'found.tmy' }, signer);
+        await createAntelopeAccount({ account: 'gov.tmy' }, signer);
 
         const demo = await createApp({
             appName: 'Tonomy Demo',
@@ -65,7 +67,7 @@ export default async function bootstrap(args: string[]) {
 
         // Create users for the demo website
         password = 'mrOOR1WW0y#6ot7z%Wbj';
-        await createUser('lovesboost', password);
+        await createUser('lovesboost1', password);
         await createUser('sweetkristy', password);
         await createUser('cheesecakeophobia', password);
         await createUser('ultimateBeast', password);
@@ -79,10 +81,11 @@ export default async function bootstrap(args: string[]) {
         restoreCreateAccountFromMock();
 
         console.log('Change the key of the accounts to the new key', newPublicKey.toString());
-        await updateAccountKey('id.tonomy', newPublicKey, true);
+        await updateAccountKey('id.tonomy1', newPublicKey, true);
         await updateAccountKey('eosio.token', newPublicKey, true);
         await updateAccountKey('eosio', newPublicKey);
-
+        await updateAccountKey('found.tmy', newPublicKey, true);
+        await updateAccountKey('gov.tmy', newPublicKey, true, 'found.tmy');
         // TODO change the block signing key as well
 
         console.log('Deploy Tonomy bios contract, which limits access to system actions');

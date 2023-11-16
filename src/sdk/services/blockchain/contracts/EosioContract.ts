@@ -119,6 +119,8 @@ class EosioContract {
             },
         };
 
+        console.log('action', action);
+
         return await transact(Name.from('eosio'), [action], signer);
     }
 

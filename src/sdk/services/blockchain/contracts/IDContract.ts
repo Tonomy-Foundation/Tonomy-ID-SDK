@@ -78,11 +78,11 @@ class IDContract {
         const action = {
             authorization: [
                 {
-                    actor: 'id.tonomy',
+                    actor: 'id.tonomy1',
                     permission: 'active',
                 },
             ],
-            account: 'id.tonomy',
+            account: 'id.tonomy1',
             name: 'newperson',
             data: {
                 username_hash,
@@ -91,7 +91,7 @@ class IDContract {
             },
         };
 
-        return await transact(Name.from('id.tonomy'), [action], signer);
+        return await transact(Name.from('id.tonomy1'), [action], signer);
     }
 
     async updatekeysper(
@@ -124,7 +124,7 @@ class IDContract {
                 if (
                     accountPermission &&
                     accountPermission.linked_actions.find(
-                        (a) => a.account.equals('id.tonomy') && a.action.equals('loginwithapp')
+                        (a) => a.account.equals('id.tonomy1') && a.action.equals('loginwithapp')
                     )
                 ) {
                     link_auth = false;
@@ -142,7 +142,7 @@ class IDContract {
                         permission: 'active',
                     },
                 ],
-                account: 'id.tonomy',
+                account: 'id.tonomy1',
                 name: 'updatekeyper',
                 data: {
                     account,
@@ -153,7 +153,7 @@ class IDContract {
             });
         }
 
-        return await transact(Name.from('id.tonomy'), actions, signer);
+        return await transact(Name.from('id.tonomy1'), actions, signer);
     }
 
     async newapp(
@@ -171,11 +171,11 @@ class IDContract {
         const action = {
             authorization: [
                 {
-                    actor: 'id.tonomy',
+                    actor: 'id.tonomy1',
                     permission: 'active',
                 },
             ],
-            account: 'id.tonomy',
+            account: 'id.tonomy1',
             name: 'newapp',
             data: {
                 app_name,
@@ -187,7 +187,7 @@ class IDContract {
             },
         };
 
-        return await transact(Name.from('id.tonomy'), [action], signer);
+        return await transact(Name.from('id.tonomy1'), [action], signer);
     }
 
     async loginwithapp(
@@ -204,7 +204,7 @@ class IDContract {
                     permission: parent,
                 },
             ],
-            account: 'id.tonomy',
+            account: 'id.tonomy1',
             name: 'loginwithapp',
             data: {
                 account,
@@ -214,7 +214,7 @@ class IDContract {
             },
         };
 
-        return await transact(Name.from('id.tonomy'), [action], signer);
+        return await transact(Name.from('id.tonomy1'), [action], signer);
     }
 
     async getPerson(account: TonomyUsername | Name): Promise<GetPersonResponse> {
@@ -226,8 +226,8 @@ class IDContract {
             const usernameHash = account.usernameHash;
 
             data = await api.v1.chain.get_table_rows({
-                code: 'id.tonomy',
-                scope: 'id.tonomy',
+                code: 'id.tonomy1',
+                scope: 'id.tonomy1',
                 table: 'people',
                 // eslint-disable-next-line camelcase
                 lower_bound: Checksum256.from(usernameHash),
@@ -243,8 +243,8 @@ class IDContract {
         } else {
             // use the account name directly
             data = await api.v1.chain.get_table_rows({
-                code: 'id.tonomy',
-                scope: 'id.tonomy',
+                code: 'id.tonomy1',
+                scope: 'id.tonomy1',
                 table: 'people',
                 // eslint-disable-next-line camelcase
                 lower_bound: account,
@@ -288,7 +288,7 @@ class IDContract {
         signer: Signer
     ): Promise<API.v1.PushTransactionResponse> {
         const action: ActionData = {
-            account: 'id.tonomy',
+            account: 'id.tonomy1',
             name: 'linkauth',
             authorization: [
                 {
@@ -304,7 +304,7 @@ class IDContract {
             },
         };
 
-        return await transact(Name.from('id.tonomy'), [action], signer);
+        return await transact(Name.from('id.tonomy1'), [action], signer);
     }
 
     async getApp(account: TonomyUsername | Name | string): Promise<AppTableRecord> {
@@ -316,8 +316,8 @@ class IDContract {
             const usernameHash = account.usernameHash;
 
             data = await api.v1.chain.get_table_rows({
-                code: 'id.tonomy',
-                scope: 'id.tonomy',
+                code: 'id.tonomy1',
+                scope: 'id.tonomy1',
                 table: 'apps',
                 // eslint-disable-next-line camelcase
                 lower_bound: Checksum256.from(usernameHash),
@@ -333,8 +333,8 @@ class IDContract {
         } else if (account instanceof Name) {
             // use the account name directly
             data = await api.v1.chain.get_table_rows({
-                code: 'id.tonomy',
-                scope: 'id.tonomy',
+                code: 'id.tonomy1',
+                scope: 'id.tonomy1',
                 table: 'apps',
                 // eslint-disable-next-line camelcase
                 lower_bound: account,
@@ -351,8 +351,8 @@ class IDContract {
             const originHash = sha256(origin);
 
             data = await api.v1.chain.get_table_rows({
-                code: 'id.tonomy',
-                scope: 'id.tonomy',
+                code: 'id.tonomy1',
+                scope: 'id.tonomy1',
                 table: 'apps',
                 // eslint-disable-next-line camelcase
                 lower_bound: Checksum256.from(originHash),
