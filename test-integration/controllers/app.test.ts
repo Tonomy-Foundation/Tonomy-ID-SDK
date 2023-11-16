@@ -1,6 +1,6 @@
 // need to use API types from inside tonomy-id-sdk, otherwise type compatibility issues
 import { createRandomApp, createRandomID } from '../helpers/user';
-import { User, AppStatus, generateRandomKeyPair } from '../../src/sdk/index';
+import { AppStatusEnum, generateRandomKeyPair } from '../../src/sdk/index';
 import { setTestSettings } from '../helpers/settings';
 import { getAccountInfo } from '../../src/sdk/helpers/user';
 
@@ -14,7 +14,7 @@ describe('App class', () => {
         const app = await createRandomApp();
         const newKey = generateRandomKeyPair().privateKey;
 
-        await user.apps.loginWithApp(app, newKey.toPublic());
+        await user.loginWithApp(app, newKey.toPublic());
 
         const accountInfo = await getAccountInfo(userAccountName);
 
@@ -25,13 +25,13 @@ describe('App class', () => {
         expect(appPermission?.parent.toString()).toEqual('local');
         expect(appPermission?.required_auth.keys[0].key.toString()).toEqual(newKey.toPublic().toString());
 
-        const userApps = await user.apps.storage.appRecords;
+        const userApps = await user.storage.appRecords;
 
         expect(userApps.length).toBe(1);
         const myApp = userApps[0];
 
         expect(myApp.app.accountName.toString()).toEqual(app.accountName.toString());
-        expect(myApp.status).toEqual(AppStatus.READY);
+        expect(myApp.status).toEqual(AppStatusEnum.READY);
         expect(myApp.added).toBeDefined();
 
         // Close connections

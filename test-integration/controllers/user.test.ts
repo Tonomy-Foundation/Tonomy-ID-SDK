@@ -1,5 +1,5 @@
-import { createRandomID } from '../helpers/user';
-import { KeyManager, KeyManagerLevel, TonomyUsername, User, createUserObject, EosioUtil } from '../../src/sdk/index';
+import { IUserPublic, createRandomID, createUserObject } from '../helpers/user';
+import { KeyManager, KeyManagerLevel, TonomyUsername, User, EosioUtil } from '../../src/sdk/index';
 import { SdkErrors } from '../../src/sdk/index';
 import { JsKeyManager } from '../../src/sdk/storage/jsKeyManager';
 import { jsStorageFactory } from '../../src/cli/bootstrap/jsstorage';
@@ -12,7 +12,7 @@ import { getAccountInfo } from '../../src/sdk/helpers/user';
 setTestSettings();
 
 let auth: KeyManager;
-let user: User;
+let user: IUserPublic;
 
 describe('User class', () => {
     beforeEach((): void => {

@@ -1,4 +1,4 @@
-import { IUserAuthentication, IUserBase, IUserHCaptcha, IUserOnboarding, IUserRequestsManager } from '../types/User';
+import { IUser } from '../types/User';
 import { Mixin } from 'ts-mixer';
 import { UserBase } from './UserBase';
 import { UserAuthorization } from './UserAuthorization';
@@ -8,4 +8,4 @@ import { UserRequestsManager } from './UserRequestsManager';
 
 export class User
     extends Mixin(UserBase, UserAuthorization, UserHCaptcha, UserOnboarding, UserRequestsManager)
-    implements IUserBase, IUserAuthentication, IUserHCaptcha, IUserOnboarding, IUserRequestsManager { }
+    implements IUser { }

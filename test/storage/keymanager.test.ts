@@ -9,10 +9,10 @@ import {
     SignDataOptions,
     StoreKeyOptions,
 } from '../../src/sdk/storage/keymanager';
-import { randomBytes, generateRandomKeyPair, createVCSigner, createSigner } from '../../src/sdk/util/crypto';
+import { generateRandomKeyPair, createVCSigner, createSigner } from '../../src/sdk/util/crypto';
 import { generatePrivateKeyFromPassword } from '../../src/cli/bootstrap/keys';
 import { setTestSettings } from '../../test-integration/helpers/settings';
-import { createUserObject } from '../../src/sdk/helpers/user';
+import { createUserObject } from '../../test-integration/helpers/user';
 
 setTestSettings();
 

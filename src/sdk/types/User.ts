@@ -146,3 +146,5 @@ export interface IUserRequestsManager extends IUserBase {
      */
     checkLoginRequests(requests: LoginRequest[]): Promise<ICheckedRequest[]>;
 }
+
+export interface IUser extends IUserBase, IUserHCaptcha, IUserAuthentication, IUserOnboarding, IUserRequestsManager { }
