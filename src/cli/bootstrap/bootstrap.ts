@@ -29,9 +29,9 @@ export default async function bootstrap(args: string[]) {
         await eosioTokenContract.create('1000000000 SYS', signer);
         await eosioTokenContract.issue('10000 SYS', signer);
 
-        await createAntelopeAccount({ account: 'id.tonomy1' }, signer);
+        await createAntelopeAccount({ account: 'id.tmy' }, signer);
         await deployContract(
-            { account: 'id.tonomy1', contractDir: path.join(__dirname, '../../Tonomy-Contracts/contracts/id.tonomy') },
+            { account: 'id.tmy', contractDir: path.join(__dirname, '../../Tonomy-Contracts/contracts/id.tonomy') },
             signer
         );
         await createAntelopeAccount({ account: 'found.tmy' }, signer);
@@ -81,7 +81,7 @@ export default async function bootstrap(args: string[]) {
         restoreCreateAccountFromMock();
 
         console.log('Change the key of the accounts to the new key', newPublicKey.toString());
-        await updateAccountKey('id.tonomy1', newPublicKey, true);
+        await updateAccountKey('id.tmy', newPublicKey, true);
         await updateAccountKey('eosio.token', newPublicKey, true);
         await updateAccountKey('eosio', newPublicKey);
         await updateAccountKey('found.tmy', newPublicKey, true);
