@@ -75,7 +75,7 @@ export async function createRandomApp(logoUrl?: string, origin?: string): Promis
     });
 }
 
-export async function loginToTonomyCommunication(user: User) {
+export async function loginToTonomyCommunication(user: IUserPublic) {
     const issuer = await user.getIssuer();
     // Login to Tonomy Communication as the user
     const authMessage = await AuthenticationMessage.signMessageWithoutRecipient({}, issuer);
@@ -87,7 +87,7 @@ export async function loginToTonomyCommunication(user: User) {
     expect(loginResponse).toBe(true);
 }
 
-export async function scanQrAndAck(user: User, qrCodeData: string) {
+export async function scanQrAndAck(user: IUserPublic, qrCodeData: string) {
     if (getSettings().loggerLevel === 'debug') console.log('TONOMY_ID/scanQR: Scanning QR code with Tonomy ID app');
 
     // BarCodeScannerResult. See Tonomy-ID/node_modules/expo-barcode-scanner/src/BarCodeScanner.tsx
