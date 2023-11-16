@@ -36,9 +36,9 @@ export const didResolver = new DIDResolverPlugin({
 
 // export const credentials = new CredentialPlugin();
 
-// export const agent = createAgent<IDIDManager & IKeyManager & IDataStore & IDataStoreORM & IResolver>({
-//     plugins: [keyManager, didManager, didResolver],
-// });
+export const agent = createAgent<IDIDManager & IKeyManager & IDataStore & IDataStoreORM & IResolver>({
+    plugins: [keyManager, didManager, didResolver],
+});
 
 export function createDidKeyAgent() {
     return createAgent<IDIDManager & IKeyManager & IDataStore & IDataStoreORM & IResolver>({
