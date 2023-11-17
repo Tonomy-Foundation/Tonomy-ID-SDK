@@ -6,7 +6,7 @@ import { ActionData, Signer, transact } from '../eosio/transaction';
 import { SdkErrors, throwError } from '../../../util/errors';
 import { sha256 } from '../../../util/crypto';
 
-const Contract_Name = 'id.tmy';
+const CONTRACT_NAME = 'id.tmy';
 
 enum PermissionLevel {
     OWNER = 'OWNER',
@@ -80,11 +80,11 @@ class IDContract {
         const action = {
             authorization: [
                 {
-                    actor: Contract_Name,
+                    actor: CONTRACT_NAME,
                     permission: 'active',
                 },
             ],
-            account: Contract_Name,
+            account: CONTRACT_NAME,
             name: 'newperson',
             data: {
                 username_hash,
@@ -93,7 +93,7 @@ class IDContract {
             },
         };
 
-        return await transact(Name.from(Contract_Name), [action], signer);
+        return await transact(Name.from(CONTRACT_NAME), [action], signer);
     }
 
     async updatekeysper(
@@ -126,7 +126,7 @@ class IDContract {
                 if (
                     accountPermission &&
                     accountPermission.linked_actions.find(
-                        (a) => a.account.equals(Contract_Name) && a.action.equals('loginwithapp')
+                        (a) => a.account.equals(CONTRACT_NAME) && a.action.equals('loginwithapp')
                     )
                 ) {
                     link_auth = false;
@@ -144,7 +144,7 @@ class IDContract {
                         permission: 'active',
                     },
                 ],
-                account: Contract_Name,
+                account: CONTRACT_NAME,
                 name: 'updatekeyper',
                 data: {
                     account,
@@ -155,7 +155,7 @@ class IDContract {
             });
         }
 
-        return await transact(Name.from(Contract_Name), actions, signer);
+        return await transact(Name.from(CONTRACT_NAME), actions, signer);
     }
 
     async newapp(
@@ -173,11 +173,11 @@ class IDContract {
         const action = {
             authorization: [
                 {
-                    actor: Contract_Name,
+                    actor: CONTRACT_NAME,
                     permission: 'active',
                 },
             ],
-            account: Contract_Name,
+            account: CONTRACT_NAME,
             name: 'newapp',
             data: {
                 app_name,
@@ -189,7 +189,7 @@ class IDContract {
             },
         };
 
-        return await transact(Name.from(Contract_Name), [action], signer);
+        return await transact(Name.from(CONTRACT_NAME), [action], signer);
     }
 
     async loginwithapp(
@@ -206,7 +206,7 @@ class IDContract {
                     permission: parent,
                 },
             ],
-            account: Contract_Name,
+            account: CONTRACT_NAME,
             name: 'loginwithapp',
             data: {
                 account,
@@ -216,7 +216,7 @@ class IDContract {
             },
         };
 
-        return await transact(Name.from(Contract_Name), [action], signer);
+        return await transact(Name.from(CONTRACT_NAME), [action], signer);
     }
 
     async getPerson(account: TonomyUsername | Name): Promise<GetPersonResponse> {
@@ -228,8 +228,8 @@ class IDContract {
             const usernameHash = account.usernameHash;
 
             data = await api.v1.chain.get_table_rows({
-                code: Contract_Name,
-                scope: Contract_Name,
+                code: CONTRACT_NAME,
+                scope: CONTRACT_NAME,
                 table: 'people',
                 // eslint-disable-next-line camelcase
                 lower_bound: Checksum256.from(usernameHash),
@@ -245,8 +245,8 @@ class IDContract {
         } else {
             // use the account name directly
             data = await api.v1.chain.get_table_rows({
-                code: Contract_Name,
-                scope: Contract_Name,
+                code: CONTRACT_NAME,
+                scope: CONTRACT_NAME,
                 table: 'people',
                 // eslint-disable-next-line camelcase
                 lower_bound: account,
@@ -290,7 +290,7 @@ class IDContract {
         signer: Signer
     ): Promise<API.v1.PushTransactionResponse> {
         const action: ActionData = {
-            account: Contract_Name,
+            account: CONTRACT_NAME,
             name: 'linkauth',
             authorization: [
                 {
@@ -306,7 +306,7 @@ class IDContract {
             },
         };
 
-        return await transact(Name.from(Contract_Name), [action], signer);
+        return await transact(Name.from(CONTRACT_NAME), [action], signer);
     }
 
     async getApp(account: TonomyUsername | Name | string): Promise<AppTableRecord> {
@@ -318,8 +318,8 @@ class IDContract {
             const usernameHash = account.usernameHash;
 
             data = await api.v1.chain.get_table_rows({
-                code: Contract_Name,
-                scope: Contract_Name,
+                code: CONTRACT_NAME,
+                scope: CONTRACT_NAME,
                 table: 'apps',
                 // eslint-disable-next-line camelcase
                 lower_bound: Checksum256.from(usernameHash),
@@ -335,8 +335,8 @@ class IDContract {
         } else if (account instanceof Name) {
             // use the account name directly
             data = await api.v1.chain.get_table_rows({
-                code: Contract_Name,
-                scope: Contract_Name,
+                code: CONTRACT_NAME,
+                scope: CONTRACT_NAME,
                 table: 'apps',
                 // eslint-disable-next-line camelcase
                 lower_bound: account,
@@ -353,8 +353,8 @@ class IDContract {
             const originHash = sha256(origin);
 
             data = await api.v1.chain.get_table_rows({
-                code: Contract_Name,
-                scope: Contract_Name,
+                code: CONTRACT_NAME,
+                scope: CONTRACT_NAME,
                 table: 'apps',
                 // eslint-disable-next-line camelcase
                 lower_bound: Checksum256.from(originHash),
