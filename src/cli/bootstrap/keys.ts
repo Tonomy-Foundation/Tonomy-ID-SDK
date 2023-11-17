@@ -46,7 +46,7 @@ export async function updateAccountKey(account: NameType, newPublicKey: PublicKe
     await eosioContract.updateauth(account.toString(), 'owner', 'owner', authority, signer);
 }
 
-export async function updateControllAccountKey(account: NameType, owner: string, addCodePermission = false) {
+export async function updateControllByAccount(account: NameType, owner: string, addCodePermission = false) {
     const authority = Authority.fromAccount({ actor: owner.toString(), permission: 'owner' });
 
     if (addCodePermission) authority.addCodePermission(account.toString());
