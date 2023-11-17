@@ -95,8 +95,6 @@ export default async function bootstrap(args: string[]) {
         restoreCreateAccountFromMock();
 
         console.log('Change the key of the accounts to the new key', newPublicKey.toString());
-        await updateAccountKey('eosio.token', newPublicKey, true);
-        await updateAccountKey('id.tmy', newPublicKey, true);
         await updateAccountKey('found.tmy', newPublicKey, true);
         // accounts controlled by found.tmy
         await updateControllByAccount('gov.tmy', 'found.tmy', true);
@@ -106,6 +104,7 @@ export default async function bootstrap(args: string[]) {
         await updateControllByAccount('prod3.tmy', 'found.tmy', true);
         //accounts controlled by gov.tmy
         await updateControllByAccount('eosio', 'gov.tmy');
+        await updateControllByAccount('eosio.token', 'gov.tmy');
         await updateControllByAccount('id.tmy', 'gov.tmy', true);
         await updateControllByAccount('ecosys.tmy', 'gov.tmy');
         await updateControllByAccount('private1.tmy', 'gov.tmy');
