@@ -7,6 +7,7 @@ import { SdkErrors, throwError } from '../../../util/errors';
 import { sha256 } from '../../../util/crypto';
 
 const CONTRACT_NAME = 'id.tonomy';
+const ACCOUNT_NAME = 'id.tmy';
 
 enum PermissionLevel {
     OWNER = 'OWNER',
@@ -84,7 +85,7 @@ class IDContract {
                     permission: 'active',
                 },
             ],
-            account: CONTRACT_NAME,
+            account: ACCOUNT_NAME,
             name: 'newperson',
             data: {
                 username_hash,
@@ -144,7 +145,7 @@ class IDContract {
                         permission: 'active',
                     },
                 ],
-                account: CONTRACT_NAME,
+                account: ACCOUNT_NAME,
                 name: 'updatekeyper',
                 data: {
                     account,
@@ -177,7 +178,7 @@ class IDContract {
                     permission: 'active',
                 },
             ],
-            account: CONTRACT_NAME,
+            account: ACCOUNT_NAME,
             name: 'newapp',
             data: {
                 app_name,
@@ -206,7 +207,7 @@ class IDContract {
                     permission: parent,
                 },
             ],
-            account: CONTRACT_NAME,
+            account: ACCOUNT_NAME,
             name: 'loginwithapp',
             data: {
                 account,
@@ -290,7 +291,7 @@ class IDContract {
         signer: Signer
     ): Promise<API.v1.PushTransactionResponse> {
         const action: ActionData = {
-            account: CONTRACT_NAME,
+            account: ACCOUNT_NAME,
             name: 'linkauth',
             authorization: [
                 {
