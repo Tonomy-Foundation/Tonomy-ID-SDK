@@ -105,7 +105,7 @@ export default async function bootstrap(args: string[]) {
         //accounts controlled by gov.tmy
         await updateControllByAccount('eosio', 'gov.tmy');
         await updateControllByAccount('eosio.token', 'gov.tmy');
-        await updateControllByAccount('id.tmy', 'gov.tmy', true);
+        await updateControllByAccount('id.tonomy', 'gov.tmy', true);
         await updateControllByAccount('ecosys.tmy', 'gov.tmy');
         await updateControllByAccount('private1.tmy', 'gov.tmy');
         await updateControllByAccount('private2.tmy', 'gov.tmy');
