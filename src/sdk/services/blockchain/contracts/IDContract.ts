@@ -6,8 +6,7 @@ import { ActionData, Signer, transact } from '../eosio/transaction';
 import { SdkErrors, throwError } from '../../../util/errors';
 import { sha256 } from '../../../util/crypto';
 
-const CONTRACT_NAME = 'id.tonomy';
-const ACCOUNT_NAME = 'id.tmy';
+const CONTRACT_NAME = 'id.tmy';
 
 enum PermissionLevel {
     OWNER = 'OWNER',
@@ -85,7 +84,7 @@ class IDContract {
                     permission: 'active',
                 },
             ],
-            account: ACCOUNT_NAME,
+            account: CONTRACT_NAME,
             name: 'newperson',
             data: {
                 username_hash,
@@ -145,7 +144,7 @@ class IDContract {
                         permission: 'active',
                     },
                 ],
-                account: ACCOUNT_NAME,
+                account: CONTRACT_NAME,
                 name: 'updatekeyper',
                 data: {
                     account,
@@ -178,7 +177,7 @@ class IDContract {
                     permission: 'active',
                 },
             ],
-            account: ACCOUNT_NAME,
+            account: CONTRACT_NAME,
             name: 'newapp',
             data: {
                 app_name,
@@ -207,7 +206,7 @@ class IDContract {
                     permission: parent,
                 },
             ],
-            account: ACCOUNT_NAME,
+            account: CONTRACT_NAME,
             name: 'loginwithapp',
             data: {
                 account,
@@ -291,7 +290,7 @@ class IDContract {
         signer: Signer
     ): Promise<API.v1.PushTransactionResponse> {
         const action: ActionData = {
-            account: ACCOUNT_NAME,
+            account: CONTRACT_NAME,
             name: 'linkauth',
             authorization: [
                 {
