@@ -31,7 +31,7 @@ export default async function bootstrap(args: string[]) {
 
         await createAntelopeAccount({ account: 'id.tmy' }, signer);
         await deployContract(
-            { account: 'id.tmy', contractDir: path.join(__dirname, '../../Tonomy-Contracts/contracts/id.tonomy') },
+            { account: 'id.tonomy', contractDir: path.join(__dirname, '../../Tonomy-Contracts/contracts/id.tonomy') },
             signer
         );
         await createAntelopeAccount({ account: 'found.tmy' }, signer);
