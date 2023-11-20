@@ -26,8 +26,8 @@ const defaultConfig = {
     demoWebsiteOrigin: `http://${ipAddress}:3001`,
     blockchainUrl: `http://${ipAddress}:8888`,
     accountSuffix: '.stag.tonomy.id',
-    communicationUrl: `ws://${ipAddress}:5000`,
-    accountsServiceUrl: `http://${ipAddress}:5000`,
+    communicationUrl: 'ws://localhost:5000',
+    accountsServiceUrl: 'http://localhost:5000',
     tonomyIdSchema: 'tonomy-id-development://',
     loggerLevel: 'info' as LoggerLevel,
 };
