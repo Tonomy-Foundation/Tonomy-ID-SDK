@@ -41,7 +41,6 @@ export async function createRandomID(checkKeys = true) {
     await user.saveCaptchaToken(HCAPCHA_CI_RESPONSE_TOKEN);
     await user.createPerson();
     await user.updateKeys(password);
-
     return { user, password, pin, auth, username };
 }
 

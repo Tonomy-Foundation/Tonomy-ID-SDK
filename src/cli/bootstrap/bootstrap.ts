@@ -29,9 +29,9 @@ export default async function bootstrap(args: string[]) {
         await eosioTokenContract.create('1000000000 SYS', signer);
         await eosioTokenContract.issue('10000 SYS', signer);
 
-        await createAntelopeAccount({ account: 'id.tmy' }, signer);
+        await createAntelopeAccount({ account: 'id.tonomy' }, signer);
         await deployContract(
-            { account: 'id.tmy', contractDir: path.join(__dirname, '../../Tonomy-Contracts/contracts/id.tonomy') },
+            { account: 'id.tonomy', contractDir: path.join(__dirname, '../../Tonomy-Contracts/contracts/id.tonomy') },
             signer
         );
         await createAntelopeAccount({ account: 'found.tmy' }, signer);
