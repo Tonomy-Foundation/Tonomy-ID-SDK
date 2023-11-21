@@ -6,7 +6,7 @@ import { ActionData, Signer, transact } from '../eosio/transaction';
 import { SdkErrors, throwError } from '../../../util/errors';
 import { sha256 } from '../../../util/crypto';
 
-const CONTRACT_NAME = 'id.tonomy';
+const CONTRACT_NAME = 'id.tmy';
 
 enum PermissionLevel {
     OWNER = 'OWNER',

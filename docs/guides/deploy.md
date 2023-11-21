@@ -13,7 +13,7 @@ Please <a href="https://tonomy.io/contact" target="_blank">contact us</a> for as
 
 - Tonomy ID (React Native mobile wallet) - <a href="https://github.com/Tonomy-Foundation/Tonomy-ID" target="_blank">Github source</a>
 - Tonomy Account Website (Reactjs) - <a href="https://github.com/Tonomy-Foundation/Tonomy-App-Websites" target="_blank">Github source</a>
-- Blockchain and `id.tonomy` smart contracts (Antelope protocol) - <a href="https://github.com/Tonomy-Foundation/Tonomy-Contracts" target="_blank">Github source</a>
+- Blockchain and `id.tmy` smart contracts (Antelope protocol) - <a href="https://github.com/Tonomy-Foundation/Tonomy-Contracts" target="_blank">Github source</a>
 - Tonomy Communication (nestjs) - <a href="https://github.com/Tonomy-Foundation/Tonomy-Communication" target="_blank">Github source</a>
 
 ## Deployment
@@ -47,8 +47,8 @@ Then you will need to deploy each service, with configuration so that they conne
     - For maximum scaleability, run using bare-metal servers.
     - Please <a href="https://tonomy.io/contact" target="_blank">contact us</a> for assistance running a production Antelope network or setting up governance.
 
-2. Create the `id.tonomy` account on the blockchain
-3. Deploy the <a href="https://github.com/Tonomy-Foundation/Tonomy-Contracts/tree/master/contracts/id.tonomy" target="_blank">id.tonomy</a> contract to the `id.tonomy` account on the blockchain
+2. Create the `id.tmy` account on the blockchain
+3. Deploy the <a href="https://github.com/Tonomy-Foundation/Tonomy-Contracts/tree/master/contracts/id.tmy" target="_blank">id.tmy</a> contract to the `id.tmy` account on the blockchain
 4. [Register your applications](../../start/register-app) that you wish to connect to Tonomy ID
 5. Configure the software with the `config.json` file in the repository so that they are connected correctly using your domains, and to white-label the applications:
 
