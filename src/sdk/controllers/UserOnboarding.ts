@@ -31,7 +31,7 @@ export class UserOnboarding extends UserAuthorization implements IUserOnboarding
             this.chainID = (await getChainInfo()).chain_id as unknown as Checksum256;
         }
 
-        const accountName = await this.storage.accountName;
+        const accountName = await this.getAccountName();
 
         this.storage.did = `did:antelope:${this.chainID}:${accountName.toString()}`;
         await this.storage.did;
@@ -118,14 +118,9 @@ export class UserOnboarding extends UserAuthorization implements IUserOnboarding
 
     async saveUsername(username: string): Promise<void> {
         this.validateUsername(username);
-        const normalizedUsername = username.normalize('NFKC');
 
         let user: API.v1.AccountObject;
-        const fullUsername = TonomyUsername.fromUsername(
-            normalizedUsername,
-            AccountType.PERSON,
-            getSettings().accountSuffix
-        );
+        const fullUsername = TonomyUsername.fromUsername(username, AccountType.PERSON, getSettings().accountSuffix);
 
         try {
             user = await getAccountInfo(fullUsername);
@@ -141,13 +136,7 @@ export class UserOnboarding extends UserAuthorization implements IUserOnboarding
     }
 
     async usernameExists(username: string): Promise<boolean> {
-        const normalizedUsername = username.normalize('NFKC');
-
-        const fullUsername = TonomyUsername.fromUsername(
-            normalizedUsername,
-            AccountType.PERSON,
-            getSettings().accountSuffix
-        );
+        const fullUsername = TonomyUsername.fromUsername(username, AccountType.PERSON, getSettings().accountSuffix);
 
         try {
             await getAccountInfo(fullUsername);
@@ -203,7 +192,7 @@ export class UserOnboarding extends UserAuthorization implements IUserOnboarding
         }
 
         const signer = createKeyManagerSigner(keyManager, KeyManagerLevel.PASSWORD, password);
-        const accountName = await this.storage.accountName;
+        const accountName = await this.getAccountName();
 
         await idContract.updatekeysper(accountName.toString(), keys, signer);
         this.storage.status = UserStatusEnum.READY;
