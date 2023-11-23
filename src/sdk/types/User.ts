@@ -67,18 +67,6 @@ export interface IUserBase {
     getIssuer(): Promise<Issuer>;
 }
 
-// export abstract class AbstractUserBase implements IUserBase {
-//     protected abstract keyManager: KeyManager;
-//     protected abstract storage: IUserStorage & PersistentStorageClean;
-//     protected abstract communication: Communication;
-
-//     abstract getStatus(): Promise<UserStatusEnum>;
-//     abstract getAccountName(): Promise<Name>;
-//     abstract getUsername(): Promise<TonomyUsername>;
-//     abstract getDid(): Promise<string>;
-//     abstract getIssuer(): Promise<Issuer>;
-// }
-
 export interface IUserAuthentication extends IUserBase {
     savePassword(masterPassword: string, options: ICreateAccountOptions): Promise<void>;
     checkPassword(password: string, options: ILoginOptions): Promise<boolean>;
