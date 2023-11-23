@@ -25,9 +25,9 @@ import { objToBase64Url } from '../../src/sdk/util/base64';
 import { VerifiableCredential } from '../../src/sdk/util/ssi/vc';
 import { getAccount } from '../../src/sdk/services/blockchain';
 import { getJwkIssuerFromStorage } from '../../src/sdk/helpers/jwkStorage';
-import { RequestsManager } from '../../src/sdk/helpers/requestsManager';
-import { getLoginRequestFromUrl, getLoginRequestResponseFromUrl, onRedirectLogin } from '../../src/sdk/helpers/urls';
+import { getLoginRequestResponseFromUrl, onRedirectLogin } from '../../src/sdk/helpers/urls';
 import { ExternalUserLoginTestOptions } from '../externalUser.test';
+import { IUserPublic } from './user';
 
 export async function externalWebsiteUserPressLoginToTonomyButton(
     keyManager: KeyManager,
@@ -228,7 +228,7 @@ export async function externalWebsiteOnCallback(
 export async function externalWebsiteOnReload(
     keyManager: KeyManager,
     storageFactory: StorageFactory,
-    tonomyUser: User
+    tonomyUser: IUserPublic
 ) {
     if (getSettings().loggerLevel === 'debug') console.log('EXTERNAL_WEBSITE/home: calling get User');
 
@@ -328,7 +328,7 @@ export async function externalWebsiteSignTransaction(externalUser: ExternalUser,
     // TODO check action trace for action and the does not contain link auth
 }
 
-export async function setupLinkAuthSubscriber(user: User): Promise<void> {
+export async function setupLinkAuthSubscriber(user: IUserPublic): Promise<void> {
     // Setup a promise that resolves when the subscriber executes
     // This emulates the Tonomy ID app, which waits for LinkAuth requests and executes them
     return new Promise<void>((resolve, reject) => {

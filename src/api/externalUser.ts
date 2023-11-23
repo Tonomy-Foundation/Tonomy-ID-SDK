@@ -1,5 +1,4 @@
 import { KeyManager, KeyManagerLevel } from '../sdk/storage/keymanager';
-import { OnPressLoginOptions, UserApps } from '../sdk/helpers/userApps';
 import { createVCSigner, randomString } from '../sdk/util/crypto';
 import { Issuer } from '@tonomy/did-jwt-vc';
 import { getSettings } from '../sdk/util/settings';
@@ -28,6 +27,8 @@ import { DIDurl } from '../sdk/util/ssi/types';
 import { Signer, createKeyManagerSigner, transact } from '../sdk/services/blockchain/eosio/transaction';
 import { createJwkIssuerAndStore } from '../sdk/helpers/jwkStorage';
 import { getLoginRequestResponseFromUrl } from '../sdk/helpers/urls';
+import { verifyKeyExistsForApp } from '../sdk/helpers/user';
+import { IOnPressLoginOptions } from '../sdk/types/User';
 
 /**
  * The storage data for an external user that has logged in with Tonomy ID
@@ -116,7 +117,7 @@ export class ExternalUser {
                 throw throwError('accountName not found', SdkErrors.AccountNotFound);
             }
 
-            const appPermission = await UserApps.verifyKeyExistsForApp(accountName, { keyManager });
+            const appPermission = await verifyKeyExistsForApp(accountName, { keyManager });
             const appPermissionStorage = await user.getAppPermission();
 
             if (appPermission.toString() !== appPermissionStorage.toString())
@@ -244,14 +245,14 @@ export class ExternalUser {
      *
      * @description should be called when the user clicks on the login button
      *
-     * @param {OnPressLoginOptions} onPressLoginOptions - options for the login
+     * @param {IOnPressLoginOptions} onPressLoginOptions - options for the login
      * @property {boolean} onPressLoginOptions.redirect - if true, redirects the user to the login page, if false, returns the token
      * @property {string} onPressLoginOptions.callbackPath - the path to redirect the user to after login
      * @param {KeyManager} [keyManager] - the key manager to use to store the keys
      * @returns {Promise<LoginWithTonomyMessages | void>} - if redirect is true, returns void, if redirect is false, returns the login request in the form of a JWT token
      */
     static async loginWithTonomy(
-        { redirect = true, callbackPath, dataRequest }: OnPressLoginOptions,
+        { redirect = true, callbackPath, dataRequest }: IOnPressLoginOptions,
         keyManager: KeyManager = new JsKeyManager()
     ): Promise<LoginWithTonomyMessages | void> {
         const issuer = await createJwkIssuerAndStore(keyManager);
@@ -352,7 +353,7 @@ export class ExternalUser {
             const accountName = loginResponse.getResponse().getPayload().accountName;
 
             if (options.checkKeys) {
-                const permission = await UserApps.verifyKeyExistsForApp(accountName, { keyManager });
+                const permission = await verifyKeyExistsForApp(accountName, { keyManager });
 
                 await externalUser.setAppPermission(permission);
             }

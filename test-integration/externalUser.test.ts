@@ -24,6 +24,7 @@ import { JsKeyManager } from '../src/sdk/storage/jsKeyManager';
 
 // helpers
 import {
+    IUserPublic,
     createRandomApp,
     createRandomID,
     loginToTonomyCommunication,
@@ -71,7 +72,7 @@ describe('Login to external website', () => {
     // EXTERNAL_WEBSITE_
     // TONOMY_LOGIN_WEBSITE_
 
-    let TONOMY_ID_user: User;
+    let TONOMY_ID_user: IUserPublic;
     let TONOMY_ID_did: string;
     let externalApp: App;
     let tonomyLoginApp: App;
@@ -200,7 +201,6 @@ describe('Login to external website', () => {
 
         const TONOMY_ID_requestSubscriber = setupLoginRequestSubscriber(
             TONOMY_ID_user,
-            tonomyLoginApp.origin,
             TONOMY_LOGIN_WEBSITE_did,
             testOptions
         );
@@ -242,6 +242,7 @@ describe('Login to external website', () => {
 
         // #####Tonomy Login App website user (callback page) #####
         // ########################################
+        // @ts-expect-error - cannot find name jsdom
         jsdom.reconfigure({
             url: tonomyLoginApp.origin,
         });

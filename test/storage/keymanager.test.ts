@@ -2,7 +2,6 @@ import { Checksum256, PrivateKey } from '@wharfkit/antelope';
 import { JsKeyManager } from '../../src/sdk/storage/jsKeyManager';
 import argon2 from 'argon2';
 import { jsStorageFactory } from '../../src/cli/bootstrap/jsstorage';
-import { createUserObject } from '../../src/sdk/controllers/user';
 import {
     CheckKeyOptions,
     GetKeyOptions,
@@ -10,9 +9,10 @@ import {
     SignDataOptions,
     StoreKeyOptions,
 } from '../../src/sdk/storage/keymanager';
-import { randomBytes, generateRandomKeyPair, createVCSigner, createSigner } from '../../src/sdk/util/crypto';
+import { generateRandomKeyPair, createVCSigner, createSigner } from '../../src/sdk/util/crypto';
 import { generatePrivateKeyFromPassword } from '../../src/cli/bootstrap/keys';
 import { setTestSettings } from '../../test-integration/helpers/settings';
+import { createUserObject } from '../../test-integration/helpers/user';
 
 setTestSettings();
 

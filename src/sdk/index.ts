@@ -1,16 +1,20 @@
 // SDK
 
 // Controllers
-export * from './controllers/user';
-export * from './helpers/userApps';
-export * from './controllers/app';
+export * from './controllers/User';
+export * from './controllers/App';
 
 // Controller helpers
-export * from './helpers/userApps';
+export * from './helpers/user';
 export * from './helpers/jwkStorage';
 export * from './helpers/requestsManager';
 export * from './helpers/responsesManager';
 export * from './helpers/urls';
+
+// Types
+export * from './types/AppStatusEnum';
+export * from './types/UserStatusEnum';
+export * from './types/User';
 
 // Services
 export * as EosioUtil from './services/blockchain';

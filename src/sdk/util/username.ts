@@ -53,7 +53,7 @@ export class TonomyUsername implements Serializable {
     }
 
     static fromUsername(username: string, type: AccountType, suffix: string) {
-        const fullUsername = username + '.' + AccountType.getPreSuffix(type) + suffix;
+        const fullUsername = username.normalize('NFKC').toLowerCase() + '.' + AccountType.getPreSuffix(type) + suffix;
 
         return new TonomyUsername(fullUsername);
     }
