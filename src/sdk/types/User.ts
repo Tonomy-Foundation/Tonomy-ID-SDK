@@ -91,7 +91,7 @@ export interface IUserAuthentication extends IUserBase {
     saveLocal(): Promise<void>;
 }
 
-export interface IUserHCaptcha extends IUserBase {
+export interface IUserCaptcha extends IUserBase {
     getCaptchaToken(): Promise<string>;
     saveCaptchaToken(captchaToken: string): Promise<void>;
 }
@@ -147,6 +147,6 @@ export interface IUserRequestsManager extends IUserBase {
     checkLoginRequests(requests: LoginRequest[]): Promise<ICheckedRequest[]>;
 }
 
-export interface IUser extends IUserBase, IUserHCaptcha, IUserAuthentication, IUserOnboarding, IUserRequestsManager {
+export interface IUser extends IUserBase, IUserCaptcha, IUserAuthentication, IUserOnboarding, IUserRequestsManager {
     // No implementation needed. Stop prettier error
 }

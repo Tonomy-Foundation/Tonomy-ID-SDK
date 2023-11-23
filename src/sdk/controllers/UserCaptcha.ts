@@ -1,7 +1,7 @@
-import { IUserHCaptcha } from '../types/User';
+import { IUserCaptcha } from '../types/User';
 import { UserBase } from './UserBase';
 
-export abstract class UserHCaptcha extends UserBase implements IUserHCaptcha {
+export abstract class UserCaptcha extends UserBase implements IUserCaptcha {
     async getCaptchaToken(): Promise<string> {
         return await this.storage.captchaToken;
     }
