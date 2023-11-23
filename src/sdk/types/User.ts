@@ -164,12 +164,6 @@ export interface IUserRequestsManager extends IUserCommunication {
     checkLoginRequests(requests: LoginRequest[]): Promise<ICheckedRequest[]>;
 }
 
-export interface IUser
-    extends IUserBase,
-    IUserCaptcha,
-    IUserAuthentication,
-    IUserOnboarding,
-    IUserCommunication,
-    IUserRequestsManager {
+export interface IUser extends IUserCaptcha, IUserOnboarding, IUserRequestsManager {
     // No implementation needed. Stop prettier error
 }
