@@ -2,11 +2,9 @@ import { Name, PrivateKey, Checksum256 } from '@wharfkit/antelope';
 import { GetPersonResponse } from '../services/blockchain/contracts/IDContract';
 import { TonomyUsername } from '../util/username';
 import { Issuer } from '@tonomy/did-jwt-vc';
-import { Message } from '../services/communication/message';
+import { AuthenticationMessage, Message } from '../services/communication/message';
 import { UserStatusEnum } from './UserStatusEnum';
-import { KeyManager } from '../storage/keymanager';
-import { PersistentStorageClean } from '../storage/storage';
-import { Communication } from '../services/communication/communication';
+import { Subscriber } from '../services/communication/communication';
 import { App } from '../controllers/App';
 import { DID, LoginRequest, WalletRequest, URL as URLtype } from '../util';
 import { PublicKey } from '@wharfkit/antelope';
@@ -69,19 +67,6 @@ export interface IUserBase {
     getIssuer(): Promise<Issuer>;
 }
 
-export abstract class AbstractUserBase implements IUserBase {
-    protected abstract keyManager: KeyManager;
-    protected abstract storage: IUserStorage & PersistentStorageClean;
-    // TODO make `communication` protected
-    abstract communication: Communication;
-
-    abstract getStatus(): Promise<UserStatusEnum>;
-    abstract getAccountName(): Promise<Name>;
-    abstract getUsername(): Promise<TonomyUsername>;
-    abstract getDid(): Promise<string>;
-    abstract getIssuer(): Promise<Issuer>;
-}
-
 export interface IUserAuthentication extends IUserBase {
     savePassword(masterPassword: string, options: ICreateAccountOptions): Promise<void>;
     checkPassword(password: string, options: ILoginOptions): Promise<boolean>;
@@ -91,12 +76,32 @@ export interface IUserAuthentication extends IUserBase {
     saveLocal(): Promise<void>;
 }
 
-export interface IUserHCaptcha extends IUserBase {
+export interface IUserCaptcha extends IUserBase {
     getCaptchaToken(): Promise<string>;
     saveCaptchaToken(captchaToken: string): Promise<void>;
 }
 
-export interface IUserOnboarding extends IUserAuthentication {
+export interface IUserCommunication extends IUserAuthentication {
+    /**
+     * connects to the Tonomy Communication server, authenticates with it's DID
+     * @param {AuthenticationMessage} authorization - the VC the user sent
+     *
+     * @returns {boolean} - true if successful
+     */
+    loginCommunication(authorization: AuthenticationMessage): Promise<boolean>;
+    subscribeMessage(subscriber: Subscriber, type?: string): number;
+    /**
+     * unsubscribes a function from the receiving a message
+     *
+     * @param {number} id - identifier which will be used for unsubscribe
+     *
+     */
+    unsubscribeMessage(id: number): void;
+    sendMessage(message: Message): Promise<boolean>;
+    disconnectCommunication(): void;
+}
+
+export interface IUserOnboarding extends IUserCommunication {
     login(username: TonomyUsername, password: string, options: ILoginOptions): Promise<GetPersonResponse>;
     isLoggedIn(): Promise<boolean>;
     createPerson(): Promise<void>;
@@ -114,7 +119,7 @@ export interface IUserOnboarding extends IUserAuthentication {
     initializeFromStorage(): Promise<boolean>;
 }
 
-export interface IUserRequestsManager extends IUserBase {
+export interface IUserRequestsManager extends IUserCommunication {
     handleLinkAuthRequestMessage(message: Message): Promise<void>;
     loginWithApp(app: App, key: PublicKey): Promise<void>;
 
@@ -147,6 +152,6 @@ export interface IUserRequestsManager extends IUserBase {
     checkLoginRequests(requests: LoginRequest[]): Promise<ICheckedRequest[]>;
 }
 
-export interface IUser extends IUserBase, IUserHCaptcha, IUserAuthentication, IUserOnboarding, IUserRequestsManager {
+export interface IUser extends IUserCaptcha, IUserOnboarding, IUserRequestsManager {
     // No implementation needed. Stop prettier error
 }

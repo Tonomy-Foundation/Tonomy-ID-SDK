@@ -18,11 +18,11 @@ import { ResponsesManager } from '../helpers/responsesManager';
 import { App } from './App';
 import { AppStatusEnum } from '../types/AppStatusEnum';
 import { verifyKeyExistsForApp } from '../helpers/user';
-import { UserBase } from './UserBase';
+import { UserCommunication } from './UserCommunication';
 
 const idContract = IDContract.Instance;
 
-export class UserRequestsManager extends UserBase implements IUserRequestsManager {
+export class UserRequestsManager extends UserCommunication implements IUserRequestsManager {
     async handleLinkAuthRequestMessage(message: Message): Promise<void> {
         const linkAuthRequestMessage = new LinkAuthRequestMessage(message);
 
@@ -62,7 +62,7 @@ export class UserRequestsManager extends UserBase implements IUserRequestsManage
                 linkAuthRequestMessage.getSender()
             );
 
-            await this.communication.sendMessage(linkAuthRequestResponseMessage);
+            await this.sendMessage(linkAuthRequestResponseMessage);
         } catch (e) {
             if (e instanceof SdkError && e.code === SdkErrors.SenderNotAuthorized) {
                 // somebody may be trying to DoS the user, drop
@@ -135,7 +135,7 @@ export class UserRequestsManager extends UserBase implements IUserRequestsManage
                 options.messageRecipient
             );
 
-            await this.communication.sendMessage(message);
+            await this.sendMessage(message);
         }
     }
 
