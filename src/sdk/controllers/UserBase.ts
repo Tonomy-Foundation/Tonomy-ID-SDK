@@ -3,24 +3,18 @@ import { KeyManager, KeyManagerLevel } from '../storage/keymanager';
 import { createStorage, PersistentStorageClean, StorageFactory, STORAGE_NAMESPACE } from '../storage/storage';
 import { SdkErrors, throwError } from '../util/errors';
 import { TonomyUsername } from '../util/username';
-import { Communication } from '../services/communication/communication';
 import { Issuer } from '@tonomy/did-jwt-vc';
 import { createVCSigner } from '../util/crypto';
 import { UserStatusEnum } from '../types/UserStatusEnum';
-import { AbstractUserBase, IUserBase, IUserStorage } from '../types/User';
+import { IUserBase, IUserStorage } from '../types/User';
 
-export class UserBase extends AbstractUserBase implements IUserBase {
+export class UserBase implements IUserBase {
     protected keyManager: KeyManager;
     protected storage: IUserStorage & PersistentStorageClean;
-    communication: Communication;
 
     constructor(_keyManager: KeyManager, storageFactory: StorageFactory) {
-        super();
         this.keyManager = _keyManager;
         this.storage = createStorage<IUserStorage>(STORAGE_NAMESPACE + 'user.', storageFactory);
-
-        //TODO implement dependency inversion
-        this.communication = new Communication(false);
     }
 
     async getStatus(): Promise<UserStatusEnum> {

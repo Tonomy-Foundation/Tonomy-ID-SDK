@@ -9,12 +9,12 @@ import { getSettings } from '../util/settings';
 import { createAccount } from '../services/communication/accounts';
 import { UserStatusEnum } from '../types/UserStatusEnum';
 import { ILoginOptions, IUserOnboarding } from '../types/User';
-import { UserAuthorization } from './UserAuthorization';
 import { getAccountInfo } from '../helpers/user';
+import { UserCommunication } from './UserCommunication';
 
 const idContract = IDContract.Instance;
 
-export class UserOnboarding extends UserAuthorization implements IUserOnboarding {
+export class UserOnboarding extends UserCommunication implements IUserOnboarding {
     private chainID!: Checksum256;
 
     private validateUsername(username: string): void {
@@ -293,7 +293,7 @@ export class UserOnboarding extends UserAuthorization implements IUserOnboarding
         // clear storage data
         this.storage.clear();
 
-        this.communication.disconnect();
+        this.disconnectCommunication();
     }
 
     async initializeFromStorage(): Promise<boolean> {

@@ -1,6 +1,6 @@
 import { Name, API, PublicKey } from '@wharfkit/antelope';
 import { LoginRequestResponseMessage, LoginRequestResponseMessagePayload } from '../services/communication/message';
-import { AbstractUserBase, IUser } from '../types/User';
+import { IUser } from '../types/User';
 import { DID, SdkErrors, objToBase64Url, throwError, URL as URLtype } from '../util';
 import { ResponsesManager } from './responsesManager';
 import { KeyManager, KeyManagerLevel } from '../storage/keymanager';
@@ -59,7 +59,7 @@ export async function terminateLoginRequest(
         callbackOrigin?: URLtype;
         callbackPath?: URLtype;
         messageRecipient?: DID;
-        user?: AbstractUserBase;
+        user?: IUser;
     }
 ): Promise<void | URLtype> {
     const responsePayload: LoginRequestResponseMessagePayload = {
@@ -88,7 +88,7 @@ export async function terminateLoginRequest(
             options.messageRecipient
         );
 
-        await options.user.communication.sendMessage(message);
+        await options.user.sendMessage(message);
     }
 }
 

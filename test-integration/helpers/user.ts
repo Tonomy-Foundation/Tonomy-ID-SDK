@@ -82,7 +82,7 @@ export async function loginToTonomyCommunication(user: IUserPublic) {
 
     if (getSettings().loggerLevel === 'debug') console.log('TONOMY_ID/appStart: connect to Tonomy Communication');
 
-    const loginResponse = await user.communication.login(authMessage);
+    const loginResponse = await user.loginCommunication(authMessage);
 
     expect(loginResponse).toBe(true);
 }
@@ -99,7 +99,7 @@ export async function scanQrAndAck(user: IUserPublic, qrCodeData: string) {
 
     if (getSettings().loggerLevel === 'debug')
         console.log("TONOMY_ID/scanQr: connecting to Tonomy Login Website's with their did:jwk from the QR code");
-    const sendMessageResponse = await user.communication.sendMessage(connectMessage);
+    const sendMessageResponse = await user.sendMessage(connectMessage);
 
     expect(sendMessageResponse).toBe(true);
 }
@@ -112,7 +112,7 @@ export async function setupLoginRequestSubscriber(
     // Setup a promise that resolves when the subscriber executes
     // This emulates the Tonomy ID app, which waits for the user requests
     return new Promise((resolve) => {
-        user.communication.subscribeMessage(async (message) => {
+        user.subscribeMessage(async (message) => {
             const loginRequestMessage = new LoginRequestsMessage(message);
 
             if (getSettings().loggerLevel === 'debug')

@@ -332,7 +332,7 @@ export async function setupLinkAuthSubscriber(user: IUserPublic): Promise<void> 
     // Setup a promise that resolves when the subscriber executes
     // This emulates the Tonomy ID app, which waits for LinkAuth requests and executes them
     return new Promise<void>((resolve, reject) => {
-        user.communication.subscribeMessage(async (message) => {
+        user.subscribeMessage(async (message) => {
             if (getSettings().loggerLevel === 'debug') console.log('TONOMY_ID/storage: LinkAuth request received');
 
             try {
