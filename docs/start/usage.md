@@ -67,7 +67,7 @@ TODO
 `eosio.token.cpp`
 
 ```c++
-#include <id.tonomy/id.tonomy.hpp>
+#include <id.tmy/id.tmy.hpp>
 
 token::transfer(const name &from,
                         const name &to,

@@ -45,3 +45,22 @@ export async function updateAccountKey(account: NameType, newPublicKey: PublicKe
     await eosioContract.updateauth(account.toString(), 'active', 'owner', authority, signer);
     await eosioContract.updateauth(account.toString(), 'owner', 'owner', authority, signer);
 }
+
+/**
+ * Updates the control by account, modifying the active and owner authorities.
+ *
+ * @param {NameType} account - The account name to update.
+ * @param {string} controllerAccount - The account name with controller permissions.
+ * @param {boolean} [addCodePermission=false] - Whether to add code permission to the authorities. To add the eosio.code authority for smart contracts change this to [true]
+ * @returns {Promise<void>} A Promise that resolves when the update is complete.
+ */
+export async function updateControllByAccount(account: NameType, controllerAccount: string, addCodePermission = false) {
+    const ownerAuthority = Authority.fromAccount({ actor: controllerAccount, permission: 'owner' });
+    const activeAuthority = Authority.fromAccount({ actor: controllerAccount, permission: 'active' });
+
+    if (addCodePermission) ownerAuthority.addCodePermission(account.toString());
+    if (addCodePermission) activeAuthority.addCodePermission(account.toString());
+
+    await eosioContract.updateauth(account.toString(), 'active', 'owner', activeAuthority, signer);
+    await eosioContract.updateauth(account.toString(), 'owner', 'owner', ownerAuthority, signer);
+}

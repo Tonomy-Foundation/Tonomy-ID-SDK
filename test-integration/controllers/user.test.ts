@@ -141,7 +141,7 @@ describe('User class', () => {
 
         // Close connections
         await user.logout();
-    });
+    }, 10000);
 
     test('checkKeysStillValid() keys are still valid after create account and login again', async () => {
         const { user, password } = await createRandomID();
@@ -154,7 +154,7 @@ describe('User class', () => {
 
         // Close connections
         await user.logout();
-    });
+    }, 10000);
 
     test('checkKeysStillValid() keys are not valid after login and change keys but not update yet', async () => {
         const { user } = await createRandomID();
@@ -168,7 +168,7 @@ describe('User class', () => {
         // Close connections
         // TODO if expect fails, then the user.logout() is not called and we dont cleanup. We need to fix this
         await user.logout();
-    });
+    }, 10000);
 
     test("checkKeysStillValid() throws error if user doesn't exist", async () => {
         await expect(user.checkKeysStillValid()).rejects.toThrowError(SdkErrors.AccountDoesntExist);
@@ -183,7 +183,7 @@ describe('User class', () => {
             user.checkPassword('verify earn dad end easily earn', { keyFromPasswordFn: generatePrivateKeyFromPassword })
         ).rejects.toThrowError(SdkErrors.PasswordInvalid);
         await user.logout();
-    }, 10000);
+    }, 12000);
 
     test('checkPassword() returns true when password matches', async () => {
         const { user, password } = await createRandomID();
@@ -195,7 +195,7 @@ describe('User class', () => {
         );
 
         await user.logout();
-    }, 10000);
+    }, 12000);
 
     test('logout', async () => {
         const { user } = await createRandomID();

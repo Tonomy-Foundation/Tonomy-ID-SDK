@@ -2,7 +2,7 @@ import deployContract from './deploy-contract';
 import path from 'path';
 import { createAntelopeAccount, createApp } from './create-account';
 import { EosioTokenContract, EosioUtil, setSettings } from '../../sdk/index';
-import { signer, updateAccountKey } from './keys';
+import { signer, updateAccountKey, updateControllByAccount } from './keys';
 import settings from './settings';
 import { createUser, mockCreateAccount, restoreCreateAccountFromMock } from './user';
 import { PrivateKey } from '@wharfkit/antelope';
@@ -29,11 +29,27 @@ export default async function bootstrap(args: string[]) {
         await eosioTokenContract.create('1000000000 SYS', signer);
         await eosioTokenContract.issue('10000 SYS', signer);
 
-        await createAntelopeAccount({ account: 'id.tonomy' }, signer);
+        await createAntelopeAccount({ account: 'id.tmy' }, signer);
         await deployContract(
-            { account: 'id.tonomy', contractDir: path.join(__dirname, '../../Tonomy-Contracts/contracts/id.tonomy') },
+            { account: 'id.tmy', contractDir: path.join(__dirname, '../../Tonomy-Contracts/contracts/id.tmy') },
             signer
         );
+        await createAntelopeAccount({ account: 'found.tmy' }, signer);
+        // found.tmy should be controlled by the following accounts
+        await createAntelopeAccount({ account: 'gov.tmy' }, signer);
+        await createAntelopeAccount({ account: 'team.tmy' }, signer);
+        await createAntelopeAccount({ account: 'prod1.tmy' }, signer);
+        await createAntelopeAccount({ account: 'prod2.tmy' }, signer);
+        await createAntelopeAccount({ account: 'prod3.tmy' }, signer);
+        // gov.tmy should be controlled by the following accounts
+        await createAntelopeAccount({ account: 'ecosystm.tmy' }, signer);
+        await createAntelopeAccount({ account: 'private1.tmy' }, signer);
+        await createAntelopeAccount({ account: 'private2.tmy' }, signer);
+        await createAntelopeAccount({ account: 'private3.tmy' }, signer);
+        await createAntelopeAccount({ account: 'public1.tmy' }, signer);
+        await createAntelopeAccount({ account: 'public2.tmy' }, signer);
+        await createAntelopeAccount({ account: 'public3.tmy' }, signer);
+        await createAntelopeAccount({ account: 'opration.tmy' }, signer);
 
         const demo = await createApp({
             appName: 'Tonomy Demo',
@@ -79,9 +95,25 @@ export default async function bootstrap(args: string[]) {
         restoreCreateAccountFromMock();
 
         console.log('Change the key of the accounts to the new key', newPublicKey.toString());
-        await updateAccountKey('id.tonomy', newPublicKey, true);
-        await updateAccountKey('eosio.token', newPublicKey, true);
-        await updateAccountKey('eosio', newPublicKey);
+        await updateAccountKey('found.tmy', newPublicKey, true);
+        // accounts controlled by found.tmy
+        await updateControllByAccount('gov.tmy', 'found.tmy', true);
+        await updateControllByAccount('team.tmy', 'found.tmy');
+        await updateControllByAccount('prod1.tmy', 'found.tmy');
+        await updateControllByAccount('prod2.tmy', 'found.tmy');
+        await updateControllByAccount('prod3.tmy', 'found.tmy');
+        //accounts controlled by gov.tmy
+        await updateControllByAccount('id.tmy', 'gov.tmy', true);
+        await updateControllByAccount('eosio', 'gov.tmy');
+        await updateControllByAccount('eosio.token', 'gov.tmy');
+        await updateControllByAccount('ecosystm.tmy', 'gov.tmy');
+        await updateControllByAccount('private1.tmy', 'gov.tmy');
+        await updateControllByAccount('private2.tmy', 'gov.tmy');
+        await updateControllByAccount('private3.tmy', 'gov.tmy');
+        await updateControllByAccount('public1.tmy', 'gov.tmy');
+        await updateControllByAccount('public2.tmy', 'gov.tmy');
+        await updateControllByAccount('public3.tmy', 'gov.tmy');
+        await updateControllByAccount('opration.tmy', 'gov.tmy');
 
         // TODO change the block signing key as well
 
