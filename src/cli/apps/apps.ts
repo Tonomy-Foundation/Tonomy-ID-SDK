@@ -1,6 +1,6 @@
 import { PublicKey } from '@wharfkit/antelope';
 import { setSettings } from '../../sdk/util/settings';
-import { App, AppCreateOptions } from '../../sdk/controllers/app';
+import { App, AppCreateOptions } from '../../sdk/controllers/App';
 
 export default async function apps(args: string[]) {
     if (args[0] === 'create') {

@@ -5,46 +5,9 @@ import { createSigner } from '../services/blockchain/eosio/transaction';
 import { getSettings } from '../util/settings';
 import { AccountType, TonomyUsername } from '../util/username';
 import { defaultAntelopePrivateKey } from '../services/blockchain';
+import { AppStatusEnum } from '../types/AppStatusEnum';
 
 const idContract = IDContract.Instance;
-
-enum AppStatus {
-    PENDING = 'PENDING',
-    CREATING = 'CREATING',
-    READY = 'READY',
-    DEACTIVATED = 'DEACTIVATED',
-}
-
-// eslint-disable-next-line @typescript-eslint/no-namespace
-namespace AppStatus {
-    /*
-     * Returns the index of the enum value
-     *
-     * @param value The level to get the index of
-     */
-    export function indexFor(value: AppStatus): number {
-        return Object.keys(AppStatus).indexOf(value);
-    }
-
-    /*
-     * Creates an AppStatus from a string or index of the level
-     *
-     * @param value The string or index
-     */
-    export function from(value: number | string): AppStatus {
-        let index: number;
-
-        if (typeof value !== 'number') {
-            index = AppStatus.indexFor(value as AppStatus);
-        } else {
-            index = value;
-        }
-
-        return Object.values(AppStatus)[index] as AppStatus;
-    }
-}
-
-export { AppStatus };
 
 export interface AppData {
     accountName: Name;
@@ -54,7 +17,7 @@ export interface AppData {
     logoUrl: string;
     origin: string;
     version: number;
-    status: AppStatus;
+    status: AppStatusEnum;
 }
 
 type AppConstructor = Omit<AppData, 'usernameHash'> & { username?: TonomyUsername; usernameHash?: Checksum256 };
@@ -77,7 +40,7 @@ export class App implements AppData {
     logoUrl: string;
     origin: string;
     version: number;
-    status: AppStatus;
+    status: AppStatusEnum;
 
     constructor(options: AppConstructor) {
         this.accountName = options.accountName;
@@ -125,7 +88,7 @@ export class App implements AppData {
             accountName: Name.from(newAccountAction.data.name),
             username,
             version: newAccountAction.data.version,
-            status: AppStatus.READY,
+            status: AppStatusEnum.READY,
         });
     }
 
@@ -140,7 +103,7 @@ export class App implements AppData {
             logoUrl: contractAppData.logo_url,
             origin: contractAppData.origin,
             version: contractAppData.version,
-            status: AppStatus.READY,
+            status: AppStatusEnum.READY,
         });
     }
 }
