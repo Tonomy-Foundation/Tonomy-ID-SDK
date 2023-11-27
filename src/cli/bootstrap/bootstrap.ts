@@ -98,22 +98,22 @@ export default async function bootstrap(args: string[]) {
         await updateAccountKey('found.tmy', newPublicKey, true);
         // accounts controlled by found.tmy
         await updateControllByAccount('gov.tmy', 'found.tmy', true);
-        await updateControllByAccount('team.tmy', 'found.tmy', true);
-        await updateControllByAccount('prod1.tmy', 'found.tmy', true);
-        await updateControllByAccount('prod2.tmy', 'found.tmy', true);
-        await updateControllByAccount('prod3.tmy', 'found.tmy', true);
+        await updateControllByAccount('team.tmy', 'found.tmy');
+        await updateControllByAccount('prod1.tmy', 'found.tmy');
+        await updateControllByAccount('prod2.tmy', 'found.tmy');
+        await updateControllByAccount('prod3.tmy', 'found.tmy');
         //accounts controlled by gov.tmy
         await updateControllByAccount('id.tmy', 'gov.tmy', true);
         await updateControllByAccount('eosio', 'gov.tmy');
         await updateControllByAccount('eosio.token', 'gov.tmy');
         await updateControllByAccount('ecosystm.tmy', 'gov.tmy');
-        await updateControllByAccount('private1.tmy', 'gov.tmy', true);
-        await updateControllByAccount('private2.tmy', 'gov.tmy', true);
-        await updateControllByAccount('private3.tmy', 'gov.tmy', true);
-        await updateControllByAccount('public1.tmy', 'gov.tmy', true);
-        await updateControllByAccount('public2.tmy', 'gov.tmy', true);
-        await updateControllByAccount('public3.tmy', 'gov.tmy', true);
-        await updateControllByAccount('opration.tmy', 'gov.tmy', true);
+        await updateControllByAccount('private1.tmy', 'gov.tmy');
+        await updateControllByAccount('private2.tmy', 'gov.tmy');
+        await updateControllByAccount('private3.tmy', 'gov.tmy');
+        await updateControllByAccount('public1.tmy', 'gov.tmy');
+        await updateControllByAccount('public2.tmy', 'gov.tmy');
+        await updateControllByAccount('public3.tmy', 'gov.tmy');
+        await updateControllByAccount('opration.tmy', 'gov.tmy');
 
         // TODO change the block signing key as well
 
