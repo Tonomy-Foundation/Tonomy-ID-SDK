@@ -49,7 +49,7 @@ export async function updateAccountKey(account: NameType, newPublicKey: PublicKe
 /**
  * Updates the control by account, modifying the active and owner authorities.
  *
- * @param {NameType} account - The account to update.
+ * @param {NameType} account - The account name to update.
  * @param {string} controllerAccount - The account name with controller permissions.
  * @param {boolean} [addCodePermission=false] - Whether to add code permission to the authorities. To add the eosio.code authority for smart contracts change this to [true]
  * @returns {Promise<void>} A Promise that resolves when the update is complete.
