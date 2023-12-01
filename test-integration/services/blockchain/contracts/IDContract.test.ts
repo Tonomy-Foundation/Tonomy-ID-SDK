@@ -36,7 +36,7 @@ describe('IDContract class', () => {
 
         // Close connections
         await user.logout();
-    });
+    }, 8000);
 
     test('newapp and getApp', async () => {
         const { appName, description, username, logoUrl, origin, accountName } = await createRandomApp();

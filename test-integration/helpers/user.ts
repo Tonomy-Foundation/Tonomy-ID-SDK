@@ -1,25 +1,36 @@
 import {
     randomString,
     KeyManager,
-    createUserObject,
     App,
     User,
-    UserApps,
     JsKeyManager,
     IdentifyMessage,
     AuthenticationMessage,
     LoginRequestsMessage,
     ResponsesManager,
+    StorageFactory,
+    IUserStorage,
+    Communication,
+    IUser,
 } from '../../src/sdk/index';
 import { jsStorageFactory } from '../../src/cli/bootstrap/jsstorage';
 import { generatePrivateKeyFromPassword } from '../../src/cli/bootstrap/keys';
 import { createUser } from '../../src/cli/bootstrap/user';
-import { DataSharingRequest, LoginRequest, WalletRequest } from '../../src/sdk/util/request';
-import { DIDurl, URL } from '../../src/sdk/util/ssi/types';
+import { DIDurl } from '../../src/sdk/util/ssi/types';
 import { defaultAntelopePublicKey } from '../../src/sdk/services/blockchain/eosio/eosio';
 import { generateRandomKeywords, getSettings } from '../../src/sdk/util';
 import { RequestsManager } from '../../src/sdk/helpers/requestsManager';
 import { ExternalUserLoginTestOptions } from '../externalUser.test';
+
+export interface IUserPublic extends IUser {
+    keyManager: KeyManager;
+    storage: IUserStorage;
+    communication: Communication;
+}
+
+export function createUserObject(keyManager: KeyManager, storageFactory: StorageFactory): IUserPublic {
+    return new User(keyManager, storageFactory) as unknown as IUserPublic;
+}
 
 export const HCAPCHA_CI_RESPONSE_TOKEN = '10000000-aaaa-bbbb-cccc-000000000001';
 
@@ -41,7 +52,6 @@ export async function createRandomID(checkKeys = true) {
     await user.saveCaptchaToken(HCAPCHA_CI_RESPONSE_TOKEN);
     await user.createPerson();
     await user.updateKeys(password);
-
     return { user, password, pin, auth, username };
 }
 
@@ -64,19 +74,19 @@ export async function createRandomApp(logoUrl?: string, origin?: string): Promis
     });
 }
 
-export async function loginToTonomyCommunication(user: User) {
+export async function loginToTonomyCommunication(user: IUserPublic) {
     const issuer = await user.getIssuer();
     // Login to Tonomy Communication as the user
     const authMessage = await AuthenticationMessage.signMessageWithoutRecipient({}, issuer);
 
     if (getSettings().loggerLevel === 'debug') console.log('TONOMY_ID/appStart: connect to Tonomy Communication');
 
-    const loginResponse = await user.communication.login(authMessage);
+    const loginResponse = await user.loginCommunication(authMessage);
 
     expect(loginResponse).toBe(true);
 }
 
-export async function scanQrAndAck(user: User, qrCodeData: string) {
+export async function scanQrAndAck(user: IUserPublic, qrCodeData: string) {
     if (getSettings().loggerLevel === 'debug') console.log('TONOMY_ID/scanQR: Scanning QR code with Tonomy ID app');
 
     // BarCodeScannerResult. See Tonomy-ID/node_modules/expo-barcode-scanner/src/BarCodeScanner.tsx
@@ -88,21 +98,20 @@ export async function scanQrAndAck(user: User, qrCodeData: string) {
 
     if (getSettings().loggerLevel === 'debug')
         console.log("TONOMY_ID/scanQr: connecting to Tonomy Login Website's with their did:jwk from the QR code");
-    const sendMessageResponse = await user.communication.sendMessage(connectMessage);
+    const sendMessageResponse = await user.sendMessage(connectMessage);
 
     expect(sendMessageResponse).toBe(true);
 }
 
 export async function setupLoginRequestSubscriber(
-    user: User,
-    tonomyLoginOrigin: URL,
+    user: IUserPublic,
     tonomyLoginDid: DIDurl,
     testOptions: ExternalUserLoginTestOptions
 ) {
     // Setup a promise that resolves when the subscriber executes
     // This emulates the Tonomy ID app, which waits for the user requests
     return new Promise((resolve) => {
-        user.communication.subscribeMessage(async (message) => {
+        user.subscribeMessage(async (message) => {
             const loginRequestMessage = new LoginRequestsMessage(message);
 
             if (getSettings().loggerLevel === 'debug')
@@ -129,7 +138,7 @@ export async function setupLoginRequestSubscriber(
 
             if (getSettings().loggerLevel === 'debug')
                 console.log('TONOMY_ID/SSO: accepting login requests and sending confirmation to Tonomy Login Website');
-            await user.apps.acceptLoginRequest(managedResponses, 'browser', { messageRecipient: receiverDid });
+            await user.acceptLoginRequest(managedResponses, 'browser', { messageRecipient: receiverDid });
 
             resolve(true);
         }, LoginRequestsMessage.getType());

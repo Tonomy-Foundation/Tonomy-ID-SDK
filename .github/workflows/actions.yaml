@@ -7,12 +7,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Run lint and test
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 18.12.1
+          cache: yarn
       - run: yarn install --immutable
       - run: yarn run lint
       - run: yarn run test:unit
@@ -22,7 +23,7 @@ jobs:
     runs-on: ubuntu-20.04
     container: tonomy/antelope
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           repository: Tonomy-Foundation/Tonomy-Contracts
           ref: development
@@ -34,8 +35,8 @@ jobs:
       - name: Build eosio.token contract
         run: ./Tonomy-Contracts/contracts/eosio.token/build.sh local
 
-      - name: Build id.tonomy contract
-        run: ./Tonomy-Contracts/contracts/id.tonomy/build.sh local
+      - name: Build id.tmy contract
+        run: ./Tonomy-Contracts/contracts/id.tmy/build.sh local
 
       - name: Add Tonomy-Contracts dir to artifacts
         uses: actions/upload-artifact@v3
@@ -59,7 +60,7 @@ jobs:
           - 5000:5000
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Delete Tonomy-Contracts directory
         run: rm -rf ./Tonomy-Contracts
@@ -71,14 +72,16 @@ jobs:
           path: ./Tonomy-Contracts
 
       - name: Install SDK and Bootstrap blockchain
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 18.12.1
+          cache: yarn
       - run: yarn install --immutable
       - run: yarn run cli bootstrap PVT_K1_2bfGi9rYsXQSXXTvJbDAPhHLQUojjaNLomdm3cEJ1XTzMqUt3V
 
       - name: Run integration tests
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 18.12.1
+          cache: yarn
       - run: yarn run test:integration

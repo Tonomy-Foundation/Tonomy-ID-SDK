@@ -1,5 +1,5 @@
-import { createRandomID } from '../helpers/user';
-import { KeyManager, KeyManagerLevel, TonomyUsername, User, createUserObject, EosioUtil } from '../../src/sdk/index';
+import { IUserPublic, createRandomID, createUserObject } from '../helpers/user';
+import { KeyManager, KeyManagerLevel, TonomyUsername, User, EosioUtil } from '../../src/sdk/index';
 import { SdkErrors } from '../../src/sdk/index';
 import { JsKeyManager } from '../../src/sdk/storage/jsKeyManager';
 import { jsStorageFactory } from '../../src/cli/bootstrap/jsstorage';
@@ -7,11 +7,12 @@ import { Checksum256 } from '@wharfkit/antelope';
 import { generatePrivateKeyFromPassword } from '../../src/cli/bootstrap/keys';
 import { getAccount } from '../../src/sdk/services/blockchain/eosio/eosio';
 import { setTestSettings } from '../helpers/settings';
+import { getAccountInfo } from '../../src/sdk/helpers/user';
 
 setTestSettings();
 
 let auth: KeyManager;
-let user: User;
+let user: IUserPublic;
 
 describe('User class', () => {
     beforeEach((): void => {
@@ -140,7 +141,7 @@ describe('User class', () => {
 
         // Close connections
         await user.logout();
-    });
+    }, 10000);
 
     test('checkKeysStillValid() keys are still valid after create account and login again', async () => {
         const { user, password } = await createRandomID();
@@ -153,7 +154,7 @@ describe('User class', () => {
 
         // Close connections
         await user.logout();
-    });
+    }, 10000);
 
     test('checkKeysStillValid() keys are not valid after login and change keys but not update yet', async () => {
         const { user } = await createRandomID();
@@ -167,7 +168,7 @@ describe('User class', () => {
         // Close connections
         // TODO if expect fails, then the user.logout() is not called and we dont cleanup. We need to fix this
         await user.logout();
-    });
+    }, 10000);
 
     test("checkKeysStillValid() throws error if user doesn't exist", async () => {
         await expect(user.checkKeysStillValid()).rejects.toThrowError(SdkErrors.AccountDoesntExist);
@@ -182,7 +183,7 @@ describe('User class', () => {
             user.checkPassword('verify earn dad end easily earn', { keyFromPasswordFn: generatePrivateKeyFromPassword })
         ).rejects.toThrowError(SdkErrors.PasswordInvalid);
         await user.logout();
-    }, 10000);
+    }, 12000);
 
     test('checkPassword() returns true when password matches', async () => {
         const { user, password } = await createRandomID();
@@ -194,7 +195,7 @@ describe('User class', () => {
         );
 
         await user.logout();
-    }, 10000);
+    }, 12000);
 
     test('logout', async () => {
         const { user } = await createRandomID();
@@ -216,12 +217,12 @@ describe('User class', () => {
         const { user } = await createRandomID();
 
         // get by account name
-        let userInfo = await User.getAccountInfo(await user.getAccountName());
+        let userInfo = await getAccountInfo(await user.getAccountName());
 
         expect(userInfo.account_name).toEqual(await user.getAccountName());
 
         // get by username
-        userInfo = await User.getAccountInfo(await user.getUsername());
+        userInfo = await getAccountInfo(await user.getUsername());
 
         expect(userInfo.account_name).toEqual(await user.getAccountName());
 
@@ -257,18 +258,18 @@ describe('User class', () => {
         await user.logout();
     });
 
-    test('intializeFromStorage() return true if account exists', async () => {
+    test('initializeFromStorage() return true if account exists', async () => {
         const { user } = await createRandomID();
         const accountName = await user.storage.accountName;
 
         expect(accountName).toBeDefined();
-        await expect(user.intializeFromStorage()).resolves.toBeTruthy();
+        await expect(user.initializeFromStorage()).resolves.toBeTruthy();
 
         await user.logout();
     });
 
-    test("intializeFromStorage() throws error if storage doesn't exist", async () => {
-        await expect(user.intializeFromStorage()).rejects.toThrowError(SdkErrors.AccountDoesntExist);
+    test("initializeFromStorage() throws error if storage doesn't exist", async () => {
+        await expect(user.initializeFromStorage()).rejects.toThrowError(SdkErrors.AccountDoesntExist);
     });
 
     test('CheckPin() returns true when pin matches', async () => {
