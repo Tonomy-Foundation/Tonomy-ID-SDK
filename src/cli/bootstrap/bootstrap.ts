@@ -18,11 +18,11 @@ export default async function bootstrap(args: string[]) {
     const newPublicKey = newPrivateKey.toPublic();
 
     try {
-        await createAntelopeAccount({ account: 'eosio.token' }, signer);
+        await createAntelopeAccount({ account: 'demo.tmy' }, signer);
         await deployContract(
             {
-                account: 'eosio.token',
-                contractDir: path.join(__dirname, '../../Tonomy-Contracts/contracts/eosio.token'),
+                account: 'demo.tmy',
+                contractDir: path.join(__dirname, '../../Tonomy-Contracts/contracts/demo.tmy'),
             },
             signer
         );
@@ -105,7 +105,7 @@ export default async function bootstrap(args: string[]) {
         //accounts controlled by gov.tmy
         await updateControllByAccount('id.tmy', 'gov.tmy', true);
         await updateControllByAccount('eosio', 'gov.tmy');
-        await updateControllByAccount('eosio.token', 'gov.tmy');
+        await updateControllByAccount('demo.tmy', 'gov.tmy');
         await updateControllByAccount('ecosystm.tmy', 'gov.tmy');
         await updateControllByAccount('private1.tmy', 'gov.tmy');
         await updateControllByAccount('private2.tmy', 'gov.tmy');

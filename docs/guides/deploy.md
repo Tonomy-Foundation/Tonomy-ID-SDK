@@ -75,6 +75,6 @@ If you want to have your applications sign blockchain transactions, see [Sign a 
 To run the [Demo website](../../examples/#tonomy-demo-integration-application) in your network follow these extra steps:
 
 1. [Register the application](../../start/register-app) using the domain you wish to run the Demo website from
-2. Deploy the <a href="https://github.com/Tonomy-Foundation/Tonomy-Contracts/tree/master/contracts/eosio.token" target="_blank">eosio.token</a> contract to the `eosio.token` account (or modify the Demo website to connect to a different account)
+2. Deploy the <a href="https://github.com/Tonomy-Foundation/Tonomy-Contracts/tree/master/contracts/demo.tmy" target="_blank">demo.tmy</a> contract to the `demo.tmy` account (or modify the Demo website to connect to a different account)
 3. Call `addperm()` function with the account name of the registered Demo application (Step 1)
 4. Create dummy accounts as shown in the <a href="https://github.com/Tonomy-Foundation/Tonomy-ID-SDK/blob/9061250ffceeddbbbf183a6ea03dfe7d5e1685c0/src/cli/bootstrap/bootstrap.ts#L88" target="_blank">bootstrap script here</a>
