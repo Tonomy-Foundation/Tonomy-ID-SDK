@@ -3,6 +3,8 @@ import { API, Name, NameType } from '@wharfkit/antelope';
 import { Signer, transact } from '../eosio/transaction';
 import { getApi } from '../eosio/eosio';
 
+const CONTRACT_NAME = 'demo.tmy';
+
 class EosioTokenContract {
     static singletonInstande: EosioTokenContract;
 
@@ -13,54 +15,54 @@ class EosioTokenContract {
     async create(supply: string, signer: Signer): Promise<API.v1.PushTransactionResponse> {
         const actions = [
             {
-                account: 'demo.tmy',
+                account: CONTRACT_NAME,
                 name: 'create',
                 authorization: [
                     {
-                        actor: 'demo.tmy',
+                        actor: CONTRACT_NAME,
                         permission: 'active',
                     },
                 ],
                 data: {
-                    issuer: 'demo.tmy',
+                    issuer: CONTRACT_NAME,
                     maximum_supply: supply,
                 },
             },
         ];
 
-        return await transact(Name.from('demo.tmy'), actions, signer);
+        return await transact(Name.from(CONTRACT_NAME), actions, signer);
     }
 
     async issue(quantity: string, signer: Signer): Promise<API.v1.PushTransactionResponse> {
         const actions = [
             {
-                account: 'demo.tmy',
+                account: CONTRACT_NAME,
                 name: 'issue',
                 authorization: [
                     {
-                        actor: 'demo.tmy',
+                        actor: CONTRACT_NAME,
                         permission: 'active',
                     },
                 ],
                 data: {
-                    to: 'demo.tmy',
+                    to: CONTRACT_NAME,
                     quantity,
                     memo: 'issued',
                 },
             },
         ];
 
-        return await transact(Name.from('demo.tmy'), actions, signer);
+        return await transact(Name.from(CONTRACT_NAME), actions, signer);
     }
 
     async selfIssue(to: Name, quantity: string, signer: Signer): Promise<API.v1.PushTransactionResponse> {
         const actions = [
             {
-                account: 'demo.tmy',
+                account: CONTRACT_NAME,
                 name: 'issue',
                 authorization: [
                     {
-                        actor: 'demo.tmy',
+                        actor: CONTRACT_NAME,
                         permission: 'active',
                     },
                 ],
@@ -72,17 +74,17 @@ class EosioTokenContract {
             },
         ];
 
-        return await transact(Name.from('demo.tmy'), actions, signer);
+        return await transact(Name.from(CONTRACT_NAME), actions, signer);
     }
 
     async addPerm(permission: NameType, signer: Signer) {
         const actions = [
             {
-                account: 'demo.tmy',
+                account: CONTRACT_NAME,
                 name: 'addperm',
                 authorization: [
                     {
-                        actor: 'demo.tmy',
+                        actor: CONTRACT_NAME,
                         permission: 'active',
                     },
                 ],
@@ -92,11 +94,11 @@ class EosioTokenContract {
             },
         ];
 
-        await transact(Name.from('demo.tmy'), actions, signer);
+        await transact(Name.from(CONTRACT_NAME), actions, signer);
     }
 
     async getBalance(account: NameType): Promise<number> {
-        const assets = await (await getApi()).v1.chain.get_currency_balance('demo.tmy', account, 'SYS');
+        const assets = await (await getApi()).v1.chain.get_currency_balance(CONTRACT_NAME, account, 'SYS');
 
         if (assets.length === 0) return 0;
 

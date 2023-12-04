@@ -29,6 +29,15 @@ export default async function bootstrap(args: string[]) {
         await eosioTokenContract.create('1000000000 SYS', signer);
         await eosioTokenContract.issue('10000 SYS', signer);
 
+        await createAntelopeAccount({ account: 'onocoin.tmy' }, signer);
+        await deployContract(
+            {
+                account: 'onocoin.tmy',
+                contractDir: path.join(__dirname, '../../Tonomy-Contracts/contracts/onocoin.tmy'),
+            },
+            signer
+        );
+
         await createAntelopeAccount({ account: 'id.tmy' }, signer);
         await deployContract(
             { account: 'id.tmy', contractDir: path.join(__dirname, '../../Tonomy-Contracts/contracts/id.tmy') },
@@ -106,6 +115,7 @@ export default async function bootstrap(args: string[]) {
         await updateControllByAccount('id.tmy', 'gov.tmy', true);
         await updateControllByAccount('eosio', 'gov.tmy');
         await updateControllByAccount('demo.tmy', 'gov.tmy');
+        await updateControllByAccount('onocoin.tmy', 'gov.tmy');
         await updateControllByAccount('ecosystm.tmy', 'gov.tmy');
         await updateControllByAccount('private1.tmy', 'gov.tmy');
         await updateControllByAccount('private2.tmy', 'gov.tmy');
