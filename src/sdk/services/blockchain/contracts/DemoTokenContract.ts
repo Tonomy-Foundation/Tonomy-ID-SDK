@@ -5,8 +5,8 @@ import { getApi } from '../eosio/eosio';
 
 const CONTRACT_NAME = 'demo.tmy';
 
-class EosioTokenContract {
-    static singletonInstande: EosioTokenContract;
+class DemoTokenContract {
+    static singletonInstande: DemoTokenContract;
 
     public static get Instance() {
         return this.singletonInstande || (this.singletonInstande = new this());
@@ -106,4 +106,4 @@ class EosioTokenContract {
     }
 }
 
-export { EosioTokenContract };
+export { DemoTokenContract };

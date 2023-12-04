@@ -55,11 +55,11 @@ class OnoCoinContract {
         return await transact(Name.from(CONTRACT_NAME), actions, signer);
     }
 
-    async selfIssue(to: Name, quantity: string, signer: Signer): Promise<API.v1.PushTransactionResponse> {
+    async transfer(to: NameType, quantity: string, signer: Signer): Promise<API.v1.PushTransactionResponse> {
         const actions = [
             {
                 account: CONTRACT_NAME,
-                name: 'issue',
+                name: 'transfer',
                 authorization: [
                     {
                         actor: CONTRACT_NAME,
@@ -67,34 +67,15 @@ class OnoCoinContract {
                     },
                 ],
                 data: {
+                    from: CONTRACT_NAME,
                     to,
                     quantity,
-                    memo: 'self issued',
+                    memo: 'transferred',
                 },
             },
         ];
 
         return await transact(Name.from(CONTRACT_NAME), actions, signer);
-    }
-
-    async addPerm(permission: NameType, signer: Signer) {
-        const actions = [
-            {
-                account: CONTRACT_NAME,
-                name: 'addperm',
-                authorization: [
-                    {
-                        actor: CONTRACT_NAME,
-                        permission: 'active',
-                    },
-                ],
-                data: {
-                    per: permission,
-                },
-            },
-        ];
-
-        await transact(Name.from(CONTRACT_NAME), actions, signer);
     }
 
     async getBalance(account: NameType): Promise<number> {

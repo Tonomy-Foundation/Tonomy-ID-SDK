@@ -1,7 +1,7 @@
 import deployContract from './deploy-contract';
 import path from 'path';
 import { createAntelopeAccount, createApp } from './create-account';
-import { EosioTokenContract, EosioUtil, setSettings, OnoCoinContract } from '../../sdk/index';
+import { DemoTokenContract, EosioUtil, setSettings, OnoCoinContract } from '../../sdk/index';
 import { signer, updateAccountKey, updateControllByAccount } from './keys';
 import settings from './settings';
 import { createUser, mockCreateAccount, restoreCreateAccountFromMock } from './user';
@@ -9,7 +9,7 @@ import { PrivateKey } from '@wharfkit/antelope';
 
 setSettings(settings.config);
 
-const eosioTokenContract = EosioTokenContract.Instance;
+const demoTokenContract = DemoTokenContract.Instance;
 const onoCoinContract = OnoCoinContract.Instance;
 
 export default async function bootstrap(args: string[]) {
@@ -27,8 +27,8 @@ export default async function bootstrap(args: string[]) {
             },
             signer
         );
-        await eosioTokenContract.create('1000000000 SYS', signer);
-        await eosioTokenContract.issue('10000 SYS', signer);
+        await demoTokenContract.create('1000000000 SYS', signer);
+        await demoTokenContract.issue('10000 SYS', signer);
 
         await createAntelopeAccount({ account: 'onocoin.tmy' }, signer);
         await deployContract(
@@ -38,8 +38,8 @@ export default async function bootstrap(args: string[]) {
             },
             signer
         );
-        await onoCoinContract.create('1000000000 SYS', signer);
-        await onoCoinContract.issue('10000 SYS', signer);
+        await onoCoinContract.create('50000000000.0000 ONO', signer);
+        await onoCoinContract.issue('32500000000.0000 ONO', signer);
 
         await createAntelopeAccount({ account: 'id.tmy' }, signer);
         await deployContract(
@@ -74,7 +74,7 @@ export default async function bootstrap(args: string[]) {
 
         // action to add demo permission to token contract
         console.log('Adding demo permission to token contract');
-        eosioTokenContract.addPerm(demo.accountName, signer);
+        demoTokenContract.addPerm(demo.accountName, signer);
 
         await createApp({
             appName: 'Tonomy Website',

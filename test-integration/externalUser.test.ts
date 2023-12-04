@@ -12,7 +12,7 @@ import {
     IdentifyMessage,
     LoginRequestResponseMessage,
     ExternalUser,
-    EosioTokenContract,
+    DemoTokenContract,
     getSettings,
     LoginRequestResponseMessagePayload,
     LoginResponse,
@@ -61,7 +61,7 @@ setTestSettings(process.env.LOG === 'true');
 // @ts-expect-error - type error on global
 global.URL = URL;
 
-const eosioTokenContract = EosioTokenContract.Instance;
+const demoTokenContract = DemoTokenContract.Instance;
 
 describe('Login to external website', () => {
     jest.setTimeout(30000);
@@ -107,7 +107,7 @@ describe('Login to external website', () => {
         TONOMY_LOGIN_WEBSITE_jsKeyManager = new JsKeyManager();
         EXTERNAL_WEBSITE_jsKeyManager = new JsKeyManager();
 
-        await eosioTokenContract.addPerm(externalApp.accountName, createSigner(defaultAntelopePrivateKey));
+        await demoTokenContract.addPerm(externalApp.accountName, createSigner(defaultAntelopePrivateKey));
 
         // setup storage factories for the external website and tonomy login website
         TONOMY_LOGIN_WEBSITE_storage_factory = createStorageFactory(STORAGE_NAMESPACE + 'login-website.');
