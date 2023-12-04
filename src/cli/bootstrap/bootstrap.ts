@@ -1,7 +1,7 @@
 import deployContract from './deploy-contract';
 import path from 'path';
 import { createAntelopeAccount, createApp } from './create-account';
-import { EosioTokenContract, EosioUtil, setSettings } from '../../sdk/index';
+import { EosioTokenContract, EosioUtil, setSettings, OnoCoinContract } from '../../sdk/index';
 import { signer, updateAccountKey, updateControllByAccount } from './keys';
 import settings from './settings';
 import { createUser, mockCreateAccount, restoreCreateAccountFromMock } from './user';
@@ -10,6 +10,7 @@ import { PrivateKey } from '@wharfkit/antelope';
 setSettings(settings.config);
 
 const eosioTokenContract = EosioTokenContract.Instance;
+const onoCoinContract = OnoCoinContract.Instance;
 
 export default async function bootstrap(args: string[]) {
     if (!args[0]) throw new Error('Missing public key argument');
@@ -37,6 +38,8 @@ export default async function bootstrap(args: string[]) {
             },
             signer
         );
+        await onoCoinContract.create('1000000000 SYS', signer);
+        await onoCoinContract.issue('10000 SYS', signer);
 
         await createAntelopeAccount({ account: 'id.tmy' }, signer);
         await deployContract(
