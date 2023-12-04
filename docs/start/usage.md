@@ -64,7 +64,7 @@ TODO
 
 **Step 1.** Modify your [Antelope smart contract](../../guides/deploy/#antelope) to accept signatures from users signed into your registered app (see [Register your app](/cli/#register-a-tonomy-app))
 
-`demo.tmy.cpp`
+`eosio.token.cpp`
 
 ```c++
 #include <id.tmy/id.tmy.hpp>
@@ -84,7 +84,7 @@ token::transfer(const name &from,
 **Step 2.** Use the API to sign the transaction
 
 ```typescript
-const trx = await user.signTransaction('demo.tmy', 'transfer', {
+const trx = await user.signTransaction('eosio.token', 'transfer', {
     from: "me",
     to: "you",
     quantity: '1 SYS',
