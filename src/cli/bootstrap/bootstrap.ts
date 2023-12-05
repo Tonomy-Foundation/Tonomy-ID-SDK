@@ -39,13 +39,14 @@ export default async function bootstrap(args: string[]) {
             signer
         );
         await onoCoinContract.create('50000000000.0000 ONO', signer);
-        await onoCoinContract.issue('32500000000.0000 ONO', signer);
+        await onoCoinContract.issue('onocoin.tmy', '32500000000.0000 ONO', signer);
 
         await createAntelopeAccount({ account: 'id.tmy' }, signer);
         await deployContract(
             { account: 'id.tmy', contractDir: path.join(__dirname, '../../Tonomy-Contracts/contracts/id.tmy') },
             signer
         );
+
         await createAntelopeAccount({ account: 'found.tmy' }, signer);
         // found.tmy should be controlled by the following accounts
         await createAntelopeAccount({ account: 'gov.tmy' }, signer);
@@ -62,6 +63,23 @@ export default async function bootstrap(args: string[]) {
         await createAntelopeAccount({ account: 'public2.tmy' }, signer);
         await createAntelopeAccount({ account: 'public3.tmy' }, signer);
         await createAntelopeAccount({ account: 'opration.tmy' }, signer);
+        const totalSupply = 50000000000.0;
+        //token allocations
+        const teamAllocation = totalSupply * 0.15;
+        const ecosystemAllocation = totalSupply * 0.3;
+        const privateAllocation = totalSupply * 0.025;
+        const publicAllocation = totalSupply * 0.025;
+        const operationAllocation = totalSupply * 0.4;
+
+        await onoCoinContract.transfer('onocoin.tmy', 'team.tmy', teamAllocation.toString() + ' ONO', signer);
+        await onoCoinContract.transfer('onocoin.tmy', 'ecosystm.tmy', ecosystemAllocation.toString() + ' ONO', signer);
+        await onoCoinContract.transfer('onocoin.tmy', 'private1.tmy', privateAllocation.toString() + ' ONO', signer);
+        await onoCoinContract.transfer('onocoin.tmy', 'private2.tmy', privateAllocation.toString() + ' ONO', signer);
+        await onoCoinContract.transfer('onocoin.tmy', 'private3.tmy', privateAllocation.toString() + ' ONO', signer);
+        await onoCoinContract.transfer('onocoin.tmy', 'public1.tmy', publicAllocation.toString() + ' ONO', signer);
+        await onoCoinContract.transfer('onocoin.tmy', 'public2.tmy', publicAllocation.toString() + ' ONO', signer);
+        await onoCoinContract.transfer('onocoin.tmy', 'public3.tmy', publicAllocation.toString() + ' ONO', signer);
+        await onoCoinContract.transfer('onocoin.tmy', 'opration.tmy', operationAllocation.toString() + ' ONO', signer);
 
         const demo = await createApp({
             appName: 'Tonomy Demo',

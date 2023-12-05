@@ -33,7 +33,7 @@ class OnoCoinContract {
         return await transact(Name.from(CONTRACT_NAME), actions, signer);
     }
 
-    async issue(quantity: string, signer: Signer): Promise<API.v1.PushTransactionResponse> {
+    async issue(to: NameType, quantity: string, signer: Signer): Promise<API.v1.PushTransactionResponse> {
         const actions = [
             {
                 account: CONTRACT_NAME,
@@ -45,7 +45,7 @@ class OnoCoinContract {
                     },
                 ],
                 data: {
-                    to: CONTRACT_NAME,
+                    to,
                     quantity,
                     memo: 'issued',
                 },
@@ -55,7 +55,12 @@ class OnoCoinContract {
         return await transact(Name.from(CONTRACT_NAME), actions, signer);
     }
 
-    async transfer(to: NameType, quantity: string, signer: Signer): Promise<API.v1.PushTransactionResponse> {
+    async transfer(
+        from: NameType,
+        to: NameType,
+        quantity: string,
+        signer: Signer
+    ): Promise<API.v1.PushTransactionResponse> {
         const actions = [
             {
                 account: CONTRACT_NAME,
@@ -67,7 +72,7 @@ class OnoCoinContract {
                     },
                 ],
                 data: {
-                    from: CONTRACT_NAME,
+                    from,
                     to,
                     quantity,
                     memo: 'transferred',
