@@ -39,7 +39,7 @@ export default async function bootstrap(args: string[]) {
             signer
         );
         await onoCoinContract.create('50000000000.0000 ONO', signer);
-        await onoCoinContract.issue('onocoin.tmy', '32500000000.0000 ONO', signer);
+        await onoCoinContract.issue('onocoin.tmy', '50000000000.0000 ONO', signer);
 
         await createAntelopeAccount({ account: 'id.tmy' }, signer);
         await deployContract(
@@ -62,7 +62,7 @@ export default async function bootstrap(args: string[]) {
         await createAntelopeAccount({ account: 'public1.tmy' }, signer);
         await createAntelopeAccount({ account: 'public2.tmy' }, signer);
         await createAntelopeAccount({ account: 'public3.tmy' }, signer);
-        await createAntelopeAccount({ account: 'opration.tmy' }, signer);
+        await createAntelopeAccount({ account: 'ops.tmy' }, signer);
         const totalSupply = 50000000000.0;
         //token allocations
         const teamAllocation = totalSupply * 0.15;
@@ -79,7 +79,7 @@ export default async function bootstrap(args: string[]) {
         await onoCoinContract.transfer('onocoin.tmy', 'public1.tmy', publicAllocation.toString() + ' ONO', signer);
         await onoCoinContract.transfer('onocoin.tmy', 'public2.tmy', publicAllocation.toString() + ' ONO', signer);
         await onoCoinContract.transfer('onocoin.tmy', 'public3.tmy', publicAllocation.toString() + ' ONO', signer);
-        await onoCoinContract.transfer('onocoin.tmy', 'opration.tmy', operationAllocation.toString() + ' ONO', signer);
+        await onoCoinContract.transfer('onocoin.tmy', 'ops.tmy', operationAllocation.toString() + ' ONO', signer);
 
         const demo = await createApp({
             appName: 'Tonomy Demo',
@@ -144,7 +144,7 @@ export default async function bootstrap(args: string[]) {
         await updateControllByAccount('public1.tmy', 'gov.tmy');
         await updateControllByAccount('public2.tmy', 'gov.tmy');
         await updateControllByAccount('public3.tmy', 'gov.tmy');
-        await updateControllByAccount('opration.tmy', 'gov.tmy');
+        await updateControllByAccount('ops.tmy', 'gov.tmy');
 
         // TODO change the block signing key as well
 
