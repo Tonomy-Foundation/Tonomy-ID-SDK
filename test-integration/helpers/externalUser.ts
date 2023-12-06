@@ -288,7 +288,7 @@ export async function externalWebsiteSignTransaction(externalUser: ExternalUser,
 
     if (getSettings().loggerLevel === 'debug')
         console.log('EXTERNAL_WEBSITE/sign-trx: signing transaction selfissue()');
-    let trx = await externalUser.signTransaction('eosio.token', 'selfissue', {
+    let trx = await externalUser.signTransaction('demo.tmy', 'selfissue', {
         to: from,
         quantity: '10 SYS',
         memo: 'test',
@@ -297,11 +297,11 @@ export async function externalWebsiteSignTransaction(externalUser: ExternalUser,
     linkedActions = await getLinkedActionsForPermission(from, externalApp.accountName);
 
     expect(linkedActions).toBeDefined();
-    expect(linkedActions.account.equals('eosio.token')).toBe(true);
+    expect(linkedActions.account.equals('demo.tmy')).toBe(true);
     expect(linkedActions.action).toBeNull();
 
     if (getSettings().loggerLevel === 'debug') console.log('EXTERNAL_WEBSITE/sign-trx: signing transaction transfer()');
-    trx = await externalUser.signTransaction('eosio.token', 'transfer', {
+    trx = await externalUser.signTransaction('demo.tmy', 'transfer', {
         from,
         to,
         quantity: '1 SYS',
@@ -315,7 +315,7 @@ export async function externalWebsiteSignTransaction(externalUser: ExternalUser,
 
     if (getSettings().loggerLevel === 'debug')
         console.log('EXTERNAL_WEBSITE/sign-trx: signing transaction transfer() again)');
-    trx = await externalUser.signTransaction('eosio.token', 'transfer', {
+    trx = await externalUser.signTransaction('demo.tmy', 'transfer', {
         from,
         to,
         quantity: '2 SYS',
