@@ -64,7 +64,7 @@ export default async function bootstrap(args: string[]) {
         await createAntelopeAccount({ account: 'public3.tmy' }, signer);
         await createAntelopeAccount({ account: 'ops.tmy' }, signer);
         const totalSupply = 50000000000.0;
-        //token allocations
+        //token allocations to all categories
         const teamAllocation = totalSupply * 0.15;
         const ecosystemAllocation = totalSupply * 0.3;
         const privateAllocation = totalSupply * 0.025;
