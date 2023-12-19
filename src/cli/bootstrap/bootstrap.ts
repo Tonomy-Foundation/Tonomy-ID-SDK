@@ -1,7 +1,7 @@
 import deployContract from './deploy-contract';
 import path from 'path';
 import { createAntelopeAccount, createApp } from './create-account';
-import { DemoTokenContract, EosioUtil, setSettings, OnoCoinContract } from '../../sdk/index';
+import { DemoTokenContract, EosioUtil, setSettings, OnoCoinContract, EosioContract } from '../../sdk/index';
 import { signer, updateAccountKey, updateControllByAccount } from './keys';
 import settings from './settings';
 import { createUser, mockCreateAccount, restoreCreateAccountFromMock } from './user';
@@ -11,6 +11,7 @@ setSettings(settings.config);
 
 const demoTokenContract = DemoTokenContract.Instance;
 const onoCoinContract = OnoCoinContract.Instance;
+const eosioContract = EosioContract.Instance;
 
 export default async function bootstrap(args: string[]) {
     if (!args[0]) throw new Error('Missing public key argument');
@@ -42,6 +43,9 @@ export default async function bootstrap(args: string[]) {
         await onoCoinContract.issue('onocoin.tmy', '50000000000.0000 ONO', signer);
 
         await createAntelopeAccount({ account: 'id.tmy' }, signer);
+        //make account priveledged
+        await eosioContract.setpriv('id.tmy', 1, signer);
+
         await deployContract(
             { account: 'id.tmy', contractDir: path.join(__dirname, '../../Tonomy-Contracts/contracts/id.tmy') },
             signer
@@ -153,10 +157,10 @@ export default async function bootstrap(args: string[]) {
         await updateControllByAccount('prod2.tmy', 'found.tmy');
         await updateControllByAccount('prod3.tmy', 'found.tmy');
         //accounts controlled by gov.tmy
-        await updateControllByAccount('id.tmy', 'gov.tmy', true);
-        await updateControllByAccount('eosio', 'gov.tmy');
+        await updateControllByAccount('id.tmy', 'gov.tmy', true); //need have ram associated
+        await updateControllByAccount('eosio', 'gov.tmy'); //need ram
         await updateControllByAccount('demo.tmy', 'gov.tmy');
-        await updateControllByAccount('onocoin.tmy', 'gov.tmy');
+        await updateControllByAccount('onocoin.tmy', 'gov.tmy'); //need ram
         await updateControllByAccount('ecosystm.tmy', 'gov.tmy');
         await updateControllByAccount('private1.tmy', 'gov.tmy');
         await updateControllByAccount('private2.tmy', 'gov.tmy');
@@ -179,8 +183,8 @@ export default async function bootstrap(args: string[]) {
 
         console.log('Bootstrap complete');
     } catch (e: any) {
-        console.error(e);
-        if (e.error?.details) console.log(e.error.details);
+        console.error('error', e);
+        if (e.error?.details) console.log('error detail', e.error.details[0]);
         process.exit(1);
     }
 }
