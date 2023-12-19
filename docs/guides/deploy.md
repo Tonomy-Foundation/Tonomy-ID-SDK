@@ -46,25 +46,28 @@ Then you will need to deploy each service, with configuration so that they conne
     - For a production grade network, we suggest 3 nodes if run by the same entity, or 5 nodes if run by separate entities
     - For maximum scaleability, run using bare-metal servers.
     - Please <a href="https://tonomy.io/contact" target="_blank">contact us</a> for assistance running a production Antelope network or setting up governance.
-
-2. Create the `id.tmy` account on the blockchain
-3. Deploy the <a href="https://github.com/Tonomy-Foundation/Tonomy-Contracts/tree/master/contracts/id.tmy" target="_blank">id.tmy</a> contract to the `id.tmy` account on the blockchain
-4. [Register your applications](../../start/register-app) that you wish to connect to Tonomy ID
-5. Configure the software with the `config.json` file in the repository so that they are connected correctly using your domains, and to white-label the applications:
+2. Create the `onocoin.tmy` account on the blockchain
+3. Deploy the <a href="https://github.com/Tonomy-Foundation/Tonomy-Contracts/tree/master/contracts/onocoin.tmy" target="_blank">onocoin.tmy</a> contract to the `onocoin.tmy` account on the blockchain
+4. Create a new currency with a total supply using the `create()` function
+5. Issue a specific amount of the newly created currency to the 'onocoin.tmy' account using the `issue()` function
+6. Create the `id.tmy` account on the blockchain
+7. Deploy the <a href="https://github.com/Tonomy-Foundation/Tonomy-Contracts/tree/master/contracts/id.tmy" target="_blank">id.tmy</a> contract to the `id.tmy` account on the blockchain
+8. [Register your applications](../../start/register-app) that you wish to connect to Tonomy ID
+9. Configure the software with the `config.json` file in the repository so that they are connected correctly using your domains, and to white-label the applications:
 
     - Copy the following files and use environment variables to change which configuration file is used
     - <a href="https://github.com/Tonomy-Foundation/Tonomy-ID/blob/master/src/config/config.json" target="_blank">Tonomy ID config.json</a>
     - <a href="https://github.com/Tonomy-Foundation/Tonomy-App-Websites/blob/master/src/common/config/config.json" target="_blank">Tonomy App Websites config.json</a>
     - <a href="https://github.com/Tonomy-Foundation/Tonomy-Communication/blob/master/src/config/config.json" target="_blank">Tonomy Communication config.json</a>
 
-6. Create a new Google Play store and Apple App store listing.
-7. Use <a href="https://expo.dev" target="_blank">Expo</a> or <a href="https://expo.dev/eas" target="_blank">Expo Application Services</a> to build Tonomy ID and submit it to your app store listings.
-8. Deploy <a href="https://github.com/Tonomy-Foundation/Tonomy-App-Websites" target="_blank">Tonomy App Websites</a>
+10. Create a new Google Play store and Apple App store listing.
+11. Use <a href="https://expo.dev" target="_blank">Expo</a> or <a href="https://expo.dev/eas" target="_blank">Expo Application Services</a> to build Tonomy ID and submit it to your app store listings.
+12. Deploy <a href="https://github.com/Tonomy-Foundation/Tonomy-App-Websites" target="_blank">Tonomy App Websites</a>
 
     - You need to use the `accounts.` subdomain to run the Tonomy Accounts website
     - You need to use the `demo.` subdomain to run the Tonomy Demo website
 
-9. Deploy <a href="https://github.com/Tonomy-Foundation/Tonomy-Communication" target="_blank">Tonomy Communication</a>
+13. Deploy <a href="https://github.com/Tonomy-Foundation/Tonomy-Communication" target="_blank">Tonomy Communication</a>
 
 #### (Optional) Sign blockchain transactions in your apps
 
@@ -75,6 +78,6 @@ If you want to have your applications sign blockchain transactions, see [Sign a 
 To run the [Demo website](../../examples/#tonomy-demo-integration-application) in your network follow these extra steps:
 
 1. [Register the application](../../start/register-app) using the domain you wish to run the Demo website from
-2. Deploy the <a href="https://github.com/Tonomy-Foundation/Tonomy-Contracts/tree/master/contracts/eosio.token" target="_blank">eosio.token</a> contract to the `eosio.token` account (or modify the Demo website to connect to a different account)
+2. Deploy the <a href="https://github.com/Tonomy-Foundation/Tonomy-Contracts/tree/master/contracts/demo.tmy" target="_blank">demo.tmy</a> contract to the `demo.tmy` account (or modify the Demo website to connect to a different account)
 3. Call `addperm()` function with the account name of the registered Demo application (Step 1)
 4. Create dummy accounts as shown in the <a href="https://github.com/Tonomy-Foundation/Tonomy-ID-SDK/blob/9061250ffceeddbbbf183a6ea03dfe7d5e1685c0/src/cli/bootstrap/bootstrap.ts#L88" target="_blank">bootstrap script here</a>
