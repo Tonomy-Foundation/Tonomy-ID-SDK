@@ -154,6 +154,25 @@ class EosioContract {
 
         return await transact(Name.from('eosio'), [action], signer);
     }
+
+    async setpriv(account: string, isPriv: number, signer: Signer): Promise<API.v1.PushTransactionResponse> {
+        const action = {
+            authorization: [
+                {
+                    actor: 'eosio',
+                    permission: 'active',
+                },
+            ],
+            account: 'eosio',
+            name: 'setpriv',
+            data: {
+                account,
+                is_priv: isPriv,
+            },
+        };
+
+        return await transact(Name.from('eosio'), [action], signer);
+    }
 }
 
 export { EosioContract };
