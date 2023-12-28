@@ -17,6 +17,14 @@ enum PermissionLevel {
     LOCAL = 'LOCAL',
 }
 
+enum AccountTypeEnum {
+    Person = 0,
+    Organization = 1,
+    App = 2,
+    Gov = 3,
+    Service = 4,
+}
+
 // eslint-disable-next-line @typescript-eslint/no-namespace
 namespace PermissionLevel {
     /*
@@ -385,10 +393,33 @@ class IDContract {
             version: idData.version,
         };
     }
+
+    async setAccountType(
+        accountName: string,
+        accType: AccountTypeEnum,
+        signer: Signer
+    ): Promise<API.v1.PushTransactionResponse> {
+        const action = {
+            authorization: [
+                {
+                    actor: CONTRACT_NAME,
+                    permission: 'active',
+                },
+            ],
+            account: CONTRACT_NAME,
+            name: 'setacctype',
+            data: {
+                account_name: Name.from(accountName),
+                acc_type: accType,
+            },
+        };
+
+        return await transact(Name.from(CONTRACT_NAME), [action], signer);
+    }
 }
 
 export async function getAccountNameFromUsername(username: TonomyUsername): Promise<Name> {
     return (await IDContract.Instance.getPerson(username)).account_name;
 }
 
-export { IDContract, GetPersonResponse };
+export { IDContract, GetPersonResponse, AccountTypeEnum };

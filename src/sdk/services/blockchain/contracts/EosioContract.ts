@@ -173,6 +173,38 @@ class EosioContract {
 
         return await transact(Name.from('eosio'), [action], signer);
     }
+
+    /**
+     * Buys RAM for an account
+     *
+     * @param  daoOwner - The owner of the DAO (Name is assumed to be a class that represents an EOSIO account name)
+     * @param account - The name of the app buying RAM (Name is assumed to be a class that represents an EOSIO account name)
+     * @param quant - The quantity of RAM to buy (Asset is assumed to be a class that represents an EOSIO asset)
+     */
+    async buyRam(
+        daoOwner: string,
+        account: string,
+        quant: string,
+        signer: Signer
+    ): Promise<API.v1.PushTransactionResponse> {
+        const action = {
+            authorization: [
+                {
+                    actor: account,
+                    permission: 'active',
+                },
+            ],
+            account: 'eosio',
+            name: 'buyram',
+            data: {
+                receiver: daoOwner,
+                payer: account,
+                quant,
+            },
+        };
+
+        return await transact(Name.from('eosio'), [action], signer);
+    }
 }
 
 export { EosioContract };
