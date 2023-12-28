@@ -45,7 +45,7 @@ const stagingConfig = {
 };
 
 const testnetConfig = {
-    environment: 'demo',
+    environment: 'testnet',
     ssoWebsiteOrigin: `https://accounts.testnet.tonomy.foundation`,
     demoWebsiteOrigin: `https://testnet.demo.tonomy.foundation`,
     blockchainUrl: `https://blockchain-api-testnet.tonomy.foundation`,
@@ -57,7 +57,7 @@ const testnetConfig = {
 };
 
 const productionConfig = {
-    environment: 'demo',
+    environment: 'production',
     ssoWebsiteOrigin: `https://accounts.tonomy.network`,
     demoWebsiteOrigin: `https://demo.tonomy.network`,
     blockchainUrl: `https://blockchain-api-production.tonomy.network`,
