@@ -46,24 +46,24 @@ const stagingConfig = {
 
 const testnetConfig = {
     environment: 'demo',
-    ssoWebsiteOrigin: `https://accounts.testnet.tonomy.foundation`,
-    demoWebsiteOrigin: `https://testnet.demo.tonomy.foundation`,
-    blockchainUrl: `https://blockchain-api-testnet.tonomy.foundation`,
+    ssoWebsiteOrigin: `https://accounts.testnet.pangeavision.org`,
+    demoWebsiteOrigin: `https://demo.testnet.pangeavision.org`,
+    blockchainUrl: `https://blockchain-api-testnet.pangeavision.org`,
     accountSuffix: '.testnet.pangea',
-    communicationUrl: 'wss://communication.testnet.tonomy.foundation',
-    accountsServiceUrl: 'http://communication.testnet.tonomy.foundation',
+    communicationUrl: 'wss://communication.testnet.pangeavision.org',
+    accountsServiceUrl: 'http://communication.testnet.pangeavision.org',
     tonomyIdSchema: 'pangea-testnet://',
     loggerLevel: 'info' as LoggerLevel,
 };
 
 const productionConfig = {
     environment: 'production',
-    ssoWebsiteOrigin: `https://accounts.tonomy.network`,
-    demoWebsiteOrigin: `https://demo.tonomy.network`,
-    blockchainUrl: `https://blockchain-api-production.tonomy.network`,
+    ssoWebsiteOrigin: `https://accounts.pangeavision.org`,
+    demoWebsiteOrigin: `https://demo.pangeavision.org`,
+    blockchainUrl: `https://blockchain-api-production.pangeavision.org`,
     accountSuffix: '.production.pangea',
-    communicationUrl: 'wss://communication.tonomy.network',
-    accountsServiceUrl: 'http://communication.tonomy.network',
+    communicationUrl: 'wss://communication.pangeavision.org',
+    accountsServiceUrl: 'http://communication.pangeavision.org',
     tonomyIdSchema: 'pangea://',
     loggerLevel: 'info' as LoggerLevel,
 };
