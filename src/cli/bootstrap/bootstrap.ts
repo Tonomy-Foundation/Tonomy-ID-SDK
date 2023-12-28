@@ -1,15 +1,7 @@
 import deployContract from './deploy-contract';
 import path from 'path';
 import { createAntelopeAccount, createApp } from './create-account';
-import {
-    DemoTokenContract,
-    EosioUtil,
-    setSettings,
-    OnoCoinContract,
-    EosioContract,
-    IDContract,
-    AccountTypeEnum,
-} from '../../sdk/index';
+import { DemoTokenContract, EosioUtil, setSettings, OnoCoinContract, EosioContract } from '../../sdk/index';
 import { signer, updateAccountKey, updateControllByAccount } from './keys';
 import settings from './settings';
 import { createUser, mockCreateAccount, restoreCreateAccountFromMock } from './user';
@@ -20,7 +12,6 @@ setSettings(settings.config);
 const demoTokenContract = DemoTokenContract.Instance;
 const onoCoinContract = OnoCoinContract.Instance;
 const eosioContract = EosioContract.Instance;
-const idContract = IDContract.Instance;
 
 export default async function bootstrap(args: string[]) {
     if (!args[0]) throw new Error('Missing public key argument');
@@ -178,12 +169,7 @@ export default async function bootstrap(args: string[]) {
         await updateControllByAccount('public2.tmy', 'gov.tmy');
         await updateControllByAccount('public3.tmy', 'gov.tmy');
         await updateControllByAccount('ops.tmy', 'gov.tmy');
-        await idContract.setAccountType('id.tmy', AccountTypeEnum.App, signer);
 
-        // const units = Int64.from('100'); // Replace '1000000' with the actual units value
-        // const symbol = Asset.Symbol.from('4,ONO'); // Replace '4,ONO' with the actual symbol value
-        // const quant = new Asset(units, symbol);
-        await eosioContract.buyRam('found.tmy', 'id.tmy', '10.0000 ONO', signer);
         // TODO change the block signing key as well
 
         console.log('Deploy Tonomy bios contract, which limits access to system actions');
