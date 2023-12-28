@@ -17,6 +17,14 @@ enum PermissionLevel {
     LOCAL = 'LOCAL',
 }
 
+enum AccountTypeEnum {
+    Person = 0,
+    Organization = 1,
+    App = 2,
+    Gov = 3,
+    Service = 4,
+}
+
 // eslint-disable-next-line @typescript-eslint/no-namespace
 namespace PermissionLevel {
     /*
@@ -385,10 +393,101 @@ class IDContract {
             version: idData.version,
         };
     }
+
+    async setAccountType(
+        accountName: string,
+        accType: AccountTypeEnum,
+        signer: Signer
+    ): Promise<API.v1.PushTransactionResponse> {
+        const action = {
+            authorization: [
+                {
+                    actor: CONTRACT_NAME,
+                    permission: 'active',
+                },
+            ],
+            account: CONTRACT_NAME,
+            name: 'setacctype',
+            data: {
+                account_name: Name.from(accountName),
+                acc_type: accType,
+            },
+        };
+
+        return await transact(Name.from(CONTRACT_NAME), [action], signer);
+    }
+
+    // async setAccountType(
+    //     account: Name | string,
+    //     accType: string,
+    //     version: number,
+    //     signer: Signer
+    // ): Promise<API.v1.PushTransactionResponse> {
+    //     let data;
+
+    //     if (account instanceof Name) {
+    //         data = await api.v1.chain.get_table_rows({
+    //             code: CONTRACT_NAME,
+    //             scope: CONTRACT_NAME,
+    //             table: 'accounts', // Assuming the table name is 'accounts'
+    //             lower_bound: account,
+    //             limit: 1,
+    //         });
+    //         if (!data || !data.rows) throwError('No data found', SdkErrors.DataQueryNoRowDataFound);
+
+    //         if (data.rows.length === 0 || data.rows[0].account_name !== account.toString()) {
+    //             throwError('Account "' + account.toString() + '" not found', SdkErrors.AccountDoesntExist);
+    //         }
+    //     }
+
+    //     const existingRecord = data.rows[0];
+    //     const updatedRecord: AccountTableRecord = {
+    //         account_name: Name.from(existingRecord.account_name),
+    //         acc_type: accType,
+    //         version: version,
+    //         // Add other fields as needed
+    //     };
+
+    //     // Call the contract action to update the record in the account table
+    //     // Modify the action and contract details based on your contract structure
+    //     const action = {
+    //         authorization: [
+    //             {
+    //                 actor: CONTRACT_NAME,
+    //                 permission: 'active',
+    //             },
+    //         ],
+    //         account: CONTRACT_NAME,
+    //         name: 'setacctype',
+    //         data: {
+    //             account_name: Name.from(accountName),
+    //             acc_type: accType,
+    //             version: version,
+    //         },
+    //     };
+
+    //     await transact({
+    //         actions: [
+    //             {
+    //                 account: CONTRACT_NAME,
+    //                 name: 'updateaccount', // Replace with the actual action name
+    //                 authorization: [
+    //                     {
+    //                         actor: CONTRACT_NAME,
+    //                         permission: 'active',
+    //                     },
+    //                 ],
+    //                 data: updatedRecord,
+    //             },
+    //         ],
+    //     });
+
+    //     return await transact(Name.from(CONTRACT_NAME), [action], signer);
+    // }
 }
 
 export async function getAccountNameFromUsername(username: TonomyUsername): Promise<Name> {
     return (await IDContract.Instance.getPerson(username)).account_name;
 }
 
-export { IDContract, GetPersonResponse };
+export { IDContract, GetPersonResponse, AccountTypeEnum };

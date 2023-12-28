@@ -52,5 +52,5 @@ export function isProduction(): boolean {
         throwError('Settings not yet initialized', SdkErrors.SettingsNotInitialized);
     }
 
-    return ['production', 'staging', 'demo'].includes(settings.environment);
+    return ['production', 'staging', 'testnet'].includes(settings.environment);
 }

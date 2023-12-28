@@ -44,15 +44,27 @@ const stagingConfig = {
     loggerLevel: 'info' as LoggerLevel,
 };
 
-const demoConfig = {
+const testnetConfig = {
     environment: 'demo',
-    ssoWebsiteOrigin: `https://accounts.demo.tonomy.foundation`,
-    demoWebsiteOrigin: `https://demo.demo.tonomy.foundation`,
-    blockchainUrl: `https://blockchain-api-demo.tonomy.foundation`,
-    accountSuffix: '.demo.tonomy.id',
-    communicationUrl: 'wss://communication.demo.tonomy.foundation',
-    accountsServiceUrl: 'http://communication.demo.tonomy.foundation',
+    ssoWebsiteOrigin: `https://accounts.testnet.tonomy.foundation`,
+    demoWebsiteOrigin: `https://testnet.demo.tonomy.foundation`,
+    blockchainUrl: `https://blockchain-api-testnet.tonomy.foundation`,
+    accountSuffix: '.testnet.tonomy.id',
+    communicationUrl: 'wss://communication.testnet.tonomy.foundation',
+    accountsServiceUrl: 'http://communication.testnet.tonomy.foundation',
     tonomyIdSchema: 'tonomy-id-demo://',
+    loggerLevel: 'info' as LoggerLevel,
+};
+
+const productionConfig = {
+    environment: 'demo',
+    ssoWebsiteOrigin: `https://accounts.tonomy.network`,
+    demoWebsiteOrigin: `https://demo.tonomy.network`,
+    blockchainUrl: `https://blockchain-api-production.tonomy.network`,
+    accountSuffix: '.demo.tonomy.id',
+    communicationUrl: 'wss://communication.tonomy.network',
+    accountsServiceUrl: 'http://communication.tonomy.network',
+    tonomyIdSchema: 'tonomy-id-production://',
     loggerLevel: 'info' as LoggerLevel,
 };
 
@@ -77,11 +89,12 @@ switch (env) {
     case 'staging':
         config = stagingConfig;
         break;
-    case 'demo':
-        config = demoConfig;
+    case 'testnet':
+        config = testnetConfig;
         break;
     case 'production':
-        throw new Error('Production config not implemented yet');
+        config = productionConfig;
+        break;
     default:
         throw new Error('Unknown environment: ' + env);
 }
