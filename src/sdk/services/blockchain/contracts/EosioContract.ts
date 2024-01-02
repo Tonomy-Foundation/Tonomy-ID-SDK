@@ -182,28 +182,34 @@ class EosioContract {
      * @param quant - The quantity of RAM to buy (Asset is assumed to be a class that represents an EOSIO asset)
      */
     async buyRam(
-        daoOwner: string,
-        account: string,
+        dao_owner: string,
+        app: string,
         quant: string,
         signer: Signer
     ): Promise<API.v1.PushTransactionResponse> {
-        const action = {
-            authorization: [
-                {
-                    actor: account,
-                    permission: 'active',
-                },
-            ],
-            account: 'eosio',
-            name: 'buyram',
-            data: {
-                receiver: daoOwner,
-                payer: account,
-                quant,
-            },
-        };
+        console.log('buyram', quant);
 
-        return await transact(Name.from('eosio'), [action], signer);
+        const actions = [
+            {
+                account: 'eosio',
+                name: 'buyram',
+                authorization: [
+                    {
+                        actor: app,
+                        permission: 'active',
+                    },
+                ],
+                data: {
+                    dao_owner,
+                    app,
+                    quant,
+                },
+            },
+        ];
+
+        console.log('acrion', actions);
+
+        return await transact(Name.from('eosio'), actions, signer);
     }
 }
 

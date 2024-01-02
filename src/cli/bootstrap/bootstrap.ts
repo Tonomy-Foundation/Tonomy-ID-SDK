@@ -12,9 +12,10 @@ import {
 } from '../../sdk/index';
 import { signer, updateAccountKey, updateControllByAccount } from './keys';
 import settings from './settings';
-import { createUser, mockCreateAccount, restoreCreateAccountFromMock } from './user';
+import { mockCreateAccount, restoreCreateAccountFromMock } from './user';
 import { PrivateKey } from '@wharfkit/antelope';
 
+//createUser
 setSettings(settings.config);
 
 const demoTokenContract = DemoTokenContract.Instance;
@@ -85,6 +86,7 @@ export default async function bootstrap(args: string[]) {
         const operationAllocation = totalSupply * 0.4;
 
         await onoCoinContract.transfer('onocoin.tmy', 'team.tmy', teamAllocation.toString() + '.0000 ONO', signer);
+        return;
         await onoCoinContract.transfer(
             'onocoin.tmy',
             'ecosystm.tmy',
@@ -137,23 +139,23 @@ export default async function bootstrap(args: string[]) {
         });
 
         // The Apple app needs to have a test user for their review. That is this user.
-        let password = '1GjGtP%g5UOp2lQ&U5*p';
+        // let password = '1GjGtP%g5UOp2lQ&U5*p';
 
         mockCreateAccount();
-        await createUser('testuser', password);
+        // await createUser('testuser', password);
 
         // Create users for the demo website
-        password = 'mrOOR1WW0y#6ot7z%Wbj';
-        await createUser('lovesboost', password);
-        await createUser('sweetkristy', password);
-        await createUser('cheesecakeophobia', password);
-        await createUser('ultimateBeast', password);
-        await createUser('tomtom', password);
-        await createUser('readingpro', password);
-        await createUser('sohappy', password);
-        await createUser('reallychel', password);
-        await createUser('thedudeabides', password);
-        await createUser('4cryingoutloud', password);
+        // password = 'mrOOR1WW0y#6ot7z%Wbj';
+        // await createUser('lovesboost', password);
+        // await createUser('sweetkristy', password);
+        // await createUser('cheesecakeophobia', password);
+        // await createUser('ultimateBeast', password);
+        // await createUser('tomtom', password);
+        // await createUser('readingpro', password);
+        // await createUser('sohappy', password);
+        // await createUser('reallychel', password);
+        // await createUser('thedudeabides', password);
+        // await createUser('4cryingoutloud', password);
 
         restoreCreateAccountFromMock();
 
@@ -183,7 +185,7 @@ export default async function bootstrap(args: string[]) {
         // const units = Int64.from('100'); // Replace '1000000' with the actual units value
         // const symbol = Asset.Symbol.from('4,ONO'); // Replace '4,ONO' with the actual symbol value
         // const quant = new Asset(units, symbol);
-        await eosioContract.buyRam('found.tmy', 'id.tmy', '10.0000 ONO', signer);
+        await eosioContract.buyRam('found.tmy', 'id.tmy', '100000.0000 ONO', signer);
         // TODO change the block signing key as well
 
         console.log('Deploy Tonomy bios contract, which limits access to system actions');
