@@ -187,8 +187,6 @@ class EosioContract {
         quant: string,
         signer: Signer
     ): Promise<API.v1.PushTransactionResponse> {
-        console.log('buyram', quant);
-
         const actions = [
             {
                 account: 'eosio',
@@ -196,6 +194,10 @@ class EosioContract {
                 authorization: [
                     {
                         actor: app,
+                        permission: 'active',
+                    },
+                    {
+                        actor: dao_owner,
                         permission: 'active',
                     },
                 ],
@@ -206,8 +208,6 @@ class EosioContract {
                 },
             },
         ];
-
-        console.log('acrion', actions);
 
         return await transact(Name.from('eosio'), actions, signer);
     }
