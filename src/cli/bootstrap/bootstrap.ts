@@ -178,7 +178,6 @@ export default async function bootstrap(args: string[]) {
         await updateControllByAccount('public1.tmy', 'gov.tmy');
         await updateControllByAccount('public2.tmy', 'gov.tmy');
         await updateControllByAccount('public3.tmy', 'gov.tmy');
-        await idContract.setAccountType('id.tmy', AccountTypeEnum.App, signer);
 
         console.log('Deploy Tonomy bios contract, which limits access to system actions');
         await deployContract(
@@ -188,6 +187,10 @@ export default async function bootstrap(args: string[]) {
             },
             EosioUtil.createSigner(newPrivateKey)
         );
+        await idContract.setAccountType('id.tmy', AccountTypeEnum.App, signer);
+        await idContract.setAccountType('eosio', AccountTypeEnum.App, signer);
+        await idContract.setAccountType('onocoin.tmy', AccountTypeEnum.App, signer);
+
         await eosioContract.buyRam('ops.tmy', 'id.tmy', '1000.0000 ONO', signer);
         await eosioContract.buyRam('ops.tmy', 'eosio', '1000.0000 ONO', signer);
         await eosioContract.buyRam('ops.tmy', 'onocoin.tmy', '1000.0000 ONO', signer);
