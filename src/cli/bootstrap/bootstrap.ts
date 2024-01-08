@@ -21,6 +21,18 @@ const demoTokenContract = DemoTokenContract.Instance;
 const onoCoinContract = OnoCoinContract.Instance;
 const eosioContract = EosioContract.Instance;
 const idContract = IDContract.Instance;
+const ramPrice = 173333.3333; // bytes / ONO
+const fee = 0.25 / 100;
+
+/**
+ * Converts bytes to ONO.
+ *
+ * @param bytes The number of bytes to convert.
+ * @returns The converted value in ONO.
+ */
+function bytesToOno(bytes: number): string {
+    return ((bytes * (1 + fee)) / ramPrice).toFixed(4) + ' ONO';
+}
 
 export default async function bootstrap(args: string[]) {
     if (!args[0]) throw new Error('Missing public key argument');
@@ -191,17 +203,11 @@ export default async function bootstrap(args: string[]) {
         await idContract.setAccountType('eosio', AccountTypeEnum.App, signer);
         await idContract.setAccountType('onocoin.tmy', AccountTypeEnum.App, signer);
 
-        //call resource params
-        await eosioContract.setresparams(0.000005769230769, 8 * 1024 * 1024 * 1024, 0.25, signer);
-        //call resource params
-        const ramPrice = 0.000005769230769;
-        const ramAmount = 8 * 1024 * 1024 * 1024;
-        const fee = 0.25;
+        // Call setresparams() to set the initial RAM price
+        await eosioContract.setresparams(ramPrice, 8 * 1024 * 1024 * 1024, fee, signer);
 
-        const quantity = (ramPrice * ramAmount + fee).toFixed(4) + ' ONO';
-
-        await eosioContract.buyRam('ops.tmy', 'id.tmy', quantity, signer);
-        await eosioContract.buyRam('ops.tmy', 'onocoin.tmy', quantity, signer);
+        await eosioContract.buyRam('ops.tmy', 'id.tmy', bytesToOno(4680000), signer);
+        await eosioContract.buyRam('ops.tmy', 'onocoin.tmy', bytesToOno(2400000), signer);
 
         console.log('Bootstrap complete');
     } catch (e: any) {
