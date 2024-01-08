@@ -211,6 +211,39 @@ class EosioContract {
 
         return await transact(Name.from('eosio'), actions, signer);
     }
+
+    /**
+     * Sets the resource parameters 
+     *
+     * @param ram_price - The price of RAM.
+     * @param total_ram_available - The total available RAM.
+     * @param ram_fee - The fee for RAM.
+    
+     */
+    async setresparams(
+        ram_price: number,
+        total_ram_available: number,
+        ram_fee: number,
+        signer: Signer
+    ): Promise<API.v1.PushTransactionResponse> {
+        const action = {
+            authorization: [
+                {
+                    actor: 'gov.tmy',
+                    permission: 'active',
+                },
+            ],
+            account: 'eosio',
+            name: 'setresparams',
+            data: {
+                ram_price,
+                total_ram_available,
+                ram_fee,
+            },
+        };
+
+        return await transact(Name.from('eosio'), [action], signer);
+    }
 }
 
 export { EosioContract };

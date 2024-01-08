@@ -191,9 +191,17 @@ export default async function bootstrap(args: string[]) {
         await idContract.setAccountType('eosio', AccountTypeEnum.App, signer);
         await idContract.setAccountType('onocoin.tmy', AccountTypeEnum.App, signer);
 
-        await eosioContract.buyRam('ops.tmy', 'id.tmy', '1000.0000 ONO', signer);
-        await eosioContract.buyRam('ops.tmy', 'eosio', '1000.0000 ONO', signer);
-        await eosioContract.buyRam('ops.tmy', 'onocoin.tmy', '1000.0000 ONO', signer);
+        //call resource params
+        await eosioContract.setresparams(0.000005769230769, 8 * 1024 * 1024 * 1024, 0.25, signer);
+        //call resource params
+        const ramPrice = 0.000005769230769;
+        const ramAmount = 8 * 1024 * 1024 * 1024;
+        const fee = 0.25;
+
+        const quantity = (ramPrice * ramAmount + fee).toFixed(4) + ' ONO';
+
+        await eosioContract.buyRam('ops.tmy', 'id.tmy', quantity, signer);
+        await eosioContract.buyRam('ops.tmy', 'onocoin.tmy', quantity, signer);
 
         console.log('Bootstrap complete');
     } catch (e: any) {

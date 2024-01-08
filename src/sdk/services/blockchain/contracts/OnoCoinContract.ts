@@ -61,7 +61,6 @@ class OnoCoinContract {
         quantity: string,
         signer: Signer
     ): Promise<API.v1.PushTransactionResponse> {
-        console.log('quantity', quantity);
         const actions = [
             {
                 account: CONTRACT_NAME,
@@ -80,8 +79,6 @@ class OnoCoinContract {
                 },
             },
         ];
-
-        console.log('acrion', actions);
 
         return await transact(Name.from(CONTRACT_NAME), actions, signer);
     }
