@@ -7,6 +7,7 @@ on:
   push:
     branches:
       - development
+      - testnet
       - master
 
 jobs:
@@ -33,6 +34,11 @@ jobs:
           if [[ ${GITHUB_REF#refs/*/} == "development" ]]; then
             echo "Variable BRANCH_NAME is set to 'development'"
             yarn config set tag development
+          fi
+
+          if [[ ${GITHUB_REF#refs/*/} == "testnet" ]]; then
+            echo "Variable BRANCH_NAME is set to 'testnet'"
+            yarn config set tag testnet
           fi
       - run: yarn install --immutable
       - run: yarn run release
