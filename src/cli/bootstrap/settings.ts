@@ -46,24 +46,24 @@ const stagingConfig = {
 
 const testnetConfig = {
     environment: 'demo',
-    ssoWebsiteOrigin: `https://accounts.testnet.pangeavision.org`,
-    demoWebsiteOrigin: `https://demo.testnet.pangeavision.org`,
-    blockchainUrl: `https://blockchain-api-testnet.pangeavision.org`,
+    ssoWebsiteOrigin: `https://accounts.testnet.pangea.web4.world`,
+    demoWebsiteOrigin: `https://demo.testnet.pangea.web4.world`,
+    blockchainUrl: `https://blockchain-api-testnet.pangea.web4.world`,
     accountSuffix: '.testnet.pangea',
-    communicationUrl: 'wss://communication.testnet.pangeavision.org',
-    accountsServiceUrl: 'http://communication.testnet.pangeavision.org',
+    communicationUrl: 'wss://communication.testnet.pangea.web4.world',
+    accountsServiceUrl: 'http://communication.testnet.pangea.web4.world',
     tonomyIdSchema: 'pangea-testnet://',
     loggerLevel: 'info' as LoggerLevel,
 };
 
 const productionConfig = {
     environment: 'production',
-    ssoWebsiteOrigin: `https://accounts.pangeavision.org`,
-    demoWebsiteOrigin: `https://demo.pangeavision.org`,
-    blockchainUrl: `https://blockchain-api-production.pangeavision.org`,
+    ssoWebsiteOrigin: `https://accounts.pangea.web4.world`,
+    demoWebsiteOrigin: `https://demo.pangea.web4.world`,
+    blockchainUrl: `https://blockchain-api-production.pangea.web4.world`,
     accountSuffix: '.production.pangea',
-    communicationUrl: 'wss://communication.pangeavision.org',
-    accountsServiceUrl: 'http://communication.pangeavision.org',
+    communicationUrl: 'wss://communication.pangea.web4.world',
+    accountsServiceUrl: 'http://communication.pangea.web4.world',
     tonomyIdSchema: 'pangea://',
     loggerLevel: 'info' as LoggerLevel,
 };
