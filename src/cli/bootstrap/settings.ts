@@ -44,15 +44,27 @@ const stagingConfig = {
     loggerLevel: 'info' as LoggerLevel,
 };
 
-const demoConfig = {
+const testnetConfig = {
     environment: 'demo',
-    ssoWebsiteOrigin: `https://accounts.demo.tonomy.foundation`,
-    demoWebsiteOrigin: `https://demo.demo.tonomy.foundation`,
-    blockchainUrl: `https://blockchain-api-demo.tonomy.foundation`,
-    accountSuffix: '.demo.tonomy.id',
-    communicationUrl: 'wss://communication.demo.tonomy.foundation',
-    accountsServiceUrl: 'http://communication.demo.tonomy.foundation',
-    tonomyIdSchema: 'tonomy-id-demo://',
+    ssoWebsiteOrigin: `https://accounts.testnet.pangea.web4.world`,
+    demoWebsiteOrigin: `https://demo.testnet.pangea.web4.world`,
+    blockchainUrl: `https://blockchain-api-testnet.pangea.web4.world`,
+    accountSuffix: '.testnet.pangea',
+    communicationUrl: 'wss://communication.testnet.pangea.web4.world',
+    accountsServiceUrl: 'http://communication.testnet.pangea.web4.world',
+    tonomyIdSchema: 'pangea-testnet://',
+    loggerLevel: 'info' as LoggerLevel,
+};
+
+const productionConfig = {
+    environment: 'production',
+    ssoWebsiteOrigin: `https://accounts.pangea.web4.world`,
+    demoWebsiteOrigin: `https://demo.pangea.web4.world`,
+    blockchainUrl: `https://blockchain-api-production.pangea.web4.world`,
+    accountSuffix: '.production.pangea',
+    communicationUrl: 'wss://communication.pangea.web4.world',
+    accountsServiceUrl: 'http://communication.pangea.web4.world',
+    tonomyIdSchema: 'pangea://',
     loggerLevel: 'info' as LoggerLevel,
 };
 
@@ -77,11 +89,12 @@ switch (env) {
     case 'staging':
         config = stagingConfig;
         break;
-    case 'demo':
-        config = demoConfig;
+    case 'testnet':
+        config = testnetConfig;
         break;
     case 'production':
-        throw new Error('Production config not implemented yet');
+        config = productionConfig;
+        break;
     default:
         throw new Error('Unknown environment: ' + env);
 }
