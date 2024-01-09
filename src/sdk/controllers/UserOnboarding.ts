@@ -195,6 +195,7 @@ export class UserOnboarding extends UserCommunication implements IUserOnboarding
         const accountName = await this.getAccountName();
 
         await idContract.updatekeysper(accountName.toString(), keys, signer);
+
         this.storage.status = UserStatusEnum.READY;
         await this.storage.status;
     }

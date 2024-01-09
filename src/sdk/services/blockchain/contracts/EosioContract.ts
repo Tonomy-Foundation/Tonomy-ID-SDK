@@ -173,6 +173,77 @@ class EosioContract {
 
         return await transact(Name.from('eosio'), [action], signer);
     }
+
+    /**
+     * Buys RAM for an account
+     *
+     * @param  daoOwner - The owner of the DAO (Name is assumed to be a class that represents an EOSIO account name)
+     * @param account - The name of the app buying RAM (Name is assumed to be a class that represents an EOSIO account name)
+     * @param quant - The quantity of RAM to buy (Asset is assumed to be a class that represents an EOSIO asset)
+     */
+    async buyRam(
+        dao_owner: string,
+        app: string,
+        quant: string,
+        signer: Signer
+    ): Promise<API.v1.PushTransactionResponse> {
+        const actions = [
+            {
+                account: 'eosio',
+                name: 'buyram',
+                authorization: [
+                    {
+                        actor: app,
+                        permission: 'active',
+                    },
+                    {
+                        actor: dao_owner,
+                        permission: 'active',
+                    },
+                ],
+                data: {
+                    dao_owner,
+                    app,
+                    quant,
+                },
+            },
+        ];
+
+        return await transact(Name.from('eosio'), actions, signer);
+    }
+
+    /**
+     * Sets the resource parameters 
+     *
+     * @param ram_price - The price of RAM.
+     * @param total_ram_available - The total available RAM.
+     * @param ram_fee - The fee for RAM.
+    
+     */
+    async setresparams(
+        ram_price: number,
+        total_ram_available: number,
+        ram_fee: number,
+        signer: Signer
+    ): Promise<API.v1.PushTransactionResponse> {
+        const action = {
+            authorization: [
+                {
+                    actor: 'gov.tmy',
+                    permission: 'active',
+                },
+            ],
+            account: 'eosio',
+            name: 'setresparams',
+            data: {
+                ram_price,
+                total_ram_available,
+                ram_fee,
+            },
+        };
+
+        return await transact(Name.from('eosio'), [action], signer);
+    }
 }
 
 export { EosioContract };

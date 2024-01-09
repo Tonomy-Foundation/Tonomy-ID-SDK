@@ -1,7 +1,15 @@
 import deployContract from './deploy-contract';
 import path from 'path';
 import { createAntelopeAccount, createApp } from './create-account';
-import { DemoTokenContract, EosioUtil, setSettings, OnoCoinContract, EosioContract } from '../../sdk/index';
+import {
+    DemoTokenContract,
+    EosioUtil,
+    setSettings,
+    OnoCoinContract,
+    EosioContract,
+    IDContract,
+    AccountTypeEnum,
+} from '../../sdk/index';
 import { signer, updateAccountKey, updateControllByAccount } from './keys';
 import settings from './settings';
 import { createUser, mockCreateAccount, restoreCreateAccountFromMock } from './user';
@@ -12,6 +20,19 @@ setSettings(settings.config);
 const demoTokenContract = DemoTokenContract.Instance;
 const onoCoinContract = OnoCoinContract.Instance;
 const eosioContract = EosioContract.Instance;
+const idContract = IDContract.Instance;
+const ramPrice = 173333.3333; // bytes / ONO
+const fee = 0.25 / 100;
+
+/**
+ * Converts bytes to ONO.
+ *
+ * @param bytes The number of bytes to convert.
+ * @returns The converted value in ONO.
+ */
+function bytesToOno(bytes: number): string {
+    return ((bytes * (1 + fee)) / ramPrice).toFixed(4) + ' ONO';
+}
 
 export default async function bootstrap(args: string[]) {
     if (!args[0]) throw new Error('Missing public key argument');
@@ -157,10 +178,11 @@ export default async function bootstrap(args: string[]) {
         await updateControllByAccount('prod2.tmy', 'found.tmy');
         await updateControllByAccount('prod3.tmy', 'found.tmy');
         //accounts controlled by gov.tmy
-        await updateControllByAccount('id.tmy', 'gov.tmy', true); //need have ram associated
-        await updateControllByAccount('eosio', 'gov.tmy'); //need ram
+        await updateControllByAccount('ops.tmy', 'gov.tmy');
+        await updateControllByAccount('id.tmy', 'ops.tmy'); //need have ram associated
+        await updateControllByAccount('eosio', 'ops.tmy'); //need ram
         await updateControllByAccount('demo.tmy', 'gov.tmy');
-        await updateControllByAccount('onocoin.tmy', 'gov.tmy'); //need ram
+        await updateControllByAccount('onocoin.tmy', 'ops.tmy'); //need ram
         await updateControllByAccount('ecosystm.tmy', 'gov.tmy');
         await updateControllByAccount('private1.tmy', 'gov.tmy');
         await updateControllByAccount('private2.tmy', 'gov.tmy');
@@ -168,9 +190,6 @@ export default async function bootstrap(args: string[]) {
         await updateControllByAccount('public1.tmy', 'gov.tmy');
         await updateControllByAccount('public2.tmy', 'gov.tmy');
         await updateControllByAccount('public3.tmy', 'gov.tmy');
-        await updateControllByAccount('ops.tmy', 'gov.tmy');
-
-        // TODO change the block signing key as well
 
         console.log('Deploy Tonomy bios contract, which limits access to system actions');
         await deployContract(
@@ -180,6 +199,15 @@ export default async function bootstrap(args: string[]) {
             },
             EosioUtil.createSigner(newPrivateKey)
         );
+        await idContract.setAccountType('id.tmy', AccountTypeEnum.App, signer);
+        await idContract.setAccountType('eosio', AccountTypeEnum.App, signer);
+        await idContract.setAccountType('onocoin.tmy', AccountTypeEnum.App, signer);
+
+        // Call setresparams() to set the initial RAM price
+        await eosioContract.setresparams(ramPrice, 8 * 1024 * 1024 * 1024, fee, signer);
+
+        await eosioContract.buyRam('ops.tmy', 'id.tmy', bytesToOno(4680000), signer);
+        await eosioContract.buyRam('ops.tmy', 'onocoin.tmy', bytesToOno(2400000), signer);
 
         console.log('Bootstrap complete');
     } catch (e: any) {
