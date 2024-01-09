@@ -41,6 +41,10 @@ class EosioContract {
                     actor: account.toString(),
                     permission: 'active',
                 },
+                {
+                    actor: 'gov.tmy',
+                    permission: 'active',
+                },
             ],
             data: {
                 account: account.toString(),
@@ -55,6 +59,10 @@ class EosioContract {
             authorization: [
                 {
                     actor: account.toString(),
+                    permission: 'active',
+                },
+                {
+                    actor: 'gov.tmy',
                     permission: 'active',
                 },
             ],

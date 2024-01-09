@@ -41,6 +41,7 @@ export default async function bootstrap(args: string[]) {
     const newPublicKey = newPrivateKey.toPublic();
 
     try {
+        await createAntelopeAccount({ account: 'gov.tmy' }, signer);
         await createAntelopeAccount({ account: 'demo.tmy' }, signer);
         await deployContract(
             {
@@ -74,7 +75,6 @@ export default async function bootstrap(args: string[]) {
 
         await createAntelopeAccount({ account: 'found.tmy' }, signer);
         // found.tmy should be controlled by the following accounts
-        await createAntelopeAccount({ account: 'gov.tmy' }, signer);
         await createAntelopeAccount({ account: 'team.tmy' }, signer);
         await createAntelopeAccount({ account: 'prod1.tmy' }, signer);
         await createAntelopeAccount({ account: 'prod2.tmy' }, signer);
