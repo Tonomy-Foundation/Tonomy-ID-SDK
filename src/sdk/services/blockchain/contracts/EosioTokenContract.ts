@@ -3,10 +3,10 @@ import { API, Name, NameType } from '@wharfkit/antelope';
 import { Signer, transact } from '../eosio/transaction';
 import { getApi } from '../eosio/eosio';
 
-const CONTRACT_NAME = 'onocoin.tmy';
+const CONTRACT_NAME = 'eosio.token';
 
-class OnoCoinContract {
-    static singletonInstande: OnoCoinContract;
+class EosioTokenContract {
+    static singletonInstande: EosioTokenContract;
 
     public static get Instance() {
         return this.singletonInstande || (this.singletonInstande = new this());
@@ -92,4 +92,4 @@ class OnoCoinContract {
     }
 }
 
-export { OnoCoinContract };
+export { EosioTokenContract as OnoCoinContract };

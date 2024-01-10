@@ -25,7 +25,7 @@ export * from './services/blockchain/eosio/authority';
 export * from './services/blockchain/contracts/IDContract';
 export * from './services/blockchain/contracts/EosioContract';
 export * from './services/blockchain/contracts/DemoTokenContract';
-export * from './services/blockchain/contracts/OnoCoinContract';
+export * from './services/blockchain/contracts/EosioTokenContract';
 export * from './services/communication/communication';
 export * from './services/communication/message';
 

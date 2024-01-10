@@ -5,7 +5,7 @@ import {
     DemoTokenContract,
     EosioUtil,
     setSettings,
-    OnoCoinContract,
+    EosioTokenContract,
     EosioContract,
     IDContract,
     AccountTypeEnum,
@@ -53,16 +53,16 @@ export default async function bootstrap(args: string[]) {
         await demoTokenContract.create('1000000000 SYS', signer);
         await demoTokenContract.issue('10000 SYS', signer);
 
-        await createAntelopeAccount({ account: 'onocoin.tmy' }, signer);
+        await createAntelopeAccount({ account: 'eosio.token' }, signer);
         await deployContract(
             {
-                account: 'onocoin.tmy',
-                contractDir: path.join(__dirname, '../../Tonomy-Contracts/contracts/onocoin.tmy'),
+                account: 'eosio.token',
+                contractDir: path.join(__dirname, '../../Tonomy-Contracts/contracts/eosio.token'),
             },
             signer
         );
         await onoCoinContract.create('50000000000.0000 ONO', signer);
-        await onoCoinContract.issue('onocoin.tmy', '50000000000.0000 ONO', signer);
+        await onoCoinContract.issue('eosio.token', '50000000000.0000 ONO', signer);
 
         await createAntelopeAccount({ account: 'id.tmy' }, signer);
         //make account priveledged
@@ -97,35 +97,35 @@ export default async function bootstrap(args: string[]) {
         const publicAllocation = totalSupply * 0.025;
         const operationAllocation = totalSupply * 0.4;
 
-        await onoCoinContract.transfer('onocoin.tmy', 'team.tmy', teamAllocation.toString() + '.0000 ONO', signer);
+        await onoCoinContract.transfer('eosio.token', 'team.tmy', teamAllocation.toString() + '.0000 ONO', signer);
         await onoCoinContract.transfer(
-            'onocoin.tmy',
+            'eosio.token',
             'ecosystm.tmy',
             ecosystemAllocation.toString() + '.0000 ONO',
             signer
         );
         await onoCoinContract.transfer(
-            'onocoin.tmy',
+            'eosio.token',
             'private1.tmy',
             privateAllocation.toString() + '.0000 ONO',
             signer
         );
         await onoCoinContract.transfer(
-            'onocoin.tmy',
+            'eosio.token',
             'private2.tmy',
             privateAllocation.toString() + '.0000 ONO',
             signer
         );
         await onoCoinContract.transfer(
-            'onocoin.tmy',
+            'eosio.token',
             'private3.tmy',
             privateAllocation.toString() + '.0000 ONO',
             signer
         );
-        await onoCoinContract.transfer('onocoin.tmy', 'public1.tmy', publicAllocation.toString() + '.0000 ONO', signer);
-        await onoCoinContract.transfer('onocoin.tmy', 'public2.tmy', publicAllocation.toString() + '.0000 ONO', signer);
-        await onoCoinContract.transfer('onocoin.tmy', 'public3.tmy', publicAllocation.toString() + '.0000 ONO', signer);
-        await onoCoinContract.transfer('onocoin.tmy', 'ops.tmy', operationAllocation.toString() + '.0000 ONO', signer);
+        await onoCoinContract.transfer('eosio.token', 'public1.tmy', publicAllocation.toString() + '.0000 ONO', signer);
+        await onoCoinContract.transfer('eosio.token', 'public2.tmy', publicAllocation.toString() + '.0000 ONO', signer);
+        await onoCoinContract.transfer('eosio.token', 'public3.tmy', publicAllocation.toString() + '.0000 ONO', signer);
+        await onoCoinContract.transfer('eosio.token', 'ops.tmy', operationAllocation.toString() + '.0000 ONO', signer);
 
         const demo = await createApp({
             appName: 'Tonomy Demo',
@@ -183,7 +183,7 @@ export default async function bootstrap(args: string[]) {
         await updateControlByAccount('id.tmy', 'ops.tmy', signer); //need have ram associated
         await updateControlByAccount('eosio', 'ops.tmy', signer); //need ram
         await updateControlByAccount('demo.tmy', 'gov.tmy', signer);
-        await updateControlByAccount('onocoin.tmy', 'ops.tmy', signer); //need ram
+        await updateControlByAccount('eosio.token', 'ops.tmy', signer); //need ram
         await updateControlByAccount('ecosystm.tmy', 'gov.tmy', signer);
         await updateControlByAccount('private1.tmy', 'gov.tmy', signer);
         await updateControlByAccount('private2.tmy', 'gov.tmy', signer);
@@ -202,13 +202,13 @@ export default async function bootstrap(args: string[]) {
         );
         await idContract.setAccountType('id.tmy', AccountTypeEnum.App, newSigner);
         await idContract.setAccountType('eosio', AccountTypeEnum.App, newSigner);
-        await idContract.setAccountType('onocoin.tmy', AccountTypeEnum.App, newSigner);
+        await idContract.setAccountType('eosio.token', AccountTypeEnum.App, newSigner);
 
         // Call setresparams() to set the initial RAM price
         await eosioContract.setresparams(ramPrice, 8 * 1024 * 1024 * 1024, fee, newSigner);
 
         await eosioContract.buyRam('ops.tmy', 'id.tmy', bytesToOno(4680000), newSigner);
-        await eosioContract.buyRam('ops.tmy', 'onocoin.tmy', bytesToOno(2400000), newSigner);
+        await eosioContract.buyRam('ops.tmy', 'eosio.token', bytesToOno(2400000), newSigner);
 
         console.log('Bootstrap complete');
     } catch (e: any) {

@@ -38,8 +38,8 @@ jobs:
       - name: Build id.tmy contract
         run: ./Tonomy-Contracts/contracts/id.tmy/build.sh local
       
-      - name: Build onocoin.tmy contract
-        run: ./Tonomy-Contracts/contracts/onocoin.tmy/build.sh local
+      - name: Build eosio.token contract
+        run: ./Tonomy-Contracts/contracts/eosio.token/build.sh local
 
       - name: Add Tonomy-Contracts dir to artifacts
         uses: actions/upload-artifact@v3
