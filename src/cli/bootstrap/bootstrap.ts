@@ -41,8 +41,9 @@ export default async function bootstrap(args: string[]) {
     const newPublicKey = newPrivateKey.toPublic();
 
     try {
-        await createAntelopeAccount({ account: 'gov.tmy' }, signer);
         await createAntelopeAccount({ account: 'demo.tmy' }, signer);
+        await createAntelopeAccount({ account: 'gov.tmy' }, signer);
+
         await deployContract(
             {
                 account: 'demo.tmy',
