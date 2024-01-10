@@ -3,7 +3,7 @@ import argon2 from 'argon2';
 import { randomBytes } from '../../sdk/util/crypto';
 import { EosioUtil, EosioContract } from '../../sdk';
 import { Authority } from '../../sdk/services/blockchain/eosio/authority';
-import { defaultAntelopePrivateKey } from '../../sdk/services/blockchain';
+import { Signer, defaultAntelopePrivateKey } from '../../sdk/services/blockchain';
 
 const eosioContract = EosioContract.Instance;
 
@@ -54,7 +54,12 @@ export async function updateAccountKey(account: NameType, newPublicKey: PublicKe
  * @param {boolean} [addCodePermission=false] - Whether to add code permission to the authorities. To add the eosio.code authority for smart contracts change this to [true]
  * @returns {Promise<void>} A Promise that resolves when the update is complete.
  */
-export async function updateControllByAccount(account: NameType, controllerAccount: string, addCodePermission = false) {
+export async function updateControlByAccount(
+    account: NameType,
+    controllerAccount: string,
+    signer: Signer,
+    addCodePermission = false
+) {
     const ownerAuthority = Authority.fromAccount({ actor: controllerAccount, permission: 'owner' });
     const activeAuthority = Authority.fromAccount({ actor: controllerAccount, permission: 'active' });
 

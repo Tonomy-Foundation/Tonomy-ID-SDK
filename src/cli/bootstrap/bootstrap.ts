@@ -10,7 +10,7 @@ import {
     IDContract,
     AccountTypeEnum,
 } from '../../sdk/index';
-import { signer, updateAccountKey, updateControllByAccount } from './keys';
+import { signer, updateAccountKey, updateControlByAccount } from './keys';
 import settings from './settings';
 import { createUser, mockCreateAccount, restoreCreateAccountFromMock } from './user';
 import { PrivateKey } from '@wharfkit/antelope';
@@ -39,6 +39,7 @@ export default async function bootstrap(args: string[]) {
 
     const newPrivateKey = PrivateKey.from(args[0]);
     const newPublicKey = newPrivateKey.toPublic();
+    const newSigner = EosioUtil.createSigner(newPrivateKey);
 
     try {
         await createAntelopeAccount({ account: 'demo.tmy' }, signer);
@@ -172,24 +173,24 @@ export default async function bootstrap(args: string[]) {
         console.log('Change the key of the accounts to the new key', newPublicKey.toString());
         await updateAccountKey('found.tmy', newPublicKey, true);
         // accounts controlled by found.tmy
-        await updateControllByAccount('gov.tmy', 'found.tmy', true);
-        await updateControllByAccount('team.tmy', 'found.tmy');
-        await updateControllByAccount('prod1.tmy', 'found.tmy');
-        await updateControllByAccount('prod2.tmy', 'found.tmy');
-        await updateControllByAccount('prod3.tmy', 'found.tmy');
+        await updateControlByAccount('gov.tmy', 'found.tmy', signer, true);
+        await updateControlByAccount('team.tmy', 'found.tmy', signer);
+        await updateControlByAccount('prod1.tmy', 'found.tmy', signer);
+        await updateControlByAccount('prod2.tmy', 'found.tmy', signer);
+        await updateControlByAccount('prod3.tmy', 'found.tmy', signer);
         //accounts controlled by gov.tmy
-        await updateControllByAccount('ops.tmy', 'gov.tmy');
-        await updateControllByAccount('id.tmy', 'ops.tmy'); //need have ram associated
-        await updateControllByAccount('eosio', 'ops.tmy'); //need ram
-        await updateControllByAccount('demo.tmy', 'gov.tmy');
-        await updateControllByAccount('onocoin.tmy', 'ops.tmy'); //need ram
-        await updateControllByAccount('ecosystm.tmy', 'gov.tmy');
-        await updateControllByAccount('private1.tmy', 'gov.tmy');
-        await updateControllByAccount('private2.tmy', 'gov.tmy');
-        await updateControllByAccount('private3.tmy', 'gov.tmy');
-        await updateControllByAccount('public1.tmy', 'gov.tmy');
-        await updateControllByAccount('public2.tmy', 'gov.tmy');
-        await updateControllByAccount('public3.tmy', 'gov.tmy');
+        await updateControlByAccount('ops.tmy', 'gov.tmy', signer);
+        await updateControlByAccount('id.tmy', 'ops.tmy', signer); //need have ram associated
+        await updateControlByAccount('eosio', 'ops.tmy', signer); //need ram
+        await updateControlByAccount('demo.tmy', 'gov.tmy', signer);
+        await updateControlByAccount('onocoin.tmy', 'ops.tmy', signer); //need ram
+        await updateControlByAccount('ecosystm.tmy', 'gov.tmy', signer);
+        await updateControlByAccount('private1.tmy', 'gov.tmy', signer);
+        await updateControlByAccount('private2.tmy', 'gov.tmy', signer);
+        await updateControlByAccount('private3.tmy', 'gov.tmy', signer);
+        await updateControlByAccount('public1.tmy', 'gov.tmy', signer);
+        await updateControlByAccount('public2.tmy', 'gov.tmy', signer);
+        await updateControlByAccount('public3.tmy', 'gov.tmy', signer);
 
         console.log('Deploy Tonomy bios contract, which limits access to system actions');
         await deployContract(
@@ -197,17 +198,17 @@ export default async function bootstrap(args: string[]) {
                 account: 'eosio',
                 contractDir: path.join(__dirname, '../../Tonomy-Contracts/contracts/eosio.bios.tonomy'),
             },
-            EosioUtil.createSigner(newPrivateKey)
+            newSigner
         );
-        await idContract.setAccountType('id.tmy', AccountTypeEnum.App, signer);
-        await idContract.setAccountType('eosio', AccountTypeEnum.App, signer);
-        await idContract.setAccountType('onocoin.tmy', AccountTypeEnum.App, signer);
+        await idContract.setAccountType('id.tmy', AccountTypeEnum.App, newSigner);
+        await idContract.setAccountType('eosio', AccountTypeEnum.App, newSigner);
+        await idContract.setAccountType('onocoin.tmy', AccountTypeEnum.App, newSigner);
 
         // Call setresparams() to set the initial RAM price
-        await eosioContract.setresparams(ramPrice, 8 * 1024 * 1024 * 1024, fee, signer);
+        await eosioContract.setresparams(ramPrice, 8 * 1024 * 1024 * 1024, fee, newSigner);
 
-        await eosioContract.buyRam('ops.tmy', 'id.tmy', bytesToOno(4680000), signer);
-        await eosioContract.buyRam('ops.tmy', 'onocoin.tmy', bytesToOno(2400000), signer);
+        await eosioContract.buyRam('ops.tmy', 'id.tmy', bytesToOno(4680000), newSigner);
+        await eosioContract.buyRam('ops.tmy', 'onocoin.tmy', bytesToOno(2400000), newSigner);
 
         console.log('Bootstrap complete');
     } catch (e: any) {
