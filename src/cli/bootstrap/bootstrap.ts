@@ -179,7 +179,7 @@ export default async function bootstrap(args: string[]) {
         await deployContract(
             {
                 account: 'eosio',
-                contractDir: path.join(__dirname, '../../Tonomy-Contracts/contracts/eosio.bios.tonomy'),
+                contractDir: path.join(__dirname, '../../Tonomy-Contracts/contracts/eosio.tonomy'),
             },
             newSigner
         );

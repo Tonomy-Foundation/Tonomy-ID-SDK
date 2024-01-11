@@ -29,8 +29,8 @@ jobs:
           ref: development
           path: Tonomy-Contracts
 
-      - name: Build eosio.bios.tonomy contract
-        run: ./Tonomy-Contracts/contracts/eosio.bios.tonomy/build.sh local
+      - name: Build eosio.tonomy contract
+        run: ./Tonomy-Contracts/contracts/eosio.tonomy/build.sh local
 
       - name: Build demo.tmy contract
         run: ./Tonomy-Contracts/contracts/demo.tmy/build.sh local
