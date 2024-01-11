@@ -283,7 +283,7 @@ class EosioContract {
     /**
      * Sets the resource parameters 
      *
-     * @param ram_price - The price of RAM.
+     * @param ram_price - The price of RAM (bytes per token)
      * @param total_ram_available - The total available RAM.
      * @param ram_fee - The fee for RAM.
     

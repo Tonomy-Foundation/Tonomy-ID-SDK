@@ -19,17 +19,17 @@ setSettings(settings.config);
 const demoTokenContract = DemoTokenContract.Instance;
 const tokenContract = EosioTokenContract.Instance;
 const eosioContract = EosioContract.Instance;
-const ramPrice = 173333.3333; // bytes / ONO
-const fee = 0.25 / 100;
+const ramPrice = 173333.3333; // bytes/token
+const fee = 0.25 / 100; // 0.25%
 
 /**
- * Converts bytes to ONO.
+ * Converts bytes to tokens.
  *
  * @param bytes The number of bytes to convert.
- * @returns The converted value in ONO.
+ * @returns The converted value in tokens.
  */
-function bytesToOno(bytes: number): string {
-    return ((bytes * (1 + fee)) / ramPrice).toFixed(4) + ' ONO';
+function bytesToTokens(bytes: number): string {
+    return ((bytes * (1 + fee)) / ramPrice).toFixed(4) + ' SYS';
 }
 
 export default async function bootstrap(args: string[]) {
@@ -59,8 +59,8 @@ export default async function bootstrap(args: string[]) {
             },
             signer
         );
-        await tokenContract.create('50000000000.0000 ONO', signer);
-        await tokenContract.issue('eosio.token', '50000000000.0000 ONO', signer);
+        await tokenContract.create('50000000000.0000 SYS', signer);
+        await tokenContract.issue('eosio.token', '50000000000.0000 SYS', signer);
 
         await createAntelopeAccount({ account: 'id.tmy' }, signer);
         //make account priveledged
@@ -95,20 +95,20 @@ export default async function bootstrap(args: string[]) {
         const publicAllocation = totalSupply * 0.025;
         const operationAllocation = totalSupply * 0.4;
 
-        await tokenContract.transfer('eosio.token', 'team.tmy', teamAllocation.toString() + '.0000 ONO', signer);
+        await tokenContract.transfer('eosio.token', 'team.tmy', teamAllocation.toString() + '.0000 SYS', signer);
         await tokenContract.transfer(
             'eosio.token',
             'ecosystm.tmy',
-            ecosystemAllocation.toString() + '.0000 ONO',
+            ecosystemAllocation.toString() + '.0000 SYS',
             signer
         );
-        await tokenContract.transfer('eosio.token', 'private1.tmy', privateAllocation.toString() + '.0000 ONO', signer);
-        await tokenContract.transfer('eosio.token', 'private2.tmy', privateAllocation.toString() + '.0000 ONO', signer);
-        await tokenContract.transfer('eosio.token', 'private3.tmy', privateAllocation.toString() + '.0000 ONO', signer);
-        await tokenContract.transfer('eosio.token', 'public1.tmy', publicAllocation.toString() + '.0000 ONO', signer);
-        await tokenContract.transfer('eosio.token', 'public2.tmy', publicAllocation.toString() + '.0000 ONO', signer);
-        await tokenContract.transfer('eosio.token', 'public3.tmy', publicAllocation.toString() + '.0000 ONO', signer);
-        await tokenContract.transfer('eosio.token', 'ops.tmy', operationAllocation.toString() + '.0000 ONO', signer);
+        await tokenContract.transfer('eosio.token', 'private1.tmy', privateAllocation.toString() + '.0000 SYS', signer);
+        await tokenContract.transfer('eosio.token', 'private2.tmy', privateAllocation.toString() + '.0000 SYS', signer);
+        await tokenContract.transfer('eosio.token', 'private3.tmy', privateAllocation.toString() + '.0000 SYS', signer);
+        await tokenContract.transfer('eosio.token', 'public1.tmy', publicAllocation.toString() + '.0000 SYS', signer);
+        await tokenContract.transfer('eosio.token', 'public2.tmy', publicAllocation.toString() + '.0000 SYS', signer);
+        await tokenContract.transfer('eosio.token', 'public3.tmy', publicAllocation.toString() + '.0000 SYS', signer);
+        await tokenContract.transfer('eosio.token', 'ops.tmy', operationAllocation.toString() + '.0000 SYS', signer);
 
         const demo = await createApp({
             appName: 'Tonomy Demo',
@@ -190,8 +190,8 @@ export default async function bootstrap(args: string[]) {
         // Call setresparams() to set the initial RAM price
         await eosioContract.setresparams(ramPrice, 8 * 1024 * 1024 * 1024, fee, newSigner);
 
-        await eosioContract.buyRam('ops.tmy', 'id.tmy', bytesToOno(4680000), newSigner);
-        await eosioContract.buyRam('ops.tmy', 'eosio.token', bytesToOno(2400000), newSigner);
+        await eosioContract.buyRam('ops.tmy', 'id.tmy', bytesToTokens(4680000), newSigner);
+        await eosioContract.buyRam('ops.tmy', 'eosio.token', bytesToTokens(2400000), newSigner);
 
         console.log('Bootstrap complete');
     } catch (e: any) {

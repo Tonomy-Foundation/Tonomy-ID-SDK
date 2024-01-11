@@ -1,4 +1,3 @@
-export * from './contracts/IDContract';
 export * from './contracts/EosioContract';
 export * from './contracts/DemoTokenContract';
 export * from './contracts/EosioTokenContract';

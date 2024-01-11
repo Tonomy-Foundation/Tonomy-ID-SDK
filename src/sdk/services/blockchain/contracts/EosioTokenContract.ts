@@ -92,4 +92,4 @@ class EosioTokenContract {
     }
 }
 
-export { EosioTokenContract as OnoCoinContract };
+export { EosioTokenContract };
