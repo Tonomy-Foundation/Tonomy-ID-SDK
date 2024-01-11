@@ -1,6 +1,6 @@
 import { Name } from '@wharfkit/antelope';
 import { KeyManagerLevel } from '../storage/keymanager';
-import { IDContract } from '../services/blockchain/contracts/IDContract';
+import { EosioContract } from '../services/blockchain/contracts/EosioContract';
 import { createKeyManagerSigner } from '../services/blockchain/eosio/transaction';
 import { SdkErrors, throwError, SdkError } from '../util/errors';
 import { getSettings } from '../util/settings';
@@ -20,7 +20,7 @@ import { AppStatusEnum } from '../types/AppStatusEnum';
 import { verifyKeyExistsForApp } from '../helpers/user';
 import { UserCommunication } from './UserCommunication';
 
-const idContract = IDContract.Instance;
+const eosioContract = EosioContract.Instance;
 
 export class UserRequestsManager extends UserCommunication implements IUserRequestsManager {
     async handleLinkAuthRequestMessage(message: Message): Promise<void> {
@@ -39,13 +39,13 @@ export class UserRequestsManager extends UserCommunication implements IUserReque
 
             if (!permission) throwError('DID does not contain fragment', SdkErrors.MissingParams);
 
-            await idContract.getApp(Name.from(permission));
+            await eosioContract.getApp(Name.from(permission));
             // Throws SdkErrors.DataQueryNoRowDataFound error if app does not exist
             // which cannot happen in theory, as the user is already logged in
 
             const signer = createKeyManagerSigner(this.keyManager, KeyManagerLevel.ACTIVE);
 
-            await idContract.linkAuth(
+            await eosioContract.linkAuth(
                 (await this.getAccountName()).toString(),
                 contract.toString(),
                 action.toString(),
@@ -95,7 +95,7 @@ export class UserRequestsManager extends UserCommunication implements IUserReque
 
         const signer = createKeyManagerSigner(this.keyManager, KeyManagerLevel.LOCAL);
 
-        await idContract.loginwithapp(myAccount.toString(), app.accountName.toString(), 'local', key, signer);
+        await eosioContract.loginwithapp(myAccount.toString(), app.accountName.toString(), 'local', key, signer);
 
         appRecord.status = AppStatusEnum.READY;
         this.storage.appRecords = apps;

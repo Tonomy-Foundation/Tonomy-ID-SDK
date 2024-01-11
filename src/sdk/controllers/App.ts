@@ -1,13 +1,13 @@
 /* eslint-disable camelcase */
 import { Checksum256, Name, PublicKey } from '@wharfkit/antelope';
-import { IDContract } from '../services/blockchain/contracts/IDContract';
+import { EosioContract } from '../services/blockchain/contracts/EosioContract';
 import { createSigner } from '../services/blockchain/eosio/transaction';
 import { getSettings } from '../util/settings';
 import { AccountType, TonomyUsername } from '../util/username';
 import { defaultAntelopePrivateKey } from '../services/blockchain';
 import { AppStatusEnum } from '../types/AppStatusEnum';
 
-const idContract = IDContract.Instance;
+const eosioContract = EosioContract.Instance;
 
 export interface AppData {
     accountName: Name;
@@ -71,7 +71,7 @@ export class App implements AppData {
         // TODO remove this
         const privateKey = defaultAntelopePrivateKey;
 
-        const res = await idContract.newapp(
+        const res = await eosioContract.newapp(
             options.appName,
             options.description,
             username.usernameHash,
@@ -93,7 +93,7 @@ export class App implements AppData {
     }
 
     static async getApp(origin: string): Promise<App> {
-        const contractAppData = await idContract.getApp(origin);
+        const contractAppData = await eosioContract.getApp(origin);
 
         return new App({
             accountName: contractAppData.account_name,

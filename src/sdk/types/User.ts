@@ -1,5 +1,5 @@
 import { Name, PrivateKey, Checksum256 } from '@wharfkit/antelope';
-import { GetPersonResponse } from '../services/blockchain/contracts/IDContract';
+import { GetPersonResponse } from '../services/blockchain/contracts/EosioContract';
 import { TonomyUsername } from '../util/username';
 import { Issuer } from '@tonomy/did-jwt-vc';
 import { AuthenticationMessage, Message } from '../services/communication/message';

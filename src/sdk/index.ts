@@ -22,7 +22,6 @@ export * as EosioUtil from './services/blockchain';
 export { AntelopePushTransactionError } from './services/blockchain/eosio/transaction';
 
 export * from './services/blockchain/eosio/authority';
-export * from './services/blockchain/contracts/IDContract';
 export * from './services/blockchain/contracts/EosioContract';
 export * from './services/blockchain/contracts/DemoTokenContract';
 export * from './services/blockchain/contracts/EosioTokenContract';

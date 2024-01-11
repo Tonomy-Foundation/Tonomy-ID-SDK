@@ -1,6 +1,6 @@
 import { Name, API, Checksum256 } from '@wharfkit/antelope';
 import { KeyManagerLevel } from '../storage/keymanager';
-import { GetPersonResponse, IDContract } from '../services/blockchain/contracts/IDContract';
+import { GetPersonResponse, EosioContract } from '../services/blockchain/contracts/EosioContract';
 import { createKeyManagerSigner } from '../services/blockchain/eosio/transaction';
 import { getChainInfo } from '../services/blockchain/eosio/eosio';
 import { SdkErrors, throwError, SdkError } from '../util/errors';
@@ -12,7 +12,7 @@ import { ILoginOptions, IUserOnboarding } from '../types/User';
 import { getAccountInfo } from '../helpers/user';
 import { UserCommunication } from './UserCommunication';
 
-const idContract = IDContract.Instance;
+const eosioContract = EosioContract.Instance;
 
 export class UserOnboarding extends UserCommunication implements IUserOnboarding {
     private chainID!: Checksum256;
@@ -42,7 +42,7 @@ export class UserOnboarding extends UserCommunication implements IUserOnboarding
         this.validateUsername(username.getBaseUsername());
         const { keyManager } = this;
 
-        const idData = await idContract.getPerson(username);
+        const idData = await eosioContract.getPerson(username);
         const salt = idData.password_salt;
 
         await this.savePassword(password, { ...options, salt });
@@ -194,7 +194,7 @@ export class UserOnboarding extends UserCommunication implements IUserOnboarding
         const signer = createKeyManagerSigner(keyManager, KeyManagerLevel.PASSWORD, password);
         const accountName = await this.getAccountName();
 
-        await idContract.updatekeysper(accountName.toString(), keys, signer);
+        await eosioContract.updatekeysper(accountName.toString(), keys, signer);
 
         this.storage.status = UserStatusEnum.READY;
         await this.storage.status;
