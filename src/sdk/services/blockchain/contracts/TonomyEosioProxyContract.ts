@@ -2,19 +2,15 @@
 import { ABI, API, Name, Serializer } from '@wharfkit/antelope';
 import { Authority } from '../eosio/authority';
 import { Signer, transact } from '../eosio/transaction';
+import { GOVERNANCE_ACCOUNT_NAME } from './TonomyContract';
 
-const CONTRACT_NAME = 'eosio';
+const CONTRACT_NAME = 'tonomy';
 
-export class EosioContract {
-    static singletonInstance: EosioContract;
-    contractName = CONTRACT_NAME;
+export class TonomyEosioProxyContract {
+    static singletonInstance: TonomyEosioProxyContract;
 
     public static get Instance() {
         return this.singletonInstance || (this.singletonInstance = new this());
-    }
-
-    constructor(contractName = CONTRACT_NAME) {
-        this.contractName = contractName;
     }
 
     /**
@@ -40,12 +36,16 @@ export class EosioContract {
         const abiSerializedHex = Serializer.encode({ object: abiDef }).hexString;
 
         // 3. Send transaction with both setcode and setabi actions
-        const setcodeAction = {
+        const setCodeAction = {
             account: CONTRACT_NAME,
             name: 'setcode',
             authorization: [
                 {
-                    actor: account.toString(),
+                    actor: GOVERNANCE_ACCOUNT_NAME,
+                    permission: 'active',
+                },
+                {
+                    actor: account,
                     permission: 'active',
                 },
             ],
@@ -56,12 +56,16 @@ export class EosioContract {
                 code: wasm,
             },
         };
-        const setabiAction = {
+        const setAbiAction = {
             account: CONTRACT_NAME,
             name: 'setabi',
             authorization: [
                 {
-                    actor: account.toString(),
+                    actor: GOVERNANCE_ACCOUNT_NAME,
+                    permission: 'active',
+                },
+                {
+                    actor: account,
                     permission: 'active',
                 },
             ],
@@ -70,7 +74,7 @@ export class EosioContract {
                 abi: abiSerializedHex,
             },
         };
-        const actions = [setcodeAction, setabiAction];
+        const actions = [setCodeAction, setAbiAction];
 
         return await transact(Name.from(CONTRACT_NAME), actions, signer);
     }
@@ -84,6 +88,10 @@ export class EosioContract {
     ): Promise<API.v1.PushTransactionResponse> {
         const action = {
             authorization: [
+                {
+                    actor: GOVERNANCE_ACCOUNT_NAME,
+                    permission: 'active',
+                },
                 {
                     actor: account,
                     permission: parent, // all higher parents, and permission, work as authorization. though permission is supposed to be the authorization that works
@@ -118,6 +126,10 @@ export class EosioContract {
         const action = {
             authorization: [
                 {
+                    actor: GOVERNANCE_ACCOUNT_NAME,
+                    permission: 'active',
+                },
+                {
                     actor: account,
                     permission: 'active',
                 },
@@ -139,7 +151,11 @@ export class EosioContract {
         const action = {
             authorization: [
                 {
-                    actor: CONTRACT_NAME,
+                    actor: GOVERNANCE_ACCOUNT_NAME,
+                    permission: 'active',
+                },
+                {
+                    actor: account,
                     permission: 'active',
                 },
             ],

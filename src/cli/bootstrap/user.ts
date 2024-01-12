@@ -1,11 +1,11 @@
 import { jsStorageFactory } from './jsstorage';
 import { generatePrivateKeyFromPassword, signer } from './keys';
-import { EosioContract, JsKeyManager, KeyManager, createUserObject } from '../../sdk';
+import { TonomyContract, JsKeyManager, KeyManager, createUserObject } from '../../sdk';
 import { CreateAccountRequest, CreateAccountResponse } from '../../sdk/services/communication/accounts';
 import * as accounts from '../../sdk/services/communication/accounts';
 import { Name } from '@wharfkit/antelope';
 
-const eosioContract = EosioContract.Instance;
+const tonomyContract = TonomyContract.Instance;
 
 const defaultCreateAccount = accounts.createAccount;
 
@@ -19,7 +19,7 @@ export function mockCreateAccount() {
     accounts.createAccount = async function (data: CreateAccountRequest): Promise<CreateAccountResponse> {
         console.log('Calling mocked createAccount()');
 
-        const res = await eosioContract.newperson(
+        const res = await tonomyContract.newperson(
             data.usernameHash.toString(),
             data.publicKey.toString(),
             data.salt.toString(),

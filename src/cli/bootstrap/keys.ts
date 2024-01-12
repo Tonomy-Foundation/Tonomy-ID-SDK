@@ -1,11 +1,11 @@
 import { NameType, Bytes, KeyType, PrivateKey, PublicKeyType, Checksum256 } from '@wharfkit/antelope';
 import argon2 from 'argon2';
 import { randomBytes } from '../../sdk/util/crypto';
-import { EosioUtil, EosioContract } from '../../sdk';
+import { EosioUtil, TonomyContract } from '../../sdk';
 import { Authority } from '../../sdk/services/blockchain/eosio/authority';
 import { Signer, defaultAntelopePrivateKey } from '../../sdk/services/blockchain';
 
-const eosioContract = EosioContract.Instance;
+const tonomyContract = TonomyContract.Instance;
 
 /**
  * creates a key based on secure (hashing) key generation algorithm Argon2
@@ -42,8 +42,8 @@ export async function updateAccountKey(account: NameType, newPublicKey: PublicKe
 
     if (addCodePermission) authority.addCodePermission(account.toString());
 
-    await eosioContract.updateauth(account.toString(), 'active', 'owner', authority, signer);
-    await eosioContract.updateauth(account.toString(), 'owner', 'owner', authority, signer);
+    await tonomyContract.updateauth(account.toString(), 'active', 'owner', authority, signer);
+    await tonomyContract.updateauth(account.toString(), 'owner', 'owner', authority, signer);
 }
 
 /**
@@ -66,6 +66,6 @@ export async function updateControlByAccount(
     if (addCodePermission) ownerAuthority.addCodePermission(account.toString());
     if (addCodePermission) activeAuthority.addCodePermission(account.toString());
 
-    await eosioContract.updateauth(account.toString(), 'active', 'owner', activeAuthority, signer);
-    await eosioContract.updateauth(account.toString(), 'owner', 'owner', ownerAuthority, signer);
+    await tonomyContract.updateauth(account.toString(), 'active', 'owner', activeAuthority, signer);
+    await tonomyContract.updateauth(account.toString(), 'owner', 'owner', ownerAuthority, signer);
 }

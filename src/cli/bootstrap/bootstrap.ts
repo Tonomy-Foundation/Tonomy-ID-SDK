@@ -6,6 +6,7 @@ import {
     EosioUtil,
     setSettings,
     EosioTokenContract,
+    TonomyContract,
     EosioContract,
     AccountTypeEnum,
 } from '../../sdk/index';
@@ -18,6 +19,7 @@ setSettings(settings.config);
 
 const demoTokenContract = DemoTokenContract.Instance;
 const tokenContract = EosioTokenContract.Instance;
+const tonomyContract = TonomyContract.Instance;
 const eosioContract = EosioContract.Instance;
 const ramPrice = 173333.3333; // bytes/token
 const fee = 0.25 / 100; // 0.25%
@@ -64,15 +66,6 @@ export default async function bootstrap(args: string[]) {
         );
         await tokenContract.create(`50000000000.0000 ${currencySymbol}`, signer);
         await tokenContract.issue('eosio.token', `50000000000.0000 ${currencySymbol}`, signer);
-
-        console.log('Deploy Tonomy system contract');
-        await deployContract(
-            {
-                account: 'eosio',
-                contractDir: path.join(__dirname, '../../Tonomy-Contracts/contracts/eosio.tonomy'),
-            },
-            signer
-        );
 
         await createAntelopeAccount({ account: 'found.tmy' }, signer);
         // found.tmy should be controlled by the following accounts
@@ -153,6 +146,15 @@ export default async function bootstrap(args: string[]) {
             signer
         );
 
+        console.log('Deploy Tonomy system contract');
+        await deployContract(
+            {
+                account: 'eosio',
+                contractDir: path.join(__dirname, '../../Tonomy-Contracts/contracts/tonomy'),
+            },
+            signer
+        );
+
         const demo = await createApp({
             appName: 'Tonomy Demo',
             usernamePrefix: 'demo',
@@ -217,14 +219,24 @@ export default async function bootstrap(args: string[]) {
         await updateControlByAccount('public2.tmy', 'gov.tmy', signer);
         await updateControlByAccount('public3.tmy', 'gov.tmy', signer);
 
-        await eosioContract.setAccountType('eosio', AccountTypeEnum.App, newSigner);
-        await eosioContract.setAccountType('eosio.token', AccountTypeEnum.App, newSigner);
+        await tonomyContract.setAccountType('eosio', AccountTypeEnum.App, newSigner);
+        await tonomyContract.setAccountType('eosio.token', AccountTypeEnum.App, newSigner);
 
         // Call setresparams() to set the initial RAM price
-        await eosioContract.setresparams(ramPrice, 8 * 1024 * 1024 * 1024, fee, newSigner);
+        await tonomyContract.setresparams(ramPrice, 8 * 1024 * 1024 * 1024, fee, newSigner);
 
-        await eosioContract.buyRam('ops.tmy', 'eosio', bytesToTokens(4680000), newSigner);
-        await eosioContract.buyRam('ops.tmy', 'eosio.token', bytesToTokens(2400000), newSigner);
+        await tonomyContract.buyRam('ops.tmy', 'eosio', bytesToTokens(4680000), newSigner);
+        await tonomyContract.buyRam('ops.tmy', 'eosio.token', bytesToTokens(2400000), newSigner);
+
+        // Deploy eosio.tonomy contract
+        console.log('Deploy eosio.tonomy contract');
+        await deployContract(
+            {
+                account: 'eosio',
+                contractDir: path.join(__dirname, '../../Tonomy-Contracts/contracts/eosio.tonomy'),
+            },
+            signer
+        );
 
         console.log('Bootstrap complete');
     } catch (e: any) {
