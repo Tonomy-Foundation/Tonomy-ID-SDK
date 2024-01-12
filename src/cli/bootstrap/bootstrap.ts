@@ -21,6 +21,7 @@ const tokenContract = EosioTokenContract.Instance;
 const eosioContract = EosioContract.Instance;
 const ramPrice = 173333.3333; // bytes/token
 const fee = 0.25 / 100; // 0.25%
+const currencySymbol = 'SYS';
 
 /**
  * Converts bytes to tokens.
@@ -29,7 +30,7 @@ const fee = 0.25 / 100; // 0.25%
  * @returns The converted value in tokens.
  */
 function bytesToTokens(bytes: number): string {
-    return ((bytes * (1 + fee)) / ramPrice).toFixed(4) + ' SYS';
+    return ((bytes * (1 + fee)) / ramPrice).toFixed(4) + ` ${currencySymbol}`;
 }
 
 export default async function bootstrap(args: string[]) {
@@ -40,6 +41,7 @@ export default async function bootstrap(args: string[]) {
     const newSigner = EosioUtil.createSigner(newPrivateKey);
 
     try {
+        console.log('Create and deploy demo contract');
         await createAntelopeAccount({ account: 'demo.tmy' }, signer);
         await deployContract(
             {
@@ -48,9 +50,10 @@ export default async function bootstrap(args: string[]) {
             },
             signer
         );
-        await demoTokenContract.create('1000000000 SYS', signer);
-        await demoTokenContract.issue('10000 SYS', signer);
+        await demoTokenContract.create(`1000000000 ${currencySymbol}`, signer);
+        await demoTokenContract.issue(`10000 ${currencySymbol}`, signer);
 
+        console.log('Create and deploy token contract');
         await createAntelopeAccount({ account: 'eosio.token' }, signer);
         await deployContract(
             {
@@ -59,15 +62,15 @@ export default async function bootstrap(args: string[]) {
             },
             signer
         );
-        await tokenContract.create('50000000000.0000 SYS', signer);
-        await tokenContract.issue('eosio.token', '50000000000.0000 SYS', signer);
+        await tokenContract.create(`50000000000.0000 ${currencySymbol}`, signer);
+        await tokenContract.issue('eosio.token', `50000000000.0000 ${currencySymbol}`, signer);
 
-        await createAntelopeAccount({ account: 'id.tmy' }, signer);
-        //make account priveledged
-        await eosioContract.setpriv('id.tmy', 1, signer);
-
+        console.log('Deploy Tonomy system contract');
         await deployContract(
-            { account: 'id.tmy', contractDir: path.join(__dirname, '../../Tonomy-Contracts/contracts/id.tmy') },
+            {
+                account: 'eosio',
+                contractDir: path.join(__dirname, '../../Tonomy-Contracts/contracts/eosio.tonomy'),
+            },
             signer
         );
 
@@ -95,20 +98,60 @@ export default async function bootstrap(args: string[]) {
         const publicAllocation = totalSupply * 0.025;
         const operationAllocation = totalSupply * 0.4;
 
-        await tokenContract.transfer('eosio.token', 'team.tmy', teamAllocation.toString() + '.0000 SYS', signer);
+        await tokenContract.transfer(
+            'eosio.token',
+            'team.tmy',
+            teamAllocation.toString() + `.0000 ${currencySymbol}`,
+            signer
+        );
         await tokenContract.transfer(
             'eosio.token',
             'ecosystm.tmy',
-            ecosystemAllocation.toString() + '.0000 SYS',
+            ecosystemAllocation.toString() + `.0000 ${currencySymbol}`,
             signer
         );
-        await tokenContract.transfer('eosio.token', 'private1.tmy', privateAllocation.toString() + '.0000 SYS', signer);
-        await tokenContract.transfer('eosio.token', 'private2.tmy', privateAllocation.toString() + '.0000 SYS', signer);
-        await tokenContract.transfer('eosio.token', 'private3.tmy', privateAllocation.toString() + '.0000 SYS', signer);
-        await tokenContract.transfer('eosio.token', 'public1.tmy', publicAllocation.toString() + '.0000 SYS', signer);
-        await tokenContract.transfer('eosio.token', 'public2.tmy', publicAllocation.toString() + '.0000 SYS', signer);
-        await tokenContract.transfer('eosio.token', 'public3.tmy', publicAllocation.toString() + '.0000 SYS', signer);
-        await tokenContract.transfer('eosio.token', 'ops.tmy', operationAllocation.toString() + '.0000 SYS', signer);
+        await tokenContract.transfer(
+            'eosio.token',
+            'private1.tmy',
+            privateAllocation.toString() + `.0000 ${currencySymbol}`,
+            signer
+        );
+        await tokenContract.transfer(
+            'eosio.token',
+            'private2.tmy',
+            privateAllocation.toString() + `.0000 ${currencySymbol}`,
+            signer
+        );
+        await tokenContract.transfer(
+            'eosio.token',
+            'private3.tmy',
+            privateAllocation.toString() + `.0000 ${currencySymbol}`,
+            signer
+        );
+        await tokenContract.transfer(
+            'eosio.token',
+            'public1.tmy',
+            publicAllocation.toString() + `.0000 ${currencySymbol}`,
+            signer
+        );
+        await tokenContract.transfer(
+            'eosio.token',
+            'public2.tmy',
+            publicAllocation.toString() + `.0000 ${currencySymbol}`,
+            signer
+        );
+        await tokenContract.transfer(
+            'eosio.token',
+            'public3.tmy',
+            publicAllocation.toString() + `.0000 ${currencySymbol}`,
+            signer
+        );
+        await tokenContract.transfer(
+            'eosio.token',
+            'ops.tmy',
+            operationAllocation.toString() + `.0000 ${currencySymbol}`,
+            signer
+        );
 
         const demo = await createApp({
             appName: 'Tonomy Demo',
@@ -163,7 +206,6 @@ export default async function bootstrap(args: string[]) {
         await updateControlByAccount('prod3.tmy', 'found.tmy', signer);
         //accounts controlled by gov.tmy
         await updateControlByAccount('ops.tmy', 'gov.tmy', signer);
-        await updateControlByAccount('id.tmy', 'ops.tmy', signer); //need have ram associated
         await updateControlByAccount('eosio', 'ops.tmy', signer); //need ram
         await updateControlByAccount('demo.tmy', 'gov.tmy', signer);
         await updateControlByAccount('eosio.token', 'ops.tmy', signer); //need ram
@@ -175,22 +217,13 @@ export default async function bootstrap(args: string[]) {
         await updateControlByAccount('public2.tmy', 'gov.tmy', signer);
         await updateControlByAccount('public3.tmy', 'gov.tmy', signer);
 
-        console.log('Deploy Tonomy bios contract, which limits access to system actions');
-        await deployContract(
-            {
-                account: 'eosio',
-                contractDir: path.join(__dirname, '../../Tonomy-Contracts/contracts/eosio.tonomy'),
-            },
-            newSigner
-        );
-        await eosioContract.setAccountType('id.tmy', AccountTypeEnum.App, newSigner);
         await eosioContract.setAccountType('eosio', AccountTypeEnum.App, newSigner);
         await eosioContract.setAccountType('eosio.token', AccountTypeEnum.App, newSigner);
 
         // Call setresparams() to set the initial RAM price
         await eosioContract.setresparams(ramPrice, 8 * 1024 * 1024 * 1024, fee, newSigner);
 
-        await eosioContract.buyRam('ops.tmy', 'id.tmy', bytesToTokens(4680000), newSigner);
+        await eosioContract.buyRam('ops.tmy', 'eosio', bytesToTokens(4680000), newSigner);
         await eosioContract.buyRam('ops.tmy', 'eosio.token', bytesToTokens(2400000), newSigner);
 
         console.log('Bootstrap complete');
