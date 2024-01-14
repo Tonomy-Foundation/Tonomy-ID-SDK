@@ -45,7 +45,7 @@ export class TonomyEosioProxyContract {
                     permission: 'active',
                 },
                 {
-                    actor: account,
+                    actor: account.toString(),
                     permission: 'active',
                 },
             ],
@@ -65,7 +65,7 @@ export class TonomyEosioProxyContract {
                     permission: 'active',
                 },
                 {
-                    actor: account,
+                    actor: account.toString(),
                     permission: 'active',
                 },
             ],

@@ -6,6 +6,8 @@ import { Name } from '@wharfkit/antelope';
 import { EosioContract } from '../../sdk/index';
 import { Signer } from '../../sdk/services/blockchain/eosio/transaction';
 
+const eosioContract = EosioContract.Instance;
+
 function getDeployableFilesFromDir(dir: string) {
     const dirCont = fs.readdirSync(dir);
 
@@ -21,14 +23,16 @@ function getDeployableFilesFromDir(dir: string) {
     };
 }
 
-async function deployContract({ account, contractDir }: { account: string; contractDir: string }, signer: Signer) {
+export default async function deployContract(
+    { account, contractDir }: { account: string; contractDir: string },
+    signer: Signer,
+    extraAuthorization?: { actor: string; permission: string }
+) {
     const { wasmPath, abiPath } = getDeployableFilesFromDir(contractDir);
 
     const wasmFile = fs.readFileSync(wasmPath);
     const abiFile = fs.readFileSync(abiPath, 'utf8');
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await EosioContract.Instance.deployContract(Name.from(account) as any, wasmFile, abiFile, signer);
+    await eosioContract.deployContract(Name.from(account) as any, wasmFile, abiFile, signer, extraAuthorization);
 }
-
-export default deployContract;

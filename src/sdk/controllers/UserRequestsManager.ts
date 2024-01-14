@@ -1,6 +1,7 @@
 import { Name } from '@wharfkit/antelope';
 import { KeyManagerLevel } from '../storage/keymanager';
-import { TonomyContract } from '../services/blockchain/contracts/TonomyContract';
+import { TonomyEosioProxyContract } from '../services/blockchain/contracts/TonomyEosioProxyContract';
+import { TonomyContract } from '../services/blockchain';
 import { createKeyManagerSigner } from '../services/blockchain/eosio/transaction';
 import { SdkErrors, throwError, SdkError } from '../util/errors';
 import { getSettings } from '../util/settings';
@@ -20,6 +21,7 @@ import { AppStatusEnum } from '../types/AppStatusEnum';
 import { verifyKeyExistsForApp } from '../helpers/user';
 import { UserCommunication } from './UserCommunication';
 
+const eosioProxyContract = TonomyEosioProxyContract.Instance;
 const tonomyContract = TonomyContract.Instance;
 
 export class UserRequestsManager extends UserCommunication implements IUserRequestsManager {
@@ -45,7 +47,7 @@ export class UserRequestsManager extends UserCommunication implements IUserReque
 
             const signer = createKeyManagerSigner(this.keyManager, KeyManagerLevel.ACTIVE);
 
-            await tonomyContract.linkAuth(
+            await eosioProxyContract.linkAuth(
                 (await this.getAccountName()).toString(),
                 contract.toString(),
                 action.toString(),

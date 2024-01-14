@@ -124,7 +124,7 @@ export class TonomyContract {
      * @param ram_fee - The fee for RAM.
     
      */
-    async setresparams(
+    async setResourceParams(
         ram_price: number,
         total_ram_available: number,
         ram_fee: number,
