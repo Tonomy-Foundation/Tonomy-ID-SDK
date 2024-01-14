@@ -6,13 +6,15 @@ import {
     setSettings,
     EosioTokenContract,
     EosioContract,
-    AccountTypeEnum,
     TonomyContract,
     EosioUtil,
+    TonomyUsername,
+    AccountType,
+    getSettings,
 } from '../../sdk/index';
 import { signer, updateAccountKey, updateControlByAccount } from './keys';
 import settings from './settings';
-import { PrivateKey, PublicKey } from '@wharfkit/antelope';
+import { Checksum256, PrivateKey, PublicKey } from '@wharfkit/antelope';
 import { Signer } from '../../sdk/services/blockchain';
 
 import { createUser, mockCreateAccount, restoreCreateAccountFromMock } from './user';
@@ -82,12 +84,7 @@ async function createAccounts() {
 
     // gov.tmy should control the following accounts
     await createAntelopeAccount({ account: 'ecosystm.tmy' }, signer);
-    await createAntelopeAccount({ account: 'private1.tmy' }, signer);
-    await createAntelopeAccount({ account: 'private2.tmy' }, signer);
-    await createAntelopeAccount({ account: 'private3.tmy' }, signer);
-    await createAntelopeAccount({ account: 'public1.tmy' }, signer);
-    await createAntelopeAccount({ account: 'public2.tmy' }, signer);
-    await createAntelopeAccount({ account: 'public3.tmy' }, signer);
+    await createAntelopeAccount({ account: 'coinsale.tmy' }, signer);
     await createAntelopeAccount({ account: 'ops.tmy' }, signer);
 
     // opts.tmy should control the following accounts
@@ -146,12 +143,7 @@ async function createTokenDistribution() {
     const allocations = {
         'ecosystm.tmy': 0.3 * totalSupply,
         'team.tmy': 0.15 * totalSupply,
-        'private1.tmy': 0.025 * totalSupply,
-        'private2.tmy': 0.025 * totalSupply,
-        'private3.tmy': 0.025 * totalSupply,
-        'public1.tmy': 0.025 * totalSupply,
-        'public2.tmy': 0.025 * totalSupply,
-        'public3.tmy': 0.025 * totalSupply,
+        'coinsale.tmy': 0.15 * totalSupply,
         'ops.tmy': 0.4 * totalSupply,
     };
 
@@ -171,17 +163,55 @@ async function createTonomyContractAndSetResources() {
     );
 
     console.log('Set App account type');
-    await tonomyContract.setAccountType('eosio', AccountTypeEnum.App, signer);
-    await tonomyContract.setAccountType('eosio.token', AccountTypeEnum.App, signer);
-    await tonomyContract.setAccountType('tonomy', AccountTypeEnum.App, signer);
+
+    await tonomyContract.adminSetApp(
+        'eosio',
+        'System Contract',
+        'Antelope blockchain system governance contract',
+        getAppUsernameHash('system'),
+        createSubdomainOnOrigin(getSettings().ssoWebsiteOrigin, 'eosio') + '/tonomy-logo1024.png',
+        createSubdomainOnOrigin(getSettings().ssoWebsiteOrigin, 'eosio'),
+        signer
+    );
+    await tonomyContract.adminSetApp(
+        'eosio.token',
+        'Native Currency',
+        'Ecosystem native currency',
+        getAppUsernameHash('currency'),
+        createSubdomainOnOrigin(getSettings().ssoWebsiteOrigin, 'eosio.token') + '/tonomy-logo1024.png',
+        createSubdomainOnOrigin(getSettings().ssoWebsiteOrigin, 'eosio.token'),
+        signer
+    );
+    await tonomyContract.adminSetApp(
+        'tonomy',
+        'Tonomy System',
+        'Tonomy system contract',
+        getAppUsernameHash('tonomy'),
+        createSubdomainOnOrigin(getSettings().ssoWebsiteOrigin, 'tonomy') + '/tonomy-logo1024.png',
+        createSubdomainOnOrigin(getSettings().ssoWebsiteOrigin, 'tonomy'),
+        signer
+    );
 
     console.log('Set Tonomy system contract params and allocate RAM');
     await tonomyContract.setResourceParams(ramPrice, ramAvailable, fee, signer);
 
     console.log('Allocate RAM to system accounts');
-    await tonomyContract.buyRam('ops.tmy', 'eosio', bytesToTokens(4680000), signer);
+    // See calculation: https://docs.google.com/spreadsheets/d/17cd4wt3oDHp6p7hty9njKsuukTTn9BYJ5z3Ab0N6pMM/edit?pli=1#gid=0&range=D30
+    await tonomyContract.buyRam('ops.tmy', 'eosio', bytesToTokens(3750000), signer);
     await tonomyContract.buyRam('ops.tmy', 'eosio.token', bytesToTokens(2400000), signer);
     await tonomyContract.buyRam('ops.tmy', 'tonomy', bytesToTokens(4680000), signer);
+}
+
+function getAppUsernameHash(username: string): Checksum256 {
+    const fullUername = TonomyUsername.fromUsername(username, AccountType.APP, getSettings().accountSuffix);
+
+    return Checksum256.from(fullUername.usernameHash);
+}
+
+function createSubdomainOnOrigin(origin: string, subdomain: string): string {
+    const url = new URL(origin);
+
+    return url.protocol + '//' + subdomain + '.' + url.host;
 }
 
 async function createUsers() {
@@ -207,7 +237,7 @@ async function createUsers() {
     restoreCreateAccountFromMock();
 }
 
-async function createTonomyApps(newPublicKey: PublicKey) {
+async function createTonomyApps(newPublicKey: PublicKey): Promise<void> {
     const demo = await createApp({
         appName: 'Tonomy Demo',
         usernamePrefix: 'demo',
@@ -224,7 +254,7 @@ async function createTonomyApps(newPublicKey: PublicKey) {
 
     await createApp({
         appName: 'Tonomy Website',
-        usernamePrefix: 'tonomy',
+        usernamePrefix: 'tonomy-sso',
         description: 'Tonomy website to manager your ID and Data',
         origin: settings.config.ssoWebsiteOrigin,
         logoUrl: settings.config.ssoWebsiteOrigin + '/tonomy-logo1024.png',
@@ -246,12 +276,7 @@ async function updateAccountControllers(newPublicKey: PublicKey) {
     // accounts controlled by gov.tmy
     await updateControlByAccount('ops.tmy', 'gov.tmy', signer);
     await updateControlByAccount('ecosystm.tmy', 'gov.tmy', signer);
-    await updateControlByAccount('private1.tmy', 'gov.tmy', signer);
-    await updateControlByAccount('private2.tmy', 'gov.tmy', signer);
-    await updateControlByAccount('private3.tmy', 'gov.tmy', signer);
-    await updateControlByAccount('public1.tmy', 'gov.tmy', signer);
-    await updateControlByAccount('public2.tmy', 'gov.tmy', signer);
-    await updateControlByAccount('public3.tmy', 'gov.tmy', signer);
+    await updateControlByAccount('coinsale.tmy', 'gov.tmy', signer);
 
     //accounts controlled by ops.tmy (contracts that are called by inline actions need eosio.code permission)
     await updateControlByAccount('tonomy', 'ops.tmy', signer, true);

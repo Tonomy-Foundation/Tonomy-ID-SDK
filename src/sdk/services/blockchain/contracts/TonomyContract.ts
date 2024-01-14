@@ -1,12 +1,12 @@
 /* eslint-disable camelcase */
-import { API, Checksum256, Name, PublicKey } from '@wharfkit/antelope';
+import { API, Checksum256, Checksum256Type, Name, NameType, PublicKey } from '@wharfkit/antelope';
 import { Signer, transact } from '../eosio/transaction';
 import { SdkErrors, TonomyUsername, sha256, throwError } from '../../../util';
 import { getAccount, getApi } from '../eosio/eosio';
 
 const CONTRACT_NAME = 'tonomy';
 
-export const GOVERNANCE_ACCOUNT_NAME = 'gov.tmy';
+export const GOVERNANCE_ACCOUNT_NAME = 'tonomy';
 
 enum PermissionLevel {
     OWNER = 'OWNER',
@@ -430,9 +430,13 @@ export class TonomyContract {
         };
     }
 
-    async setAccountType(
-        accountName: string,
-        accType: AccountTypeEnum,
+    async adminSetApp(
+        accountName: NameType,
+        appName: string,
+        description: string,
+        usernameHash: Checksum256Type,
+        logoUrl: string,
+        origin: string,
         signer: Signer
     ): Promise<API.v1.PushTransactionResponse> {
         const action = {
@@ -443,10 +447,14 @@ export class TonomyContract {
                 },
             ],
             account: CONTRACT_NAME,
-            name: 'setacctype',
+            name: 'adminsetapp',
             data: {
                 account_name: Name.from(accountName),
-                acc_type: accType,
+                app_name: appName,
+                description,
+                username_hash: usernameHash,
+                logo_url: logoUrl,
+                origin,
             },
         };
 
