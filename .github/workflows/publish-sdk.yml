@@ -38,7 +38,7 @@ jobs:
 
           if [[ ${GITHUB_REF#refs/*/} == "testnet" ]]; then
             echo "Variable BRANCH_NAME is set to 'testnet'"
-            yarn config set tag testnet
+            yarn config set tag rc
           fi
       - run: yarn install --immutable
       - run: yarn run release

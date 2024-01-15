@@ -31,7 +31,10 @@ jobs:
 
       - name: Build demo.tmy contract
         run: ./Tonomy-Contracts/contracts/demo.tmy/build.sh local
-  
+
+      - name: Compile eosio.msig
+        run: ./contracts/eosio.boot/build.sh local
+
       - name: Build eosio.token contract
         run: ./Tonomy-Contracts/contracts/eosio.token/build.sh local
   
