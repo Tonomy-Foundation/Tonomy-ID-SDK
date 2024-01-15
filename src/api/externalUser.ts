@@ -14,7 +14,7 @@ import { DataSharingRequest, DataSharingRequestPayload } from '../sdk/util';
 import {
     AuthenticationMessage,
     Communication,
-    IDContract,
+    TonomyContract,
     LinkAuthRequestMessage,
     LinkAuthRequestResponseMessage,
     LoginRequestsMessagePayload,
@@ -57,7 +57,7 @@ export type LoginWithTonomyMessages = {
     loginToCommunication: AuthenticationMessage;
 };
 
-const idContract = IDContract.Instance;
+const tonomyContract = TonomyContract.Instance;
 
 /**
  * An external user on a website that is being logged into by a Tonomy ID user
@@ -126,7 +126,7 @@ export class ExternalUser {
             const username = await user.getUsername();
 
             if (username) {
-                const personData = await idContract.getPerson(username);
+                const personData = await tonomyContract.getPerson(username);
 
                 if (accountName.toString() !== personData.account_name.toString())
                     throwError('Username has changed', SdkErrors.InvalidData);
@@ -463,7 +463,10 @@ export class ExternalUser {
         // If not then link it
         if (!linkedAuth) {
             const linkAuthRequestMessage = await LinkAuthRequestMessage.signMessage(
-                { contract: Name.from(contract), action: Name.from('') },
+                {
+                    contract: Name.from(contract),
+                    action: Name.from(''), // empty action name means all actions on this contract
+                },
                 await this.getIssuer(),
                 await this.getWalletDid()
             );

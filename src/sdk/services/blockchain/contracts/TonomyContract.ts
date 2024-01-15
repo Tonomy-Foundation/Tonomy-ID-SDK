@@ -1,12 +1,12 @@
 /* eslint-disable camelcase */
-import { API, Checksum256, Name, PublicKey } from '@wharfkit/antelope';
-import { TonomyUsername } from '../../../util/username';
+import { API, Checksum256, Checksum256Type, Name, NameType, PublicKey } from '@wharfkit/antelope';
+import { Signer, transact } from '../eosio/transaction';
+import { SdkErrors, TonomyUsername, sha256, throwError } from '../../../util';
 import { getAccount, getApi } from '../eosio/eosio';
-import { ActionData, Signer, transact } from '../eosio/transaction';
-import { SdkErrors, throwError } from '../../../util/errors';
-import { sha256 } from '../../../util/crypto';
 
-const CONTRACT_NAME = 'id.tmy';
+const CONTRACT_NAME = 'tonomy';
+
+export const GOVERNANCE_ACCOUNT_NAME = 'tonomy';
 
 enum PermissionLevel {
     OWNER = 'OWNER',
@@ -17,7 +17,7 @@ enum PermissionLevel {
     LOCAL = 'LOCAL',
 }
 
-enum AccountTypeEnum {
+export enum AccountTypeEnum {
     Person = 0,
     Organization = 1,
     App = 2,
@@ -54,7 +54,7 @@ namespace PermissionLevel {
     }
 }
 
-type GetPersonResponse = {
+export type GetPersonResponse = {
     account_name: Name;
     status: number;
     username_hash: Checksum256;
@@ -72,11 +72,81 @@ type AppTableRecord = {
     version: number;
 };
 
-class IDContract {
-    static singletonInstance: IDContract;
+export class TonomyContract {
+    static singletonInstance: TonomyContract;
 
     public static get Instance() {
         return this.singletonInstance || (this.singletonInstance = new this());
+    }
+    /**
+     * Buys RAM for an account
+     *
+     * @param  daoOwner - The owner of the DAO (Name is assumed to be a class that represents an EOSIO account name)
+     * @param account - The name of the app buying RAM (Name is assumed to be a class that represents an EOSIO account name)
+     * @param quant - The quantity of RAM to buy (Asset is assumed to be a class that represents an EOSIO asset)
+     */
+    async buyRam(
+        dao_owner: string,
+        app: string,
+        quant: string,
+        signer: Signer
+    ): Promise<API.v1.PushTransactionResponse> {
+        const actions = [
+            {
+                account: CONTRACT_NAME,
+                name: 'buyram',
+                authorization: [
+                    {
+                        actor: app,
+                        permission: 'active',
+                    },
+                    {
+                        actor: dao_owner,
+                        permission: 'active',
+                    },
+                ],
+                data: {
+                    dao_owner,
+                    app,
+                    quant,
+                },
+            },
+        ];
+
+        return await transact(Name.from(CONTRACT_NAME), actions, signer);
+    }
+
+    /**
+     * Sets the resource parameters 
+     *
+     * @param ram_price - The price of RAM (bytes per token)
+     * @param total_ram_available - The total available RAM.
+     * @param ram_fee - The fee for RAM.
+    
+     */
+    async setResourceParams(
+        ram_price: number,
+        total_ram_available: number,
+        ram_fee: number,
+        signer: Signer
+    ): Promise<API.v1.PushTransactionResponse> {
+        const action = {
+            authorization: [
+                {
+                    actor: GOVERNANCE_ACCOUNT_NAME,
+                    permission: 'active',
+                },
+            ],
+            account: CONTRACT_NAME,
+            name: 'setresparams',
+            data: {
+                ram_price,
+                total_ram_available,
+                ram_fee,
+            },
+        };
+
+        return await transact(Name.from(CONTRACT_NAME), [action], signer);
     }
 
     async newperson(
@@ -283,40 +353,6 @@ class IDContract {
             version: idData.version,
         };
     }
-
-    /**
-     * @param account - the permission's owner to be linked and the payer of the RAM needed to store this link,
-     * @param code - the owner of the action to be linked,
-     * @param type - the action to be linked,
-     * @param requirement - the permission to be linked.
-     */
-    async linkAuth(
-        account: string,
-        code: string,
-        type: string,
-        requirement: string,
-        signer: Signer
-    ): Promise<API.v1.PushTransactionResponse> {
-        const action: ActionData = {
-            account: CONTRACT_NAME,
-            name: 'linkauth',
-            authorization: [
-                {
-                    actor: account,
-                    permission: 'active',
-                },
-            ],
-            data: {
-                account,
-                code,
-                type,
-                requirement,
-            },
-        };
-
-        return await transact(Name.from(CONTRACT_NAME), [action], signer);
-    }
-
     async getApp(account: TonomyUsername | Name | string): Promise<AppTableRecord> {
         let data;
         const api = await getApi();
@@ -394,9 +430,13 @@ class IDContract {
         };
     }
 
-    async setAccountType(
-        accountName: string,
-        accType: AccountTypeEnum,
+    async adminSetApp(
+        accountName: NameType,
+        appName: string,
+        description: string,
+        usernameHash: Checksum256Type,
+        logoUrl: string,
+        origin: string,
         signer: Signer
     ): Promise<API.v1.PushTransactionResponse> {
         const action = {
@@ -407,10 +447,14 @@ class IDContract {
                 },
             ],
             account: CONTRACT_NAME,
-            name: 'setacctype',
+            name: 'adminsetapp',
             data: {
                 account_name: Name.from(accountName),
-                acc_type: accType,
+                app_name: appName,
+                description,
+                username_hash: usernameHash,
+                logo_url: logoUrl,
+                origin,
             },
         };
 
@@ -419,7 +463,5 @@ class IDContract {
 }
 
 export async function getAccountNameFromUsername(username: TonomyUsername): Promise<Name> {
-    return (await IDContract.Instance.getPerson(username)).account_name;
+    return (await TonomyContract.Instance.getPerson(username)).account_name;
 }
-
-export { IDContract, GetPersonResponse, AccountTypeEnum };

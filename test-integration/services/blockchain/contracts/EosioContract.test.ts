@@ -1,12 +1,12 @@
-import { IDContract } from '../../../../src/sdk/index';
+import { TonomyContract } from '../../../../src/sdk/index';
 import { setTestSettings } from '../../../helpers/settings';
 import { createRandomID, createRandomApp } from '../../../helpers/user';
 
 setTestSettings();
 
-const idContract = IDContract.Instance;
+const tonomyContract = TonomyContract.Instance;
 
-describe('IDContract class', () => {
+describe('TonomyContract class', () => {
     beforeEach((): void => {
         jest.setTimeout(60000);
     });
@@ -19,7 +19,7 @@ describe('IDContract class', () => {
         const salt = await user.storage.salt;
 
         // get by account name
-        let idInfo = await idContract.getPerson(accountName);
+        let idInfo = await tonomyContract.getPerson(accountName);
 
         expect(idInfo.account_name).toEqual(accountName);
         expect(idInfo.username_hash.toString()).toEqual(username.usernameHash);
@@ -30,7 +30,7 @@ describe('IDContract class', () => {
         // expect(idInfo.version).toBe(1);
 
         // get by username
-        idInfo = await idContract.getPerson(username);
+        idInfo = await tonomyContract.getPerson(username);
         expect(idInfo.account_name.toString()).toEqual(accountName.toString());
         expect(idInfo.username_hash.toString()).toEqual(username.usernameHash);
 
@@ -41,7 +41,7 @@ describe('IDContract class', () => {
     test('newapp and getApp', async () => {
         const { appName, description, username, logoUrl, origin, accountName } = await createRandomApp();
 
-        let appInfo = await idContract.getApp(username);
+        let appInfo = await tonomyContract.getApp(username);
 
         expect(appInfo.app_name).toEqual(appName);
         expect(appInfo.description).toEqual(description);
@@ -50,7 +50,7 @@ describe('IDContract class', () => {
         expect(appInfo.origin).toEqual(origin);
         expect(appInfo.account_name.toString()).toEqual(accountName.toString());
 
-        appInfo = await idContract.getApp(origin);
+        appInfo = await tonomyContract.getApp(origin);
 
         expect(appInfo.app_name).toEqual(appName);
         expect(appInfo.description).toEqual(description);
@@ -59,7 +59,7 @@ describe('IDContract class', () => {
         expect(appInfo.origin).toEqual(origin);
         expect(appInfo.account_name.toString()).toEqual(accountName.toString());
 
-        appInfo = await idContract.getApp(accountName);
+        appInfo = await tonomyContract.getApp(accountName);
 
         expect(appInfo.app_name).toEqual(appName);
         expect(appInfo.description).toEqual(description);
