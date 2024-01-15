@@ -126,10 +126,6 @@ export class TonomyEosioProxyContract {
         const action = {
             authorization: [
                 {
-                    actor: GOVERNANCE_ACCOUNT_NAME,
-                    permission: 'active',
-                },
-                {
                     actor: account,
                     permission: 'active',
                 },

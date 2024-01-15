@@ -21,7 +21,7 @@ import { AppStatusEnum } from '../types/AppStatusEnum';
 import { verifyKeyExistsForApp } from '../helpers/user';
 import { UserCommunication } from './UserCommunication';
 
-const eosioProxyContract = TonomyEosioProxyContract.Instance;
+const tonomyEosioProxyContract = TonomyEosioProxyContract.Instance;
 const tonomyContract = TonomyContract.Instance;
 
 export class UserRequestsManager extends UserCommunication implements IUserRequestsManager {
@@ -39,7 +39,7 @@ export class UserRequestsManager extends UserCommunication implements IUserReque
 
             const permission = parseDid(message.getSender()).fragment;
 
-            if (!permission) throwError('DID does not contain fragment', SdkErrors.MissingParams);
+            if (!permission) throwError('DID does not contain App permission', SdkErrors.MissingParams);
 
             await tonomyContract.getApp(Name.from(permission));
             // Throws SdkErrors.DataQueryNoRowDataFound error if app does not exist
@@ -47,7 +47,7 @@ export class UserRequestsManager extends UserCommunication implements IUserReque
 
             const signer = createKeyManagerSigner(this.keyManager, KeyManagerLevel.ACTIVE);
 
-            await eosioProxyContract.linkAuth(
+            await tonomyEosioProxyContract.linkAuth(
                 (await this.getAccountName()).toString(),
                 contract.toString(),
                 action.toString(),

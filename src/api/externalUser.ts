@@ -463,7 +463,10 @@ export class ExternalUser {
         // If not then link it
         if (!linkedAuth) {
             const linkAuthRequestMessage = await LinkAuthRequestMessage.signMessage(
-                { contract: Name.from(contract), action: Name.from('') },
+                {
+                    contract: Name.from(contract),
+                    action: Name.from(''), // empty action name means all actions on this contract
+                },
                 await this.getIssuer(),
                 await this.getWalletDid()
             );
