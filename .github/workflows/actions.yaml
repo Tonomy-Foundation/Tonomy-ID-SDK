@@ -1,6 +1,9 @@
 name: Run Tonomy-SDK Tests
 
-on: pull_request
+on:
+  pull_request:
+    branches:
+    - development
 
 jobs:
   test:
