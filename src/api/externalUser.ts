@@ -421,14 +421,28 @@ export class ExternalUser {
      *
      * @returns {Promise<API.v1.PushTransactionResponse>} - the signed transaction
      */
-    async signTransaction(contract: NameType, action: NameType, data: object): Promise<API.v1.PushTransactionResponse> {
+    async signTransaction(
+        contract: NameType | TonomyUsername,
+        action: NameType,
+        data: object
+    ): Promise<API.v1.PushTransactionResponse> {
         const account = await this.getAccountName();
         const permission = await this.getAppPermission();
+
+        let contractAccount: Name;
+
+        if (contract instanceof TonomyUsername) {
+            const app = await tonomyContract.getApp(contract);
+
+            contractAccount = app.account_name;
+        } else {
+            contractAccount = Name.from(contract);
+        }
 
         // This is a hack to get around linked_auth requirements on custom permissions
         // see https://github.com/Tonomy-Foundation/Tonomy-ID/issues/636#issuecomment-1508887362
         // and https://github.com/AntelopeIO/leap/issues/1131
-        await this.checkLinkAuthRequirements(account, permission, contract, action);
+        await this.checkLinkAuthRequirements(account, permission, contractAccount, action);
 
         // Setup the action to sign
         const newAction = {
@@ -443,7 +457,13 @@ export class ExternalUser {
         };
         const signer = this.getTransactionSigner();
 
-        return await transact(Name.from(contract), [newAction], signer);
+        if (getSettings().loggerLevel === 'debug')
+            console.log(
+                `signTransaction() called by ${account.toString()} with permission ${permission.toString()} to contract ${contractAccount.toString()}`,
+                JSON.stringify(newAction, null, 2)
+            );
+
+        return await transact(Name.from(contractAccount), [newAction], signer);
     }
 
     private async checkLinkAuthRequirements(

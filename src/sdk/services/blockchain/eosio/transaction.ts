@@ -50,6 +50,7 @@ interface AntelopePushTransactionErrorConstructor extends Error {
         ];
     };
     actions?: ActionData[];
+    contract?: Name;
 }
 
 function createSigner(privateKey: PrivateKey): Signer {
@@ -89,6 +90,7 @@ export class AntelopePushTransactionError extends Error {
         ];
     };
     actions?: ActionData[];
+    contract?: Name;
 
     constructor(err: AntelopePushTransactionErrorConstructor) {
         super('AntelopePushTransactionError');
@@ -96,6 +98,7 @@ export class AntelopePushTransactionError extends Error {
         this.code = err.code;
         this.message = err.message;
         this.error = err.error;
+        this.contract = err.contract;
         this.actions = err.actions;
         this.stack = new Error().stack;
         // Ensure the name of this error is the same as the class name
@@ -161,7 +164,7 @@ async function transact(
     } catch (e) {
         if (e.response?.headers) {
             if (e.response?.json) {
-                throw new AntelopePushTransactionError({ ...e.response.json, actions });
+                throw new AntelopePushTransactionError({ ...e.response.json, contract, actions });
             }
 
             throw new HttpError(e);

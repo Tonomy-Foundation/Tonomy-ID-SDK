@@ -23,7 +23,7 @@ import {
 import { ExternalUser, LoginWithTonomyMessages } from '../../src/api/externalUser';
 import { objToBase64Url } from '../../src/sdk/util/base64';
 import { VerifiableCredential } from '../../src/sdk/util/ssi/vc';
-import { getAccount } from '../../src/sdk/services/blockchain';
+import { TonomyContract, getAccount } from '../../src/sdk/services/blockchain';
 import { getJwkIssuerFromStorage } from '../../src/sdk/helpers/jwkStorage';
 import { getLoginRequestResponseFromUrl, onRedirectLogin } from '../../src/sdk/helpers/urls';
 import { ExternalUserLoginTestOptions } from '../externalUser.test';
@@ -287,8 +287,11 @@ export async function externalWebsiteSignTransaction(externalUser: ExternalUser,
     expect(linkedActions).toBeUndefined();
 
     if (getSettings().loggerLevel === 'debug')
-        console.log('EXTERNAL_WEBSITE/sign-trx: signing transaction selfissue()');
-    let trx = await externalUser.signTransaction('demo.tmy', 'selfissue', {
+        console.log(
+            `EXTERNAL_WEBSITE/sign-trx: signing transaction selfissue() from ${from.toString()} with app ${externalApp.accountName.toString()}`
+        );
+
+    let trx = await externalUser.signTransaction(externalApp.accountName, 'selfissue', {
         to: from,
         quantity: '10 SYS',
         memo: 'test',
@@ -297,11 +300,11 @@ export async function externalWebsiteSignTransaction(externalUser: ExternalUser,
     linkedActions = await getLinkedActionsForPermission(from, externalApp.accountName);
 
     expect(linkedActions).toBeDefined();
-    expect(linkedActions.account.equals('demo.tmy')).toBe(true);
+    expect(linkedActions.account.equals(externalApp.accountName)).toBe(true);
     expect(linkedActions.action).toBeNull();
 
     if (getSettings().loggerLevel === 'debug') console.log('EXTERNAL_WEBSITE/sign-trx: signing transaction transfer()');
-    trx = await externalUser.signTransaction('demo.tmy', 'transfer', {
+    trx = await externalUser.signTransaction(externalApp.accountName, 'transfer', {
         from,
         to,
         quantity: '1 SYS',
@@ -315,7 +318,7 @@ export async function externalWebsiteSignTransaction(externalUser: ExternalUser,
 
     if (getSettings().loggerLevel === 'debug')
         console.log('EXTERNAL_WEBSITE/sign-trx: signing transaction transfer() again)');
-    trx = await externalUser.signTransaction('demo.tmy', 'transfer', {
+    trx = await externalUser.signTransaction(externalApp.accountName, 'transfer', {
         from,
         to,
         quantity: '2 SYS',

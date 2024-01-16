@@ -24,7 +24,8 @@ export class TonomyEosioProxyContract {
         account: Name,
         wasmFileContent: any,
         abiFileContent: any,
-        signer: Signer
+        signer: Signer,
+        extraAuthorization?: { actor: string; permission: string }
     ): Promise<API.v1.PushTransactionResponse> {
         // 1. Prepare SETCODE
         // read the file and make a hex string out of it
@@ -41,10 +42,6 @@ export class TonomyEosioProxyContract {
             name: 'setcode',
             authorization: [
                 {
-                    actor: GOVERNANCE_ACCOUNT_NAME,
-                    permission: 'active',
-                },
-                {
                     actor: account.toString(),
                     permission: 'active',
                 },
@@ -56,14 +53,12 @@ export class TonomyEosioProxyContract {
                 code: wasm,
             },
         };
+
+        if (extraAuthorization) setCodeAction.authorization.push(extraAuthorization);
         const setAbiAction = {
             account: CONTRACT_NAME,
             name: 'setabi',
             authorization: [
-                {
-                    actor: GOVERNANCE_ACCOUNT_NAME,
-                    permission: 'active',
-                },
                 {
                     actor: account.toString(),
                     permission: 'active',
@@ -74,6 +69,8 @@ export class TonomyEosioProxyContract {
                 abi: abiSerializedHex,
             },
         };
+
+        if (extraAuthorization) setAbiAction.authorization.push(extraAuthorization);
         const actions = [setCodeAction, setAbiAction];
 
         return await transact(Name.from(CONTRACT_NAME), actions, signer);
