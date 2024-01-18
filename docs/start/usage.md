@@ -62,21 +62,23 @@ TODO
 
 ### Sign a blockchain transaction
 
-**Step 1.** Modify your [Antelope smart contract](../../guides/deploy/#antelope) to accept signatures from users signed into your registered app (see [Register your app](/cli/#register-a-tonomy-app))
+**Step 1.** Modify your [Antelope smart contract](../../guides/deploy/#antelope) to accept signatures from users signed into your registered app (see [Register your app](/cli/#register-a-tonomy-app)). If you have deployed the smart contract to the same account as your App, then you can get the permission name with `get_self()`. If not, then you can use one of the tonomy helper functions to lookup the permission name with the origin or username.
 
 `eosio.token.cpp`
 
 ```c++
-#include <id.tmy/id.tmy.hpp>
+#include <tonomy/tonomy.hpp>
 
 token::transfer(const name &from,
                         const name &to,
                         const asset &quantity,
                         const string &memo)
 {
-    require_auth({to, idtonomy::id::get_app_permission_by_origin("https://your-registered-app.com")});
+    require_auth({from, get_self()})
     // or
-    require_auth({to, idtonomy::id::get_app_permission_by_username("your-registered-app.app.demo.tonomy.id")});
+    require_auth({from, tonomysystem::tonomy::get_app_permission_by_origin("https://your-registered-app.com")});
+    // or
+    require_auth({from, tonomysystem::tonomy::get_app_permission_by_username("your-registered-app.app.demo.tonomy.id")});
     ...
 }
 ```

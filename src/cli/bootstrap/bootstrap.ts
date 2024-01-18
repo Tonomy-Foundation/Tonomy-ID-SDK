@@ -32,7 +32,9 @@ const eosioContract = EosioContract.Instance;
 const ramPrice = 173333.3333; // bytes/token
 const fee = 0.25 / 100; // 0.25%
 const ramAvailable = 8 * 1024 * 1024 * 1024; // 8 GB
-const currencySymbol = 'SYS';
+
+// TODO move to settings
+export const CURRENCY_SYMBOL = 'SYS';
 
 /**
  * Converts bytes to tokens.
@@ -41,7 +43,7 @@ const currencySymbol = 'SYS';
  * @returns The converted value in tokens.
  */
 function bytesToTokens(bytes: number): string {
-    return ((bytes * (1 + fee)) / ramPrice).toFixed(4) + ` ${currencySymbol}`;
+    return ((bytes * (1 + fee)) / ramPrice).toFixed(4) + ` ${CURRENCY_SYMBOL}`;
 }
 
 export default async function bootstrap(args: string[]) {
@@ -55,12 +57,12 @@ export default async function bootstrap(args: string[]) {
         await createAccounts();
         await setPrivilegedAccounts();
         await deployEosioMsig();
-        await createDemoToken();
         await createNativeToken();
         await createTokenDistribution();
         await createTonomyContractAndSetResources();
         await createUsers();
         await createTonomyApps(newPublicKey);
+        await configureDemoToken();
         await updateAccountControllers(newPublicKey);
         await deployEosioTonomy(newSigner);
 
@@ -111,17 +113,9 @@ async function deployEosioMsig() {
     );
 }
 
-async function createDemoToken() {
-    console.log('Create and deploy demo contract');
-    await deployContract(
-        {
-            account: 'demo.tmy',
-            contractDir: path.join(__dirname, '../../Tonomy-Contracts/contracts/demo.tmy'),
-        },
-        signer
-    );
-    await demoTokenContract.create(`1000000000 ${currencySymbol}`, signer);
-    await demoTokenContract.issue(`10000 ${currencySymbol}`, signer);
+async function configureDemoToken() {
+    await demoTokenContract.create(`1000000000 ${CURRENCY_SYMBOL}`, signer);
+    await demoTokenContract.issue(`10000 ${CURRENCY_SYMBOL}`, signer);
 }
 
 async function createNativeToken() {
@@ -133,8 +127,8 @@ async function createNativeToken() {
         },
         signer
     );
-    await tokenContract.create(`50000000000.0000 ${currencySymbol}`, signer);
-    await tokenContract.issue('eosio.token', `50000000000.0000 ${currencySymbol}`, signer);
+    await tokenContract.create(`50000000000.0000 ${CURRENCY_SYMBOL}`, signer);
+    await tokenContract.issue('eosio.token', `50000000000.0000 ${CURRENCY_SYMBOL}`, signer);
 }
 
 async function createTokenDistribution() {
@@ -148,7 +142,7 @@ async function createTokenDistribution() {
     };
 
     for (const [account, amount] of Object.entries(allocations)) {
-        await tokenContract.transfer('eosio.token', account, amount.toString() + `.0000 ${currencySymbol}`, signer);
+        await tokenContract.transfer('eosio.token', account, amount.toString() + `.0000 ${CURRENCY_SYMBOL}`, signer);
     }
 }
 
@@ -238,6 +232,7 @@ async function createUsers() {
 }
 
 async function createTonomyApps(newPublicKey: PublicKey): Promise<void> {
+    console.log('Create Tonomy apps');
     const demo = await createApp({
         appName: 'Tonomy Demo',
         usernamePrefix: 'demo',
@@ -247,10 +242,14 @@ async function createTonomyApps(newPublicKey: PublicKey): Promise<void> {
         publicKey: newPublicKey,
     });
 
-    // action to add demo permission to token contract
-    // TODO this can be removed, the account name will always be `get_self()`
-    console.log('Adding demo permission to token contract');
-    demoTokenContract.addPerm(demo.accountName, signer);
+    console.log('Deploy demo contract');
+    await deployContract(
+        {
+            account: demo.accountName,
+            contractDir: path.join(__dirname, '../../Tonomy-Contracts/contracts/demo.tmy'),
+        },
+        signer
+    );
 
     await createApp({
         appName: 'Tonomy Website',
@@ -297,8 +296,10 @@ async function deployEosioTonomy(signer: Signer) {
         },
         signer,
         {
-            actor: 'tonomy',
-            permission: 'active',
+            extraAuthorization: {
+                actor: 'tonomy',
+                permission: 'active',
+            },
         }
     );
 }
