@@ -46,10 +46,10 @@ Then you will need to deploy each service, with configuration so that they conne
     - For a production grade network, we suggest 3 nodes if run by the same entity, or 5 nodes if run by separate entities
     - For maximum scaleability, run using bare-metal servers.
     - Please <a href="https://tonomy.io/contact" target="_blank">contact us</a> for assistance running a production Antelope network or setting up governance.
-2. Create the `onocoin.tmy` account on the blockchain
-3. Deploy the <a href="https://github.com/Tonomy-Foundation/Tonomy-Contracts/tree/master/contracts/onocoin.tmy" target="_blank">onocoin.tmy</a> contract to the `onocoin.tmy` account on the blockchain
+2. Create the `eosio.token` account on the blockchain
+3. Deploy the <a href="https://github.com/Tonomy-Foundation/Tonomy-Contracts/tree/master/contracts/eosio.token" target="_blank">eosio.token</a> contract to the `eosio.token` account on the blockchain
 4. Create a new currency with a total supply using the `create()` function
-5. Issue a specific amount of the newly created currency to the 'onocoin.tmy' account using the `issue()` function
+5. Issue a specific amount of the newly created currency to the 'eosio.token' account using the `issue()` function
 6. Create the `id.tmy` account on the blockchain
 7. Deploy the <a href="https://github.com/Tonomy-Foundation/Tonomy-Contracts/tree/master/contracts/id.tmy" target="_blank">id.tmy</a> contract to the `id.tmy` account on the blockchain
 8. [Register your applications](../../start/register-app) that you wish to connect to Tonomy ID
