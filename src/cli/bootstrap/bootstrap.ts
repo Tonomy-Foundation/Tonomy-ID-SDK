@@ -210,7 +210,7 @@ function createSubdomainOnOrigin(origin: string, subdomain: string): string {
 
 async function createUsers() {
     // The Apple app needs to have a test user for their review. That is this user.
-    let password = '1GjGtP%g5UOp2lQ&U5*p';
+    let password = 'above day fever lemon piano sport';
 
     mockCreateAccount();
     await createUser('testuser', password);
