@@ -16,6 +16,7 @@ type ConfigType = {
     accountsServiceUrl: string;
     tonomyIdSchema: string;
     loggerLevel: LoggerLevel;
+    ecosystemName: string;
 };
 
 const ipAddress = address.ip();
@@ -30,6 +31,7 @@ const defaultConfig = {
     accountsServiceUrl: 'http://localhost:5000',
     tonomyIdSchema: 'tonomy-id-development://',
     loggerLevel: 'info' as LoggerLevel,
+    ecosystemName: 'Tonomy - Development',
 };
 
 const stagingConfig = {
@@ -42,6 +44,7 @@ const stagingConfig = {
     accountsServiceUrl: 'http://communication.staging.tonomy.foundation',
     tonomyIdSchema: 'tonomy-id-staging://',
     loggerLevel: 'info' as LoggerLevel,
+    ecosystemName: 'Tonomy - Staging',
 };
 
 const testnetConfig = {
@@ -54,6 +57,7 @@ const testnetConfig = {
     accountsServiceUrl: 'http://communication.testnet.pangea.web4.world',
     tonomyIdSchema: 'pangea-testnet://',
     loggerLevel: 'info' as LoggerLevel,
+    ecosystemName: 'Tonomy - Testnet',
 };
 
 const productionConfig = {
@@ -66,6 +70,7 @@ const productionConfig = {
     accountsServiceUrl: 'http://communication.pangea.web4.world',
     tonomyIdSchema: 'pangea://',
     loggerLevel: 'info' as LoggerLevel,
+    ecosystemName: 'Tonomy - Production',
 };
 
 type SettingsType = {

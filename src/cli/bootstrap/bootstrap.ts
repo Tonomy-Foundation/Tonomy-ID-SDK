@@ -234,9 +234,9 @@ async function createUsers() {
 async function createTonomyApps(newPublicKey: PublicKey): Promise<void> {
     console.log('Create Tonomy apps');
     const demo = await createApp({
-        appName: 'Tonomy Demo',
+        appName: `${settings.config.ecosystemName} Demo`,
         usernamePrefix: 'demo',
-        description: 'Demo of Tonomy ID login and features',
+        description: `Demo of ${settings.config.ecosystemName} login and features`,
         origin: settings.config.demoWebsiteOrigin,
         logoUrl: settings.config.demoWebsiteOrigin + '/market.com.png',
         publicKey: newPublicKey,
@@ -252,9 +252,9 @@ async function createTonomyApps(newPublicKey: PublicKey): Promise<void> {
     );
 
     await createApp({
-        appName: 'Tonomy Website',
+        appName: `${settings.config.ecosystemName} Website`,
         usernamePrefix: 'tonomy-sso',
-        description: 'Tonomy website to manager your ID and Data',
+        description: `${settings.config.ecosystemName} website to manager your ID and Data`,
         origin: settings.config.ssoWebsiteOrigin,
         logoUrl: settings.config.ssoWebsiteOrigin + '/tonomy-logo1024.png',
         publicKey: newPublicKey,
