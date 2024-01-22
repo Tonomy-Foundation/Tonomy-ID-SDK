@@ -1,11 +1,12 @@
 import { NameType, Bytes, KeyType, PrivateKey, PublicKeyType, Checksum256 } from '@wharfkit/antelope';
 import argon2 from 'argon2';
 import { randomBytes } from '../../sdk/util/crypto';
-import { EosioUtil, EosioContract } from '../../sdk';
+import { EosioUtil, EosioContract, TonomyEosioProxyContract } from '../../sdk';
 import { Authority } from '../../sdk/services/blockchain/eosio/authority';
 import { Signer, defaultAntelopePrivateKey } from '../../sdk/services/blockchain';
 
 const eosioContract = EosioContract.Instance;
+const tonomyEosioProxyContract = TonomyEosioProxyContract.Instance;
 
 /**
  * creates a key based on secure (hashing) key generation algorithm Argon2
@@ -50,22 +51,48 @@ export async function updateAccountKey(account: NameType, newPublicKey: PublicKe
  * Updates the control by account, modifying the active and owner authorities.
  *
  * @param {NameType} account - The account name to update.
- * @param {string} controllerAccount - The account name with controller permissions.
- * @param {boolean} [addCodePermission=false] - Whether to add code permission to the authorities. To add the eosio.code authority for smart contracts change this to [true]
+ * @param {string} controllerAccount - The account name(s) with controller permissions.
+ * @param {boolean} [options.addCodePermission=false] - Whether to add code permission to the authorities. To add the eosio.code authority for smart contracts change this to [true]
+ * @param {boolean} [options.replaceActive=true] - Whether to replace the active authority with the owner authority.
+ * @param {boolean} [options.useTonomyContract=false] - Whether to use the tonomy eosio proxy contract instead of the eosio contract.
  * @returns {Promise<void>} A Promise that resolves when the update is complete.
  */
 export async function updateControlByAccount(
     account: NameType,
-    controllerAccount: string,
+    controllerAccount: string | string[],
     signer: Signer,
-    addCodePermission = false
+    options: { addCodePermission?: boolean; replaceActive?: boolean; useTonomyContract?: boolean } = {}
 ) {
-    const activeAuthority = Authority.fromAccount({ actor: controllerAccount, permission: 'active' });
-    const ownerAuthority = Authority.fromAccount({ actor: controllerAccount, permission: 'owner' });
+    if (!Array.isArray(controllerAccount)) controllerAccount = [controllerAccount];
+    const activeAuthority = Authority.fromAccount({ actor: controllerAccount[0], permission: 'active' });
+    const ownerAuthority = Authority.fromAccount({ actor: controllerAccount[0], permission: 'owner' });
 
-    if (addCodePermission) activeAuthority.addCodePermission(account.toString());
-    if (addCodePermission) ownerAuthority.addCodePermission(account.toString());
+    if (options.addCodePermission ?? false) activeAuthority.addCodePermission(account.toString());
+    if (options.addCodePermission ?? false) ownerAuthority.addCodePermission(account.toString());
 
-    await eosioContract.updateauth(account.toString(), 'active', 'owner', activeAuthority, signer);
-    await eosioContract.updateauth(account.toString(), 'owner', 'owner', ownerAuthority, signer);
+    // If multiple keys provided, make a 2/3 multisig
+    if (controllerAccount.length > 1) {
+        for (let i = 1; i < controllerAccount.length; i++) {
+            activeAuthority.addAccount({ actor: controllerAccount[i], permission: 'active' });
+            ownerAuthority.addAccount({ actor: controllerAccount[i], permission: 'owner' });
+        }
+
+        const threshold = Math.ceil((controllerAccount.length * 2) / 3);
+
+        ownerAuthority.setThreshold(threshold);
+        activeAuthority.setThreshold(threshold);
+    }
+
+    let contract = eosioContract;
+
+    if (options.useTonomyContract ?? false) {
+        // @ts-expect-error contract does not have some of the functions of eosioContract type
+        contract = tonomyEosioProxyContract;
+    }
+
+    if (options.replaceActive ?? true) {
+        await contract.updateauth(account.toString(), 'active', 'owner', activeAuthority, signer);
+    }
+
+    await contract.updateauth(account.toString(), 'owner', 'owner', ownerAuthority, signer);
 }

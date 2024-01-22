@@ -4,10 +4,11 @@ import { defaultAntelopePublicKey } from '../../sdk/services/blockchain';
 
 const eosioContract = EosioContract.Instance;
 
-export async function createAntelopeAccount({ account }: { account: string }, signer: Signer) {
-    const ownerAuth = Authority.fromKey(defaultAntelopePublicKey.toString());
+export async function createAntelopeAccount({ account, key }: { account: string; key?: string }, signer: Signer) {
+    const accountKey = key ?? defaultAntelopePublicKey.toString();
+    const ownerAuth = Authority.fromKey(accountKey);
 
-    const activeAuth = Authority.fromKey(defaultAntelopePublicKey.toString());
+    const activeAuth = Authority.fromKey(accountKey);
 
     // need to add the eosio.code authority as well so that it can call eosio from the smart contract
     ownerAuth.addCodePermission(account);
