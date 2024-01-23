@@ -14,9 +14,12 @@ setTestSettings();
 let auth: KeyManager;
 let user: IUserPublic;
 
+const SECONDS = 1000;
+
 describe('User class', () => {
+    jest.setTimeout(60 * SECONDS);
+
     beforeEach((): void => {
-        jest.setTimeout(60000);
         auth = new JsKeyManager();
         user = createUserObject(auth, jsStorageFactory);
     });
@@ -115,7 +118,7 @@ describe('User class', () => {
         // Close connections
         await user.logout();
         await userLogin.logout();
-    }, 10000);
+    });
 
     test('login() fails with wrong password', async () => {
         const { user } = await createRandomID();
@@ -132,7 +135,7 @@ describe('User class', () => {
         // Close connections
         await user.logout();
         await userLogin.logout();
-    }, 10000);
+    });
 
     test('checkKeysStillValid() keys are still valid after create account', async () => {
         const { user } = await createRandomID();
@@ -141,7 +144,7 @@ describe('User class', () => {
 
         // Close connections
         await user.logout();
-    }, 10000);
+    });
 
     test('checkKeysStillValid() keys are still valid after create account and login again', async () => {
         const { user, password } = await createRandomID();
@@ -154,7 +157,7 @@ describe('User class', () => {
 
         // Close connections
         await user.logout();
-    }, 10000);
+    });
 
     test('checkKeysStillValid() keys are not valid after login and change keys but not update yet', async () => {
         const { user } = await createRandomID();
@@ -168,7 +171,7 @@ describe('User class', () => {
         // Close connections
         // TODO if expect fails, then the user.logout() is not called and we dont cleanup. We need to fix this
         await user.logout();
-    }, 10000);
+    });
 
     test("checkKeysStillValid() throws error if user doesn't exist", async () => {
         await expect(user.checkKeysStillValid()).rejects.toThrowError(SdkErrors.AccountDoesntExist);
@@ -183,7 +186,7 @@ describe('User class', () => {
             user.checkPassword('verify earn dad end easily earn', { keyFromPasswordFn: generatePrivateKeyFromPassword })
         ).rejects.toThrowError(SdkErrors.PasswordInvalid);
         await user.logout();
-    }, 12000);
+    });
 
     test('checkPassword() returns true when password matches', async () => {
         const { user, password } = await createRandomID();
@@ -195,7 +198,7 @@ describe('User class', () => {
         );
 
         await user.logout();
-    }, 12000);
+    });
 
     test('logout', async () => {
         const { user } = await createRandomID();
@@ -247,6 +250,7 @@ describe('User class', () => {
         await userLogin.logout();
         await user.logout();
     });
+
     test('getDid() expect chainId and account name defined', async () => {
         const { user } = await createRandomID();
         const accountName = await user.storage.accountName;
@@ -283,7 +287,7 @@ describe('User class', () => {
         await expect(user.checkPin('12345')).resolves.toBe(true);
 
         await user.logout();
-    }, 10000);
+    });
 
     test('CheckPin() throws error if the Key Does not matches', async () => {
         const { user, password } = await createRandomID();
@@ -295,7 +299,7 @@ describe('User class', () => {
         await expect(user.checkPin('12121')).rejects.toThrowError(SdkErrors.PinInvalid);
 
         await user.logout();
-    }, 10000);
+    });
 
     test('usernameExists(), returns true if username already exists if not throws an error', async () => {
         const { user, username } = await createRandomID();
@@ -320,5 +324,5 @@ describe('User class', () => {
         expect(key1.toString()).not.toEqual(key2.toString());
         await user.updateKeys(password);
         await user.logout();
-    }, 10000);
+    });
 });
