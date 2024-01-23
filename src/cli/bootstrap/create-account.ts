@@ -1,11 +1,11 @@
 import { Authority, EosioContract, App, AppCreateOptions } from '../../sdk/index';
 import { Signer } from '../../sdk/services/blockchain/eosio/transaction';
-import { defaultAntelopePublicKey } from '../../sdk/services/blockchain';
+import { getDefaultAntelopePublicKey } from '../../sdk/services/blockchain';
 
 const eosioContract = EosioContract.Instance;
 
 export async function createAntelopeAccount({ account, key }: { account: string; key?: string }, signer: Signer) {
-    const accountKey = key ?? defaultAntelopePublicKey.toString();
+    const accountKey = key ?? getDefaultAntelopePublicKey().toString();
     const ownerAuth = Authority.fromKey(accountKey);
 
     const activeAuth = Authority.fromKey(accountKey);

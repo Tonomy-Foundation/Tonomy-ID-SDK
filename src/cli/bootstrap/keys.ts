@@ -3,7 +3,7 @@ import argon2 from 'argon2';
 import { randomBytes } from '../../sdk/util/crypto';
 import { EosioUtil, EosioContract, TonomyEosioProxyContract } from '../../sdk';
 import { Authority } from '../../sdk/services/blockchain/eosio/authority';
-import { Signer, defaultAntelopePrivateKey } from '../../sdk/services/blockchain';
+import { Signer, getDefaultAntelopePrivateKey } from '../../sdk/services/blockchain';
 
 const eosioContract = EosioContract.Instance;
 const tonomyEosioProxyContract = TonomyEosioProxyContract.Instance;
@@ -36,15 +36,17 @@ export async function generatePrivateKeyFromPassword(
     };
 }
 
-export const signer = EosioUtil.createSigner(defaultAntelopePrivateKey);
+export function getSigner(): Signer {
+    return EosioUtil.createSigner(getDefaultAntelopePrivateKey());
+}
 
 export async function updateAccountKey(account: NameType, newPublicKey: PublicKeyType, addCodePermission = false) {
     const authority = Authority.fromKey(newPublicKey.toString());
 
     if (addCodePermission) authority.addCodePermission(account.toString());
 
-    await eosioContract.updateauth(account.toString(), 'active', 'owner', authority, signer);
-    await eosioContract.updateauth(account.toString(), 'owner', 'owner', authority, signer);
+    await eosioContract.updateauth(account.toString(), 'active', 'owner', authority, getSigner());
+    await eosioContract.updateauth(account.toString(), 'owner', 'owner', authority, getSigner());
 }
 
 /**

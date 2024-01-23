@@ -12,7 +12,7 @@ import {
     AccountType,
     getSettings,
 } from '../../sdk/index';
-import { signer, updateAccountKey, updateControlByAccount } from './keys';
+import { getSigner, updateAccountKey, updateControlByAccount } from './keys';
 import settings from './settings';
 import { Checksum256, PrivateKey, PublicKey } from '@wharfkit/antelope';
 import { Signer } from '../../sdk/services/blockchain';
@@ -45,17 +45,23 @@ function bytesToTokens(bytes: number): string {
     return ((bytes * (1 + fee)) / ramPrice).toFixed(4) + ` ${CURRENCY_SYMBOL}`;
 }
 
+const signer = getSigner();
+
 export default async function bootstrap() {
     try {
-        if (!process.env.TONOMY_OPS_KEY) throw new Error('Missing TONOMY_OPS_KEY');
-        if (!process.env.TONOMY_BOARD_KEYS || !Array.isArray(JSON.parse(process.env.TONOMY_BOARD_KEYS).keys))
-            throw new Error('Missing TONOMY_BOARD_KEYS');
+        if (!process.env.TONOMY_OPS_PRIVATE_KEY) throw new Error('Missing TONOMY_OPS_PRIVATE_KEY');
+        if (
+            !process.env.TONOMY_BOARD_PUBLIC_KEYS ||
+            !Array.isArray(JSON.parse(process.env.TONOMY_BOARD_PUBLIC_KEYS).keys)
+        )
+            throw new Error('Missing TONOMY_BOARD_PUBLIC_KEYS');
+        if (!process.env.TONOMY_TEST_ACCOUNTS_PASSPHRASE) throw new Error('Missing TONOMY_TEST_ACCOUNTS_PASSPHRASE');
 
-        const newPrivateKey = PrivateKey.from(process.env.TONOMY_OPS_KEY);
+        const newPrivateKey = PrivateKey.from(process.env.TONOMY_OPS_PRIVATE_KEY);
         const newPublicKey = newPrivateKey.toPublic();
         const newSigner = EosioUtil.createSigner(newPrivateKey);
-
-        const tonomyGovKeys: string[] = JSON.parse(process.env.TONOMY_BOARD_KEYS).keys;
+        const tonomyGovKeys: string[] = JSON.parse(process.env.TONOMY_BOARD_PUBLIC_KEYS).keys;
+        const passphrase = process.env.TONOMY_TEST_ACCOUNTS_PASSPHRASE;
 
         await createAccounts(tonomyGovKeys);
         await setPrivilegedAccounts();
@@ -63,7 +69,7 @@ export default async function bootstrap() {
         await createNativeToken();
         await createTokenDistribution();
         await createTonomyContractAndSetResources();
-        await createUsers();
+        await createUsers(passphrase);
         await createTonomyApps(newPublicKey, newSigner);
         await configureDemoToken(newSigner);
         await updateAccountControllers(tonomyGovKeys, newPublicKey, newSigner);
@@ -229,31 +235,30 @@ function createSubdomainOnOrigin(origin: string, subdomain: string): string {
     return url.protocol + '//' + subdomain + '.' + url.host;
 }
 
-async function createUsers() {
-    // The Apple app needs to have a test user for their review. That is this user.
-    let password = 'above day fever lemon piano sport';
-
+async function createUsers(passphrase: string) {
     mockCreateAccount();
-    await createUser('testuser', password);
+    // Google and Apple app store managers needs to have a test user for their review. That is this user.
+    await createUser('testuser', passphrase);
 
     // Create users for the demo website
-    password = 'mrOOR1WW0y#6ot7z%Wbj';
-    await createUser('lovesboost', password);
-    await createUser('sweetkristy', password);
-    await createUser('cheesecakeophobia', password);
-    await createUser('ultimateBeast', password);
-    await createUser('tomtom', password);
-    await createUser('readingpro', password);
-    await createUser('sohappy', password);
-    await createUser('reallychel', password);
-    await createUser('thedudeabides', password);
-    await createUser('4cryingoutloud', password);
+    passphrase = 'mrOOR1WW0y#6ot7z%Wbj';
+    await createUser('lovesboost', passphrase);
+    await createUser('sweetkristy', passphrase);
+    await createUser('cheesecakeophobia', passphrase);
+    await createUser('ultimateBeast', passphrase);
+    await createUser('tomtom', passphrase);
+    await createUser('readingpro', passphrase);
+    await createUser('sohappy', passphrase);
+    await createUser('reallychel', passphrase);
+    await createUser('thedudeabides', passphrase);
+    await createUser('4cryingoutloud', passphrase);
 
     restoreCreateAccountFromMock();
 }
 
 async function createTonomyApps(newPublicKey: PublicKey, newSigner: Signer): Promise<void> {
     console.log('Create Tonomy apps');
+
     const demo = await createApp({
         appName: `${settings.config.ecosystemName} Demo`,
         usernamePrefix: 'demo',
@@ -261,6 +266,7 @@ async function createTonomyApps(newPublicKey: PublicKey, newSigner: Signer): Pro
         origin: settings.config.demoWebsiteOrigin,
         logoUrl: settings.config.demoWebsiteOrigin + '/market.com.png',
         publicKey: newPublicKey,
+        signer,
     });
 
     console.log('Deploy demo contract');
@@ -279,6 +285,7 @@ async function createTonomyApps(newPublicKey: PublicKey, newSigner: Signer): Pro
         origin: settings.config.ssoWebsiteOrigin,
         logoUrl: settings.config.ssoWebsiteOrigin + '/tonomy-logo1024.png',
         publicKey: newPublicKey,
+        signer,
     });
 }
 

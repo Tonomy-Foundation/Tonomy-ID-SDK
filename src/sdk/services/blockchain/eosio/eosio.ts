@@ -1,7 +1,7 @@
 import { APIClient, FetchProvider, NameType, API, PrivateKey } from '@wharfkit/antelope';
 import { GetInfoResponse } from '@wharfkit/antelope/src/api/v1/types';
 import fetch from 'cross-fetch';
-import { getSettings } from '../../../util/settings';
+import { getSettings, isProduction } from '../../../util/settings';
 import { throwError, SdkErrors } from '../../../util/errors';
 
 let api: APIClient;
@@ -39,16 +39,28 @@ export async function getAccount(account: NameType): Promise<API.v1.AccountObjec
     }
 }
 
-function getDefaultAntelopePrivateKey() {
-    // if (isProduction()) {
-    //     throw new Error('Cannot use default private key in production');
-    // }
+export function getDefaultAntelopePrivateKey() {
+    if (isProduction()) {
+        throw new Error('Cannot use default private key in production');
+    }
 
+    // This is the default private key used by an Antelope node when it is first started
     return PrivateKey.from('PVT_K1_2bfGi9rYsXQSXXTvJbDAPhHLQUojjaNLomdm3cEJ1XTzMqUt3V');
+    // PUB_K1_6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5BoDq63
 }
 
-// This is the default private key used by an Antelope node when it is first started
-export const defaultAntelopePrivateKey = getDefaultAntelopePrivateKey();
+export function getDefaultAntelopePublicKey() {
+    return getDefaultAntelopePrivateKey().toPublic();
+}
 
-export const defaultAntelopePublicKey = defaultAntelopePrivateKey.toPublic();
-// PUB_K1_6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5BoDq63
+export function getTonomyOperationsKey(): PrivateKey {
+    if (isProduction() && !process.env.TONOMY_OPS_PRIVATE_KEY)
+        throw new Error('TONOMY_OPS_PRIVATE_KEY must be set in production');
+
+    if (process.env.TONOMY_OPS_PRIVATE_KEY) {
+        if (getSettings().loggerLevel === 'debug') console.log('Using TONOMY_OPS_PRIVATE_KEY from env');
+        return PrivateKey.from(process.env.TONOMY_OPS_PRIVATE_KEY);
+    }
+
+    return PrivateKey.from('PVT_K1_24kG9VcMk3VkkgY4hh42X262AWV18YcPjBTd2Hox4YWoP8vRTU');
+}

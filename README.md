@@ -78,6 +78,16 @@ Then go to any test e.g. `test/app.test.ts` and you can click ▶️ or right cl
 
 `yarn run cli`
 
+### Bootstrapping
+
+`yarn run cli bootstrap`
+
+Environment variables are required to bootstrap the network. These values are provided by default in test and develpment environments but must be provided externally for non-dev environments:
+
+- TONOMY_OPS_PRIVATE_KEY: the private key of the operations account that will be used for the tonomy@active account
+- TONOMY_BOARD_PUBLIC_KEYS: the public keys (in JSON array format) of the network governance multi-signature account that controls governance operations
+- TONOMY_TEST_ACCOUNTS_PASSPHRASE: the passphrase that will be used for the App store test user and demo app users
+
 ## Linting
 
 Linting is done with `eslint`. Install the recommended VS Code plugin to see markers in your code.
