@@ -88,9 +88,10 @@ jobs:
       - run: yarn install --immutable
       - run: yarn run cli bootstrap PVT_K1_2bfGi9rYsXQSXXTvJbDAPhHLQUojjaNLomdm3cEJ1XTzMqUt3V
 
-      - name: Run integration tests
+      - name: Run integration and governance tests
         uses: actions/setup-node@v4
         with:
           node-version: 18.12.1
           cache: yarn
       - run: yarn run test:integration
+      - run: yarn run test:governance
