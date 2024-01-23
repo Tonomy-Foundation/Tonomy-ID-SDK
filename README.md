@@ -66,6 +66,18 @@ Then run the tests
 
 `yarn run test:integration`
 
+### Governance tests
+
+Tests the governance of the system. Can only be run once before a blockchain reset is required.
+
+First run the blockchain or Tonomy Communication service locally.
+
+`yarn run test:setup`
+
+Then run the tests
+
+`yarn run test:governance`
+
 ### Run all tests in the VS Code debugger
 
 Make sure you install the Jest extension (recommended automatically when you open VS Code)

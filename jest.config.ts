@@ -25,6 +25,12 @@ const config: Config = {
             rootDir: './test',
             testMatch: ['**/*.integration.test.ts'],
         },
+        {
+            ...baseConfig,
+            displayName: 'Governance tests',
+            rootDir: './test',
+            testMatch: ['**/*.governance.test.ts'],
+        },
     ],
 };
 
