@@ -87,14 +87,24 @@ describe('TonomyContract class', () => {
         });
 
         test('sign with tonomy@owner with 2 keys using eosio.msig should succeed', async () => {
-            expect.assertions(1);
+            expect.assertions(4);
+            const proposalName = randomAccountName();
+            const proposer = '1.found.tmy';
 
-            const trx = await eosioMsigContract.propose(
-                '1.found.tmy',
-                randomAccountName(),
+            const { proposalHash, transaction } = await eosioMsigContract.propose(
+                proposer,
+                proposalName,
                 [
                     {
-                        actor: 'tonomy',
+                        actor: '1.found.tmy',
+                        permission: 'owner',
+                    },
+                    {
+                        actor: '2.found.tmy',
+                        permission: 'owner',
+                    },
+                    {
+                        actor: '3.found.tmy',
                         permission: 'owner',
                     },
                 ],
@@ -102,7 +112,85 @@ describe('TonomyContract class', () => {
                 tonomyBoardSigners[0]
             );
 
-            expect(trx.processed.receipt.status).toBe('executed');
+            expect(transaction.processed.receipt.status).toBe('executed');
+
+            const approve1Trx = await eosioMsigContract.approve(
+                proposer,
+                proposalName,
+                {
+                    actor: Name.from('1.found.tmy'),
+                    permission: Name.from('owner'),
+                },
+                proposalHash,
+                tonomyBoardSigners[0]
+            );
+
+            expect(approve1Trx.processed.receipt.status).toBe('executed');
+
+            const approve2Trx = await eosioMsigContract.approve(
+                proposer,
+                proposalName,
+                {
+                    actor: Name.from('2.found.tmy'),
+                    permission: Name.from('owner'),
+                },
+                proposalHash,
+                tonomyBoardSigners[1]
+            );
+
+            expect(approve2Trx.processed.receipt.status).toBe('executed');
+
+            const execTrx = await eosioMsigContract.exec(proposer, proposalName, '1.found.tmy', tonomyBoardSigners[0]);
+
+            expect(execTrx.processed.receipt.status).toBe('executed');
+        });
+
+        test('sign with tonomy@owner with 1 keys using eosio.msig should fail', async () => {
+            expect.assertions(3);
+            const proposalName = randomAccountName();
+            const proposer = '1.found.tmy';
+
+            const { proposalHash, transaction } = await eosioMsigContract.propose(
+                proposer,
+                proposalName,
+                [
+                    {
+                        actor: '1.found.tmy',
+                        permission: 'owner',
+                    },
+                    {
+                        actor: '2.found.tmy',
+                        permission: 'owner',
+                    },
+                    {
+                        actor: '3.found.tmy',
+                        permission: 'owner',
+                    },
+                ],
+                [action],
+                tonomyBoardSigners[0]
+            );
+
+            expect(transaction.processed.receipt.status).toBe('executed');
+
+            const approve1Trx = await eosioMsigContract.approve(
+                proposer,
+                proposalName,
+                {
+                    actor: Name.from('1.found.tmy'),
+                    permission: Name.from('owner'),
+                },
+                proposalHash,
+                tonomyBoardSigners[0]
+            );
+
+            expect(approve1Trx.processed.receipt.status).toBe('executed');
+
+            try {
+                await eosioMsigContract.exec(proposer, proposalName, '1.found.tmy', tonomyBoardSigners[0]);
+            } catch (e) {
+                expect(e.error.details[0].message).toContain('transaction authorization failed');
+            }
         });
 
         test('sign with random@owner with board should succeed', async () => {

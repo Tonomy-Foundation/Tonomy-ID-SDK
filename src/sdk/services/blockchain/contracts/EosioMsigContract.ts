@@ -1,5 +1,14 @@
 /* eslint-disable camelcase */
-import { API, Name, NameType, PermissionLevelType } from '@wharfkit/antelope';
+import {
+    API,
+    Checksum256Type,
+    Checksum256,
+    Name,
+    NameType,
+    PermissionLevel,
+    PermissionLevelType,
+    Transaction,
+} from '@wharfkit/antelope';
 import { ActionData, Signer, transact } from '../eosio/transaction';
 import { getApi, serializeActionData } from '../eosio/eosio';
 
@@ -23,7 +32,7 @@ export class EosioMsigContract {
         requested: PermissionLevelType[],
         actions: ActionData[],
         signer: Signer
-    ): Promise<API.v1.PushTransactionResponse> {
+    ): Promise<{ transaction: API.v1.PushTransactionResponse; proposalHash: Checksum256 }> {
         // Serialize the actions
         const serializedActions = await Promise.all(
             actions.map(async (action) => {
@@ -44,23 +53,26 @@ export class EosioMsigContract {
         const expirationString = expiration.toISOString().split('.')[0];
 
         const info = await (await getApi()).v1.chain.get_info();
+        const trx = {
+            expiration: expirationString,
+            ref_block_num: info.getTransactionHeader().ref_block_num,
+            ref_block_prefix: info.getTransactionHeader().ref_block_prefix,
+            max_net_usage_words: 0,
+            max_cpu_usage_ms: 0,
+            delay_sec: 0,
+            context_free_actions: [],
+            actions: serializedActions,
+            transaction_extensions: [],
+        };
+        const proposalTrx = Transaction.from(trx);
+        const proposalHash = proposalTrx.id;
 
         // Action data (not sure if this is right format)
         const data = {
             proposer,
             proposal_name: proposalName,
             requested,
-            trx: {
-                expiration: expirationString,
-                ref_block_num: info.head_block_num,
-                ref_block_prefix: 0,
-                max_net_usage_words: 0,
-                max_cpu_usage_ms: 0,
-                delay_sec: 0,
-                context_free_actions: [],
-                actions: serializedActions,
-                transaction_extensions: [],
-            },
+            trx,
         };
 
         // Propose action
@@ -76,6 +88,67 @@ export class EosioMsigContract {
             data,
         };
 
-        return await transact(Name.from(CONTRACT_NAME), [action], signer);
+        const myTrx = await transact(Name.from(CONTRACT_NAME), [action], signer);
+
+        return {
+            proposalHash,
+            transaction: myTrx,
+        };
+    }
+
+    async approve(
+        proposer: NameType,
+        proposalName: NameType,
+        level: PermissionLevelType,
+        proposalHash: Checksum256Type,
+        signer: Signer
+    ): Promise<API.v1.PushTransactionResponse> {
+        const actions = [
+            {
+                account: CONTRACT_NAME,
+                name: 'approve',
+                authorization: [
+                    {
+                        actor: level.actor.toString(),
+                        permission: level.permission.toString(),
+                    },
+                ],
+                data: {
+                    proposer,
+                    proposal_name: proposalName,
+                    level,
+                    proposal_hash: proposalHash,
+                },
+            },
+        ];
+
+        return await transact(Name.from(CONTRACT_NAME), actions, signer);
+    }
+
+    async exec(
+        proposer: NameType,
+        proposalName: NameType,
+        executer: NameType,
+        signer: Signer
+    ): Promise<API.v1.PushTransactionResponse> {
+        const actions = [
+            {
+                account: CONTRACT_NAME,
+                name: 'exec',
+                authorization: [
+                    {
+                        actor: executer.toString(),
+                        permission: 'active',
+                    },
+                ],
+                data: {
+                    proposer,
+                    proposal_name: proposalName,
+                    executer,
+                },
+            },
+        ];
+
+        return await transact(Name.from(CONTRACT_NAME), actions, signer);
     }
 }
