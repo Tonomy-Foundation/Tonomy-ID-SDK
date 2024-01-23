@@ -1,5 +1,6 @@
 export * from './contracts/EosioContract';
 export * from './contracts/TonomyEosioProxyContract';
+export * from './contracts/EosioMsigContract';
 export * from './contracts/TonomyContract';
 export * from './contracts/DemoTokenContract';
 export * from './contracts/EosioTokenContract';

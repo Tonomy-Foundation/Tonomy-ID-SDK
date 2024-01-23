@@ -1,5 +1,5 @@
 import { KeyType, Name, PrivateKey } from '@wharfkit/antelope';
-import { TonomyContract, TonomyEosioProxyContract, Authority } from '../../../../src/sdk/index';
+import { EosioMsigContract, Authority } from '../../../../src/sdk/index';
 import { ActionData, createSigner, getTonomyOperationsKey, transact } from '../../../../src/sdk/services/blockchain';
 import { setTestSettings } from '../../../helpers/settings';
 
@@ -13,6 +13,8 @@ const tonomyBoardKeys = [
 
 const tonomyBoardPrivateKeys = tonomyBoardKeys.map((key) => PrivateKey.from(key));
 const tonomyBoardSigners = tonomyBoardPrivateKeys.map((key) => createSigner(key));
+
+const eosioMsigContract = EosioMsigContract.Instance;
 
 function randomAccountName(): string {
     // replace all digits 06789 with another random digit
@@ -80,6 +82,25 @@ describe('TonomyContract class', () => {
         test('sign with tonomy@owner with 2 keys should succeed', async () => {
             expect.assertions(1);
             const trx = await transact(Name.from('tonomy'), [action], [tonomyBoardSigners[0], tonomyBoardSigners[1]]);
+
+            expect(trx.processed.receipt.status).toBe('executed');
+        });
+
+        test('sign with tonomy@owner with 2 keys using eosio.msig should succeed', async () => {
+            expect.assertions(1);
+
+            const trx = await eosioMsigContract.propose(
+                '1.found.tmy',
+                randomAccountName(),
+                [
+                    {
+                        actor: 'tonomy',
+                        permission: 'owner',
+                    },
+                ],
+                [action],
+                tonomyBoardSigners[0]
+            );
 
             expect(trx.processed.receipt.status).toBe('executed');
         });
