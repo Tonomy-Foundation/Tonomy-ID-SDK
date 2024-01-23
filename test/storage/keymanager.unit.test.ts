@@ -11,8 +11,8 @@ import {
 } from '../../src/sdk/storage/keymanager';
 import { generateRandomKeyPair, createVCSigner, createSigner } from '../../src/sdk/util/crypto';
 import { generatePrivateKeyFromPassword } from '../../src/cli/bootstrap/keys';
-import { setTestSettings } from '../../test-integration/helpers/settings';
-import { createUserObject } from '../../test-integration/helpers/user';
+import { setTestSettings } from '../helpers/settings';
+import { createUserObject } from '../helpers/user';
 
 setTestSettings();
 

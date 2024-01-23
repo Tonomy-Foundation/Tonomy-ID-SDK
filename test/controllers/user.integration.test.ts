@@ -1,5 +1,5 @@
 import { IUserPublic, createRandomID, createUserObject } from '../helpers/user';
-import { KeyManager, KeyManagerLevel, TonomyUsername, User, EosioUtil } from '../../src/sdk/index';
+import { KeyManager, KeyManagerLevel, TonomyUsername, EosioUtil } from '../../src/sdk/index';
 import { SdkErrors } from '../../src/sdk/index';
 import { JsKeyManager } from '../../src/sdk/storage/jsKeyManager';
 import { jsStorageFactory } from '../../src/cli/bootstrap/jsstorage';

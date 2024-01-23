@@ -17,11 +17,13 @@ const config: Config = {
             ...baseConfig,
             displayName: 'Unit tests',
             rootDir: './test',
+            testMatch: ['**/*.unit.test.ts'],
         },
         {
             ...baseConfig,
             displayName: 'Integration tests',
-            rootDir: './test-integration',
+            rootDir: './test',
+            testMatch: ['**/*.integration.test.ts'],
         },
     ],
 };
