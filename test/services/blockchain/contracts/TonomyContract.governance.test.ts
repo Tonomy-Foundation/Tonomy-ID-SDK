@@ -494,7 +494,7 @@ describe('TonomyContract class', () => {
             }
         );
 
-        test('deploy eosio contract (special): sign with tonomy@owner with eosio.msig and two board + tonomy ops signers should fail', async () => {
+        test('deploy eosio contract (special): sign with tonomy@owner with eosio.msig and two board + tonomy ops signers should succeed', async () => {
             expect.assertions(3);
 
             try {
