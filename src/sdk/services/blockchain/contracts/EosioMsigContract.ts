@@ -5,7 +5,6 @@ import {
     Checksum256,
     Name,
     NameType,
-    PermissionLevel,
     PermissionLevelType,
     Transaction,
 } from '@wharfkit/antelope';
