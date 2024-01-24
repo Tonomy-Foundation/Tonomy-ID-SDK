@@ -176,6 +176,7 @@ describe('TonomyContract class', () => {
                     permission: newPermission,
                     parent: 'owner',
                     auth: authority,
+                    // eslint-disable-next-line camelcase
                     auth_parent: true,
                 },
             };
@@ -469,30 +470,26 @@ describe('TonomyContract class', () => {
             }
         });
 
-        test(
-            'deploy eosio contract (special): sign with tonomy@owner' +
-            'with two board signers and Tonomy ops signer should succeed',
-            async () => {
-                expect.assertions(1);
+        test('deploy eosio contract (special): sign with tonomy@owner with two board signers and Tonomy ops signer should succeed', async () => {
+            expect.assertions(1);
 
-                try {
-                    const trx = await tonomyEosioProxyContract.deployContract(
-                        Name.from('eosio'),
-                        wasmFile,
-                        abiFile,
-                        [tonomyBoardSigners[0], tonomyBoardSigners[1], tonomyOpsSigner],
-                        { extraAuthorization: { actor: 'tonomy', permission: 'owner' } }
-                    );
+            try {
+                const trx = await tonomyEosioProxyContract.deployContract(
+                    Name.from('eosio'),
+                    wasmFile,
+                    abiFile,
+                    [tonomyBoardSigners[0], tonomyBoardSigners[1], tonomyOpsSigner],
+                    { extraAuthorization: { actor: 'tonomy', permission: 'owner' } }
+                );
 
-                    expect(trx.processed.receipt.status).toBe('executed');
+                expect(trx.processed.receipt.status).toBe('executed');
 
-                    await restoreEosioTonomyContract();
-                } catch (e) {
-                    console.log(e.message, JSON.stringify(e, null, 2));
-                    throw e;
-                }
+                await restoreEosioTonomyContract();
+            } catch (e) {
+                console.log(e.message, JSON.stringify(e, null, 2));
+                throw e;
             }
-        );
+        });
 
         test('deploy eosio contract (special): sign with tonomy@owner with eosio.msig and two board + tonomy ops signers should succeed', async () => {
             expect.assertions(3);
