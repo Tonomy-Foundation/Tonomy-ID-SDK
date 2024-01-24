@@ -241,7 +241,6 @@ async function createUsers(passphrase: string) {
     await createUser('testuser', passphrase);
 
     // Create users for the demo website
-    passphrase = 'mrOOR1WW0y#6ot7z%Wbj';
     await createUser('lovesboost', passphrase);
     await createUser('sweetkristy', passphrase);
     await createUser('cheesecakeophobia', passphrase);

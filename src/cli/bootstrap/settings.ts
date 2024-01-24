@@ -55,7 +55,7 @@ const testnetConfig = {
     accountsServiceUrl: 'http://communication.testnet.pangea.web4.world',
     tonomyIdSchema: 'pangea-testnet://',
     loggerLevel: 'info' as LoggerLevel,
-    ecosystemName: 'Tonomy - Testnet',
+    ecosystemName: 'Pangea Testnet',
 };
 
 const productionConfig = {
@@ -68,7 +68,7 @@ const productionConfig = {
     accountsServiceUrl: 'http://communication.pangea.web4.world',
     tonomyIdSchema: 'pangea://',
     loggerLevel: 'info' as LoggerLevel,
-    ecosystemName: 'Tonomy - Production',
+    ecosystemName: 'Pangea',
 };
 
 type SettingsType = {
