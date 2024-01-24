@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# WARNING: These keys are only used for testing and should not be used in production
+
 export TONOMY_OPS_PRIVATE_KEY=PVT_K1_24kG9VcMk3VkkgY4hh42X262AWV18YcPjBTd2Hox4YWoP8vRTU
 # Corresponding public key: PUB_K1_6VTUaL8u2S8g6z2FawT7RuyjVdCYD8mGXGy5iVcRpRWy5umj7q
 
