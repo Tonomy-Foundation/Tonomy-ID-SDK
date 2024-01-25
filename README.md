@@ -66,6 +66,18 @@ Then run the tests
 
 `yarn run test:integration`
 
+### Governance tests
+
+Tests the governance of the system. Can only be run once before a blockchain reset is required.
+
+First run the blockchain or Tonomy Communication service locally.
+
+`yarn run test:setup`
+
+Then run the tests
+
+`yarn run test:governance`
+
 ### Run all tests in the VS Code debugger
 
 Make sure you install the Jest extension (recommended automatically when you open VS Code)
@@ -77,6 +89,16 @@ Then go to any test e.g. `test/app.test.ts` and you can click ▶️ or right cl
 ## Command line interface
 
 `yarn run cli`
+
+### Bootstrapping
+
+`yarn run cli bootstrap`
+
+Environment variables are required to bootstrap the network. These values are provided by default in test and develpment environments but must be provided externally for non-dev environments:
+
+- `TONOMY_OPS_PRIVATE_KEY`: the private key of the operations account that will be used for the tonomy@active account.
+- `TONOMY_BOARD_PUBLIC_KEYS`: the public keys (in JSON array format) of the network governance multi-signature account that controls governance operations
+- `TONOMY_TEST_ACCOUNTS_PASSPHRASE`: the passphrase that will be used for the App store test user and demo app users
 
 ## Linting
 

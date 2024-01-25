@@ -4,7 +4,7 @@ import URL from 'jsdom-url';
 import { ExternalUser, LoginWithTonomyMessages } from '../../src/api/externalUser';
 import { LoginRequestPayload } from '../../src/sdk/util/request';
 import { objToBase64Url } from '../../src/sdk/util/base64';
-import { setTestSettings } from '../../test-integration/helpers/settings';
+import { setTestSettings } from '../helpers/settings';
 import { onRedirectLogin } from '../../src/sdk/helpers/urls';
 
 // @ts-expect-error - URL type on global does not match

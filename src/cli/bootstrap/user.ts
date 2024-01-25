@@ -1,5 +1,5 @@
 import { jsStorageFactory } from './jsstorage';
-import { generatePrivateKeyFromPassword, signer } from './keys';
+import { generatePrivateKeyFromPassword, getSigner } from './keys';
 import { TonomyContract, JsKeyManager, KeyManager, createUserObject } from '../../sdk';
 import { CreateAccountRequest, CreateAccountResponse } from '../../sdk/services/communication/accounts';
 import * as accounts from '../../sdk/services/communication/accounts';
@@ -23,7 +23,7 @@ export function mockCreateAccount() {
             data.usernameHash.toString(),
             data.publicKey.toString(),
             data.salt.toString(),
-            signer
+            getSigner()
         );
 
         const newAccountAction = res.processed.action_traces[0].inline_traces[0].act;

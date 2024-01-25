@@ -1,10 +1,9 @@
 /* eslint-disable camelcase */
 import { Checksum256, Name, PublicKey } from '@wharfkit/antelope';
 import { TonomyContract } from '../services/blockchain/contracts/TonomyContract';
-import { createSigner } from '../services/blockchain/eosio/transaction';
+import { Signer } from '../services/blockchain/eosio/transaction';
 import { getSettings } from '../util/settings';
 import { AccountType, TonomyUsername } from '../util/username';
-import { defaultAntelopePrivateKey } from '../services/blockchain';
 import { AppStatusEnum } from '../types/AppStatusEnum';
 
 const tonomyContract = TonomyContract.Instance;
@@ -29,6 +28,7 @@ export type AppCreateOptions = {
     logoUrl: string;
     origin: string;
     publicKey: PublicKey;
+    signer: Signer;
 };
 
 export class App implements AppData {
@@ -68,9 +68,6 @@ export class App implements AppData {
             getSettings().accountSuffix
         );
 
-        // TODO remove this
-        const privateKey = defaultAntelopePrivateKey;
-
         const res = await tonomyContract.newapp(
             options.appName,
             options.description,
@@ -78,7 +75,7 @@ export class App implements AppData {
             options.logoUrl,
             options.origin,
             options.publicKey,
-            createSigner(privateKey)
+            options.signer
         );
 
         const newAccountAction = res.processed.action_traces[0].inline_traces[0].act;

@@ -1,4 +1,4 @@
-import { setTestSettings } from '../../test-integration/helpers/settings';
+import { setTestSettings } from '../helpers/settings';
 import { generateAutoSuggestions, isKeyword, generateRandomKeywords } from '../../src/sdk/util';
 
 setTestSettings();
