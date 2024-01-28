@@ -259,6 +259,15 @@ async function createTonomyApps(newPublicKey: PublicKey): Promise<void> {
         logoUrl: settings.config.ssoWebsiteOrigin + '/tonomy-logo1024.png',
         publicKey: newPublicKey,
     });
+
+    await createApp({
+        appName: 'Developers Console',
+        usernamePrefix: 'developer-console',
+        description: 'Tonomy website to manager your ID and Data',
+        origin: settings.config.consoleWebsiteOrigin,
+        logoUrl: settings.config.consoleWebsiteOrigin + '/tonomy-logo1024.png',
+        publicKey: newPublicKey,
+    });
 }
 
 async function updateAccountControllers(newPublicKey: PublicKey) {
