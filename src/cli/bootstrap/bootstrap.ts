@@ -286,6 +286,16 @@ async function createTonomyApps(newPublicKey: PublicKey, newSigner: Signer): Pro
         publicKey: newPublicKey,
         signer,
     });
+
+    await createApp({
+        appName: `${settings.config.ecosystemName} Website`,
+        usernamePrefix: 'tonomy-console',
+        description: `${settings.config.ecosystemName} website to manager your ID and Data`,
+        origin: settings.config.consoleWebsiteOrigin,
+        logoUrl: settings.config.consoleWebsiteOrigin + '/tonomy-logo1024.png',
+        publicKey: newPublicKey,
+        signer,
+    });
 }
 
 async function updateAccountControllers(govKeys: string[], newPublicKey: PublicKey, newSigner: Signer) {
