@@ -2,8 +2,8 @@
 
 The CLI is used
 
-- by integration applications to create keys and manage Applications for the single sign-on (SSO) flow
-- by the Tonomy ID Integration repository to bootstrap the blockchain state
+* by integration applications to create keys and manage Applications for the single sign-on (SSO) flow
+* by the Pangea Passport Integration repository to bootstrap the blockchain state
 
 ```bash
 Usage:

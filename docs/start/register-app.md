@@ -1,16 +1,16 @@
 # Register your application
 
-You need to register your application details so that they can be displayed to the user when they sign into your application. You can currently do this with the Tonomy CLI. In the future you shall be able to do this through the Tonomy Developer Console.
+You need to register your application details so that they can be displayed to the user when they sign into your application. You can currently do this with the Pangea CLI. In the future you shall be able to do this through the Pangea Developer Console.
 
 ## Step 1. Creating a key
 
-A private key is used to manage a Tonomy App. Save this key in a safe place.
+A private key is used to manage a Pangea App. Save this key in a safe place.
 
 ```bash
 yarn run cli keys create
 ```
 
-## Step 2: (Optional) Configure for a custom Tonomy network
+## Step 2: (Optional) Configure for a custom Pangea network
 
 If you are using the Demo network, skip this step.
 
@@ -25,7 +25,7 @@ Modify the `demoConfig` variable in `src/cli/bootstrap/settings.ts` to point to 
 
 Run `yarn run build:cli`
 
-## Step 3. Register a new Tonomy App
+## Step 3. Register a new Pangea App
 
 ```bash
 export NODE_ENV=demo

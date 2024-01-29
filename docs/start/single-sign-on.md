@@ -1,7 +1,7 @@
 # Single Sign-On
 
 1. Configuration - Set the network
-2. `/login` page - add login button and send to Tonomy ID
+2. `/login` page - add login button and send to Pangea Passport
 3. `/callback` page - receive callback
 4. `/` home page - check for logged in users
 
@@ -22,7 +22,7 @@ api.setSettings({
 
 ## 2. Login page
 
-On your login page add the "Login with Tonomy ID" button and set it to call the `ExternalUser.loginWithTonomy` function when pressed. Set your `/callback` page path as shown below. This is where your  the user will be redirect to in your application, after they complete the login process.
+On your login page add the "Login with Pangea Passport" button and set it to call the `ExternalUser.loginWithTonomy` function when pressed. Set your `/callback` page path as shown below. This is where your the user will be redirect to in your application, after they complete the login process.
 
 ```typescript
 async function onButtonPress() {
@@ -31,7 +31,7 @@ async function onButtonPress() {
 ```
 
 ```html
-<button className="tonomy-login-button" onClick={onButtonPress}>Login with Tonomy ID</button>
+<button className="tonomy-login-button" onClick={onButtonPress}>Login with Pangea Passport</button>
 ```
 
 ### Request data sharing
