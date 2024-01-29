@@ -6,7 +6,7 @@ Pangea API lets you connect your apps to Pangea Passport in the following ways:
 
 * Desktop web: Displays a QR code for users to scan with the Pangea Passport mobile app.
 * Mobile browser: Pangea API generates a dynamic deep link that takes users straight to your app in the Pangea Passport mobile app.
-* Mobile native: Tonomy API generates a dynamic deep link that takes users straight to your app in the Pangea Passport mobile app. (only React Native mobile apps are supported through the javascript SDK)
+* Mobile native: Pangea API generates a dynamic deep link that takes users straight to your app in the Pangea Passport mobile app. (only React Native mobile apps are supported through the javascript SDK)
 
 ## Pangea Passport
 

@@ -1,6 +1,6 @@
 # Features
 
-Pangea Passport supports the following developer features. Take advantage of these features in your applications by integrating with the Tonomy SDK.
+Pangea Passport supports the following developer features. Take advantage of these features in your applications by integrating with the Pangea SDK.
 
 Read the White Paper for more details: [Pangea Passport - White Paper](https://www.canva.com/design/DAFnktNOWKU/Ps1zXw3XICaEMiB0R4Ghkg/view)
 

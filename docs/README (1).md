@@ -2,7 +2,7 @@
 
 Open-source applications that illustrate how to use Pangea Passport.
 
-## Tonomy Demo integration application
+## Pangea Demo integration application
 
 A web app that shows how to integrate with Pangea Passport.
 

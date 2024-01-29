@@ -62,7 +62,7 @@ TODO
 
 ### Sign a blockchain transaction
 
-**Step 1.** Modify your [Antelope smart contract](../../guides/deploy/#antelope) to accept signatures from users signed into your registered app (see [Register your app](/cli/#register-a-tonomy-app)). If you have deployed the smart contract to the same account as your App, then you can get the permission name with `get_self()`. If not, then you can use one of the tonomy helper functions to lookup the permission name with the origin or username.
+**Step 1.** Modify your [Antelope smart contract](../../guides/deploy/#antelope) to accept signatures from users signed into your registered app (see [Register your app](../../cli/#register-a-tonomy-app)). If you have deployed the smart contract to the same account as your App, then you can get the permission name with `get_self()`. If not, then you can use one of the Pangea helper functions to lookup the permission name with the origin or username.
 
 `eosio.token.cpp`
 

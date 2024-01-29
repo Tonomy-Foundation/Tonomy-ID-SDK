@@ -9,7 +9,7 @@ Examples below are for a Reactjs website.
 
 ## 1. Configuration - Set the network
 
-Configure to use a specific network (in this case, the Tonomy demo network). Run this at the javascript root of your app (e.g. App.tsx in Reactjs) so they are set before used
+Configure to use a specific network (in this case, the Pangea demo network). Run this at the javascript root of your app (e.g. App.tsx in Reactjs) so they are set before used
 
 ```typescript
 import { api } from '@tonomy/tonomy-id-sdk';
@@ -22,7 +22,7 @@ api.setSettings({
 
 ## 2. Login page
 
-On your login page add the "Login with Pangea Passport" button and set it to call the `ExternalUser.loginWithTonomy` function when pressed. Set your `/callback` page path as shown below. This is where your the user will be redirect to in your application, after they complete the login process.
+On your login page add the "Login with Pangea Passport" button and set it to call the `ExternalUser.loginWithPangea` function when pressed. Set your `/callback` page path as shown below. This is where your the user will be redirect to in your application, after they complete the login process.
 
 ```typescript
 async function onButtonPress() {
@@ -36,7 +36,7 @@ async function onButtonPress() {
 
 ### Request data sharing
 
-During the login process, you can additionally request information from the user account by adding a `dataRequest` object when calling the `loginWithTonomy` function.
+During the login process, you can additionally request information from the user account by adding a `dataRequest` object when calling the `loginWithPangea` function.
 
 ```typescript
 await api.ExternalUser.loginWithTonomy({ callbackPath: '/callback', dataRequest: { username: true } });
@@ -44,9 +44,9 @@ await api.ExternalUser.loginWithTonomy({ callbackPath: '/callback', dataRequest:
 
 Currently, only the `username` is able to be requested. We are working on supporting more data sharing options soon including basic personal information (name, date of birth, etc...) and sharing of data between applications.
 
-### Styling the Tonomy login button
+### Styling the Pangea login button
 
-To use the Tonomy login button styles, import the stylesheet and use the class `tonomy-login-button` on your button.
+To use the Pangea login button styles, import the stylesheet and use the class `tonomy-login-button` on your button.
 
 ```typescript
 import "@tonomy/tonomy-id-sdk/build/api/tonomy.css";

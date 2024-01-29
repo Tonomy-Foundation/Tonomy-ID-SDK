@@ -1,6 +1,6 @@
 # Welcome
 
-Welcome to the Tonomy developer documentation. Pangea Passport is a self-sovereign identity and single-sign on system with the ability to use end-to-end cryptography in user devices.
+Welcome to the Pangea developer documentation. Pangea Passport is a self-sovereign identity and single-sign on system with the ability to use end-to-end cryptography in user devices.
 
 Read the White Paper to understand Pangea Passport features and how it works:
 

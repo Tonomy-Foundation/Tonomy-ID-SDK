@@ -1,6 +1,6 @@
 # Start
 
-The Tonomy API allow existing applications to login and interact with Tonomy identities. This is through a familiar [Single Sign-On](https://en.wikipedia.org/wiki/Single\_sign-on) (SSO) flow like with oAuth 2.0 or OpenIdConnect.
+The Pangea API allow existing applications to login and interact with Pangea identities. This is through a familiar [Single Sign-On](https://en.wikipedia.org/wiki/Single\_sign-on) (SSO) flow like with oAuth 2.0 or OpenIdConnect.
 
 **Integration is expected to take 10-30 minutes**
 

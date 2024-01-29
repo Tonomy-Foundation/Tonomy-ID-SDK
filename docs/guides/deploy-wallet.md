@@ -1,6 +1,6 @@
-# Deploy a web wallet with the Tonomy SDK
+# Deploy a web wallet with the SDK
 
-The Tonomy SDK powers Pangea Passport to manage users keys. You can use it to create your own wallet (web or mobile) with a fully customized UI to suite your needs.
+The Pangea SDK powers Pangea Passport to manage users keys. You can use it to create your own wallet (web or mobile) with a fully customized UI to suite your needs.
 
 We suggest one of the following strategies:
 
@@ -10,9 +10,9 @@ Run [Pangea Passport](https://github.com/Tonomy-Foundation/Tonomy-ID) and instea
 
 Please [contact us](https://tonomy.io/contact) for assistance in deploying your bespoke solution.
 
-## 2. Install the Tonomy SDK in your project
+## 2. Install the Pangea SDK in your project
 
-Install the [Tonomy SDK](https://github.com/Tonomy-Foundation/Tonomy-ID-SDK) in your project and manage identities directly.
+Install the [Pangea SDK](https://github.com/Tonomy-Foundation/Tonomy-ID-SDK) in your project and manage identities directly.
 
 How to use the SDK as a web wallet:
 
