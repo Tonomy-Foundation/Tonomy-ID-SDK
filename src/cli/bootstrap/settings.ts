@@ -40,7 +40,6 @@ const stagingConfig = {
     demoWebsiteOrigin: `https://demo.staging.tonomy.foundation`,
     consoleWebsiteOrigin: `https://console.developers.staging.tonomy.foundation`,
     blockchainUrl: `https://blockchain-api-staging.tonomy.foundation`,
-    consoleWebsiteOrigin: `https://console.developers.staging.tonomy.foundation`,
     accountSuffix: '.stag.tonomy.id',
     communicationUrl: 'wss://communication.staging.tonomy.foundation',
     accountsServiceUrl: 'http://communication.staging.tonomy.foundation',
