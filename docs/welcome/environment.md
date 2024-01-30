@@ -12,4 +12,4 @@ Pangea API lets you connect your apps to Pangea Passport in the following ways:
 
 Pangea Passport is available on Android and iOS as native applications. It can be deployed as a white label product.
 
-Support for browser extensions or web wallets can be done directly by using the Pangea SDK (see [Deploy a web wallet with the SDK](../../guides/deploy-wallet/) for more details).
+Support for browser extensions or web wallets can be done directly by using the Pangea SDK (see [Deploy a web wallet with the SDK](../guides/deploy-wallet.md) for more details).

@@ -51,7 +51,7 @@ Then you will need to deploy each service, with configuration so that they conne
 5. Issue a specific amount of the newly created currency to the 'eosio.token' account using the `issue()` function
 6. Create the `id.tmy` account on the blockchain
 7. Deploy the [id.tmy](https://github.com/Tonomy-Foundation/Tonomy-Contracts/tree/master/contracts/id.tmy) contract to the `id.tmy` account on the blockchain
-8. [Register your applications](../../start/register-app/) that you wish to connect to Pangea Passport
+8. [Register your applications](../start/register-app.md) that you wish to connect to Pangea Passport
 9. Configure the software with the `config.json` file in the repository so that they are connected correctly using your domains, and to white-label the applications:
    * Copy the following files and use environment variables to change which configuration file is used
    * [Pangea Passport config.json](https://github.com/Tonomy-Foundation/Tonomy-ID/blob/master/src/config/config.json)
@@ -66,11 +66,11 @@ Then you will need to deploy each service, with configuration so that they conne
 
 #### (Optional) Sign blockchain transactions in your apps
 
-If you want to have your applications sign blockchain transactions, see [Sign a blockchain transaction](../../start/usage/#sign-a-blockchain-transaction) for how to configure your smart contracts.
+If you want to have your applications sign blockchain transactions, see [Sign a blockchain transaction](../../start/usage/#sign-a-blockchain-transaction)[ ](../start/usage.md)for how to configure your smart contracts.
 
-#### (Optional) Run the [Demo website](../../examples/#tonomy-demo-integration-application)
+#### (Optional) Run the [Demo website](<../README (1).md>)
 
-To run the [Demo website](../../examples/#tonomy-demo-integration-application) in your network follow these extra steps:
+To run the [Demo website](../../examples/#tonomy-demo-integration-application)[ ](<../README (1).md>)in your network follow these extra steps:
 
 1. [Register the application](../../start/register-app/) using the domain you wish to run the Demo website from
 2. Deploy the [demo.tmy](https://github.com/Tonomy-Foundation/Tonomy-Contracts/tree/master/contracts/demo.tmy) contract to the `demo.tmy` account (or modify the Demo website to connect to a different account)
