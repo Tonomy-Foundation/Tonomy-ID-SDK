@@ -12,9 +12,9 @@ Additionally, to use the biometric MFA feature on Android, users will need a fin
 
 The Pangea Passport app works when it is supported by the following infrastructure:
 
-* [Pangea Communication](https://github.com/Tonomy-Foundation/Tonomy-Communication) service v1.0+
-* Pangea Accounts website from the [Pangea Apps Websites](https://github.com/Tonomy-Foundation/Tonomy-App-Websites) repository v1.0+
+* [Pangea Communication](https://github.com/Tonomy-Foundation/Tonomy-Communication/tree/testnet) service v1.0+
+* Pangea Accounts website from the [Pangea Apps Websites](https://github.com/Tonomy-Foundation/Tonomy-App-Websites/tree/testnet) repository v1.0+
 * An [Antelope blockchain](https://antelope.io/) network v3.0+
-* The `id.tmy` contract in the [Pangea Contracts](https://github.com/Tonomy-Foundation/Tonomy-Contracts) repository deployed to the blockchain v1.0+
+* The `id.tmy` contract in the [Pangea Contracts](https://github.com/Tonomy-Foundation/Tonomy-Contracts/tree/testnet) repository deployed to the blockchain v1.0+
 
 See [Deploy Pangea Passport](../guides/deploy.md) for how to run your own network. Or [contact us](https://tonomy.io/contact) to discuss how we can support your network.
