@@ -59,20 +59,6 @@ export async function getAccount(account: NameType): Promise<API.v1.AccountObjec
     }
 }
 
-export function getDefaultAntelopePrivateKey() {
-    if (isProduction()) {
-        throw new Error('Cannot use default private key in production');
-    }
-
-    // This is the default private key used by an Antelope node when it is first started
-    return PrivateKey.from('PVT_K1_2bfGi9rYsXQSXXTvJbDAPhHLQUojjaNLomdm3cEJ1XTzMqUt3V');
-    // PUB_K1_6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5BoDq63
-}
-
-export function getDefaultAntelopePublicKey() {
-    return getDefaultAntelopePrivateKey().toPublic();
-}
-
 export function getTonomyOperationsKey(): PrivateKey {
     if (isProduction() && !process.env.TONOMY_OPS_PRIVATE_KEY)
         throw new Error('TONOMY_OPS_PRIVATE_KEY must be set in production');

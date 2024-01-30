@@ -21,6 +21,7 @@ Usage:
     Commands:
         apps create appName usernamePrefix description logoUrl origin publicKey blockchainUrl
         keys create
+        keys convert publicKey
         bootstrap privateKey
 `);
     }

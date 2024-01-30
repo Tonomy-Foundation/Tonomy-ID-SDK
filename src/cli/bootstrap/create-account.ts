@@ -1,6 +1,6 @@
 import { Authority, EosioContract, App, AppCreateOptions } from '../../sdk/index';
 import { Signer } from '../../sdk/services/blockchain/eosio/transaction';
-import { getDefaultAntelopePublicKey } from '../../sdk/services/blockchain';
+import { getDefaultAntelopePublicKey } from './keys';
 
 const eosioContract = EosioContract.Instance;
 
