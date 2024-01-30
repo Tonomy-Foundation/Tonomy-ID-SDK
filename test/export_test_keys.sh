@@ -12,3 +12,6 @@ export TONOMY_BOARD_PUBLIC_KEYS='{"keys":["PUB_K1_81aU18Y3RdyFf2WY4Wy7g7fvG9M9d7
 # - PVT_K1_2KjVtHQaBXydUidyoEdjbLw44DZBaQbFdNB6GmQHPzoXQqsTyp
 
 export TONOMY_TEST_ACCOUNTS_PASSPHRASE='above day fever lemon piano sport'
+
+# Don't forget to delete last 8 lines from history with:
+# history -d 
