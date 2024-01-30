@@ -57,6 +57,17 @@ class Authority {
             weight: 1,
         });
     }
+
+    addAccount(permission: { actor: string; permission: string }) {
+        this.accounts.push({
+            permission,
+            weight: 1,
+        });
+    }
+
+    setThreshold(threshold: number) {
+        this.threshold = threshold;
+    }
 }
 
 export { Authority };

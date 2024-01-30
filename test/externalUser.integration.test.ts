@@ -47,7 +47,7 @@ import {
 } from './helpers/externalUser';
 import { createStorageFactory } from './helpers/storageFactory';
 import { objToBase64Url } from '../src/sdk/util/base64';
-import { createSigner, defaultAntelopePrivateKey } from '../src/sdk/services/blockchain';
+import { createSigner, getTonomyOperationsKey } from '../src/sdk/services/blockchain';
 import { setTestSettings, settings } from './helpers/settings';
 import deployContract from '../src/cli/bootstrap/deploy-contract';
 import { CURRENCY_SYMBOL } from '../src/cli/bootstrap/bootstrap';
@@ -62,7 +62,7 @@ setTestSettings(process.env.LOG === 'true');
 // @ts-expect-error - type error on global
 global.URL = URL;
 
-const signer = createSigner(defaultAntelopePrivateKey);
+const signer = createSigner(getTonomyOperationsKey());
 
 describe('Login to external website', () => {
     jest.setTimeout(30000);

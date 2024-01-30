@@ -19,13 +19,15 @@ export class TonomyEosioProxyContract {
      * @param account - Account where the contract will be deployed
      * @param wasmFileContents - wasmFile after reading with fs.readFileSync(path) or equivalent
      * @param abiFileContents - abiFile after reading with fs.readFileSync(path, `utf8`) or equivalent
+     * @param signer - Signer or Signer[] to sign the transaction
+     * @param extraAuthorization - Extra authorization to be added to the transaction
      */
     async deployContract(
         account: Name,
         wasmFileContent: any,
         abiFileContent: any,
-        signer: Signer,
-        extraAuthorization?: { actor: string; permission: string }
+        signer: Signer | Signer[],
+        options: { extraAuthorization?: { actor: string; permission: string } } = {}
     ): Promise<API.v1.PushTransactionResponse> {
         // 1. Prepare SETCODE
         // read the file and make a hex string out of it
@@ -54,7 +56,7 @@ export class TonomyEosioProxyContract {
             },
         };
 
-        if (extraAuthorization) setCodeAction.authorization.push(extraAuthorization);
+        if (options.extraAuthorization) setCodeAction.authorization.push(options.extraAuthorization);
         const setAbiAction = {
             account: CONTRACT_NAME,
             name: 'setabi',
@@ -70,7 +72,7 @@ export class TonomyEosioProxyContract {
             },
         };
 
-        if (extraAuthorization) setAbiAction.authorization.push(extraAuthorization);
+        if (options.extraAuthorization) setAbiAction.authorization.push(options.extraAuthorization);
         const actions = [setCodeAction, setAbiAction];
 
         return await transact(Name.from(CONTRACT_NAME), actions, signer);
@@ -81,7 +83,8 @@ export class TonomyEosioProxyContract {
         permission: string,
         parent: string,
         auth: Authority,
-        signer: Signer
+        signer: Signer,
+        options: { authParent?: boolean } = {}
     ): Promise<API.v1.PushTransactionResponse> {
         const action = {
             authorization: [
@@ -101,6 +104,7 @@ export class TonomyEosioProxyContract {
                 permission,
                 parent: permission === 'owner' ? '' : parent,
                 auth,
+                auth_parent: options.authParent ?? false,
             },
         };
 

@@ -1,6 +1,6 @@
 import { AccountType, TonomyUsername } from '../../src/sdk/util/username';
 import { getSettings } from '../../src/sdk/util/settings';
-import { setTestSettings } from '../../test-integration/helpers/settings';
+import { setTestSettings } from '../helpers/settings';
 
 setTestSettings();
 

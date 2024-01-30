@@ -60,7 +60,15 @@ function start {
 function bootstrap {
     # Run bootstrap script
     cd  "$SDK_DIR"
-    yarn run cli bootstrap PVT_K1_2bfGi9rYsXQSXXTvJbDAPhHLQUojjaNLomdm3cEJ1XTzMqUt3V
+
+    # For development environment use set keys, otherwise these should be set in the environment
+    export NODE_ENV="${NODE_ENV:-development}"
+    if [[ "${NODE_ENV}" == "development" ]]
+    then
+        echo "Using development environment: setting keys"
+        source ./test/export_test_keys.sh
+    fi
+    yarn run cli bootstrap
 }
 
 function stop {

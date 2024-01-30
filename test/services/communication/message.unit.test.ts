@@ -3,7 +3,7 @@ import { ES256KSigner, generateRandomKeyPair, createSigner } from '../../../src/
 import { IdentifyMessage } from '../../../src/sdk/services/communication/message';
 import { Issuer } from '@tonomy/did-jwt-vc';
 import { createJWK, toDid } from '../../../src/sdk/util/ssi/did-jwk';
-import { setTestSettings } from '../../../test-integration/helpers/settings';
+import { setTestSettings } from '../../helpers/settings';
 
 setTestSettings();
 

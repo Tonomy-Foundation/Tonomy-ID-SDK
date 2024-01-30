@@ -31,7 +31,7 @@ export class EosioContract {
         wasmFileContent: any,
         abiFileContent: any,
         signer: Signer,
-        extraAuthorization?: { actor: string; permission: string }
+        options: { extraAuthorization?: { actor: string; permission: string } } = {}
     ): Promise<API.v1.PushTransactionResponse> {
         // 1. Prepare SETCODE
         // read the file and make a hex string out of it
@@ -60,7 +60,7 @@ export class EosioContract {
             },
         };
 
-        if (extraAuthorization) setCodeAction.authorization.push(extraAuthorization);
+        if (options.extraAuthorization) setCodeAction.authorization.push(options.extraAuthorization);
         const setAbiAction = {
             account: CONTRACT_NAME,
             name: 'setabi',
@@ -76,7 +76,7 @@ export class EosioContract {
             },
         };
 
-        if (extraAuthorization) setAbiAction.authorization.push(extraAuthorization);
+        if (options.extraAuthorization) setAbiAction.authorization.push(options.extraAuthorization);
         const actions = [setCodeAction, setAbiAction];
 
         return await transact(Name.from(CONTRACT_NAME), actions, signer);
