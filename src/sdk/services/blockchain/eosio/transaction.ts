@@ -125,7 +125,7 @@ export class AntelopePushTransactionError extends Error {
 async function transact(
     contract: Name,
     actions: ActionData[],
-    signer: Signer
+    signer: Signer | Signer[]
 ): Promise<API.v1.PushTransactionResponse> {
     // Get the ABI
     const api = await getApi();
@@ -147,11 +147,12 @@ async function transact(
     });
 
     // Create signature
+    if (!Array.isArray(signer)) signer = [signer];
     const signDigest = transaction.signingDigest(info.chain_id);
-    const signature = await signer.sign(signDigest);
+    const signatures = await Promise.all(signer.map((s) => s.sign(signDigest)));
     const signedTransaction = SignedTransaction.from({
         ...transaction,
-        signatures: [signature],
+        signatures,
     });
 
     // Send to the node

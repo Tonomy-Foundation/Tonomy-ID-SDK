@@ -12,11 +12,10 @@ import {
     AccountType,
     getSettings,
 } from '../../sdk/index';
-import { signer, updateAccountKey, updateControlByAccount } from './keys';
+import { getSigner, updateAccountKey, updateControlByAccount } from './keys';
 import settings from './settings';
 import { Checksum256, PrivateKey, PublicKey } from '@wharfkit/antelope';
 import { Signer } from '../../sdk/services/blockchain';
-
 import { createUser, mockCreateAccount, restoreCreateAccountFromMock } from './user';
 
 if (process.env.LOG === 'true') {
@@ -46,25 +45,36 @@ function bytesToTokens(bytes: number): string {
     return ((bytes * (1 + fee)) / ramPrice).toFixed(4) + ` ${CURRENCY_SYMBOL}`;
 }
 
-export default async function bootstrap(args: string[]) {
-    if (!args[0]) throw new Error('Missing public key argument');
+const signer = getSigner();
 
+export default async function bootstrap() {
     try {
-        const newPrivateKey = PrivateKey.from(args[0]);
+        if (!process.env.TONOMY_OPS_PRIVATE_KEY) throw new Error('Missing TONOMY_OPS_PRIVATE_KEY');
+        if (
+            !process.env.TONOMY_BOARD_PUBLIC_KEYS ||
+            !Array.isArray(JSON.parse(process.env.TONOMY_BOARD_PUBLIC_KEYS).keys)
+        )
+            throw new Error('Missing TONOMY_BOARD_PUBLIC_KEYS');
+        if (!process.env.TONOMY_TEST_ACCOUNTS_PASSPHRASE) throw new Error('Missing TONOMY_TEST_ACCOUNTS_PASSPHRASE');
+
+        const newPrivateKey = PrivateKey.from(process.env.TONOMY_OPS_PRIVATE_KEY);
         const newPublicKey = newPrivateKey.toPublic();
         const newSigner = EosioUtil.createSigner(newPrivateKey);
+        const tonomyGovKeys: string[] = JSON.parse(process.env.TONOMY_BOARD_PUBLIC_KEYS).keys;
+        const passphrase = process.env.TONOMY_TEST_ACCOUNTS_PASSPHRASE;
 
-        await createAccounts();
+        await createAccounts(tonomyGovKeys);
         await setPrivilegedAccounts();
         await deployEosioMsig();
         await createNativeToken();
         await createTokenDistribution();
         await createTonomyContractAndSetResources();
-        await createUsers();
-        await createTonomyApps(newPublicKey);
-        await configureDemoToken();
-        await updateAccountControllers(newPublicKey);
+        await createUsers(passphrase);
+        await createTonomyApps(newPublicKey, newSigner);
+        await configureDemoToken(newSigner);
+        await updateAccountControllers(tonomyGovKeys, newPublicKey, newSigner);
         await deployEosioTonomy(newSigner);
+        await updateMsigControl(tonomyGovKeys, newSigner);
 
         console.log('Bootstrap complete');
     } catch (e: any) {
@@ -73,7 +83,7 @@ export default async function bootstrap(args: string[]) {
     }
 }
 
-async function createAccounts() {
+async function createAccounts(govKeys: string[]) {
     console.log('Create accounts');
     await createAntelopeAccount({ account: 'found.tmy' }, signer);
 
@@ -94,6 +104,21 @@ async function createAccounts() {
     await createAntelopeAccount({ account: 'demo.tmy' }, signer);
     await createAntelopeAccount({ account: 'eosio.msig' }, signer);
     await createAntelopeAccount({ account: 'eosio.token' }, signer);
+
+    console.log('Create accounts for msig control');
+
+    for (let i = 0; i < govKeys.length; i++) {
+        console.log('Create account', indexToAccountName(i));
+        await createAntelopeAccount({ account: indexToAccountName(i) }, signer);
+    }
+}
+
+// Account names can only create digits 1-5
+function indexToAccountName(index: number): string {
+    if (index > 23) throw new Error('Number too large for current algorithm');
+    const indexBase5 = (index + 1).toString(5);
+
+    return indexBase5 + '.found.tmy';
 }
 
 async function setPrivilegedAccounts() {
@@ -113,9 +138,9 @@ async function deployEosioMsig() {
     );
 }
 
-async function configureDemoToken() {
-    await demoTokenContract.create(`1000000000 ${CURRENCY_SYMBOL}`, signer);
-    await demoTokenContract.issue(`10000 ${CURRENCY_SYMBOL}`, signer);
+async function configureDemoToken(newSigner: Signer) {
+    await demoTokenContract.create(`1000000000 ${CURRENCY_SYMBOL}`, newSigner);
+    await demoTokenContract.issue(`10000 ${CURRENCY_SYMBOL}`, newSigner);
 }
 
 async function createNativeToken() {
@@ -127,7 +152,9 @@ async function createNativeToken() {
         },
         signer
     );
+    console.log('Create and issue native token');
     await tokenContract.create(`50000000000.0000 ${CURRENCY_SYMBOL}`, signer);
+    console.log('Issue native token');
     await tokenContract.issue('eosio.token', `50000000000.0000 ${CURRENCY_SYMBOL}`, signer);
 }
 
@@ -208,38 +235,37 @@ function createSubdomainOnOrigin(origin: string, subdomain: string): string {
     return url.protocol + '//' + subdomain + '.' + url.host;
 }
 
-async function createUsers() {
-    // The Apple app needs to have a test user for their review. That is this user.
-    let password = 'above day fever lemon piano sport';
-
+async function createUsers(passphrase: string) {
     mockCreateAccount();
-    await createUser('testuser', password);
+    // Google and Apple app store managers needs to have a test user for their review. That is this user.
+    await createUser('testuser', passphrase);
 
     // Create users for the demo website
-    password = 'mrOOR1WW0y#6ot7z%Wbj';
-    await createUser('lovesboost', password);
-    await createUser('sweetkristy', password);
-    await createUser('cheesecakeophobia', password);
-    await createUser('ultimateBeast', password);
-    await createUser('tomtom', password);
-    await createUser('readingpro', password);
-    await createUser('sohappy', password);
-    await createUser('reallychel', password);
-    await createUser('thedudeabides', password);
-    await createUser('4cryingoutloud', password);
+    await createUser('lovesboost', passphrase);
+    await createUser('sweetkristy', passphrase);
+    await createUser('cheesecakeophobia', passphrase);
+    await createUser('ultimateBeast', passphrase);
+    await createUser('tomtom', passphrase);
+    await createUser('readingpro', passphrase);
+    await createUser('sohappy', passphrase);
+    await createUser('reallychel', passphrase);
+    await createUser('thedudeabides', passphrase);
+    await createUser('4cryingoutloud', passphrase);
 
     restoreCreateAccountFromMock();
 }
 
-async function createTonomyApps(newPublicKey: PublicKey): Promise<void> {
+async function createTonomyApps(newPublicKey: PublicKey, newSigner: Signer): Promise<void> {
     console.log('Create Tonomy apps');
+
     const demo = await createApp({
-        appName: 'Tonomy Demo',
+        appName: `${settings.config.ecosystemName} Demo`,
         usernamePrefix: 'demo',
-        description: 'Demo of Tonomy ID login and features',
+        description: `Demo of ${settings.config.ecosystemName} login and features`,
         origin: settings.config.demoWebsiteOrigin,
         logoUrl: settings.config.demoWebsiteOrigin + '/market.com.png',
         publicKey: newPublicKey,
+        signer,
     });
 
     console.log('Deploy demo contract');
@@ -248,20 +274,21 @@ async function createTonomyApps(newPublicKey: PublicKey): Promise<void> {
             account: demo.accountName,
             contractDir: path.join(__dirname, '../../Tonomy-Contracts/contracts/demo.tmy'),
         },
-        signer
+        newSigner
     );
 
     await createApp({
-        appName: 'Tonomy Website',
+        appName: `${settings.config.ecosystemName} Website`,
         usernamePrefix: 'tonomy-sso',
-        description: 'Tonomy website to manager your ID and Data',
+        description: `${settings.config.ecosystemName} website to manager your ID and Data`,
         origin: settings.config.ssoWebsiteOrigin,
         logoUrl: settings.config.ssoWebsiteOrigin + '/tonomy-logo1024.png',
         publicKey: newPublicKey,
+        signer,
     });
 }
 
-async function updateAccountControllers(newPublicKey: PublicKey) {
+async function updateAccountControllers(govKeys: string[], newPublicKey: PublicKey, newSigner: Signer) {
     console.log('Change the key of the accounts to the new key', newPublicKey.toString());
     await updateAccountKey('found.tmy', newPublicKey);
 
@@ -277,14 +304,20 @@ async function updateAccountControllers(newPublicKey: PublicKey) {
     await updateControlByAccount('ecosystm.tmy', 'gov.tmy', signer);
     await updateControlByAccount('coinsale.tmy', 'gov.tmy', signer);
 
-    //accounts controlled by ops.tmy (contracts that are called by inline actions need eosio.code permission)
-    await updateControlByAccount('tonomy', 'ops.tmy', signer, true);
+    // accounts controlled by ops.tmy (contracts that are called by inline actions need eosio.code permission)
+    // tonomy account needs to keep operation account to sign transactions
+    await updateAccountKey('tonomy', newPublicKey, true);
+    await updateControlByAccount('tonomy', 'ops.tmy', newSigner, { addCodePermission: true, replaceActive: false });
     await updateControlByAccount('eosio.token', 'ops.tmy', signer);
     await updateControlByAccount('eosio.msig', 'ops.tmy', signer);
     await updateControlByAccount('demo.tmy', 'ops.tmy', signer);
 
     // Update the system contract
     await updateControlByAccount('eosio', 'tonomy', signer);
+
+    for (let i = 0; i < govKeys.length; i++) {
+        await updateAccountKey(indexToAccountName(i), govKeys[i]);
+    }
 }
 
 async function deployEosioTonomy(signer: Signer) {
@@ -302,4 +335,16 @@ async function deployEosioTonomy(signer: Signer) {
             },
         }
     );
+}
+
+async function updateMsigControl(govKeys: string[], signer: Signer) {
+    console.log('Update found.tmy msig control');
+
+    const govAccounts: string[] = [];
+
+    for (let i = 0; i < govKeys.length; i++) {
+        govAccounts.push(indexToAccountName(i));
+    }
+
+    await updateControlByAccount('found.tmy', govAccounts, signer, { useTonomyContract: true });
 }

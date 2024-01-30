@@ -9,7 +9,7 @@ import { Signer } from '../../sdk/services/blockchain/eosio/transaction';
 const eosioContract = EosioContract.Instance;
 const tonomyContract = TonomyEosioProxyContract.Instance;
 
-function getDeployableFilesFromDir(dir: string) {
+export function getDeployableFilesFromDir(dir: string) {
     const dirCont = fs.readdirSync(dir);
 
     const wasmFileName = dirCont.find((filePath) => filePath.match(/.*\.(wasm)$/gi));
@@ -37,5 +37,5 @@ export default async function deployContract(
     const contract = options?.throughTonomyProxy ? tonomyContract : eosioContract;
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await contract.deployContract(Name.from(account) as any, wasmFile, abiFile, signer, options?.extraAuthorization);
+    await contract.deployContract(Name.from(account) as any, wasmFile, abiFile, signer, options);
 }
