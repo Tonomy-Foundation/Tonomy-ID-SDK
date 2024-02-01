@@ -14,5 +14,5 @@ A web app that shows how to integrate with Pangea Passport.
 Pangea Passport mobile wallet (Android and iOS)
 
 * [Try me out here Android](https://play.google.com/store/apps/details?id=foundation.tonomy.projects.pangeatestnet)
-* [Try me out here iOS](https://testflight.apple.com/join/7Bdd9jdB)
+* [Try me out here iOS](https://testflight.apple.com/join/ou7KmYiE)
 * [Github code](https://github.com/Tonomy-Foundation/Tonomy-ID/tree/testnet)
