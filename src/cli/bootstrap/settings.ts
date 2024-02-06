@@ -9,6 +9,7 @@ type ConfigType = {
     blockchainUrl: string;
     ssoWebsiteOrigin: string;
     demoWebsiteOrigin: string;
+    consoleWebsiteOrigin: string;
     accountSuffix: string;
     communicationUrl: string;
     accountsServiceUrl: string;
@@ -23,6 +24,7 @@ const defaultConfig = {
     environment: 'development',
     ssoWebsiteOrigin: `http://${ipAddress}:3000`,
     demoWebsiteOrigin: `http://${ipAddress}:3001`,
+    consoleWebsiteOrigin: `http://${ipAddress}:3002`,
     blockchainUrl: `http://${ipAddress}:8888`,
     accountSuffix: '.stag.tonomy.id',
     communicationUrl: 'ws://localhost:5000',
@@ -36,6 +38,7 @@ const stagingConfig = {
     environment: 'staging',
     ssoWebsiteOrigin: `https://accounts.staging.tonomy.foundation`,
     demoWebsiteOrigin: `https://demo.staging.tonomy.foundation`,
+    consoleWebsiteOrigin: `https://console.developers.staging.tonomy.foundation`,
     blockchainUrl: `https://blockchain-api-staging.tonomy.foundation`,
     accountSuffix: '.stag.tonomy.id',
     communicationUrl: 'wss://communication.staging.tonomy.foundation',
@@ -49,6 +52,7 @@ const testnetConfig = {
     environment: 'demo',
     ssoWebsiteOrigin: `https://accounts.testnet.pangea.web4.world`,
     demoWebsiteOrigin: `https://demo.testnet.pangea.web4.world`,
+    consoleWebsiteOrigin: `https://console.developers.testnet.pangea.web4.world`,
     blockchainUrl: `https://blockchain-api-testnet.pangea.web4.world`,
     accountSuffix: '.testnet.pangea',
     communicationUrl: 'wss://communication.testnet.pangea.web4.world',
@@ -62,6 +66,7 @@ const productionConfig = {
     environment: 'production',
     ssoWebsiteOrigin: `https://accounts.pangea.web4.world`,
     demoWebsiteOrigin: `https://demo.pangea.web4.world`,
+    consoleWebsiteOrigin: `https://console.developers.pangea.web4.world`,
     blockchainUrl: `https://blockchain-api-production.pangea.web4.world`,
     accountSuffix: '.production.pangea',
     communicationUrl: 'wss://communication.pangea.web4.world',
