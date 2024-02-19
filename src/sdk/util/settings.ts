@@ -17,6 +17,7 @@ export type SettingsType = {
     accountsServiceUrl: string;
     tonomyIdSchema: string;
     loggerLevel: LoggerLevel;
+    currencySymbol: string;
 };
 
 let settings: SettingsType;

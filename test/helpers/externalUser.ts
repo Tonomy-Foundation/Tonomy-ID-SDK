@@ -293,7 +293,7 @@ export async function externalWebsiteSignTransaction(externalUser: ExternalUser,
 
     let trx = await externalUser.signTransaction(externalApp.accountName, 'selfissue', {
         to: from,
-        quantity: '10 SYS',
+        quantity: `10.000000 ${getSettings().currencySymbol}`,
         memo: 'test',
     });
 
@@ -307,7 +307,7 @@ export async function externalWebsiteSignTransaction(externalUser: ExternalUser,
     trx = await externalUser.signTransaction(externalApp.accountName, 'transfer', {
         from,
         to,
-        quantity: '1 SYS',
+        quantity: `1.000000 ${getSettings().currencySymbol}`,
         memo: 'test',
     });
 
@@ -321,7 +321,7 @@ export async function externalWebsiteSignTransaction(externalUser: ExternalUser,
     trx = await externalUser.signTransaction(externalApp.accountName, 'transfer', {
         from,
         to,
-        quantity: '2 SYS',
+        quantity: `2.000000 ${getSettings().currencySymbol}`,
         memo: 'test',
     });
 
