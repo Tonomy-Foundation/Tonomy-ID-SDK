@@ -4,7 +4,6 @@ import { Signer, transact } from '../eosio/transaction';
 import { getApi } from '../eosio/eosio';
 import { AccountType, TonomyUsername, getSettings } from '../../../util';
 import { TonomyContract } from './TonomyContract';
-import { CURRENCY_SYMBOL } from '../../../../cli/bootstrap/bootstrap';
 
 const tonomyContract = TonomyContract.Instance;
 
@@ -102,7 +101,7 @@ class DemoTokenContract {
     async getBalance(account: NameType): Promise<number> {
         const assets = await (
             await getApi()
-        ).v1.chain.get_currency_balance(await this.getContractName(), account, CURRENCY_SYMBOL);
+        ).v1.chain.get_currency_balance(await this.getContractName(), account, getSettings().currencySymbol);
 
         if (assets.length === 0) return 0;
 

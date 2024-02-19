@@ -32,9 +32,6 @@ const ramPrice = 173333.3333; // bytes/token
 const fee = 0.25 / 100; // 0.25%
 const ramAvailable = 8 * 1024 * 1024 * 1024; // 8 GB
 
-// TODO move to settings
-export const CURRENCY_SYMBOL = 'LEOS';
-
 /**
  * Converts bytes to tokens.
  *
@@ -42,7 +39,7 @@ export const CURRENCY_SYMBOL = 'LEOS';
  * @returns The converted value in tokens.
  */
 function bytesToTokens(bytes: number): string {
-    return ((bytes * (1 + fee)) / ramPrice).toFixed(4) + ` ${CURRENCY_SYMBOL}`;
+    return ((bytes * (1 + fee)) / ramPrice).toFixed(4) + ` ${getSettings().currencySymbol}`;
 }
 
 const signer = getSigner();
@@ -139,8 +136,8 @@ async function deployEosioMsig() {
 }
 
 async function configureDemoToken(newSigner: Signer) {
-    await demoTokenContract.create(`1000000000 ${CURRENCY_SYMBOL}`, newSigner);
-    await demoTokenContract.issue(`10000 ${CURRENCY_SYMBOL}`, newSigner);
+    await demoTokenContract.create(`1000000000 ${getSettings().currencySymbol}`, newSigner);
+    await demoTokenContract.issue(`10000 ${getSettings().currencySymbol}`, newSigner);
 }
 
 async function createNativeToken() {
@@ -153,9 +150,9 @@ async function createNativeToken() {
         signer
     );
     console.log('Create and issue native token');
-    await tokenContract.create(`50000000000.000000 ${CURRENCY_SYMBOL}`, signer);
+    await tokenContract.create(`50000000000.000000 ${getSettings().currencySymbol}`, signer);
     console.log('Issue native token');
-    await tokenContract.issue('eosio.token', `50000000000.000000 ${CURRENCY_SYMBOL}`, signer);
+    await tokenContract.issue('eosio.token', `50000000000.000000 ${getSettings().currencySymbol}`, signer);
 }
 
 async function createTokenDistribution() {
@@ -169,7 +166,12 @@ async function createTokenDistribution() {
     };
 
     for (const [account, amount] of Object.entries(allocations)) {
-        await tokenContract.transfer('eosio.token', account, amount.toString() + `.000000 ${CURRENCY_SYMBOL}`, signer);
+        await tokenContract.transfer(
+            'eosio.token',
+            account,
+            amount.toString() + `.000000 ${getSettings().currencySymbol}`,
+            signer
+        );
     }
 }
 

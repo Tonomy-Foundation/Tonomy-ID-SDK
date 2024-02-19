@@ -2,7 +2,7 @@
 import { API, Name, NameType } from '@wharfkit/antelope';
 import { Signer, transact } from '../eosio/transaction';
 import { getApi } from '../eosio/eosio';
-import { CURRENCY_SYMBOL } from '../../../../cli/bootstrap/bootstrap';
+import { getSettings } from '../../../util';
 
 const CONTRACT_NAME = 'eosio.token';
 
@@ -85,7 +85,9 @@ class EosioTokenContract {
     }
 
     async getBalance(account: NameType): Promise<number> {
-        const assets = await (await getApi()).v1.chain.get_currency_balance(CONTRACT_NAME, account, CURRENCY_SYMBOL);
+        const assets = await (
+            await getApi()
+        ).v1.chain.get_currency_balance(CONTRACT_NAME, account, getSettings().currencySymbol);
 
         if (assets.length === 0) return 0;
 

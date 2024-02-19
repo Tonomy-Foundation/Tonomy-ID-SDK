@@ -16,6 +16,7 @@ type ConfigType = {
     tonomyIdSchema: string;
     loggerLevel: LoggerLevel;
     ecosystemName: string;
+    currencySymbol: string;
 };
 
 const ipAddress = address.ip();
@@ -32,6 +33,7 @@ const defaultConfig = {
     tonomyIdSchema: 'tonomy-id-development://',
     loggerLevel: 'info' as LoggerLevel,
     ecosystemName: 'Tonomy - Development',
+    currencySymbol: 'LEOS',
 };
 
 const stagingConfig = {
@@ -46,6 +48,7 @@ const stagingConfig = {
     tonomyIdSchema: 'tonomy-id-staging://',
     loggerLevel: 'info' as LoggerLevel,
     ecosystemName: 'Tonomy - Staging',
+    currencySymbol: 'LEOS',
 };
 
 const testnetConfig = {
@@ -60,6 +63,7 @@ const testnetConfig = {
     tonomyIdSchema: 'pangea-testnet://',
     loggerLevel: 'info' as LoggerLevel,
     ecosystemName: 'Pangea Testnet',
+    currencySymbol: 'LEOS',
 };
 
 const productionConfig = {
@@ -74,6 +78,7 @@ const productionConfig = {
     tonomyIdSchema: 'pangea://',
     loggerLevel: 'info' as LoggerLevel,
     ecosystemName: 'Pangea',
+    currencySymbol: 'LEOS',
 };
 
 type SettingsType = {
