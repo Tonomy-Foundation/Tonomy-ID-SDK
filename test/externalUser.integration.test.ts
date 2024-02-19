@@ -111,11 +111,11 @@ describe('Login to external website', () => {
             }
         );
         await DemoTokenContract.atAccount(externalApp.accountName).create(
-            `1000000000 ${getSettings().currencySymbol}`,
+            `1000000000.000000 ${getSettings().currencySymbol}`,
             signer
         );
         await DemoTokenContract.atAccount(externalApp.accountName).issue(
-            `10000 ${getSettings().currencySymbol}`,
+            `10000.000000 ${getSettings().currencySymbol}`,
             signer
         );
 
