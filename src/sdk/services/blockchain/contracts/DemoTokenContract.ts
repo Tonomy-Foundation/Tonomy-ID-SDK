@@ -101,7 +101,7 @@ class DemoTokenContract {
     async getBalance(account: NameType): Promise<number> {
         const assets = await (
             await getApi()
-        ).v1.chain.get_currency_balance(await this.getContractName(), account, 'SYS');
+        ).v1.chain.get_currency_balance(await this.getContractName(), account, 'LEOS');
 
         if (assets.length === 0) return 0;
 

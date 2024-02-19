@@ -33,7 +33,7 @@ const fee = 0.25 / 100; // 0.25%
 const ramAvailable = 8 * 1024 * 1024 * 1024; // 8 GB
 
 // TODO move to settings
-export const CURRENCY_SYMBOL = 'SYS';
+export const CURRENCY_SYMBOL = 'LEOS';
 
 /**
  * Converts bytes to tokens.
@@ -153,9 +153,9 @@ async function createNativeToken() {
         signer
     );
     console.log('Create and issue native token');
-    await tokenContract.create(`50000000000.0000 ${CURRENCY_SYMBOL}`, signer);
+    await tokenContract.create(`50000000000.000000 ${CURRENCY_SYMBOL}`, signer);
     console.log('Issue native token');
-    await tokenContract.issue('eosio.token', `50000000000.0000 ${CURRENCY_SYMBOL}`, signer);
+    await tokenContract.issue('eosio.token', `50000000000.000000 ${CURRENCY_SYMBOL}`, signer);
 }
 
 async function createTokenDistribution() {
@@ -169,7 +169,7 @@ async function createTokenDistribution() {
     };
 
     for (const [account, amount] of Object.entries(allocations)) {
-        await tokenContract.transfer('eosio.token', account, amount.toString() + `.0000 ${CURRENCY_SYMBOL}`, signer);
+        await tokenContract.transfer('eosio.token', account, amount.toString() + `.000000 ${CURRENCY_SYMBOL}`, signer);
     }
 }
 

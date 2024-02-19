@@ -84,7 +84,7 @@ class EosioTokenContract {
     }
 
     async getBalance(account: NameType): Promise<number> {
-        const assets = await (await getApi()).v1.chain.get_currency_balance(CONTRACT_NAME, account, 'SYS');
+        const assets = await (await getApi()).v1.chain.get_currency_balance(CONTRACT_NAME, account, 'LEOS');
 
         if (assets.length === 0) return 0;
 
