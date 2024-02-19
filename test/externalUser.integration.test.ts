@@ -110,7 +110,6 @@ describe('Login to external website', () => {
                 },
             }
         );
-        console.log('getSettings', getSettings());
         await DemoTokenContract.atAccount(externalApp.accountName).create(
             `1000000000 ${getSettings().currencySymbol}`,
             signer
