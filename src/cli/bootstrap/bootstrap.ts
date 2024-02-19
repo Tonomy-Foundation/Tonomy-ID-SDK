@@ -39,7 +39,7 @@ const ramAvailable = 8 * 1024 * 1024 * 1024; // 8 GB
  * @returns The converted value in tokens.
  */
 function bytesToTokens(bytes: number): string {
-    return ((bytes * (1 + fee)) / ramPrice).toFixed(4) + ` ${getSettings().currencySymbol}`;
+    return ((bytes * (1 + fee)) / ramPrice).toFixed(6) + ` ${getSettings().currencySymbol}`;
 }
 
 const signer = getSigner();
