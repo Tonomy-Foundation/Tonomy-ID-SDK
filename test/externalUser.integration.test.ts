@@ -50,7 +50,6 @@ import { objToBase64Url } from '../src/sdk/util/base64';
 import { createSigner, getTonomyOperationsKey } from '../src/sdk/services/blockchain';
 import { setTestSettings, settings } from './helpers/settings';
 import deployContract from '../src/cli/bootstrap/deploy-contract';
-import { CURRENCY_SYMBOL } from '../src/cli/bootstrap/bootstrap';
 
 export type ExternalUserLoginTestOptions = {
     dataRequest: boolean;
@@ -111,9 +110,15 @@ describe('Login to external website', () => {
                 },
             }
         );
-
-        await DemoTokenContract.atAccount(externalApp.accountName).create(`1000000000 ${CURRENCY_SYMBOL}`, signer);
-        await DemoTokenContract.atAccount(externalApp.accountName).issue(`10000 ${CURRENCY_SYMBOL}`, signer);
+        console.log('getSettings', getSettings());
+        await DemoTokenContract.atAccount(externalApp.accountName).create(
+            `1000000000.000000 ${getSettings().currencySymbol}`,
+            signer
+        );
+        await DemoTokenContract.atAccount(externalApp.accountName).issue(
+            `10000.000000 ${getSettings().currencySymbol}`,
+            signer
+        );
 
         tonomyLoginApp = await createRandomApp();
 
