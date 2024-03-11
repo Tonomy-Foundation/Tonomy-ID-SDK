@@ -187,4 +187,63 @@ export class EosioContract {
 
         return await transact(Name.from(CONTRACT_NAME), [action], signer);
     }
+
+    async setParams(
+        params: BlockchainParams = defaultBlockchainParams,
+        signer: Signer
+    ): Promise<API.v1.PushTransactionResponse> {
+        const action = {
+            authorization: [
+                {
+                    actor: CONTRACT_NAME,
+                    permission: 'active',
+                },
+            ],
+            account: CONTRACT_NAME,
+            name: 'setparams',
+            data: params,
+        };
+
+        return await transact(Name.from(CONTRACT_NAME), [action], signer);
+    }
 }
+
+export type BlockchainParams = {
+    max_block_net_usage: number; // the maximum net usage in instructions for a block (uint64_t)
+    target_block_net_usage_pct: number; // The target percent (1% == 100, 100%= 10,000) of maximum net usage; exceeding this triggers congestion handling. (uint32_t)
+    max_transaction_net_usage: number; // The maximum objectively measured net usage that the chain will allow regardless of account limits. (uint32_t)
+    base_per_transaction_net_usage: number; // (uint32_t)
+    net_usage_leeway: number; // The amount of net usage leeway available whilst executing a transaction (still checks against new limits without leeway at the end of the transaction) (uint32_t)
+    context_free_discount_net_usage_num: number; // The numerator for the discount on net usage of context-free data. (uint32_t)
+    context_free_discount_net_usage_den: number; // The denominator for the discount on net usage of context-free data. (uint32_t)
+    max_block_cpu_usage: number; // The maximum billable cpu usage (in microseconds) for a block. (uint32_t)
+    target_block_cpu_usage_pct: number; // The target percent (1% == 100, 100%= 10,000) of maximum cpu usage; exceeding this triggers congestion handling. (uint32_t)
+    max_transaction_cpu_usage: number; // The maximum billable cpu usage (in microseconds) that the chain will allow regardless of account limits. (uint32_t)
+    min_transaction_cpu_usage: number; // The minimum billable cpu usage (in microseconds) that the chain requires. (uint32_t)
+    max_transaction_lifetime: number; // Maximum lifetime of a transacton. (uint32_t)
+    deferred_trx_expiration_window: number; // the number of seconds after the time a deferred transaction can first execute until it expires (uint32_t)
+    max_transaction_delay: number; // The maximum number of seconds that can be imposed as a delay requirement by authorization checks. (uint32_t)
+    max_inline_action_size: number; // Maximum size of inline action. (uint32_t)
+    max_inline_action_depth: number; // Maximum depth of inline action. (uint16_t)
+    max_authority_depth: number; // Maximum authority depth. (uint16_t)
+};
+
+export const defaultBlockchainParams = {
+    max_block_net_usage: 1024 * 1024,
+    target_block_net_usage_pct: 8000,
+    max_transaction_net_usage: 1024 * 512,
+    base_per_transaction_net_usage: 12,
+    net_usage_leeway: 500,
+    context_free_discount_net_usage_num: 20,
+    context_free_discount_net_usage_den: 100,
+    max_block_cpu_usage: 200000,
+    target_block_cpu_usage_pct: 8000,
+    max_transaction_cpu_usage: 50000,
+    min_transaction_cpu_usage: 100,
+    max_transaction_lifetime: 3600,
+    deferred_trx_expiration_window: 600,
+    max_transaction_delay: 3888000,
+    max_inline_action_size: 4096,
+    max_inline_action_depth: 4,
+    max_authority_depth: 6,
+};
