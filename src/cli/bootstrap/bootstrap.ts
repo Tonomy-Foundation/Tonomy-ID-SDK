@@ -15,7 +15,7 @@ import {
 import { getSigner, updateAccountKey, updateControlByAccount } from './keys';
 import settings from './settings';
 import { Checksum256, PrivateKey, PublicKey } from '@wharfkit/antelope';
-import { Signer } from '../../sdk/services/blockchain';
+import { Signer, defaultBlockchainParams } from '../../sdk/services/blockchain';
 import { createUser, mockCreateAccount, restoreCreateAccountFromMock } from './user';
 
 if (process.env.LOG === 'true') {
@@ -62,6 +62,7 @@ export default async function bootstrap() {
 
         await createAccounts(tonomyGovKeys);
         await setPrivilegedAccounts();
+        await setBlockchainParameters();
         await deployEosioMsig();
         await createNativeToken();
         await createTokenDistribution();
@@ -119,9 +120,14 @@ function indexToAccountName(index: number): string {
 }
 
 async function setPrivilegedAccounts() {
-    console.log('Set privledged accounts');
+    console.log('Set privileged accounts');
     await eosioContract.setPriv('tonomy', 1, signer);
     await eosioContract.setPriv('eosio.msig', 1, signer);
+}
+
+async function setBlockchainParameters() {
+    console.log('Set blockchain parameters');
+    await eosioContract.setParams(defaultBlockchainParams, signer);
 }
 
 async function deployEosioMsig() {

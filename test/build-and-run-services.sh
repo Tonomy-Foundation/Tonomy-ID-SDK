@@ -62,7 +62,7 @@ function bootstrap {
     cd  "$SDK_DIR"
 
     # For development environment use set keys, otherwise these should be set in the environment
-    export NODE_ENV="${NODE_ENV:-development}"
+    NODE_ENV="${NODE_ENV:-development}"
     if [[ "${NODE_ENV}" == "development" ]]
     then
         echo "Using development environment: setting keys"
