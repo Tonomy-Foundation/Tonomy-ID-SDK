@@ -11,6 +11,7 @@ import {
     TonomyUsername,
     AccountType,
     getSettings,
+    VestngContract,
 } from '../../sdk/index';
 import { getSigner, updateAccountKey, updateControlByAccount } from './keys';
 import settings from './settings';
@@ -28,6 +29,8 @@ const demoTokenContract = DemoTokenContract.Instance;
 const tokenContract = EosioTokenContract.Instance;
 const tonomyContract = TonomyContract.Instance;
 const eosioContract = EosioContract.Instance;
+const vestngContract = VestngContract.Instance;
+
 const ramPrice = 173333.3333; // bytes/token
 const fee = 0.25 / 100; // 0.25%
 const ramAvailable = 8 * 1024 * 1024 * 1024; // 8 GB
@@ -38,9 +41,9 @@ const ramAvailable = 8 * 1024 * 1024 * 1024; // 8 GB
  * @param bytes The number of bytes to convert.
  * @returns The converted value in tokens.
  */
-function bytesToTokens(bytes: number): string {
-    return ((bytes * (1 + fee)) / ramPrice).toFixed(6) + ` ${getSettings().currencySymbol}`;
-}
+// function bytesToTokens(bytes: number): string {
+//     return ((bytes * (1 + fee)) / ramPrice).toFixed(6) + ` ${getSettings().currencySymbol}`;
+// }
 
 const signer = getSigner();
 
@@ -64,6 +67,7 @@ export default async function bootstrap() {
         await setPrivilegedAccounts();
         await setBlockchainParameters();
         await deployEosioMsig();
+        await deployVesting();
         await createNativeToken();
         await createTokenDistribution();
         await createTonomyContractAndSetResources();
@@ -102,6 +106,7 @@ async function createAccounts(govKeys: string[]) {
     await createAntelopeAccount({ account: 'demo.tmy' }, signer);
     await createAntelopeAccount({ account: 'eosio.msig' }, signer);
     await createAntelopeAccount({ account: 'eosio.token' }, signer);
+    await createAntelopeAccount({ account: 'vestng.token' }, signer);
 
     console.log('Create accounts for msig control');
 
@@ -165,17 +170,20 @@ async function createTokenDistribution() {
     console.log('Create token distribution');
     const totalSupply = 50000000000.0;
     const allocations = {
-        'ecosystm.tmy': 0.3 * totalSupply,
-        'team.tmy': 0.15 * totalSupply,
-        'coinsale.tmy': 0.15 * totalSupply,
-        'ops.tmy': 0.4 * totalSupply,
+        'ecosystm.tmy': { id: 1, percentage: 0.3, amount: 0.3 * totalSupply },
+        'team.tmy': { id: 2, percentage: 0.15, amount: 0.15 * totalSupply },
+        'coinsale.tmy': { id: 3, percentage: 0.15, amount: 0.15 * totalSupply },
+        'ops.tmy': { id: 4, percentage: 0.4, amount: 0.4 * totalSupply },
     };
 
-    for (const [account, amount] of Object.entries(allocations)) {
-        await tokenContract.transfer(
+    await vestngContract.updatedate('2024-03-19T00:00:00', '2024-04-20T00:00:00', signer);
+
+    for (const [account, { id, amount }] of Object.entries(allocations)) {
+        await vestngContract.assignTokens(
             'eosio.token',
             account,
             amount.toString() + `.000000 ${getSettings().currencySymbol}`,
+            id,
             signer
         );
     }
@@ -226,9 +234,9 @@ async function createTonomyContractAndSetResources() {
 
     console.log('Allocate RAM to system accounts');
     // See calculation: https://docs.google.com/spreadsheets/d/17cd4wt3oDHp6p7hty9njKsuukTTn9BYJ5z3Ab0N6pMM/edit?pli=1#gid=0&range=D30
-    await tonomyContract.buyRam('ops.tmy', 'eosio', bytesToTokens(3750000), signer);
-    await tonomyContract.buyRam('ops.tmy', 'eosio.token', bytesToTokens(2400000), signer);
-    await tonomyContract.buyRam('ops.tmy', 'tonomy', bytesToTokens(4680000), signer);
+    // await tonomyContract.buyRam('ops.tmy', 'eosio', bytesToTokens(3750000), signer);
+    // await tonomyContract.buyRam('ops.tmy', 'eosio.token', bytesToTokens(2400000), signer);
+    // await tonomyContract.buyRam('ops.tmy', 'tonomy', bytesToTokens(4680000), signer);
 }
 
 function getAppUsernameHash(username: string): Checksum256 {
@@ -329,6 +337,7 @@ async function updateAccountControllers(govKeys: string[], newPublicKey: PublicK
     await updateControlByAccount('eosio.token', 'ops.tmy', signer);
     await updateControlByAccount('eosio.msig', 'ops.tmy', signer);
     await updateControlByAccount('demo.tmy', 'ops.tmy', signer);
+    await updateControlByAccount('vestng.token', 'ops.tmy', signer);
 
     // Update the system contract
     await updateControlByAccount('eosio', 'tonomy', signer);
@@ -352,6 +361,17 @@ async function deployEosioTonomy(signer: Signer) {
                 permission: 'active',
             },
         }
+    );
+}
+
+async function deployVesting() {
+    console.log('Deploy vestng.token contract');
+    await deployContract(
+        {
+            account: 'vestng.token',
+            contractDir: path.join(__dirname, '../../Tonomy-Contracts/contracts/vestng.token'),
+        },
+        signer
     );
 }
 
