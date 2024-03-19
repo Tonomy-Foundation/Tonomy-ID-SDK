@@ -17,10 +17,11 @@ import { jsStorageFactory } from '../../src/cli/bootstrap/jsstorage';
 import { generatePrivateKeyFromPassword } from '../../src/cli/bootstrap/keys';
 import { createUser } from '../../src/cli/bootstrap/user';
 import { DIDurl } from '../../src/sdk/util/ssi/types';
-import { defaultAntelopePublicKey } from '../../src/sdk/services/blockchain/eosio/eosio';
 import { generateRandomKeywords, getSettings } from '../../src/sdk/util';
 import { RequestsManager } from '../../src/sdk/helpers/requestsManager';
 import { ExternalUserLoginTestOptions } from '../externalUser.test';
+import { getTonomyOperationsKey } from '../../src/sdk/services/blockchain/eosio/eosio';
+import { createSigner } from '../../src/sdk/services/blockchain';
 
 export interface IUserPublic extends IUser {
     keyManager: KeyManager;
@@ -70,7 +71,8 @@ export async function createRandomApp(logoUrl?: string, origin?: string): Promis
         description: description,
         logoUrl,
         origin,
-        publicKey: defaultAntelopePublicKey,
+        publicKey: getTonomyOperationsKey().toPublic(),
+        signer: createSigner(getTonomyOperationsKey()),
     });
 }
 

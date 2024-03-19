@@ -8,6 +8,7 @@ export const settings: Partial<SettingsType> = {
     accountsServiceUrl: 'http://localhost:5000',
     tonomyIdSchema: 'tonomy-id-test://',
     loggerLevel: 'info',
+    currencySymbol: 'LEOS',
 };
 
 export function setTestSettings(debugLogger = false) {

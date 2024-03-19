@@ -6,6 +6,10 @@
       "prerelease": false
     },
     {
+      "name": "testnet",
+      "prerelease": "rc"
+    },
+    {
       "name": "development",
       "prerelease": "development"
     }

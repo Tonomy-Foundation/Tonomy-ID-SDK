@@ -49,6 +49,8 @@ interface AntelopePushTransactionErrorConstructor extends Error {
             }
         ];
     };
+    actions?: ActionData[];
+    contract?: Name;
 }
 
 function createSigner(privateKey: PrivateKey): Signer {
@@ -87,6 +89,8 @@ export class AntelopePushTransactionError extends Error {
             }
         ];
     };
+    actions?: ActionData[];
+    contract?: Name;
 
     constructor(err: AntelopePushTransactionErrorConstructor) {
         super('AntelopePushTransactionError');
@@ -94,6 +98,8 @@ export class AntelopePushTransactionError extends Error {
         this.code = err.code;
         this.message = err.message;
         this.error = err.error;
+        this.contract = err.contract;
+        this.actions = err.actions;
         this.stack = new Error().stack;
         // Ensure the name of this error is the same as the class name
         this.name = this.constructor.name;
@@ -119,7 +125,7 @@ export class AntelopePushTransactionError extends Error {
 async function transact(
     contract: Name,
     actions: ActionData[],
-    signer: Signer
+    signer: Signer | Signer[]
 ): Promise<API.v1.PushTransactionResponse> {
     // Get the ABI
     const api = await getApi();
@@ -141,11 +147,12 @@ async function transact(
     });
 
     // Create signature
+    if (!Array.isArray(signer)) signer = [signer];
     const signDigest = transaction.signingDigest(info.chain_id);
-    const signature = await signer.sign(signDigest);
+    const signatures = await Promise.all(signer.map((s) => s.sign(signDigest)));
     const signedTransaction = SignedTransaction.from({
         ...transaction,
-        signatures: [signature],
+        signatures,
     });
 
     // Send to the node
@@ -158,7 +165,7 @@ async function transact(
     } catch (e) {
         if (e.response?.headers) {
             if (e.response?.json) {
-                throw new AntelopePushTransactionError(e.response.json);
+                throw new AntelopePushTransactionError({ ...e.response.json, contract, actions });
             }
 
             throw new HttpError(e);

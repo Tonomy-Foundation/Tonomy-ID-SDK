@@ -1,13 +1,12 @@
 /* eslint-disable camelcase */
 import { Checksum256, Name, PublicKey } from '@wharfkit/antelope';
-import { IDContract } from '../services/blockchain/contracts/IDContract';
-import { createSigner } from '../services/blockchain/eosio/transaction';
+import { TonomyContract } from '../services/blockchain/contracts/TonomyContract';
+import { Signer } from '../services/blockchain/eosio/transaction';
 import { getSettings } from '../util/settings';
 import { AccountType, TonomyUsername } from '../util/username';
-import { defaultAntelopePrivateKey } from '../services/blockchain';
 import { AppStatusEnum } from '../types/AppStatusEnum';
 
-const idContract = IDContract.Instance;
+const tonomyContract = TonomyContract.Instance;
 
 export interface AppData {
     accountName: Name;
@@ -29,6 +28,7 @@ export type AppCreateOptions = {
     logoUrl: string;
     origin: string;
     publicKey: PublicKey;
+    signer: Signer;
 };
 
 export class App implements AppData {
@@ -68,17 +68,14 @@ export class App implements AppData {
             getSettings().accountSuffix
         );
 
-        // TODO remove this
-        const privateKey = defaultAntelopePrivateKey;
-
-        const res = await idContract.newapp(
+        const res = await tonomyContract.newapp(
             options.appName,
             options.description,
             username.usernameHash,
             options.logoUrl,
             options.origin,
             options.publicKey,
-            createSigner(privateKey)
+            options.signer
         );
 
         const newAccountAction = res.processed.action_traces[0].inline_traces[0].act;
@@ -93,7 +90,7 @@ export class App implements AppData {
     }
 
     static async getApp(origin: string): Promise<App> {
-        const contractAppData = await idContract.getApp(origin);
+        const contractAppData = await tonomyContract.getApp(origin);
 
         return new App({
             accountName: contractAppData.account_name,

@@ -11,11 +11,13 @@ export type SettingsType = {
     environment: string;
     blockchainUrl: string;
     ssoWebsiteOrigin: string;
+    consoleWebsiteOrigin: string;
     accountSuffix: string;
     communicationUrl: string;
     accountsServiceUrl: string;
     tonomyIdSchema: string;
     loggerLevel: LoggerLevel;
+    currencySymbol: string;
 };
 
 let settings: SettingsType;
@@ -52,5 +54,5 @@ export function isProduction(): boolean {
         throwError('Settings not yet initialized', SdkErrors.SettingsNotInitialized);
     }
 
-    return ['production', 'staging', 'demo'].includes(settings.environment);
+    return ['production', 'staging', 'testnet'].includes(settings.environment);
 }
