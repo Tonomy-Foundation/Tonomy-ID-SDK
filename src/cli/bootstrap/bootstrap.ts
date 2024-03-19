@@ -41,9 +41,9 @@ const ramAvailable = 8 * 1024 * 1024 * 1024; // 8 GB
  * @param bytes The number of bytes to convert.
  * @returns The converted value in tokens.
  */
-// function bytesToTokens(bytes: number): string {
-//     return ((bytes * (1 + fee)) / ramPrice).toFixed(6) + ` ${getSettings().currencySymbol}`;
-// }
+function bytesToTokens(bytes: number): string {
+    return ((bytes * (1 + fee)) / ramPrice).toFixed(6) + ` ${getSettings().currencySymbol}`;
+}
 
 const signer = getSigner();
 
@@ -234,9 +234,9 @@ async function createTonomyContractAndSetResources() {
 
     console.log('Allocate RAM to system accounts');
     // See calculation: https://docs.google.com/spreadsheets/d/17cd4wt3oDHp6p7hty9njKsuukTTn9BYJ5z3Ab0N6pMM/edit?pli=1#gid=0&range=D30
-    // await tonomyContract.buyRam('ops.tmy', 'eosio', bytesToTokens(3750000), signer);
-    // await tonomyContract.buyRam('ops.tmy', 'eosio.token', bytesToTokens(2400000), signer);
-    // await tonomyContract.buyRam('ops.tmy', 'tonomy', bytesToTokens(4680000), signer);
+    await tonomyContract.buyRam('ops.tmy', 'eosio', bytesToTokens(3750000), signer);
+    await tonomyContract.buyRam('ops.tmy', 'eosio.token', bytesToTokens(2400000), signer);
+    await tonomyContract.buyRam('ops.tmy', 'tonomy', bytesToTokens(4680000), signer);
 }
 
 function getAppUsernameHash(username: string): Checksum256 {
