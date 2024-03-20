@@ -169,18 +169,25 @@ async function createNativeToken() {
 async function createTokenDistribution() {
     console.log('Create token distribution');
     const totalSupply = 50000000000.0;
+    const coinsaleAmount = 0.15 * totalSupply;
+
+    await tokenContract.transfer(
+        'eosio.token',
+        'coinsale.tmy',
+        coinsaleAmount + `.000000 ${getSettings().currencySymbol}`,
+        signer
+    );
     const allocations = {
-        'ecosystm.tmy': { id: 1, percentage: 0.3, amount: 0.3 * totalSupply },
-        'team.tmy': { id: 2, percentage: 0.15, amount: 0.15 * totalSupply },
-        'coinsale.tmy': { id: 3, percentage: 0.15, amount: 0.15 * totalSupply },
-        'ops.tmy': { id: 4, percentage: 0.4, amount: 0.4 * totalSupply },
+        'ecosystm.tmy': { id: 1, percentage: 0.3, amount: 0.3 * coinsaleAmount },
+        'team.tmy': { id: 2, percentage: 0.15, amount: 0.15 * coinsaleAmount },
+        'ops.tmy': { id: 4, percentage: 0.4, amount: 0.4 * coinsaleAmount },
     };
 
     await vestngContract.updatedate('2024-03-19T00:00:00', '2024-04-20T00:00:00', signer);
 
     for (const [account, { id, amount }] of Object.entries(allocations)) {
         await vestngContract.assignTokens(
-            'eosio.token',
+            'coinsale.tmy',
             account,
             amount.toString() + `.000000 ${getSettings().currencySymbol}`,
             id,
@@ -328,7 +335,11 @@ async function updateAccountControllers(govKeys: string[], newPublicKey: PublicK
     // accounts controlled by gov.tmy
     await updateControlByAccount('ops.tmy', 'gov.tmy', signer);
     await updateControlByAccount('ecosystm.tmy', 'gov.tmy', signer);
-    await updateControlByAccount('coinsale.tmy', 'gov.tmy', signer);
+    await updateAccountKey('coinsale.tmy', newPublicKey, true);
+    await updateControlByAccount('coinsale.tmy', 'gov.tmy', newSigner, {
+        addCodePermission: false,
+        replaceActive: false,
+    });
 
     // accounts controlled by ops.tmy (contracts that are called by inline actions need eosio.code permission)
     // tonomy account needs to keep operation account to sign transactions
