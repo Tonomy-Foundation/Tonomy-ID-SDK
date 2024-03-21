@@ -60,7 +60,6 @@ export default async function bootstrap() {
         const newPrivateKey = PrivateKey.from(process.env.TONOMY_OPS_PRIVATE_KEY);
         const newPublicKey = newPrivateKey.toPublic();
 
-        console.log('newPublicKey', newPublicKey.toString());
         const newSigner = EosioUtil.createSigner(newPrivateKey);
         const tonomyGovKeys: string[] = JSON.parse(process.env.TONOMY_BOARD_PUBLIC_KEYS).keys;
         const passphrase = process.env.TONOMY_TEST_ACCOUNTS_PASSPHRASE;
@@ -334,16 +333,11 @@ async function updateAccountControllers(govKeys: string[], newPublicKey: PublicK
     await updateControlByAccount('prod1.tmy', 'found.tmy', signer);
     await updateControlByAccount('prod2.tmy', 'found.tmy', signer);
     await updateControlByAccount('prod3.tmy', 'found.tmy', signer);
+    await updateControlByAccount('coinsale.tmy', 'found.tmy', signer);
 
     // accounts controlled by gov.tmy
     await updateControlByAccount('ops.tmy', 'gov.tmy', signer);
     await updateControlByAccount('ecosystm.tmy', 'gov.tmy', signer);
-    await updateAccountKey('coinsale.tmy', newPublicKey, true);
-    await updateControlByAccount('coinsale.tmy', 'gov.tmy', newSigner, {
-        addCodePermission: false,
-        replaceActive: false,
-    });
-
     // accounts controlled by ops.tmy (contracts that are called by inline actions need eosio.code permission)
     // tonomy account needs to keep operation account to sign transactions
     await updateAccountKey('tonomy', newPublicKey, true);
@@ -351,7 +345,7 @@ async function updateAccountControllers(govKeys: string[], newPublicKey: PublicK
     await updateControlByAccount('eosio.token', 'ops.tmy', signer);
     await updateControlByAccount('eosio.msig', 'ops.tmy', signer);
     await updateControlByAccount('demo.tmy', 'ops.tmy', signer);
-    await updateControlByAccount('vestng.token', 'ops.tmy', signer);
+    // await updateControlByAccount('vestng.token', 'ops.tmy', signer);
 
     // Update the system contract
     await updateControlByAccount('eosio', 'tonomy', signer);

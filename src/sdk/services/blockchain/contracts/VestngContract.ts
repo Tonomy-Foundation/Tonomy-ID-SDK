@@ -3,7 +3,6 @@ import { API, Name } from '@wharfkit/antelope';
 import { Signer, transact } from '../eosio/transaction';
 
 const CONTRACT_NAME = 'vestng.token';
-const ACCOUNT_NAME = 'vestng.token';
 
 export class VestngContract {
     static singletonInstance: VestngContract;
@@ -29,7 +28,7 @@ export class VestngContract {
                     permission: 'active',
                 },
             ],
-            account: ACCOUNT_NAME,
+            account: CONTRACT_NAME,
             name: 'updatedate',
             data: {
                 sales_start_date: salesDateStr,
@@ -37,7 +36,6 @@ export class VestngContract {
             },
         };
 
-        console.log('action', action);
         return await transact(Name.from(CONTRACT_NAME), [action], signer);
     }
 
@@ -55,7 +53,7 @@ export class VestngContract {
                     permission: 'active',
                 },
             ],
-            account: ACCOUNT_NAME,
+            account: CONTRACT_NAME,
             name: 'assigntokens',
             data: {
                 sender,
@@ -68,15 +66,15 @@ export class VestngContract {
         return await transact(Name.from(CONTRACT_NAME), [action], signer);
     }
 
-    async withdraw(holder: Name, signer: Signer): Promise<API.v1.PushTransactionResponse> {
+    async withdraw(holder: string, signer: Signer): Promise<API.v1.PushTransactionResponse> {
         const action = {
             authorization: [
                 {
-                    actor: holder.toString(),
+                    actor: CONTRACT_NAME,
                     permission: 'active',
                 },
             ],
-            account: ACCOUNT_NAME,
+            account: CONTRACT_NAME,
             name: 'withdraw',
             data: {
                 holder,
