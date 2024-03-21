@@ -59,6 +59,8 @@ export default async function bootstrap() {
 
         const newPrivateKey = PrivateKey.from(process.env.TONOMY_OPS_PRIVATE_KEY);
         const newPublicKey = newPrivateKey.toPublic();
+
+        console.log('newPublicKey', newPublicKey.toString());
         const newSigner = EosioUtil.createSigner(newPrivateKey);
         const tonomyGovKeys: string[] = JSON.parse(process.env.TONOMY_BOARD_PUBLIC_KEYS).keys;
         const passphrase = process.env.TONOMY_TEST_ACCOUNTS_PASSPHRASE;
@@ -183,11 +185,12 @@ async function createTokenDistribution() {
         'ops.tmy': { id: 4, percentage: 0.4, amount: 0.4 * coinsaleAmount },
     };
 
+    console.log('signer', signer?.sign);
     await vestngContract.updatedate('2024-03-19T00:00:00', '2024-04-20T00:00:00', signer);
 
     for (const [account, { id, amount }] of Object.entries(allocations)) {
         await vestngContract.assignTokens(
-            'coinsale.tmy',
+            'eosio.token',
             account,
             amount.toString() + `.000000 ${getSettings().currencySymbol}`,
             id,
@@ -241,9 +244,9 @@ async function createTonomyContractAndSetResources() {
 
     console.log('Allocate RAM to system accounts');
     // See calculation: https://docs.google.com/spreadsheets/d/17cd4wt3oDHp6p7hty9njKsuukTTn9BYJ5z3Ab0N6pMM/edit?pli=1#gid=0&range=D30
-    await tonomyContract.buyRam('ops.tmy', 'eosio', bytesToTokens(3750000), signer);
-    await tonomyContract.buyRam('ops.tmy', 'eosio.token', bytesToTokens(2400000), signer);
-    await tonomyContract.buyRam('ops.tmy', 'tonomy', bytesToTokens(4680000), signer);
+    await tonomyContract.buyRam('coinsale.tmy', 'eosio', bytesToTokens(3750000), signer);
+    await tonomyContract.buyRam('coinsale.tmy', 'eosio.token', bytesToTokens(2400000), signer);
+    await tonomyContract.buyRam('coinsale.tmy', 'tonomy', bytesToTokens(4680000), signer);
 }
 
 function getAppUsernameHash(username: string): Checksum256 {

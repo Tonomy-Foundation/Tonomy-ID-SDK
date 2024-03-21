@@ -1,14 +1,14 @@
-import { PrivateKey } from '@wharfkit/antelope';
-import { VestngContract, EosioUtil } from '../../../../src/sdk/index';
+import { VestngContract } from '../../../../src/sdk/index';
 import { setTestSettings } from '../../../helpers/settings';
+import { createSigner, getTonomyOperationsKey } from '../../../../src/sdk/services/blockchain';
+import { getSigner } from '../../../../src/cli/bootstrap/keys';
 
 setTestSettings();
 
 const vestngContract = VestngContract.Instance;
 
 describe('VestngContract class', () => {
-    const newPrivateKey = PrivateKey.from('PVT_K1_21Rjns8rtfwrKZFmzAE4UbCYvQ7HCugXrundk9YxU34JJG2Dwn');
-    const newSigner = EosioUtil.createSigner(newPrivateKey);
+    const signer = createSigner(getTonomyOperationsKey());
 
     beforeEach(() => {
         jest.setTimeout(60000);
@@ -20,7 +20,7 @@ describe('VestngContract class', () => {
         const launchDate = '2024-04-20T00:00:00';
 
         try {
-            const trx = await vestngContract.updatedate(salesDate, launchDate, newSigner);
+            const trx = await vestngContract.updatedate(salesDate, launchDate, signer);
 
             console.log('trx', trx);
             expect(trx.processed.receipt.status).toBe('executed');

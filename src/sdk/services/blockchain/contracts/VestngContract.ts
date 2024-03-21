@@ -37,6 +37,7 @@ export class VestngContract {
             },
         };
 
+        console.log('action', action);
         return await transact(Name.from(CONTRACT_NAME), [action], signer);
     }
 
