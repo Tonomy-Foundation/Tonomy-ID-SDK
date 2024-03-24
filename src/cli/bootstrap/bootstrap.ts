@@ -184,7 +184,6 @@ async function createTokenDistribution() {
         'ops.tmy': { id: 4, percentage: 0.4, amount: 0.4 * coinsaleAmount },
     };
 
-    console.log('signer', signer?.sign);
     await vestngContract.updatedate('2024-03-19T00:00:00', '2024-04-20T00:00:00', signer);
 
     for (const [account, { id, amount }] of Object.entries(allocations)) {
