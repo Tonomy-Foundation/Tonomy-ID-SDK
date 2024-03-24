@@ -7,3 +7,4 @@ export * from './contracts/EosioTokenContract';
 export * from './eosio/authority';
 export * from './eosio/eosio';
 export * from './eosio/transaction';
+export * from './contracts/VestngContract';
