@@ -112,8 +112,8 @@ describe('VestngContract class', () => {
 
     test('assignTokens(): Unsuccessful assignment due to sales not started', async () => {
         expect.assertions(1);
-        const salesDate = new Date(Date.now() + 5000).toISOString();
-        const launchDate = new Date(Date.now() + 10000).toISOString();
+        const salesDate = new Date(Date.now() + 10000).toISOString();
+        const launchDate = new Date(Date.now() + 15000).toISOString();
 
         try {
             const { user } = await createRandomID();
