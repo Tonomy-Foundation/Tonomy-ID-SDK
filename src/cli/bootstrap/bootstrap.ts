@@ -169,21 +169,31 @@ async function createNativeToken() {
 async function createTokenDistribution() {
     console.log('Create token distribution');
     const totalSupply = 50000000000.0;
-    const allocations = {
-        'ecosystm.tmy': { id: 1, percentage: 0.3, amount: 0.3 * totalSupply },
-        'team.tmy': { id: 2, percentage: 0.15, amount: 0.15 * totalSupply },
-        'coinsale.tmy': { id: 3, percentage: 0.15, amount: 0.15 * totalSupply },
-        'ops.tmy': { id: 4, percentage: 0.4, amount: 0.4 * totalSupply },
-    };
+    const allocations: [string, number][] = [
+        ['coinsale.tmy', 0.025], // Seed Private Sale
+        ['coinsale.tmy', 0.055], // Strategic Partners Private Sale
+        ['coinsale.tmy', 0.07], // Public Sale
+        ['team.tmy', 0.02], // Team and Advisors
+        ['team.tmy', 0.03], // Legal and Compliance
+        ['team.tmy', 0.05], // Reserves
+        ['team.tmy', 0.05], // Partnerships
+        ['team.tmy', 0.05], // Liquidity Allocation
+        ['team.tmy', 0.01], // Community and Marketing
+        ['team.tmy', 0.05], // Platform Development
+        ['team.tmy', 0.01], // Infrastructure Rewards
+        ['team.tmy', 0.03], // Ecosystem
+    ];
 
     await vestngContract.updatedate('2024-03-19T00:00:00', '2024-04-20T00:00:00', signer);
 
-    for (const [account, { id, amount }] of Object.entries(allocations)) {
-        await vestngContract.assignTokens(
+    for (const allocation of allocations) {
+        const account = allocation[0];
+        const percentage = allocation[1];
+
+        await tokenContract.transfer(
             'eosio.token',
             account,
-            amount.toString() + `.000000 ${getSettings().currencySymbol}`,
-            id,
+            (percentage * totalSupply).toString() + `.000000 ${getSettings().currencySymbol}`,
             signer
         );
     }
