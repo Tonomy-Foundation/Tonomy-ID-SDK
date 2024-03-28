@@ -31,7 +31,7 @@ const tonomyContract = TonomyContract.Instance;
 const eosioContract = EosioContract.Instance;
 const vestngContract = VestngContract.Instance;
 
-const ramPrice = 173333.3333; // bytes/token
+const ramPrice = 2463054.19; // bytes/token
 const fee = 0.25 / 100; // 0.25%
 const ramAvailable = 8 * 1024 * 1024 * 1024; // 8 GB
 
@@ -92,12 +92,12 @@ const opsControlledAccounts = [
     'eosio.token',
     'eosio.msig',
     'demo.tmy',
-    'vestng.token',
+    'vesting.tmy',
     'legal.tmy',
     'reserves.tmy',
     'partners.tmy',
-    'liquidity.tmy',
-    'marketing.tmy',
+    'liquidty.tmy',
+    'marketng.tmy',
     'devs.tmy',
     'infra.tmy',
 ];
@@ -186,18 +186,16 @@ async function createTokenDistribution() {
         ['coinsale.tmy', 0.025], // Seed Private Sale
         ['coinsale.tmy', 0.055], // Strategic Partners Private Sale
         ['coinsale.tmy', 0.07], // Public Sale
-        ['team.tmy', 0.02], // Team and Advisors
-        ['legal.tmy', 0.03], // Legal and Compliance
-        ['reserves.tmy', 0.05], // Reserves
+        ['team.tmy', 0.15], // Team and Advisors
+        ['legal.tmy', 0.02], // Legal and Compliance
+        ['reserves.tmy', 0.03], // Reserves
         ['partners.tmy', 0.05], // Partnerships
-        ['liquidity.tmy', 0.05], // Liquidity Allocation
-        ['marketing.tmy', 0.01], // Community and Marketing
-        ['devs.tmy', 0.05], // Platform Development
-        ['infra.tmy', 0.01], // Infrastructure Rewards
-        ['ecosystm.tmy', 0.03], // Ecosystem
+        ['liquidty.tmy', 0.05], // Liquidity Allocation
+        ['marketng.tmy', 0.1], // Community and Marketing
+        ['ops.tmy', 0.05], // Platform Operations
+        ['infra.tmy', 0.1], // Infrastructure Rewards
+        ['ecosystm.tmy', 0.3], // Ecosystem
     ];
-
-    await vestngContract.updatedate('2024-03-19T00:00:00', '2024-04-20T00:00:00', signer);
 
     let totalPercentage = 0;
 
@@ -210,14 +208,16 @@ async function createTokenDistribution() {
         await tokenContract.transfer(
             'eosio.token',
             account,
-            (percentage * totalSupply).toString() + `.000000 ${getSettings().currencySymbol}`,
+            (percentage * totalSupply).toPrecision(1) + `.000000 ${getSettings().currencySymbol}`,
             signer
         );
     }
 
-    if (totalPercentage !== 1.0) {
-        throw new Error('Total percentage should be 100%');
+    if (totalPercentage.toPrecision(5) !== '1.0000') {
+        throw new Error('Total percentage should be 100% but it is ' + totalPercentage.toPrecision(5));
     }
+
+    await vestngContract.updatedate('2024-12-01T00:00:00', '2030-01-01T00:00:00', signer);
 }
 
 async function createTonomyContractAndSetResources() {
@@ -260,7 +260,7 @@ async function createTonomyContractAndSetResources() {
         signer
     );
     await tonomyContract.adminSetApp(
-        'vestng.tmy',
+        'vesting.tmy',
         'LEOS Vesting',
         'LEOS Vesting contract',
         getAppUsernameHash('vesting'),
@@ -272,12 +272,25 @@ async function createTonomyContractAndSetResources() {
     console.log('Set Tonomy system contract params and allocate RAM');
     await tonomyContract.setResourceParams(ramPrice, ramAvailable, fee, signer);
 
+    console.log('Allocate operational tokens to accounts');
+    await tokenContract.transfer('ops.tmy', 'tonomy', bytesToTokens(3750000), signer);
+
     console.log('Allocate RAM to system accounts');
     // See calculation: https://docs.google.com/spreadsheets/d/17cd4wt3oDHp6p7hty9njKsuukTTn9BYJ5z3Ab0N6pMM/edit?pli=1#gid=0&range=D30
-    await tonomyContract.buyRam('ops.tmy', 'eosio', bytesToTokens(3750000), signer);
-    await tonomyContract.buyRam('ops.tmy', 'eosio.token', bytesToTokens(2400000), signer);
-    await tonomyContract.buyRam('ops.tmy', 'tonomy', bytesToTokens(4680000), signer);
-    await tonomyContract.buyRam('vestng.tmy', 'tonomy', bytesToTokens(10 * 4680000), signer);
+    const ramAllocations: [string, number][] = [
+        ['eosio', 3750000],
+        ['eosio.token', 2400000],
+        ['tonomy', 4680000],
+        ['vesting.tmy', 4680000],
+    ];
+
+    for (const allocation of ramAllocations) {
+        const account = allocation[0];
+        const tokens = bytesToTokens(allocation[1]);
+
+        await tokenContract.transfer('ops.tmy', account, tokens, signer);
+        await tonomyContract.buyRam('ops.tmy', account, tokens, signer);
+    }
 }
 
 function getAppUsernameHash(username: string): Checksum256 {
@@ -404,11 +417,11 @@ async function deployEosioTonomy(signer: Signer) {
 }
 
 async function deployVesting() {
-    console.log('Deploy vestng.token contract');
+    console.log('Deploy vesting.tmy contract');
     await deployContract(
         {
-            account: 'vestng.token',
-            contractDir: path.join(__dirname, '../../Tonomy-Contracts/contracts/vestng.token'),
+            account: 'vesting.tmy',
+            contractDir: path.join(__dirname, '../../Tonomy-Contracts/contracts/vesting.tmy'),
         },
         signer
     );

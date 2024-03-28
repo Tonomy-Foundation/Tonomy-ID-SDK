@@ -2,8 +2,8 @@
 import { API, Name } from '@wharfkit/antelope';
 import { Signer, transact } from '../eosio/transaction';
 
-const CONTRACT_NAME = 'vestng.token';
-const ACCOUNT_NAME = 'vestng.token';
+const CONTRACT_NAME = 'vesting.tmy';
+const ACCOUNT_NAME = 'vesting.tmy';
 
 export class VestngContract {
     static singletonInstance: VestngContract;
