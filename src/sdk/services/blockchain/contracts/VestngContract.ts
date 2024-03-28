@@ -2,7 +2,7 @@
 import { API, Name } from '@wharfkit/antelope';
 import { Signer, transact } from '../eosio/transaction';
 
-const CONTRACT_NAME = 'vestng.token';
+const CONTRACT_NAME = 'vesting.tmy';
 
 export class VestngContract {
     static singletonInstance: VestngContract;
@@ -66,11 +66,11 @@ export class VestngContract {
         return await transact(Name.from(CONTRACT_NAME), [action], signer);
     }
 
-    async withdraw(holder: string, signer: Signer): Promise<API.v1.PushTransactionResponse> {
+    async withdraw(holder: Name, signer: Signer): Promise<API.v1.PushTransactionResponse> {
         const action = {
             authorization: [
                 {
-                    actor: CONTRACT_NAME,
+                    actor: holder.toString(),
                     permission: 'active',
                 },
             ],
