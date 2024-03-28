@@ -4,8 +4,8 @@ import { Signer, transact } from '../eosio/transaction';
 
 const CONTRACT_NAME = 'vesting.tmy';
 
-export class VestngContract {
-    static singletonInstance: VestngContract;
+export class VestingContract {
+    static singletonInstance: VestingContract;
     contractName = CONTRACT_NAME;
 
     public static get Instance() {

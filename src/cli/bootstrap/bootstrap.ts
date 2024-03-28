@@ -11,7 +11,7 @@ import {
     TonomyUsername,
     AccountType,
     getSettings,
-    VestngContract,
+    VestingContract,
 } from '../../sdk/index';
 import { getSigner, updateAccountKey, updateControlByAccount } from './keys';
 import settings from './settings';
@@ -29,7 +29,7 @@ const demoTokenContract = DemoTokenContract.Instance;
 const tokenContract = EosioTokenContract.Instance;
 const tonomyContract = TonomyContract.Instance;
 const eosioContract = EosioContract.Instance;
-const vestngContract = VestngContract.Instance;
+const VestingContract = VestingContract.Instance;
 
 const ramPrice = 173333.3333; // bytes/token
 const fee = 0.25 / 100; // 0.25%
@@ -219,7 +219,7 @@ async function createTokenDistribution() {
         throw new Error('Total percentage should be 100% but it is ' + totalPercentage.toPrecision(5));
     }
 
-    await vestngContract.updatedate('2024-12-01T00:00:00', '2030-01-01T00:00:00', signer);
+    await VestingContract.updatedate('2024-12-01T00:00:00', '2030-01-01T00:00:00', signer);
 }
 
 async function createTonomyContractAndSetResources() {
