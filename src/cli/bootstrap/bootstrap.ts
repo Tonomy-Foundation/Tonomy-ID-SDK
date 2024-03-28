@@ -85,28 +85,41 @@ export default async function bootstrap() {
     }
 }
 
+const foundControlledAccounts = ['gov.tmy', 'team.tmy', 'prod1.tmy', 'prod2.tmy', 'prod3.tmy'];
+const govControlledAccounts = ['ops.tmy', 'ecosystm.tmy', 'coinsale.tmy'];
+const opsControlledAccounts = [
+    'tonomy',
+    'eosio.token',
+    'eosio.msig',
+    'demo.tmy',
+    'vestng.token',
+    'legal.tmy',
+    'reserves.tmy',
+    'partners.tmy',
+    'liquidity.tmy',
+    'marketing.tmy',
+    'devs.tmy',
+    'infra.tmy',
+];
+
 async function createAccounts(govKeys: string[]) {
     console.log('Create accounts');
     await createAntelopeAccount({ account: 'found.tmy' }, signer);
 
     // found.tmy should control the following accounts
-    await createAntelopeAccount({ account: 'gov.tmy' }, signer);
-    await createAntelopeAccount({ account: 'team.tmy' }, signer);
-    await createAntelopeAccount({ account: 'prod1.tmy' }, signer);
-    await createAntelopeAccount({ account: 'prod2.tmy' }, signer);
-    await createAntelopeAccount({ account: 'prod3.tmy' }, signer);
+    for (const account of foundControlledAccounts) {
+        await createAntelopeAccount({ account }, signer);
+    }
 
     // gov.tmy should control the following accounts
-    await createAntelopeAccount({ account: 'ecosystm.tmy' }, signer);
-    await createAntelopeAccount({ account: 'coinsale.tmy' }, signer);
-    await createAntelopeAccount({ account: 'ops.tmy' }, signer);
+    for (const account of govControlledAccounts) {
+        await createAntelopeAccount({ account }, signer);
+    }
 
     // opts.tmy should control the following accounts
-    await createAntelopeAccount({ account: 'tonomy' }, signer);
-    await createAntelopeAccount({ account: 'demo.tmy' }, signer);
-    await createAntelopeAccount({ account: 'eosio.msig' }, signer);
-    await createAntelopeAccount({ account: 'eosio.token' }, signer);
-    await createAntelopeAccount({ account: 'vestng.token' }, signer);
+    for (const account of opsControlledAccounts) {
+        await createAntelopeAccount({ account }, signer);
+    }
 
     console.log('Create accounts for msig control');
 
@@ -147,8 +160,8 @@ async function deployEosioMsig() {
 }
 
 async function configureDemoToken(newSigner: Signer) {
-    await demoTokenContract.create(`1000000000 ${getSettings().currencySymbol}`, newSigner);
-    await demoTokenContract.issue(`10000 ${getSettings().currencySymbol}`, newSigner);
+    await demoTokenContract.create(`1000000000 DEMO`, newSigner);
+    await demoTokenContract.issue(`10000 DEMO`, newSigner);
 }
 
 async function createNativeToken() {
@@ -174,21 +187,25 @@ async function createTokenDistribution() {
         ['coinsale.tmy', 0.055], // Strategic Partners Private Sale
         ['coinsale.tmy', 0.07], // Public Sale
         ['team.tmy', 0.02], // Team and Advisors
-        ['team.tmy', 0.03], // Legal and Compliance
-        ['team.tmy', 0.05], // Reserves
-        ['team.tmy', 0.05], // Partnerships
-        ['team.tmy', 0.05], // Liquidity Allocation
-        ['team.tmy', 0.01], // Community and Marketing
-        ['team.tmy', 0.05], // Platform Development
-        ['team.tmy', 0.01], // Infrastructure Rewards
-        ['team.tmy', 0.03], // Ecosystem
+        ['legal.tmy', 0.03], // Legal and Compliance
+        ['reserves.tmy', 0.05], // Reserves
+        ['partners.tmy', 0.05], // Partnerships
+        ['liquidity.tmy', 0.05], // Liquidity Allocation
+        ['marketing.tmy', 0.01], // Community and Marketing
+        ['devs.tmy', 0.05], // Platform Development
+        ['infra.tmy', 0.01], // Infrastructure Rewards
+        ['ecosystm.tmy', 0.03], // Ecosystem
     ];
 
     await vestngContract.updatedate('2024-03-19T00:00:00', '2024-04-20T00:00:00', signer);
 
+    let totalPercentage = 0;
+
     for (const allocation of allocations) {
         const account = allocation[0];
         const percentage = allocation[1];
+
+        totalPercentage += percentage;
 
         await tokenContract.transfer(
             'eosio.token',
@@ -196,6 +213,10 @@ async function createTokenDistribution() {
             (percentage * totalSupply).toString() + `.000000 ${getSettings().currencySymbol}`,
             signer
         );
+    }
+
+    if (totalPercentage !== 1.0) {
+        throw new Error('Total percentage should be 100%');
     }
 }
 
@@ -238,6 +259,15 @@ async function createTonomyContractAndSetResources() {
         createSubdomainOnOrigin(getSettings().ssoWebsiteOrigin, 'tonomy'),
         signer
     );
+    await tonomyContract.adminSetApp(
+        'vestng.tmy',
+        'LEOS Vesting',
+        'LEOS Vesting contract',
+        getAppUsernameHash('vesting'),
+        createSubdomainOnOrigin(getSettings().ssoWebsiteOrigin, 'vesting') + '/tonomy-logo1024.png',
+        createSubdomainOnOrigin(getSettings().ssoWebsiteOrigin, 'vesting'),
+        signer
+    );
 
     console.log('Set Tonomy system contract params and allocate RAM');
     await tonomyContract.setResourceParams(ramPrice, ramAvailable, fee, signer);
@@ -247,6 +277,7 @@ async function createTonomyContractAndSetResources() {
     await tonomyContract.buyRam('ops.tmy', 'eosio', bytesToTokens(3750000), signer);
     await tonomyContract.buyRam('ops.tmy', 'eosio.token', bytesToTokens(2400000), signer);
     await tonomyContract.buyRam('ops.tmy', 'tonomy', bytesToTokens(4680000), signer);
+    await tonomyContract.buyRam('vestng.tmy', 'tonomy', bytesToTokens(10 * 4680000), signer);
 }
 
 function getAppUsernameHash(username: string): Checksum256 {
@@ -329,25 +360,23 @@ async function updateAccountControllers(govKeys: string[], newPublicKey: PublicK
     await updateAccountKey('found.tmy', newPublicKey);
 
     // accounts controlled by found.tmy
-    await updateControlByAccount('gov.tmy', 'found.tmy', signer);
-    await updateControlByAccount('team.tmy', 'found.tmy', signer);
-    await updateControlByAccount('prod1.tmy', 'found.tmy', signer);
-    await updateControlByAccount('prod2.tmy', 'found.tmy', signer);
-    await updateControlByAccount('prod3.tmy', 'found.tmy', signer);
+    for (const account of foundControlledAccounts) {
+        await updateControlByAccount(account, 'found.tmy', signer);
+    }
 
     // accounts controlled by gov.tmy
-    await updateControlByAccount('ops.tmy', 'gov.tmy', signer);
-    await updateControlByAccount('ecosystm.tmy', 'gov.tmy', signer);
-    await updateControlByAccount('coinsale.tmy', 'gov.tmy', signer);
+    for (const account of govControlledAccounts) {
+        await updateControlByAccount(account, 'gov.tmy', signer);
+    }
 
     // accounts controlled by ops.tmy (contracts that are called by inline actions need eosio.code permission)
     // tonomy account needs to keep operation account to sign transactions
     await updateAccountKey('tonomy', newPublicKey, true);
     await updateControlByAccount('tonomy', 'ops.tmy', newSigner, { addCodePermission: true, replaceActive: false });
-    await updateControlByAccount('eosio.token', 'ops.tmy', signer);
-    await updateControlByAccount('eosio.msig', 'ops.tmy', signer);
-    await updateControlByAccount('demo.tmy', 'ops.tmy', signer);
-    await updateControlByAccount('vestng.token', 'ops.tmy', signer);
+
+    for (const account of opsControlledAccounts.filter((account) => account !== 'tonomy')) {
+        await updateControlByAccount(account, 'ops.tmy', signer);
+    }
 
     // Update the system contract
     await updateControlByAccount('eosio', 'tonomy', signer);
