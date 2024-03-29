@@ -1,59 +1,40 @@
-import { VestngContract } from '../../../../src/sdk/index';
+import { VestingContract } from '../../../../src/sdk/index';
 import { setTestSettings } from '../../../helpers/settings';
-import { getSigner } from '../../../../src/cli/bootstrap/keys';
 import { createRandomID } from '../../../helpers/user';
 import { getAccountInfo } from '../../../../src/sdk/helpers/user';
+import { createSigner, getTonomyOperationsKey } from '../../../../src/sdk/services/blockchain';
 
 setTestSettings();
 
-const vestngContract = VestngContract.Instance;
+const vestingContract = VestingContract.Instance;
 
-describe('VestngContract class', () => {
-    const signer = getSigner();
+const signer = createSigner(getTonomyOperationsKey());
 
-    test('assignTokens(): UnSuccessful assignment if date not set', async () => {
-        try {
-            const salesDate = '';
-            const launchDate = '';
+describe('VestingContract class', () => {
+    jest.setTimeout(60000);
+    let now: string;
+    let nowPlus10s: string;
+    let accountName: string;
 
-            await vestngContract.updatedate(salesDate, launchDate, signer);
-            const { user } = await createRandomID();
-            const userAccountName = await user.storage.accountName;
-            const accountInfo = await getAccountInfo(userAccountName);
-            const accountName = accountInfo.account_name.toString();
+    beforeEach(async () => {
+        now = new Date().toISOString();
+        nowPlus10s = new Date(Date.now() + 5000).toISOString();
 
-            await vestngContract.assignTokens('coinsale.tmy', accountName, '100.000000 LEOS', 1, signer);
-        } catch (e) {
-            expect(e).toBeDefined();
-        }
+        await vestingContract.updatedate(now, nowPlus10s, signer);
+
+        const { user } = await createRandomID();
+        const userAccountName = await user.storage.accountName;
+        const accountInfo = await getAccountInfo(userAccountName);
+
+        accountName = accountInfo.account_name.toString();
+        console.log('accountName', accountName);
     });
 
-    test('withdraw(): UnSuccessful withdraw if date not set', async () => {
-        try {
-            const salesDate = new Date().toISOString();
-            const launchDate = '';
+    test('updatedate(): Successfully set start and launch date', async () => {
+        const settings = await vestingContract.getSettings();
 
-            await vestngContract.updatedate(salesDate, launchDate, signer);
-            const { user } = await createRandomID();
-            const userAccountName = await user.storage.accountName;
-            const accountInfo = await getAccountInfo(userAccountName);
-            const accountName = accountInfo.account_name.toString();
-
-            await vestngContract.assignTokens('coinsale.tmy', accountName, '100.000000 LEOS', 1, signer);
-            await vestngContract.withdraw(accountName, signer);
-        } catch (e) {
-            expect(e).toBeDefined();
-        }
-    });
-
-    test('updatedate(): Successfully set start date', async () => {
-        expect.assertions(1);
-        const salesDate = new Date().toISOString();
-        const launchDate = new Date(Date.now() + 5000).toISOString();
-
-        const trx = await vestngContract.updatedate(salesDate, launchDate, signer);
-
-        expect(trx.processed.receipt.status).toBe('executed');
+        expect(settings.sales_start_date).toBe(now.split('.')[0]);
+        expect(settings.launch_date).toBe(nowPlus10s.split('.')[0]);
     });
 
     test('updatedate(): Unsuccessful if  date not format incorrect', async () => {
@@ -61,35 +42,33 @@ describe('VestngContract class', () => {
         const launchDate = 'undefined';
 
         try {
-            await vestngContract.updatedate(salesDate, launchDate, signer);
+            await vestingContract.updatedate(salesDate, launchDate, signer);
         } catch (e) {
             expect(e.error.details[0].message).toContain('date parsing failed');
         }
-    }, 10000);
+    });
 
     test('assignTokens(): Successfully assign tokens to a holder', async () => {
-        expect.assertions(1);
+        expect.assertions(7);
 
-        const { user } = await createRandomID();
-        const userAccountName = await user.storage.accountName;
-        const accountInfo = await getAccountInfo(userAccountName);
-        const accountName = accountInfo.account_name.toString();
-
-        const trx = await vestngContract.assignTokens('coinsale.tmy', accountName, '100.000000 LEOS', 1, signer);
+        const trx = await vestingContract.assignTokens('coinsale.tmy', accountName, '1.000000 LEOS', 999, signer);
 
         expect(trx.processed.receipt.status).toBe('executed');
+        const allocations = await vestingContract.getAllocations(accountName);
+
+        expect(allocations.length).toBe(1);
+        expect(allocations[0].holder).toBe(accountName);
+        expect(allocations[0].total_allocated).toBe('1.000000 LEOS');
+        expect(allocations[0].tokens_claimed).toBe('0.000000 LEOS');
+        expect(allocations[0].cliff_period_claimed).toBe(0);
+        expect(allocations[0].vesting_category_type).toBe(999);
     });
 
     test('assignTokens(): Unsuccessful assignment due to invalid symbol', async () => {
         expect.assertions(1);
 
         try {
-            const { user } = await createRandomID();
-            const userAccountName = await user.storage.accountName;
-            const accountInfo = await getAccountInfo(userAccountName);
-            const accountName = accountInfo.account_name.toString();
-
-            await vestngContract.assignTokens('coinsale.tmy', accountName, '10.000000 EOS', 1, signer);
+            await vestingContract.assignTokens('coinsale.tmy', accountName, '10.000000 EOS', 1, signer);
         } catch (e) {
             expect(e.error.details[0].message).toContain(' Symbol does not match system resource currency');
         }
@@ -104,7 +83,7 @@ describe('VestngContract class', () => {
             const accountInfo = await getAccountInfo(userAccountName);
             const accountName = accountInfo.account_name.toString();
 
-            await vestngContract.assignTokens('coinsale.tmy', accountName, '-10.000000 LEOS', 1, signer);
+            await vestingContract.assignTokens('coinsale.tmy', accountName, '-10.000000 LEOS', 1, signer);
         } catch (e) {
             expect(e.error.details[0].message).toContain('Amount must be greater than 0');
         }
@@ -121,8 +100,8 @@ describe('VestngContract class', () => {
             const accountInfo = await getAccountInfo(userAccountName);
             const accountName = accountInfo.account_name.toString();
 
-            await vestngContract.updatedate(salesDate, launchDate, signer);
-            await vestngContract.assignTokens('coinsale.tmy', accountName, '10.000000 LEOS', 1, signer);
+            await vestingContract.updatedate(salesDate, launchDate, signer);
+            await vestingContract.assignTokens('coinsale.tmy', accountName, '10.000000 LEOS', 1, signer);
         } catch (e) {
             expect(e.error.details[0].message).toContain('Sale has not yet started');
         }
@@ -137,7 +116,7 @@ describe('VestngContract class', () => {
             const accountInfo = await getAccountInfo(userAccountName);
             const accountName = accountInfo.account_name.toString();
 
-            await vestngContract.assignTokens('coinsale.tmy', accountName, '10.000000 LEOS', 0, signer);
+            await vestingContract.assignTokens('coinsale.tmy', accountName, '10.000000 LEOS', 0, signer);
         } catch (e) {
             expect(e.error.details[0].message).toContain('Invalid vesting category');
         }
@@ -158,7 +137,7 @@ describe('VestngContract class', () => {
                 promises.push(
                     new Promise((resolve, reject) => {
                         setTimeout(() => {
-                            vestngContract
+                            vestingContract
                                 .assignTokens('coinsale.tmy', accountName, '10.000000 LEOS', 1, signer)
                                 .then(resolve)
                                 .catch(reject);
@@ -184,11 +163,11 @@ describe('VestngContract class', () => {
             const accountInfo = await getAccountInfo(userAccountName);
             const accountName = accountInfo.account_name.toString();
 
-            await vestngContract.updatedate(salesDate, launchDate, signer);
+            await vestingContract.updatedate(salesDate, launchDate, signer);
 
-            await vestngContract.assignTokens('coinsale.tmy', accountName, '100.000000 LEOS', 1, signer);
+            await vestingContract.assignTokens('coinsale.tmy', accountName, '100.000000 LEOS', 1, signer);
 
-            await vestngContract.withdraw(accountName, signer);
+            await vestingContract.withdraw(accountName, signer);
         } catch (e) {
             expect(e.error.details[0].message).toContain('Vesting period after cliff has not started');
         }
@@ -204,10 +183,10 @@ describe('VestngContract class', () => {
         const accountInfo = await getAccountInfo(userAccountName);
         const accountName = accountInfo.account_name.toString();
 
-        await vestngContract.updatedate(salesDate, launchDate, signer);
-        await vestngContract.assignTokens('coinsale.tmy', accountName, '100.000000 LEOS', 1, signer);
+        await vestingContract.updatedate(salesDate, launchDate, signer);
+        await vestingContract.assignTokens('coinsale.tmy', accountName, '100.000000 LEOS', 1, signer);
 
-        const trx = await vestngContract.withdraw(accountName, signer);
+        const trx = await vestingContract.withdraw(accountName, signer);
 
         expect(trx.processed.receipt.status).toBe('executed');
     });
@@ -223,8 +202,8 @@ describe('VestngContract class', () => {
             const accountInfo = await getAccountInfo(userAccountName);
             const accountName = accountInfo.account_name.toString();
 
-            await vestngContract.assignTokens('eosio.token', accountName, '500.000000 LEOS', category, signer);
-            const trx = await vestngContract.withdraw(accountName, signer);
+            await vestingContract.assignTokens('eosio.token', accountName, '500.000000 LEOS', category, signer);
+            const trx = await vestingContract.withdraw(accountName, signer);
 
             expect(trx.processed.receipt.status).toBe('executed');
         }
@@ -241,8 +220,8 @@ describe('VestngContract class', () => {
             const accountInfo = await getAccountInfo(userAccountName);
             const accountName = accountInfo.account_name.toString();
 
-            await vestngContract.assignTokens('eosio.token', accountName, '500.000000 LEOS', category[i], signer);
-            const trx = await vestngContract.withdraw(accountName, signer);
+            await vestingContract.assignTokens('eosio.token', accountName, '500.000000 LEOS', category[i], signer);
+            const trx = await vestingContract.withdraw(accountName, signer);
 
             expect(trx.processed.receipt.status).toBe('executed');
         }
