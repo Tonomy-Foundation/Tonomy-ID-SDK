@@ -16,7 +16,7 @@ import {
 import { getSigner, updateAccountKey, updateControlByAccount } from './keys';
 import settings from './settings';
 import { Checksum256, PrivateKey, PublicKey } from '@wharfkit/antelope';
-import { Signer, defaultBlockchainParams } from '../../sdk/services/blockchain';
+import { Authority, Signer, defaultBlockchainParams } from '../../sdk/services/blockchain';
 import { createUser, mockCreateAccount, restoreCreateAccountFromMock } from './user';
 
 if (process.env.LOG === 'true') {
@@ -29,7 +29,7 @@ const demoTokenContract = DemoTokenContract.Instance;
 const tokenContract = EosioTokenContract.Instance;
 const tonomyContract = TonomyContract.Instance;
 const eosioContract = EosioContract.Instance;
-const VestingContract = VestingContract.Instance;
+const vestingContract = VestingContract.Instance;
 
 const ramPrice = 173333.3333; // bytes/token
 const fee = 0.25 / 100; // 0.25%
@@ -75,7 +75,7 @@ export default async function bootstrap() {
         await createUsers(passphrase);
         await createTonomyApps(newPublicKey, newSigner);
         await configureDemoToken(newSigner);
-        await updateAccountControllers(tonomyGovKeys, newPublicKey, newSigner);
+        await updateAccountControllers(tonomyGovKeys, newPublicKey);
         await deployEosioTonomy(newSigner);
         await updateMsigControl(tonomyGovKeys, newSigner);
 
@@ -87,9 +87,12 @@ export default async function bootstrap() {
 }
 
 const foundControlledAccounts = ['gov.tmy', 'team.tmy', 'prod1.tmy', 'prod2.tmy', 'prod3.tmy'];
-const govControlledAccounts = ['ops.tmy', 'ecosystm.tmy', 'coinsale.tmy'];
+const govControlledAccounts = ['ops.tmy'];
+const operationsAccount = 'ops.tmy';
 const opsControlledAccounts = [
     'tonomy',
+    'ecosystm.tmy',
+    'coinsale.tmy',
     'eosio.token',
     'eosio.msig',
     'demo.tmy',
@@ -102,6 +105,7 @@ const opsControlledAccounts = [
     'devs.tmy',
     'infra.tmy',
 ];
+const systemAccount = 'eosio';
 
 async function createAccounts(govKeys: string[]) {
     console.log('Create accounts');
@@ -219,7 +223,7 @@ async function createTokenDistribution() {
         throw new Error('Total percentage should be 100% but it is ' + totalPercentage.toPrecision(5));
     }
 
-    await VestingContract.updatedate('2024-12-01T00:00:00', '2030-01-01T00:00:00', signer);
+    await vestingContract.updatedate('2024-12-01T00:00:00', '2030-01-01T00:00:00', signer);
 }
 
 async function createTonomyContractAndSetResources() {
@@ -235,7 +239,7 @@ async function createTonomyContractAndSetResources() {
     console.log('Set App account type');
 
     await tonomyContract.adminSetApp(
-        'eosio',
+        systemAccount,
         'System Contract',
         'Antelope blockchain system governance contract',
         getAppUsernameHash('system'),
@@ -280,7 +284,7 @@ async function createTonomyContractAndSetResources() {
     console.log('Allocate RAM to system accounts');
     // See calculation: https://docs.google.com/spreadsheets/d/17cd4wt3oDHp6p7hty9njKsuukTTn9BYJ5z3Ab0N6pMM/edit?pli=1#gid=0&range=D30
     const ramAllocations: [string, number][] = [
-        ['eosio', 3750000],
+        [systemAccount, 3750000],
         ['eosio.token', 2400000],
         ['tonomy', 4680000],
         ['vesting.tmy', 4680000],
@@ -370,32 +374,33 @@ async function createTonomyApps(newPublicKey: PublicKey, newSigner: Signer): Pro
     });
 }
 
-async function updateAccountControllers(govKeys: string[], newPublicKey: PublicKey, newSigner: Signer) {
+async function updateAccountControllers(govKeys: string[], newPublicKey: PublicKey) {
     console.log('Change the key of the accounts to the new key', newPublicKey.toString());
     await updateAccountKey('found.tmy', newPublicKey);
 
     // accounts controlled by found.tmy
-
     for (const account of foundControlledAccounts) {
         await updateControlByAccount(account, 'found.tmy', signer);
     }
 
     // accounts controlled by gov.tmy
-    for (const account of govControlledAccounts) {
-        await updateControlByAccount(account, 'gov.tmy', signer);
-    }
+    const activeAuthority = Authority.fromAccount({ actor: 'gov.tmy', permission: 'active' });
+
+    activeAuthority.addCodePermission('ops.tmy');
+    activeAuthority.addKey(newPublicKey.toString(), 1);
+    await eosioContract.updateauth(operationsAccount, 'active', 'owner', activeAuthority, signer);
+    const ownerAuthority = Authority.fromAccount({ actor: 'gov.tmy', permission: 'owner' });
+
+    await eosioContract.updateauth(operationsAccount, 'owner', 'owner', ownerAuthority, signer);
 
     // accounts controlled by ops.tmy (contracts that are called by inline actions need eosio.code permission)
     // tonomy account needs to keep operation account to sign transactions
-    await updateAccountKey('tonomy', newPublicKey, true);
-    await updateControlByAccount('tonomy', 'ops.tmy', newSigner, { addCodePermission: true, replaceActive: false });
-
-    for (const account of opsControlledAccounts.filter((account) => account !== 'tonomy')) {
+    for (const account of opsControlledAccounts) {
         await updateControlByAccount(account, 'ops.tmy', signer);
     }
 
     // Update the system contract
-    await updateControlByAccount('eosio', 'tonomy', signer);
+    await updateControlByAccount(systemAccount, 'tonomy', signer);
 
     for (let i = 0; i < govKeys.length; i++) {
         await updateAccountKey(indexToAccountName(i), govKeys[i]);

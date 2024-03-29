@@ -1,9 +1,23 @@
 /* eslint-disable camelcase */
-import { API, Name } from '@wharfkit/antelope';
+import { API, Name, NameType } from '@wharfkit/antelope';
 import { Signer, transact } from '../eosio/transaction';
+import { getApi } from '../eosio/eosio';
 
 const CONTRACT_NAME = 'vesting.tmy';
 
+interface VestingSetttings {
+    sales_start_date: string;
+    launch_date: string;
+}
+
+interface VestingAllocation {
+    cliff_period_claimed: number;
+    holder: string;
+    seconds_since_sale_start: number;
+    tokens_claimed: string;
+    total_allocated: string;
+    vesting_category_type: number;
+}
 export class VestingContract {
     static singletonInstance: VestingContract;
     contractName = CONTRACT_NAME;
@@ -82,5 +96,33 @@ export class VestingContract {
         };
 
         return await transact(Name.from(CONTRACT_NAME), [action], signer);
+    }
+
+    async getSettings(): Promise<VestingSetttings> {
+        const res = await (
+            await getApi()
+        ).v1.chain.get_table_rows({
+            code: 'vesting.tmy',
+            scope: 'vesting.tmy',
+            table: 'settings',
+            json: true,
+        });
+
+        if (res.rows.length === 0) throw new Error('Settings have not yet been set');
+
+        return res.rows[0];
+    }
+
+    async getAllocations(account: NameType): Promise<VestingAllocation[]> {
+        const res = await (
+            await getApi()
+        ).v1.chain.get_table_rows({
+            code: 'vesting.tmy',
+            scope: account.toString(),
+            table: 'allocation',
+            json: true,
+        });
+
+        return res.rows;
     }
 }
