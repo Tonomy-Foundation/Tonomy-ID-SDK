@@ -382,6 +382,32 @@ describe('VestingContract class', () => {
             expect(transferAmount + transferAmount2 + transferAmount3).toBe(2.0);
         });
 
+        test('Successful withdrawal with 2 different allocations of different categories', async () => {
+            expect.assertions(4);
+
+            await vestingContract.assignTokens('coinsale.tmy', accountName, '1.000000 LEOS', 999, signer);
+            await vestingContract.assignTokens('coinsale.tmy', accountName, '1.000000 LEOS', 1, signer);
+
+            const allocations = await vestingContract.getAllocations(accountName);
+            const vestingPeriod = VestingContract.calculateVestingPeriod(settings, allocations[0]);
+
+            // 1st withdrawal after 1st allocation vesting end
+            await sleepUntil(addSeconds(vestingPeriod.vestingEnd, 1));
+            await vestingContract.withdraw(accountName, accountSigner);
+
+            const allocations1 = await vestingContract.getAllocations(accountName);
+
+            expect(assetToAmount(allocations1[0].tokens_claimed)).toBe(1.0);
+            expect(assetToAmount(allocations1[1].tokens_claimed)).toBe(0.0);
+
+            // Withdraw again
+            await vestingContract.withdraw(accountName, accountSigner);
+            const allocations2 = await vestingContract.getAllocations(accountName);
+
+            expect(assetToAmount(allocations2[0].tokens_claimed)).toBe(1.0);
+            expect(assetToAmount(allocations2[1].tokens_claimed)).toBe(0.0);
+        });
+
         test('Unsuccessful when launch has not started', async () => {
             expect.assertions(1);
             const settings = await vestingContract.getSettings();
