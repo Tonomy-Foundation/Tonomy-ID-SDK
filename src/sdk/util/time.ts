@@ -20,3 +20,49 @@ export function toDateTime(secs: number): Date {
 export async function sleep(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
 }
+
+/**
+ * Sleeps until the given date
+ *
+ * @async
+ * @param {Date} date - Date to sleep until
+ */
+export async function sleepUntil(date: Date): Promise<void> {
+    const now = new Date();
+
+    if (date.getTime() <= now.getTime()) {
+        return;
+    }
+
+    await sleep(date.getTime() - now.getTime());
+}
+
+/**
+ * Adds a number of seconds and returns a new Date object
+ *
+ * @param {Date} date - Date object
+ * @param {number} secs - Number of seconds to add
+ */
+export function addSeconds(date: Date, secs: number): Date {
+    return new Date(date.getTime() + secs * 1000);
+}
+
+/**
+ * Adds a number of microseconds and returns a new Date object
+ *
+ * @param {Date} date - Date object
+ * @param {number} ms - Number of microseconds to add
+ */
+export function addMicroseconds(date: Date, ms: number): Date {
+    return new Date(date.getTime() + ms / 1000);
+}
+
+/**
+ * Subtracts a number of microseconds and returns a new Date object
+ *
+ * @param {Date} date - Date object
+ * @param {number} ms - Number of microseconds to subtract
+ */
+export function subtractMicroseconds(date: Date, ms: number): Date {
+    return new Date(date.getTime() - ms / 1000);
+}

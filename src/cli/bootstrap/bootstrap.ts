@@ -386,7 +386,6 @@ async function updateAccountControllers(govKeys: string[], newPublicKey: PublicK
     const activeAuthority = Authority.fromAccount({ actor: 'gov.tmy', permission: 'active' });
     const ownerAuthority = Authority.fromAccount({ actor: 'gov.tmy', permission: 'owner' });
 
-    // activeAuthority.addCodePermission('ops.tmy');
     activeAuthority.addKey(newPublicKey.toString(), 1);
     await eosioContract.updateauth(operationsAccount, 'active', 'owner', activeAuthority, signer);
     await eosioContract.updateauth(operationsAccount, 'owner', 'owner', ownerAuthority, signer);

@@ -26,13 +26,13 @@ export class UserBase implements IUserBase {
     }
 
     async getUsername(): Promise<TonomyUsername> {
-        const storage = await this.storage.username;
+        const username = await this.storage.username;
 
-        if (!storage) throwError('Username not set', SdkErrors.InvalidData);
-        else if (storage instanceof TonomyUsername) {
-            return storage;
-        } else if (typeof storage === 'string') {
-            return new TonomyUsername(storage);
+        if (!username) throwError('Username not set', SdkErrors.InvalidData);
+        else if (username instanceof TonomyUsername) {
+            return username;
+        } else if (typeof username === 'string') {
+            return new TonomyUsername(username);
         } else {
             throwError('Username not in expected format', SdkErrors.InvalidData);
         }
