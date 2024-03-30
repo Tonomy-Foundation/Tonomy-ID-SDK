@@ -41,7 +41,7 @@ export class VestingContract {
         return this.singletonInstance || (this.singletonInstance = new this());
     }
 
-    static MAX_ALLOCATIONS = 15;
+    static MAX_ALLOCATIONS = 150;
 
     static calculateVestingPeriod(settings: VestingSettings, allocation: VestingAllocation) {
         const vestingCategory = vestingCategories.get(allocation.vesting_category_type);

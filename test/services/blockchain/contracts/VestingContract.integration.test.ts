@@ -174,19 +174,30 @@ describe('VestingContract class', () => {
         test(
             'Unsuccessful assignment due to number of purchases',
             async () => {
-                expect.assertions(1);
+                expect.assertions(2 + VestingContract.MAX_ALLOCATIONS);
 
                 for (let i = 0; i < VestingContract.MAX_ALLOCATIONS; i++) {
-                    console.log(i);
-                    await sleep(1000); // Needs to wait to be in a separate block, otherwise primary key is the same. See https://github.com/Tonomy-Foundation/Tonomy-Contracts/pull/111/commits/93525ff460299b3c97d623da78281524d164868d#diff-603eb802bda54a8100f95221bfed922b002a61284728341bf9221cede61c01c4R71
-                    await vestingContract.assignTokens('coinsale.tmy', accountName, '1.000000 LEOS', 999, signer);
+                    await sleep(1000); // Wait to ensure don't get duplicate transaction error
+                    const trx = await vestingContract.assignTokens(
+                        'coinsale.tmy',
+                        accountName,
+                        '1.000000 LEOS',
+                        999,
+                        signer
+                    );
+
+                    expect(trx.processed.receipt.status).toBe('executed');
                 }
 
+                const allocations = await vestingContract.getAllocations(accountName);
+
+                expect(allocations.length).toBe(VestingContract.MAX_ALLOCATIONS);
+
                 try {
-                    await sleep(1000); // Needs to wait to be in a separate block, otherwise primary key is the same. See https://github.com/Tonomy-Foundation/Tonomy-Contracts/pull/111/commits/93525ff460299b3c97d623da78281524d164868d#diff-603eb802bda54a8100f95221bfed922b002a61284728341bf9221cede61c01c4R71
+                    await sleep(1000); // Wait to ensure don't get duplicate transaction error
                     await vestingContract.assignTokens('coinsale.tmy', accountName, '1.000000 LEOS', 999, signer);
                 } catch (e) {
-                    expect(e.message).toContain('Too many purchases received on this account.');
+                    expect(e.error.details[0].message).toContain('Too many purchases received on this account.');
                 }
             },
             1.5 * VestingContract.MAX_ALLOCATIONS * 1000
