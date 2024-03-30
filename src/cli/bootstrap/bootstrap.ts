@@ -209,7 +209,7 @@ async function createTokenDistribution() {
         const percentage = allocation[1];
 
         totalPercentage += percentage;
-
+        console.log('Allocate', percentage * 100, '% to', account);
         await tokenContract.transfer(
             'eosio.token',
             account,
@@ -222,7 +222,7 @@ async function createTokenDistribution() {
         throw new Error('Total percentage should be 100% but it is ' + totalPercentage.toPrecision(5));
     }
 
-    await vestingContract.updatedate('2024-12-01T00:00:00', '2030-01-01T00:00:00', signer);
+    await vestingContract.setSettings('2024-12-01T00:00:00', '2030-01-01T00:00:00', signer);
 }
 
 async function createTonomyContractAndSetResources() {

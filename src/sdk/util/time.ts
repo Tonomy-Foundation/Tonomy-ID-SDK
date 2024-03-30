@@ -48,6 +48,16 @@ export function addSeconds(date: Date, secs: number): Date {
 }
 
 /**
+ * Subtracts a number of seconds and returns a new Date object
+ *
+ * @param {Date} date - Date object
+ * @param {number} secs - Number of seconds to subtract
+ */
+export function subtractSeconds(date: Date, secs: number): Date {
+    return new Date(date.getTime() - secs * 1000);
+}
+
+/**
  * Adds a number of microseconds and returns a new Date object
  *
  * @param {Date} date - Date object

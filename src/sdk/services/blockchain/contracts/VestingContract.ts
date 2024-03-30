@@ -41,7 +41,7 @@ export class VestingContract {
         return this.singletonInstance || (this.singletonInstance = new this());
     }
 
-    static MAX_ALLOCATIONS = 150;
+    static MAX_ALLOCATIONS = 15;
 
     static calculateVestingPeriod(settings: VestingSettings, allocation: VestingAllocation) {
         const vestingCategory = vestingCategories.get(allocation.vesting_category_type);
@@ -66,7 +66,7 @@ export class VestingContract {
         this.contractName = contractName;
     }
 
-    async updatedate(
+    async setSettings(
         salesDateStr: string,
         launchDateStr: string,
         signer: Signer
@@ -79,7 +79,7 @@ export class VestingContract {
                 },
             ],
             account: CONTRACT_NAME,
-            name: 'updatedate',
+            name: 'setsettings',
             data: {
                 sales_start_date: salesDateStr,
                 launch_date: launchDateStr,
