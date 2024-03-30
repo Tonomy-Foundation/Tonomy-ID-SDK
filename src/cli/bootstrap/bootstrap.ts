@@ -102,7 +102,6 @@ const opsControlledAccounts = [
     'partners.tmy',
     'liquidty.tmy',
     'marketng.tmy',
-    'devs.tmy',
     'infra.tmy',
 ];
 const systemAccount = 'eosio';
@@ -383,21 +382,25 @@ async function updateAccountControllers(govKeys: string[], newPublicKey: PublicK
         await updateControlByAccount(account, 'found.tmy', signer);
     }
 
-    // accounts controlled by gov.tmy
+    // ops.tmy account controlled by gov.tmy
     const activeAuthority = Authority.fromAccount({ actor: 'gov.tmy', permission: 'active' });
-
-    activeAuthority.addCodePermission('ops.tmy');
-    activeAuthority.addKey(newPublicKey.toString(), 1);
-    await eosioContract.updateauth(operationsAccount, 'active', 'owner', activeAuthority, signer);
     const ownerAuthority = Authority.fromAccount({ actor: 'gov.tmy', permission: 'owner' });
 
+    // activeAuthority.addCodePermission('ops.tmy');
+    activeAuthority.addKey(newPublicKey.toString(), 1);
+    await eosioContract.updateauth(operationsAccount, 'active', 'owner', activeAuthority, signer);
     await eosioContract.updateauth(operationsAccount, 'owner', 'owner', ownerAuthority, signer);
 
-    // accounts controlled by ops.tmy (contracts that are called by inline actions need eosio.code permission)
-    // tonomy account needs to keep operation account to sign transactions
-    for (const account of opsControlledAccounts) {
+    // accounts controlled by ops.tmy
+    for (const account of opsControlledAccounts.filter(
+        (account) => account !== 'vesting.tmy' && account !== 'tonomy'
+    )) {
         await updateControlByAccount(account, 'ops.tmy', signer);
     }
+
+    // (contracts that are called by inline actions need eosio.code permission)
+    await updateControlByAccount('vesting.tmy', 'ops.tmy', signer, { addCodePermission: true });
+    await updateControlByAccount('tonomy', 'ops.tmy', signer, { addCodePermission: true });
 
     // Update the system contract
     await updateControlByAccount(systemAccount, 'tonomy', signer);
