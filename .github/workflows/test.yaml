@@ -50,6 +50,9 @@ jobs:
       - name: Build tonomy contract
         run: ./Tonomy-Contracts/contracts/tonomy/build.sh local
 
+      - name: Build vesting.tmy contract
+        run: ./Tonomy-Contracts/contracts/vesting.tmy/build.sh local
+
       - name: Add Tonomy-Contracts dir to artifacts
         uses: actions/upload-artifact@v3
         with:
