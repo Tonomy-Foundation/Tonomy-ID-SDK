@@ -65,6 +65,13 @@ class Authority {
         });
     }
 
+    addKey(key: string, weight: number) {
+        this.keys.push({
+            key,
+            weight,
+        });
+    }
+
     setThreshold(threshold: number) {
         this.threshold = threshold;
     }
