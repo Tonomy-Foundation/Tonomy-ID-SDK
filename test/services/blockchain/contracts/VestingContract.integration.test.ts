@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { KeyManagerLevel, VestingContract, VestingSettings, VestingAllocation } from '../../../../src/sdk/index';
 import { setTestSettings } from '../../../helpers/settings';
 import { createRandomID } from '../../../helpers/user';
@@ -268,6 +269,7 @@ describe('VestingContract class', () => {
 
             await sleepUntil(addSeconds(vestingPeriod.vestingEnd, 1));
             await vestingContract.withdraw(accountName, accountSigner);
+            await sleep(1000); // Wait to ensure don't get duplicate transaction error
             const trx = await vestingContract.withdraw(accountName, accountSigner);
 
             expect(trx.processed.action_traces[0].inline_traces.length).toBe(0);
@@ -304,7 +306,7 @@ describe('VestingContract class', () => {
             const transferTrx2 = trx2.processed.action_traces[0].inline_traces[0];
             const transferAmount2 = assetToAmount(transferTrx2.act.data.quantity);
 
-            expect(transferAmount2).toBe(1.0 - transferAmount);
+            expect(transferAmount2).toBeCloseTo(1.0 - transferAmount, 6);
 
             allocations = await vestingContract.getAllocations(accountName);
             const allocatedAmount2 = assetToAmount(allocations[0].tokens_claimed);
@@ -364,10 +366,10 @@ describe('VestingContract class', () => {
             expect(assetToAmount(allocations2[0].tokens_claimed)).toBeGreaterThan(transferAmount);
             expect(assetToAmount(allocations2[1].tokens_claimed)).toBeGreaterThan(0.0);
             expect(assetToAmount(allocations2[1].tokens_claimed)).toBeLessThan(1.0);
-            expect(transferAmount2).toBe(
+            expect(transferAmount2).toBeCloseTo(
                 assetToAmount(allocations2[1].tokens_claimed) +
                 assetToAmount(allocations2[0].tokens_claimed) -
-                transferAmount
+                transferAmount, 6
             );
 
             // 3rd withdrawal after 2nd allocation vesting end
@@ -401,6 +403,7 @@ describe('VestingContract class', () => {
             expect(assetToAmount(allocations1[1].tokens_claimed)).toBe(0.0);
 
             // Withdraw again
+            await sleep(1000); // Wait to ensure don't get duplicate transaction error
             await vestingContract.withdraw(accountName, accountSigner);
             const allocations2 = await vestingContract.getAllocations(accountName);
 

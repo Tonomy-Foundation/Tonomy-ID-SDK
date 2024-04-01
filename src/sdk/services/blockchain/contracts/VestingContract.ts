@@ -157,6 +157,7 @@ export class VestingContract {
             scope: account.toString(),
             table: 'allocation',
             json: true,
+            limit: VestingContract.MAX_ALLOCATIONS + 1,
         });
 
         return res.rows;
