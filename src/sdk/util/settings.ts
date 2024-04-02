@@ -11,11 +11,13 @@ export type SettingsType = {
     environment: string;
     blockchainUrl: string;
     ssoWebsiteOrigin: string;
+    consoleWebsiteOrigin: string;
     accountSuffix: string;
     communicationUrl: string;
     accountsServiceUrl: string;
     tonomyIdSchema: string;
     loggerLevel: LoggerLevel;
+    currencySymbol: string;
 };
 
 let settings: SettingsType;

@@ -27,6 +27,7 @@ export * from './services/blockchain/contracts/EosioTokenContract';
 export * from './services/blockchain/contracts/EosioContract';
 export * from './services/blockchain/contracts/EosioMsigContract';
 export * from './services/blockchain/contracts/TonomyContract';
+export * from './services/blockchain/contracts/VestingContract';
 export * from './services/blockchain/contracts/TonomyEosioProxyContract';
 export * from './services/communication/communication';
 export * from './services/communication/message';

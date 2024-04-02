@@ -52,7 +52,7 @@ function start {
     cd  "$SDK_DIR/Tonomy-Communication"
     pm2 stop micro || true
     pm2 delete micro || true
-    unset CREATE_ACCOUNT_PRIVATE_KEY
+    unset TONOMY_OPS_PRIVATE_KEY
     unset HCAPTCHA_SECRET
     pm2 start --interpreter /bin/bash yarn --name "micro" -- run start:dev
 }
@@ -62,7 +62,7 @@ function bootstrap {
     cd  "$SDK_DIR"
 
     # For development environment use set keys, otherwise these should be set in the environment
-    export NODE_ENV="${NODE_ENV:-development}"
+    NODE_ENV="${NODE_ENV:-development}"
     if [[ "${NODE_ENV}" == "development" ]]
     then
         echo "Using development environment: setting keys"
