@@ -52,7 +52,7 @@ function start {
     cd  "$SDK_DIR/Tonomy-Communication"
     pm2 stop micro || true
     pm2 delete micro || true
-    unset CREATE_ACCOUNT_PRIVATE_KEY
+    unset TONOMY_OPS_PRIVATE_KEY
     unset HCAPTCHA_SECRET
     pm2 start --interpreter /bin/bash yarn --name "micro" -- run start:dev
 }
