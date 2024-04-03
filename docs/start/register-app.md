@@ -23,7 +23,7 @@ yarn run cli keys create
 
 ### Step 2: (Optional) Configure for a custom Pangea network
 
-If you are using the Demo network, skip this step.
+If you are using the a suuported network, skip this step.
 
 Modify the `demoConfig` variable in `src/cli/bootstrap/settings.ts` to point to the correct Antelope blockchain API and use the right username suffix.
 
@@ -38,11 +38,13 @@ Run `yarn run build:cli`
 
 ### Step 3. Register a new Pangea App
 
+Don't forget to set the NODE\_ENV and Tonomy Ops private key
+
 ```bash
 export NODE_ENV=demo
-yarn run cli apps create appName username description logoUrl domain publicKey blockchainUrl
+export TONOMY_OPS_PRIVATE_KEY=PVT_K1_24kG9VcMk3VkkgY4hh42X262AWV18YcPjBTd2Hox4YWoP8vRTU
 
+# yarn run cli apps create appName username description logoUrl domain publicKey
 # example
-export NODE_ENV=demo
-yarn run cli apps create Netflix netflix "streaming video platform" "https://netflix.com/logo.png" "https://netflix.com" PUB_K1_55csjge6LNnLxECFTtTpCU6Z7chi3h47G8vyzPBjAKdvZmnZ8Z "http://localhost:8888"
+yarn run cli apps create Netflix netflix "streaming video platform" "https://netflix.com/logo.png" "https://netflix.com" PUB_K1_55csjge6LNnLxECFTtTpCU6Z7chi3h47G8vyzPBjAKdvZmnZ8Z
 ```
