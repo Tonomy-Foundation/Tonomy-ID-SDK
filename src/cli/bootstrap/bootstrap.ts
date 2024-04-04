@@ -209,17 +209,22 @@ async function createTokenDistribution() {
         const percentage = allocation[1];
 
         totalPercentage += percentage;
-        console.log('Allocate', percentage * 100, '% to', account);
+        console.log(
+            'Allocate',
+            ((percentage * 100).toFixed(1) + '% to').padStart(8),
+            account.padEnd(13),
+            (percentage * totalSupply).toFixed(0) + `.000000 ${getSettings().currencySymbol}`
+        );
         await tokenContract.transfer(
             'eosio.token',
             account,
-            (percentage * totalSupply).toPrecision(1) + `.000000 ${getSettings().currencySymbol}`,
+            (percentage * totalSupply).toFixed(0) + `.000000 ${getSettings().currencySymbol}`,
             signer
         );
     }
 
-    if (totalPercentage.toPrecision(5) !== '1.0000') {
-        throw new Error('Total percentage should be 100% but it is ' + totalPercentage.toPrecision(5));
+    if (totalPercentage.toFixed(4) !== '1.0000') {
+        throw new Error('Total percentage should be 100% but it is ' + totalPercentage.toFixed(4));
     }
 
     await vestingContract.setSettings('2024-12-01T00:00:00', '2030-01-01T00:00:00', signer);
