@@ -1,6 +1,7 @@
 import { PublicKey } from '@wharfkit/antelope';
 import { setSettings } from '../../sdk/util/settings';
 import { App, AppCreateOptions } from '../../sdk/controllers/App';
+import { createSigner, getTonomyOperationsKey } from '../../sdk/services/blockchain';
 
 export default async function apps(args: string[]) {
     if (args[0] === 'create') {
@@ -13,6 +14,7 @@ export default async function apps(args: string[]) {
             logoUrl: args[3],
             origin: args[4],
             publicKey: PublicKey.from(args[5]),
+            signer: createSigner(getTonomyOperationsKey()),
         };
         const blockchainUrl = args[6];
 

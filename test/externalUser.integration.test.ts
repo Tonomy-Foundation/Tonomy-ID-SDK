@@ -2,7 +2,6 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 /* eslint-disable camelcase */
 /* eslint-disable @typescript-eslint/no-unused-vars */
-
 import {
     App,
     User,
@@ -12,7 +11,7 @@ import {
     IdentifyMessage,
     LoginRequestResponseMessage,
     ExternalUser,
-    EosioTokenContract,
+    DemoTokenContract,
     getSettings,
     LoginRequestResponseMessagePayload,
     LoginResponse,
@@ -48,8 +47,9 @@ import {
 } from './helpers/externalUser';
 import { createStorageFactory } from './helpers/storageFactory';
 import { objToBase64Url } from '../src/sdk/util/base64';
-import { createSigner, defaultAntelopePrivateKey } from '../src/sdk/services/blockchain';
+import { createSigner, getTonomyOperationsKey } from '../src/sdk/services/blockchain';
 import { setTestSettings, settings } from './helpers/settings';
+import deployContract from '../src/cli/bootstrap/deploy-contract';
 
 export type ExternalUserLoginTestOptions = {
     dataRequest: boolean;
@@ -61,7 +61,7 @@ setTestSettings(process.env.LOG === 'true');
 // @ts-expect-error - type error on global
 global.URL = URL;
 
-const eosioTokenContract = EosioTokenContract.Instance;
+const signer = createSigner(getTonomyOperationsKey());
 
 describe('Login to external website', () => {
     jest.setTimeout(30000);
@@ -96,6 +96,29 @@ describe('Login to external website', () => {
 
         // Create two apps which will be logged into
         externalApp = await createRandomApp();
+
+        if (getSettings().loggerLevel === 'debug')
+            console.log('Deploying and configuring demo.tmy contract to ', externalApp.accountName.toString());
+        await deployContract(
+            { account: externalApp.accountName, contractDir: './Tonomy-Contracts/contracts/demo.tmy' },
+            signer,
+            {
+                throughTonomyProxy: true,
+                extraAuthorization: {
+                    actor: 'tonomy',
+                    permission: 'active',
+                },
+            }
+        );
+        await DemoTokenContract.atAccount(externalApp.accountName).create(
+            `1000000000.000000 ${getSettings().currencySymbol}`,
+            signer
+        );
+        await DemoTokenContract.atAccount(externalApp.accountName).issue(
+            `10000.000000 ${getSettings().currencySymbol}`,
+            signer
+        );
+
         tonomyLoginApp = await createRandomApp();
 
         setSettings({
@@ -106,8 +129,6 @@ describe('Login to external website', () => {
         // setup KeyManagers for the external website and tonomy login website
         TONOMY_LOGIN_WEBSITE_jsKeyManager = new JsKeyManager();
         EXTERNAL_WEBSITE_jsKeyManager = new JsKeyManager();
-
-        await eosioTokenContract.addPerm(externalApp.accountName, createSigner(defaultAntelopePrivateKey));
 
         // setup storage factories for the external website and tonomy login website
         TONOMY_LOGIN_WEBSITE_storage_factory = createStorageFactory(STORAGE_NAMESPACE + 'login-website.');

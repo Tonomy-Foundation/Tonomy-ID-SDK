@@ -12,7 +12,7 @@ async function main() {
     } else if (args[0] === 'keys') {
         await keys(args.slice(1));
     } else if (args[0] === 'bootstrap') {
-        await bootstrap(args.slice(1));
+        await bootstrap();
     } else {
         console.log(`
 Usage:
@@ -21,6 +21,7 @@ Usage:
     Commands:
         apps create appName usernamePrefix description logoUrl origin publicKey blockchainUrl
         keys create
+        keys convert publicKey
         bootstrap privateKey
 `);
     }

@@ -1,11 +1,11 @@
 import { jsStorageFactory } from './jsstorage';
-import { generatePrivateKeyFromPassword, signer } from './keys';
-import { IDContract, JsKeyManager, KeyManager, createUserObject } from '../../sdk';
+import { generatePrivateKeyFromPassword, getSigner } from './keys';
+import { TonomyContract, JsKeyManager, KeyManager, createUserObject } from '../../sdk';
 import { CreateAccountRequest, CreateAccountResponse } from '../../sdk/services/communication/accounts';
 import * as accounts from '../../sdk/services/communication/accounts';
 import { Name } from '@wharfkit/antelope';
 
-const idContract = IDContract.Instance;
+const tonomyContract = TonomyContract.Instance;
 
 const defaultCreateAccount = accounts.createAccount;
 
@@ -19,11 +19,11 @@ export function mockCreateAccount() {
     accounts.createAccount = async function (data: CreateAccountRequest): Promise<CreateAccountResponse> {
         console.log('Calling mocked createAccount()');
 
-        const res = await idContract.newperson(
+        const res = await tonomyContract.newperson(
             data.usernameHash.toString(),
             data.publicKey.toString(),
             data.salt.toString(),
-            signer
+            getSigner()
         );
 
         const newAccountAction = res.processed.action_traces[0].inline_traces[0].act;

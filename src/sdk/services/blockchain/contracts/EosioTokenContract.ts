@@ -2,6 +2,9 @@
 import { API, Name, NameType } from '@wharfkit/antelope';
 import { Signer, transact } from '../eosio/transaction';
 import { getApi } from '../eosio/eosio';
+import { getSettings } from '../../../util';
+
+const CONTRACT_NAME = 'eosio.token';
 
 class EosioTokenContract {
     static singletonInstande: EosioTokenContract;
@@ -13,90 +16,78 @@ class EosioTokenContract {
     async create(supply: string, signer: Signer): Promise<API.v1.PushTransactionResponse> {
         const actions = [
             {
-                account: 'eosio.token',
+                account: CONTRACT_NAME,
                 name: 'create',
                 authorization: [
                     {
-                        actor: 'eosio.token',
+                        actor: CONTRACT_NAME,
                         permission: 'active',
                     },
                 ],
                 data: {
-                    issuer: 'eosio.token',
+                    issuer: CONTRACT_NAME,
                     maximum_supply: supply,
                 },
             },
         ];
 
-        return await transact(Name.from('eosio.token'), actions, signer);
+        return await transact(Name.from(CONTRACT_NAME), actions, signer);
     }
 
-    async issue(quantity: string, signer: Signer): Promise<API.v1.PushTransactionResponse> {
+    async issue(to: NameType, quantity: string, signer: Signer): Promise<API.v1.PushTransactionResponse> {
         const actions = [
             {
-                account: 'eosio.token',
+                account: CONTRACT_NAME,
                 name: 'issue',
                 authorization: [
                     {
-                        actor: 'eosio.token',
-                        permission: 'active',
-                    },
-                ],
-                data: {
-                    to: 'eosio.token',
-                    quantity,
-                    memo: 'issued',
-                },
-            },
-        ];
-
-        return await transact(Name.from('eosio.token'), actions, signer);
-    }
-
-    async selfIssue(to: Name, quantity: string, signer: Signer): Promise<API.v1.PushTransactionResponse> {
-        const actions = [
-            {
-                account: 'eosio.token',
-                name: 'issue',
-                authorization: [
-                    {
-                        actor: 'eosio.token',
+                        actor: CONTRACT_NAME,
                         permission: 'active',
                     },
                 ],
                 data: {
                     to,
                     quantity,
-                    memo: 'self issued',
+                    memo: 'issued',
                 },
             },
         ];
 
-        return await transact(Name.from('eosio.token'), actions, signer);
+        return await transact(Name.from(CONTRACT_NAME), actions, signer);
     }
 
-    async addPerm(permission: NameType, signer: Signer) {
+    async transfer(
+        from: NameType,
+        to: NameType,
+        quantity: string,
+        signer: Signer
+    ): Promise<API.v1.PushTransactionResponse> {
         const actions = [
             {
-                account: 'eosio.token',
-                name: 'addperm',
+                account: CONTRACT_NAME,
+                name: 'transfer',
                 authorization: [
                     {
-                        actor: 'eosio.token',
+                        actor: CONTRACT_NAME,
                         permission: 'active',
                     },
                 ],
                 data: {
-                    per: permission,
+                    from,
+                    to,
+                    quantity,
+                    memo: 'transferred',
                 },
             },
         ];
 
-        await transact(Name.from('eosio.token'), actions, signer);
+        return await transact(Name.from(CONTRACT_NAME), actions, signer);
     }
 
     async getBalance(account: NameType): Promise<number> {
-        const assets = await (await getApi()).v1.chain.get_currency_balance('eosio.token', account, 'SYS');
+        const assets = await (
+            await getApi()
+        ).v1.chain.get_currency_balance(CONTRACT_NAME, account, getSettings().currencySymbol);
 
         if (assets.length === 0) return 0;
 
