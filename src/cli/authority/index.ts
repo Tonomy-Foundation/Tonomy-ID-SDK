@@ -1,7 +1,7 @@
 import { PublicKey, Name } from '@wharfkit/antelope';
 import { Authority } from '../../sdk';
 
-export function createAuthorityFromAccountArray(args: string[], permission: string): Authority {
+export function createAuthorityFromAccountArray(args: string[], permission: string, threshold = 1): Authority {
     if (!Name.pattern.test(args[0])) throw new Error(`Invalid account name ${args[0]}`);
 
     const authority = Authority.fromAccount({ actor: args[0], permission });
@@ -13,6 +13,8 @@ export function createAuthorityFromAccountArray(args: string[], permission: stri
             authority.addAccount({ actor: arg, permission });
         }
     }
+
+    authority.setThreshold(threshold);
 
     return authority;
 }

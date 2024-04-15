@@ -31,7 +31,9 @@ Usage:
         authority publicKey
         authority account1 [account2] [account3] [accountN]
         bootstrap privateKey
-        msig gov-update
+        msig cancel proposalName
+        msig propose gov-update-active proposalName
+        msig propose gov-update-owner proposalName
 `);
     }
 }

@@ -150,4 +150,31 @@ export class EosioMsigContract {
 
         return await transact(Name.from(CONTRACT_NAME), actions, signer);
     }
+
+    async cancel(
+        proposer: NameType,
+        proposalName: NameType,
+        canceler: NameType,
+        signer: Signer
+    ): Promise<API.v1.PushTransactionResponse> {
+        const actions = [
+            {
+                account: CONTRACT_NAME,
+                name: 'cancel',
+                authorization: [
+                    {
+                        actor: canceler.toString(),
+                        permission: 'active',
+                    },
+                ],
+                data: {
+                    proposer,
+                    proposal_name: proposalName,
+                    canceler,
+                },
+            },
+        ];
+
+        return await transact(Name.from(CONTRACT_NAME), actions, signer);
+    }
 }
