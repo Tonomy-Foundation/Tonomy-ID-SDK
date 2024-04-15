@@ -47,7 +47,7 @@ export class EosioMsigContract {
 
         // Determine expiration
         const now = new Date();
-        const expireInSeconds = 60;
+        const expireInSeconds = 60 * 60 * 24 * 5; // 5 days
         const expiration = new Date(now.getTime() + expireInSeconds * 1000);
         const expirationString = expiration.toISOString().split('.')[0];
 

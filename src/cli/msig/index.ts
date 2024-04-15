@@ -160,6 +160,9 @@ export default async function msig(args: string[]) {
             );
 
             console.log('Transaction: ', JSON.stringify(transaction, null, 2));
+
+            console.log('Proposal name: ', proposalName.toString());
+            console.log('You have 5 days to approve and execute the proposal.');
         } catch (e) {
             if (e?.error?.details[0]?.message.includes('transaction declares authority')) {
                 console.error(
