@@ -34,6 +34,7 @@ Usage:
         msig cancel proposalName
         msig propose gov-update-active proposalName
         msig propose gov-update-owner proposalName
+        msig exec proposalName
 `);
     }
 }

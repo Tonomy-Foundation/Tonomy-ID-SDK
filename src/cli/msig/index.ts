@@ -25,8 +25,10 @@ export default async function msig(args: string[]) {
             const transaction = await eosioMsigContract.cancel(proposer, proposalName, proposer, signer);
 
             console.log('Transaction: ', JSON.stringify(transaction, null, 2));
+            console.error('Transaction succeeded');
         } catch (e) {
             console.error('Error: ', JSON.stringify(e, null, 2));
+            console.error('Transaction failed');
         }
     } else if (args[0] === 'propose') {
         const proposalName = Name.from(args[2]);
@@ -34,20 +36,33 @@ export default async function msig(args: string[]) {
         let requested, actions;
 
         if (args[1] === 'gov-update-active') {
-            const permission = 'active';
+            const permissionActive = 'active';
+            const permissionOwner = 'owner';
 
             requested = [
                 {
                     actor: '1.found.tmy',
-                    permission,
+                    permission: permissionActive,
                 },
                 {
                     actor: '2.found.tmy',
-                    permission,
+                    permission: permissionActive,
                 },
                 {
                     actor: '3.found.tmy',
-                    permission,
+                    permission: permissionActive,
+                },
+                {
+                    actor: '1.found.tmy',
+                    permission: permissionOwner,
+                },
+                {
+                    actor: '2.found.tmy',
+                    permission: permissionOwner,
+                },
+                {
+                    actor: '3.found.tmy',
+                    permission: permissionOwner,
                 },
             ];
 
@@ -58,6 +73,10 @@ export default async function msig(args: string[]) {
                     {
                         actor: 'tonomy',
                         permission: 'active',
+                    },
+                    {
+                        actor: 'tonomy',
+                        permission: 'owner',
                     },
                 ],
                 data: {
@@ -75,7 +94,7 @@ export default async function msig(args: string[]) {
                             '13.found.tmy',
                             '14.found.tmy',
                         ],
-                        permission,
+                        permissionActive,
                         2
                     ),
                     auth_parent: true, // should be false when permission is 'owner'
@@ -160,6 +179,7 @@ export default async function msig(args: string[]) {
             );
 
             console.log('Transaction: ', JSON.stringify(transaction, null, 2));
+            console.error('Transaction succeeded');
 
             console.log('Proposal name: ', proposalName.toString());
             console.log('You have 5 days to approve and execute the proposal.');
@@ -170,7 +190,20 @@ export default async function msig(args: string[]) {
                 );
             } else {
                 console.error('Error: ', JSON.stringify(e, null, 2));
+                console.error('Transaction failed');
             }
+        }
+    } else if (args[0] === 'exec') {
+        const proposalName = Name.from(args[1]);
+
+        try {
+            const transaction = await eosioMsigContract.exec(proposer, proposalName, proposer, signer);
+
+            console.log('Transaction: ', JSON.stringify(transaction, null, 2));
+            console.error('Transaction succeeded');
+        } catch (e) {
+            console.error('Error: ', JSON.stringify(e, null, 2));
+            console.error('Transaction failed');
         }
     } else {
         throw new Error(`Invalid msig command ${args[0]}`);
