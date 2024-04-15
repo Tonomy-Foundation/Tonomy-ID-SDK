@@ -15,6 +15,7 @@ export function createAuthorityFromAccountArray(args: string[], permission: stri
     }
 
     authority.setThreshold(threshold);
+    authority.sort();
 
     return authority;
 }
