@@ -1,3 +1,5 @@
+import { Name } from '@wharfkit/antelope';
+
 type KeyWeight = { key: string; weight: number };
 type PermissionWeight = {
     permission: {
@@ -36,6 +38,10 @@ class Authority {
     }
 
     static fromAccount(permission: { actor: string; permission: string }) {
+        if (!Name.pattern.test(permission.actor)) throw new Error(`Invalid account name ${permission.actor}`);
+        if (!Name.pattern.test(permission.permission))
+            throw new Error(`Invalid account permission ${permission.permission}`);
+
         const accounts = [
             {
                 permission,
@@ -44,6 +50,21 @@ class Authority {
         ];
 
         return new this(1, [], accounts, []);
+    }
+
+    static fromAccountArray(accounts: string[], permission: string, threshold = 1): Authority {
+        const authority = Authority.fromAccount({ actor: accounts[0], permission });
+
+        if (accounts.length > 1) {
+            for (const arg of accounts.slice(1)) {
+                authority.addAccount({ actor: arg, permission });
+            }
+        }
+
+        authority.setThreshold(threshold);
+        authority.sort();
+
+        return authority;
     }
 
     // to add the eosio.code authority for smart contracts

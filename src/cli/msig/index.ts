@@ -1,7 +1,6 @@
 import { PrivateKey, Name } from '@wharfkit/antelope';
 import { EosioMsigContract, setSettings } from '../../sdk';
-import { createSigner } from '../../sdk/services/blockchain';
-import { createAuthorityFromAccountArray } from '../authority';
+import { Authority, createSigner } from '../../sdk/services/blockchain';
 import settings from '../bootstrap/settings';
 
 const eosioMsigContract = EosioMsigContract.Instance;
@@ -83,7 +82,7 @@ export default async function msig(args: string[]) {
                     account: 'tonomy',
                     permission: 'active',
                     parent: 'owner',
-                    auth: createAuthorityFromAccountArray(
+                    auth: Authority.fromAccountArray(
                         [
                             '1.found.tmy',
                             '2.found.tmy',
@@ -97,7 +96,7 @@ export default async function msig(args: string[]) {
                         permissionActive,
                         2
                     ),
-                    auth_parent: true, // should be false when permission is 'owner'
+                    auth_parent: true, // should be true when permission already exists and permission owner is not active, otherwise false
                 },
             };
 
@@ -133,7 +132,7 @@ export default async function msig(args: string[]) {
                     account: 'tonomy',
                     permission: 'owner',
                     parent: '',
-                    auth: createAuthorityFromAccountArray(
+                    auth: Authority.fromAccountArray(
                         [
                             '1.found.tmy',
                             '2.found.tmy',
@@ -147,7 +146,7 @@ export default async function msig(args: string[]) {
                         permission,
                         2
                     ),
-                    auth_parent: false, // should be false when permission is 'owner'
+                    auth_parent: false, // should be true when permission already exists and permission owner is not active, otherwise false
                 },
             };
 
