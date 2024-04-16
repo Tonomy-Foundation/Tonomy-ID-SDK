@@ -327,10 +327,6 @@ async function createUsers(passphrase: string) {
     await createUser('ultimateBeast', passphrase);
     await createUser('tomtom', passphrase);
     await createUser('readingpro', passphrase);
-    await createUser('sohappy', passphrase);
-    await createUser('reallychel', passphrase);
-    await createUser('thedudeabides', passphrase);
-    await createUser('4cryingoutloud', passphrase);
 
     restoreCreateAccountFromMock();
 }
