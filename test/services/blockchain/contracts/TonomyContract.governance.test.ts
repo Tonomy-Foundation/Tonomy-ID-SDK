@@ -609,15 +609,15 @@ describe('TonomyContract class', () => {
         const requested = [
             {
                 actor: '1.found.tmy',
-                permission: 'owner',
+                permission: 'active',
             },
             {
                 actor: '2.found.tmy',
-                permission: 'owner',
+                permission: 'active',
             },
             {
                 actor: '3.found.tmy',
-                permission: 'owner',
+                permission: 'active',
             },
         ];
 
@@ -643,7 +643,7 @@ describe('TonomyContract class', () => {
             proposalName,
             {
                 actor: Name.from('1.found.tmy'),
-                permission: Name.from('owner'),
+                permission: Name.from('active'),
             },
             proposalHash,
             tonomyBoardSigners[0]
@@ -657,7 +657,7 @@ describe('TonomyContract class', () => {
                 proposalName,
                 {
                     actor: Name.from('2.found.tmy'),
-                    permission: Name.from('owner'),
+                    permission: Name.from('active'),
                 },
                 proposalHash,
                 tonomyBoardSigners[1]
