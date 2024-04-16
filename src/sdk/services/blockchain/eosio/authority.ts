@@ -1,4 +1,5 @@
-import { Name } from '@wharfkit/antelope';
+import { Name, NameType } from '@wharfkit/antelope';
+import BN from 'bn.js';
 
 type KeyWeight = { key: string; weight: number };
 type PermissionWeight = {
@@ -10,7 +11,7 @@ type PermissionWeight = {
 };
 type WaitWeight = { wait_sec: number; weight: number };
 
-class Authority {
+export class Authority {
     threshold: number;
 
     keys: KeyWeight[];
@@ -101,11 +102,27 @@ class Authority {
      * Sorts the authority weights in place, should be called before including the authority in a `updateauth` action or it might be rejected.
      */
     sort() {
-        // This hack satisfies the constraints that authority weights, see: https://github.com/wharfkit/antelope/issues/8
         this.keys.sort((a, b) => String(a.key).localeCompare(String(b.key)));
-        this.accounts.sort((a, b) => String(a.permission).localeCompare(String(b.permission)));
-        this.waits.sort((a, b) => String(a.wait_sec).localeCompare(String(b.wait_sec)));
+        this.accounts.sort((a, b) => comparePermissionLevelWeight(a, b));
+        this.waits.sort((a, b) => a.wait_sec - b.wait_sec);
     }
 }
 
-export { Authority };
+function comparePermissionLevelWeight(lhs: PermissionWeight, rhs: PermissionWeight): number {
+    if (compareNameType(lhs.permission.actor, rhs.permission.actor) !== 0) {
+        return compareNameType(lhs.permission.actor, rhs.permission.actor);
+    }
+
+    if (compareNameType(lhs.permission.permission, rhs.permission.permission) !== 0) {
+        return compareNameType(lhs.permission.permission, rhs.permission.permission);
+    }
+
+    return lhs.weight - rhs.weight;
+}
+
+function compareNameType(lhs: NameType, rhs: NameType): number {
+    const lhsValue: BN = Name.from(lhs).value.value;
+    const rhsValue: BN = Name.from(rhs).value.value;
+
+    return lhsValue.cmp(rhsValue);
+}
