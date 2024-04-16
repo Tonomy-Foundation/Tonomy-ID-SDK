@@ -32,8 +32,7 @@ Usage:
         authority account1 [account2] [account3] [accountN]
         bootstrap privateKey
         msig cancel proposalName
-        msig propose gov-update-active proposalName
-        msig propose gov-update-owner proposalName
+        msig propose proposalName
         msig exec proposalName
 `);
     }

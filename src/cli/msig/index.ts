@@ -16,6 +16,15 @@ export default async function msig(args: string[]) {
     const proposer = '1.found.tmy';
     const privateKey = PrivateKey.from(process.env.SIGNING_KEY || '');
     const signer = createSigner(privateKey);
+    const governanceAccounts = ['1.found.tmy', '2.found.tmy', '3.found.tmy'];
+    const newGovernanceAccounts = [
+        ...governanceAccounts,
+        '4.found.tmy',
+        '5.found.tmy',
+        '11.found.tmy',
+        '13.found.tmy',
+        '14.found.tmy',
+    ];
 
     if (args[0] === 'cancel') {
         const proposalName = Name.from(args[1]);
@@ -30,128 +39,36 @@ export default async function msig(args: string[]) {
             console.error('Transaction failed');
         }
     } else if (args[0] === 'propose') {
-        const proposalName = Name.from(args[2]);
+        const proposalName = Name.from(args[1]);
 
-        let requested, actions;
+        const requested = governanceAccounts.map((actor) => ({
+            actor,
+            permission: 'active',
+        }));
 
-        if (args[1] === 'gov-update-active') {
-            const permissionActive = 'active';
-            const permissionOwner = 'owner';
-
-            requested = [
+        const updateAuthAction = {
+            account: 'tonomy',
+            name: 'updateauth',
+            authorization: [
                 {
-                    actor: '1.found.tmy',
-                    permission: permissionActive,
-                },
-                {
-                    actor: '2.found.tmy',
-                    permission: permissionActive,
-                },
-                {
-                    actor: '3.found.tmy',
-                    permission: permissionActive,
-                },
-                {
-                    actor: '1.found.tmy',
-                    permission: permissionOwner,
-                },
-                {
-                    actor: '2.found.tmy',
-                    permission: permissionOwner,
-                },
-                {
-                    actor: '3.found.tmy',
-                    permission: permissionOwner,
-                },
-            ];
-
-            const updateAuthAction = {
-                account: 'tonomy',
-                name: 'updateauth',
-                authorization: [
-                    {
-                        actor: 'tonomy',
-                        permission: 'active',
-                    },
-                    {
-                        actor: 'tonomy',
-                        permission: 'owner',
-                    },
-                ],
-                data: {
-                    account: 'tonomy',
+                    actor: 'tonomy',
                     permission: 'active',
-                    parent: 'owner',
-                    auth: Authority.fromAccountArray(
-                        [
-                            '1.found.tmy',
-                            '2.found.tmy',
-                            '3.found.tmy',
-                            '4.found.tmy',
-                            '5.found.tmy',
-                            '11.found.tmy',
-                            '13.found.tmy',
-                            '14.found.tmy',
-                        ],
-                        permissionActive,
-                        2
-                    ),
-                    auth_parent: true, // should be true when a new permission is being created, otherwise false
-                },
-            };
-
-            actions = [updateAuthAction];
-        } else if (args[1] === 'gov-update-owner') {
-            const permission = 'owner';
-
-            requested = [
-                {
-                    actor: '1.found.tmy',
-                    permission,
                 },
                 {
-                    actor: '2.found.tmy',
-                    permission,
-                },
-                {
-                    actor: '3.found.tmy',
-                    permission,
-                },
-            ];
-
-            const updateAuthAction = {
-                account: 'tonomy',
-                name: 'updateauth',
-                authorization: [
-                    {
-                        actor: 'tonomy',
-                        permission: 'owner',
-                    },
-                ],
-                data: {
-                    account: 'tonomy',
+                    actor: 'tonomy',
                     permission: 'owner',
-                    parent: '',
-                    auth: Authority.fromAccountArray(
-                        [
-                            '1.found.tmy',
-                            '2.found.tmy',
-                            '3.found.tmy',
-                            '4.found.tmy',
-                            '5.found.tmy',
-                            '11.found.tmy',
-                            '13.found.tmy',
-                            '14.found.tmy',
-                        ],
-                        permission,
-                        2
-                    ),
-                    auth_parent: false, // should be true when a new permission is being created, otherwise false
                 },
-            };
+            ],
+            data: {
+                account: 'tonomy',
+                permission: 'active',
+                parent: 'owner',
+                auth: Authority.fromAccountArray(newGovernanceAccounts, 'active', 2),
+                auth_parent: false, // should be true when a new permission is being created, otherwise false
+            },
+        };
 
-            actions = [updateAuthAction];
-        }
+        const actions = [updateAuthAction];
 
         console.log(
             'Sending transaction',
@@ -160,7 +77,7 @@ export default async function msig(args: string[]) {
                     proposer,
                     proposalName,
                     requested,
-                    actions: actions,
+                    actions,
                     signer: privateKey.toPublic(),
                 },
                 null,
@@ -169,13 +86,7 @@ export default async function msig(args: string[]) {
         );
 
         try {
-            const { transaction } = await eosioMsigContract.propose(
-                proposer,
-                proposalName,
-                requested as any,
-                actions as any,
-                signer
-            );
+            const { transaction } = await eosioMsigContract.propose(proposer, proposalName, requested, actions, signer);
 
             console.log('Transaction: ', JSON.stringify(transaction, null, 2));
             console.error('Transaction succeeded');
