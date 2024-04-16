@@ -319,9 +319,114 @@ describe('TonomyContract class', () => {
                 };
 
                 try {
-                    await sleep(2000);
                     await transact(Name.from('tonomy'), [updateAuthAction], tonomyBoardSigners.slice(0, 2));
                     await restoreFoundTmyAuth();
+                } catch (e) {
+                    console.log(e.message, JSON.stringify(e, null, 2));
+                    throw e;
+                }
+            });
+
+            test('found.tmy@owner update and sign with tonomy@owner using 2 eosio.msig with board keys and change back should succeed', async () => {
+                expect.assertions(3);
+
+                const updateAuthAction: ActionData = {
+                    account: 'tonomy',
+                    name: 'updateauth',
+                    authorization: [
+                        {
+                            actor: 'tonomy',
+                            permission: 'owner',
+                        },
+                        {
+                            actor: 'tonomy',
+                            permission: 'active',
+                        },
+                    ],
+                    data: {
+                        account: 'found.tmy',
+                        permission: 'owner',
+                        parent: '',
+                        auth: Authority.fromAccountArray(newAccounts, 'active', 2),
+                        // eslint-disable-next-line camelcase
+                        auth_parent: false, // should be true when a new permission is being created, otherwise false
+                    },
+                };
+
+                try {
+                    await transact(Name.from('tonomy'), [updateAuthAction], tonomyBoardSigners.slice(0, 2));
+
+                    const proposalName = randomAccountName();
+                    const proposer = '1.found.tmy';
+
+                    const requested = newAccounts.map((account) => {
+                        return { actor: account, permission: 'active' };
+                    });
+
+                    const updateAuthActionRestore: ActionData = {
+                        account: 'tonomy',
+                        name: 'updateauth',
+                        authorization: [
+                            {
+                                actor: 'tonomy',
+                                permission: 'owner',
+                            },
+                            {
+                                actor: 'tonomy',
+                                permission: 'active',
+                            },
+                        ],
+                        data: {
+                            account: 'found.tmy',
+                            permission: 'owner',
+                            parent: '',
+                            auth: Authority.fromAccountArray(tonomyBoardAccounts, 'active', 2),
+                            // eslint-disable-next-line camelcase
+                            auth_parent: false, // should be true when a new permission is being created, otherwise false
+                        },
+                    };
+
+                    const { proposalHash, transaction } = await eosioMsigContract.propose(
+                        proposer,
+                        proposalName,
+                        requested,
+                        [updateAuthActionRestore],
+                        tonomyBoardSigners[0]
+                    );
+
+                    expect(transaction.processed.receipt.status).toBe('executed');
+
+                    const approve1Trx = await eosioMsigContract.approve(
+                        proposer,
+                        proposalName,
+                        {
+                            actor: Name.from(newAccounts[0]),
+                            permission: Name.from('active'),
+                        },
+                        proposalHash,
+                        newSigners[0]
+                    );
+
+                    expect(approve1Trx.processed.receipt.status).toBe('executed');
+
+                    await eosioMsigContract.approve(
+                        proposer,
+                        proposalName,
+                        {
+                            actor: Name.from(newAccounts[1]),
+                            permission: Name.from('active'),
+                        },
+                        proposalHash,
+                        newSigners[1]
+                    );
+                    const execTrx = await eosioMsigContract.exec(
+                        proposer,
+                        proposalName,
+                        '1.found.tmy',
+                        tonomyBoardSigners[0]
+                    );
+
+                    expect(execTrx.processed.receipt.status).toBe('executed');
                 } catch (e) {
                     console.log(e.message, JSON.stringify(e, null, 2));
                     throw e;
