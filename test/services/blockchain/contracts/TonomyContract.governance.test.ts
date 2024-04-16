@@ -1,15 +1,17 @@
 import { ABI, KeyType, Name, PrivateKey, Serializer } from '@wharfkit/antelope';
-import { EosioMsigContract, Authority } from '../../../../src/sdk/index';
+import { EosioMsigContract } from '../../../../src/sdk/index';
 import {
     ActionData,
     TonomyEosioProxyContract,
     createSigner,
     getTonomyOperationsKey,
     transact,
+    Authority,
 } from '../../../../src/sdk/services/blockchain';
 import { setTestSettings } from '../../../helpers/settings';
 import { getDeployableFilesFromDir } from '../../../../src/cli/bootstrap/deploy-contract';
 import fs from 'fs';
+import { sleep } from '../../../../src/sdk/util';
 
 setTestSettings();
 
@@ -19,6 +21,7 @@ const tonomyBoardKeys = [
     'PVT_K1_2KjVtHQaBXydUidyoEdjbLw44DZBaQbFdNB6GmQHPzoXQqsTyp',
 ];
 
+const tonomyBoardAccounts = ['1.found.tmy', '2.found.tmy', '3.found.tmy'];
 const tonomyBoardPrivateKeys = tonomyBoardKeys.map((key) => PrivateKey.from(key));
 const tonomyBoardSigners = tonomyBoardPrivateKeys.map((key) => createSigner(key));
 
@@ -151,111 +154,278 @@ describe('TonomyContract class', () => {
     });
 
     describe('native::updateauth()', () => {
-        // special_governance_check()
-        let key: PrivateKey;
-        let authority: Authority;
-        let action: ActionData;
-        let newPermission: string;
+        describe('update eosio@[new] auth', () => {
+            // special_governance_check()
+            let key: PrivateKey;
+            let authority: Authority;
+            let action: ActionData;
+            let newPermission: string;
 
-        beforeEach(() => {
-            key = PrivateKey.generate(KeyType.K1);
-            authority = Authority.fromKey(key.toPublic().toString());
-            newPermission = randomAccountName();
+            beforeEach(() => {
+                key = PrivateKey.generate(KeyType.K1);
+                authority = Authority.fromKey(key.toPublic().toString());
+                newPermission = randomAccountName();
 
-            action = {
-                account: 'tonomy',
-                name: 'updateauth',
-                authorization: [
-                    {
-                        actor: 'tonomy',
-                        permission: 'owner',
+                action = {
+                    account: 'tonomy',
+                    name: 'updateauth',
+                    authorization: [
+                        {
+                            actor: 'tonomy',
+                            permission: 'owner',
+                        },
+                    ],
+                    data: {
+                        account: 'eosio',
+                        permission: newPermission,
+                        parent: 'owner',
+                        auth: authority,
+                        // eslint-disable-next-line camelcase
+                        auth_parent: true, // should be true when permission already exists and permission owner is not active, otherwise false
                     },
-                ],
-                data: {
-                    account: 'eosio',
-                    permission: newPermission,
-                    parent: 'owner',
-                    auth: authority,
-                    // eslint-disable-next-line camelcase
-                    auth_parent: true,
-                },
-            };
+                };
+            });
+
+            test('sign with tonomy@owner should succeed', async () => {
+                expect.assertions(1);
+
+                try {
+                    const trx = await transact(
+                        Name.from('tonomy'),
+                        [action],
+                        [tonomyBoardSigners[0], tonomyBoardSigners[1]]
+                    );
+
+                    expect(trx.processed.receipt.status).toBe('executed');
+                } catch (e) {
+                    console.log(e.message, JSON.stringify(e, null, 2));
+                    throw e;
+                }
+            });
+
+            test('sign with tonomy@owner with only one board key should fail', async () => {
+                expect.assertions(1);
+
+                try {
+                    await transact(Name.from('tonomy'), [action], [tonomyBoardSigners[0]]);
+                } catch (e) {
+                    expect(e.error.details[0].message).toContain('but does not have signatures for it');
+                }
+            });
+
+            test('sign with tonomy@active should fail', async () => {
+                expect.assertions(1);
+
+                try {
+                    await transact(Name.from('tonomy'), [action], [tonomyOpsSigner]);
+                } catch (e) {
+                    expect(e.error.details[0].message).toContain('but does not have signatures for it');
+                }
+            });
+
+            test('sign with tonomy@owner should succeed', async () => {
+                expect.assertions(1);
+
+                try {
+                    action.authorization = [{ actor: 'tonomy', permission: 'owner' }];
+                    const trx = await transact(
+                        Name.from('tonomy'),
+                        [action],
+                        [tonomyBoardSigners[0], tonomyBoardSigners[1]]
+                    );
+
+                    expect(trx.processed.receipt.status).toBe('executed');
+                } catch (e) {
+                    console.log(e.message, JSON.stringify(e, null, 2));
+                    throw e;
+                }
+            });
+
+            test('sign with tonomy@owner using eosio.msig 2 keys should succeed', async () => {
+                expect.assertions(3);
+
+                try {
+                    await msigAction([action], { satisfyRequireApproval: true });
+                } catch (e) {
+                    console.log(e.message, JSON.stringify(e, null, 2));
+                    throw e;
+                }
+            });
+
+            test('sign with tonomy@owner using eosio.msig 1 keys should fail', async () => {
+                expect.assertions(3);
+
+                try {
+                    await msigAction([action]);
+                } catch (e) {
+                    console.log(e.message, JSON.stringify(e, null, 2));
+                    throw e;
+                }
+            });
         });
 
-        test('update eosio auth: sign with tonomy@owner should succeed', async () => {
-            expect.assertions(1);
+        describe('update found.tmy auth', () => {
+            const newAccounts = [randomAccountName(), randomAccountName(), randomAccountName()];
+            const newKeys = newAccounts.map(() => PrivateKey.generate(KeyType.K1));
+            const newAuthorities = newKeys.map((key) => Authority.fromKey(key.toPublic().toString()));
+            const newSigners = newKeys.map((key) => createSigner(key));
 
-            try {
-                const trx = await transact(
+            beforeAll(async () => {
+                function newAccountAction(name: string, authority: Authority) {
+                    return {
+                        account: 'tonomy',
+                        name: 'newaccount',
+                        authorization: [
+                            {
+                                actor: 'tonomy',
+                                permission: 'owner',
+                            },
+                        ],
+                        data: {
+                            creator: 'tonomy',
+                            name,
+                            owner: authority,
+                            active: authority,
+                        },
+                    };
+                }
+
+                // Create new accounts to use as new governance accounts
+                const actions: ActionData[] = [];
+
+                for (let i = 0; i < newAccounts.length; i++) {
+                    actions.push(newAccountAction(newAccounts[i], newAuthorities[i]));
+                }
+
+                await transact(Name.from('tonomy'), actions, [tonomyBoardSigners[0], tonomyBoardSigners[1]]);
+                console.log('New accounts created:', newAccounts);
+            });
+
+            test('found.tmy@owner sign with tonomy@owner using 2 board keys and change back should succeed', async () => {
+                expect.assertions(1);
+
+                const updateAuthAction: ActionData = {
+                    account: 'tonomy',
+                    name: 'updateauth',
+                    authorization: [
+                        {
+                            actor: 'tonomy',
+                            permission: 'owner',
+                        },
+                        {
+                            actor: 'tonomy',
+                            permission: 'active',
+                        },
+                    ],
+                    data: {
+                        account: 'found.tmy',
+                        permission: 'owner',
+                        parent: '',
+                        auth: Authority.fromAccountArray(newAccounts, 'owner', 2),
+                        // eslint-disable-next-line camelcase
+                        auth_parent: false, // should be true when permission already exists and permission owner is not active, otherwise false
+                    },
+                };
+
+                try {
+                    // Change to new owners
+                    await sleep(2000);
+                    await transact(
+                        Name.from('tonomy'),
+                        [updateAuthAction],
+                        [tonomyBoardSigners[0], tonomyBoardSigners[1]]
+                    );
+                    console.log('Changed found.tmy owner to:', newAccounts);
+                    // Then change back
+                    await restoreFoundTmyAuth('owner');
+                    console.log('Changed found.tmy owner back to:', tonomyBoardAccounts);
+                } catch (e) {
+                    console.log(e.message, JSON.stringify(e, null, 2));
+                    throw e;
+                }
+            });
+
+            test('found.tmy@active sign with tonomy@owner using 2 board keys and change back should succeed', async () => {
+                expect.assertions(1);
+
+                const updateAuthAction: ActionData = {
+                    account: 'tonomy',
+                    name: 'updateauth',
+                    authorization: [
+                        {
+                            actor: 'tonomy',
+                            permission: 'owner',
+                        },
+                        {
+                            actor: 'tonomy',
+                            permission: 'active',
+                        },
+                    ],
+                    data: {
+                        account: 'found.tmy',
+                        permission: 'active',
+                        parent: '',
+                        auth: Authority.fromAccountArray(newAccounts, 'active', 2),
+                        // eslint-disable-next-line camelcase
+                        auth_parent: true, // should be true when permission already exists and permission owner is not active, otherwise false
+                    },
+                };
+
+                try {
+                    // Change to new owners
+                    await sleep(2000);
+                    await transact(
+                        Name.from('tonomy'),
+                        [updateAuthAction],
+                        [tonomyBoardSigners[0], tonomyBoardSigners[1]]
+                    );
+                    console.log('Changed found.tmy owner to:', newAccounts);
+                    // Then change back
+                    await restoreFoundTmyAuth('active');
+                    console.log('Changed found.tmy owner back to:', tonomyBoardAccounts);
+                } catch (e) {
+                    console.log(e.message, JSON.stringify(e, null, 2));
+                    throw e;
+                }
+            });
+
+            async function restoreFoundTmyAuth(permission: string) {
+                const updateAuthAction: ActionData = {
+                    account: 'tonomy',
+                    name: 'updateauth',
+                    authorization: [
+                        {
+                            actor: 'tonomy',
+                            permission: 'owner',
+                        },
+                        {
+                            actor: 'tonomy',
+                            permission: 'active',
+                        },
+                    ],
+                    data: {
+                        account: 'found.tmy',
+                        permission: permission,
+                        parent: '',
+                        auth: Authority.fromAccountArray(tonomyBoardAccounts, 'owner', 2),
+                        // eslint-disable-next-line camelcase
+                        auth_parent: true, // should be true when permission already exists and permission owner is not active, otherwise false
+                    },
+                };
+
+                if (permission === 'active') {
+                    updateAuthAction.data.auth_parent = true;
+                    // @ts-expect-error - data Object does not have a property 'parent'
+                    updateAuthAction.data.parent = 'owner';
+                }
+
+                const transaction = await transact(
                     Name.from('tonomy'),
-                    [action],
-                    [tonomyBoardSigners[0], tonomyBoardSigners[1]]
+                    [updateAuthAction],
+                    [...newSigners.slice(0, 1), ...tonomyBoardSigners.slice(0, 1)]
                 );
 
-                expect(trx.processed.receipt.status).toBe('executed');
-            } catch (e) {
-                console.log(e.message, JSON.stringify(e, null, 2));
-                throw e;
-            }
-        });
-
-        test('update eosio auth: sign with tonomy@owner with only one board key should fail', async () => {
-            expect.assertions(1);
-
-            try {
-                await transact(Name.from('tonomy'), [action], [tonomyBoardSigners[0]]);
-            } catch (e) {
-                expect(e.error.details[0].message).toContain('but does not have signatures for it');
-            }
-        });
-
-        test('update eosio auth: sign with tonomy@active should fail', async () => {
-            expect.assertions(1);
-
-            try {
-                await transact(Name.from('tonomy'), [action], [tonomyOpsSigner]);
-            } catch (e) {
-                expect(e.error.details[0].message).toContain('but does not have signatures for it');
-            }
-        });
-
-        test('update eosio auth: sign with tonomy@owner should succeed', async () => {
-            expect.assertions(1);
-
-            try {
-                action.authorization = [{ actor: 'tonomy', permission: 'owner' }];
-                const trx = await transact(
-                    Name.from('tonomy'),
-                    [action],
-                    [tonomyBoardSigners[0], tonomyBoardSigners[1]]
-                );
-
-                expect(trx.processed.receipt.status).toBe('executed');
-            } catch (e) {
-                console.log(e.message, JSON.stringify(e, null, 2));
-                throw e;
-            }
-        });
-
-        test('update eosio auth: sign with tonomy@owner using eosio.msig 2 keys should succeed', async () => {
-            expect.assertions(3);
-
-            try {
-                await msigAction([action], { satisfyRequireApproval: true });
-            } catch (e) {
-                console.log(e.message, JSON.stringify(e, null, 2));
-                throw e;
-            }
-        });
-
-        test('update eosio auth: sign with tonomy@owner using eosio.msig 1 keys should fail', async () => {
-            expect.assertions(3);
-
-            try {
-                await msigAction([action]);
-            } catch (e) {
-                console.log(e.message, JSON.stringify(e, null, 2));
-                throw e;
+                expect(transaction.processed.receipt.status).toBe('executed');
             }
         });
     });
