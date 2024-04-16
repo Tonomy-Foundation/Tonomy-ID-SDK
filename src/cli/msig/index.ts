@@ -96,7 +96,7 @@ export default async function msig(args: string[]) {
                         permissionActive,
                         2
                     ),
-                    auth_parent: true, // should be true when permission already exists and permission owner is not active, otherwise false
+                    auth_parent: true, // should be true when a new permission is being created, otherwise false
                 },
             };
 
@@ -146,7 +146,7 @@ export default async function msig(args: string[]) {
                         permission,
                         2
                     ),
-                    auth_parent: false, // should be true when permission already exists and permission owner is not active, otherwise false
+                    auth_parent: false, // should be true when a new permission is being created, otherwise false
                 },
             };
 

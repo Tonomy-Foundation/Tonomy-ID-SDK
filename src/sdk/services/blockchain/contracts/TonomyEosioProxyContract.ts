@@ -104,7 +104,7 @@ export class TonomyEosioProxyContract {
                 permission,
                 parent: permission === 'owner' ? '' : parent,
                 auth,
-                auth_parent: options.authParent ?? false, // should be true when permission already exists and permission owner is not active, otherwise false
+                auth_parent: options.authParent ?? false, // should be true when a new permission is being created, otherwise false
             },
         };
 

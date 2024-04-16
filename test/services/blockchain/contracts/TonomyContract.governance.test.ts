@@ -181,7 +181,7 @@ describe('TonomyContract class', () => {
                         parent: 'owner',
                         auth: authority,
                         // eslint-disable-next-line camelcase
-                        auth_parent: true, // should be true when permission already exists and permission owner is not active, otherwise false
+                        auth_parent: true, // should be true when a new permission is being created, otherwise false
                     },
                 };
             });
@@ -323,7 +323,7 @@ describe('TonomyContract class', () => {
                         parent: '',
                         auth: Authority.fromAccountArray(newAccounts, 'owner', 2),
                         // eslint-disable-next-line camelcase
-                        auth_parent: false, // should be true when permission already exists and permission owner is not active, otherwise false
+                        auth_parent: false, // should be true when a new permission is being created, otherwise false
                     },
                 };
 
@@ -364,10 +364,10 @@ describe('TonomyContract class', () => {
                     data: {
                         account: 'found.tmy',
                         permission: 'active',
-                        parent: '',
+                        parent: 'owner',
                         auth: Authority.fromAccountArray(newAccounts, 'active', 2),
                         // eslint-disable-next-line camelcase
-                        auth_parent: true, // should be true when permission already exists and permission owner is not active, otherwise false
+                        auth_parent: false, // should be true when a new permission is being created, otherwise false
                     },
                 };
 
@@ -379,10 +379,10 @@ describe('TonomyContract class', () => {
                         [updateAuthAction],
                         [tonomyBoardSigners[0], tonomyBoardSigners[1]]
                     );
-                    console.log('Changed found.tmy owner to:', newAccounts);
+                    console.log('Changed found.tmy active to:', newAccounts);
                     // Then change back
                     await restoreFoundTmyAuth('active');
-                    console.log('Changed found.tmy owner back to:', tonomyBoardAccounts);
+                    console.log('Changed found.tmy active back to:', tonomyBoardAccounts);
                 } catch (e) {
                     console.log(e.message, JSON.stringify(e, null, 2));
                     throw e;
@@ -409,7 +409,7 @@ describe('TonomyContract class', () => {
                         parent: '',
                         auth: Authority.fromAccountArray(tonomyBoardAccounts, 'owner', 2),
                         // eslint-disable-next-line camelcase
-                        auth_parent: true, // should be true when permission already exists and permission owner is not active, otherwise false
+                        auth_parent: true, // should be true when a new permission is being created, otherwise false
                     },
                 };
 
