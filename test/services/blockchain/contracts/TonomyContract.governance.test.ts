@@ -290,52 +290,7 @@ describe('TonomyContract class', () => {
                 }
 
                 await transact(Name.from('tonomy'), actions, tonomyBoardSigners.slice(0, 2));
-                console.log('New accounts created:', newAccounts);
             });
-
-            // test('found.tmy@active to use found.tmy@owner: sign with tonomy@owner using 2 board keys and change back should succeed', async () => {
-            //     expect.assertions(1);
-
-            //     const updateAuthAction: ActionData = {
-            //         account: 'tonomy',
-            //         name: 'updateauth',
-            //         authorization: [
-            //             {
-            //                 actor: 'tonomy',
-            //                 permission: 'owner',
-            //             },
-            //             {
-            //                 actor: 'tonomy',
-            //                 permission: 'active',
-            //             },
-            //         ],
-            //         data: {
-            //             account: 'found.tmy',
-            //             permission: 'active',
-            //             parent: 'owner',
-            //             auth: Authority.fromAccount({ actor: 'found.tmy', permission: 'owner' }),
-            //             // eslint-disable-next-line camelcase
-            //             auth_parent: false, // should be true when a new permission is being created, otherwise false
-            //         },
-            //     };
-
-            //     try {
-            //         // Change to new owners
-            //         await sleep(2000);
-            //         await transact(
-            //             Name.from('tonomy'),
-            //             [updateAuthAction],
-            //             tonomyBoardSigners.slice(0, 2)
-            //         );
-            //         console.log('Changed found.tmy owner to:', newAccounts);
-            //         // Then change back
-            //         // await restoreFoundTmyAuth('owner');
-            //         // console.log('Changed found.tmy owner back to:', tonomyBoardAccounts);
-            //     } catch (e) {
-            //         console.log(e.message, JSON.stringify(e, null, 2));
-            //         throw e;
-            //     }
-            // });
 
             test('found.tmy@owner update and sign with tonomy@owner using 2 board keys and change back should succeed', async () => {
                 expect.assertions(1);
@@ -366,58 +321,12 @@ describe('TonomyContract class', () => {
                 try {
                     await sleep(2000);
                     await transact(Name.from('tonomy'), [updateAuthAction], tonomyBoardSigners.slice(0, 2));
-                    console.log('Changed found.tmy owner to:', newAccounts);
                     await restoreFoundTmyAuth();
-                    console.log('Changed found.tmy owner back to:', tonomyBoardAccounts);
                 } catch (e) {
                     console.log(e.message, JSON.stringify(e, null, 2));
                     throw e;
                 }
             });
-
-            // test('found.tmy@active sign with tonomy@owner using 2 board keys and change back should succeed', async () => {
-            //     expect.assertions(1);
-
-            //     const updateAuthAction: ActionData = {
-            //         account: 'tonomy',
-            //         name: 'updateauth',
-            //         authorization: [
-            //             {
-            //                 actor: 'tonomy',
-            //                 permission: 'owner',
-            //             },
-            //             {
-            //                 actor: 'tonomy',
-            //                 permission: 'active',
-            //             },
-            //         ],
-            //         data: {
-            //             account: 'found.tmy',
-            //             permission: 'active',
-            //             parent: 'owner',
-            //             auth: Authority.fromAccountArray(newAccounts, 'active', 2),
-            //             // eslint-disable-next-line camelcase
-            //             auth_parent: false, // should be true when a new permission is being created, otherwise false
-            //         },
-            //     };
-
-            //     try {
-            //         // Change to new owners
-            //         await sleep(2000);
-            //         await transact(
-            //             Name.from('tonomy'),
-            //             [updateAuthAction],
-            //             tonomyBoardSigners.slice(0, 2)
-            //         );
-            //         console.log('Changed found.tmy active to:', newAccounts);
-            //         // Then change back
-            //         await restoreFoundTmyAuth();
-            //         console.log('Changed found.tmy active back to:', tonomyBoardAccounts);
-            //     } catch (e) {
-            //         console.log(e.message, JSON.stringify(e, null, 2));
-            //         throw e;
-            //     }
-            // });
 
             async function restoreFoundTmyAuth() {
                 const updateAuthAction: ActionData = {
