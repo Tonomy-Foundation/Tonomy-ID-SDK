@@ -16,7 +16,7 @@ import {
 import { getSigner, updateAccountKey, updateControlByAccount } from './keys';
 import settings from './settings';
 import { Checksum256, PrivateKey, PublicKey } from '@wharfkit/antelope';
-import { Authority, Signer, defaultBlockchainParams } from '../../sdk/services/blockchain';
+import { Authority, Signer, TonomyEosioProxyContract, defaultBlockchainParams } from '../../sdk/services/blockchain';
 import { createUser, mockCreateAccount, restoreCreateAccountFromMock } from './user';
 
 if (process.env.LOG === 'true') {
@@ -166,6 +166,17 @@ async function deployEosioMsig() {
 async function configureDemoToken(newSigner: Signer) {
     await demoTokenContract.create(`1000000000 DEMO`, newSigner);
     await demoTokenContract.issue(`10000 DEMO`, newSigner);
+}
+
+async function deployVesting() {
+    console.log('Deploy vesting.tmy contract');
+    await deployContract(
+        {
+            account: 'vesting.tmy',
+            contractDir: path.join(__dirname, '../../Tonomy-Contracts/contracts/vesting.tmy'),
+        },
+        signer
+    );
 }
 
 async function createNativeToken() {
@@ -427,25 +438,18 @@ async function deployEosioTonomy(signer: Signer) {
     );
 }
 
-async function deployVesting() {
-    console.log('Deploy vesting.tmy contract');
-    await deployContract(
-        {
-            account: 'vesting.tmy',
-            contractDir: path.join(__dirname, '../../Tonomy-Contracts/contracts/vesting.tmy'),
-        },
-        signer
-    );
-}
+const tonomyEosioProxyContract = TonomyEosioProxyContract.Instance;
 
 async function updateMsigControl(govKeys: string[], signer: Signer) {
     console.log('Update found.tmy msig control');
 
-    const govAccounts: string[] = [];
+    const govAccounts: string[] = govKeys.map((key) => indexToAccountName(govKeys.indexOf(key)));
 
-    for (let i = 0; i < govKeys.length; i++) {
-        govAccounts.push(indexToAccountName(i));
-    }
+    const activeAuthority = Authority.fromAccount({ actor: 'found.tmy', permission: 'owner' });
+    const threshold = Math.ceil((govAccounts.length * 2) / 3);
+    const ownerAuthority = Authority.fromAccountArray(govAccounts, 'active', threshold);
 
-    await updateControlByAccount('found.tmy', govAccounts, signer, { useTonomyContract: true });
+    await tonomyEosioProxyContract.updateauth('found.tmy', 'active', 'owner', activeAuthority, signer);
+
+    await tonomyEosioProxyContract.updateauth('found.tmy', 'owner', 'owner', ownerAuthority, signer);
 }
