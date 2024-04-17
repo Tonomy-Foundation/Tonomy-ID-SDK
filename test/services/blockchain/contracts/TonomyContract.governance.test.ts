@@ -356,6 +356,7 @@ describe('TonomyContract class', () => {
                 };
 
                 try {
+                    await sleep(1000);
                     await transact(Name.from('tonomy'), [updateAuthAction], tonomyBoardSigners.slice(0, 2));
 
                     const proposalName = randomAccountName();
@@ -797,6 +798,7 @@ describe('TonomyContract class', () => {
 
             test('using tonomy contract, sign with tonomy@owner with two board signers should succeed', async () => {
                 expect.assertions(2);
+                await sleep(1000);
                 const trx = await tonomyEosioProxyContract.deployContract(
                     Name.from('tonomy'),
                     wasmFile,
