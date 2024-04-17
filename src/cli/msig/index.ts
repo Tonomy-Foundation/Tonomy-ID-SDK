@@ -64,6 +64,7 @@ export default async function msig(args: string[]) {
                 permission: 'active',
                 parent: 'owner',
                 auth: Authority.fromAccountArray(newGovernanceAccounts, 'active', 2),
+                // eslint-disable-next-line camelcase
                 auth_parent: false, // should be true when a new permission is being created, otherwise false
             },
         };
