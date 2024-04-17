@@ -39,70 +39,80 @@ export default async function msig(args: string[]) {
             console.error('Transaction failed');
         }
     } else if (args[0] === 'propose') {
-        const proposalName = Name.from(args[1]);
+        const proposalName = Name.from(args[2]);
 
-        const requested = governanceAccounts.map((actor) => ({
-            actor,
-            permission: 'active',
-        }));
-
-        const updateAuthAction = {
-            account: 'tonomy',
-            name: 'updateauth',
-            authorization: [
-                {
-                    actor: 'tonomy',
-                    permission: 'active',
-                },
-                {
-                    actor: 'tonomy',
-                    permission: 'owner',
-                },
-            ],
-            data: {
-                account: 'tonomy',
+        if (args[1] === 'gov-update') {
+            const requested = governanceAccounts.map((actor) => ({
+                actor,
                 permission: 'active',
-                parent: 'owner',
-                auth: Authority.fromAccountArray(newGovernanceAccounts, 'active', 2),
-                // eslint-disable-next-line camelcase
-                auth_parent: false, // should be true when a new permission is being created, otherwise false
-            },
-        };
+            }));
 
-        const actions = [updateAuthAction];
+            const updateAuthAction = {
+                account: 'tonomy',
+                name: 'updateauth',
+                authorization: [
+                    {
+                        actor: 'tonomy',
+                        permission: 'active',
+                    },
+                    {
+                        actor: 'tonomy',
+                        permission: 'owner',
+                    },
+                ],
+                data: {
+                    account: 'found.tmy',
+                    permission: 'owner',
+                    parent: '',
+                    auth: Authority.fromAccountArray(newGovernanceAccounts, 'active', 2),
+                    // eslint-disable-next-line camelcase
+                    auth_parent: false, // should be true when a new permission is being created, otherwise false
+                },
+            };
 
-        console.log(
-            'Sending transaction',
-            JSON.stringify(
-                {
+            const actions = [updateAuthAction];
+
+            console.log(
+                'Sending transaction',
+                JSON.stringify(
+                    {
+                        proposer,
+                        proposalName,
+                        requested,
+                        actions,
+                        signer: privateKey.toPublic(),
+                    },
+                    null,
+                    2
+                )
+            );
+
+            try {
+                const { transaction } = await eosioMsigContract.propose(
                     proposer,
                     proposalName,
                     requested,
                     actions,
-                    signer: privateKey.toPublic(),
-                },
-                null,
-                2
-            )
-        );
-
-        try {
-            const { transaction } = await eosioMsigContract.propose(proposer, proposalName, requested, actions, signer);
-
-            console.log('Transaction: ', JSON.stringify(transaction, null, 2));
-            console.error('Transaction succeeded');
-
-            console.log('Proposal name: ', proposalName.toString());
-            console.log('You have 5 days to approve and execute the proposal.');
-        } catch (e) {
-            if (e?.error?.details[0]?.message.includes('transaction declares authority')) {
-                console.error(
-                    'The transaction authorization requirements are not correct. Check the action authorizations, and the "requested" permissions.'
+                    signer
                 );
-            } else {
-                console.error('Error: ', JSON.stringify(e, null, 2));
-                console.error('Transaction failed');
+
+                console.log('Transaction: ', JSON.stringify(transaction, null, 2));
+                console.error('Transaction succeeded');
+
+                console.log('Proposal name: ', proposalName.toString());
+                console.log('You have 7 days to approve and execute the proposal.');
+            } catch (e) {
+                if (e?.error?.details[0]?.message.includes('transaction declares authority')) {
+                    console.error(
+                        'The transaction authorization requirements are not correct. Check the action authorizations, and the "requested" permissions.'
+                    );
+                } else {
+                    console.error('Error: ', JSON.stringify(e, null, 2));
+                    console.error('Transaction failed');
+                }
             }
+        } else {
+            throw new Error(`Invalid msig proposal ${args[1]}`);
         }
     } else if (args[0] === 'exec') {
         const proposalName = Name.from(args[1]);
