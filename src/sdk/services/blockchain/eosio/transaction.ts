@@ -13,12 +13,16 @@ import { HttpError } from '../../../util/errors';
 import { getApi } from './eosio';
 import { getSettings } from '../../../util';
 
+interface MapObject {
+    [key: string]: any;
+}
+
 /**
  * Action data for a transaction
  * @property {string} account - The smart contract account name
  * @property {string} name - The name of the action (function in the smart contract)
  * @property {object} data - The data for the action (arguments for the function)
- * @property {object} authorization - The authorization for the action
+ * @property {MapObject} authorization - The authorization for the action
  */
 export type ActionData = {
     authorization: {
@@ -27,14 +31,15 @@ export type ActionData = {
     }[];
     account?: string;
     name: string;
-    data: object;
+    data: MapObject;
 };
 
 interface Signer {
     sign(digest: Checksum256 | string): Promise<Signature>;
 }
 
-interface AntelopePushTransactionErrorConstructor extends Error {
+interface AntelopePushTransactionErrorConstructor {
+    message: string;
     code: number;
     error: {
         code: number;
@@ -96,7 +101,12 @@ export class AntelopePushTransactionError extends Error {
         super('AntelopePushTransactionError');
 
         this.code = err.code;
-        this.message = err.message;
+        this.message = err.error.what;
+
+        if (Array.isArray(err.error?.details) && err.error.details.length > 0) {
+            this.message += ': ' + err.error.details[0].message;
+        }
+
         this.error = err.error;
         this.contract = err.contract;
         this.actions = err.actions;
