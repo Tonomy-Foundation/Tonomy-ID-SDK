@@ -381,7 +381,7 @@ describe('VestingContract class', () => {
             expect(assetToAmount(allocations3[0].tokens_claimed)).toBe(1.0);
             expect(assetToAmount(allocations3[1].tokens_claimed)).toBe(1.0);
 
-            expect(transferAmount + transferAmount2 + transferAmount3).toBe(2.0);
+            expect(transferAmount + transferAmount2 + transferAmount3).toBeCloseTo(2.0, 6);
         });
 
         test('Successful withdrawal with 2 different allocations of different categories', async () => {
