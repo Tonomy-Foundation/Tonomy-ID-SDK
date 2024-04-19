@@ -35,6 +35,7 @@ Usage:
         msig propose gov-migrate proposalName
         msig propose new-account proposalName
         msig propose transfer proposalName
+        msig propose ... --test
         msig exec proposalName
 `);
     }
