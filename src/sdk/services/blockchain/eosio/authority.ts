@@ -78,6 +78,8 @@ export class Authority {
             },
             weight: 1,
         });
+
+        this.sort();
     }
 
     addAccount(permission: { actor: string; permission: string }) {
@@ -85,6 +87,8 @@ export class Authority {
             permission,
             weight: 1,
         });
+
+        this.sort();
     }
 
     addKey(key: string, weight: number) {
@@ -92,6 +96,8 @@ export class Authority {
             key,
             weight,
         });
+
+        this.sort();
     }
 
     setThreshold(threshold: number) {
