@@ -90,8 +90,9 @@ export default async function msig(args: string[]) {
             if (test) await executeProposal(proposer, proposalName, proposalHash);
         } else if (proposalType === 'new-account') {
             const activeAuth = Authority.fromAccount({ actor: 'team.tmy', permission: 'active' });
+            const additionalAuthority = test ? governanceAccounts[2] : '13.found.tmy';
 
-            activeAuth.addAccount({ actor: test ? governanceAccounts[2] : '13.found.tmy', permission: 'active' });
+            activeAuth.addAccount({ actor: additionalAuthority, permission: 'active' });
             const action = {
                 account: 'tonomy',
                 name: 'newaccount',
