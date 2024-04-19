@@ -346,8 +346,8 @@ describe('VestingContract class', () => {
             // 1st withdrawal after 1st allocation cliff end
             await sleepUntil(addSeconds(vestingPeriod.cliffEnd, 1));
             const trx = await vestingContract.withdraw(accountName, accountSigner);
-            // const trxConsole = JSON.parse(trx.processed.action_traces[0].console);
 
+            // const trxConsole = JSON.parse(trx.processed.action_traces[0].console);
             // console.log('trxConsole', trxConsole);
             // console.log('allocations', allocations);
 

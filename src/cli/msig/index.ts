@@ -1,6 +1,6 @@
 import { PrivateKey, Name } from '@wharfkit/antelope';
 import { EosioMsigContract, setSettings } from '../../sdk';
-import { Authority, createSigner } from '../../sdk/services/blockchain';
+import { ActionData, Authority, createSigner } from '../../sdk/services/blockchain';
 import settings from '../bootstrap/settings';
 
 const eosioMsigContract = EosioMsigContract.Instance;
@@ -39,15 +39,59 @@ export default async function msig(args: string[]) {
             console.error('Transaction failed');
         }
     } else if (args[0] === 'propose') {
+        const proposalType = args[1];
         const proposalName = Name.from(args[2]);
 
-        if (args[1] === 'gov-update') {
-            const requested = governanceAccounts.map((actor) => ({
+        // eslint-disable-next-line no-inner-declarations
+        async function createProposal(actions: ActionData[], requested = newGovernanceAccounts) {
+            const requestedPermissions = requested.map((actor) => ({
                 actor,
                 permission: 'active',
             }));
 
-            const updateAuthAction = {
+            console.log(
+                'Sending transaction',
+                JSON.stringify(
+                    {
+                        proposer,
+                        proposalName,
+                        requestedPermissions,
+                        actions,
+                        signer: privateKey.toPublic(),
+                    },
+                    null,
+                    2
+                )
+            );
+
+            try {
+                const { transaction } = await eosioMsigContract.propose(
+                    proposer,
+                    proposalName,
+                    requestedPermissions,
+                    actions,
+                    signer
+                );
+
+                console.log('Transaction: ', JSON.stringify(transaction, null, 2));
+                console.error('Transaction succeeded');
+
+                console.log('Proposal name: ', proposalName.toString());
+                console.log('You have 7 days to approve and execute the proposal.');
+            } catch (e) {
+                if (e?.error?.details[0]?.message.includes('transaction declares authority')) {
+                    console.error(
+                        'The transaction authorization requirements are not correct. Check the action authorizations, and the "requested" permissions.'
+                    );
+                } else {
+                    console.error('Error: ', JSON.stringify(e, null, 2));
+                    console.error('Transaction failed');
+                }
+            }
+        }
+
+        if (proposalType === 'gov-migrate') {
+            const action = {
                 account: 'tonomy',
                 name: 'updateauth',
                 authorization: [
@@ -70,49 +114,55 @@ export default async function msig(args: string[]) {
                 },
             };
 
-            const actions = [updateAuthAction];
+            await createProposal([action], governanceAccounts);
+        } else if (proposalType === 'new-account') {
+            const activeAuth = Authority.fromAccount({ actor: 'team.tmy', permission: 'active' });
 
-            console.log(
-                'Sending transaction',
-                JSON.stringify(
+            activeAuth.addAccount({ actor: '13.found.tmy', permission: 'active' });
+            const action = {
+                account: 'tonomy',
+                name: 'newaccount',
+                authorization: [
                     {
-                        proposer,
-                        proposalName,
-                        requested,
-                        actions,
-                        signer: privateKey.toPublic(),
+                        actor: 'tonomy',
+                        permission: 'owner',
                     },
-                    null,
-                    2
-                )
-            );
+                    {
+                        actor: 'tonomy',
+                        permission: 'active',
+                    },
+                ],
+                data: {
+                    creator: 'tonomy',
+                    name: 'advteam.tmy',
+                    owner: Authority.fromAccount({ actor: 'team.tmy', permission: 'owner' }),
+                    active: activeAuth,
+                },
+            };
 
-            try {
-                const { transaction } = await eosioMsigContract.propose(
-                    proposer,
-                    proposalName,
-                    requested,
-                    actions,
-                    signer
-                );
+            await createProposal([action]);
+        } else if (proposalType === 'transfer') {
+            const from = 'team.tmy';
+            const action = {
+                account: 'eosio.token',
+                name: 'transfer',
+                authorization: [
+                    {
+                        actor: from,
+                        permission: 'active',
+                    },
+                ],
+                data: {
+                    from: from,
+                    to: 'advteam.tmy',
+                    quantity: '10000000.000000 LEOS',
+                    memo: 'To pay advisors',
+                },
+            };
 
-                console.log('Transaction: ', JSON.stringify(transaction, null, 2));
-                console.error('Transaction succeeded');
-
-                console.log('Proposal name: ', proposalName.toString());
-                console.log('You have 7 days to approve and execute the proposal.');
-            } catch (e) {
-                if (e?.error?.details[0]?.message.includes('transaction declares authority')) {
-                    console.error(
-                        'The transaction authorization requirements are not correct. Check the action authorizations, and the "requested" permissions.'
-                    );
-                } else {
-                    console.error('Error: ', JSON.stringify(e, null, 2));
-                    console.error('Transaction failed');
-                }
-            }
+            await createProposal([action]);
         } else {
-            throw new Error(`Invalid msig proposal ${args[1]}`);
+            throw new Error(`Invalid msig proposal type ${proposalType}`);
         }
     } else if (args[0] === 'exec') {
         const proposalName = Name.from(args[1]);

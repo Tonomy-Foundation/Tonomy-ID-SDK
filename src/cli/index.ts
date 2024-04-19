@@ -32,7 +32,9 @@ Usage:
         authority account1 [account2] [account3] [accountN]
         bootstrap privateKey
         msig cancel proposalName
-        msig propose gov-update proposalName
+        msig propose gov-migrate proposalName
+        msig propose new-account proposalName
+        msig propose transfer proposalName
         msig exec proposalName
 `);
     }
