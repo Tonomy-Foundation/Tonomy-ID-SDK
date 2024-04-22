@@ -13,7 +13,7 @@ Please [contact us](https://tonomy.io/contact) for assistance in your on-site de
 
 * Pangea Passport (React Native mobile wallet) - [Github source](https://github.com/Tonomy-Foundation/Tonomy-ID/tree/testnet)
 * Pangea Account Website (Reactjs) - [Github source](https://github.com/Tonomy-Foundation/Tonomy-App-Websites/tree/testnet)
-* Blockchain and `id.tmy` smart contracts (Antelope protocol) - [Github source](https://github.com/Tonomy-Foundation/Tonomy-Contracts/tree/testnet)
+* Blockchain and `tonomy` smart contracts (Antelope protocol) - [Github source](https://github.com/Tonomy-Foundation/Tonomy-Contracts/tree/testnet)
 * Pangea Communication (nestjs) - [Github source](https://github.com/Tonomy-Foundation/Tonomy-Communication/tree/testnet)
 
 ## Deployment
