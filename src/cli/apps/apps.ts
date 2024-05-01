@@ -20,7 +20,6 @@ export default async function apps(args: string[]) {
 
         setSettings(settings.config);
 
-        console.log(options);
         const res = await App.create(options);
 
         console.log('New app created with username: ', res.username?.username);
