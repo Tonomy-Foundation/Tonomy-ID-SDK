@@ -25,7 +25,7 @@ Usage:
     yarn run cli [commands]
     
     Commands:
-        apps create appName usernamePrefix description logoUrl origin publicKey blockchainUrl
+        apps create appName usernamePrefix description logoUrl origin publicKey
         keys create
         keys convert publicKey
         authority publicKey/privateKey
