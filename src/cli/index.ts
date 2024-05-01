@@ -28,7 +28,7 @@ Usage:
         apps create appName usernamePrefix description logoUrl origin publicKey blockchainUrl
         keys create
         keys convert publicKey
-        authority publicKey
+        authority publicKey/privateKey
         authority account1 [account2] [account3] [accountN]
         bootstrap privateKey
         msig cancel proposalName
