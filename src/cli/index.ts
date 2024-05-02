@@ -32,7 +32,7 @@ Usage:
     
     Commands:
         apps create appName usernamePrefix description logoUrl origin publicKey
-        accounts username
+        accounts get username
         keys create
         keys convert publicKey
         authority publicKey/privateKey
