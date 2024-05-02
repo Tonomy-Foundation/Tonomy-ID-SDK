@@ -1,8 +1,10 @@
-import apps from './apps/apps';
+import apps from './apps';
 import keys from './keys';
 import authority from './authority';
-import bootstrap from './bootstrap/bootstrap';
+import bootstrap from './bootstrap';
 import msig from './msig';
+import accounts from './accounts';
+import vesting from './vesting';
 
 const args: string[] = process.argv.slice(2);
 
@@ -11,6 +13,10 @@ async function main() {
 
     if (args[0] === 'apps') {
         await apps(args.slice(1));
+    } else if (args[0] === 'accounts') {
+        await accounts(args.slice(1));
+    } else if (args[0] === 'vesting') {
+        await vesting(args.slice(1));
     } else if (args[0] === 'keys') {
         await keys(args.slice(1));
     } else if (args[0] === 'authority') {
@@ -26,6 +32,7 @@ Usage:
     
     Commands:
         apps create appName usernamePrefix description logoUrl origin publicKey
+        accounts username
         keys create
         keys convert publicKey
         authority publicKey/privateKey
