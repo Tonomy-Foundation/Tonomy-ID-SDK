@@ -6,14 +6,11 @@ import settings from '../bootstrap/settings';
 const eosioMsigContract = EosioMsigContract.Instance;
 
 const governanceAccounts = ['1.found.tmy', '2.found.tmy', '3.found.tmy'];
-let newGovernanceAccounts = [
-    ...governanceAccounts,
-    '4.found.tmy',
-    '5.found.tmy',
-    '11.found.tmy',
-    '13.found.tmy',
-    '14.found.tmy',
-];
+let newGovernanceAccounts = ['14.found.tmy', '5.found.tmy', '11.found.tmy', '12.found.tmy', '13.found.tmy'];
+
+if (!settings.isProduction()) {
+    newGovernanceAccounts.push(...governanceAccounts);
+}
 
 export default async function msig(args: string[]) {
     setSettings({
@@ -62,6 +59,7 @@ export default async function msig(args: string[]) {
         const proposalName = Name.from(args[2]);
 
         if (proposalType === 'gov-migrate') {
+            const threshold = settings.isProduction() ? 3 : 2;
             const action = {
                 account: 'tonomy',
                 name: 'updateauth',
@@ -79,7 +77,7 @@ export default async function msig(args: string[]) {
                     account: 'found.tmy',
                     permission: 'owner',
                     parent: '',
-                    auth: Authority.fromAccountArray(newGovernanceAccounts, 'active', 2),
+                    auth: Authority.fromAccountArray(newGovernanceAccounts, 'active', threshold),
                     // eslint-disable-next-line camelcase
                     auth_parent: false, // should be true when a new permission is being created, otherwise false
                 },
@@ -89,8 +87,10 @@ export default async function msig(args: string[]) {
 
             if (test) await executeProposal(proposer, proposalName, proposalHash);
         } else if (proposalType === 'new-account') {
+            const newAccount = 'advteam.tmy';
+
             const activeAuth = Authority.fromAccount({ actor: 'team.tmy', permission: 'active' });
-            const additionalAuthority = test ? governanceAccounts[2] : '13.found.tmy';
+            const additionalAuthority = test ? governanceAccounts[2] : '11.found.tmy';
 
             activeAuth.addAccount({ actor: additionalAuthority, permission: 'active' });
             const action = {
@@ -108,17 +108,24 @@ export default async function msig(args: string[]) {
                 ],
                 data: {
                     creator: 'tonomy',
-                    name: 'advteam.tmy',
+                    name: newAccount,
                     owner: Authority.fromAccount({ actor: 'team.tmy', permission: 'owner' }),
                     active: activeAuth,
                 },
             };
 
-            const proposalHash = await createProposal(proposer, proposalName, [action], privateKey, governanceAccounts);
+            const proposalHash = await createProposal(
+                proposer,
+                proposalName,
+                [action],
+                privateKey,
+                newGovernanceAccounts
+            );
 
             if (test) await executeProposal(proposer, proposalName, proposalHash);
         } else if (proposalType === 'transfer') {
             const from = 'team.tmy';
+            const to = 'advteam.tmy';
 
             const amountUsd = 100000;
             const price = 0.012;
@@ -141,14 +148,20 @@ export default async function msig(args: string[]) {
                     },
                 ],
                 data: {
-                    from: from,
-                    to: 'advteam.tmy',
+                    from,
+                    to,
                     quantity,
                     memo: 'To pay advisors',
                 },
             };
 
-            const proposalHash = await createProposal(proposer, proposalName, [action], privateKey, governanceAccounts);
+            const proposalHash = await createProposal(
+                proposer,
+                proposalName,
+                [action],
+                privateKey,
+                newGovernanceAccounts
+            );
 
             if (test) await executeProposal(proposer, proposalName, proposalHash);
         } else {
