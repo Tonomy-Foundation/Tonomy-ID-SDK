@@ -17,9 +17,9 @@ export default async function apps(args: string[]) {
             AccountType.PERSON,
             settings.config.accountSuffix
         );
-        const { account_name } = await tonomyContract.getPerson(usernameInstance);
+        const { account_name: account } = await tonomyContract.getPerson(usernameInstance);
 
-        console.log('Account name: ', account_name.toString());
+        console.log('Account name: ', account.toString());
     } else {
         throw new Error(`Unknown command ${args[0]}`);
     }
