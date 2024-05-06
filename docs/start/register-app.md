@@ -29,8 +29,13 @@ Modify the `demoConfig` variable in `src/cli/bootstrap/settings.ts` to point to 
 
 ```js
 {
-    blockchainUrl: 'change me!!',
-    accountSuffix: 'change me!!',
+    //Testnet Configuration
+    blockchainUrl: 'https://blockchain-api-testnet.pangea.web4.world',
+    accountSuffix: '.testnet.pangea',
+    
+    //Mainnet Configuration
+    blockchainUrl: 'https://blockchain-api.pangea.web4.world',
+    accountSuffix: '.production.pangea',
 }
 ```
 

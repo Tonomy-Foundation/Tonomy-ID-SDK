@@ -6,7 +6,7 @@ The Pangea API allow existing applications to login and interact with Pangea ide
 
 See a demo Reactjs website use SSO to log in with Pangea Passport and sign data here:
 
-* [Demo website](https://demo.testnet.pangea.web4.world/)
+* [Demo website](https://demo.pangea.web4.world/)
 
 ## Prerequisites
 

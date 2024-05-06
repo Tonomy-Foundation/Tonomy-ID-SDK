@@ -10,4 +10,4 @@ Read the White Paper to understand Pangea Passport features and how it works:
 
 Integrate your existing app in less then 10 minutes. Follow the [Quick start](../start/start.md) with the Demo network (default).
 
-Check out how it works by using the Demo integration app on the Demo network. [Click here](https://demo.testnet.pangea.web4.world/)
+Check out how it works by using the Demo integration app on the Demo network. [Click here](https://demo.pangea.web4.world/)

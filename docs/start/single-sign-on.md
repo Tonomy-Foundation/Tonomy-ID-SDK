@@ -14,24 +14,27 @@ Configure to use a specific network (in this case, the Pangea demo network). Run
 ```typescript
 import { api } from '@tonomy/tonomy-id-sdk';
 
+//Testnet Configuration
 api.setSettings({
-    ssoWebsiteOrigin: "https://accounts.demo.tonomy.foundation",
-    blockchainUrl: "https://blockchain-api-demo.tonomy.foundation"
+    ssoWebsiteOrigin: "https://accounts.testnet.pangea.web4.world",
+    blockchainUrl: "https://blockchain-api-testnet.pangea.web4.world"
+});
+
+//Mainnet Configuration
+api.setSettings({
+    ssoWebsiteOrigin: "https://accounts.pangea.web4.world",
+    blockchainUrl: "https://blockchain-api.pangea.web4.world"
 });
 ```
 
 ## 2. Login page
 
-On your login page add the "Login with Pangea Passport" button and set it to call the `ExternalUser.loginWithPangea` function when pressed. Set your `/callback` page path as shown below. This is where your the user will be redirect to in your application, after they complete the login process.
+On your login page set it to call the `ExternalUser.loginWithPangea` function when pressed. Set your `/callback` page path as shown below. This is where your the user will be redirect to in your application, after they complete the login process.
 
 ```typescript
 async function onButtonPress() {
     await api.ExternalUser.loginWithTonomy({ callbackPath: '/callback' });
 }
-```
-
-```html
-<button className="tonomy-login-button" onClick={onButtonPress}>Login with Pangea Passport</button>
 ```
 
 ### Request data sharing
