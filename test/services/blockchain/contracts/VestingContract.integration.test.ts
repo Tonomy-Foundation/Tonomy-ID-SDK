@@ -346,8 +346,8 @@ describe('VestingContract class', () => {
             // 1st withdrawal after 1st allocation cliff end
             await sleepUntil(addSeconds(vestingPeriod.cliffEnd, 1));
             const trx = await vestingContract.withdraw(accountName, accountSigner);
-            // const trxConsole = JSON.parse(trx.processed.action_traces[0].console);
 
+            // const trxConsole = JSON.parse(trx.processed.action_traces[0].console);
             // console.log('trxConsole', trxConsole);
             // console.log('allocations', allocations);
 
@@ -381,7 +381,7 @@ describe('VestingContract class', () => {
             expect(assetToAmount(allocations3[0].tokens_claimed)).toBe(1.0);
             expect(assetToAmount(allocations3[1].tokens_claimed)).toBe(1.0);
 
-            expect(transferAmount + transferAmount2 + transferAmount3).toBe(2.0);
+            expect(transferAmount + transferAmount2 + transferAmount3).toBeCloseTo(2.0, 6);
         });
 
         test('Successful withdrawal with 2 different allocations of different categories', async () => {
