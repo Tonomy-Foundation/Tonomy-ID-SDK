@@ -238,7 +238,7 @@ async function createTokenDistribution() {
         throw new Error('Total percentage should be 100% but it is ' + totalPercentage.toFixed(4));
     }
 
-    await vestingContract.setSettings('2024-12-01T00:00:00', '2030-01-01T00:00:00', signer);
+    await vestingContract.setSettings('2024-04-30T12:00:00', '2030-01-01T00:00:00', signer);
 }
 
 async function createTonomyContractAndSetResources() {

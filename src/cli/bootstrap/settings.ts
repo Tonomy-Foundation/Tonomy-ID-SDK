@@ -75,7 +75,7 @@ const productionConfig = {
     accountSuffix: '.pangea.id',
     communicationUrl: 'wss://communication.pangea.web4.world',
     accountsServiceUrl: 'http://communication.pangea.web4.world',
-    tonomyIdSchema: 'pangea://',
+    tonomyIdSchema: 'united-wallet://',
     loggerLevel: 'info' as LoggerLevel,
     ecosystemName: 'Pangea',
     currencySymbol: 'LEOS',
