@@ -47,7 +47,7 @@ export class EosioMsigContract {
 
         // Determine expiration
         const now = new Date();
-        const expireInSeconds = 60;
+        const expireInSeconds = 60 * 60 * 24 * 7; // 7 days
         const expiration = new Date(now.getTime() + expireInSeconds * 1000);
         const expirationString = expiration.toISOString().split('.')[0];
 
@@ -144,6 +144,33 @@ export class EosioMsigContract {
                     proposer,
                     proposal_name: proposalName,
                     executer,
+                },
+            },
+        ];
+
+        return await transact(Name.from(CONTRACT_NAME), actions, signer);
+    }
+
+    async cancel(
+        proposer: NameType,
+        proposalName: NameType,
+        canceler: NameType,
+        signer: Signer
+    ): Promise<API.v1.PushTransactionResponse> {
+        const actions = [
+            {
+                account: CONTRACT_NAME,
+                name: 'cancel',
+                authorization: [
+                    {
+                        actor: canceler.toString(),
+                        permission: 'active',
+                    },
+                ],
+                data: {
+                    proposer,
+                    proposal_name: proposalName,
+                    canceler,
                 },
             },
         ];

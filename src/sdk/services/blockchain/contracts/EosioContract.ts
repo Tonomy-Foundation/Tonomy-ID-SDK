@@ -30,7 +30,7 @@ export class EosioContract {
         account: Name,
         wasmFileContent: any,
         abiFileContent: any,
-        signer: Signer,
+        signer: Signer | Signer[],
         options: { extraAuthorization?: { actor: string; permission: string } } = {}
     ): Promise<API.v1.PushTransactionResponse> {
         // 1. Prepare SETCODE

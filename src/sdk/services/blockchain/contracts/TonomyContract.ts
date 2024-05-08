@@ -353,6 +353,7 @@ export class TonomyContract {
             version: idData.version,
         };
     }
+
     async getApp(account: TonomyUsername | Name | string): Promise<AppTableRecord> {
         let data;
         const api = await getApi();
