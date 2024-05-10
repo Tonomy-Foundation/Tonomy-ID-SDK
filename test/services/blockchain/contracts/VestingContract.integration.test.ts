@@ -203,6 +203,26 @@ describe('VestingContract class', () => {
             },
             1.5 * VestingContract.MAX_ALLOCATIONS * 1000
         );
+
+        test("successfully get account balance ", async () =>{
+            expect.assertions(4);
+
+            const trx = await vestingContract.assignTokens('coinsale.tmy', accountName, '2.000000 LEOS', 999, signer);
+
+            expect(trx.processed.receipt.status).toBe('executed');
+            const balance = await vestingContract.getBalance(accountName);
+
+            expect(balance).toBe(2);
+            const trx2 = await vestingContract.assignTokens('coinsale.tmy', accountName, '1.000000 LEOS', 999, signer);
+
+            expect(trx2.processed.receipt.status).toBe('executed');
+
+            const balance2 = await vestingContract.getBalance(accountName);
+
+            expect(balance2).toBe(3);
+
+        
+        })
     });
 
     describe('withdraw()', () => {
@@ -426,4 +446,6 @@ describe('VestingContract class', () => {
             }
         });
     });
+
+    
 });

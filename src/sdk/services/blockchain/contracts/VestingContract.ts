@@ -162,4 +162,18 @@ export class VestingContract {
 
         return res.rows;
     }
+
+    async getBalance(account: NameType): Promise<number> {
+        const allocations = await this.getAllocations(account);
+        let totalBalance = 0;
+
+        for (const allocation of allocations) {
+            const tokens = allocation.tokens_allocated.split(' ')[0];
+            const numberTokens = parseFloat(tokens);
+
+            totalBalance += numberTokens;
+        }
+
+        return totalBalance;
+    }
 }
