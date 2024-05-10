@@ -10,6 +10,9 @@ const tonomyContract = TonomyContract.Instance;
 const vestingContract = VestingContract.Instance;
 
 export default async function vesting(args: string[]) {
+    const tonomyOpsKey = getTonomyOperationsKey();
+    const signer = createSigner(tonomyOpsKey);
+
     if (args[0] === 'assign') {
         const username = args[1];
 
@@ -30,14 +33,8 @@ export default async function vesting(args: string[]) {
         const sender = 'coinsale.tmy';
         const holder = account.toString();
 
-        const tonomyOpsKey = getTonomyOperationsKey();
         const signer = createSigner(tonomyOpsKey);
-        const saleStartDate = new Date();
-        const saleStart = saleStartDate.toISOString();
-        const launchStartDate = addSeconds(saleStartDate, 5);
-        const launchStart = launchStartDate.toISOString();
 
-        await vestingContract.setSettings(saleStart, launchStart, signer);
         console.log('Assigning tokens to: ', {
             username,
             accountName: holder,
@@ -48,6 +45,8 @@ export default async function vesting(args: string[]) {
         const res = await vestingContract.assignTokens(sender, holder, quantity, categoryId, signer);
 
         console.log('Transaction ID: ', JSON.stringify(res, null, 2));
+    } else if (args[0] === 'setsettings') {
+        await vestingContract.setSettings('2024-12-01T00:00:00', '2030-01-01T00:00:00', signer);
     } else {
         throw new Error(`Unknown command ${args[0]}`);
     }
