@@ -2,7 +2,6 @@ import { AccountType, TonomyContract, TonomyUsername, VestingContract } from '..
 import { createSigner, getTonomyOperationsKey } from '../../sdk/services/blockchain';
 import { setSettings } from '../../sdk/util/settings';
 import settings from '../bootstrap/settings';
-import { addSeconds } from '../../sdk/util';
 
 setSettings(settings.config);
 
