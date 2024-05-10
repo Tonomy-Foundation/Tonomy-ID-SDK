@@ -205,6 +205,8 @@ describe('VestingContract class', () => {
         );
 
         test("successfully get account balance ", async () =>{
+            expect.assertions(4);
+
             const trx = await vestingContract.assignTokens('coinsale.tmy', accountName, '2.000000 LEOS', 999, signer);
 
             expect(trx.processed.receipt.status).toBe('executed');
