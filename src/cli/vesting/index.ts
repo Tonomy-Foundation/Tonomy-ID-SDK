@@ -2,6 +2,7 @@ import { AccountType, TonomyContract, TonomyUsername, VestingContract } from '..
 import { createSigner, getTonomyOperationsKey } from '../../sdk/services/blockchain';
 import { setSettings } from '../../sdk/util/settings';
 import settings from '../bootstrap/settings';
+import { addSeconds } from '../../sdk/util';
 
 setSettings(settings.config);
 
@@ -31,7 +32,12 @@ export default async function vesting(args: string[]) {
 
         const tonomyOpsKey = getTonomyOperationsKey();
         const signer = createSigner(tonomyOpsKey);
+        const saleStartDate = new Date();
+        const saleStart = saleStartDate.toISOString();
+        const launchStartDate = addSeconds(saleStartDate, 5);
+        const launchStart = launchStartDate.toISOString();
 
+        await vestingContract.setSettings(saleStart, launchStart, signer);
         console.log('Assigning tokens to: ', {
             username,
             accountName: holder,
