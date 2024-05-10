@@ -153,9 +153,7 @@ describe('VestingContract class', () => {
             const salesDate = new Date(Date.now() + 10000).toISOString();
             const launchDate = new Date(Date.now() + 15000).toISOString();
 
-            console.log("Salesdate", salesDate, launchDate)
-            await vestingContract.setSettings('2024-12-01T00:00:00', '2030-01-01T00:00:00', signer);
-            // await vestingContract.setSettings(salesDate, launchDate, signer);
+            await vestingContract.setSettings(salesDate, launchDate, signer);
 
             try {
                 await vestingContract.assignTokens('coinsale.tmy', accountName, '1.000000 LEOS', 999, signer);
