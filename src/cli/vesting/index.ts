@@ -32,8 +32,6 @@ export default async function vesting(args: string[]) {
         const sender = 'coinsale.tmy';
         const holder = account.toString();
 
-        const signer = createSigner(tonomyOpsKey);
-
         console.log('Assigning tokens to: ', {
             username,
             accountName: holder,
