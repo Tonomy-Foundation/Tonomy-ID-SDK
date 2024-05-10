@@ -3,6 +3,7 @@ import { API, Name, NameType } from '@wharfkit/antelope';
 import { Signer, transact } from '../eosio/transaction';
 import { getApi } from '../eosio/eosio';
 import { addMicroseconds } from '../../../util';
+import { getSettings } from '../../../util';
 
 const CONTRACT_NAME = 'vesting.tmy';
 
@@ -161,5 +162,15 @@ export class VestingContract {
         });
 
         return res.rows;
+    }
+
+    async getBalance(account: NameType): Promise<number> {
+        const assets = await (
+            await getApi()
+        ).v1.chain.get_currency_balance(CONTRACT_NAME, account, getSettings().currencySymbol);
+
+        if (assets.length === 0) return 0;
+
+        return assets[0].value;
     }
 }
