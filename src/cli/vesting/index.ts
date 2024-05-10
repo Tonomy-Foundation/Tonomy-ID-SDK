@@ -39,18 +39,18 @@ export default async function vesting(args: string[]) {
             categoryId,
         });
 
-        const settings = await vestingContract.getSettings();
+        const vestingSettings = await vestingContract.getSettings();
 
-        console.log('settings', settings);
+        console.log('settings', vestingSettings);
 
         const res = await vestingContract.assignTokens(sender, holder, quantity, categoryId, signer);
 
         console.log('Transaction ID: ', JSON.stringify(res, null, 2));
     } else if (args[0] === 'setsettings') {
         await vestingContract.setSettings('2024-12-01T00:00:00', '2030-01-01T00:00:00', signer);
-        const settings = await vestingContract.getSettings();
+        const vestingSettings = await vestingContract.getSettings();
 
-        console.log('settings', settings);
+        console.log('settings', vestingSettings);
     } else {
         throw new Error(`Unknown command ${args[0]}`);
     }
