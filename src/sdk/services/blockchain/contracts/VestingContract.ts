@@ -165,12 +165,16 @@ export class VestingContract {
     }
 
     async getBalance(account: NameType): Promise<number> {
-        const assets = await (
-            await getApi()
-        ).v1.chain.get_currency_balance(CONTRACT_NAME, account, getSettings().currencySymbol);
+        const allocations = await this.getAllocations(account);
+        let totalBalance = 0;
 
-        if (assets.length === 0) return 0;
+        for (const allocation of allocations) {
+            const tokens = allocation.tokens_allocated.split(' ')[0];
+            const numberTokens = parseFloat(tokens);
 
-        return assets[0].value;
+            totalBalance += numberTokens;
+        }
+
+        return totalBalance;
     }
 }
