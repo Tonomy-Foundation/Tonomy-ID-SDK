@@ -203,6 +203,16 @@ describe('VestingContract class', () => {
             },
             1.5 * VestingContract.MAX_ALLOCATIONS * 1000
         );
+
+        test("successfully get account balance ", async () =>{
+            const trx = await vestingContract.assignTokens('coinsale.tmy', accountName, '2.000000 LEOS', 999, signer);
+
+            expect(trx.processed.receipt.status).toBe('executed');
+            const balance = await vestingContract.getBalance(accountName);
+
+            expect(balance).toBe(2);
+        
+        })
     });
 
     describe('withdraw()', () => {
@@ -426,4 +436,6 @@ describe('VestingContract class', () => {
             }
         });
     });
+
+    
 });

@@ -3,7 +3,6 @@ import { API, Name, NameType } from '@wharfkit/antelope';
 import { Signer, transact } from '../eosio/transaction';
 import { getApi } from '../eosio/eosio';
 import { addMicroseconds } from '../../../util';
-import { getSettings } from '../../../util';
 
 const CONTRACT_NAME = 'vesting.tmy';
 
