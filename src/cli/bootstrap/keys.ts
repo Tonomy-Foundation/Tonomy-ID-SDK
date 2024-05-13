@@ -13,10 +13,14 @@ const tonomyEosioProxyContract = TonomyEosioProxyContract.Instance;
  */
 export async function generatePrivateKeyFromPassword(
     password: string,
-    salt?: Checksum256
+    salt?: Checksum256,
+    chainId?: string
 ): Promise<{ privateKey: PrivateKey; salt: Checksum256 }> {
     if (!salt) salt = Checksum256.from(randomBytes(32));
-    const hash = await argon2.hash(password, {
+    let passwordWords = password;
+
+    if (chainId) passwordWords = password + chainId;
+    const hash = await argon2.hash(passwordWords, {
         salt: Buffer.from(salt.hexString),
         type: argon2.argon2id,
         raw: true,

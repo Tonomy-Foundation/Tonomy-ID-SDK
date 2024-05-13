@@ -1,4 +1,4 @@
-import { Name } from '@wharfkit/antelope';
+import { Name, PublicKey } from '@wharfkit/antelope';
 import { KeyManager, KeyManagerLevel } from '../storage/keymanager';
 import { createStorage, PersistentStorageClean, StorageFactory, STORAGE_NAMESPACE } from '../storage/storage';
 import { SdkErrors, throwError } from '../util/errors';
@@ -23,6 +23,12 @@ export class UserBase implements IUserBase {
 
     async getAccountName(): Promise<Name> {
         return await this.storage.accountName;
+    }
+
+    async getEthereumKey(): Promise<PublicKey> {
+        const publicKey = await this.keyManager.getKey({ level: KeyManagerLevel.ETHEREUM_KEY });
+
+        return publicKey;
     }
 
     async getUsername(): Promise<TonomyUsername> {
