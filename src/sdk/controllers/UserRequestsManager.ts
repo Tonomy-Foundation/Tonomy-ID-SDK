@@ -45,8 +45,8 @@ export class UserRequestsManager extends UserCommunication implements IUserReque
             // Throws SdkErrors.DataQueryNoRowDataFound error if app does not exist
             // which cannot happen in theory, as the user is already logged in
 
-            if (permission !== contract.toString())
-                throwError('Contract and permission do not match', SdkErrors.MismatchedParams);
+            // if (permission !== contract.toString())
+            //     throwError('Contract and permission do not match', SdkErrors.MismatchedParams);
 
             const signer = createKeyManagerSigner(this.keyManager, KeyManagerLevel.ACTIVE);
 
