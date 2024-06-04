@@ -56,6 +56,14 @@ const userDid = vc.getIssuer();
 
 You can also use the same flow above to send all requests, which adds integrity protection and non-repudiation to all requests to your server.
 
+## Logout
+
+The `logout()` function logs out the current user from the application. It performs necessary actions such as clearing session data and revoking authentication tokens to ensure the user is securely logged out.
+
+```typescript
+ await user.logout();
+```
+
 ### Sign a document
 
 TODO
