@@ -231,37 +231,37 @@ describe('VestingContract class', () => {
             }
         });
 
-        // test(
-        //     'Unsuccessful assignment due to number of purchases',
-        //     async () => {
-        //         expect.assertions(2 + VestingContract.MAX_ALLOCATIONS);
+        test(
+            'Unsuccessful assignment due to number of purchases',
+            async () => {
+                expect.assertions(2 + VestingContract.MAX_ALLOCATIONS);
 
-        //         for (let i = 0; i < VestingContract.MAX_ALLOCATIONS; i++) {
-        //             await sleep(1000); // Wait to ensure don't get duplicate transaction error
-        //             const trx = await vestingContract.assignTokens(
-        //                 'coinsale.tmy',
-        //                 accountName,
-        //                 '1.000000 LEOS',
-        //                 999,
-        //                 signer
-        //             );
+                for (let i = 0; i < VestingContract.MAX_ALLOCATIONS; i++) {
+                    await sleep(1000); // Wait to ensure don't get duplicate transaction error
+                    const trx = await vestingContract.assignTokens(
+                        'coinsale.tmy',
+                        accountName,
+                        '1.000000 LEOS',
+                        999,
+                        signer
+                    );
 
-        //             expect(trx.processed.receipt.status).toBe('executed');
-        //         }
+                    expect(trx.processed.receipt.status).toBe('executed');
+                }
 
-        //         const allocations = await vestingContract.getAllocations(accountName);
+                const allocations = await vestingContract.getAllocations(accountName);
 
-        //         expect(allocations.length).toBe(VestingContract.MAX_ALLOCATIONS);
+                expect(allocations.length).toBe(VestingContract.MAX_ALLOCATIONS);
 
-        //         try {
-        //             await sleep(1000); // Wait to ensure don't get duplicate transaction error
-        //             await vestingContract.assignTokens('coinsale.tmy', accountName, '1.000000 LEOS', 999, signer);
-        //         } catch (e) {
-        //             expect(e.error.details[0].message).toContain('Too many purchases received on this account.');
-        //         }
-        //     },
-        //     1.5 * VestingContract.MAX_ALLOCATIONS * 1000
-        // );
+                try {
+                    await sleep(1000); // Wait to ensure don't get duplicate transaction error
+                    await vestingContract.assignTokens('coinsale.tmy', accountName, '1.000000 LEOS', 999, signer);
+                } catch (e) {
+                    expect(e.error.details[0].message).toContain('Too many purchases received on this account.');
+                }
+            },
+            1.5 * VestingContract.MAX_ALLOCATIONS * 1000
+        );
 
         test("successfully get account balance ", async () => {
             expect.assertions(4);
@@ -308,10 +308,6 @@ describe('VestingContract class', () => {
 
             expect(transferAmount).toBeLessThan(1.0);
             expect(transferAmount).toBeGreaterThan(0.5);
-
-            // const trxConsole = JSON.parse(trx.processed.action_traces[0].console);
-            // console.log('trxConsole', trxConsole);
-            // console.log('allocations', allocations);
 
             allocations = await vestingContract.getAllocations(accountName);
             const allocatedAmount = assetToAmount(allocations[0].tokens_claimed);
