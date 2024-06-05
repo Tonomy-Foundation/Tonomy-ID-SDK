@@ -72,6 +72,7 @@ describe('VestingContract class', () => {
             const wrongSigner = createSigner(PrivateKey.generate("K1"));
 
             try {
+                await sleep(1000); // Wait to ensure don't get duplicate transaction error
                 await vestingContract.setSettings(saleStart, launchStart, wrongSigner);
             } catch (e) {
                 expect(e.error.details[0].message).toContain("transaction declares authority '{\"actor\":\"vesting.tmy\",\"permission\":\"active\"}', but does not have signatures for it");
