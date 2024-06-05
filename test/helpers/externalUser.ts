@@ -284,7 +284,9 @@ export async function externalWebsiteSignTransaction(externalUser: ExternalUser,
 
     let linkedActions = await getLinkedActionsForPermission(from, externalApp.accountName);
 
-    expect(linkedActions).toBeUndefined();
+    expect(linkedActions).toBeDefined();
+    expect(linkedActions.account.equals(externalApp.accountName)).toBe(true);
+    expect(linkedActions.action).toBeNull();
 
     if (getSettings().loggerLevel === 'debug')
         console.log(

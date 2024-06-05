@@ -18,7 +18,7 @@ import { RequestsManager } from '../helpers/requestsManager';
 import { ResponsesManager } from '../helpers/responsesManager';
 import { App } from './App';
 import { AppStatusEnum } from '../types/AppStatusEnum';
-import { verifyKeyExistsForApp } from '../helpers/user';
+import { getAccountInfo, verifyKeyExistsForApp } from '../helpers/user';
 import { UserCommunication } from './UserCommunication';
 
 const tonomyEosioProxyContract = TonomyEosioProxyContract.Instance;
@@ -80,7 +80,7 @@ export class UserRequestsManager extends UserCommunication implements IUserReque
     }
 
     async loginWithApp(app: App, key: PublicKey): Promise<void> {
-        const myAccount = await this.storage.accountName;
+        const myAccount = await this.getAccountName();
 
         const appRecord: IUserAppRecord = {
             app,
@@ -98,9 +98,30 @@ export class UserRequestsManager extends UserCommunication implements IUserReque
         this.storage.appRecords = apps;
         await this.storage.appRecords;
 
-        const signer = createKeyManagerSigner(this.keyManager, KeyManagerLevel.LOCAL);
+        const localSigner = createKeyManagerSigner(this.keyManager, KeyManagerLevel.LOCAL);
+        let linkAuth = false;
 
-        await tonomyContract.loginwithapp(myAccount.toString(), app.accountName.toString(), 'local', key, signer);
+        try {
+            (await getAccountInfo(myAccount)).getPermission(app.accountName);
+        } catch (e) {
+            if (e.message === `Unknown permission ${app.accountName.toString()} on account ${myAccount.toString()}.`) {
+                linkAuth = true;
+            }
+        }
+
+        await tonomyContract.loginwithapp(myAccount.toString(), app.accountName.toString(), 'local', key, localSigner);
+
+        if (linkAuth) {
+            const activeSigner = createKeyManagerSigner(this.keyManager, KeyManagerLevel.ACTIVE);
+
+            await tonomyEosioProxyContract.linkAuth(
+                myAccount.toString(),
+                app.accountName.toString(),
+                '',
+                app.accountName.toString(),
+                activeSigner
+            );
+        }
 
         appRecord.status = AppStatusEnum.READY;
         this.storage.appRecords = apps;
