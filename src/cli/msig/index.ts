@@ -8,7 +8,7 @@ import deployContract from '../bootstrap/deploy-contract';
 const eosioMsigContract = EosioMsigContract.Instance;
 
 const governanceAccounts = ['1.found.tmy', '2.found.tmy', '3.found.tmy'];
-let newGovernanceAccounts = [...governanceAccounts];
+let newGovernanceAccounts = ['14.found.tmy', '5.found.tmy', '11.found.tmy', '12.found.tmy', '13.found.tmy'];
 
 if (!settings.isProduction()) {
     newGovernanceAccounts.push(...governanceAccounts);
@@ -41,7 +41,7 @@ export default async function msig(args: string[]) {
     }
 
     const proposer = '1.found.tmy';
-    const privateKey = PrivateKey.from('PVT_K1_YUpMM1hPec78763ADBMK3gJ4N3yUFi3N8dKRQ3nyYcxqoDnmL');
+    const privateKey = PrivateKey.from(process.env.SIGNING_KEY || '');
     const signer = createSigner(privateKey);
 
     if (args[0] === 'cancel') {
