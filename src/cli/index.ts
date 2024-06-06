@@ -44,6 +44,8 @@ Usage:
         msig propose transfer proposalName
         msig propose ... --test
         msig exec proposalName
+        msig propose deploy-contract proposalName contractName 
+        msig propose eosio.code-permission proposalName
 `);
     }
 }

@@ -4,6 +4,7 @@ import { EosioMsigContract, setSettings } from '../../sdk';
 import { ActionData, Authority, EosioTokenContract, createSigner } from '../../sdk/services/blockchain';
 import settings from '../bootstrap/settings';
 import deployContract from '../bootstrap/deploy-contract';
+import { updateControlByAccount } from '../bootstrap/keys';
 
 const eosioMsigContract = EosioMsigContract.Instance;
 
@@ -205,6 +206,36 @@ export default async function msig(args: string[]) {
 
             if (test) await executeProposal(proposer, proposalName, proposalHash);
         } else if (proposalType === 'eosio.code') {
+            const contractAccount = 'vesting.tmy';
+            const permission = 'ops.tmy';
+
+            const action = {
+                account: 'eosio',
+                name: 'setcode',
+                authorization: [
+                    {
+                        actor: contractAccount,
+                        permission: 'active',
+                    },
+                ],
+                data: {
+                    account: contractAccount,
+                    vmtype: 0,
+                    vmversion: 0,
+                    code: await updateControlByAccount(contractAccount, permission, signer, {
+                        addCodePermission: 'vesting.tmy',
+                    }),
+                },
+            };
+            const proposalHash = await createProposal(
+                proposer,
+                proposalName,
+                [action],
+                privateKey,
+                newGovernanceAccounts
+            );
+
+            if (test) await executeProposal(proposer, proposalName, proposalHash);
         } else {
             throw new Error(`Invalid msig proposal type ${proposalType}`);
         }
