@@ -116,6 +116,6 @@
     "tonomy"
   ],
   "resolutions": {
-    "@wharfkit/antelope": "0.7.1"
+    "@wharfkit/antelope": "1.0.7"
   }
 }
