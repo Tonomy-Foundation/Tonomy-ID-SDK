@@ -1,7 +1,9 @@
 import { PrivateKey, Name, Checksum256 } from '@wharfkit/antelope';
+import path from 'path';
 import { EosioMsigContract, setSettings } from '../../sdk';
 import { ActionData, Authority, EosioTokenContract, createSigner } from '../../sdk/services/blockchain';
 import settings from '../bootstrap/settings';
+import deployContract from '../bootstrap/deploy-contract';
 
 const eosioMsigContract = EosioMsigContract.Instance;
 
@@ -164,6 +166,20 @@ export default async function msig(args: string[]) {
             );
 
             if (test) await executeProposal(proposer, proposalName, proposalHash);
+        } else if (proposalType === 'deploy-contract') {
+            const contractName = args[3];
+
+            if (!contractName) {
+                throw new Error('Contract name must be provided for deploy-contract proposal');
+            }
+
+            const contractInfo = {
+                account: contractName,
+                contractDir: path.join(__dirname, `../../Tonomy-Contracts/contracts/${contractName}`),
+            };
+
+            await deployContract(contractInfo, signer, { throughTonomyProxy: true });
+        } else if (proposalType === 'eosio.code') {
         } else {
             throw new Error(`Invalid msig proposal type ${proposalType}`);
         }
