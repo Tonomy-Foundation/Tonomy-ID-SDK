@@ -23,12 +23,15 @@ export function getDeployableFilesFromDir(dir: string) {
         abiPath: path.join(dir, abiFileName),
     };
 }
-modify function instead od sending 
-it just return the action data
+
 export default async function deployContract(
     { account, contractDir }: { account: NameType; contractDir: string },
     signer: Signer,
-    options?: { extraAuthorization?: { actor: string; permission: string }; throughTonomyProxy?: boolean, actionData?: boolean }
+    options?: {
+        extraAuthorization?: { actor: string; permission: string };
+        throughTonomyProxy?: boolean;
+        actionData?: boolean;
+    }
 ) {
     const { wasmPath, abiPath } = getDeployableFilesFromDir(contractDir);
 
@@ -40,7 +43,7 @@ export default async function deployContract(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await contract.deployContract(Name.from(account) as any, wasmFile, abiFile, signer, options);
 
-    if(options?.actionData) {
+    if (options?.actionData) {
         // Return action data
         return {
             account: 'eosio',
@@ -59,5 +62,4 @@ export default async function deployContract(
             },
         };
     }
-    
 }
