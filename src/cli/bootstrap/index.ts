@@ -208,7 +208,8 @@ const allocations: [string, number][] = [
     ['infra.tmy', 0.1], // Infrastructure Rewards
     ['ecosystm.tmy', 0.3], // Ecosystem
 ];
-const addCodePermissionTo = allocations.map((allocation) => allocation[0]);
+
+export const addCodePermissionTo = allocations.map((allocation) => allocation[0]);
 
 async function createTokenDistribution() {
     console.log('Create token distribution');
