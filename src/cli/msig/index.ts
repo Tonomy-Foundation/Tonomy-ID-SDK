@@ -178,40 +178,26 @@ export default async function msig(args: string[]) {
                 account: contractName,
                 contractDir: path.join(__dirname, `../../Tonomy-Contracts/contracts/${contractName}`),
             };
+            const action = await deployContract(contractInfo, signer, { throughTonomyProxy: true, actionData: true });
 
-            const action = {
-                account: 'eosio',
-                name: 'setcode',
-                authorization: [
-                    {
-                        actor: contractName,
-                        permission: 'active',
-                    },
-                ],
-                data: {
-                    account: contractName,
-                    vmtype: 0,
-                    vmversion: 0,
-                    code: await deployContract(contractInfo, signer, { throughTonomyProxy: true }),
-                },
-            };
+            if (action) {
+                const proposalHash = await createProposal(
+                    proposer,
+                    proposalName,
+                    [action],
+                    privateKey,
+                    newGovernanceAccounts
+                );
 
-            const proposalHash = await createProposal(
-                proposer,
-                proposalName,
-                [action],
-                privateKey,
-                newGovernanceAccounts
-            );
-
-            if (test) await executeProposal(proposer, proposalName, proposalHash);
+                if (test) await executeProposal(proposer, proposalName, proposalHash);
+            }
         } else if (proposalType === 'eosio.code') {
             const contractAccount = 'vesting.tmy';
             const permission = 'ops.tmy';
 
             const action = {
                 account: 'eosio',
-                name: 'setcode',
+                name: 'updateauth',
                 authorization: [
                     {
                         actor: contractAccount,
@@ -220,9 +206,9 @@ export default async function msig(args: string[]) {
                 ],
                 data: {
                     account: contractAccount,
-                    vmtype: 0,
-                    vmversion: 0,
-                    code: await updateControlByAccount(contractAccount, permission, signer, {
+                    permission: 'owner',
+                    parent: '',
+                    auth: await updateControlByAccount(contractAccount, permission, signer, {
                         addCodePermission: 'vesting.tmy',
                     }),
                 },

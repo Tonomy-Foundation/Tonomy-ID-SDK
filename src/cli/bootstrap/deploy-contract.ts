@@ -23,11 +23,12 @@ export function getDeployableFilesFromDir(dir: string) {
         abiPath: path.join(dir, abiFileName),
     };
 }
-
+modify function instead od sending 
+it just return the action data
 export default async function deployContract(
     { account, contractDir }: { account: NameType; contractDir: string },
     signer: Signer,
-    options?: { extraAuthorization?: { actor: string; permission: string }; throughTonomyProxy?: boolean }
+    options?: { extraAuthorization?: { actor: string; permission: string }; throughTonomyProxy?: boolean, actionData?: boolean }
 ) {
     const { wasmPath, abiPath } = getDeployableFilesFromDir(contractDir);
 
@@ -38,4 +39,25 @@ export default async function deployContract(
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await contract.deployContract(Name.from(account) as any, wasmFile, abiFile, signer, options);
+
+    if(options?.actionData) {
+        // Return action data
+        return {
+            account: 'eosio',
+            name: 'setcode',
+            authorization: [
+                {
+                    actor: Name.from(account).toString(),
+                    permission: 'active',
+                },
+            ],
+            data: {
+                account: Name.from(account).toString(),
+                vmtype: 0,
+                vmversion: 0,
+                code: wasmFile.toString('hex'),
+            },
+        };
+    }
+    
 }
