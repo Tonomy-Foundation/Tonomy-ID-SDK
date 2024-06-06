@@ -9,33 +9,14 @@ import {
     Authority,
     EosioContract,
 } from '../../../../src/sdk/services/blockchain';
-import { setTestSettings } from '../../../helpers/settings';
 import { getDeployableFilesFromDir } from '../../../../src/cli/bootstrap/deploy-contract';
 import fs from 'fs';
 import { sleep } from '../../../../src/sdk/util';
-
-setTestSettings();
-
-const tonomyBoardKeys = [
-    'PVT_K1_YUpMM1hPec78763ADBMK3gJ4N3yUFi3N8dKRQ3nyYcxqoDnmL',
-    'PVT_K1_2BvbQ8rQ55eTtUqaohjKZViUCupsDtbwhUsEmn3dTaZymAdXKp',
-    'PVT_K1_2KjVtHQaBXydUidyoEdjbLw44DZBaQbFdNB6GmQHPzoXQqsTyp',
-];
-
-const tonomyBoardAccounts = ['1.found.tmy', '2.found.tmy', '3.found.tmy'];
-const tonomyBoardPrivateKeys = tonomyBoardKeys.map((key) => PrivateKey.from(key));
-const tonomyBoardSigners = tonomyBoardPrivateKeys.map((key) => createSigner(key));
+import { randomAccountName, tonomyBoardAccounts, tonomyBoardSigners } from '../../../helpers/eosio';
 
 const eosioMsigContract = EosioMsigContract.Instance;
 const tonomyEosioProxyContract = TonomyEosioProxyContract.Instance;
 const eosioContract = EosioContract.Instance;
-
-function randomAccountName(): string {
-    // replace all digits 06789 with another random digit
-    return ('test' + Math.floor(Math.random() * 100000000)).replace(/[06789]/g, (x) =>
-        Math.ceil(Math.random() * 5).toString()
-    );
-}
 
 describe('TonomyContract class', () => {
     const tonomyOpsSigner = createSigner(getTonomyOperationsKey());

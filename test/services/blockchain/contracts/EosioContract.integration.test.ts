@@ -1,8 +1,5 @@
 import { TonomyContract } from '../../../../src/sdk/index';
-import { setTestSettings } from '../../../helpers/settings';
 import { createRandomID, createRandomApp } from '../../../helpers/user';
-
-setTestSettings();
 
 const tonomyContract = TonomyContract.Instance;
 

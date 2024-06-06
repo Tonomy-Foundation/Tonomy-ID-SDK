@@ -1,8 +1,5 @@
 import { IdentifyMessage, Message } from '../../src/sdk/services/communication/message';
-import { setTestSettings } from '../helpers/settings';
 import { createRandomID } from '../helpers/user';
-
-setTestSettings();
 
 describe('user signing messages', () => {
     test('user can sign a message', async () => {
