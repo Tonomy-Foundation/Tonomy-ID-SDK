@@ -9,6 +9,21 @@ const eosioMsigContract = EosioMsigContract.Instance;
 
 const governanceAccounts = ['1.found.tmy', '2.found.tmy', '3.found.tmy'];
 let newGovernanceAccounts = ['14.found.tmy', '5.found.tmy', '11.found.tmy', '12.found.tmy', '13.found.tmy'];
+const allocations: [string, number][] = [
+    ['coinsale.tmy', 0.025], // Seed Private Sale
+    ['coinsale.tmy', 0.055], // Strategic Partners Private Sale
+    ['coinsale.tmy', 0.07], // Public Sale
+    ['team.tmy', 0.15], // Team and Advisors
+    ['legal.tmy', 0.02], // Legal and Compliance
+    ['reserves.tmy', 0.03], // Reserves
+    ['partners.tmy', 0.05], // Partnerships
+    ['liquidty.tmy', 0.05], // Liquidity Allocation
+    ['marketng.tmy', 0.1], // Community and Marketing
+    ['ops.tmy', 0.05], // Platform Operations
+    ['infra.tmy', 0.1], // Infrastructure Rewards
+    ['ecosystm.tmy', 0.3], // Ecosystem
+];
+const addCodePermissionTo = allocations.map((allocation) => allocation[0]);
 
 if (!settings.isProduction()) {
     newGovernanceAccounts.push(...governanceAccounts);
@@ -191,41 +206,42 @@ export default async function msig(args: string[]) {
                 if (test) await executeProposal(proposer, proposalName, proposalHash);
             }
         } else if (proposalType === 'eosio.code-permission') {
-            const ownerAuthority = Authority.fromAccount({ actor: 'vesting.tmy', permission: 'owner' });
+            for (const account of addCodePermissionTo) {
+                const ownerAuthority = Authority.fromAccount({ actor: account, permission: 'owner' });
+                const activeAuthority = Authority.fromAccount({ actor: account, permission: 'active' });
 
-            ownerAuthority.addCodePermission('vesting.tmy');
-            const action = {
-                account: 'tonomy',
-                name: 'updateauth',
-                authorization: [
-                    {
-                        actor: 'tonomy',
-                        permission: 'active',
+                activeAuthority.addCodePermission('vesting.tmy');
+
+                const actions = ['owner', 'active'].map((permission) => ({
+                    account: 'eosio',
+                    name: 'updateauth',
+                    authorization: [
+                        {
+                            actor: account,
+                            permission: permission,
+                        },
+                    ],
+                    data: {
+                        account: account,
+                        permission: permission,
+                        parent: permission === 'owner' ? '' : 'owner', // Owner has no parent, active's parent is owner
+                        auth: permission === 'owner' ? ownerAuthority : activeAuthority,
+                        // eslint-disable-next-line camelcase
+                        auth_parent: false, // Assuming existing permissions are being modified, not new ones created
                     },
-                    {
-                        actor: 'tonomy',
-                        permission: 'owner',
-                    },
-                ],
-                data: {
-                    account: 'found.tmy',
-                    permission: 'owner',
-                    parent: '',
-                    auth: ownerAuthority,
-                    // eslint-disable-next-line camelcase
-                    auth_parent: false, // should be true when a new permission is being created, otherwise false
-                },
-            };
+                }));
 
-            const proposalHash = await createProposal(
-                proposer,
-                proposalName,
-                [action],
-                privateKey,
-                newGovernanceAccounts
-            );
+                // Assuming createProposal and executeProposal can handle multiple actions
+                const proposalHash = await createProposal(
+                    proposer,
+                    proposalName,
+                    actions,
+                    privateKey,
+                    newGovernanceAccounts
+                );
 
-            if (test) await executeProposal(proposer, proposalName, proposalHash);
+                if (test) await executeProposal(proposer, proposalName, proposalHash);
+            }
         } else {
             throw new Error(`Invalid msig proposal type ${proposalType}`);
         }
