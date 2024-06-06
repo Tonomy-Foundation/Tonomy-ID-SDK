@@ -1,4 +1,4 @@
-import { decodeJWT } from '@tonomy/did-jwt';
+import { decodeJWT } from 'did-jwt';
 import { JWTDecoded, JWTPayload } from '@tonomy/did-jwt/lib/JWT';
 import { DIDurl, URL, JWT, JWTVCPayload } from './types';
 import { getSettings } from '../settings';

@@ -49,7 +49,7 @@ export * from './storage/storage';
 export * from './storage/browserStorage';
 export * from './storage/jsKeyManager';
 // Other
-export { ES256KSigner } from '@tonomy/did-jwt';
+export { ES256KSigner } from 'did-jwt';
 
 // API
 export * from '../api/externalUser';

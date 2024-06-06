@@ -1,6 +1,6 @@
 import { LoginRequestsMessage, generateRandomKeyPair, randomString } from '../../src/sdk';
 import { createJWK } from '../../src/sdk/util/ssi/did-jwk';
-import { ES256KSigner } from '@tonomy/did-jwt';
+import { ES256KSigner } from 'did-jwt';
 import { Issuer } from '@tonomy/did-jwt-vc';
 import { toDid } from '../../src/sdk/util/ssi/did-jwk';
 import { LoginRequest, LoginRequestPayload } from '../../src/sdk/util/request';

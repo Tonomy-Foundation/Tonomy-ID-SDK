@@ -3,7 +3,7 @@ import rb from '@consento/sync-randombytes';
 import elliptic from 'elliptic';
 import { SdkErrors, throwError } from './errors';
 import { KeyManager, KeyManagerLevel } from '../storage/keymanager';
-import { ES256KSigner, ES256Signer, Signer } from '@tonomy/did-jwt';
+import { ES256KSigner, ES256Signer, Signer } from 'did-jwt';
 
 const secp256k1 = new elliptic.ec('secp256k1');
 

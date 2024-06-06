@@ -1,4 +1,4 @@
-import { decodeJWT, verifyJWT } from '@tonomy/did-jwt';
+import { decodeJWT, verifyJWT } from 'did-jwt';
 import { VerificationMethod } from '@tonomy/did-resolver';
 import { resolve } from '../../../src/sdk/util/ssi/did-jwk';
 
