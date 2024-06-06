@@ -178,7 +178,32 @@ export default async function msig(args: string[]) {
                 contractDir: path.join(__dirname, `../../Tonomy-Contracts/contracts/${contractName}`),
             };
 
-            await deployContract(contractInfo, signer, { throughTonomyProxy: true });
+            const action = {
+                account: 'eosio',
+                name: 'setcode',
+                authorization: [
+                    {
+                        actor: contractName,
+                        permission: 'active',
+                    },
+                ],
+                data: {
+                    account: contractName,
+                    vmtype: 0,
+                    vmversion: 0,
+                    code: await deployContract(contractInfo, signer, { throughTonomyProxy: true }),
+                },
+            };
+
+            const proposalHash = await createProposal(
+                proposer,
+                proposalName,
+                [action],
+                privateKey,
+                newGovernanceAccounts
+            );
+
+            if (test) await executeProposal(proposer, proposalName, proposalHash);
         } else if (proposalType === 'eosio.code') {
         } else {
             throw new Error(`Invalid msig proposal type ${proposalType}`);
