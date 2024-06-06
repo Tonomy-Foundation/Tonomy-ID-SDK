@@ -1,13 +1,11 @@
 import { PrivateKey, Name, Checksum256, ABI, Serializer } from '@wharfkit/antelope';
 import path from 'path';
 import fs from 'fs';
-import { EosioMsigContract, getSettings, setSettings } from '../../sdk';
+import { EosioMsigContract, getAccountInfo, setSettings } from '../../sdk';
 import { ActionData, Authority, EosioTokenContract, createSigner } from '../../sdk/services/blockchain';
 import settings from '../bootstrap/settings';
 import { getDeployableFilesFromDir } from '../bootstrap/deploy-contract';
 import { addCodePermissionTo } from '../bootstrap';
-import { getAccountInfo } from '../../../build/sdk/types/sdk/helpers/user';
-import { AccountType, TonomyUsername } from '../../../build/sdk/types/sdk/util/username';
 
 const eosioMsigContract = EosioMsigContract.Instance;
 
@@ -244,13 +242,8 @@ export default async function msig(args: string[]) {
             if (test) await executeProposal(proposer, proposalName, proposalHash);
         } else if (proposalType === 'eosio.code-permission') {
             for (const account of addCodePermissionTo) {
-                const accountName = TonomyUsername.fromUsername(
-                    account,
-                    AccountType.PERSON,
-                    getSettings().accountSuffix
-                );
+                const accountInfo = await getAccountInfo(Name.from(account));
 
-                const accountInfo = await getAccountInfo(accountName);
                 const ownerPermission = accountInfo.permissions.find((perm) => perm.perm_name.toString() === 'owner');
                 const activePermission = accountInfo.permissions.find((perm) => perm.perm_name.toString() === 'active');
 
@@ -284,6 +277,7 @@ export default async function msig(args: string[]) {
                         permission: permission,
                         parent: permission === 'owner' ? '' : 'owner',
                         auth: permission === 'owner' ? ownerAuthority : activeAuthority,
+                        // eslint-disable-next-line camelcase
                         auth_parent: false,
                     },
                 }));
