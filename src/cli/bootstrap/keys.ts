@@ -102,6 +102,8 @@ export async function updateControlByAccount(
         contract = tonomyEosioProxyContract;
     }
 
+    console.log('activeAuthority', account.toString(), activeAuthority.accounts[0].permission);
+
     if (options.replaceActive ?? true) {
         await contract.updateauth(account.toString(), 'active', 'owner', activeAuthority, signer);
     }

@@ -4,12 +4,11 @@ import { EosioMsigContract, setSettings } from '../../sdk';
 import { ActionData, Authority, EosioTokenContract, createSigner } from '../../sdk/services/blockchain';
 import settings from '../bootstrap/settings';
 import deployContract from '../bootstrap/deploy-contract';
-import { updateControlByAccount } from '../bootstrap/keys';
 
 const eosioMsigContract = EosioMsigContract.Instance;
 
 const governanceAccounts = ['1.found.tmy', '2.found.tmy', '3.found.tmy'];
-let newGovernanceAccounts = ['14.found.tmy', '5.found.tmy', '11.found.tmy', '12.found.tmy', '13.found.tmy'];
+let newGovernanceAccounts = [...governanceAccounts];
 
 if (!settings.isProduction()) {
     newGovernanceAccounts.push(...governanceAccounts);
@@ -24,7 +23,7 @@ export default async function msig(args: string[]) {
 
     console.log('Using environment', settings.env);
 
-    let test = false;
+    let test = true;
 
     for (const arg of args) {
         if (arg.includes('--test')) {
@@ -42,7 +41,7 @@ export default async function msig(args: string[]) {
     }
 
     const proposer = '1.found.tmy';
-    const privateKey = PrivateKey.from(process.env.SIGNING_KEY || '');
+    const privateKey = PrivateKey.from('PVT_K1_YUpMM1hPec78763ADBMK3gJ4N3yUFi3N8dKRQ3nyYcxqoDnmL');
     const signer = createSigner(privateKey);
 
     if (args[0] === 'cancel') {
@@ -191,28 +190,33 @@ export default async function msig(args: string[]) {
 
                 if (test) await executeProposal(proposer, proposalName, proposalHash);
             }
-        } else if (proposalType === 'eosio.code') {
-            const contractAccount = 'vesting.tmy';
-            const permission = 'ops.tmy';
+        } else if (proposalType === 'eosio.code-permission') {
+            const ownerAuthority = Authority.fromAccount({ actor: 'vesting.tmy', permission: 'owner' });
 
+            ownerAuthority.addCodePermission('vesting.tmy');
             const action = {
-                account: 'eosio',
+                account: 'tonomy',
                 name: 'updateauth',
                 authorization: [
                     {
-                        actor: contractAccount,
+                        actor: 'tonomy',
                         permission: 'active',
+                    },
+                    {
+                        actor: 'tonomy',
+                        permission: 'owner',
                     },
                 ],
                 data: {
-                    account: contractAccount,
+                    account: 'found.tmy',
                     permission: 'owner',
                     parent: '',
-                    auth: await updateControlByAccount(contractAccount, permission, signer, {
-                        addCodePermission: 'vesting.tmy',
-                    }),
+                    auth: ownerAuthority,
+                    // eslint-disable-next-line camelcase
+                    auth_parent: false, // should be true when a new permission is being created, otherwise false
                 },
             };
+
             const proposalHash = await createProposal(
                 proposer,
                 proposalName,

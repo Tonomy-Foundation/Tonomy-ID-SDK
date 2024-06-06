@@ -62,4 +62,7 @@ export default async function deployContract(
             },
         };
     }
+
+    // Explicitly return null if options?.actionData is not true
+    return null;
 }
