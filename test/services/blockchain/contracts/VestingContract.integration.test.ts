@@ -1,9 +1,9 @@
 /* eslint-disable prettier/prettier */
-import { KeyManagerLevel, VestingContract, VestingSettings, VestingAllocation } from '../../../../src/sdk/index';
-import { setTestSettings } from '../../../helpers/settings';
+import { KeyManagerLevel, VestingContract, VestingSettings } from '../../../../src/sdk/index';
 import { createRandomID } from '../../../helpers/user';
-import { getAccountInfo } from '../../../../src/sdk/helpers/user';
 import {
+    Authority,
+    EosioTokenContract,
     Signer,
     createKeyManagerSigner,
     createSigner,
@@ -11,11 +11,11 @@ import {
 } from '../../../../src/sdk/services/blockchain';
 import { sleep } from '../../../helpers/sleep';
 import { addSeconds, sleepUntil, subtractSeconds } from '../../../../src/sdk/util';
-
-setTestSettings();
+import { PrivateKey } from '@wharfkit/antelope';
+import { createRandomAccount } from '../../../helpers/eosio';
 
 const vestingContract = VestingContract.Instance;
-
+const eosioTokenContract = EosioTokenContract.Instance;
 const signer = createSigner(getTonomyOperationsKey());
 
 function assetToAmount(asset: string): number {
@@ -35,10 +35,8 @@ describe('VestingContract class', () => {
     beforeEach(async () => {
         // Create a random user
         const { user } = await createRandomID();
-        const userAccountName = await user.storage.accountName;
-        const accountInfo = await getAccountInfo(userAccountName);
 
-        accountName = accountInfo.account_name.toString();
+        accountName = (await user.getAccountName()).toString()
         accountSigner = createKeyManagerSigner(user.keyManager, KeyManagerLevel.ACTIVE);
 
         // Set the sale and launch date
@@ -67,6 +65,17 @@ describe('VestingContract class', () => {
                 await vestingContract.setSettings(salesDate, launchDate, signer);
             } catch (e) {
                 expect(e.error.details[0].message).toContain('date parsing failed');
+            }
+        });
+
+        test('Unsuccessful if not signed by vesting.tmy key', async () => {
+            const wrongSigner = createSigner(PrivateKey.generate("K1"));
+
+            try {
+                await sleep(1000); // Wait to ensure don't get duplicate transaction error
+                await vestingContract.setSettings(saleStart, launchStart, wrongSigner);
+            } catch (e) {
+                expect(e.error.details[0].message).toContain("transaction declares authority '{\"actor\":\"vesting.tmy\",\"permission\":\"active\"}', but does not have signatures for it");
             }
         });
     });
@@ -172,6 +181,56 @@ describe('VestingContract class', () => {
             }
         });
 
+        test('Sucessfull when signed by sender of coins key', async () => {
+            expect.assertions(1);
+            const newAccountKey = PrivateKey.generate("K1")
+            const newAccountSigner = createSigner(newAccountKey);
+            const authority = Authority.fromKey(newAccountKey.toPublic().toString());
+
+            authority.addCodePermission("vesting.tmy");
+            const { name: newAccountName } = await createRandomAccount(authority);
+
+            await eosioTokenContract.transfer('ops.tmy', newAccountName, '1.000000 LEOS', signer);
+            const trx = await vestingContract.assignTokens(newAccountName, 'found.tmy', '1.000000 LEOS', 999, newAccountSigner);
+
+            expect(trx.processed.receipt.status).toBe('executed');
+        });
+
+        test('Unsuccessful if not sender does not add vesting.tmy code permission', async () => {
+            expect.assertions(1);
+            const newAccountKey = PrivateKey.generate("K1")
+            const newAccountSigner = createSigner(newAccountKey);
+            const authority = Authority.fromKey(newAccountKey.toPublic().toString());
+
+            const { name: newAccountName } = await createRandomAccount(authority);
+
+            await eosioTokenContract.transfer('ops.tmy', newAccountName, '1.000000 LEOS', signer);
+
+            try {
+                await vestingContract.assignTokens(newAccountName, 'found.tmy', '1.000000 LEOS', 999, newAccountSigner);
+            } catch (e) {
+                expect(e.error.details[0].message).toContain("transaction declares authority '{\"actor\":\"" + newAccountName.toString() + "\",\"permission\":\"active\"}', but does not have signatures for it");
+            }
+        });
+
+        test('Unsuccessful if not signed by sender of coins key', async () => {
+            expect.assertions(1);
+            const newAccountKey = PrivateKey.generate("K1")
+            const wrongSigner = createSigner(PrivateKey.generate("K1"));
+            const authority = Authority.fromKey(newAccountKey.toPublic().toString());
+
+            authority.addCodePermission("vesting.tmy");
+            const { name: newAccountName } = await createRandomAccount(authority);
+
+            await eosioTokenContract.transfer('ops.tmy', newAccountName, '1.000000 LEOS', signer);
+
+            try {
+                await vestingContract.assignTokens(newAccountName, 'found.tmy', '1.000000 LEOS', 999, wrongSigner);
+            } catch (e) {
+                expect(e.error.details[0].message).toContain("transaction declares authority '{\"actor\":\"" + newAccountName.toString() + "\",\"permission\":\"active\"}', but does not have signatures for it");
+            }
+        });
+
         test(
             'Unsuccessful assignment due to number of purchases',
             async () => {
@@ -204,7 +263,7 @@ describe('VestingContract class', () => {
             1.5 * VestingContract.MAX_ALLOCATIONS * 1000
         );
 
-        test("successfully get account balance ", async () =>{
+        test("successfully get account balance ", async () => {
             expect.assertions(4);
 
             const trx = await vestingContract.assignTokens('coinsale.tmy', accountName, '2.000000 LEOS', 999, signer);
@@ -221,7 +280,7 @@ describe('VestingContract class', () => {
 
             expect(balance2).toBe(3);
 
-        
+
         })
     });
 
@@ -249,10 +308,6 @@ describe('VestingContract class', () => {
 
             expect(transferAmount).toBeLessThan(1.0);
             expect(transferAmount).toBeGreaterThan(0.5);
-
-            // const trxConsole = JSON.parse(trx.processed.action_traces[0].console);
-            // console.log('trxConsole', trxConsole);
-            // console.log('allocations', allocations);
 
             allocations = await vestingContract.getAllocations(accountName);
             const allocatedAmount = assetToAmount(allocations[0].tokens_claimed);
@@ -447,5 +502,5 @@ describe('VestingContract class', () => {
         });
     });
 
-    
+
 });

@@ -159,7 +159,7 @@ describe('Login to external website', () => {
     });
 
     async function runExternalUserLoginTest(testOptions: ExternalUserLoginTestOptions) {
-        let expectedTests = 45;
+        let expectedTests = 47;
 
         if (testOptions.dataRequest) {
             expectedTests += 1;
@@ -356,15 +356,9 @@ describe('Login to external website', () => {
 
         await externalWebsiteSignVc(EXTERNAL_WEBSITE_user);
 
-        // ##### Tonomy ID user (storage container) #####
-        // ##########################
-
-        const TONOMY_ID_linkAuthSubscriber = setupLinkAuthSubscriber(TONOMY_ID_user);
-
         // #####External website user (callback page) #####
         // ################################
         await externalWebsiteSignTransaction(EXTERNAL_WEBSITE_user, externalApp);
-        await TONOMY_ID_linkAuthSubscriber;
 
         await externalWebsiteOnLogout(EXTERNAL_WEBSITE_jsKeyManager, EXTERNAL_WEBSITE_storage_factory);
 

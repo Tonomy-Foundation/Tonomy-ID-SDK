@@ -6,10 +6,7 @@ import { jsStorageFactory } from '../../src/cli/bootstrap/jsstorage';
 import { Checksum256 } from '@wharfkit/antelope';
 import { generatePrivateKeyFromPassword } from '../../src/cli/bootstrap/keys';
 import { getAccount } from '../../src/sdk/services/blockchain/eosio/eosio';
-import { setTestSettings } from '../helpers/settings';
 import { getAccountInfo } from '../../src/sdk/helpers/user';
-
-setTestSettings();
 
 let auth: KeyManager;
 let user: IUserPublic;

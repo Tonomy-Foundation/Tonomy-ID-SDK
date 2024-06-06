@@ -68,7 +68,7 @@ class EosioTokenContract {
                 name: 'transfer',
                 authorization: [
                     {
-                        actor: CONTRACT_NAME,
+                        actor: from.toString(),
                         permission: 'active',
                     },
                 ],

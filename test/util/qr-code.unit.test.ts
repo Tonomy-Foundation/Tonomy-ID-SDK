@@ -1,8 +1,6 @@
 import { SdkErrors } from '../../src/sdk';
 import { createLoginQrCode, validateQrCode } from '../../src/sdk/util/qr-code';
-import { settings, setTestSettings } from '../helpers/settings';
-
-setTestSettings();
+import { settings } from '../helpers/settings';
 
 const tonomyIdSchema = settings.tonomyIdSchema;
 

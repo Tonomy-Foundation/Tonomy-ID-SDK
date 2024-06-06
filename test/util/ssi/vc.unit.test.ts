@@ -5,9 +5,6 @@ import { ES256KSigner } from '@tonomy/did-jwt';
 import { Issuer } from '@tonomy/did-jwt-vc';
 import { toDid } from '../../../src/sdk/util/ssi/did-jwk';
 import { LoginRequest, LoginRequestPayload } from '../../../src/sdk/util/request';
-import { setTestSettings } from '../../helpers/settings';
-
-setTestSettings();
 
 type TestObject = {
     name: string;

@@ -73,14 +73,14 @@ export async function updateControlByAccount(
     account: NameType,
     controllerAccount: string | string[],
     signer: Signer,
-    options: { addCodePermission?: boolean; replaceActive?: boolean; useTonomyContract?: boolean } = {}
+    options: { addCodePermission?: string; replaceActive?: boolean; useTonomyContract?: boolean } = {}
 ) {
     if (!Array.isArray(controllerAccount)) controllerAccount = [controllerAccount];
     const activeAuthority = Authority.fromAccount({ actor: controllerAccount[0], permission: 'active' });
     const ownerAuthority = Authority.fromAccount({ actor: controllerAccount[0], permission: 'owner' });
 
-    if (options.addCodePermission ?? false) activeAuthority.addCodePermission(account.toString());
-    if (options.addCodePermission ?? false) ownerAuthority.addCodePermission(account.toString());
+    if (options.addCodePermission) activeAuthority.addCodePermission(options.addCodePermission);
+    if (options.addCodePermission) ownerAuthority.addCodePermission(options.addCodePermission);
 
     // If multiple keys provided, make a 2/3 multisig
     if (controllerAccount.length > 1) {

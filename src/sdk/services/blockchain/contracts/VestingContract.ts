@@ -99,7 +99,7 @@ export class VestingContract {
         const action = {
             authorization: [
                 {
-                    actor: CONTRACT_NAME,
+                    actor: sender.toString(),
                     permission: 'active',
                 },
             ],
