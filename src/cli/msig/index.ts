@@ -25,7 +25,7 @@ export default async function msig(args: string[]) {
 
     console.log('Using environment', settings.env);
 
-    let test = true;
+    let test = false;
 
     for (const arg of args) {
         if (arg.includes('--test')) {
@@ -244,8 +244,8 @@ export default async function msig(args: string[]) {
             for (const account of addCodePermissionTo) {
                 const accountInfo = await getAccountInfo(Name.from(account));
 
-                const ownerPermission = accountInfo.permissions.find((perm) => perm.perm_name.toString() === 'owner');
-                const activePermission = accountInfo.permissions.find((perm) => perm.perm_name.toString() === 'active');
+                const ownerPermission = accountInfo.getPermission('owner');
+                const activePermission = accountInfo.getPermission('active');
 
                 if (!ownerPermission || !activePermission) {
                     throw new Error(`Permissions not found for account: ${account}`);
@@ -262,6 +262,7 @@ export default async function msig(args: string[]) {
                 });
 
                 activeAuthority.addCodePermission('vesting.tmy');
+                ownerAuthority.addCodePermission('vesting.tmy');
 
                 const actions = ['owner', 'active'].map((permission) => ({
                     account: 'eosio',
