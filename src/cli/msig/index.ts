@@ -1,9 +1,10 @@
-import { PrivateKey, Name, Checksum256 } from '@wharfkit/antelope';
+import { PrivateKey, Name, Checksum256, ABI, Serializer } from '@wharfkit/antelope';
 import path from 'path';
+import fs from 'fs';
 import { EosioMsigContract, setSettings } from '../../sdk';
 import { ActionData, Authority, EosioTokenContract, createSigner } from '../../sdk/services/blockchain';
 import settings from '../bootstrap/settings';
-import deployContract from '../bootstrap/deploy-contract';
+import { getDeployableFilesFromDir } from '../bootstrap/deploy-contract';
 
 const eosioMsigContract = EosioMsigContract.Instance;
 
@@ -192,19 +193,67 @@ export default async function msig(args: string[]) {
                 account: contractName,
                 contractDir: path.join(__dirname, `../../Tonomy-Contracts/contracts/${contractName}`),
             };
-            const action = await deployContract(contractInfo, signer, { throughTonomyProxy: true, actionData: true });
 
-            if (action) {
-                const proposalHash = await createProposal(
-                    proposer,
-                    proposalName,
-                    [action],
-                    privateKey,
-                    newGovernanceAccounts
-                );
+            const { wasmPath, abiPath } = getDeployableFilesFromDir(contractInfo.contractDir);
 
-                if (test) await executeProposal(proposer, proposalName, proposalHash);
-            }
+            const wasmFile = fs.readFileSync(wasmPath);
+            const abiFile = fs.readFileSync(abiPath, 'utf8');
+            const wasm = wasmFile.toString(`hex`);
+
+            // 2. Prepare SETABI
+            const abi = JSON.parse(abiFile);
+            const abiDef = ABI.from(abi);
+            const abiSerializedHex = Serializer.encode({ object: abiDef }).hexString;
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const actions: ActionData[] = [];
+
+            // Prepare SETCODE action
+            const setCodeAction: ActionData = {
+                account: 'tonomy',
+                name: 'setcode',
+                authorization: [
+                    {
+                        actor: contractName.toString(),
+                        permission: 'active',
+                    },
+                ],
+                data: {
+                    account: contractName.toString(),
+                    vmtype: 0,
+                    vmversion: 0,
+                    code: wasm,
+                },
+            };
+
+            actions.push(setCodeAction);
+
+            // Prepare SETABI action
+            const setAbiAction: ActionData = {
+                account: 'tonomy',
+                name: 'setabi',
+                authorization: [
+                    {
+                        actor: contractName.toString(),
+                        permission: 'active',
+                    },
+                ],
+                data: {
+                    account: contractName.toString(),
+                    abi: abiSerializedHex,
+                },
+            };
+
+            actions.push(setAbiAction);
+
+            const proposalHash = await createProposal(
+                proposer,
+                proposalName,
+                actions,
+                privateKey,
+                newGovernanceAccounts
+            );
+
+            if (test) await executeProposal(proposer, proposalName, proposalHash);
         } else if (proposalType === 'eosio.code-permission') {
             for (const account of addCodePermissionTo) {
                 const ownerAuthority = Authority.fromAccount({ actor: account, permission: 'owner' });

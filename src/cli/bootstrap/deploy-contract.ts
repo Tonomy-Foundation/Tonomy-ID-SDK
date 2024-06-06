@@ -30,7 +30,6 @@ export default async function deployContract(
     options?: {
         extraAuthorization?: { actor: string; permission: string };
         throughTonomyProxy?: boolean;
-        actionData?: boolean;
     }
 ) {
     const { wasmPath, abiPath } = getDeployableFilesFromDir(contractDir);
@@ -42,27 +41,4 @@ export default async function deployContract(
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await contract.deployContract(Name.from(account) as any, wasmFile, abiFile, signer, options);
-
-    if (options?.actionData) {
-        // Return action data
-        return {
-            account: 'eosio',
-            name: 'setcode',
-            authorization: [
-                {
-                    actor: Name.from(account).toString(),
-                    permission: 'active',
-                },
-            ],
-            data: {
-                account: Name.from(account).toString(),
-                vmtype: 0,
-                vmversion: 0,
-                code: wasmFile.toString('hex'),
-            },
-        };
-    }
-
-    // Explicitly return null if options?.actionData is not true
-    return null;
 }
