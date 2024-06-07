@@ -175,44 +175,8 @@ export default async function msig(args: string[]) {
                 const ownerPermission = accountInfo.getPermission('owner');
                 const activePermission = accountInfo.getPermission('active');
 
-                const ownerAuthority = new Authority(
-                    ownerPermission.required_auth.threshold.toNumber(),
-                    ownerPermission.required_auth.keys.map((keyWeight) => ({
-                        key: keyWeight.key.toString(),
-                        weight: keyWeight.weight.toNumber(),
-                    })),
-                    ownerPermission.required_auth.accounts.map((permissionWeight) => ({
-                        permission: {
-                            actor: permissionWeight.permission.actor.toString(),
-                            permission: permissionWeight.permission.permission.toString(),
-                        },
-                        weight: permissionWeight.weight.toNumber(),
-                    })),
-                    ownerPermission.required_auth.waits.map((waitWeight) => ({
-                        // eslint-disable-next-line camelcase
-                        wait_sec: waitWeight.wait_sec.toNumber(),
-                        weight: waitWeight.weight.toNumber(),
-                    }))
-                );
-                const activeAuthority = new Authority(
-                    activePermission.required_auth.threshold.toNumber(),
-                    activePermission.required_auth.keys.map((keyWeight) => ({
-                        key: keyWeight.key.toString(),
-                        weight: keyWeight.weight.toNumber(),
-                    })),
-                    activePermission.required_auth.accounts.map((permissionWeight) => ({
-                        permission: {
-                            actor: permissionWeight.permission.actor.toString(),
-                            permission: permissionWeight.permission.permission.toString(),
-                        },
-                        weight: permissionWeight.weight.toNumber(),
-                    })),
-                    activePermission.required_auth.waits.map((waitWeight) => ({
-                        // eslint-disable-next-line camelcase
-                        wait_sec: waitWeight.wait_sec.toNumber(),
-                        weight: waitWeight.weight.toNumber(),
-                    }))
-                );
+                const ownerAuthority = Authority.fromAccountPermission(ownerPermission);
+                const activeAuthority = Authority.fromAccountPermission(activePermission);
 
                 activeAuthority.addCodePermission('vesting.tmy');
                 ownerAuthority.addCodePermission('vesting.tmy');
