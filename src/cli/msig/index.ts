@@ -243,28 +243,66 @@ export default async function msig(args: string[]) {
         } else if (proposalType === 'eosio.code-permission') {
             let count = 1;
 
-            console.log('addCodePermissionTo', addCodePermissionTo);
+            console.log('addCodePermissionTo', addCodePermissionTo, addCodePermissionTo.length);
 
             for (const account of addCodePermissionTo) {
-                console.log('account', account);
+                count = count + 1;
+
+                console.log('accountName', account);
                 const accountInfo = await getAccountInfo(Name.from(account));
 
                 const ownerPermission = accountInfo.getPermission('owner');
                 const activePermission = accountInfo.getPermission('active');
 
-                if (!ownerPermission || !activePermission) {
-                    throw new Error(`Permissions not found for account: ${account}`);
-                }
+                console.log('permissionss', ownerPermission, activePermission);
 
-                const ownerAuthority = Authority.fromAccount({
-                    actor: account,
-                    permission: 'owner',
-                });
+                // const ownerAuthority = Authority.fromAccount({
+                //     actor: account,
+                //     permission: ownerPermission.perm_name.toString(),
+                // });
 
-                const activeAuthority = Authority.fromAccount({
-                    actor: account,
-                    permission: 'active',
-                });
+                // const activeAuthority = Authority.fromAccount({
+                //     actor: account,
+                //     permission: activePermission.perm_name.toString(),
+                // });
+                const ownerAuthority = new Authority(
+                    ownerPermission.required_auth.threshold.toNumber(),
+                    ownerPermission.required_auth.keys.map((keyWeight) => ({
+                        key: keyWeight.key.toString(),
+                        weight: keyWeight.weight.toNumber(),
+                    })),
+                    ownerPermission.required_auth.accounts.map((permissionWeight) => ({
+                        permission: {
+                            actor: permissionWeight.permission.actor.toString(),
+                            permission: permissionWeight.permission.permission.toString(),
+                        },
+                        weight: permissionWeight.weight.toNumber(),
+                    })),
+                    ownerPermission.required_auth.waits.map((waitWeight) => ({
+                        // eslint-disable-next-line camelcase
+                        wait_sec: waitWeight.wait_sec.toNumber(),
+                        weight: waitWeight.weight.toNumber(),
+                    }))
+                );
+                const activeAuthority = new Authority(
+                    activePermission.required_auth.threshold.toNumber(),
+                    activePermission.required_auth.keys.map((keyWeight) => ({
+                        key: keyWeight.key.toString(),
+                        weight: keyWeight.weight.toNumber(),
+                    })),
+                    activePermission.required_auth.accounts.map((permissionWeight) => ({
+                        permission: {
+                            actor: permissionWeight.permission.actor.toString(),
+                            permission: permissionWeight.permission.permission.toString(),
+                        },
+                        weight: permissionWeight.weight.toNumber(),
+                    })),
+                    activePermission.required_auth.waits.map((waitWeight) => ({
+                        // eslint-disable-next-line camelcase
+                        wait_sec: waitWeight.wait_sec.toNumber(),
+                        weight: waitWeight.weight.toNumber(),
+                    }))
+                );
 
                 activeAuthority.addCodePermission('vesting.tmy');
                 ownerAuthority.addCodePermission('vesting.tmy');
@@ -288,9 +326,8 @@ export default async function msig(args: string[]) {
                     },
                 }));
 
-                proposalName = Name.from(proposalName + count.toString());
+                proposalName = Name.from(`'${proposalName} + ${count}`);
                 console.log('proposalName', proposalName);
-                count++;
 
                 const proposalHash = await createProposal(
                     proposer,

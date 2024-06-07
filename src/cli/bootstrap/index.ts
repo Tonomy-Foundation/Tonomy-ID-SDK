@@ -89,7 +89,8 @@ export default async function bootstrap() {
 const foundControlledAccounts = ['gov.tmy', 'team.tmy', 'prod1.tmy', 'prod2.tmy', 'prod3.tmy'];
 const govControlledAccounts = ['ops.tmy'];
 const operationsAccount = 'ops.tmy';
-const opsControlledAccounts = [
+
+export const opsControlledAccounts = [
     'tonomy',
     'ecosystm.tmy',
     'coinsale.tmy',
@@ -104,6 +105,7 @@ const opsControlledAccounts = [
     'marketng.tmy',
     'infra.tmy',
 ];
+
 const systemAccount = 'eosio';
 
 async function createAccounts(govKeys: string[]) {
