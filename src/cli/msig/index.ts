@@ -202,6 +202,14 @@ export default async function msig(args: string[]) {
                         actor: contractName.toString(),
                         permission: 'active',
                     },
+                    {
+                        actor: 'tonomy',
+                        permission: 'active',
+                    },
+                    {
+                        actor: 'tonomy',
+                        permission: 'owner',
+                    },
                 ],
                 data: {
                     account: contractName.toString(),
@@ -221,6 +229,14 @@ export default async function msig(args: string[]) {
                     {
                         actor: contractName.toString(),
                         permission: 'active',
+                    },
+                    {
+                        actor: 'tonomy',
+                        permission: 'active',
+                    },
+                    {
+                        actor: 'tonomy',
+                        permission: 'owner',
                     },
                 ],
                 data: {
