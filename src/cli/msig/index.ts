@@ -66,32 +66,41 @@ export default async function msig(args: string[]) {
         const proposalName = Name.from(args[2]);
 
         if (proposalType === 'gov-migrate') {
-            await govMigrate({ newGovernanceAccounts }, {
-                proposer,
-                proposalName,
-                privateKey,
-                requested: governanceAccounts,
-                test
-            })
+            await govMigrate(
+                { newGovernanceAccounts },
+                {
+                    proposer,
+                    proposalName,
+                    privateKey,
+                    requested: governanceAccounts,
+                    test,
+                }
+            );
         } else if (proposalType === 'new-account') {
-            await newAccount({ governanceAccounts }, {
-                proposer,
-                proposalName,
-                privateKey,
-                requested: newGovernanceAccounts,
-                test
-            })
+            await newAccount(
+                { governanceAccounts },
+                {
+                    proposer,
+                    proposalName,
+                    privateKey,
+                    requested: newGovernanceAccounts,
+                    test,
+                }
+            );
         } else if (proposalType === 'transfer') {
             const from = 'team.tmy';
             const to = 'advteam.tmy';
 
-            await transfer({ from, to }, {
-                proposer,
-                proposalName,
-                privateKey,
-                requested: newGovernanceAccounts,
-                test
-            });
+            await transfer(
+                { from, to },
+                {
+                    proposer,
+                    proposalName,
+                    privateKey,
+                    requested: newGovernanceAccounts,
+                    test,
+                }
+            );
         } else if (proposalType === 'deploy-contract') {
             const contractName = args[3];
 
@@ -181,8 +190,6 @@ export default async function msig(args: string[]) {
 
             if (test) await executeProposal(proposer, proposalName, proposalHash);
         } else if (proposalType === 'eosio.code-permission') {
-            console.log('addCodePermissionTo', addCodePermissionTo, addCodePermissionTo.length);
-
             const actions = [];
 
             for (const account of addCodePermissionTo) {
