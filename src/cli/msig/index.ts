@@ -2,10 +2,13 @@ import { PrivateKey, Name, Checksum256, ABI, Serializer } from '@wharfkit/antelo
 import path from 'path';
 import fs from 'fs';
 import { EosioMsigContract, getAccountInfo, setSettings } from '../../sdk';
-import { ActionData, Authority, EosioTokenContract, createSigner } from '../../sdk/services/blockchain';
+import { ActionData, Authority, createSigner } from '../../sdk/services/blockchain';
 import settings from '../bootstrap/settings';
 import { getDeployableFilesFromDir } from '../bootstrap/deploy-contract';
 import { addCodePermissionTo } from '../bootstrap';
+import { govMigrate } from './govMigrate';
+import { newAccount } from './newAccount';
+import { transfer } from './transfer';
 
 const eosioMsigContract = EosioMsigContract.Instance;
 
@@ -63,111 +66,32 @@ export default async function msig(args: string[]) {
         const proposalName = Name.from(args[2]);
 
         if (proposalType === 'gov-migrate') {
-            const threshold = settings.isProduction() ? 3 : 2;
-            const action = {
-                account: 'tonomy',
-                name: 'updateauth',
-                authorization: [
-                    {
-                        actor: 'tonomy',
-                        permission: 'active',
-                    },
-                    {
-                        actor: 'tonomy',
-                        permission: 'owner',
-                    },
-                ],
-                data: {
-                    account: 'found.tmy',
-                    permission: 'owner',
-                    parent: '',
-                    auth: Authority.fromAccountArray(newGovernanceAccounts, 'active', threshold),
-                    // eslint-disable-next-line camelcase
-                    auth_parent: false, // should be true when a new permission is being created, otherwise false
-                },
-            };
-
-            const proposalHash = await createProposal(proposer, proposalName, [action], privateKey, governanceAccounts);
-
-            if (test) await executeProposal(proposer, proposalName, proposalHash);
-        } else if (proposalType === 'new-account') {
-            const newAccount = 'advteam.tmy';
-
-            const activeAuth = Authority.fromAccount({ actor: 'team.tmy', permission: 'active' });
-            const additionalAuthority = test ? governanceAccounts[2] : '11.found.tmy';
-
-            activeAuth.addAccount({ actor: additionalAuthority, permission: 'active' });
-            const action = {
-                account: 'tonomy',
-                name: 'newaccount',
-                authorization: [
-                    {
-                        actor: 'tonomy',
-                        permission: 'owner',
-                    },
-                    {
-                        actor: 'tonomy',
-                        permission: 'active',
-                    },
-                ],
-                data: {
-                    creator: 'tonomy',
-                    name: newAccount,
-                    owner: Authority.fromAccount({ actor: 'team.tmy', permission: 'owner' }),
-                    active: activeAuth,
-                },
-            };
-
-            const proposalHash = await createProposal(
+            await govMigrate({ newGovernanceAccounts }, {
                 proposer,
                 proposalName,
-                [action],
                 privateKey,
-                newGovernanceAccounts
-            );
-
-            if (test) await executeProposal(proposer, proposalName, proposalHash);
+                requested: governanceAccounts,
+                test
+            })
+        } else if (proposalType === 'new-account') {
+            await newAccount({ governanceAccounts }, {
+                proposer,
+                proposalName,
+                privateKey,
+                requested: newGovernanceAccounts,
+                test
+            })
         } else if (proposalType === 'transfer') {
             const from = 'team.tmy';
             const to = 'advteam.tmy';
 
-            const amountUsd = 100000;
-            const price = 0.012;
-            const amount = amountUsd / price;
-            const quantity = amount.toFixed(0) + '.000000 LEOS';
-
-            const balance = await EosioTokenContract.Instance.getBalance(from);
-
-            if (balance < amount) {
-                throw new Error(`Insufficient balance. Required: ${amount}, Available: ${balance}`);
-            }
-
-            const action = {
-                account: 'eosio.token',
-                name: 'transfer',
-                authorization: [
-                    {
-                        actor: from,
-                        permission: 'active',
-                    },
-                ],
-                data: {
-                    from,
-                    to,
-                    quantity,
-                    memo: 'To pay advisors',
-                },
-            };
-
-            const proposalHash = await createProposal(
+            await transfer({ from, to }, {
                 proposer,
                 proposalName,
-                [action],
                 privateKey,
-                newGovernanceAccounts
-            );
-
-            if (test) await executeProposal(proposer, proposalName, proposalHash);
+                requested: newGovernanceAccounts,
+                test
+            });
         } else if (proposalType === 'deploy-contract') {
             const contractName = args[3];
 
@@ -393,7 +317,7 @@ export default async function msig(args: string[]) {
     }
 }
 
-async function createProposal(
+export async function createProposal(
     proposer: string,
     proposalName: Name,
     actions: ActionData[],
@@ -447,7 +371,7 @@ async function createProposal(
     }
 }
 
-async function executeProposal(proposer: string, proposalName: Name, proposalHash: Checksum256) {
+export async function executeProposal(proposer: string, proposalName: Name, proposalHash: Checksum256) {
     if (!process.env.TONOMY_BOARD_PRIVATE_KEYS) throw new Error('TONOMY_BOARD_PRIVATE_KEYS not set');
     const tonomyGovKeys: string[] = JSON.parse(process.env.TONOMY_BOARD_PRIVATE_KEYS).keys;
     const tonomyGovSigners = tonomyGovKeys.map((key) => createSigner(PrivateKey.from(key)));
@@ -473,3 +397,11 @@ async function executeProposal(proposer: string, proposalName: Name, proposalHas
         console.error('Transaction failed');
     }
 }
+
+export type StandardProposalOptions = {
+    proposer: string;
+    proposalName: Name;
+    privateKey: PrivateKey;
+    requested: string[];
+    test?: boolean;
+};
