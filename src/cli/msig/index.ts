@@ -63,7 +63,7 @@ export default async function msig(args: string[]) {
         }
     } else if (args[0] === 'propose') {
         const proposalType = args[1];
-        let proposalName = Name.from(args[2]);
+        const proposalName = Name.from(args[2]);
 
         if (proposalType === 'gov-migrate') {
             await govMigrate({ newGovernanceAccounts }, {
@@ -165,30 +165,16 @@ export default async function msig(args: string[]) {
 
             if (test) await executeProposal(proposer, proposalName, proposalHash);
         } else if (proposalType === 'eosio.code-permission') {
-            let count = 1;
-
             console.log('addCodePermissionTo', addCodePermissionTo, addCodePermissionTo.length);
 
-            for (const account of addCodePermissionTo) {
-                count = count + 1;
+            const actions = [];
 
-                console.log('accountName', account);
+            for (const account of addCodePermissionTo) {
                 const accountInfo = await getAccountInfo(Name.from(account));
 
                 const ownerPermission = accountInfo.getPermission('owner');
                 const activePermission = accountInfo.getPermission('active');
 
-                console.log('permissionss', ownerPermission, activePermission);
-
-                // const ownerAuthority = Authority.fromAccount({
-                //     actor: account,
-                //     permission: ownerPermission.perm_name.toString(),
-                // });
-
-                // const activeAuthority = Authority.fromAccount({
-                //     actor: account,
-                //     permission: activePermission.perm_name.toString(),
-                // });
                 const ownerAuthority = new Authority(
                     ownerPermission.required_auth.threshold.toNumber(),
                     ownerPermission.required_auth.keys.map((keyWeight) => ({
@@ -231,38 +217,70 @@ export default async function msig(args: string[]) {
                 activeAuthority.addCodePermission('vesting.tmy');
                 ownerAuthority.addCodePermission('vesting.tmy');
 
-                const actions = ['owner', 'active'].map((permission) => ({
-                    account: 'eosio',
+                actions.push({
+                    account: 'tonomy',
                     name: 'updateauth',
                     authorization: [
                         {
                             actor: account,
-                            permission: permission,
+                            permission: 'owner',
+                        },
+                        {
+                            actor: 'tonomy',
+                            permission: 'active',
+                        },
+                        {
+                            actor: 'tonomy',
+                            permission: 'owner',
                         },
                     ],
                     data: {
                         account: account,
-                        permission: permission,
-                        parent: permission === 'owner' ? '' : 'owner',
-                        auth: permission === 'owner' ? ownerAuthority : activeAuthority,
+                        permission: 'owner',
+                        parent: '',
+                        auth: ownerAuthority,
                         // eslint-disable-next-line camelcase
                         auth_parent: false,
                     },
-                }));
+                });
 
-                proposalName = Name.from(`'${proposalName} + ${count}`);
-                console.log('proposalName', proposalName);
-
-                const proposalHash = await createProposal(
-                    proposer,
-                    proposalName,
-                    actions,
-                    privateKey,
-                    newGovernanceAccounts
-                );
-
-                if (test) await executeProposal(proposer, proposalName, proposalHash);
+                actions.push({
+                    account: 'tonomy',
+                    name: 'updateauth',
+                    authorization: [
+                        {
+                            actor: account,
+                            permission: 'active',
+                        },
+                        {
+                            actor: 'tonomy',
+                            permission: 'active',
+                        },
+                        {
+                            actor: 'tonomy',
+                            permission: 'owner',
+                        },
+                    ],
+                    data: {
+                        account: account,
+                        permission: 'active',
+                        parent: 'owner',
+                        auth: activeAuthority,
+                        // eslint-disable-next-line camelcase
+                        auth_parent: false,
+                    },
+                });
             }
+
+            const proposalHash = await createProposal(
+                proposer,
+                proposalName,
+                actions,
+                privateKey,
+                newGovernanceAccounts
+            );
+
+            if (test) await executeProposal(proposer, proposalName, proposalHash);
         } else {
             throw new Error(`Invalid msig proposal type ${proposalType}`);
         }
