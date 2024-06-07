@@ -16,7 +16,7 @@ let newGovernanceAccounts = ['14.found.tmy', '5.found.tmy', '11.found.tmy', '12.
 
 if (settings.env === "testnet") {
     newGovernanceAccounts.push(...governanceAccounts);
-} else if (settings.env === "staging") {
+} else if (!settings.isProduction()) {
     newGovernanceAccounts = governanceAccounts;
 }
 
@@ -29,7 +29,7 @@ export default async function msig(args: string[]) {
 
     console.log('Using environment', settings.env);
 
-    let test = true;
+    let test = false;
 
     for (const arg of args) {
         if (arg.includes('--test')) {
@@ -46,8 +46,8 @@ export default async function msig(args: string[]) {
         }
     }
 
-    const proposer = '1.found.tmy';
-    let signingKey = process.env.SIGNING_KEY
+    const proposer = governanceAccounts[0];
+    let signingKey: string | undefined = process.env.SIGNING_KEY
     if (!signingKey) {
         if (!process.env.TONOMY_BOARD_PRIVATE_KEYS) throw new Error('Neither SIGNING_KEY or TONOMY_BOARD_PRIVATE_KEYS are set');
         const tonomyGovKeys: string[] = JSON.parse(process.env.TONOMY_BOARD_PRIVATE_KEYS).keys;
@@ -203,8 +203,9 @@ export async function createProposal(
     } catch (e) {
         if (e?.error?.details[0]?.message.includes('transaction declares authority')) {
             throw new Error(
-                'The transaction authorization requirements are not correct. Check the action authorizations, and the "requested" permissions.'
-            );
+                'The transaction authorization requirements are not correct. Check the action authorizations are correct, and the "requested" permissions.\n' +
+                'Details: ' + e?.error?.details[0]?.message
+            )
         } else {
             console.error('Error: ', JSON.stringify(e, null, 2));
             throw new Error('Transaction failed');

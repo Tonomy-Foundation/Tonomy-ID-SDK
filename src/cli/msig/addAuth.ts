@@ -5,8 +5,8 @@ import { getAccountInfo } from '../../sdk';
 
 export async function addAuth(args: { account: string, permission: string, newDelegate: string }, options: StandardProposalOptions) {
     const accountInfo = await getAccountInfo(Name.from(args.account));
-    const authority = accountInfo.getPermission(args.permission);
-    const newAuthority = Authority.fromAccountPermission(authority);
+    const perm = accountInfo.getPermission(args.permission);
+    const newAuthority = Authority.fromAccountPermission(perm);
 
     newAuthority.addAccount({ actor: args.newDelegate, permission: 'active' });
 
@@ -16,7 +16,8 @@ export async function addAuth(args: { account: string, permission: string, newDe
         authorization: [
             {
                 actor: args.account,
-                permission: args.permission,
+                permission: 'owner',
+                // permission: args.permission,
             },
             {
                 actor: 'tonomy',
@@ -30,7 +31,7 @@ export async function addAuth(args: { account: string, permission: string, newDe
         data: {
             account: args.account,
             permission: args.permission,
-            parent: authority.parent,
+            parent: perm.parent,
             auth: newAuthority,
             // eslint-disable-next-line camelcase
             auth_parent: false,
