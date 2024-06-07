@@ -25,7 +25,7 @@ export default async function msig(args: string[]) {
 
     console.log('Using environment', settings.env);
 
-    let test = false;
+    let test = true;
 
     for (const arg of args) {
         if (arg.includes('--test')) {
@@ -60,7 +60,7 @@ export default async function msig(args: string[]) {
         }
     } else if (args[0] === 'propose') {
         const proposalType = args[1];
-        const proposalName = Name.from(args[2]);
+        let proposalName = Name.from(args[2]);
 
         if (proposalType === 'gov-migrate') {
             const threshold = settings.isProduction() ? 3 : 2;
@@ -241,7 +241,12 @@ export default async function msig(args: string[]) {
 
             if (test) await executeProposal(proposer, proposalName, proposalHash);
         } else if (proposalType === 'eosio.code-permission') {
+            let count = 1;
+
+            console.log('addCodePermissionTo', addCodePermissionTo);
+
             for (const account of addCodePermissionTo) {
+                console.log('account', account);
                 const accountInfo = await getAccountInfo(Name.from(account));
 
                 const ownerPermission = accountInfo.getPermission('owner');
@@ -282,6 +287,10 @@ export default async function msig(args: string[]) {
                         auth_parent: false,
                     },
                 }));
+
+                proposalName = Name.from(proposalName + count.toString());
+                console.log('proposalName', proposalName);
+                count++;
 
                 const proposalHash = await createProposal(
                     proposer,
