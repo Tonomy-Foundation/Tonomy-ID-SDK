@@ -16,8 +16,7 @@ export async function addAuth(args: { account: string, permission: string, newDe
         authorization: [
             {
                 actor: args.account,
-                permission: 'owner',
-                // permission: args.permission,
+                permission: args.permission,
             },
             {
                 actor: 'tonomy',

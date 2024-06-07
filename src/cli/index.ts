@@ -32,17 +32,14 @@ Usage:
     
     Commands:
         apps create appName usernamePrefix description logoUrl origin publicKey
-        accounts get username
+        accounts get username/accountName
         keys create
         keys convert publicKey
         authority publicKey/privateKey
         authority account1 [account2] [account3] [accountN]
         bootstrap privateKey
         msig cancel proposalName
-        msig propose gov-migrate proposalName
-        msig propose new-account proposalName
-        msig propose transfer proposalName
-        msig propose ... --test
+        msig propose ... proposalName [--test]
         msig exec proposalName
         msig propose deploy-contract proposalName contractName 
         msig propose eosio.code-permission proposalName
