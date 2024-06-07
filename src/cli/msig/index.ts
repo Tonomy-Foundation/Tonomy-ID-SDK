@@ -9,14 +9,17 @@ import { addCodePermissionTo } from '../bootstrap';
 import { govMigrate } from './govMigrate';
 import { newAccount } from './newAccount';
 import { transfer } from './transfer';
+import { addAuth } from './addAuth';
 
 const eosioMsigContract = EosioMsigContract.Instance;
 
 const governanceAccounts = ['1.found.tmy', '2.found.tmy', '3.found.tmy'];
 let newGovernanceAccounts = ['14.found.tmy', '5.found.tmy', '11.found.tmy', '12.found.tmy', '13.found.tmy'];
 
-if (!settings.isProduction()) {
+if (settings.env === "testnet") {
     newGovernanceAccounts.push(...governanceAccounts);
+} else if (settings.env === "staging") {
+    newGovernanceAccounts = governanceAccounts;
 }
 
 export default async function msig(args: string[]) {
@@ -46,7 +49,13 @@ export default async function msig(args: string[]) {
     }
 
     const proposer = '1.found.tmy';
-    const privateKey = PrivateKey.from(process.env.SIGNING_KEY || '');
+    let signingKey = process.env.SIGNING_KEY
+    if (!signingKey) {
+        if (!process.env.TONOMY_BOARD_PRIVATE_KEYS) throw new Error('Neither SIGNING_KEY or TONOMY_BOARD_PRIVATE_KEYS are set');
+        const tonomyGovKeys: string[] = JSON.parse(process.env.TONOMY_BOARD_PRIVATE_KEYS).keys;
+        signingKey = tonomyGovKeys[0];
+    }
+    const privateKey = PrivateKey.from(signingKey);
     const signer = createSigner(privateKey);
 
     if (args[0] === 'cancel') {
@@ -245,7 +254,20 @@ export default async function msig(args: string[]) {
             );
 
             if (test) await executeProposal(proposer, proposalName, proposalHash);
-        } else {
+        } else if (proposalType === 'add-auth') {
+            await addAuth({
+                account: "coinsale.tmy",
+                permission: "active",
+                newDelegate: settings.isProduction() ? "13.found.tmy" : governanceAccounts[2]
+            }, {
+                proposer,
+                proposalName,
+                privateKey,
+                requested: newGovernanceAccounts,
+                test
+            });
+        }
+        else {
             throw new Error(`Invalid msig proposal type ${proposalType}`);
         }
     } else if (args[0] === 'exec') {

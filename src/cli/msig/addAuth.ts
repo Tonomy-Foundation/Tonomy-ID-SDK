@@ -1,0 +1,49 @@
+import { ActionData, Authority } from '../../sdk/services/blockchain';
+import { StandardProposalOptions, createProposal, executeProposal } from ".";
+import { Name } from '@wharfkit/antelope';
+import { getAccountInfo } from '../../sdk';
+
+export async function addAuth(args: { account: string, permission: string, newDelegate: string }, options: StandardProposalOptions) {
+    const accountInfo = await getAccountInfo(Name.from(args.account));
+    const authority = accountInfo.getPermission(args.permission);
+    const newAuthority = Authority.fromAccountPermission(authority);
+
+    newAuthority.addAccount({ actor: args.newDelegate, permission: 'active' });
+
+    const action: ActionData = {
+        account: 'tonomy',
+        name: 'updateauth',
+        authorization: [
+            {
+                actor: args.account,
+                permission: args.permission,
+            },
+            {
+                actor: 'tonomy',
+                permission: 'active',
+            },
+            {
+                actor: 'tonomy',
+                permission: 'owner',
+            },
+        ],
+        data: {
+            account: args.account,
+            permission: args.permission,
+            parent: authority.parent,
+            auth: newAuthority,
+            // eslint-disable-next-line camelcase
+            auth_parent: false,
+        },
+    };
+
+    const proposalHash = await createProposal(
+        options.proposer,
+        options.proposalName,
+        [action],
+        options.privateKey,
+        options.requested
+    );
+
+    if (options.test) await executeProposal(options.proposer, options.proposalName, proposalHash);
+}
