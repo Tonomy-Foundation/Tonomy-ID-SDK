@@ -194,24 +194,25 @@ async function createNativeToken() {
     await tokenContract.issue('eosio.token', `50000000000.000000 ${getSettings().currencySymbol}`, signer);
 }
 
+const allocations: [string, number][] = [
+    ['coinsale.tmy', 0.025], // Seed Private Sale
+    ['coinsale.tmy', 0.055], // Strategic Partners Private Sale
+    ['coinsale.tmy', 0.07], // Public Sale
+    ['team.tmy', 0.15], // Team and Advisors
+    ['legal.tmy', 0.02], // Legal and Compliance
+    ['reserves.tmy', 0.03], // Reserves
+    ['partners.tmy', 0.05], // Partnerships
+    ['liquidty.tmy', 0.05], // Liquidity Allocation
+    ['marketng.tmy', 0.1], // Community and Marketing
+    ['ops.tmy', 0.05], // Platform Operations
+    ['infra.tmy', 0.1], // Infrastructure Rewards
+    ['ecosystm.tmy', 0.3], // Ecosystem
+];
+const addCodePermissionTo = allocations.map((allocation) => allocation[0]);
+
 async function createTokenDistribution() {
     console.log('Create token distribution');
     const totalSupply = 50000000000.0;
-
-    const allocations: [string, number][] = [
-        ['coinsale.tmy', 0.025], // Seed Private Sale
-        ['coinsale.tmy', 0.055], // Strategic Partners Private Sale
-        ['coinsale.tmy', 0.07], // Public Sale
-        ['team.tmy', 0.15], // Team and Advisors
-        ['legal.tmy', 0.02], // Legal and Compliance
-        ['reserves.tmy', 0.03], // Reserves
-        ['partners.tmy', 0.05], // Partnerships
-        ['liquidty.tmy', 0.05], // Liquidity Allocation
-        ['marketng.tmy', 0.1], // Community and Marketing
-        ['ops.tmy', 0.05], // Platform Operations
-        ['infra.tmy', 0.1], // Infrastructure Rewards
-        ['ecosystm.tmy', 0.3], // Ecosystem
-    ];
 
     let totalPercentage = 0;
 
@@ -389,9 +390,13 @@ async function updateAccountControllers(govKeys: string[], newPublicKey: PublicK
     console.log('Change the key of the accounts to the new key', newPublicKey.toString());
     await updateAccountKey('found.tmy', newPublicKey);
 
+    function updateControlByOptions(account: string) {
+        return { addCodePermission: addCodePermissionTo.includes(account) ? 'vesting.tmy' : undefined };
+    }
+
     // accounts controlled by found.tmy
     for (const account of foundControlledAccounts) {
-        await updateControlByAccount(account, 'found.tmy', signer);
+        await updateControlByAccount(account, 'found.tmy', signer, updateControlByOptions(account));
     }
 
     // ops.tmy account controlled by gov.tmy
@@ -399,6 +404,7 @@ async function updateAccountControllers(govKeys: string[], newPublicKey: PublicK
     const ownerAuthority = Authority.fromAccount({ actor: 'gov.tmy', permission: 'owner' });
 
     activeAuthority.addKey(newPublicKey.toString(), 1);
+    activeAuthority.addCodePermission('vesting.tmy');
     await eosioContract.updateauth(operationsAccount, 'active', 'owner', activeAuthority, signer);
     await eosioContract.updateauth(operationsAccount, 'owner', 'owner', ownerAuthority, signer);
 
@@ -406,12 +412,12 @@ async function updateAccountControllers(govKeys: string[], newPublicKey: PublicK
     for (const account of opsControlledAccounts.filter(
         (account) => account !== 'vesting.tmy' && account !== 'tonomy'
     )) {
-        await updateControlByAccount(account, 'ops.tmy', signer);
+        await updateControlByAccount(account, 'ops.tmy', signer, updateControlByOptions(account));
     }
 
     // (contracts that are called by inline actions need eosio.code permission)
-    await updateControlByAccount('vesting.tmy', 'ops.tmy', signer, { addCodePermission: true });
-    await updateControlByAccount('tonomy', 'ops.tmy', signer, { addCodePermission: true });
+    await updateControlByAccount('vesting.tmy', 'ops.tmy', signer, { addCodePermission: 'vesting.tmy' });
+    await updateControlByAccount('tonomy', 'ops.tmy', signer, { addCodePermission: 'tonomy' });
 
     // Update the system contract
     await updateControlByAccount(systemAccount, 'tonomy', signer);

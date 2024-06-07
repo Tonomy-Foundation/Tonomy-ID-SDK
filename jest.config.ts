@@ -3,6 +3,7 @@ import type { Config } from 'jest';
 const baseConfig: Config = {
     preset: 'ts-jest',
     testEnvironment: '../custom-test-env.js',
+    setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
     transform: {
         '^.+\\.[t|j]sx?$': ['babel-jest', { configFile: './babel.config.json' }],
     },
