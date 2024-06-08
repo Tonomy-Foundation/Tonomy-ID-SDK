@@ -14,9 +14,7 @@ const eosioMsigContract = EosioMsigContract.Instance;
 const governanceAccounts = ['1.found.tmy', '2.found.tmy', '3.found.tmy'];
 let newGovernanceAccounts = ['14.found.tmy', '5.found.tmy', '11.found.tmy', '12.found.tmy', '13.found.tmy'];
 
-if (settings.env === "testnet") {
-    newGovernanceAccounts.push(...governanceAccounts);
-} else if (!settings.isProduction()) {
+if (!settings.isProduction()) {
     newGovernanceAccounts = governanceAccounts;
 }
 
@@ -46,7 +44,7 @@ export default async function msig(args: string[]) {
         }
     }
 
-    const proposer = governanceAccounts[0];
+    const proposer = newGovernanceAccounts[0];
     let signingKey: string | undefined = process.env.SIGNING_KEY
     if (!signingKey) {
         if (!process.env.TONOMY_BOARD_PRIVATE_KEYS) throw new Error('Neither SIGNING_KEY or TONOMY_BOARD_PRIVATE_KEYS are set');
@@ -129,7 +127,7 @@ export default async function msig(args: string[]) {
             await addAuth({
                 account: "coinsale.tmy",
                 permission: "active",
-                newDelegate: settings.isProduction() ? "13.found.tmy" : governanceAccounts[2]
+                newDelegate: settings.isProduction() ? "14.found.tmy" : governanceAccounts[2]
             }, {
                 proposer,
                 proposalName,
@@ -201,10 +199,9 @@ export async function createProposal(
         console.log('You have 7 days to approve and execute the proposal.');
         return proposalHash;
     } catch (e) {
-        if (e?.error?.details[0]?.message.includes('transaction declares authority')) {
+        if (e?.error?.details[0]?.message === "assertion failure with message: transaction authorization failed") {
             throw new Error(
-                'The transaction authorization requirements are not correct. Check the action authorizations are correct, and the "requested" permissions.\n' +
-                'Details: ' + e?.error?.details[0]?.message
+                'The transaction authorization requirements are not correct. Check the action authorizations are correct, and the "requested" permissions.'
             )
         } else {
             console.error('Error: ', JSON.stringify(e, null, 2));

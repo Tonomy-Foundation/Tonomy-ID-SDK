@@ -1,5 +1,5 @@
 import { Authority } from '../../sdk/services/blockchain';
-import { StandardProposalOptions, createProposal, executeProposal } from ".";
+import { StandardProposalOptions, createProposal, executeProposal } from '.';
 import { Name } from '@wharfkit/antelope';
 import { getAccountInfo } from '../../sdk';
 import { addCodePermissionTo } from '../bootstrap';
@@ -7,7 +7,9 @@ import { addCodePermissionTo } from '../bootstrap';
 export async function addEosioCode(options: StandardProposalOptions) {
     const actions = [];
 
-    for (const account of addCodePermissionTo) {
+    const accountsToUpdate = [...addCodePermissionTo, 'advteam.tmy'];
+
+    for (const account of accountsToUpdate) {
         const accountInfo = await getAccountInfo(Name.from(account));
 
         const ownerPermission = accountInfo.getPermission('owner');
