@@ -27,7 +27,10 @@ export function getDeployableFilesFromDir(dir: string) {
 export default async function deployContract(
     { account, contractDir }: { account: NameType; contractDir: string },
     signer: Signer,
-    options?: { extraAuthorization?: { actor: string; permission: string }; throughTonomyProxy?: boolean }
+    options?: {
+        extraAuthorization?: { actor: string; permission: string };
+        throughTonomyProxy?: boolean;
+    }
 ) {
     const { wasmPath, abiPath } = getDeployableFilesFromDir(contractDir);
 

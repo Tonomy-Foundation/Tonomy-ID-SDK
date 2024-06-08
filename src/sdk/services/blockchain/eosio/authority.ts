@@ -1,5 +1,6 @@
 import { Name, NameType } from '@wharfkit/antelope';
 import BN from 'bn.js';
+import { API } from '@wharfkit/antelope';
 
 type KeyWeight = { key: string; weight: number };
 type PermissionWeight = {
@@ -66,6 +67,28 @@ export class Authority {
         authority.sort();
 
         return authority;
+    }
+
+    static fromAccountPermission(permission: API.v1.AccountPermission): Authority {
+        return new Authority(
+            permission.required_auth.threshold.toNumber(),
+            permission.required_auth.keys.map((keyWeight) => ({
+                key: keyWeight.key.toString(),
+                weight: keyWeight.weight.toNumber(),
+            })),
+            permission.required_auth.accounts.map((permissionWeight) => ({
+                permission: {
+                    actor: permissionWeight.permission.actor.toString(),
+                    permission: permissionWeight.permission.permission.toString(),
+                },
+                weight: permissionWeight.weight.toNumber(),
+            })),
+            permission.required_auth.waits.map((waitWeight) => ({
+                // eslint-disable-next-line camelcase
+                wait_sec: waitWeight.wait_sec.toNumber(),
+                weight: waitWeight.weight.toNumber(),
+            }))
+        );
     }
 
     // to add the eosio.code authority for smart contracts
