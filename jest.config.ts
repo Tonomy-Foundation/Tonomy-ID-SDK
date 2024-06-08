@@ -2,14 +2,21 @@ import type { Config } from 'jest';
 
 const baseConfig: Config = {
     preset: 'ts-jest',
-    testEnvironment: '../custom-test-env.js',
-    setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
+    testEnvironment: './custom-test-env.js',
+    setupFilesAfterEnv: ['<rootDir>/test/jest.setup.ts'],
     transform: {
         '^.+\\.[t|j]sx?$': ['babel-jest', { configFile: './babel.config.json' }],
     },
     transformIgnorePatterns: [],
     roots: ['<rootDir>'],
-    testMatch: ['**/*.test.ts'],
+    testMatch: ['./test/**/*.test.ts'],
+    resolver: "jest-resolver-enhanced",
+    moduleNameMapper: {
+        "^uint8arrays$": "<rootDir>/node_modules/uint8arrays/esm/src/index.js",
+        "^@ipld/dag-pb*": "<rootDir>/node_modules/@ipld/dag-pb/src/index.js",
+        "^multiformats/(.*)$": "<rootDir>/node_modules/multiformats/dist/src/$1.js",
+        "^ipfs-unixfs$": "<rootDir>/node_modules/ipfs-unixfs/dist/src/index.js",
+    }
 };
 
 const config: Config = {
@@ -17,19 +24,16 @@ const config: Config = {
         {
             ...baseConfig,
             displayName: 'Unit tests',
-            rootDir: './test',
             testMatch: ['**/*.unit.test.ts'],
         },
         {
             ...baseConfig,
             displayName: 'Integration tests',
-            rootDir: './test',
             testMatch: ['**/*.integration.test.ts'],
         },
         {
             ...baseConfig,
             displayName: 'Governance tests',
-            rootDir: './test',
             testMatch: ['**/*.governance.test.ts'],
         },
     ],

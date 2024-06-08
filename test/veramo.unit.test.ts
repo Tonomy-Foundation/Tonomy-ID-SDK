@@ -1,4 +1,4 @@
-import { DataSource } from 'typeorm'
+import { DataSource } from 'typeorm';
 import { Wallet } from 'ethers';
 import { KeyManagementSystem, SecretBox } from '@veramo/kms-local';
 import { KeyManager } from '@veramo/key-manager';
@@ -7,7 +7,7 @@ import { Entities, KeyStore, migrations, PrivateKeyStore } from '@veramo/data-st
 describe('resolver', () => {
     test('other', async () => {
         console.log('testing Veramo libraries');
-        const DATABASE_FILE = 'database.sqlite'
+        const DATABASE_FILE = 'database.sqlite';
         const dbConnection = new DataSource({
             type: 'sqlite',
             database: DATABASE_FILE,
@@ -16,7 +16,7 @@ describe('resolver', () => {
             migrationsRun: true,
             logging: ['error', 'info', 'warn'],
             entities: Entities,
-        }).initialize()
+        }).initialize();
 
         const DB_ENCRYPTION_KEY = 'test';
 
@@ -31,5 +31,5 @@ describe('resolver', () => {
 
         keyManager.keyManagerCreate({ type: 'Secp256k1', kms: 'local', meta: { encryption: ['ECDH-ES'] } });
         keyManager.keyManagerImport({ type: 'Secp256k1', kms: 'local', privateKeyHex: key, kid });
-    })
+    });
 });
