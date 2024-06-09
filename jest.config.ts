@@ -2,7 +2,7 @@ import type { Config } from 'jest';
 
 const baseConfig: Config = {
     preset: 'ts-jest',
-    testEnvironment: './custom-test-env.js',
+    testEnvironment: '<rootDir>/test/custom-test-env.js',
     setupFilesAfterEnv: ['<rootDir>/test/jest.setup.ts'],
     transform: {
         '^.+\\.[t|j]sx?$': ['babel-jest', { configFile: './babel.config.json' }],
@@ -17,6 +17,7 @@ const baseConfig: Config = {
     },
     moduleNameMapper: {
         // This is a workaround for the following packages that use conditional exports in package.json which jest does not support yet
+        // see https://github.com/Tonomy-Foundation/Tonomy-ID-SDK/issues/336
         "^uint8arrays$": "<rootDir>/node_modules/uint8arrays/esm/src/index.js",
         "^@ipld/dag-pb*": "<rootDir>/node_modules/@ipld/dag-pb/src/index.js",
         "^multiformats/(.*)$": "<rootDir>/node_modules/multiformats/dist/src/$1.js",
