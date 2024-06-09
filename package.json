@@ -54,7 +54,8 @@
     "lint:fix": "yarn run lint -- --fix",
     "release": "semantic-release  --debug",
     "docs:serve": "python -m mkdocs serve",
-    "docs:build": "python -m mkdocs build -c"
+    "docs:build": "python -m mkdocs build -c",
+    "prepare": "yarn run build"
   },
   "name": "@tonomy/tonomy-id-sdk",
   "author": "Jack Tanner",
