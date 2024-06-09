@@ -4,7 +4,7 @@ import { KeyManagementSystem, SecretBox } from '@veramo/kms-local';
 import { KeyManager } from '@veramo/key-manager';
 import { Entities, KeyStore, migrations, PrivateKeyStore } from '@veramo/data-store';
 
-describe('resolver', () => {
+describe('veramo', () => {
     test('other', async () => {
         console.log('testing Veramo libraries');
         const DATABASE_FILE = 'database.sqlite';
