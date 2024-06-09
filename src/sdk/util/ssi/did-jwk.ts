@@ -1,7 +1,7 @@
 import { PublicKey } from '@wharfkit/antelope';
 import { toElliptic } from '../crypto';
 import { base64ToStr, bnToBase64Url, strToBase64 } from '../base64';
-import { ResolverRegistry, ParsedDID, DIDResolutionResult, DIDDocument } from '@tonomy/did-resolver';
+import { ResolverRegistry, ParsedDID, DIDResolutionResult, DIDDocument } from 'did-resolver';
 
 export function createJWK(publicKey: PublicKey) {
     const ecPubKey = toElliptic(publicKey);

@@ -1,6 +1,6 @@
 import { KeyManager, KeyManagerLevel } from '../sdk/storage/keymanager';
 import { createVCSigner, randomString } from '../sdk/util/crypto';
-import { Issuer } from '@tonomy/did-jwt-vc';
+import { Issuer } from 'did-jwt-vc';
 import { getSettings } from '../sdk/util/settings';
 import { SdkError, SdkErrors, createSdkError, throwError } from '../sdk/util/errors';
 import { createStorage, PersistentStorageClean, StorageFactory, STORAGE_NAMESPACE } from '../sdk/storage/storage';
