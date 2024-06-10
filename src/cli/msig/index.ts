@@ -39,7 +39,7 @@ export default async function msig(args: string[]) {
         }
     }
 
-    const proposer = '14.found.tmy';
+    const proposer = settings.isProduction() ? '14.found.tmy' : '1.found.tmy';
     const privateKey = PrivateKey.from(process.env.SIGNING_KEY || '');
     const signer = createSigner(privateKey);
 
