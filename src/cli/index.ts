@@ -26,26 +26,30 @@ async function main() {
     } else if (args[0] === 'msig') {
         await msig(args.slice(1));
     } else {
-        console.log(`
-Usage:
-    yarn run cli [commands]
-    
-    Commands:
-        apps create appName usernamePrefix description logoUrl origin publicKey
-        accounts get username
-        keys create
-        keys convert publicKey
-        authority publicKey/privateKey
-        authority account1 [account2] [account3] [accountN]
-        bootstrap privateKey
-        msig cancel proposalName
-        msig propose gov-migrate proposalName
-        msig propose new-account proposalName
-        msig propose transfer proposalName
-        msig propose ... --test
-        msig exec proposalName
-`);
+        printCliHelp();
     }
+}
+
+export function printCliHelp() {
+    console.log(`
+        Usage:
+            yarn run cli [commands]
+            
+            Commands:
+                apps create appName usernamePrefix description logoUrl origin publicKey
+                accounts get username
+                keys create
+                keys convert publicKey
+                authority publicKey/privateKey
+                authority account1 [account2] [account3] [accountN]
+                bootstrap privateKey
+                msig cancel proposalName
+                msig propose gov-migrate proposalName
+                msig propose new-account proposalName
+                msig propose transfer proposalName
+                msig propose ... --test
+                msig exec proposalName
+        `);
 }
 
 Promise.resolve(main()).catch((err) => {

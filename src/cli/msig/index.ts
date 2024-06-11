@@ -2,6 +2,7 @@ import { PrivateKey, Name, Checksum256 } from '@wharfkit/antelope';
 import { EosioMsigContract, setSettings } from '../../sdk';
 import { ActionData, Authority, EosioTokenContract, createSigner } from '../../sdk/services/blockchain';
 import settings from '../bootstrap/settings';
+import { printCliHelp } from '..';
 
 const eosioMsigContract = EosioMsigContract.Instance;
 
@@ -38,7 +39,7 @@ export default async function msig(args: string[]) {
         }
     }
 
-    const proposer = '1.found.tmy';
+    const proposer = settings.isProduction() ? '14.found.tmy' : '1.found.tmy';
     const privateKey = PrivateKey.from(process.env.SIGNING_KEY || '');
     const signer = createSigner(privateKey);
 
@@ -165,6 +166,7 @@ export default async function msig(args: string[]) {
 
             if (test) await executeProposal(proposer, proposalName, proposalHash);
         } else {
+            printCliHelp();
             throw new Error(`Invalid msig proposal type ${proposalType}`);
         }
     } else if (args[0] === 'exec') {
@@ -180,6 +182,7 @@ export default async function msig(args: string[]) {
             console.error('Transaction failed');
         }
     } else {
+        printCliHelp();
         throw new Error(`Invalid msig command ${args[0]}`);
     }
 }
