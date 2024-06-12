@@ -165,6 +165,7 @@ export class UserOnboarding extends UserCommunication implements IUserOnboarding
             PIN: string;
             BIOMETRIC: string;
             LOCAL: string;
+            ETHEREUM_KEY: string;
         };
 
         try {
@@ -187,6 +188,15 @@ export class UserOnboarding extends UserCommunication implements IUserOnboarding
             const localKey = await keyManager.getKey({ level: KeyManagerLevel.LOCAL });
 
             keys.LOCAL = localKey.toString();
+        } catch (e) {
+            if (!(e instanceof SdkError) || e.code !== SdkErrors.KeyNotFound) throw e;
+        }
+
+        try {
+            const ethereumKey = await keyManager.getKey({ level: KeyManagerLevel.ETHEREUM_KEY });
+
+            console.log('ethereumKey', ethereumKey);
+            keys.ETHEREUM_KEY = ethereumKey.toString();
         } catch (e) {
             if (!(e instanceof SdkError) || e.code !== SdkErrors.KeyNotFound) throw e;
         }

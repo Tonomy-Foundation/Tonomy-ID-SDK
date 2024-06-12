@@ -65,6 +65,7 @@ export interface IUserBase {
     getUsername(): Promise<TonomyUsername>;
     getDid(): Promise<string>;
     getIssuer(): Promise<Issuer>;
+    getEthereumKey(): Promise<PublicKey>;
 }
 
 export interface IUserAuthentication extends IUserBase {

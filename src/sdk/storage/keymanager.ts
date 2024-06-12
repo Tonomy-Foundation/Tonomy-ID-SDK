@@ -9,6 +9,7 @@ enum KeyManagerLevel {
     LOCAL = 'LOCAL',
     BROWSER_LOCAL_STORAGE = 'BROWSER_LOCAL_STORAGE',
     BROWSER_SESSION_STORAGE = 'BROWSER_SESSION_STORAGE',
+    ETHEREUM_KEY = 'ETHEREUM_KEY',
 }
 
 // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -55,6 +56,7 @@ class StoreKeyOptions {
     level: KeyManagerLevel;
     privateKey: PrivateKey;
     challenge?: string;
+    ethereumPrivateKey?: PrivateKey;
 
     static validate(options: StoreKeyOptions): void {
         toElliptic(options.privateKey); // throws if key not valid

@@ -100,4 +100,15 @@ export class UserAuthorization extends UserBase implements IUserAuthentication {
             privateKey,
         });
     }
+    async saveEthereumKey(masterPassword: string, options: ICreateAccountOptions): Promise<void> {
+        const res = await options.keyFromPasswordFn(masterPassword);
+
+        const privateKey = res.privateKey;
+
+        console.log('privatekey', privateKey);
+        await this.keyManager.storeKey({
+            level: KeyManagerLevel.ETHEREUM_KEY,
+            privateKey,
+        });
+    }
 }
