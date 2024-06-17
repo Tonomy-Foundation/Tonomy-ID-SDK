@@ -91,12 +91,13 @@ describe('VerifiableCredentialWithType class', () => {
         request = {
             randomString: randomString(32),
             origin: 'https://tonomy.foundation',
-            publicKey: publicKey.toString(),
+            publicKey: publicKey,
             callbackPath: '/callback',
         };
     });
 
     it('fails if it is created using the VerifiableCredentialWithType class', async () => {
+        // @ts-expect-error sign is a protected function
         await expect(VerifiableCredentialWithType.sign<LoginRequestPayload>(request, issuer)).rejects.toThrow(
             'class should be a derived class of VerifiableCredentialWithType'
         );

@@ -19,7 +19,7 @@ import { createUser } from '../../src/cli/bootstrap/user';
 import { DIDurl } from '../../src/sdk/util/ssi/types';
 import { generateRandomKeywords, getSettings } from '../../src/sdk/util';
 import { RequestsManager } from '../../src/sdk/helpers/requestsManager';
-import { ExternalUserLoginTestOptions } from '../externalUser.test';
+import { ExternalUserLoginTestOptions } from '../externalUser.integration.test';
 import { getTonomyOperationsKey } from '../../src/sdk/services/blockchain/eosio/eosio';
 import { createSigner } from '../../src/sdk/services/blockchain';
 

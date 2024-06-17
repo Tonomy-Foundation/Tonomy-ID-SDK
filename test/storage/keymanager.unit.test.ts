@@ -1,6 +1,5 @@
-import { Checksum256, PrivateKey } from '@wharfkit/antelope';
+import { PrivateKey } from '@wharfkit/antelope';
 import { JsKeyManager } from '../../src/sdk/storage/jsKeyManager';
-import argon2 from 'argon2';
 import { jsStorageFactory } from '../../src/cli/bootstrap/jsstorage';
 import {
     CheckKeyOptions,
