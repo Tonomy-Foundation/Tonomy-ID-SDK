@@ -1,3 +1,4 @@
+// @ts-nocheck
 import {
     createAgent,
     IDIDManager,
@@ -22,10 +23,8 @@ import { DataSource } from 'typeorm'
 import { Wallet } from 'ethers'
 
 const DATABASE_FILE = 'database.sqlite';
-const INFURA_PROJECT_ID = process.env.INFURA_PROJECT_ID || '77422fa49acc4b4eb189abd416350cd8'
+const INFURA_PROJECT_ID = 'e19492ad3c7d409ca266f23af0a097d7'
 const KMS_SECRET_KEY = 'a8add1db4f64e6117667708d261e6fd9f4de85209ba690ad254fa8ecb26ffe03'
-
-if (INFURA_PROJECT_ID === '') throw new Error('INFURA_PROJECT_ID env variable is required')
 
 type AgentType = IDIDManager & IKeyManager & IDataStore & IDataStoreORM & IResolver & ICredentialPlugin;
 
@@ -90,20 +89,20 @@ async function setup(): Promise<AgentType> {
 async function listIdentifiers(agent: AgentType) {
     const identifiers = await agent.didManagerFind()
 
-    console.log(`There are ${identifiers.length} identifiers`)
+    // console.log(`There are ${identifiers.length} identifiers`)
 
-    if (identifiers.length > 0) {
-        identifiers.map((id) => {
-            console.log(id)
-            console.log('..................')
-        })
-    }
+    // if (identifiers.length > 0) {
+    //     identifiers.map((id) => {
+    //         console.log(id)
+    //         console.log('..................')
+    //     })
+    // }
 }
 
 async function createIdentifier(agent: AgentType) {
     const identifier = await agent.didManagerCreate({ alias: 'default' })
-    console.log(`New identifier created`, identifier.did)
-    console.log(JSON.stringify(identifier, null, 2))
+    // console.log(`New identifier created`, identifier.did)
+    // console.log(JSON.stringify(identifier, null, 2))
 }
 
 async function createCredential(agent: AgentType): Promise<VerifiableCredential> {
@@ -119,14 +118,14 @@ async function createCredential(agent: AgentType): Promise<VerifiableCredential>
         },
         proofFormat: 'jwt',
     })
-    console.log(`New credential created`, verifiableCredential.id)
-    console.log(JSON.stringify(verifiableCredential, null, 2))
+    // console.log(`New credential created`, verifiableCredential.id)
+    // console.log(JSON.stringify(verifiableCredential, null, 2))
     return verifiableCredential;
 }
 
 async function verifyCredential(agent: AgentType, verifiableCredential: VerifiableCredential) {
     const result = await agent.verifyCredential({ credential: verifiableCredential })
-    console.log(`Credential verified`, result.verified)
+    // console.log(`Credential verified`, result.verified)
 }
 
 export async function veramo2() {
