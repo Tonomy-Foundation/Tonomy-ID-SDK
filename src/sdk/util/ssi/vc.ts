@@ -1,5 +1,5 @@
 import { decodeJWT } from 'did-jwt';
-import { JWTDecoded, JWTPayload } from '@tonomy/did-jwt/lib/JWT';
+import { JWTDecoded, JWTPayload } from 'did-jwt/lib/JWT';
 import { DIDurl, URL, JWT, JWTVCPayload } from './types';
 import { getSettings } from '../settings';
 import { Resolver } from 'did-resolver';
@@ -145,7 +145,6 @@ export class VerifiableCredential<T extends object = object> {
     async verify(): Promise<VerifiedCredential> {
         const settings = getSettings();
 
-        // @ts-expect-error did-resolver and did-resolver types are not compatible
         const resolver = new Resolver({
             ...getJwkResolver(),
             ...getResolver({ antelopeChainUrl: settings.blockchainUrl, fetch: crossFetch as any }),

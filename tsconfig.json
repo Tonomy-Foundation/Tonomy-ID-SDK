@@ -16,7 +16,6 @@
         "declarationDir": "./build/sdk/types",
         "strict": true,
         "moduleResolution": "bundler",
-        "isolatedModules": true,
         "noImplicitReturns": true,
         "types": [
             "jest"
