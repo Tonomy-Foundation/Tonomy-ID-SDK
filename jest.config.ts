@@ -1,15 +1,29 @@
+// import { defaults } from 'jest-config';
 import type { Config } from 'jest';
 
 const baseConfig: Config = {
-    preset: 'ts-jest',
-    testEnvironment: '../custom-test-env.js',
-    setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
+    testEnvironment: 'node',
+    // moduleFileExtensions: [...defaults.moduleFileExtensions, 'mts'],
+    setupFilesAfterEnv: ['<rootDir>/test/test.setup.ts'],
     transform: {
-        '^.+\\.[t|j]sx?$': ['babel-jest', { configFile: './babel.config.json' }],
+        '^.+\\.m?tsx?$': [
+            'ts-jest',
+            {
+                useESM: true,
+                tsconfig: './tsconfig.json',
+                diagnostics: false,
+            },
+        ],
     },
-    transformIgnorePatterns: [],
-    roots: ['<rootDir>'],
-    testMatch: ['**/*.test.ts'],
+    // transform: {},
+    // transformIgnorePatterns: ['node_modules/(?!typeorm)'],
+    // // typescript 5 removes the need to specify relative imports as .js, so we should no longer need this workaround
+    // // but webpack still requires .js specifiers, so we are keeping it for now
+    // moduleNameMapper: {
+    //     '^(\\.{1,2}/.*)\\.js$': '$1',
+    // },
+    extensionsToTreatAsEsm: ['.ts'],
+    testMatch: ['./test/**/*.test.ts'],
 };
 
 const config: Config = {
@@ -17,22 +31,18 @@ const config: Config = {
         {
             ...baseConfig,
             displayName: 'Unit tests',
-            rootDir: './test',
             testMatch: ['**/*.unit.test.ts'],
         },
         {
             ...baseConfig,
             displayName: 'Integration tests',
-            rootDir: './test',
             testMatch: ['**/*.integration.test.ts'],
         },
         {
             ...baseConfig,
             displayName: 'Governance tests',
-            rootDir: './test',
             testMatch: ['**/*.governance.test.ts'],
         },
     ],
 };
-
 export default config;

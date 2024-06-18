@@ -53,4 +53,3 @@ export { ES256KSigner } from 'did-jwt';
 
 // API
 export * from '../api/externalUser';
-export * from '../api/index';

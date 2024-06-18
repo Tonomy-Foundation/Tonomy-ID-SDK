@@ -2,7 +2,12 @@
     "compilerOptions": {
         "target": "ES2022",
         "module": "ES2022",
-        "lib": ["dom", "esnext", "es6", "es2015.promise"],
+        "lib": [
+            "dom",
+            "esnext",
+            "es6",
+            "es2015.promise"
+        ],
         "importHelpers": true,
         "declaration": true,
         "declarationMap": true,
@@ -11,17 +16,25 @@
         "declarationDir": "./build/sdk/types",
         "rootDir": "src",
         "strict": true,
+        "moduleResolution": "bundler",
+        "isolatedModules": true,
         "noImplicitReturns": true,
-        "types": ["jest", "node"],
+        "types": [
+            "jest"
+        ],
         "noFallthroughCasesInSwitch": true,
         "noUnusedLocals": true,
         "noUnusedParameters": true,
         "useUnknownInCatchVariables": false,
-        "moduleResolution": "Node",
+        "allowSyntheticDefaultImports": true,
+        "resolveJsonModule": true,
         "esModuleInterop": true,
         "skipLibCheck": true,
         "forceConsistentCasingInFileNames": true,
         "strictPropertyInitialization": false
     },
-    "exclude": ["node_modules", "build"]
+    "exclude": [
+        "node_modules",
+        "build"
+    ]
 }
