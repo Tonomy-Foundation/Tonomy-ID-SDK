@@ -1,5 +1,5 @@
 import { decodeJWT, verifyJWT } from 'did-jwt';
-import { VerificationMethod } from '@tonomy/did-resolver';
+import { VerificationMethod } from 'did-resolver';
 import { resolve } from '../../../src/sdk/util/ssi/did-jwk';
 
 describe('did-jwk resolver', () => {
