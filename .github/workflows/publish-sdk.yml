@@ -22,12 +22,12 @@ jobs:
       - name: 📦 Install
         uses: actions/setup-node@v4
         with:
-          node-version: 18.12.1
+          node-version: 20.9.0
           registry-url: https://registry.npmjs.org/
       - name: 🚀 Build and publish SDK
         uses: actions/setup-node@v4
         with:
-          node-version: 18.12.1
+          node-version: 20.9.0
       - name: Check branch name
         run: echo ${GITHUB_REF#refs/*/}
       - run: |
