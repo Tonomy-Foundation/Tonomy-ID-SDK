@@ -92,7 +92,12 @@
     "@consento/sync-randombytes": "^1.0.5",
     "@tonomy/antelope-did": "^0.1.5",
     "@tonomy/antelope-did-resolver": "^0.7.0",
+    "@veramo/core": "^6.0.0",
+    "@veramo/credential-w3c": "^6.0.0",
     "@veramo/data-store": "^6.0.0",
+    "@veramo/did-manager": "^6.0.0",
+    "@veramo/did-provider-ethr": "^6.0.0",
+    "@veramo/did-resolver": "^6.0.0",
     "@veramo/key-manager": "^6.0.0",
     "@veramo/kms-local": "^6.0.0",
     "@wharfkit/antelope": "^1.0.7",
@@ -104,10 +109,12 @@
     "did-resolver": "^4.1.0",
     "elliptic": "^6.5.5",
     "ethers": "^6.13.1",
+    "ethr-did-resolver": "^10.1.9",
     "socket.io-client": "^4.7.5",
     "sqlite3": "^5.1.7",
     "typeorm": "^0.3.20",
-    "universal-base64url": "^1.1.0"
+    "universal-base64url": "^1.1.0",
+    "web-did-resolver": "^2.0.27"
   },
   "publishConfig": {
     "access": "public"
