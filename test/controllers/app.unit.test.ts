@@ -1,13 +1,13 @@
+/**
+ * @jest-environment jsdom
+ */
 import { PrivateKey, PublicKey } from '@wharfkit/antelope';
 import { generateRandomKeyPair } from '../../src/sdk/util/crypto';
-import URL from 'jsdom-url';
 import { ExternalUser, LoginWithTonomyMessages } from '../../src/api/externalUser';
 import { LoginRequestPayload } from '../../src/sdk/util/request';
 import { objToBase64Url } from '../../src/sdk/util/base64';
 import { onRedirectLogin } from '../../src/sdk/helpers/urls';
-
-// @ts-expect-error - URL type on global does not match
-global.URL = URL;
+import { setReferrer, setUrl } from '../helpers/browser';
 
 describe('logging in', () => {
     it('generates random key pair', () => {
@@ -27,6 +27,9 @@ describe('logging in', () => {
     });
 
     it('checks login url', async () => {
+        const appOrigin = 'http://app.com';
+        const ssoOrigin = 'http://sso.com';
+        setUrl(appOrigin);
         const { loginRequest, dataSharingRequest } = (await ExternalUser.loginWithTonomy({
             callbackPath: '/login',
             redirect: false,
@@ -35,15 +38,10 @@ describe('logging in', () => {
             requests: [loginRequest, dataSharingRequest],
         };
         const base64UrlPayload = objToBase64Url(payload);
-        const url = 'http://localhost/login?payload=' + base64UrlPayload;
+        const url = ssoOrigin + '/login?payload=' + base64UrlPayload;
 
-        jest.spyOn(document, 'referrer', 'get').mockReturnValue('http://localhost');
-
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        jsdom.reconfigure({
-            url,
-        });
+        setReferrer(appOrigin)
+        setUrl(url);
 
         const requests = await onRedirectLogin();
 
@@ -53,7 +51,7 @@ describe('logging in', () => {
 
         expect(typeof receivedLoginRequest.randomString).toBe('string');
         expect(receivedLoginRequest.publicKey).toBeInstanceOf(PublicKey);
-        expect(receivedLoginRequest.origin).toBe('http://localhost');
+        expect(receivedLoginRequest.origin).toBe(appOrigin);
         expect(receivedLoginRequest.callbackPath).toBe('/login');
     });
 });
