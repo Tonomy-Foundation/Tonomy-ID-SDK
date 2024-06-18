@@ -1,5 +1,6 @@
 import deployContract from './deploy-contract';
 import path from 'path';
+import { fileURLToPath } from 'url';
 import { createAntelopeAccount, createApp } from './create-account';
 import {
     DemoTokenContract,
@@ -34,6 +35,8 @@ const vestingContract = VestingContract.Instance;
 const ramPrice = 173333.3333; // bytes/token
 const fee = 0.25 / 100; // 0.25%
 const ramAvailable = 8 * 1024 * 1024 * 1024; // 8 GB
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 /**
  * Converts bytes to tokens.

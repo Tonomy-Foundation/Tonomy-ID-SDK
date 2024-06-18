@@ -39,7 +39,7 @@
   "scripts": {
     "start": "microbundle watch  -i ./src/sdk/index.ts -o build/sdk/index.js",
     "build:sdk": "microbundle --compress=false -i ./src/sdk/index.ts -o build/sdk/index.js",
-    "build:cli": "microbundle --compress=false --target=node -f cjs -i ./src/cli/index.ts -o build/cli/index.js",
+    "build:cli": "microbundle --compress=false --target=node -f esm -i ./src/cli/index.ts -o build/cli/index.js",
     "build": "yarn run build:sdk && yarn run build:cli",
     "test:setup": "./test/build-and-run-services.sh start",
     "test:setup-down": "./test/build-and-run-services.sh stop",
@@ -47,7 +47,7 @@
     "test:integration": "yarn run test --selectProjects \"Integration tests\"",
     "test:governance": "yarn run test --selectProjects \"Governance tests\"",
     "test": "cross-env NODE_OPTIONS=\"--experimental-vm-modules\" jest --detectOpenHandles",
-    "cli": "node ./build/cli/index.cjs",
+    "cli": "node ./build/cli/index.module.js",
     "lint": "eslint src test --ext .ts --resolve-plugins-relative-to .",
     "lint:fix": "yarn run lint -- --fix",
     "release": "semantic-release  --debug",
