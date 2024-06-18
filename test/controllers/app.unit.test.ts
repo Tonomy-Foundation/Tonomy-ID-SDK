@@ -1,3 +1,7 @@
+/**
+ * @jest-environment jsdom
+ */
+// import { TextEncoder, TextDecoder } from 'util';
 import { PrivateKey, PublicKey } from '@wharfkit/antelope';
 import { generateRandomKeyPair } from '../../src/sdk/util/crypto';
 import URL from 'jsdom-url';
@@ -5,6 +9,11 @@ import { ExternalUser, LoginWithTonomyMessages } from '../../src/api/externalUse
 import { LoginRequestPayload } from '../../src/sdk/util/request';
 import { objToBase64Url } from '../../src/sdk/util/base64';
 import { onRedirectLogin } from '../../src/sdk/helpers/urls';
+
+// // Object.assign(global, { TextDecoder, TextEncoder });
+// global.TextEncoder = TextEncoder;
+// // @ts-expect-error TextDecoder bs...
+// global.TextDecoder = TextDecoder;
 
 // @ts-expect-error - URL type on global does not match
 global.URL = URL;

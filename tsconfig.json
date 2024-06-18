@@ -1,39 +1,28 @@
 {
     "compilerOptions": {
-        "target": "esnext",
-        "module": "esnext",
-        "lib": [
-            "dom",
-            "esnext",
-            "es6",
-            "es2015.promise"
-        ],
-        "importHelpers": true,
+        "target": "ES2022",
+        "module": "ES2022",
         "declaration": true,
         "declarationMap": true,
         "sourceMap": true,
-        "outDir": "./build/sdk",
-        "declarationDir": "./build/sdk/types",
+        "outDir": "lib",
         "strict": true,
-        "noImplicitReturns": true,
+        "moduleResolution": "bundler",
+        "isolatedModules": true,
         "types": [
-            "jest",
-            "node"
+            "jest"
         ],
-        "noFallthroughCasesInSwitch": true,
-        "noUnusedLocals": true,
-        "noUnusedParameters": true,
-        "useUnknownInCatchVariables": false,
-        "moduleResolution": "node",
+        "allowSyntheticDefaultImports": true,
+        "resolveJsonModule": true,
         "esModuleInterop": true,
-        "skipLibCheck": true,
-        "forceConsistentCasingInFileNames": true,
-        "strictPropertyInitialization": false,
-        "preserveConstEnums": true,
-        "downlevelIteration": true
+        "skipLibCheck": true
     },
     "exclude": [
+        "**/__tests__/*",
         "node_modules",
-        "build"
+        "lib"
+    ],
+    "include": [
+        "src"
     ]
 }

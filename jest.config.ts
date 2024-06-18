@@ -11,6 +11,7 @@ const baseConfig: Config = {
             {
                 useESM: true,
                 tsconfig: './tsconfig.json',
+                diagnostics: false,
             },
         ],
     },
