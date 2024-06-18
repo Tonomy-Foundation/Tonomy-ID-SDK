@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-var-requires */
 import pkg from 'jest-environment-jsdom';
 import { TextEncoder, TextDecoder } from 'util';
 

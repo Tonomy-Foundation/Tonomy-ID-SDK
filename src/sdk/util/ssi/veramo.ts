@@ -5,7 +5,7 @@ import { KeyManager } from '@veramo/key-manager';
 import { Entities, KeyStore, migrations, PrivateKeyStore } from '@veramo/data-store';
 
 export async function veramo() {
-    console.log('testing Veramo libraries');
+    // console.log('testing Veramo libraries');
     const DATABASE_FILE = 'database.sqlite';
     const dbConnection = new DataSource({
         type: 'sqlite',

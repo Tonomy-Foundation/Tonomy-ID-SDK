@@ -1,9 +1,9 @@
-import { defaults } from 'jest-config';
+// import { defaults } from 'jest-config';
 import type { Config } from 'jest';
 
 const baseConfig: Config = {
-    testEnvironment: 'node',
-    moduleFileExtensions: [...defaults.moduleFileExtensions, 'mts'],
+    testEnvironment: 'jest-environment-jsdom-sixteen',
+    // moduleFileExtensions: [...defaults.moduleFileExtensions, 'mts'],
     setupFilesAfterEnv: ['<rootDir>/test/test.setup.ts'],
     transform: {
         '^.+\\.m?tsx?$': [
@@ -14,6 +14,13 @@ const baseConfig: Config = {
             },
         ],
     },
+    // transform: {},
+    // transformIgnorePatterns: ['node_modules/(?!typeorm)'],
+    // // typescript 5 removes the need to specify relative imports as .js, so we should no longer need this workaround
+    // // but webpack still requires .js specifiers, so we are keeping it for now
+    // moduleNameMapper: {
+    //     '^(\\.{1,2}/.*)\\.js$': '$1',
+    // },
     extensionsToTreatAsEsm: ['.ts'],
     testMatch: ['./test/**/*.test.ts'],
 };
