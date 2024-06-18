@@ -1,5 +1,5 @@
 import { decodeJWT } from 'did-jwt';
-import { JWTDecoded, JWTPayload } from 'did-jwt/lib/JWT';
+import { JWTHeader, JWTPayload } from 'did-jwt';
 import { DIDurl, URL, JWT, JWTVCPayload } from './types';
 import { getSettings } from '../settings';
 import { Resolver } from 'did-resolver';
@@ -16,6 +16,13 @@ import {
 import { toDateTime } from '../time';
 import { randomString } from '../crypto';
 import { Serializable } from '../serializable';
+
+interface JWTDecoded {
+    header: JWTHeader
+    payload: JWTPayload
+    signature: string
+    data: string
+}
 
 /**
  * A W3C Verifiable Credential
