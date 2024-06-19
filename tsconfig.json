@@ -17,6 +17,9 @@
         "rootDir": "src",
         "strict": true,
         "noImplicitReturns": true,
+        // "isolatedModules": true, // TODO: Enable this and fix errors
+        "allowSyntheticDefaultImports": true,
+        "moduleResolution": "bundler",
         "types": [
             "jest"
         ],
@@ -24,7 +27,6 @@
         "noUnusedLocals": true,
         "noUnusedParameters": true,
         "useUnknownInCatchVariables": false,
-        "moduleResolution": "node",
         "esModuleInterop": true,
         "skipLibCheck": true,
         "forceConsistentCasingInFileNames": true,
