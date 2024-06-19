@@ -21,7 +21,6 @@ import {
     ResponsesManager,
     setSettings,
 } from '../src/sdk/index';
-import URL from 'jsdom-url';
 import { JsKeyManager } from '../src/sdk/storage/jsKeyManager';
 import { jest } from '@jest/globals';
 // helpers
@@ -61,9 +60,6 @@ export type ExternalUserLoginTestOptions = {
 };
 
 setTestSettings(process.env.LOG === 'true');
-
-// @ts-expect-error - type error on global
-global.URL = URL;
 
 const signer = createSigner(getTonomyOperationsKey());
 
