@@ -8,10 +8,6 @@ import { LoginRequestPayload } from '../../src/sdk/util/request';
 import { objToBase64Url } from '../../src/sdk/util/base64';
 import { onRedirectLogin } from '../../src/sdk/helpers/urls';
 import { setReferrer, setUrl } from '../helpers/browser';
-// import "reflect-metadata";
-// // @ts-ignore migrations
-// import { Entities } from '@veramo/data-store'
-// import { DataSource } from 'typeorm'
 
 describe('logging in', () => {
     it('generates random key pair', () => {
