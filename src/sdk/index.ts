@@ -41,10 +41,10 @@ export * from './util/crypto';
 export * from './util/username';
 export * from './util/request';
 export * from './util/base64';
-export * as util from './util';
 export * from './util/ssi/did';
 export * from './util/ssi/veramo';
 export * from './util/qr-code';
+export * as util from './util';
 
 // Storage
 export * from './storage/keymanager';
@@ -56,3 +56,4 @@ export { ES256KSigner } from 'did-jwt';
 
 // API
 export * from '../api/externalUser';
+export * as api from '../api';
