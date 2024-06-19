@@ -1,3 +1,6 @@
+/**
+ * @jest-environment jsdom
+ */
 /* eslint-disable no-console */
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 /* eslint-disable camelcase */
@@ -20,7 +23,7 @@ import {
 } from '../src/sdk/index';
 import URL from 'jsdom-url';
 import { JsKeyManager } from '../src/sdk/storage/jsKeyManager';
-
+import { jest } from '@jest/globals';
 // helpers
 import {
     IUserPublic,
@@ -50,6 +53,7 @@ import { objToBase64Url } from '../src/sdk/util/base64';
 import { createSigner, getTonomyOperationsKey } from '../src/sdk/services/blockchain';
 import { setTestSettings, settings } from './helpers/settings';
 import deployContract from '../src/cli/bootstrap/deploy-contract';
+import { setReferrer, setUrl } from './helpers/browser';
 
 export type ExternalUserLoginTestOptions = {
     dataRequest: boolean;
@@ -175,10 +179,7 @@ describe('Login to external website', () => {
         // this would redirect the user to the tonomyLoginApp and send the token via the URL, but we're not doing that here
         // Instead we take the token as output
 
-        // @ts-expect-error - cannot find name jsdom
-        jsdom.reconfigure({
-            url: externalApp.origin + '/login',
-        });
+        setUrl(externalApp.origin + '/login');
 
         const { did: EXTERNAL_WEBSITE_did, redirectUrl: EXTERNAL_WEBSITE_redirectUrl } =
             await externalWebsiteUserPressLoginToTonomyButton(
@@ -191,11 +192,8 @@ describe('Login to external website', () => {
         // ########################################
 
         // catch the externalAppToken in the URL
-        jest.spyOn(document, 'referrer', 'get').mockReturnValue(externalApp.origin);
-        // @ts-expect-error - cannot find name jsdom
-        jsdom.reconfigure({
-            url: EXTERNAL_WEBSITE_redirectUrl,
-        });
+        setReferrer(externalApp.origin);
+        setUrl(EXTERNAL_WEBSITE_redirectUrl);
 
         // Setup a request for the login app
         const {
@@ -263,10 +261,7 @@ describe('Login to external website', () => {
 
         // #####Tonomy Login App website user (callback page) #####
         // ########################################
-        // @ts-expect-error - cannot find name jsdom
-        jsdom.reconfigure({
-            url: tonomyLoginApp.origin,
-        });
+        setUrl(tonomyLoginApp.origin);
 
         // Receive the message back, and redirect to the callback
         const requestConfirmedMessageFromTonomyId = await TONOMY_LOGIN_WEBSITE_requestsConfirmedMessagePromise;
@@ -309,10 +304,7 @@ describe('Login to external website', () => {
         if (getSettings().loggerLevel === 'debug') console.log('TONOMY_LOGIN_WEBSITE/login: sending to callback page');
         const TONOMY_LOGIN_WEBSITE_base64UrlPayload = objToBase64Url(payload);
 
-        // @ts-expect-error - cannot find name jsdom
-        jsdom.reconfigure({
-            url: tonomyLoginApp.origin + `/callback?payload=${TONOMY_LOGIN_WEBSITE_base64UrlPayload}`,
-        });
+        setUrl(tonomyLoginApp.origin + `/callback?payload=${TONOMY_LOGIN_WEBSITE_base64UrlPayload}`);
 
         const { externalLoginRequest, managedResponses: TONOMY_LOGIN_WEBSITE_managedResponses } =
             await loginWebsiteOnCallback(
@@ -332,13 +324,11 @@ describe('Login to external website', () => {
 
         // #####External website user (callback page) #####
         // ################################
-        // @ts-expect-error - cannot find name jsdom
-        jsdom.reconfigure({
-            url:
-                externalLoginRequest.getPayload().origin +
-                externalLoginRequest.getPayload().callbackPath +
-                `?payload=${EXTERNAL_WEBSITE_base64UrlPayload}`,
-        });
+        setUrl(
+            externalLoginRequest.getPayload().origin +
+            externalLoginRequest.getPayload().callbackPath +
+            `?payload=${EXTERNAL_WEBSITE_base64UrlPayload}`
+        );
 
         EXTERNAL_WEBSITE_user = await externalWebsiteOnCallback(
             EXTERNAL_WEBSITE_jsKeyManager,

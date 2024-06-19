@@ -1,5 +1,9 @@
+/**
+ * @jest-environment jsdom
+ */
 import { TonomyContract } from '../../../../src/sdk/index';
 import { createRandomID, createRandomApp } from '../../../helpers/user';
+import { jest } from '@jest/globals';
 
 const tonomyContract = TonomyContract.Instance;
 

@@ -13,6 +13,7 @@ import { sleep } from '../../../helpers/sleep';
 import { addSeconds, sleepUntil, subtractSeconds } from '../../../../src/sdk/util';
 import { PrivateKey } from '@wharfkit/antelope';
 import { createRandomAccount } from '../../../helpers/eosio';
+import { jest } from '@jest/globals';
 
 const vestingContract = VestingContract.Instance;
 const eosioTokenContract = EosioTokenContract.Instance;

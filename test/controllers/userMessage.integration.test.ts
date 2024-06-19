@@ -1,3 +1,6 @@
+/**
+ * @jest-environment jsdom
+ */
 import { IdentifyMessage, Message } from '../../src/sdk/services/communication/message';
 import { createRandomID } from '../helpers/user';
 
