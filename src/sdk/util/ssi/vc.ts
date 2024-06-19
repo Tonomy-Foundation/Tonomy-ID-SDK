@@ -1,5 +1,6 @@
 import { decodeJWT } from 'did-jwt';
-import { JWTHeader, JWTPayload } from 'did-jwt';
+import { JWTPayload } from 'did-jwt';
+import { JWTDecoded } from '../../../../node_modules/did-jwt/src/JWT';
 import { DIDurl, URL, JWT, JWTVCPayload } from './types';
 import { getSettings } from '../settings';
 import { Resolver } from 'did-resolver';
@@ -16,13 +17,6 @@ import {
 import { toDateTime } from '../time';
 import { randomString } from '../crypto';
 import { Serializable } from '../serializable';
-
-interface JWTDecoded {
-    header: JWTHeader
-    payload: JWTPayload
-    signature: string
-    data: string
-}
 
 /**
  * A W3C Verifiable Credential
