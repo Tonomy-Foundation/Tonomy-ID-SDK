@@ -24,13 +24,6 @@ describe('logging in', () => {
         })) as LoginWithTonomyMessages;
 
         expect(typeof loginRequest.toString()).toBe('string');
-        // await new DataSource({
-        //     type: 'sqlite',
-        //     database: 'database.sqlite',
-        //     synchronize: false,
-        //     logging: ['error', 'info', 'warn'],
-        //     entities: Entities,
-        // }).initialize()
     });
 
     it('checks login url', async () => {
