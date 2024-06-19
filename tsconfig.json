@@ -1,12 +1,10 @@
 {
     "compilerOptions": {
-        "target": "ES2022",
-        "module": "ES2022",
+        "target": "ES2020",
+        "module": "ESNext",
         "lib": [
             "dom",
-            "esnext",
-            "es6",
-            "es2015.promise"
+            "esnext"
         ],
         "importHelpers": true,
         "declaration": true,
@@ -15,7 +13,7 @@
         "outDir": "./build/sdk",
         "declarationDir": "./build/sdk/types",
         "strict": true,
-        "moduleResolution": "bundler",
+        "moduleResolution": "node",
         "noImplicitReturns": true,
         "types": [
             "jest"
@@ -25,11 +23,13 @@
         "noUnusedParameters": true,
         "useUnknownInCatchVariables": false,
         "allowSyntheticDefaultImports": true,
-        "resolveJsonModule": true,
         "esModuleInterop": true,
         "skipLibCheck": true,
+        "allowJs": true,
         "forceConsistentCasingInFileNames": true,
-        "strictPropertyInitialization": false
+        "strictPropertyInitialization": false,
+        "emitDecoratorMetadata": true,
+        "experimentalDecorators": true,
     },
     "exclude": [
         "node_modules",

@@ -1,4 +1,4 @@
-import { dbConnection, setupDatabase, veramo, veramo2 } from '../src/sdk/util/ssi/veramo'
+import { dbConnection, setupDatabase, veramo, veramo2 } from '../../../src/sdk/util/ssi/veramo'
 
 describe('veramo', () => {
     beforeAll(async () => {
@@ -11,7 +11,6 @@ describe('veramo', () => {
         for (const entity of entities) {
             const repository = dbConnection.getRepository(entity.name);
             await repository.clear(); // This clears all entries from the entity's table.
-            // console.log(`Cleared all entries from ${entity.name}`);
         }
     })
 

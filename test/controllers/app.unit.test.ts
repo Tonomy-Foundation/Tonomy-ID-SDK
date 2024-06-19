@@ -8,6 +8,10 @@ import { LoginRequestPayload } from '../../src/sdk/util/request';
 import { objToBase64Url } from '../../src/sdk/util/base64';
 import { onRedirectLogin } from '../../src/sdk/helpers/urls';
 import { setReferrer, setUrl } from '../helpers/browser';
+// import "reflect-metadata";
+// // @ts-ignore migrations
+// import { Entities } from '@veramo/data-store'
+// import { DataSource } from 'typeorm'
 
 describe('logging in', () => {
     it('generates random key pair', () => {
@@ -24,6 +28,13 @@ describe('logging in', () => {
         })) as LoginWithTonomyMessages;
 
         expect(typeof loginRequest.toString()).toBe('string');
+        // await new DataSource({
+        //     type: 'sqlite',
+        //     database: 'database.sqlite',
+        //     synchronize: false,
+        //     logging: ['error', 'info', 'warn'],
+        //     entities: Entities,
+        // }).initialize()
     });
 
     it('checks login url', async () => {
