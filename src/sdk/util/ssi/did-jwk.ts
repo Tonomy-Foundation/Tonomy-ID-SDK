@@ -19,7 +19,6 @@ export function createJWK(publicKey: PublicKey) {
 
 // reference https://github.com/OR13/did-jwk/blob/main/src/index.js#L120
 export function toDid(jwk: any) {
-    // eslint-disable-next-line no-unused-vars
     const { d, p, q, dp, dq, qi, ...publicKeyJwk } = jwk;
     // TODO replace with base64url encoder for web
     const id = strToBase64(JSON.stringify(publicKeyJwk));
@@ -44,7 +43,6 @@ export function toDidDocument(jwk: any): DIDDocument {
         return keyOps;
     };
     const {
-        // eslint-disable-next-line no-unused-vars
         d,
         p,
         q,

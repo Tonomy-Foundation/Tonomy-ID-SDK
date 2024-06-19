@@ -1,4 +1,3 @@
-/* eslint-disable camelcase */
 import { KeyManager, KeyManagerLevel } from '../storage/keymanager';
 import { Issuer } from 'did-jwt-vc';
 import { ES256KSigner, JsKeyManager, createVCSigner, generateRandomKeyPair } from '..';

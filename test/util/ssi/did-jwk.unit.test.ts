@@ -23,7 +23,6 @@ describe('did-jwk resolver', () => {
         expect.assertions(1);
 
         // TODO: add support JsonWebKey2020 for ES256K-R
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
 
         const resolver: any = {
             resolve,

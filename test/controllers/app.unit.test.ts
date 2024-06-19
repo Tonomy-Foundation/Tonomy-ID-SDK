@@ -29,6 +29,7 @@ describe('logging in', () => {
     it('checks login url', async () => {
         const appOrigin = 'http://app.com';
         const ssoOrigin = 'http://sso.com';
+
         setUrl(appOrigin);
         const { loginRequest, dataSharingRequest } = (await ExternalUser.loginWithTonomy({
             callbackPath: '/login',
@@ -40,7 +41,7 @@ describe('logging in', () => {
         const base64UrlPayload = objToBase64Url(payload);
         const url = ssoOrigin + '/login?payload=' + base64UrlPayload;
 
-        setReferrer(appOrigin)
+        setReferrer(appOrigin);
         setUrl(url);
 
         const requests = await onRedirectLogin();

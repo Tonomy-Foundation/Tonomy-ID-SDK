@@ -5,12 +5,12 @@ import type { Config } from 'jest';
 const baseConfig: Config = {
     testEnvironment: 'node',
     setupFilesAfterEnv: ['<rootDir>/test/test.setup.ts'],
-    // preset: 'ts-jest/presets/js-with-babel-esm-legacy',
     transform: {
         // '^.+\\.[tj]sx?$': [ // ts,js,tsx,jsx
         // '^.+\\.m?[tj]sx?$': [ // ts,js,tsx,jsx,mts,mjs,mtsx,mjsx
         // '^.+\\.tsx?$': [ // ts,tsx
-        '^.+\\.m?tsx?$': [ // ts,tsx,mts,mtsx
+        '^.+\\.m?tsx?$': [
+            // ts,tsx,mts,mtsx
             'ts-jest',
             {
                 useESM: true,
@@ -37,18 +37,14 @@ const baseConfig: Config = {
     },
     moduleNameMapper: {
         '^typeorm$': '<rootDir>/node_modules/typeorm/index.mjs',
-        // '^typeorm$': '<rootDir>/node_modules/typeorm/browser/index.js',
         '^ws$': '<rootDir>/node_modules/ws/wrapper.mjs',
     },
-    transformIgnorePatterns: [
-        'node_modules/(?!typeorm|uuid|ws/)',
-    ],
+    transformIgnorePatterns: ['node_modules/(?!typeorm|uuid|ws/)'],
     extensionsToTreatAsEsm: ['.ts'],
     testMatch: ['./test/**/*.test.ts'],
-    // resolver: '<rootDir>/test/customResolver.cjs',
 };
 
-const config = {
+const config: Config = {
     projects: [
         {
             ...baseConfig,
@@ -67,4 +63,5 @@ const config = {
         },
     ],
 };
+
 export default config;

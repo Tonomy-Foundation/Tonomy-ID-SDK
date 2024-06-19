@@ -7,13 +7,7 @@ import { Resolver } from 'did-resolver';
 import { getResolver } from '@tonomy/antelope-did-resolver';
 import { getResolver as getJwkResolver } from './did-jwk';
 import crossFetch from 'cross-fetch';
-import {
-    verifyCredential,
-    W3CCredential,
-    Issuer,
-    createVerifiableCredentialJwt,
-    VerifiedCredential,
-} from 'did-jwt-vc';
+import { verifyCredential, W3CCredential, Issuer, createVerifiableCredentialJwt, VerifiedCredential } from 'did-jwt-vc';
 import { toDateTime } from '../time';
 import { randomString } from '../crypto';
 import { Serializable } from '../serializable';

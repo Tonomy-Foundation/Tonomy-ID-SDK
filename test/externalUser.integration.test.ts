@@ -2,7 +2,7 @@
  * @jest-environment jsdom
  */
 /* eslint-disable no-console */
-/* eslint-disable @typescript-eslint/ban-ts-comment */
+
 /* eslint-disable camelcase */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import {
@@ -322,8 +322,8 @@ describe('Login to external website', () => {
         // ################################
         setUrl(
             externalLoginRequest.getPayload().origin +
-            externalLoginRequest.getPayload().callbackPath +
-            `?payload=${EXTERNAL_WEBSITE_base64UrlPayload}`
+                externalLoginRequest.getPayload().callbackPath +
+                `?payload=${EXTERNAL_WEBSITE_base64UrlPayload}`
         );
 
         EXTERNAL_WEBSITE_user = await externalWebsiteOnCallback(

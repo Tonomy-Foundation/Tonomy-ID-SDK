@@ -51,7 +51,7 @@ interface AntelopePushTransactionErrorConstructor {
                 file: string;
                 line_number: number;
                 method: string;
-            }
+            },
         ];
     };
     actions?: ActionData[];
@@ -91,7 +91,7 @@ export class AntelopePushTransactionError extends Error {
                 file: string;
                 line_number: number;
                 method: string;
-            }
+            },
         ];
     };
     actions?: ActionData[];
