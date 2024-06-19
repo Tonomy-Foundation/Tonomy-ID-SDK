@@ -85,7 +85,8 @@ async function setup(): Promise<AgentType> {
 }
 
 async function listIdentifiers(agent: AgentType) {
-    const identifiers = await agent.didManagerFind();
+    await agent.didManagerFind({ alias: 'default' });
+    // const identifiers = await agent.didManagerFind({ alias: 'default' });
 
     // console.log(`There are ${identifiers.length} identifiers`)
 
@@ -98,14 +99,16 @@ async function listIdentifiers(agent: AgentType) {
 }
 
 async function createIdentifier(agent: AgentType) {
-    const identifier = await agent.didManagerCreate({ alias: 'default' });
+    // @ts-expect-error expected 2 arguments got 1
+    await agent.didManagerCreate({ alias: 'default' });
+    // const identifier = await agent.didManagerCreate({ alias: 'default' });
     // console.log(`New identifier created`, identifier.did)
     // console.log(JSON.stringify(identifier, null, 2))
 }
 
 async function createCredential(agent: AgentType): Promise<VerifiableCredential> {
     const identifier = await agent.didManagerGetByAlias({ alias: 'default' });
-
+    // @ts-expect-error expected 2 arguments got 1
     const verifiableCredential = await agent.createVerifiableCredential({
         credential: {
             issuer: { id: identifier.did },
@@ -123,6 +126,7 @@ async function createCredential(agent: AgentType): Promise<VerifiableCredential>
 }
 
 async function verifyCredential(agent: AgentType, verifiableCredential: VerifiableCredential) {
+    // @ts-expect-error expected 2 arguments got 1
     const result = await agent.verifyCredential({ credential: verifiableCredential });
     // console.log(`Credential verified`, result.verified)
 }
