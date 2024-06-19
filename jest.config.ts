@@ -5,12 +5,9 @@ import type { Config } from 'jest';
 const baseConfig: Config = {
     testEnvironment: 'node',
     setupFilesAfterEnv: ['<rootDir>/test/test.setup.ts'],
+    // typeorm, uuid and ws had difficulties with ESM compatibility
     transform: {
-        // '^.+\\.[tj]sx?$': [ // ts,js,tsx,jsx
-        // '^.+\\.m?[tj]sx?$': [ // ts,js,tsx,jsx,mts,mjs,mtsx,mjsx
-        // '^.+\\.tsx?$': [ // ts,tsx
         '^.+\\.m?tsx?$': [
-            // ts,tsx,mts,mtsx
             'ts-jest',
             {
                 useESM: true,
@@ -39,7 +36,7 @@ const baseConfig: Config = {
         '^typeorm$': '<rootDir>/node_modules/typeorm/index.mjs',
         '^ws$': '<rootDir>/node_modules/ws/wrapper.mjs',
     },
-    transformIgnorePatterns: ['node_modules/(?!typeorm|uuid|ws/)'],
+    transformIgnorePatterns: ['node_modules/(?!typeorm|uuid/)'],
     extensionsToTreatAsEsm: ['.ts'],
     testMatch: ['./test/**/*.test.ts'],
 };
