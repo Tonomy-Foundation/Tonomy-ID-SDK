@@ -21,7 +21,7 @@ jobs:
       - run: yarn run lint
       - run: yarn run test:unit
 
-  check-packages:
+  check-outdated-packages:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

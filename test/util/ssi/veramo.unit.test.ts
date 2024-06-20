@@ -5,7 +5,7 @@ describe('veramo', () => {
         await setupDatabase();
     });
 
-    beforeEach(async () => {
+    afterEach(async () => {
         const entities = dbConnection.entityMetadatas;
 
         for (const entity of entities) {

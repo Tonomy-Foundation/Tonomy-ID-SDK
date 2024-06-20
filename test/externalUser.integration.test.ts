@@ -4,10 +4,9 @@
 /* eslint-disable no-console */
 
 /* eslint-disable camelcase */
-/* eslint-disable @typescript-eslint/no-unused-vars */
+
 import {
     App,
-    User,
     KeyManager,
     StorageFactory,
     STORAGE_NAMESPACE,
@@ -17,7 +16,6 @@ import {
     DemoTokenContract,
     getSettings,
     LoginRequestResponseMessagePayload,
-    LoginResponse,
     ResponsesManager,
     setSettings,
 } from '../src/sdk/index';
@@ -45,7 +43,6 @@ import {
     externalWebsiteOnLogout,
     externalWebsiteSignVc,
     externalWebsiteSignTransaction,
-    setupLinkAuthSubscriber,
 } from './helpers/externalUser';
 import { createStorageFactory } from './helpers/storageFactory';
 import { objToBase64Url } from '../src/sdk/util/base64';
@@ -303,11 +300,7 @@ describe('Login to external website', () => {
         setUrl(tonomyLoginApp.origin + `/callback?payload=${TONOMY_LOGIN_WEBSITE_base64UrlPayload}`);
 
         const { externalLoginRequest, managedResponses: TONOMY_LOGIN_WEBSITE_managedResponses } =
-            await loginWebsiteOnCallback(
-                TONOMY_LOGIN_WEBSITE_jsKeyManager,
-                TONOMY_LOGIN_WEBSITE_storage_factory,
-                testOptions
-            );
+            await loginWebsiteOnCallback(TONOMY_LOGIN_WEBSITE_jsKeyManager, TONOMY_LOGIN_WEBSITE_storage_factory);
 
         const EXTERNAL_WEBSITE_loginRequestResponseMessagePayload: LoginRequestResponseMessagePayload = {
             success: true,
@@ -322,8 +315,8 @@ describe('Login to external website', () => {
         // ################################
         setUrl(
             externalLoginRequest.getPayload().origin +
-                externalLoginRequest.getPayload().callbackPath +
-                `?payload=${EXTERNAL_WEBSITE_base64UrlPayload}`
+            externalLoginRequest.getPayload().callbackPath +
+            `?payload=${EXTERNAL_WEBSITE_base64UrlPayload}`
         );
 
         EXTERNAL_WEBSITE_user = await externalWebsiteOnCallback(

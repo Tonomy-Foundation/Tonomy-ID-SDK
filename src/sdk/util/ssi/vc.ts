@@ -4,7 +4,7 @@ import { JWTDecoded } from '../../../../node_modules/did-jwt/src/JWT';
 import { DIDurl, URL, JWT, JWTVCPayload } from './types';
 import { getSettings } from '../settings';
 import { Resolver } from 'did-resolver';
-import { getResolver } from '@tonomy/antelope-did-resolver';
+import { getResolver as getAntelopeResolver } from '@tonomy/antelope-did-resolver';
 import { getResolver as getJwkResolver } from './did-jwk';
 import crossFetch from 'cross-fetch';
 import { verifyCredential, W3CCredential, Issuer, createVerifiableCredentialJwt, VerifiedCredential } from 'did-jwt-vc';
@@ -142,7 +142,7 @@ export class VerifiableCredential<T extends object = object> {
 
         const resolver = new Resolver({
             ...getJwkResolver(),
-            ...getResolver({ antelopeChainUrl: settings.blockchainUrl, fetch: crossFetch as any }),
+            ...getAntelopeResolver({ antelopeChainUrl: settings.blockchainUrl, fetch: crossFetch as any }),
         });
 
         return verifyCredential(this.jwt, resolver);
