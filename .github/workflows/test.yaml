@@ -21,6 +21,18 @@ jobs:
       - run: yarn run lint
       - run: yarn run test:unit
 
+  check-packages:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for outdated packages
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.9.0
+          cache: yarn
+      - run: yarn outdated
+  
   compile-contracts:
     name: Compiles contracts needed for bootstrap script
     runs-on: ubuntu-20.04

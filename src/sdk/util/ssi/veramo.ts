@@ -1,3 +1,5 @@
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-nocheck veramo context argument breaks ts
 import {
     createAgent,
     IDIDManager,
@@ -99,7 +101,6 @@ async function listIdentifiers(agent: AgentType) {
 }
 
 async function createIdentifier(agent: AgentType) {
-    // @ts-expect-error expected 2 arguments got 1
     await agent.didManagerCreate({ alias: 'default' });
     // const identifier = await agent.didManagerCreate({ alias: 'default' });
     // console.log(`New identifier created`, identifier.did)
@@ -108,7 +109,6 @@ async function createIdentifier(agent: AgentType) {
 
 async function createCredential(agent: AgentType): Promise<VerifiableCredential> {
     const identifier = await agent.didManagerGetByAlias({ alias: 'default' });
-    // @ts-expect-error expected 2 arguments got 1
     const verifiableCredential = await agent.createVerifiableCredential({
         credential: {
             issuer: { id: identifier.did },
@@ -126,7 +126,6 @@ async function createCredential(agent: AgentType): Promise<VerifiableCredential>
 }
 
 async function verifyCredential(agent: AgentType, verifiableCredential: VerifiableCredential) {
-    // @ts-expect-error expected 2 arguments got 1
     const result = await agent.verifyCredential({ credential: verifiableCredential });
     // console.log(`Credential verified`, result.verified)
 }
