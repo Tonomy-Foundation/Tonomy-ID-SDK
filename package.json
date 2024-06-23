@@ -68,7 +68,7 @@
     "@types/eslint__js": "^8.42.3",
     "@types/jest": "^29.5.12",
     "@types/randombytes": "^2.0.3",
-    "address": "^2.0.2",
+    "address": "^2.0.3",
     "babel-jest": "^29.7.0",
     "cross-env": "^7.0.3",
     "eslint": "^9.5.0",
@@ -85,13 +85,13 @@
     "ts-mixer": "^6.0.4",
     "ts-node": "^10.9.2",
     "tslib": "^2.6.3",
-    "typescript": "^5.4.5",
+    "typescript": "^5.5.2",
     "typescript-eslint": "^7.13.1"
   },
   "dependencies": {
     "@consento/sync-randombytes": "^1.0.5",
     "@tonomy/antelope-did": "^0.1.5",
-    "@tonomy/antelope-did-resolver": "^0.7.0",
+    "@tonomy/antelope-did-resolver": "^0.8.0",
     "@veramo/core": "^6.0.0",
     "@veramo/credential-w3c": "^6.0.0",
     "@veramo/data-store": "^6.0.0",
@@ -127,8 +127,5 @@
   "keywords": [
     "sdk",
     "tonomy"
-  ],
-  "resolutions": {
-    "@wharfkit/antelope": "1.0.7"
-  }
+  ]
 }

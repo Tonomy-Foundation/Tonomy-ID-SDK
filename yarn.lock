@@ -2637,7 +2637,7 @@
   dependencies:
     "@noble/hashes" "1.3.2"
 
-"@noble/curves@^1.0.0", "@noble/curves@^1.1.0":
+"@noble/curves@^1.0.0", "@noble/curves@^1.1.0", "@noble/curves@^1.4.0":
   version "1.4.0"
   resolved "https://registry.yarnpkg.com/@noble/curves/-/curves-1.4.0.tgz#f05771ef64da724997f69ee1261b2417a49522d6"
   integrity sha512-p+4cb332SFCrReJkCYe8Xzm0OWi4Jji5jVdIZRL/PmacmDkFNw6MrrV+gGpiPxLHbV+zKFRywUWbaseT+tZRXg==
@@ -3516,15 +3516,16 @@
     base64url "^3.0.1"
     eosjs "^21.0.4"
 
-"@tonomy/antelope-did-resolver@^0.7.0":
-  version "0.7.0"
-  resolved "https://registry.yarnpkg.com/@tonomy/antelope-did-resolver/-/antelope-did-resolver-0.7.0.tgz#337e9c36999539e1c73bf79e87ef2070e806ab88"
-  integrity sha512-nUJA15XCBEGnBHTtk4QEA2Uevx5cvBesGhcjsu1XwVxJlnaxvakhY8fcwM/VmVbYgzV8CmYpWboONAqXgtsXtg==
+"@tonomy/antelope-did-resolver@^0.8.0":
+  version "0.8.0"
+  resolved "https://registry.yarnpkg.com/@tonomy/antelope-did-resolver/-/antelope-did-resolver-0.8.0.tgz#094188e562bde8aa946f7d1169a6785267c232d3"
+  integrity sha512-zFIsy4Zk0Q3wp+WnlK5cPK2sG76bu2jeSkfGx9XX7mkjNy4aux823KKezC+Lx6gqVlHAtXoJOI0L2GHukA/yWQ==
   dependencies:
-    "@wharfkit/antelope" "^0.7.1"
-    cross-fetch "^3.1.6"
+    "@noble/curves" "^1.4.0"
+    "@wharfkit/antelope" "^1.0.7"
+    cross-fetch "^4.0.0"
+    did-jwt "^8.0.4"
     did-resolver "^4.1.0"
-    uint8arrays "3.1.1"
 
 "@tonomy/antelope-did@^0.1.5":
   version "0.1.5"
@@ -4196,7 +4197,7 @@
     multiformats "^13.0.0"
     uint8arrays "^4.0.6"
 
-"@wharfkit/antelope@1.0.7", "@wharfkit/antelope@^0.7.1", "@wharfkit/antelope@^1.0.7":
+"@wharfkit/antelope@1.0.7", "@wharfkit/antelope@^1.0.7":
   version "1.0.7"
   resolved "https://registry.yarnpkg.com/@wharfkit/antelope/-/antelope-1.0.7.tgz#5ca010db963e061b2e8c47c14e55f86817718c2e"
   integrity sha512-C4DRC4U+qC2XQKUgwznKX6i8xdKo+ZqxkZURrPTtY3v53IvKwj+3amTQQSpuECechS5x6ItcT+/fOFBNlQ2Juw==
@@ -4258,10 +4259,10 @@ acorn@^8.11.3:
   resolved "https://registry.yarnpkg.com/acorn/-/acorn-8.11.3.tgz#71e0b14e13a4ec160724b38fb7b0f233b1b81d7a"
   integrity sha512-Y9rRfJG5jcKOE0CLisYbojUjIrIEE7AGMzA/Sm4BslANhbS+cDMpgBdcPT91oJ7OuJ9hYJBx59RjbhxVnrF8Xg==
 
-address@^2.0.2:
-  version "2.0.2"
-  resolved "https://registry.yarnpkg.com/address/-/address-2.0.2.tgz#7c1063d26bfc647a695f3bd7bdb29d688b5fac73"
-  integrity sha512-u6nFssvaX9RHQmjMSqgT7b7QJbf/5/U8+ntbTL8vgABfIiEmm02ZSM5MwljKjCrIrm7iIbgYEya2YW6AaRccVA==
+address@^2.0.3:
+  version "2.0.3"
+  resolved "https://registry.yarnpkg.com/address/-/address-2.0.3.tgz#e910900615db3d8a20c040d4c710631062fc4ba8"
+  integrity sha512-XNAb/a6TCqou+TufU8/u11HCu9x1gYvOoxLwtlXgIqmkrYQADVv6ljyW2zwiPhHz9R1gItAWpuDrdJMmrOBFEA==
 
 aes-js@4.0.0-beta.5:
   version "4.0.0-beta.5"
@@ -5380,13 +5381,6 @@ cross-env@^7.0.3:
   integrity sha512-+/HKd6EgcQCJGh2PSjZuUitQBQynKor4wrFbRg4DtAgS1aWO+gU52xpH7M9ScGgXSYmAVS9bIJ8EzuaGw0oNAw==
   dependencies:
     cross-spawn "^7.0.1"
-
-cross-fetch@^3.1.6:
-  version "3.1.8"
-  resolved "https://registry.yarnpkg.com/cross-fetch/-/cross-fetch-3.1.8.tgz#0327eba65fd68a7d119f8fb2bf9334a1a7956f82"
-  integrity sha512-cvA+JwZoU0Xq+h6WkMvAUqPEYy92Obet6UdKLfW60qn99ftItKjB5T+BkyWOFWe2pUyfQ+IJHmpOTznqk1M6Kg==
-  dependencies:
-    node-fetch "^2.6.12"
 
 cross-fetch@^4.0.0:
   version "4.0.0"
@@ -11730,10 +11724,10 @@ typescript@^4.1.3:
   resolved "https://registry.npmjs.org/typescript/-/typescript-4.9.5.tgz"
   integrity sha512-1FXk9E2Hm+QzZQ7z+McJiHL4NW1F2EzMu9Nq9i3zAaGqibafqYwCVU6WyWAuyQRRzOlxou8xZSyXLEN8oKj24g==
 
-typescript@^5.4.5:
-  version "5.4.5"
-  resolved "https://registry.yarnpkg.com/typescript/-/typescript-5.4.5.tgz#42ccef2c571fdbd0f6718b1d1f5e6e5ef006f611"
-  integrity sha512-vcI4UpRgg81oIRUFwR0WSIHKt11nJ7SAVlYNIu+QpqeyXP+gpQJy/Z4+F0aGxSE4MqwjyXvW/TzgkLAx2AGHwQ==
+typescript@^5.5.2:
+  version "5.5.2"
+  resolved "https://registry.yarnpkg.com/typescript/-/typescript-5.5.2.tgz#c26f023cb0054e657ce04f72583ea2d85f8d0507"
+  integrity sha512-NcRtPEOsPFFWjobJEtfihkLCZCXZt/os3zf8nTxjVH3RvTSxjrCamJpbExGvYOF+tFHc3pA65qpdwPbzjohhew==
 
 uglify-js@^3.1.4:
   version "3.17.4"
