@@ -11,9 +11,8 @@ const baseConfig: Config = {
             'ts-jest',
             {
                 useESM: true,
-                supportStaticESM: true,
                 tsconfig: './tsconfig.json',
-                diagnostics: false,
+                diagnostics: process.env.CI ? true : false,
             },
         ],
         'node_modules/(typeorm|uuid)/.+\\.(j|t)sx?$': [

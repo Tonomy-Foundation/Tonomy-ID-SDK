@@ -1,5 +1,5 @@
 import { Checksum256, PrivateKey, PublicKey, Signature } from '@wharfkit/antelope';
-import { SdkErrors, throwError, toElliptic } from '../util';
+import { SdkErrors, throwError } from '../util';
 
 enum KeyManagerLevel {
     PASSWORD = 'PASSWORD',
@@ -57,7 +57,6 @@ class StoreKeyOptions {
     challenge?: string;
 
     static validate(options: StoreKeyOptions): void {
-        toElliptic(options.privateKey); // throws if key not valid
         KeyManagerLevel.validate(options.level); // throws if level not valid
 
         if (options.challenge !== undefined) {

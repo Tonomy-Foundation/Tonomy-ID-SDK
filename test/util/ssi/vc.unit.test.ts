@@ -1,6 +1,6 @@
 import { VerifiableCredential, VerifiableCredentialWithType } from '../../../src/sdk/util/ssi/vc';
 import { generateRandomKeyPair, randomString } from '../../../src/sdk';
-import { createJWK } from '../../../src/sdk/util/ssi/did-jwk';
+import { createJWK } from '@tonomy/antelope-did-resolver';
 import { ES256KSigner } from 'did-jwt';
 import { Issuer } from 'did-jwt-vc';
 import { toDid } from '../../../src/sdk/util/ssi/did-jwk';
@@ -91,12 +91,13 @@ describe('VerifiableCredentialWithType class', () => {
         request = {
             randomString: randomString(32),
             origin: 'https://tonomy.foundation',
-            publicKey: publicKey.toString(),
+            publicKey: publicKey,
             callbackPath: '/callback',
         };
     });
 
     it('fails if it is created using the VerifiableCredentialWithType class', async () => {
+        // @ts-expect-error sign is protected
         await expect(VerifiableCredentialWithType.sign<LoginRequestPayload>(request, issuer)).rejects.toThrow(
             'class should be a derived class of VerifiableCredentialWithType'
         );

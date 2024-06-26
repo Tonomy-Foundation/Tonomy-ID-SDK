@@ -1,25 +1,21 @@
-import { PublicKey } from '@wharfkit/antelope';
-import { toElliptic } from '../crypto';
-import { base64ToStr, bnToBase64Url, strToBase64 } from '../base64';
-import { ResolverRegistry, ParsedDID, DIDResolutionResult, DIDDocument } from 'did-resolver';
+import { base64ToStr, strToBase64 } from '../base64';
+import { ResolverRegistry, ParsedDID, DIDResolutionResult, DIDDocument, Resolvable } from 'did-resolver';
+import { JWK } from '@tonomy/antelope-did-resolver';
 
-export function createJWK(publicKey: PublicKey) {
-    const ecPubKey = toElliptic(publicKey);
-
-    const publicKeyJwk = {
-        crv: 'secp256k1',
-        kty: 'EC',
-        x: bnToBase64Url(ecPubKey.getPublic().getX()),
-        y: bnToBase64Url(ecPubKey.getPublic().getY()),
-        kid: publicKey.toString(),
-    };
-
-    return publicKeyJwk;
+interface JWKExtended extends JWK {
+    d?: string;
+    p?: string;
+    q?: string;
+    dp?: string;
+    dq?: string;
+    qi?: string;
+    key_ops?: string[];
 }
 
 // reference https://github.com/OR13/did-jwk/blob/main/src/index.js#L120
-export function toDid(jwk: any) {
-    const { d, p, q, dp, dq, qi, ...publicKeyJwk } = jwk;
+export function toDid(jwk: JWKExtended) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { d, p, q, dp, dq, qi, ...publicKeyJwk }: JWKExtended = jwk;
     // TODO replace with base64url encoder for web
     const id = strToBase64(JSON.stringify(publicKeyJwk));
 
@@ -29,7 +25,7 @@ export function toDid(jwk: any) {
 }
 
 // reference https://github.com/OR13/did-jwk/blob/main/src/index.js#L128
-export function toDidDocument(jwk: any): DIDDocument {
+export function toDidDocument(jwk: JWKExtended): DIDDocument {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const getPublicOperationsFromPrivate = (keyOps: any) => {
         if (keyOps.includes('sign')) {
@@ -42,6 +38,7 @@ export function toDidDocument(jwk: any): DIDDocument {
 
         return keyOps;
     };
+
     const {
         d,
         p,
@@ -49,15 +46,14 @@ export function toDidDocument(jwk: any): DIDDocument {
         dp,
         dq,
         qi,
-
         // eslint-disable-next-line camelcase
         key_ops,
-
         ...publicKeyJwk
     } = jwk;
 
     // eslint-disable-next-line camelcase
     if (d && key_ops) {
+        // @ts-expect-error key_ops
         // eslint-disable-next-line camelcase
         publicKeyJwk.key_ops = getPublicOperationsFromPrivate(key_ops);
     }
@@ -78,9 +74,8 @@ export function toDidDocument(jwk: any): DIDDocument {
     return didDocument;
 }
 
-// reference https://github.com/OR13/did-jwk/blob/main/src/index.js#L177
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function resolve(did: any, options = {}): Promise<DIDResolutionResult> {
+export async function resolve(did: string, options = {}): Promise<DIDResolutionResult> {
+    console.log('resolve() resolving did:jwk');
     if (options) options = {};
     const decoded = base64ToStr(did.split(':').pop().split('#')[0]);
     const jwk = JSON.parse(decoded.toString());
@@ -96,16 +91,8 @@ export async function resolve(did: any, options = {}): Promise<DIDResolutionResu
 
 export function getResolver(): ResolverRegistry {
     return {
-        jwk: (
-            did: string,
-            // @ts-expect-error(TS6133 declared but never used)
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            parsed: ParsedDID,
-            // @ts-expect-error(TS6133 declared but never used)
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            resolver: Resolvable
-        ) => {
+        jwk: (did: string, parsed: ParsedDID, resolver: Resolvable) => {
             return resolve(did);
         },
-    } as any;
+    };
 }

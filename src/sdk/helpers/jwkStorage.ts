@@ -1,7 +1,8 @@
 import { KeyManager, KeyManagerLevel } from '../storage/keymanager';
 import { Issuer } from 'did-jwt-vc';
 import { ES256KSigner, JsKeyManager, createVCSigner, generateRandomKeyPair } from '..';
-import { createJWK, toDid } from '../util/ssi/did-jwk';
+import { toDid } from '../util/ssi/did-jwk';
+import { createJWK } from '@tonomy/antelope-did-resolver';
 
 export async function createJwkIssuerAndStore(keyManager: KeyManager = new JsKeyManager()): Promise<Issuer> {
     const { privateKey, publicKey } = generateRandomKeyPair();

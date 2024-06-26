@@ -2,7 +2,8 @@ import { PrivateKey } from '@wharfkit/antelope';
 import { ES256KSigner, generateRandomKeyPair, createSigner } from '../../../src/sdk';
 import { IdentifyMessage } from '../../../src/sdk/services/communication/message';
 import { Issuer } from 'did-jwt-vc';
-import { createJWK, toDid } from '../../../src/sdk/util/ssi/did-jwk';
+import { toDid } from '../../../src/sdk/util/ssi/did-jwk';
+import { createJWK } from '@tonomy/antelope-did-resolver';
 
 describe('Message class', () => {
     let issuer: Issuer;

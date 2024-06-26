@@ -3836,13 +3836,6 @@
   resolved "https://registry.npmjs.org/@types/parse-json/-/parse-json-4.0.0.tgz"
   integrity sha512-//oorEZjL6sbPcKUaCdIGlIUeH26mgzimjBB77G6XRgnDl/L5wOnpyBGRe/Mmf5CVW3PwEBE1NjiMZ/ssFh4wA==
 
-"@types/randombytes@^2.0.3":
-  version "2.0.3"
-  resolved "https://registry.yarnpkg.com/@types/randombytes/-/randombytes-2.0.3.tgz#c83a107ef51ae7a8611a7b964f54b21cb782bbed"
-  integrity sha512-+NRgihTfuURllWCiIAhm1wsJqzsocnqXM77V/CalsdJIYSRGEHMnritxh+6EsBklshC+clo1KgnN14qgSGeQdw==
-  dependencies:
-    "@types/node" "*"
-
 "@types/resolve@1.17.1":
   version "1.17.1"
   resolved "https://registry.npmjs.org/@types/resolve/-/resolve-1.17.1.tgz"
@@ -4197,7 +4190,7 @@
     multiformats "^13.0.0"
     uint8arrays "^4.0.6"
 
-"@wharfkit/antelope@1.0.7", "@wharfkit/antelope@^1.0.7":
+"@wharfkit/antelope@^1.0.7":
   version "1.0.7"
   resolved "https://registry.yarnpkg.com/@wharfkit/antelope/-/antelope-1.0.7.tgz#5ca010db963e061b2e8c47c14e55f86817718c2e"
   integrity sha512-C4DRC4U+qC2XQKUgwznKX6i8xdKo+ZqxkZURrPTtY3v53IvKwj+3amTQQSpuECechS5x6ItcT+/fOFBNlQ2Juw==
@@ -5786,7 +5779,7 @@ elliptic@6.5.4, elliptic@^6.5.4:
     minimalistic-assert "^1.0.1"
     minimalistic-crypto-utils "^1.0.1"
 
-elliptic@^6.5.2, elliptic@^6.5.5:
+elliptic@^6.5.2:
   version "6.5.5"
   resolved "https://registry.yarnpkg.com/elliptic/-/elliptic-6.5.5.tgz#c715e09f78b6923977610d4c2346d6ce22e6dded"
   integrity sha512-7EjbcmUm17NQFu4Pmgmq2olYMj8nwMnpcddByChSUjArp8F5DQWcIcpriwO4ZToLNAJig0yiyjswfyGNje/ixw==

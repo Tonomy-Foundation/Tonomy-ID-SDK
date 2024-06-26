@@ -1,5 +1,5 @@
 import { LoginRequestsMessage, generateRandomKeyPair, randomString } from '../../src/sdk';
-import { createJWK } from '../../src/sdk/util/ssi/did-jwk';
+import { createJWK } from '@tonomy/antelope-did-resolver';
 import { ES256KSigner } from 'did-jwt';
 import { Issuer } from 'did-jwt-vc';
 import { toDid } from '../../src/sdk/util/ssi/did-jwk';
