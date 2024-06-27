@@ -23,7 +23,7 @@ import { ExternalUser, LoginWithTonomyMessages } from '../../src/api/externalUse
 import { objToBase64Url } from '../../src/sdk/util/base64';
 import { VerifiableCredential } from '../../src/sdk/util/ssi/vc';
 import { getAccount } from '../../src/sdk/services/blockchain';
-import { getJwkIssuerFromStorage } from '../../src/sdk/helpers/jwkStorage';
+import { getDidKeyIssuerFromStorage } from '../../src/sdk/helpers/didKeyStorage';
 import { getLoginRequestResponseFromUrl, onRedirectLogin } from '../../src/sdk/helpers/urls';
 import { ExternalUserLoginTestOptions } from '../externalUser.integration.test';
 import { IUserPublic } from './user';
@@ -33,7 +33,7 @@ export async function externalWebsiteUserPressLoginToTonomyButton(
     loginAppOrigin: string,
     testOptions: ExternalUserLoginTestOptions
 ) {
-    if (getSettings().loggerLevel === 'debug') console.log('EXTERNAL_WEBSITE/login: create did:jwk and login request');
+    if (getSettings().loggerLevel === 'debug') console.log('EXTERNAL_WEBSITE/login: create did:key and login request');
 
     const onPressLoginOptions: IOnPressLoginOptions = {
         callbackPath: '/callback',
@@ -55,7 +55,7 @@ export async function externalWebsiteUserPressLoginToTonomyButton(
 
     const did = loginRequest.getIssuer();
 
-    expect(did).toContain('did:jwk:');
+    expect(did).toContain('did:key:');
 
     if (getSettings().loggerLevel === 'debug') console.log('EXTERNAL_WEBSITE/login: redirect to Tonomy Login Website');
 
@@ -85,7 +85,7 @@ export async function loginWebsiteOnRedirect(
     const managedExternalRequests = await onRedirectLogin();
 
     if (getSettings().loggerLevel === 'debug')
-        console.log('TONOMY_LOGIN_WEBSITE/login: create did:jwk and login request');
+        console.log('TONOMY_LOGIN_WEBSITE/login: create did:key and login request');
 
     const { loginRequest, dataSharingRequest, loginToCommunication } = (await ExternalUser.loginWithTonomy(
         {
@@ -99,7 +99,7 @@ export async function loginWebsiteOnRedirect(
     )) as LoginWithTonomyMessages;
     const did = loginRequest.getIssuer();
 
-    expect(did).toContain('did:jwk:');
+    expect(did).toContain('did:key:');
     expect(did).not.toEqual(externalWebsiteDid);
 
     const requests: WalletRequest[] = [...managedExternalRequests.getRequests(), loginRequest];
@@ -164,9 +164,9 @@ export async function sendLoginRequestsMessage(
     communication: Communication,
     recipientDid: string
 ) {
-    const jwkIssuer = await getJwkIssuerFromStorage(keyManager);
+    const didKeyIssuer = await getDidKeyIssuerFromStorage(keyManager);
 
-    const loginRequestMessage = await LoginRequestsMessage.signMessage({ requests }, jwkIssuer, recipientDid);
+    const loginRequestMessage = await LoginRequestsMessage.signMessage({ requests }, didKeyIssuer, recipientDid);
 
     if (getSettings().loggerLevel === 'debug')
         console.log('TONOMY_LOGIN_WEBSITE/login: sending login request to Tonomy ID app');

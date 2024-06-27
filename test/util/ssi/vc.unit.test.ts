@@ -1,10 +1,8 @@
 import { VerifiableCredential, VerifiableCredentialWithType } from '../../../src/sdk/util/ssi/vc';
 import { generateRandomKeyPair, randomString } from '../../../src/sdk';
-import { createJWK } from '@tonomy/antelope-did-resolver';
-import { ES256KSigner } from 'did-jwt';
 import { Issuer } from 'did-jwt-vc';
-import { toDid } from '../../../src/sdk/util/ssi/did-jwk';
 import { LoginRequest, LoginRequestPayload } from '../../../src/sdk/util/request';
+import { toDidKeyIssuer } from '../../../src/sdk/util/ssi/did-key';
 
 type TestObject = {
     name: string;
@@ -18,16 +16,9 @@ describe('VerifiableCredential class', () => {
     const credentialSubject = { name: 'test', dob: 3 };
 
     beforeEach(async () => {
-        const { privateKey, publicKey } = generateRandomKeyPair();
-        const signer = ES256KSigner(privateKey.data.array, true);
-        const jwk = await createJWK(publicKey);
-        const did = toDid(jwk);
+        const { privateKey } = generateRandomKeyPair();
 
-        issuer = {
-            did,
-            signer,
-            alg: 'ES256K-R',
-        };
+        issuer = await toDidKeyIssuer(privateKey);
 
         vc = await VerifiableCredential.sign<TestObject>(id, ['VerifiableCredential'], credentialSubject, issuer);
     });
@@ -48,7 +39,7 @@ describe('VerifiableCredential class', () => {
         expect(vc.toString).toBeDefined();
     });
 
-    it('creates a VC with a did-jwk', async () => {
+    it('creates a VC with a did-key', async () => {
         expect(vc).toBeDefined();
         expect(vc.getPayload().iss).toBe(issuer.did);
         expect(vc.getPayload().jti).toBe(id);
@@ -79,15 +70,9 @@ describe('VerifiableCredentialWithType class', () => {
 
     beforeEach(async () => {
         const { privateKey, publicKey } = generateRandomKeyPair();
-        const signer = ES256KSigner(privateKey.data.array, true);
-        const jwk = await createJWK(publicKey);
-        const did = toDid(jwk);
 
-        issuer = {
-            did,
-            signer,
-            alg: 'ES256K-R',
-        };
+        issuer = await toDidKeyIssuer(privateKey);
+
         request = {
             randomString: randomString(32),
             origin: 'https://tonomy.foundation',

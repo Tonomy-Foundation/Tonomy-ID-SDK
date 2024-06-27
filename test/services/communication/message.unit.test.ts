@@ -1,25 +1,17 @@
 import { PrivateKey } from '@wharfkit/antelope';
-import { ES256KSigner, generateRandomKeyPair, createSigner } from '../../../src/sdk';
+import { generateRandomKeyPair, createSigner } from '../../../src/sdk';
 import { IdentifyMessage } from '../../../src/sdk/services/communication/message';
 import { Issuer } from 'did-jwt-vc';
-import { toDid } from '../../../src/sdk/util/ssi/did-jwk';
-import { createJWK } from '@tonomy/antelope-did-resolver';
+import { toDidKeyIssuer } from '../../../src/sdk/util/ssi/did-key';
 
 describe('Message class', () => {
     let issuer: Issuer;
     const recipient = 'did:antelope:tonomy:staging:test#permission1';
 
     beforeEach(async () => {
-        const { privateKey, publicKey } = generateRandomKeyPair();
-        const signer = ES256KSigner(privateKey.data.array, true);
-        const jwk = await createJWK(publicKey);
-        const did = toDid(jwk);
+        const { privateKey } = generateRandomKeyPair();
 
-        issuer = {
-            did,
-            signer,
-            alg: 'ES256K-R',
-        };
+        issuer = await toDidKeyIssuer(privateKey);
     });
 
     it('creates a IdentifyMessage with the correct functions', async () => {
@@ -35,7 +27,7 @@ describe('Message class', () => {
         expect(identifyMessage.getSender).toBeDefined();
     });
 
-    it('creates a IdentifyMessage with a did-jwk', async () => {
+    it('creates a IdentifyMessage with a did-key', async () => {
         const identifyMessage = await IdentifyMessage.signMessage({}, issuer, recipient);
 
         expect(identifyMessage.getSender()).toBe(issuer.did);
@@ -46,7 +38,7 @@ describe('Message class', () => {
         expect(identifyMessage.toString().length).toBeGreaterThan(10);
     });
 
-    it('creates a IdentifyMessage with a did-jwk with the correct types', async () => {
+    it('creates a IdentifyMessage with a did-key with the correct types', async () => {
         const identifyMessage = await IdentifyMessage.signMessage({}, issuer, recipient);
 
         expect(identifyMessage.getType()).toBe('IdentifyMessage');

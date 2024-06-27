@@ -4123,6 +4123,18 @@
     ethers "^6.11.1"
     ethr-did "^3.0.5"
 
+"@veramo/did-provider-key@^6.0.0":
+  version "6.0.0"
+  resolved "https://registry.yarnpkg.com/@veramo/did-provider-key/-/did-provider-key-6.0.0.tgz#48a532bab373b480815a1cc2f4e10e4acc921b06"
+  integrity sha512-vEA1CpaGUWzGqTk0s5mhyaSgt1o09mjMWm/HAS0RR7Z+FTorlx7Kc7rhINBUmylzVKTsZQqeRlx0aSJhUxdUUw==
+  dependencies:
+    "@veramo/core-types" "^6.0.0"
+    "@veramo/did-manager" "^6.0.0"
+    "@veramo/utils" "^6.0.0"
+    debug "^4.3.3"
+    did-resolver "^4.1.0"
+    ethers "^6.11.1"
+
 "@veramo/did-resolver@^6.0.0":
   version "6.0.0"
   resolved "https://registry.yarnpkg.com/@veramo/did-resolver/-/did-resolver-6.0.0.tgz#598962fe14283f49b0b724bf52aa48f56505b7ee"

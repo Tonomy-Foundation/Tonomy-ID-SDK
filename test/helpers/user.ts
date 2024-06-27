@@ -99,7 +99,7 @@ export async function scanQrAndAck(user: IUserPublic, qrCodeData: string) {
     const connectMessage = await IdentifyMessage.signMessage({}, await user.getIssuer(), barcodeScanResults.data);
 
     if (getSettings().loggerLevel === 'debug')
-        console.log("TONOMY_ID/scanQr: connecting to Tonomy Login Website's with their did:jwk from the QR code");
+        console.log("TONOMY_ID/scanQr: connecting to Tonomy Login Website's with their did:key from the QR code");
     const sendMessageResponse = await user.sendMessage(connectMessage);
 
     expect(sendMessageResponse).toBe(true);

@@ -6,7 +6,7 @@ export * from './controllers/App';
 
 // Controller helpers
 export * from './helpers/user';
-export * from './helpers/jwkStorage';
+export * from './helpers/didKeyStorage';
 export * from './helpers/requestsManager';
 export * from './helpers/responsesManager';
 export * from './helpers/urls';
