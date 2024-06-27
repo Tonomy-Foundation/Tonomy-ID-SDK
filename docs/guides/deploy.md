@@ -7,7 +7,7 @@ Please <a href="https://tonomy.io/contact" target="_blank">contact us</a> for as
 ## Prerequisites
 
 - Tonomy ID services run exclusively in `Linux`, we recommend Ubuntu 20.04 or 22.04.
-- `npm` with `corepack enabled`, we recommend v18.12.1. Suggested to install with nvm v0.35+
+- `npm` with `corepack enabled`, we recommend v20.9.0. Suggested to install with nvm v0.35+
 
 ## Services to run Tonomy ID
 

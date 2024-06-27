@@ -1,7 +1,2 @@
-import { ExternalUser } from './externalUser';
-import { setSettings } from '../sdk';
-
-export const api = {
-    ExternalUser,
-    setSettings,
-};
+export { ExternalUser } from './externalUser';
+export { setSettings } from '../sdk/util/settings';

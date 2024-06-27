@@ -1,21 +1,16 @@
-import { decodeJWT } from '@tonomy/did-jwt';
-import { JWTDecoded, JWTPayload } from '@tonomy/did-jwt/lib/JWT';
+import { decodeJWT } from 'did-jwt';
+import { JWTPayload } from 'did-jwt';
+import { JWTDecoded } from '../../../../node_modules/did-jwt/src/JWT';
 import { DIDurl, URL, JWT, JWTVCPayload } from './types';
 import { getSettings } from '../settings';
-import { Resolver } from '@tonomy/did-resolver';
-import { getResolver } from '@tonomy/antelope-did-resolver';
-import { getResolver as getJwkResolver } from './did-jwk';
+import { Resolver } from 'did-resolver';
+import { getResolver as getAntelopeResolver } from '@tonomy/antelope-did-resolver';
 import crossFetch from 'cross-fetch';
-import {
-    verifyCredential,
-    W3CCredential,
-    Issuer,
-    createVerifiableCredentialJwt,
-    VerifiedCredential,
-} from '@tonomy/did-jwt-vc';
+import { verifyCredential, W3CCredential, Issuer, createVerifiableCredentialJwt, VerifiedCredential } from 'did-jwt-vc';
 import { toDateTime } from '../time';
 import { randomString } from '../crypto';
 import { Serializable } from '../serializable';
+import { getDidKeyResolver } from '@veramo/did-provider-key';
 
 /**
  * A W3C Verifiable Credential
@@ -145,10 +140,9 @@ export class VerifiableCredential<T extends object = object> {
     async verify(): Promise<VerifiedCredential> {
         const settings = getSettings();
 
-        // @ts-expect-error did-resolver and @tonomy/did-resolver types are not compatible
         const resolver = new Resolver({
-            ...getJwkResolver(),
-            ...getResolver({ antelopeChainUrl: settings.blockchainUrl, fetch: crossFetch as any }),
+            ...getDidKeyResolver(),
+            ...getAntelopeResolver({ antelopeChainUrl: settings.blockchainUrl, fetch: crossFetch as any }),
         });
 
         return verifyCredential(this.jwt, resolver);

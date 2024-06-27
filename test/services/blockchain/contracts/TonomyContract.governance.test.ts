@@ -13,6 +13,7 @@ import { getDeployableFilesFromDir } from '../../../../src/cli/bootstrap/deploy-
 import fs from 'fs';
 import { sleep } from '../../../../src/sdk/util';
 import { randomAccountName, tonomyBoardAccounts, tonomyBoardSigners } from '../../../helpers/eosio';
+import { jest } from '@jest/globals';
 
 const eosioMsigContract = EosioMsigContract.Instance;
 const tonomyEosioProxyContract = TonomyEosioProxyContract.Instance;

@@ -1,6 +1,6 @@
 import { Name } from '@wharfkit/antelope';
 import { DIDurl } from './types';
-import { ParsedDID, parse } from '@tonomy/did-resolver';
+import { ParsedDID, parse } from 'did-resolver';
 
 export function getAccountNameFromDid(did: DIDurl): Name {
     const parsed = parseDid(did);

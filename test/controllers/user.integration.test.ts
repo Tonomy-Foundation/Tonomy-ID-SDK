@@ -1,3 +1,6 @@
+/**
+ * @jest-environment jsdom
+ */
 import { IUserPublic, createRandomID, createUserObject } from '../helpers/user';
 import { KeyManager, KeyManagerLevel, TonomyUsername, EosioUtil } from '../../src/sdk/index';
 import { SdkErrors } from '../../src/sdk/index';
@@ -7,6 +10,7 @@ import { Checksum256 } from '@wharfkit/antelope';
 import { generatePrivateKeyFromPassword } from '../../src/cli/bootstrap/keys';
 import { getAccount } from '../../src/sdk/services/blockchain/eosio/eosio';
 import { getAccountInfo } from '../../src/sdk/helpers/user';
+import { jest } from '@jest/globals';
 
 let auth: KeyManager;
 let user: IUserPublic;

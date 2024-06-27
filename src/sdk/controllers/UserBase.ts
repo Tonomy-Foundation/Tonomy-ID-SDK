@@ -3,7 +3,7 @@ import { KeyManager, KeyManagerLevel } from '../storage/keymanager';
 import { createStorage, PersistentStorageClean, StorageFactory, STORAGE_NAMESPACE } from '../storage/storage';
 import { SdkErrors, throwError } from '../util/errors';
 import { TonomyUsername } from '../util/username';
-import { Issuer } from '@tonomy/did-jwt-vc';
+import { Issuer } from 'did-jwt-vc';
 import { createVCSigner } from '../util/crypto';
 import { UserStatusEnum } from '../types/UserStatusEnum';
 import { IUserBase, IUserStorage } from '../types/User';

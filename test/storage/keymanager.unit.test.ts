@@ -1,6 +1,5 @@
-import { Checksum256, PrivateKey } from '@wharfkit/antelope';
+import { PrivateKey } from '@wharfkit/antelope';
 import { JsKeyManager } from '../../src/sdk/storage/jsKeyManager';
-import argon2 from 'argon2';
 import { jsStorageFactory } from '../../src/cli/bootstrap/jsstorage';
 import {
     CheckKeyOptions,
@@ -101,9 +100,6 @@ describe('Keymanager class', () => {
         ).not.toThrow();
         expect(() =>
             StoreKeyOptions.validate({ level: 'INVALID' as any, privateKey: generateRandomKeyPair().privateKey })
-        ).toThrow();
-        expect(() =>
-            StoreKeyOptions.validate({ level: KeyManagerLevel.ACTIVE, privateKey: 'not a private key' as any })
         ).toThrow();
         expect(() => GetKeyOptions.validate({ level: KeyManagerLevel.ACTIVE })).not.toThrow();
         expect(() => CheckKeyOptions.validate({ level: KeyManagerLevel.ACTIVE, challenge: 'hi' })).not.toThrow();

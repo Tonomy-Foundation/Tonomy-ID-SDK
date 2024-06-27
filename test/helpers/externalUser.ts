@@ -12,21 +12,20 @@ import {
     StorageFactory,
     Subscriber,
     TonomyUsername,
-    User,
     getAccountNameFromUsername,
     getSettings,
     WalletRequest,
     LoginRequestsMessagePayload,
-    OnPressLoginOptions,
+    IOnPressLoginOptions,
     ResponsesManager,
 } from '../../src/sdk';
 import { ExternalUser, LoginWithTonomyMessages } from '../../src/api/externalUser';
 import { objToBase64Url } from '../../src/sdk/util/base64';
 import { VerifiableCredential } from '../../src/sdk/util/ssi/vc';
-import { TonomyContract, getAccount } from '../../src/sdk/services/blockchain';
-import { getJwkIssuerFromStorage } from '../../src/sdk/helpers/jwkStorage';
+import { getAccount } from '../../src/sdk/services/blockchain';
+import { getDidKeyIssuerFromStorage } from '../../src/sdk/helpers/didKeyStorage';
 import { getLoginRequestResponseFromUrl, onRedirectLogin } from '../../src/sdk/helpers/urls';
-import { ExternalUserLoginTestOptions } from '../externalUser.test';
+import { ExternalUserLoginTestOptions } from '../externalUser.integration.test';
 import { IUserPublic } from './user';
 
 export async function externalWebsiteUserPressLoginToTonomyButton(
@@ -34,9 +33,9 @@ export async function externalWebsiteUserPressLoginToTonomyButton(
     loginAppOrigin: string,
     testOptions: ExternalUserLoginTestOptions
 ) {
-    if (getSettings().loggerLevel === 'debug') console.log('EXTERNAL_WEBSITE/login: create did:jwk and login request');
+    if (getSettings().loggerLevel === 'debug') console.log('EXTERNAL_WEBSITE/login: create did:key and login request');
 
-    const onPressLoginOptions: OnPressLoginOptions = {
+    const onPressLoginOptions: IOnPressLoginOptions = {
         callbackPath: '/callback',
         redirect: false,
     };
@@ -56,7 +55,7 @@ export async function externalWebsiteUserPressLoginToTonomyButton(
 
     const did = loginRequest.getIssuer();
 
-    expect(did).toContain('did:jwk:');
+    expect(did).toContain('did:key:');
 
     if (getSettings().loggerLevel === 'debug') console.log('EXTERNAL_WEBSITE/login: redirect to Tonomy Login Website');
 
@@ -86,7 +85,7 @@ export async function loginWebsiteOnRedirect(
     const managedExternalRequests = await onRedirectLogin();
 
     if (getSettings().loggerLevel === 'debug')
-        console.log('TONOMY_LOGIN_WEBSITE/login: create did:jwk and login request');
+        console.log('TONOMY_LOGIN_WEBSITE/login: create did:key and login request');
 
     const { loginRequest, dataSharingRequest, loginToCommunication } = (await ExternalUser.loginWithTonomy(
         {
@@ -100,7 +99,7 @@ export async function loginWebsiteOnRedirect(
     )) as LoginWithTonomyMessages;
     const did = loginRequest.getIssuer();
 
-    expect(did).toContain('did:jwk:');
+    expect(did).toContain('did:key:');
     expect(did).not.toEqual(externalWebsiteDid);
 
     const requests: WalletRequest[] = [...managedExternalRequests.getRequests(), loginRequest];
@@ -165,9 +164,9 @@ export async function sendLoginRequestsMessage(
     communication: Communication,
     recipientDid: string
 ) {
-    const jwkIssuer = await getJwkIssuerFromStorage(keyManager);
+    const didKeyIssuer = await getDidKeyIssuerFromStorage(keyManager);
 
-    const loginRequestMessage = await LoginRequestsMessage.signMessage({ requests }, jwkIssuer, recipientDid);
+    const loginRequestMessage = await LoginRequestsMessage.signMessage({ requests }, didKeyIssuer, recipientDid);
 
     if (getSettings().loggerLevel === 'debug')
         console.log('TONOMY_LOGIN_WEBSITE/login: sending login request to Tonomy ID app');
@@ -176,11 +175,7 @@ export async function sendLoginRequestsMessage(
     expect(sendMessageResponse).toBe(true);
 }
 
-export async function loginWebsiteOnCallback(
-    keyManager: KeyManager,
-    storageFactory: StorageFactory,
-    testOptions: ExternalUserLoginTestOptions
-) {
+export async function loginWebsiteOnCallback(keyManager: KeyManager, storageFactory: StorageFactory) {
     if (getSettings().loggerLevel === 'debug')
         console.log('TONOMY_LOGIN_WEBSITE/callback: fetching response from URL and verifying login');
     const externalUser = await ExternalUser.verifyLoginRequest({
@@ -252,6 +247,9 @@ export async function externalWebsiteSignVc(externalUser: ExternalUser) {
     expect(signedVc.getIssuer()).toBe(await externalUser.getDid());
     expect(signedVc.getIssuer().includes('did:antelope:')).toBe(true);
     expect(signedVc.getCredentialSubject()).toEqual(vcData);
+    // @ts-expect-error error TS2339: Property 'decodedJwt' does not exist on type 'VerifiableCredential'
+    console.log(JSON.stringify(signedVc.decodedJwt, null, 2));
+    // const resolver = getResolver({ antelopeChainUrl: settings.blockchainUrl, fetch: crossFetch as any })
     const verifiedVc = await signedVc.verify();
 
     expect(verifiedVc.verified).toBe(true);

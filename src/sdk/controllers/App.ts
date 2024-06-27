@@ -1,4 +1,3 @@
-/* eslint-disable camelcase */
 import { Checksum256, Name, PublicKey } from '@wharfkit/antelope';
 import { TonomyContract } from '../services/blockchain/contracts/TonomyContract';
 import { Signer } from '../services/blockchain/eosio/transaction';

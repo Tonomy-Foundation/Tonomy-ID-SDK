@@ -1,11 +1,8 @@
 import { Bytes, Checksum256, KeyType, PrivateKey, PublicKey } from '@wharfkit/antelope';
 import rb from '@consento/sync-randombytes';
-import elliptic from 'elliptic';
-import { SdkErrors, throwError } from './errors';
+import { throwError } from './errors';
 import { KeyManager, KeyManagerLevel } from '../storage/keymanager';
-import { ES256KSigner, ES256Signer, Signer } from '@tonomy/did-jwt';
-
-const secp256k1 = new elliptic.ec('secp256k1');
+import { ES256KSigner, ES256Signer, Signer } from 'did-jwt';
 
 export function randomBytes(bytes: number): Uint8Array {
     return rb(new Uint8Array(bytes));
@@ -36,14 +33,6 @@ export function randomNumber(min: number, max: number): number {
     return randomValue;
 }
 
-function validateKey(keyPair: elliptic.ec.KeyPair) {
-    const result = keyPair.validate();
-
-    if (!result.result) {
-        throwError(`Key not valid with reason ${result.reason}`, SdkErrors.InvalidKey);
-    }
-}
-
 /*
 
 /* Creates a signer from a private key that can be used to sign a JWT
@@ -61,20 +50,6 @@ export function createSigner(privateKey: PrivateKey): Signer {
     }
 
     throw new Error('Unsupported key type');
-}
-
-export function toElliptic(key: PrivateKey | PublicKey): elliptic.ec.KeyPair {
-    let ecKeyPair: elliptic.ec.KeyPair;
-
-    if (key instanceof PublicKey) {
-        ecKeyPair = secp256k1.keyFromPublic(key.data.array);
-    } else {
-        ecKeyPair = secp256k1.keyFromPrivate(key.data.array);
-    }
-
-    validateKey(ecKeyPair);
-
-    return ecKeyPair;
 }
 
 export function randomString(bytes: number): string {
@@ -95,14 +70,6 @@ export function encodeHex(str: string): string {
     return str
         .split('')
         .map((c) => c.charCodeAt(0).toString(16).padStart(2, '0'))
-        .join('');
-}
-
-export function decodeHex(hex: string): string {
-    return hex
-        .split(/(\w\w)/g)
-        .filter((p) => !!p)
-        .map((c) => String.fromCharCode(parseInt(c, 16)))
         .join('');
 }
 

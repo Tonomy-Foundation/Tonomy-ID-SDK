@@ -1,4 +1,3 @@
-/* eslint-disable camelcase */
 import { SdkErrors, throwError } from '../util/errors';
 import { LoginRequest, WalletRequest } from '../util/request';
 import { DataSharingRequest } from '../util';

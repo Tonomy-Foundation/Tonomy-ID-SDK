@@ -13,6 +13,7 @@ import { sleep } from '../../../helpers/sleep';
 import { addSeconds, sleepUntil, subtractSeconds } from '../../../../src/sdk/util';
 import { PrivateKey } from '@wharfkit/antelope';
 import { createRandomAccount } from '../../../helpers/eosio';
+import { jest } from '@jest/globals';
 
 const vestingContract = VestingContract.Instance;
 const eosioTokenContract = EosioTokenContract.Instance;
@@ -234,6 +235,7 @@ describe('VestingContract class', () => {
         test(
             'Unsuccessful assignment due to number of purchases',
             async () => {
+                if (!process.env.CI) return; // Skip this test in local environment as it takes too long
                 expect.assertions(2 + VestingContract.MAX_ALLOCATIONS);
 
                 for (let i = 0; i < VestingContract.MAX_ALLOCATIONS; i++) {

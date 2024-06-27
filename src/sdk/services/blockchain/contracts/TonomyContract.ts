@@ -309,10 +309,10 @@ export class TonomyContract {
                 code: CONTRACT_NAME,
                 scope: CONTRACT_NAME,
                 table: 'people',
-                // eslint-disable-next-line camelcase
+
                 lower_bound: Checksum256.from(usernameHash),
                 limit: 1,
-                // eslint-disable-next-line camelcase
+
                 index_position: 'secondary',
             });
             if (!data || !data.rows) throwError('No data found', SdkErrors.DataQueryNoRowDataFound);
@@ -326,7 +326,7 @@ export class TonomyContract {
                 code: CONTRACT_NAME,
                 scope: CONTRACT_NAME,
                 table: 'people',
-                // eslint-disable-next-line camelcase
+
                 lower_bound: account,
                 limit: 1,
             });
@@ -343,12 +343,11 @@ export class TonomyContract {
         const idData = data.rows[0];
 
         return {
-            // eslint-disable-next-line camelcase
             account_name: Name.from(idData.account_name),
             status: idData.status,
-            // eslint-disable-next-line camelcase
+
             username_hash: Checksum256.from(idData.username_hash),
-            // eslint-disable-next-line camelcase
+
             password_salt: Checksum256.from(idData.password_salt),
             version: idData.version,
         };
@@ -366,10 +365,10 @@ export class TonomyContract {
                 code: CONTRACT_NAME,
                 scope: CONTRACT_NAME,
                 table: 'apps',
-                // eslint-disable-next-line camelcase
+
                 lower_bound: Checksum256.from(usernameHash),
                 limit: 1,
-                // eslint-disable-next-line camelcase
+
                 index_position: 'secondary',
             });
             if (!data || !data.rows) throwError('No data found', SdkErrors.DataQueryNoRowDataFound);
@@ -383,7 +382,7 @@ export class TonomyContract {
                 code: CONTRACT_NAME,
                 scope: CONTRACT_NAME,
                 table: 'apps',
-                // eslint-disable-next-line camelcase
+
                 lower_bound: account,
                 limit: 1,
             });
@@ -401,10 +400,10 @@ export class TonomyContract {
                 code: CONTRACT_NAME,
                 scope: CONTRACT_NAME,
                 table: 'apps',
-                // eslint-disable-next-line camelcase
+
                 lower_bound: Checksum256.from(originHash),
                 limit: 1,
-                // eslint-disable-next-line camelcase
+
                 index_position: 'tertiary',
             });
             if (!data || !data.rows) throwError('No data found', SdkErrors.DataQueryNoRowDataFound);
@@ -417,15 +416,14 @@ export class TonomyContract {
         const idData = data.rows[0];
 
         return {
-            // eslint-disable-next-line camelcase
             app_name: idData.app_name,
             description: idData.description,
-            // eslint-disable-next-line camelcase
+
             logo_url: idData.logo_url,
             origin: idData.origin,
-            // eslint-disable-next-line camelcase
+
             account_name: Name.from(idData.account_name),
-            // eslint-disable-next-line camelcase
+
             username_hash: Checksum256.from(idData.username_hash),
             version: idData.version,
         };

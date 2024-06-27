@@ -19,7 +19,7 @@ import { createUser } from '../../src/cli/bootstrap/user';
 import { DIDurl } from '../../src/sdk/util/ssi/types';
 import { generateRandomKeywords, getSettings } from '../../src/sdk/util';
 import { RequestsManager } from '../../src/sdk/helpers/requestsManager';
-import { ExternalUserLoginTestOptions } from '../externalUser.test';
+import { ExternalUserLoginTestOptions } from '../externalUser.integration.test';
 import { getTonomyOperationsKey } from '../../src/sdk/services/blockchain/eosio/eosio';
 import { createSigner } from '../../src/sdk/services/blockchain';
 
@@ -99,7 +99,7 @@ export async function scanQrAndAck(user: IUserPublic, qrCodeData: string) {
     const connectMessage = await IdentifyMessage.signMessage({}, await user.getIssuer(), barcodeScanResults.data);
 
     if (getSettings().loggerLevel === 'debug')
-        console.log("TONOMY_ID/scanQr: connecting to Tonomy Login Website's with their did:jwk from the QR code");
+        console.log("TONOMY_ID/scanQr: connecting to Tonomy Login Website's with their did:key from the QR code");
     const sendMessageResponse = await user.sendMessage(connectMessage);
 
     expect(sendMessageResponse).toBe(true);
