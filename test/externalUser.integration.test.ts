@@ -2,7 +2,7 @@
  * @jest-environment jsdom
  */
 /* eslint-disable no-console */
-
+/* eslint-disable prettier/prettier */
 /* eslint-disable camelcase */
 
 import {
@@ -313,6 +313,7 @@ describe('Login to external website', () => {
 
         // #####External website user (callback page) #####
         // ################################
+
         setUrl(
             externalLoginRequest.getPayload().origin +
             externalLoginRequest.getPayload().callbackPath +

@@ -5,7 +5,6 @@ import type { Config } from 'jest';
 const baseConfig: Config = {
     testEnvironment: 'node',
     setupFilesAfterEnv: ['<rootDir>/test/test.setup.ts'],
-    // typeorm, uuid and ws had difficulties with ESM compatibility
     transform: {
         '^.+\\.m?tsx?$': [
             'ts-jest',
@@ -15,6 +14,7 @@ const baseConfig: Config = {
                 diagnostics: process.env.CI ? true : false,
             },
         ],
+        // typeorm, uuid and ws had difficulties with ESM compatibility
         'node_modules/(typeorm|uuid)/.+\\.(j|t)sx?$': [
             'babel-jest',
             {
