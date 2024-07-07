@@ -247,9 +247,7 @@ export async function externalWebsiteSignVc(externalUser: ExternalUser) {
     expect(signedVc.getIssuer()).toBe(await externalUser.getDid());
     expect(signedVc.getIssuer().includes('did:antelope:')).toBe(true);
     expect(signedVc.getCredentialSubject()).toEqual(vcData);
-    // @ts-expect-error error TS2339: Property 'decodedJwt' does not exist on type 'VerifiableCredential'
-    console.log(JSON.stringify(signedVc.decodedJwt, null, 2));
-    // const resolver = getResolver({ antelopeChainUrl: settings.blockchainUrl, fetch: crossFetch as any })
+
     const verifiedVc = await signedVc.verify();
 
     expect(verifiedVc.verified).toBe(true);

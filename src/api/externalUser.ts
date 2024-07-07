@@ -300,12 +300,11 @@ export class ExternalUser {
     /**
      * Returns the issuer of the user for use with did-jwt and VCs
      *
-     * @param {KeyManager} [keyManager] - the key manager to use to store the keys
      * @returns {Promise<Issuer>} - the issuer of the user
      */
-    async getIssuer(keyManager: KeyManager = new JsKeyManager()): Promise<Issuer> {
+    async getIssuer(): Promise<Issuer> {
         const did = await this.getDid();
-        const signer = createVCSigner(keyManager, KeyManagerLevel.BROWSER_LOCAL_STORAGE);
+        const signer = createVCSigner(this.keyManager, KeyManagerLevel.BROWSER_LOCAL_STORAGE);
 
         return {
             did,
