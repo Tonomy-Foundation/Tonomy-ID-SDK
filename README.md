@@ -9,7 +9,7 @@ The SDK is written in typescript with jest to run tests.
 ## Dependencies
 
 - Linux debian distribution (Ubuntu 20.0.4 LTS used)
-- [Nodejs](https://nodejs.org) v20.9.0+ suggested installed with [nvm](https://github.com/nvm-sh/nvm)
+- [Nodejs](https://nodejs.org) v22.3.0+ suggested installed with [nvm](https://github.com/nvm-sh/nvm)
 
 Integration tests:
 

@@ -15,7 +15,7 @@ jobs:
       - name: Run lint and test
         uses: actions/setup-node@v4
         with:
-          node-version: 20.9.0
+          node-version: 22.3.0
           cache: yarn
       - run: yarn install --immutable
       - run: yarn run lint
@@ -29,7 +29,7 @@ jobs:
       - name: Check for outdated packages
         uses: actions/setup-node@v4
         with:
-          node-version: 20.9.0
+          node-version: 22.3.0
           cache: yarn
       - run: yarn outdated
   
@@ -105,7 +105,7 @@ jobs:
       - name: Install SDK and Bootstrap blockchain
         uses: actions/setup-node@v4
         with:
-          node-version: 20.9.0
+          node-version: 22.3.0
           cache: yarn
       - run: yarn install --immutable
       - run: yarn run cli bootstrap
@@ -113,7 +113,7 @@ jobs:
       - name: Run integration and governance tests
         uses: actions/setup-node@v4
         with:
-          node-version: 20.9.0
+          node-version: 22.3.0
           cache: yarn
       - run: yarn run test:integration
       - run: yarn run test:governance

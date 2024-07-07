@@ -54,7 +54,7 @@ function start {
     npx pm2 delete micro || true
     unset TONOMY_OPS_PRIVATE_KEY
     unset HCAPTCHA_SECRET
-    npx pm2 start --interpreter /bin/bash yarn --name "micro" -- run start:dev
+    npx pm2 start --interpreter /bin/bash yarn --name "micro" -- run start
 }
 
 function bootstrap {
