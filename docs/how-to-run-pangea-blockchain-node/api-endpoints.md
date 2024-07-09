@@ -10,7 +10,7 @@
 
 ### Pangea Testnet
 
-[https://pangea.testnet.eosusa.io](https://pangea.testnet.eosusa.io) (with Hyperion v2 API)
+[https://test.pangea.eosusa.io](https://test.pangea.eosusa.io) (with Hyperion v2 API)
 
 [https://blockchain-api-testnet.pangea.web4.world](https://blockchain-api-testnet.pangea.web4.world)
 

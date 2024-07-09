@@ -15,13 +15,13 @@ Add the following values of p2p-peer-address at the end of your config.ini file 
 ```
 p2p-nodes
 # 1.prod.tmy
-p2p-peer-address = 123.255.78.9:9876
+p2p-peer-address = 135.181.35.32:9876
 # 2.prod.tmy
-p2p-peer-address = 123.255.78.9:9876
+p2p-peer-address = 78.46.191.87:9876
 # 3.prod.tmy
-p2p-peer-address = 123.255.78.9:9876
+p2p-peer-address = 5.161.199.183:9876
 # eosusa
-p2p-peer-address = 123.255.78.9:9876
+p2p-peer-address = pangea.eosusa.io:9886
 ```
 
 #### genesis.json
@@ -58,7 +58,7 @@ p2p-peer-address = 123.255.78.9:9876
 ```
 p2p-nodes
 # pangea testnet
-p2p-peer-address = 123.255.78.9:9876
+p2p-peer-address = test.pangea.eosusa.io:9886
 ```
 
 #### genesis.json
