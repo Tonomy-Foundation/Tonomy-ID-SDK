@@ -9,15 +9,11 @@ The SDK is written in typescript with jest to run tests.
 ## Dependencies
 
 - Linux debian distribution (Ubuntu 20.0.4 LTS used)
-- [Nodejs](https://nodejs.org) v22.3.0+ suggested installed with [nvm](https://github.com/nvm-sh/nvm)
+- [Nodejs](https://nodejs.org) v20+ suggested installed with [nvm](https://github.com/nvm-sh/nvm)
 
 Integration tests:
 
 - [Docker](http://docs.docker.com) v20.10+
-
-Documentation:
-
-- [mkdocs](https://www.mkdocs.org) with [material](https://squidfunk.github.io/mkdocs-material) theme
 
 ## Sub-Repositories
 
@@ -32,7 +28,7 @@ Build notes:
 
 - Build just the sdk `yarn run build:sdk`
 - Build just the cli `yarn run build:cli`
-  - Cli has dependency of `argon2` package, which is not needed by SDK and should be moved to a devDependency if these softwares are ever separated.
+  - TODO: cli has dependency of `argon2` package, which is not needed by SDK and should be moved to a devDependency if these softwares are ever separated.
 
 ## Run
 
@@ -111,16 +107,3 @@ yarn run lint
 ## Error handling
 
 See [errors.ts](./src/services/errors.ts). All errors have a registered unique enumeration code.
-
-## Documentation
-
-Documentation is in the `./docs` folder and runs with [mkdocs](https://www.mkdocs.org) with [material](https://squidfunk.github.io/mkdocs-material) theme.
-
-Install with
-
-```bash
-sudo apt-get -y install mkdocs
-pip install mkdocs-material
-```
-
-Then `yarn run docs:serve`
