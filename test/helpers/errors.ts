@@ -6,6 +6,7 @@ export function catchAndPrintErrors(fn: () => Promise<void>): () => Promise<void
                 // Not a Jest error
                 console.error(JSON.stringify(err, null, 2));
             }
+
             throw err;
         });
 }

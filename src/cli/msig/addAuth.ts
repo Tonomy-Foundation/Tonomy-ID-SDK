@@ -1,9 +1,12 @@
 import { ActionData, Authority } from '../../sdk/services/blockchain';
-import { StandardProposalOptions, createProposal, executeProposal } from ".";
+import { StandardProposalOptions, createProposal, executeProposal } from '.';
 import { Name } from '@wharfkit/antelope';
 import { getAccountInfo } from '../../sdk';
 
-export async function addAuth(args: { account: string, permission: string, newDelegate: string }, options: StandardProposalOptions) {
+export async function addAuth(
+    args: { account: string; permission: string; newDelegate: string },
+    options: StandardProposalOptions
+) {
     const accountInfo = await getAccountInfo(Name.from(args.account));
     const perm = accountInfo.getPermission(args.permission);
     const newAuthority = Authority.fromAccountPermission(perm);

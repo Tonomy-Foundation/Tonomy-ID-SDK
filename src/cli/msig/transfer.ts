@@ -1,7 +1,7 @@
 import { EosioTokenContract } from '../../sdk/services/blockchain';
-import { StandardProposalOptions, createProposal, executeProposal } from ".";
+import { StandardProposalOptions, createProposal, executeProposal } from '.';
 
-export async function transfer(args: { to: string, from: string }, options: StandardProposalOptions) {
+export async function transfer(args: { to: string; from: string }, options: StandardProposalOptions) {
     const amountUsd = 100000;
     const price = 0.012;
     const amount = amountUsd / price;

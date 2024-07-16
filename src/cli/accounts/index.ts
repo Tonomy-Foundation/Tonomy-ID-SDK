@@ -24,7 +24,7 @@ export default async function apps(args: string[]) {
             console.log('Account name: ', account.toString());
         } catch (e) {
             if (e instanceof SdkError && e.code === SdkErrors.UsernameNotFound) {
-                console.log('Username not found')
+                console.log('Username not found');
                 console.log('Searching for account: ', username);
 
                 const account = await getAccountInfo(Name.from(username));

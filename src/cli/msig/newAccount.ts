@@ -1,7 +1,7 @@
 import { Authority } from '../../sdk/services/blockchain';
-import { StandardProposalOptions, createProposal, executeProposal } from ".";
+import { StandardProposalOptions, createProposal, executeProposal } from '.';
 
-export async function newAccount(args: { governanceAccounts: string[]; }, options: StandardProposalOptions) {
+export async function newAccount(args: { governanceAccounts: string[] }, options: StandardProposalOptions) {
     const newAccount = 'advteam.tmy';
 
     const activeAuth = Authority.fromAccount({ actor: 'team.tmy', permission: 'active' });
