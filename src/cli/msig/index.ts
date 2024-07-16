@@ -8,6 +8,7 @@ import { transfer } from './transfer';
 import { addAuth } from './addAuth';
 import { deployContract } from './deployContract';
 import { addEosioCode } from './addEosioCode';
+import { printCliHelp } from '..';
 
 const eosioMsigContract = EosioMsigContract.Instance;
 
@@ -45,12 +46,16 @@ export default async function msig(args: string[]) {
     }
 
     const proposer = newGovernanceAccounts[0];
-    let signingKey: string | undefined = process.env.SIGNING_KEY
+    let signingKey: string | undefined = process.env.SIGNING_KEY;
+
     if (!signingKey) {
-        if (!process.env.TONOMY_BOARD_PRIVATE_KEYS) throw new Error('Neither SIGNING_KEY or TONOMY_BOARD_PRIVATE_KEYS are set');
+        if (!process.env.TONOMY_BOARD_PRIVATE_KEYS)
+            throw new Error('Neither SIGNING_KEY or TONOMY_BOARD_PRIVATE_KEYS are set');
         const tonomyGovKeys: string[] = JSON.parse(process.env.TONOMY_BOARD_PRIVATE_KEYS).keys;
+
         signingKey = tonomyGovKeys[0];
     }
+
     const privateKey = PrivateKey.from(signingKey);
     const signer = createSigner(privateKey);
 
@@ -108,35 +113,41 @@ export default async function msig(args: string[]) {
             );
         } else if (proposalType === 'deploy-contract') {
             const contractName = args[3];
-            await deployContract({ contractName }, {
-                proposer,
-                proposalName,
-                privateKey,
-                requested: newGovernanceAccounts,
-                test
-            });
+
+            await deployContract(
+                { contractName },
+                {
+                    proposer,
+                    proposalName,
+                    privateKey,
+                    requested: newGovernanceAccounts,
+                    test,
+                }
+            );
         } else if (proposalType === 'eosio.code-permission') {
             await addEosioCode({
                 proposer,
                 proposalName,
                 privateKey,
                 requested: newGovernanceAccounts,
-                test
-            })
-        } else if (proposalType === 'add-auth') {
-            await addAuth({
-                account: "coinsale.tmy",
-                permission: "active",
-                newDelegate: settings.isProduction() ? "14.found.tmy" : governanceAccounts[2]
-            }, {
-                proposer,
-                proposalName,
-                privateKey,
-                requested: newGovernanceAccounts,
-                test
+                test,
             });
-        }
-        else {
+        } else if (proposalType === 'add-auth') {
+            await addAuth(
+                {
+                    account: 'coinsale.tmy',
+                    permission: 'active',
+                    newDelegate: settings.isProduction() ? '14.found.tmy' : governanceAccounts[2],
+                },
+                {
+                    proposer,
+                    proposalName,
+                    privateKey,
+                    requested: newGovernanceAccounts,
+                    test,
+                }
+            );
+        } else {
             throw new Error(`Invalid msig proposal type ${proposalType}`);
         }
     } else if (args[0] === 'exec') {
@@ -152,6 +163,7 @@ export default async function msig(args: string[]) {
             console.error('Transaction failed');
         }
     } else {
+        printCliHelp();
         throw new Error(`Invalid msig command ${args[0]}`);
     }
 }
@@ -199,10 +211,10 @@ export async function createProposal(
         console.log('You have 7 days to approve and execute the proposal.');
         return proposalHash;
     } catch (e) {
-        if (e?.error?.details[0]?.message === "assertion failure with message: transaction authorization failed") {
+        if (e?.error?.details[0]?.message === 'assertion failure with message: transaction authorization failed') {
             throw new Error(
                 'The transaction authorization requirements are not correct. Check the action authorizations are correct, and the "requested" permissions.'
-            )
+            );
         } else {
             console.error('Error: ', JSON.stringify(e, null, 2));
             throw new Error('Transaction failed');

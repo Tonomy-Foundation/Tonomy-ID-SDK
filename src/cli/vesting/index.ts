@@ -1,5 +1,7 @@
+import { PrivateKey } from '@wharfkit/antelope';
+import { printCliHelp } from '..';
 import { AccountType, TonomyContract, TonomyUsername, VestingContract } from '../../sdk';
-import { createSigner, getTonomyOperationsKey } from '../../sdk/services/blockchain';
+import { createSigner } from '../../sdk/services/blockchain';
 import { setSettings } from '../../sdk/util/settings';
 import settings from '../bootstrap/settings';
 
@@ -9,10 +11,9 @@ const tonomyContract = TonomyContract.Instance;
 const vestingContract = VestingContract.Instance;
 
 export default async function vesting(args: string[]) {
-    const tonomyOpsKey = getTonomyOperationsKey();
-    const signer = createSigner(tonomyOpsKey);
-
     if (args[0] === 'assign') {
+        const privateKey = PrivateKey.from(process.env.SIGNING_KEY || '');
+        const signer = createSigner(privateKey);
         const username = args[1];
 
         console.log('Searching for username: ', username);
@@ -47,8 +48,12 @@ export default async function vesting(args: string[]) {
 
         console.log('Transaction ID: ', JSON.stringify(res, null, 2));
     } else if (args[0] === 'setsettings') {
+        const privateKey = PrivateKey.from(process.env.SIGNING_KEY || '');
+        const signer = createSigner(privateKey);
+
         await vestingContract.setSettings('2024-04-30T12:00:00', '2030-01-01T00:00:00', signer);
     } else {
+        printCliHelp();
         throw new Error(`Unknown command ${args[0]}`);
     }
 }
