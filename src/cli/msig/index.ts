@@ -1,6 +1,8 @@
 import { PrivateKey, Name, Checksum256 } from '@wharfkit/antelope';
 import { EosioMsigContract, setSettings } from '../../sdk';
-import { ActionData, Authority, EosioTokenContract, createSigner } from '../../sdk/services/blockchain';
+import { ActionData, Authority, EosioTokenContract, createSigner, getAccount } from '../../sdk/services/blockchain';
+import { parse } from 'csv-parse/sync';
+import fs from 'fs';
 import settings from '../bootstrap/settings';
 import { printCliHelp } from '..';
 
@@ -163,6 +165,78 @@ export default async function msig(args: string[]) {
                 privateKey,
                 newGovernanceAccounts
             );
+
+            if (test) await executeProposal(proposer, proposalName, proposalHash);
+        } else if (proposalType === 'vesting-bulk') {
+            const csvFilePath = '/home/dev/Downloads/allocate-stag.csv';
+
+            console.log('Reading file: ', csvFilePath);
+            const sender = 'advteam.tmy';
+            const categoryId = 7; // Community and Marketing, Platform Dev, Infra Rewards
+            const leosPrice = 0.002; // Seed early bird price
+            // const leosPrice = 0.004; // Seed later comer price
+            // const leosPrice = 0.012; // TGE price
+
+            const records = parse(fs.readFileSync(csvFilePath, 'utf8'), {
+                columns: true,
+                // eslint-disable-next-line camelcase
+                skip_empty_lines: true,
+            });
+            const results: { accountName: string; usdQuantity: number }[] = [];
+
+            await Promise.all(
+                records.map(async (data: any) => {
+                    // if (results.length === 0) return; // skip header
+
+                    // accountName, usdQuantity
+                    if (!data.accountName || !data.usdQuantity) {
+                        throw new Error(`Invalid CSV format on line ${results.length + 1}: ${data}`);
+                    }
+
+                    // check account exists
+                    await getAccount(data.accountName);
+
+                    data.usdQuantity = Number(data.usdQuantity);
+
+                    if (isNaN(data.usdQuantity)) {
+                        throw new Error(`Invalid quantity type on line ${results.length + 1}: ${data}`);
+                    }
+
+                    if (data.usdQuantity <= 0 || data.usdQuantity > 100000) {
+                        throw new Error(`Invalid quantity on line ${results.length + 1}: ${data}`);
+                    }
+
+                    results.push(data);
+                })
+            );
+
+            const actions = results.map((data) => {
+                const leosNumber = data.usdQuantity / leosPrice;
+
+                const leosQuantity = leosNumber.toFixed(0) + '.000000 LEOS';
+
+                console.log(
+                    `Assigning: ${data.accountName} ${leosQuantity} vested in category ${categoryId} at rate ${leosPrice} ($${data.usdQuantity} USD)`
+                );
+                return {
+                    account: 'vesting.tonomy',
+                    name: 'assigntokens',
+                    authorization: [
+                        {
+                            actor: sender.toString(),
+                            permission: 'active',
+                        },
+                    ],
+                    data: {
+                        sender,
+                        holder: data.accountName,
+                        amount: leosQuantity,
+                        category: categoryId,
+                    },
+                };
+            });
+
+            const proposalHash = await createProposal(proposer, proposalName, actions, privateKey, [sender]);
 
             if (test) await executeProposal(proposer, proposalName, proposalHash);
         } else {
