@@ -168,10 +168,10 @@ export default async function msig(args: string[]) {
 
             if (test) await executeProposal(proposer, proposalName, proposalHash);
         } else if (proposalType === 'vesting-bulk') {
-            const csvFilePath = '/home/dev/Downloads/allocate-stag.csv';
+            const csvFilePath = '/home/dev/Downloads/allocate.csv';
 
             console.log('Reading file: ', csvFilePath);
-            const sender = 'advteam.tmy';
+            const sender = settings.isProduction() ? 'advteam.tmy' : 'team.tmy';
             const categoryId = 7; // Community and Marketing, Platform Dev, Infra Rewards
             const leosPrice = 0.002; // Seed early bird price
             // const leosPrice = 0.004; // Seed later comer price
@@ -186,8 +186,6 @@ export default async function msig(args: string[]) {
 
             await Promise.all(
                 records.map(async (data: any) => {
-                    // if (results.length === 0) return; // skip header
-
                     // accountName, usdQuantity
                     if (!data.accountName || !data.usdQuantity) {
                         throw new Error(`Invalid CSV format on line ${results.length + 1}: ${data}`);
@@ -216,10 +214,10 @@ export default async function msig(args: string[]) {
                 const leosQuantity = leosNumber.toFixed(0) + '.000000 LEOS';
 
                 console.log(
-                    `Assigning: ${data.accountName} ${leosQuantity} vested in category ${categoryId} at rate ${leosPrice} ($${data.usdQuantity} USD)`
+                    `Assigning: ${leosQuantity} ($${data.usdQuantity} USD) vested in category ${categoryId} to ${data.accountName} at rate of $${leosPrice}/LEOS`
                 );
                 return {
-                    account: 'vesting.tonomy',
+                    account: 'vesting.tmy',
                     name: 'assigntokens',
                     authorization: [
                         {
@@ -236,7 +234,13 @@ export default async function msig(args: string[]) {
                 };
             });
 
-            const proposalHash = await createProposal(proposer, proposalName, actions, privateKey, [sender]);
+            const proposalHash = await createProposal(
+                proposer,
+                proposalName,
+                actions,
+                privateKey,
+                settings.isProduction() ? [sender] : newGovernanceAccounts
+            );
 
             if (test) await executeProposal(proposer, proposalName, proposalHash);
         } else {
