@@ -48,6 +48,8 @@ export function printCliHelp() {
                 msig propose new-account proposalName
                 msig propose transfer proposalName
                 msig propose vesting-bulk proposalName
+                msig propose add-prod proposalName
+                msig propose remove-prod proposalName
                 msig propose ... --test
                 msig approve proposalName
                 msig exec proposalName

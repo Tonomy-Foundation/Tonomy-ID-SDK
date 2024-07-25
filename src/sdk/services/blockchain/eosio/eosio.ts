@@ -59,6 +59,12 @@ export async function getAccount(account: NameType): Promise<API.v1.AccountObjec
     }
 }
 
+export async function getProducers(): Promise<API.v1.GetProducerScheduleResponse> {
+    const api = await getApi();
+
+    return await api.v1.chain.get_producer_schedule();
+}
+
 export function getTonomyOperationsKey(): PrivateKey {
     if (isProduction() && !process.env.TONOMY_OPS_PRIVATE_KEY)
         throw new Error('TONOMY_OPS_PRIVATE_KEY must be set in production');
