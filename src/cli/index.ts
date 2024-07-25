@@ -49,6 +49,7 @@ export function printCliHelp() {
                 msig propose transfer proposalName
                 msig propose vesting-bulk proposalName
                 msig propose ... --test
+                msig approve proposalName
                 msig exec proposalName
         `);
 }

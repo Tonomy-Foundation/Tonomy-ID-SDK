@@ -172,6 +172,7 @@ export default async function msig(args: string[]) {
 
             console.log('Reading file: ', csvFilePath);
             const sender = settings.isProduction() ? 'advteam.tmy' : 'team.tmy';
+            const requiredAuthority = test ? governanceAccounts[2] : '11.found.tmy';
             const categoryId = 7; // Community and Marketing, Platform Dev, Infra Rewards
             const leosPrice = 0.002; // Seed early bird price
             // const leosPrice = 0.004; // Seed later comer price
@@ -234,18 +235,24 @@ export default async function msig(args: string[]) {
                 };
             });
 
-            const proposalHash = await createProposal(
-                proposer,
-                proposalName,
-                actions,
-                privateKey,
-                settings.isProduction() ? [sender] : newGovernanceAccounts
-            );
+            const proposalHash = await createProposal(proposer, proposalName, actions, privateKey, [requiredAuthority]);
 
             if (test) await executeProposal(proposer, proposalName, proposalHash);
         } else {
             printCliHelp();
             throw new Error(`Invalid msig proposal type ${proposalType}`);
+        }
+    } else if (args[0] === 'approve') {
+        const proposalName = Name.from(args[1]);
+
+        try {
+            const transaction = await eosioMsigContract.approve(proposer, proposalName, proposer, undefined, signer);
+
+            console.log('Transaction: ', JSON.stringify(transaction, null, 2));
+            console.error('Transaction succeeded');
+        } catch (e) {
+            console.error('Error: ', JSON.stringify(e, null, 2));
+            console.error('Transaction failed');
         }
     } else if (args[0] === 'exec') {
         const proposalName = Name.from(args[1]);
@@ -329,7 +336,7 @@ async function executeProposal(proposer: string, proposalName: Name, proposalHas
             await eosioMsigContract.approve(
                 proposer,
                 proposalName,
-                { actor: governanceAccounts[i], permission: 'active' },
+                governanceAccounts[i],
                 proposalHash,
                 tonomyGovSigners[i]
             );
