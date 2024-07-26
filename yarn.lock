@@ -3567,10 +3567,10 @@
     base64url "^3.0.1"
     eosjs "^21.0.4"
 
-"@tonomy/antelope-did-resolver@^0.8.0":
-  version "0.8.0"
-  resolved "https://registry.yarnpkg.com/@tonomy/antelope-did-resolver/-/antelope-did-resolver-0.8.0.tgz#094188e562bde8aa946f7d1169a6785267c232d3"
-  integrity sha512-zFIsy4Zk0Q3wp+WnlK5cPK2sG76bu2jeSkfGx9XX7mkjNy4aux823KKezC+Lx6gqVlHAtXoJOI0L2GHukA/yWQ==
+"@tonomy/antelope-did-resolver@^0.10.0":
+  version "0.10.0"
+  resolved "https://registry.yarnpkg.com/@tonomy/antelope-did-resolver/-/antelope-did-resolver-0.10.0.tgz#13c32856d3d7ed692f783a1a423267a7755b7652"
+  integrity sha512-1698BVydqAN7x4LN4M7hACx/8LBbnm3l6+dxn2oiBkTKx4goPzF//a90z4C3QyXn4CCqxICHRSTcQzK2WDvlGA==
   dependencies:
     "@noble/curves" "^1.4.0"
     "@wharfkit/antelope" "^1.0.7"
@@ -8574,7 +8574,8 @@ jsonld@digitalcredentials/jsonld.js#v10.x:
   version "8.3.3-0"
   resolved "https://codeload.github.com/digitalcredentials/jsonld.js/tar.gz/17f2c35f85d176231d9c8620d39144e845c15e91"
   dependencies:
-    "@digitalbazaar/http-client" "^4.1.0"
+    "@digitalbazaar/http-client" "^4.1.1"
+    "@digitalcredentials/rdf-canonize" "^1.0.0"
     canonicalize "^1.0.1"
     lru-cache "^6.0.0"
     rdf-canonize "^4.0.1"

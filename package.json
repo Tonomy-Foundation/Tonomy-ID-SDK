@@ -78,7 +78,7 @@
   "dependencies": {
     "@consento/sync-randombytes": "^1.0.5",
     "@tonomy/antelope-did": "^0.1.5",
-    "@tonomy/antelope-did-resolver": "^0.8.0",
+    "@tonomy/antelope-did-resolver": "^0.10.0",
     "@veramo/core": "^6.0.0",
     "@veramo/credential-w3c": "^6.0.0",
     "@veramo/data-store": "^6.0.0",
