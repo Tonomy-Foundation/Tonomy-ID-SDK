@@ -68,7 +68,7 @@ export function getTonomyOperationsKey(): PrivateKey {
         throw new Error('TONOMY_OPS_PRIVATE_KEY must be set in production');
 
     if (process.env.TONOMY_OPS_PRIVATE_KEY) {
-        if (getSettings().loggerLevel === 'debug') console.log('Using TONOMY_OPS_PRIVATE_KEY from env');
+        debug('Using TONOMY_OPS_PRIVATE_KEY from env');
         return PrivateKey.from(process.env.TONOMY_OPS_PRIVATE_KEY);
     }
 

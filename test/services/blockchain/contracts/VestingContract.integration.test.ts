@@ -424,10 +424,6 @@ describe('VestingContract class', () => {
             await sleepUntil(addSeconds(vestingPeriod.cliffEnd, 1));
             const trx = await vestingContract.withdraw(accountName, accountSigner);
 
-            // const trxConsole = JSON.parse(trx.processed.action_traces[0].console);
-            // console.log('trxConsole', trxConsole);
-            // console.log('allocations', allocations);
-
             const transferAmount = assetToAmount(trx.processed.action_traces[0].inline_traces[0].act.data.quantity);
             const allocations1 = await vestingContract.getAllocations(accountName);
 

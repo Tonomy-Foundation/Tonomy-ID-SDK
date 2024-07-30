@@ -1,7 +1,7 @@
 /**
  * @jest-environment jsdom
  */
-/* eslint-disable no-console */
+
 /* eslint-disable prettier/prettier */
 /* eslint-disable camelcase */
 
@@ -50,6 +50,9 @@ import { createSigner, getTonomyOperationsKey } from '../src/sdk/services/blockc
 import { setTestSettings, settings } from './helpers/settings';
 import deployContract from '../src/cli/bootstrap/deploy-contract';
 import { setReferrer, setUrl } from './helpers/browser';
+import Debug from 'debug';
+
+const debug = Debug('tonomy-sdk-tests:externalUser.integration.test');
 
 export type ExternalUserLoginTestOptions = {
     dataRequest: boolean;
@@ -83,7 +86,7 @@ describe('Login to external website', () => {
         // ##### Tonomy ID user #####
         // ##########################
         // Create new Tonomy ID user
-        if (getSettings().loggerLevel === 'debug') console.log('TONOMY_ID: creating new Tonomy ID user');
+        debug('TONOMY_ID: creating new Tonomy ID user');
         TONOMY_ID_user = (await createRandomID()).user;
         TONOMY_ID_did = await TONOMY_ID_user.getDid();
 
@@ -94,8 +97,7 @@ describe('Login to external website', () => {
         // Create two apps which will be logged into
         externalApp = await createRandomApp();
 
-        if (getSettings().loggerLevel === 'debug')
-            console.log('Deploying and configuring demo.tmy contract to ', externalApp.accountName.toString());
+        debug('Deploying and configuring demo.tmy contract to ', externalApp.accountName.toString());
         await deployContract(
             { account: externalApp.accountName, contractDir: './Tonomy-Contracts/contracts/demo.tmy' },
             signer,
@@ -134,7 +136,7 @@ describe('Login to external website', () => {
 
     afterEach(async () => {
         await TONOMY_ID_user.logout();
-        if (getSettings().loggerLevel === 'debug') console.log('finished test');
+        debug('finished test');
 
         // for some reason this is needed to ensure all the code lines execute. Not sure why needed
         // TODO figure out why this is needed and remove issue
@@ -294,7 +296,7 @@ describe('Login to external website', () => {
             }
         }
 
-        if (getSettings().loggerLevel === 'debug') console.log('TONOMY_LOGIN_WEBSITE/login: sending to callback page');
+        debug('TONOMY_LOGIN_WEBSITE/login: sending to callback page');
         const TONOMY_LOGIN_WEBSITE_base64UrlPayload = objToBase64Url(payload);
 
         setUrl(tonomyLoginApp.origin + `/callback?payload=${TONOMY_LOGIN_WEBSITE_base64UrlPayload}`);

@@ -11,7 +11,9 @@ import { UserStatusEnum } from '../types/UserStatusEnum';
 import { ILoginOptions, IUserOnboarding } from '../types/User';
 import { getAccountInfo } from '../helpers/user';
 import { UserCommunication } from './UserCommunication';
+import Debug from 'debug';
 
+const debug = Debug('tonomy-sdk:controllers:user-onboarding');
 const tonomyContract = TonomyContract.Instance;
 
 export class UserOnboarding extends UserCommunication implements IUserOnboarding {
@@ -107,13 +109,11 @@ export class UserOnboarding extends UserCommunication implements IUserOnboarding
         await this.storage.status;
         await this.createDid();
 
-        if (getSettings().loggerLevel === 'debug') {
-            console.log('Created account', {
-                accountName: (await this.storage.accountName).toString(),
-                username: (await this.getUsername()).getBaseUsername(),
-                did: await this.getDid(),
-            });
-        }
+        debug('Created account', {
+            accountName: (await this.getAccountName()).toString(),
+            username: (await this.getUsername()).getBaseUsername(),
+            did: await this.getDid(),
+        });
     }
 
     async saveUsername(username: string): Promise<void> {

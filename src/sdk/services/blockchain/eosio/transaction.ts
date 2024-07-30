@@ -11,7 +11,9 @@ import {
 import { KeyManager, KeyManagerLevel } from '../../../storage/keymanager';
 import { HttpError } from '../../../util/errors';
 import { getApi } from './eosio';
-import { getSettings } from '../../../util';
+import Debug from 'debug';
+
+const debug = Debug('tonomy-sdk:services:blockchain:eosio:transaction');
 
 interface MapObject {
     [key: string]: any;
@@ -169,8 +171,7 @@ async function transact(
     let res;
 
     try {
-        if (getSettings().loggerLevel === 'debug')
-            console.debug('Pushing transaction', JSON.stringify(actions, null, 2));
+        debug('Pushing transaction', JSON.stringify(actions, null, 2));
         res = await api.v1.chain.push_transaction(signedTransaction);
     } catch (e) {
         if (e.response?.headers) {

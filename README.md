@@ -107,3 +107,7 @@ yarn run lint
 ## Error handling
 
 See [errors.ts](./src/services/errors.ts). All errors have a registered unique enumeration code.
+
+## Debugging
+
+Uses [debug](https://www.npmjs.com/package/debug) package. Use `export DEBUG="tonomy*"` to see all debug logs.

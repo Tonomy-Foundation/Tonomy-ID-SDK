@@ -24,7 +24,7 @@ import { DataSource } from 'typeorm';
 import { Wallet } from 'ethers';
 import Debug from 'debug';
 
-const debug = Debug('tonomy:util:ssi:veramo');
+const debug = Debug('tonomy-sdk:util:ssi:veramo');
 
 const DATABASE_FILE = '.database.sqlite.test';
 const INFURA_PROJECT_ID = 'e19492ad3c7d409ca266f23af0a097d7';
