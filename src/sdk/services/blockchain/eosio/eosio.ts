@@ -1,19 +1,23 @@
 import { APIClient, FetchProvider, NameType, API, PrivateKey, Serializer } from '@wharfkit/antelope';
 import { GetInfoResponse } from '@wharfkit/antelope/src/api/v1/types';
 import fetch from 'cross-fetch';
-import { getSettings, isProduction } from '../../../util/settings';
+import { getFetch, getSettings, isProduction } from '../../../util/settings';
 import { throwError, SdkErrors } from '../../../util/errors';
+import Debug from 'debug';
+
+const debug = Debug('tonomy-sdk:services:blockchain:eosio:eosio');
 
 let api: APIClient;
 
 export async function getApi(): Promise<APIClient> {
+    debug('Fetching api', typeof api, typeof getFetch(), typeof fetch);
     if (api) return api;
 
     const settings = getSettings();
 
     api = new APIClient({
         url: settings.blockchainUrl,
-        provider: new FetchProvider(settings.blockchainUrl, { fetch }),
+        provider: new FetchProvider(settings.blockchainUrl, { fetch: getFetch() || fetch }),
     });
     if (!api) throwError('Could not create API client', SdkErrors.CouldntCreateApi);
     return api;

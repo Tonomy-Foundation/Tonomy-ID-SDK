@@ -2,10 +2,9 @@ import { decodeJWT } from 'did-jwt';
 import { JWTPayload } from 'did-jwt';
 import { JWTDecoded } from '../../../../node_modules/did-jwt/src/JWT';
 import { DIDurl, URL, JWT, JWTVCPayload } from './types';
-import { getSettings } from '../settings';
+import { getFetch, getSettings } from '../settings';
 import { Resolver } from 'did-resolver';
 import { getResolver as getAntelopeResolver } from '@tonomy/antelope-did-resolver';
-import crossFetch from 'cross-fetch';
 import { verifyCredential, W3CCredential, Issuer, createVerifiableCredentialJwt, VerifiedCredential } from 'did-jwt-vc';
 import { toDateTime } from '../time';
 import { randomString } from '../crypto';
@@ -142,7 +141,7 @@ export class VerifiableCredential<T extends object = object> {
 
         const resolver = new Resolver({
             ...getDidKeyResolver(),
-            ...getAntelopeResolver({ antelopeChainUrl: settings.blockchainUrl, fetch: crossFetch as any }),
+            ...getAntelopeResolver({ antelopeChainUrl: settings.blockchainUrl, fetch: getFetch() }),
         });
 
         return verifyCredential(this.jwt, resolver);
