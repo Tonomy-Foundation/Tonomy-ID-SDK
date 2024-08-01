@@ -111,5 +111,8 @@
     "sdk",
     "tonomy"
   ],
-  "packageManager": "yarn@1.22.19+sha1.4ba7fc5c6e704fce2066ecbfb0b0d8976fe62447"
+  "resolutions": {
+    "jsonld": "link:./node_modules/@digitalcredentials/jsonld"
+  },
+  "packageManager": "yarn@4.3.1"
 }
