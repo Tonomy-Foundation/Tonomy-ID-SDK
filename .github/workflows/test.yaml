@@ -36,7 +36,7 @@ jobs:
         with:
           node-version: 22.3.0
           cache: yarn
-      - run: npx --yes npm-check-updates --target @latest
+      - run: npx --yes npm-check-updates --target @latest --errorLevel 1
   
   compile-contracts:
     name: Compiles contracts needed for bootstrap script
