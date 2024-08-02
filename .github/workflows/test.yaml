@@ -28,6 +28,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Enable Corepack before setting up Node
+        run: corepack enable
+
       - name: Check for outdated packages
         uses: actions/setup-node@v4
         with:
