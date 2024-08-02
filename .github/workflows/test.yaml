@@ -9,13 +9,15 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+      
+      - name: Enable Corepack before setting up Node
+        run: corepack enable
 
       - name: Run lint and test
         uses: actions/setup-node@v4
         with:
           node-version: 22.3.0
           cache: yarn
-      - run: corepack enable
       - run: yarn install --immutable
       - run: yarn run lint
       - run: yarn run test:unit
@@ -100,13 +102,15 @@ jobs:
         with:
           name: Tonomy-Contracts
           path: ./Tonomy-Contracts
+      
+      - name: Enable Corepack before setting up Node
+        run: corepack enable
 
       - name: Install SDK and Bootstrap blockchain
         uses: actions/setup-node@v4
         with:
           node-version: 22.3.0
           cache: yarn
-      - run: corepack prepare yarn@4.3.1 --activate
       - run: yarn install --immutable
       - run: yarn run cli bootstrap
 
