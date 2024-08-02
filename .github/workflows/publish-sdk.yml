@@ -18,12 +18,16 @@ jobs:
         uses: actions/checkout@v4
         with:
           token: ${{secrets.MY_GITHUB_PERSONAL_ACCESS_TOKEN}}
+      
+      - name: Enable Corepack before setting up Node
+        run: corepack enable
 
       - name: 📦 Install
         uses: actions/setup-node@v4
         with:
           node-version: 22.3.0
           registry-url: https://registry.npmjs.org/
+      
       - name: 🚀 Build and publish SDK
         uses: actions/setup-node@v4
         with:
