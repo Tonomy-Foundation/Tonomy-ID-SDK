@@ -1,9 +1,7 @@
 name: Run Tonomy-ID-SDK Tests
 
 on:
-  pull_request:
-    branches:
-    - development
+  push
 
 jobs:
   test:
