@@ -19,6 +19,7 @@ jobs:
           node-version: 22.3.0
           cache: yarn
       - run: yarn install --immutable
+      - run: yarn run build
       - run: yarn run lint
       - run: yarn run test:unit
 
@@ -112,6 +113,7 @@ jobs:
           node-version: 22.3.0
           cache: yarn
       - run: yarn install --immutable
+      - run: yarn run build
       - run: yarn run cli bootstrap
 
       - name: Run integration and governance tests
