@@ -1,5 +1,6 @@
 import { SettingsType } from '../../src/sdk/index';
-import { setSettings } from '../../src/sdk/util/settings';
+import { setFetch, setSettings } from '../../src/sdk/util/settings';
+import fetch from 'cross-fetch';
 
 export const settings: Partial<SettingsType> = {
     blockchainUrl: 'http://localhost:8888',
@@ -17,4 +18,5 @@ export function setTestSettings(debugLogger = false) {
     }
 
     setSettings(settings);
+    setFetch(fetch);
 }
