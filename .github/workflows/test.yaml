@@ -33,7 +33,7 @@ jobs:
         with:
           node-version: 22.3.0
           cache: yarn
-      - run: yarn outdated || echo "WARNING:Packages outdate. Update packages with 'yarn upgrade-interactive --latest'" && exit 1
+      - run: npx --yes npm-check-updates --target @latest
   
   compile-contracts:
     name: Compiles contracts needed for bootstrap script
