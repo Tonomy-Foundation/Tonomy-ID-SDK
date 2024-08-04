@@ -59,7 +59,7 @@ export type ExternalUserLoginTestOptions = {
     dataRequestUsername?: boolean;
 };
 
-setTestSettings(process.env.LOG === 'true');
+setTestSettings();
 
 const signer = createSigner(getTonomyOperationsKey());
 

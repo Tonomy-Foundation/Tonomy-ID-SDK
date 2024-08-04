@@ -12,11 +12,7 @@ export const settings: Partial<SettingsType> = {
     currencySymbol: 'LEOS',
 };
 
-export function setTestSettings(debugLogger = false) {
-    if (debugLogger) {
-        settings.loggerLevel = 'debug';
-    }
-
+export function setTestSettings() {
     setSettings(settings);
     setFetch(fetch);
 }

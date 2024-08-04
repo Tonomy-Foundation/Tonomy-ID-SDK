@@ -20,10 +20,6 @@ import { Checksum256, PrivateKey, PublicKey } from '@wharfkit/antelope';
 import { Authority, Signer, TonomyEosioProxyContract, defaultBlockchainParams } from '../../sdk/services/blockchain';
 import { createUser, mockCreateAccount, restoreCreateAccountFromMock } from './user';
 
-if (process.env.LOG === 'true') {
-    settings.config.loggerLevel = 'debug';
-}
-
 setSettings(settings.config);
 
 const demoTokenContract = DemoTokenContract.Instance;

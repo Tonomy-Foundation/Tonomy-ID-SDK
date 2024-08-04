@@ -40,10 +40,6 @@ This builds to `/build` and runs the project in watch mode so any edits you save
 
 To do a one-off build, use `yarn run build`.
 
-## Tests
-
-To show logs during tests `export LOG=true`
-
 ### Unit tests
 
 Tests individual class and function logic within the SDK.
