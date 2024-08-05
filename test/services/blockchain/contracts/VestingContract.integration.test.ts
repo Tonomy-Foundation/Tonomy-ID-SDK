@@ -14,6 +14,7 @@ import { sleep } from '../../../helpers/sleep';
 import { addSeconds, sleepUntil, subtractSeconds } from '../../../../src/sdk/util';
 import { PrivateKey, Name } from '@wharfkit/antelope';
 import { createRandomAccount } from '../../../helpers/eosio';
+import { msigAction } from './governance';
 
 const vestingContract = VestingContract.Instance;
 const eosioTokenContract = EosioTokenContract.Instance;
@@ -331,13 +332,6 @@ describe('VestingContract class', () => {
 
             expect(actionTraces.length).toBe(2);
 
-            function checkAction(action: any, receiver: string, contract: string, name: string, data: object) {
-                expect(action.receiver).toBe(receiver)
-                expect(action.act.account).toBe(contract);
-                expect(action.act.name).toBe(name)
-                expect(JSON.stringify(action.act.data)).toBe(JSON.stringify(data))
-            }
-
             // vesting.tmy::assigntokens for accountName
             checkAction(actionTraces[0], contract, contract, 'assigntokens', assignTokensAction.data);
             // vesting.tmy::assigntokens account notification
@@ -357,6 +351,89 @@ describe('VestingContract class', () => {
             // eosio.token::transfer account notifications (2x)
             checkAction(actionTraces[1].inline_traces[1].inline_traces[0], sender, "eosio.token", "transfer", eosioTokenTransferData)
             checkAction(actionTraces[1].inline_traces[1].inline_traces[1], contract, "eosio.token", "transfer", eosioTokenTransferData);
+
+            vestedBalance = await vestingContract.getBalance(accountName);
+            vestedBalance2 = await vestingContract.getBalance(accountName2);
+            const senderLeosBalanceAfter = await eosioTokenContract.getBalance(sender);
+
+            expect(vestedBalance).toBe(2);
+            expect(vestedBalance2).toBe(2);
+            expect(senderLeosBalance - senderLeosBalanceAfter).toBe(4);
+        })
+
+        test("Successfully assign multiple tokens at once (msig transaction)", async () => {
+            expect.assertions(7 + 3 + 10 * 4);
+
+            const sender = 'coinsale.tmy';
+            const contract = 'vesting.tmy';
+            const { user } = await createRandomID();
+            const accountName2 = (await user.getAccountName()).toString()
+
+            const assignTokensAction = {
+                authorization: [
+                    {
+                        actor: sender.toString(),
+                        permission: 'active',
+                    },
+                ],
+                account: contract,
+                name: 'assigntokens',
+                data: {
+                    sender,
+                    holder: accountName,
+                    amount: '2.000000 LEOS',
+                    category: 999,
+                },
+            }
+            const eosioTokenTransferData = {
+                from: sender,
+                to: contract,
+                quantity: assignTokensAction.data.amount,
+                memo: "Allocated vested funds"
+            }
+
+            const assignTokensAction2 = JSON.parse(JSON.stringify(assignTokensAction));
+
+            assignTokensAction2.data.holder = accountName2;
+
+            const actions = [assignTokensAction, assignTokensAction2];
+
+            let vestedBalance = await vestingContract.getBalance(accountName);
+            let vestedBalance2 = await vestingContract.getBalance(accountName2);
+            const senderLeosBalance = await eosioTokenContract.getBalance(sender);
+
+            expect(vestedBalance).toBe(0);
+            expect(vestedBalance2).toBe(0);
+
+            const trx = await msigAction(actions, { satisfyRequireApproval: true });
+
+            if (!trx) throw new Error("Transaction not found");
+            const actionTraces = trx.processed.action_traces;
+
+            expect(actionTraces.length).toBe(1)
+            const inlineTraces = actionTraces[0].inline_traces;
+
+            expect(inlineTraces.length).toBe(2);
+            // vesting.tmy::assigntokens for accountName
+            checkAction(inlineTraces[0], contract, contract, 'assigntokens', assignTokensAction.data);
+            // vesting.tmy::assigntokens account notification
+            checkAction(inlineTraces[0].inline_traces[0], accountName, contract, 'assigntokens', assignTokensAction.data);
+            // eosio.token::transfer
+            checkAction(inlineTraces[0].inline_traces[1], "eosio.token", "eosio.token", "transfer", eosioTokenTransferData);
+            // eosio.token::transfer account notifications (2x)
+            checkAction(inlineTraces[0].inline_traces[1].inline_traces[0], sender, "eosio.token", "transfer", eosioTokenTransferData)
+            checkAction(inlineTraces[0].inline_traces[1].inline_traces[1], contract, "eosio.token", "transfer", eosioTokenTransferData);
+
+            // vesting.tmy::assigntokens for accountName2
+            checkAction(inlineTraces[1], contract, contract, 'assigntokens', assignTokensAction2.data);
+            // vesting.tmy::assigntokens account notification
+            checkAction(inlineTraces[1].inline_traces[0], accountName2, contract, 'assigntokens', assignTokensAction2.data);
+            // eosio.token::transfer
+            checkAction(inlineTraces[1].inline_traces[1], "eosio.token", "eosio.token", "transfer", eosioTokenTransferData)
+            // eosio.token::transfer account notifications (2x)
+            checkAction(inlineTraces[1].inline_traces[1].inline_traces[0], sender, "eosio.token", "transfer", eosioTokenTransferData)
+            checkAction(inlineTraces[1].inline_traces[1].inline_traces[1], contract, "eosio.token", "transfer", eosioTokenTransferData);
+
 
             vestedBalance = await vestingContract.getBalance(accountName);
             vestedBalance2 = await vestingContract.getBalance(accountName2);
@@ -585,6 +662,11 @@ describe('VestingContract class', () => {
             }
         });
     });
-
-
 });
+
+function checkAction(action: any, receiver: string, contract: string, name: string, data: object) {
+    expect(action.receiver).toBe(receiver)
+    expect(action.act.account).toBe(contract);
+    expect(action.act.name).toBe(name)
+    expect(JSON.stringify(action.act.data)).toBe(JSON.stringify(data))
+}
