@@ -283,7 +283,7 @@ describe('VestingContract class', () => {
         })
 
         test("Successfully assign multiple tokens at once", async () => {
-            expect.assertions(5);
+            expect.assertions(16);
 
             const sender = 'coinsale.tmy';
             const CONTRACT_NAME = 'vesting.tmy';
@@ -306,6 +306,12 @@ describe('VestingContract class', () => {
                     category: 999,
                 },
             }
+            const eosioTokenTransferData = {
+                from: sender,
+                to: CONTRACT_NAME,
+                quantity: assignTokensAction.data.amount,
+                "memo": "Allocated vested funds"
+            }
 
             const assignTokensAction2 = JSON.parse(JSON.stringify(assignTokensAction));
 
@@ -323,7 +329,51 @@ describe('VestingContract class', () => {
             const trx = await transact(Name.from(CONTRACT_NAME), actions, signer);
             const actionTraces = trx.processed.action_traces;
 
-            console.debug('actionTraces', JSON.stringify(actionTraces, null, 2));
+            expect(actionTraces.length).toBe(2);
+
+            function checkAction(action: any, receiver: string, contract: string, name: string, data: object): boolean {
+                if (action.receiver !== receiver) {
+                    console.error(`Expected receiver ${receiver}, got ${action.receiver}`);
+                    return false
+                }
+
+                if (action.act.account !== contract) {
+                    console.error(`Expected contract ${contract}, got ${action.act.account}`);
+                    return false
+                }
+
+                if (action.act.name !== name) {
+                    console.error(`Expected name ${name}, got ${action.act.name}`);
+                    return false
+                }
+
+                if (JSON.stringify(action.act.data) !== JSON.stringify(data)) {
+                    console.error(`Expected data ${JSON.stringify(data)}, got ${JSON.stringify(action.act.data)}`);
+                    return false
+                }
+
+                return true;
+            }
+
+            // vesting.tmy::assigntokens for accountName
+            expect(checkAction(actionTraces[0], CONTRACT_NAME, CONTRACT_NAME, 'assigntokens', assignTokensAction.data)).toBeTruthy();
+            // vesting.tmy::assigntokens account notification
+            expect(checkAction(actionTraces[0].inline_traces[0], accountName, CONTRACT_NAME, 'assigntokens', assignTokensAction.data)).toBeTruthy();
+            // eosio.token::transfer
+            expect(checkAction(actionTraces[0].inline_traces[1], "eosio.token", "eosio.token", "transfer", eosioTokenTransferData)).toBeTruthy();
+            // eosio.token::transfer account notifications (2x)
+            expect(checkAction(actionTraces[0].inline_traces[1].inline_traces[0], sender, "eosio.token", "transfer", eosioTokenTransferData)).toBeTruthy();
+            expect(checkAction(actionTraces[0].inline_traces[1].inline_traces[1], CONTRACT_NAME, "eosio.token", "transfer", eosioTokenTransferData)).toBeTruthy();
+
+            // vesting.tmy::assigntokens for accountName2
+            expect(checkAction(actionTraces[1], CONTRACT_NAME, CONTRACT_NAME, 'assigntokens', assignTokensAction2.data)).toBeTruthy();
+            // vesting.tmy::assigntokens account notification
+            expect(checkAction(actionTraces[1].inline_traces[0], accountName2, CONTRACT_NAME, 'assigntokens', assignTokensAction2.data)).toBeTruthy();
+            // eosio.token::transfer
+            expect(checkAction(actionTraces[1].inline_traces[1], "eosio.token", "eosio.token", "transfer", eosioTokenTransferData)).toBeTruthy();
+            // eosio.token::transfer account notifications (2x)
+            expect(checkAction(actionTraces[1].inline_traces[1].inline_traces[0], sender, "eosio.token", "transfer", eosioTokenTransferData)).toBeTruthy();
+            expect(checkAction(actionTraces[1].inline_traces[1].inline_traces[1], CONTRACT_NAME, "eosio.token", "transfer", eosioTokenTransferData)).toBeTruthy();
 
             vestedBalance = await vestingContract.getBalance(accountName);
             vestedBalance2 = await vestingContract.getBalance(accountName2);
@@ -332,7 +382,6 @@ describe('VestingContract class', () => {
             expect(vestedBalance).toBe(2);
             expect(vestedBalance2).toBe(2);
             expect(senderLeosBalance - senderLeosBalanceAfter).toBe(4);
-
         })
     });
 
