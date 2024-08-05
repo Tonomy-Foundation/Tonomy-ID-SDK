@@ -8,10 +8,11 @@ import {
     createKeyManagerSigner,
     createSigner,
     getTonomyOperationsKey,
+    transact,
 } from '../../../../src/sdk/services/blockchain';
 import { sleep } from '../../../helpers/sleep';
 import { addSeconds, sleepUntil, subtractSeconds } from '../../../../src/sdk/util';
-import { PrivateKey } from '@wharfkit/antelope';
+import { PrivateKey, Name } from '@wharfkit/antelope';
 import { createRandomAccount } from '../../../helpers/eosio';
 
 const vestingContract = VestingContract.Instance;
@@ -279,7 +280,58 @@ describe('VestingContract class', () => {
             const balance2 = await vestingContract.getBalance(accountName);
 
             expect(balance2).toBe(3);
+        })
 
+        test("Successfully assign multiple tokens at once", async () => {
+            expect.assertions(5);
+
+            const sender = 'coinsale.tmy';
+            const CONTRACT_NAME = 'vesting.tmy';
+            const { user } = await createRandomID();
+            const accountName2 = (await user.getAccountName()).toString()
+
+            const assignTokensAction = {
+                authorization: [
+                    {
+                        actor: sender.toString(),
+                        permission: 'active',
+                    },
+                ],
+                account: CONTRACT_NAME,
+                name: 'assigntokens',
+                data: {
+                    sender,
+                    holder: accountName,
+                    amount: '2.000000 LEOS',
+                    category: 999,
+                },
+            }
+
+            const assignTokensAction2 = JSON.parse(JSON.stringify(assignTokensAction));
+
+            assignTokensAction2.data.holder = accountName2;
+
+            const actions = [assignTokensAction, assignTokensAction2];
+
+            let vestedBalance = await vestingContract.getBalance(accountName);
+            let vestedBalance2 = await vestingContract.getBalance(accountName2);
+            const senderLeosBalance = await eosioTokenContract.getBalance(sender);
+
+            expect(vestedBalance).toBe(0);
+            expect(vestedBalance2).toBe(0);
+
+            const trx = await transact(Name.from(CONTRACT_NAME), actions, signer);
+            const actionTraces = trx.processed.action_traces;
+
+            console.debug('actionTraces', JSON.stringify(actionTraces, null, 2));
+
+            vestedBalance = await vestingContract.getBalance(accountName);
+            vestedBalance2 = await vestingContract.getBalance(accountName2);
+            const senderLeosBalanceAfter = await eosioTokenContract.getBalance(sender);
+
+            expect(vestedBalance).toBe(2);
+            expect(vestedBalance2).toBe(2);
+            expect(senderLeosBalance - senderLeosBalanceAfter).toBe(4);
 
         })
     });
