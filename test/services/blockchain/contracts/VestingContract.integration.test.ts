@@ -283,10 +283,10 @@ describe('VestingContract class', () => {
         })
 
         test("Successfully assign multiple tokens at once", async () => {
-            expect.assertions(16);
+            expect.assertions(6 + 10 * 4);
 
             const sender = 'coinsale.tmy';
-            const CONTRACT_NAME = 'vesting.tmy';
+            const contract = 'vesting.tmy';
             const { user } = await createRandomID();
             const accountName2 = (await user.getAccountName()).toString()
 
@@ -297,7 +297,7 @@ describe('VestingContract class', () => {
                         permission: 'active',
                     },
                 ],
-                account: CONTRACT_NAME,
+                account: contract,
                 name: 'assigntokens',
                 data: {
                     sender,
@@ -308,9 +308,9 @@ describe('VestingContract class', () => {
             }
             const eosioTokenTransferData = {
                 from: sender,
-                to: CONTRACT_NAME,
+                to: contract,
                 quantity: assignTokensAction.data.amount,
-                "memo": "Allocated vested funds"
+                memo: "Allocated vested funds"
             }
 
             const assignTokensAction2 = JSON.parse(JSON.stringify(assignTokensAction));
@@ -326,54 +326,37 @@ describe('VestingContract class', () => {
             expect(vestedBalance).toBe(0);
             expect(vestedBalance2).toBe(0);
 
-            const trx = await transact(Name.from(CONTRACT_NAME), actions, signer);
+            const trx = await transact(Name.from(contract), actions, signer);
             const actionTraces = trx.processed.action_traces;
 
             expect(actionTraces.length).toBe(2);
 
-            function checkAction(action: any, receiver: string, contract: string, name: string, data: object): boolean {
-                if (action.receiver !== receiver) {
-                    console.error(`Expected receiver ${receiver}, got ${action.receiver}`);
-                    return false
-                }
-
-                if (action.act.account !== contract) {
-                    console.error(`Expected contract ${contract}, got ${action.act.account}`);
-                    return false
-                }
-
-                if (action.act.name !== name) {
-                    console.error(`Expected name ${name}, got ${action.act.name}`);
-                    return false
-                }
-
-                if (JSON.stringify(action.act.data) !== JSON.stringify(data)) {
-                    console.error(`Expected data ${JSON.stringify(data)}, got ${JSON.stringify(action.act.data)}`);
-                    return false
-                }
-
-                return true;
+            function checkAction(action: any, receiver: string, contract: string, name: string, data: object) {
+                expect(action.receiver).toBe(receiver)
+                expect(action.act.account).toBe(contract);
+                expect(action.act.name).toBe(name)
+                expect(JSON.stringify(action.act.data)).toBe(JSON.stringify(data))
             }
 
             // vesting.tmy::assigntokens for accountName
-            expect(checkAction(actionTraces[0], CONTRACT_NAME, CONTRACT_NAME, 'assigntokens', assignTokensAction.data)).toBeTruthy();
+            checkAction(actionTraces[0], contract, contract, 'assigntokens', assignTokensAction.data);
             // vesting.tmy::assigntokens account notification
-            expect(checkAction(actionTraces[0].inline_traces[0], accountName, CONTRACT_NAME, 'assigntokens', assignTokensAction.data)).toBeTruthy();
+            checkAction(actionTraces[0].inline_traces[0], accountName, contract, 'assigntokens', assignTokensAction.data);
             // eosio.token::transfer
-            expect(checkAction(actionTraces[0].inline_traces[1], "eosio.token", "eosio.token", "transfer", eosioTokenTransferData)).toBeTruthy();
+            checkAction(actionTraces[0].inline_traces[1], "eosio.token", "eosio.token", "transfer", eosioTokenTransferData);
             // eosio.token::transfer account notifications (2x)
-            expect(checkAction(actionTraces[0].inline_traces[1].inline_traces[0], sender, "eosio.token", "transfer", eosioTokenTransferData)).toBeTruthy();
-            expect(checkAction(actionTraces[0].inline_traces[1].inline_traces[1], CONTRACT_NAME, "eosio.token", "transfer", eosioTokenTransferData)).toBeTruthy();
+            checkAction(actionTraces[0].inline_traces[1].inline_traces[0], sender, "eosio.token", "transfer", eosioTokenTransferData)
+            checkAction(actionTraces[0].inline_traces[1].inline_traces[1], contract, "eosio.token", "transfer", eosioTokenTransferData);
 
             // vesting.tmy::assigntokens for accountName2
-            expect(checkAction(actionTraces[1], CONTRACT_NAME, CONTRACT_NAME, 'assigntokens', assignTokensAction2.data)).toBeTruthy();
+            checkAction(actionTraces[1], contract, contract, 'assigntokens', assignTokensAction2.data);
             // vesting.tmy::assigntokens account notification
-            expect(checkAction(actionTraces[1].inline_traces[0], accountName2, CONTRACT_NAME, 'assigntokens', assignTokensAction2.data)).toBeTruthy();
+            checkAction(actionTraces[1].inline_traces[0], accountName2, contract, 'assigntokens', assignTokensAction2.data);
             // eosio.token::transfer
-            expect(checkAction(actionTraces[1].inline_traces[1], "eosio.token", "eosio.token", "transfer", eosioTokenTransferData)).toBeTruthy();
+            checkAction(actionTraces[1].inline_traces[1], "eosio.token", "eosio.token", "transfer", eosioTokenTransferData)
             // eosio.token::transfer account notifications (2x)
-            expect(checkAction(actionTraces[1].inline_traces[1].inline_traces[0], sender, "eosio.token", "transfer", eosioTokenTransferData)).toBeTruthy();
-            expect(checkAction(actionTraces[1].inline_traces[1].inline_traces[1], CONTRACT_NAME, "eosio.token", "transfer", eosioTokenTransferData)).toBeTruthy();
+            checkAction(actionTraces[1].inline_traces[1].inline_traces[0], sender, "eosio.token", "transfer", eosioTokenTransferData)
+            checkAction(actionTraces[1].inline_traces[1].inline_traces[1], contract, "eosio.token", "transfer", eosioTokenTransferData);
 
             vestedBalance = await vestingContract.getBalance(accountName);
             vestedBalance2 = await vestingContract.getBalance(accountName2);
