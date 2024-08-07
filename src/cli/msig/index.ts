@@ -1,5 +1,5 @@
 import { PrivateKey, Name, Checksum256, PublicKey, Weight } from '@wharfkit/antelope';
-import { EosioMsigContract, setSettings } from '../../sdk';
+import { EosioMsigContract, SdkError, SdkErrors, setSettings } from '../../sdk';
 import {
     ActionData,
     createSigner,
@@ -172,6 +172,7 @@ export default async function msig(args: string[]) {
             });
             const results: { accountName: string; usdQuantity: number }[] = [];
 
+            const unfoundAccounts: string[] = [];
             await Promise.all(
                 records.map(async (data: any) => {
                     // accountName, usdQuantity
@@ -180,21 +181,34 @@ export default async function msig(args: string[]) {
                     }
 
                     // check account exists
-                    await getAccount(data.accountName);
+                    try {
+                        await getAccount(data.accountName);
 
-                    data.usdQuantity = Number(data.usdQuantity);
+                        data.usdQuantity = Number(data.usdQuantity);
 
-                    if (isNaN(data.usdQuantity)) {
-                        throw new Error(`Invalid quantity type on line ${results.length + 1}: ${data}`);
+                        if (isNaN(data.usdQuantity)) {
+                            throw new Error(`Invalid quantity type on line ${results.length + 1}: ${data}`);
+                        }
+
+                        if (data.usdQuantity <= 0 || data.usdQuantity > 100000) {
+                            throw new Error(`Invalid quantity on line ${results.length + 1}: ${data}`);
+                        }
+
+                        results.push(data);
+                    } catch (e) {
+                        if (e instanceof SdkError && e.code === SdkErrors.AccountDoesntExist) {
+                            unfoundAccounts.push(data.accountName);
+                        } else {
+                            throw e;
+                        }
                     }
-
-                    if (data.usdQuantity <= 0 || data.usdQuantity > 100000) {
-                        throw new Error(`Invalid quantity on line ${results.length + 1}: ${data}`);
-                    }
-
-                    results.push(data);
                 })
             );
+
+            if (unfoundAccounts.length > 0) {
+                console.log(`${unfoundAccounts.length} accounts were not found in environment ${settings.env}:`, unfoundAccounts);
+                process.exit(1);
+            }
 
             const actions = results.map((data) => {
                 const leosNumber = data.usdQuantity / leosPrice;
@@ -221,6 +235,8 @@ export default async function msig(args: string[]) {
                     },
                 };
             });
+
+            console.log(`Total ${actions.length} accounts to be paid`);
 
             const proposalHash = await createProposal(proposer, proposalName, actions, privateKey, [requiredAuthority]);
 
