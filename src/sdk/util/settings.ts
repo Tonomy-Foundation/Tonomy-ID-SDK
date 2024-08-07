@@ -1,8 +1,11 @@
 'use strict';
 import { SdkErrors, throwError } from './errors';
+import Debug from 'debug';
+
+const debug = Debug('tonomy-sdk:settings');
 
 if (typeof Proxy === 'undefined') {
-    throw new Error("This browser doesn't support Proxy");
+    throw new Error("This environment doesn't support Proxy");
 }
 
 export type LoggerLevel = 'emergency' | 'alert' | 'critical' | 'error' | 'warning' | 'notice' | 'info' | 'debug';
@@ -20,13 +23,26 @@ export type SettingsType = {
     currencySymbol: string;
 };
 
+type FetchType = (input: RequestInfo, init?: RequestInit) => Promise<Response>;
+
 let settings: SettingsType;
+let fetchFunction: FetchType;
 let initialized = false;
 
-export function setSettings(newSettings: Partial<SettingsType>) {
-    if (newSettings.loggerLevel === 'debug') console.debug('setSettings', newSettings);
+export function setSettings(newSettings: Partial<SettingsType>): void {
+    debug('Settings initialized', newSettings);
     settings = newSettings as SettingsType;
     initialized = true;
+}
+
+export function setFetch(fetch: FetchType): void {
+    debug('Fetch initialized', typeof fetch);
+    fetchFunction = fetch;
+}
+
+export function getFetch(): FetchType | undefined {
+    debug('Fetch requested', typeof fetchFunction);
+    return fetchFunction;
 }
 
 export function getSettings(): SettingsType {
@@ -50,6 +66,8 @@ export function getSettings(): SettingsType {
 }
 
 export function isProduction(): boolean {
+    debug('Checking if production for environment:', settings.environment);
+
     if (!initialized) {
         throwError('Settings not yet initialized', SdkErrors.SettingsNotInitialized);
     }

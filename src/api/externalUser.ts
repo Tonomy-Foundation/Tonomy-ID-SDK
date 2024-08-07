@@ -29,6 +29,9 @@ import { createDidKeyIssuerAndStore } from '../sdk/helpers/didKeyStorage';
 import { getLoginRequestResponseFromUrl } from '../sdk/helpers/urls';
 import { verifyKeyExistsForApp } from '../sdk/helpers/user';
 import { IOnPressLoginOptions } from '../sdk/types/User';
+import Debug from 'debug';
+
+const debug = Debug('tonomy-sdk:externalUser');
 
 /**
  * The storage data for an external user that has logged in with Tonomy ID
@@ -456,11 +459,10 @@ export class ExternalUser {
         };
         const signer = this.getTransactionSigner();
 
-        if (getSettings().loggerLevel === 'debug')
-            console.log(
-                `signTransaction() called by ${account.toString()} with permission ${permission.toString()} to contract ${contractAccount.toString()}`,
-                JSON.stringify(newAction, null, 2)
-            );
+        debug(
+            `signTransaction() called by ${account.toString()} with permission ${permission.toString()} to contract ${contractAccount.toString()}`,
+            JSON.stringify(newAction, null, 2)
+        );
 
         return await transact(Name.from(contractAccount), [newAction], signer);
     }

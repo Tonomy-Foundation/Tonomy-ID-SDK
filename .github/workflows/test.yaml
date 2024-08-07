@@ -1,9 +1,7 @@
 name: Run Tonomy-ID-SDK Tests
 
 on:
-  pull_request:
-    branches:
-    - development
+  push
 
 jobs:
   test:
@@ -11,6 +9,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+      
+      - name: Enable Corepack before setting up Node
+        run: corepack enable
 
       - name: Run lint and test
         uses: actions/setup-node@v4
@@ -18,20 +19,9 @@ jobs:
           node-version: 22.3.0
           cache: yarn
       - run: yarn install --immutable
+      - run: yarn run build
       - run: yarn run lint
       - run: yarn run test:unit
-
-  check-outdated-packages:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Check for outdated packages
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22.3.0
-          cache: yarn
-      - run: yarn outdated || echo "WARNING:Packages outdate. Update packages with 'yarn upgrade-interactive --latest'" && exit 1
   
   compile-contracts:
     name: Compiles contracts needed for bootstrap script
@@ -101,6 +91,9 @@ jobs:
         with:
           name: Tonomy-Contracts
           path: ./Tonomy-Contracts
+      
+      - name: Enable Corepack before setting up Node
+        run: corepack enable
 
       - name: Install SDK and Bootstrap blockchain
         uses: actions/setup-node@v4
@@ -108,6 +101,7 @@ jobs:
           node-version: 22.3.0
           cache: yarn
       - run: yarn install --immutable
+      - run: yarn run build
       - run: yarn run cli bootstrap
 
       - name: Run integration and governance tests

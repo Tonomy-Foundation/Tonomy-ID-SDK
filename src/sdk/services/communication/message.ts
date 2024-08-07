@@ -197,8 +197,6 @@ export class LoginRequestResponseMessage extends Message<LoginRequestResponseMes
         super(vc);
         const payload = this.getVc().getPayload().vc.credentialSubject.payload;
 
-        // console.log('LoginRequestResponseMessage', payload);
-
         if (payload.success) {
             if (!payload.response) {
                 throw new Error('LoginRequestsResponseMessage must have a response property');

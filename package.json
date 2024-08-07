@@ -1,5 +1,5 @@
 {
-  "version": "0.21.0-development.4",
+  "version": "0.21.0-development.5",
   "license": "Apache-2.0",
   "type": "module",
   "source": "src/sdk/index.ts",
@@ -43,6 +43,32 @@
   },
   "name": "@tonomy/tonomy-id-sdk",
   "author": "Jack Tanner",
+  "dependencies": {
+    "@consento/sync-randombytes": "^1.0.5",
+    "@tonomy/antelope-did-resolver": "^0.10.0",
+    "@veramo/core": "^6.0.0",
+    "@veramo/credential-w3c": "^6.0.0",
+    "@veramo/data-store": "^6.0.0",
+    "@veramo/did-manager": "^6.0.0",
+    "@veramo/did-provider-ethr": "^6.0.0",
+    "@veramo/did-provider-key": "^6.0.0",
+    "@veramo/did-resolver": "^6.0.0",
+    "@veramo/key-manager": "^6.0.0",
+    "@veramo/kms-local": "^6.0.0",
+    "@wharfkit/antelope": "^1.0.7",
+    "argon2": "^0.40.3",
+    "cross-fetch": "^4.0.0",
+    "csv-parse": "^5.5.6",
+    "debug": "^4.3.6",
+    "ethers": "^6.13.1",
+    "ethr-did-resolver": "^10.1.9",
+    "reflect-metadata": "^0.2.2",
+    "socket.io-client": "^4.7.5",
+    "sqlite3": "^5.1.7",
+    "typeorm": "^0.3.20",
+    "universal-base64url": "^1.1.0",
+    "web-did-resolver": "^2.0.27"
+  },
   "devDependencies": {
     "@babel/core": "^7.24.7",
     "@babel/node": "^7.24.7",
@@ -50,8 +76,8 @@
     "@babel/preset-typescript": "^7.24.7",
     "@semantic-release/changelog": "^6.0.2",
     "@semantic-release/git": "^10.0.1",
+    "@types/debug": "^4.1.12",
     "@types/elliptic": "^6.4.18",
-    "@types/eslint__js": "^8.42.3",
     "@types/jest": "^29.5.12",
     "address": "^2.0.3",
     "babel-jest": "^29.7.0",
@@ -75,36 +101,6 @@
     "typescript-eslint": "^7.13.1",
     "ws": "^8.18.0"
   },
-  "dependencies": {
-    "@consento/sync-randombytes": "^1.0.5",
-    "@tonomy/antelope-did": "^0.1.5",
-    "@tonomy/antelope-did-resolver": "^0.8.0",
-    "@veramo/core": "^6.0.0",
-    "@veramo/credential-w3c": "^6.0.0",
-    "@veramo/data-store": "^6.0.0",
-    "@veramo/did-manager": "^6.0.0",
-    "@veramo/did-provider-ethr": "^6.0.0",
-    "@veramo/did-provider-key": "^6.0.0",
-    "@veramo/did-resolver": "^6.0.0",
-    "@veramo/key-manager": "^6.0.0",
-    "@veramo/kms-local": "^6.0.0",
-    "@wharfkit/antelope": "^1.0.7",
-    "argon2": "^0.40.3",
-    "base64url": "^3.0.1",
-    "cross-fetch": "^4.0.0",
-    "csv-parse": "^5.5.6",
-    "did-jwt": "^8.0.4",
-    "did-jwt-vc": "^4.0.4",
-    "did-resolver": "^4.1.0",
-    "ethers": "^6.13.1",
-    "ethr-did-resolver": "^10.1.9",
-    "reflect-metadata": "^0.2.2",
-    "socket.io-client": "^4.7.5",
-    "sqlite3": "^5.1.7",
-    "typeorm": "^0.3.20",
-    "universal-base64url": "^1.1.0",
-    "web-did-resolver": "^2.0.27"
-  },
   "publishConfig": {
     "access": "public"
   },
@@ -116,5 +112,8 @@
     "sdk",
     "tonomy"
   ],
-  "packageManager": "yarn@1.22.19+sha1.4ba7fc5c6e704fce2066ecbfb0b0d8976fe62447"
+  "resolutions": {
+    "jsonld": "link:./node_modules/@digitalcredentials/jsonld"
+  },
+  "packageManager": "yarn@4.3.1"
 }

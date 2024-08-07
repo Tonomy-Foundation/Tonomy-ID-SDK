@@ -2,8 +2,6 @@ import { PrivateKey, Name, Checksum256, PublicKey, Weight } from '@wharfkit/ante
 import { EosioMsigContract, setSettings } from '../../sdk';
 import {
     ActionData,
-    Authority,
-    EosioTokenContract,
     createSigner,
     getAccount,
     getProducers,
@@ -11,6 +9,12 @@ import {
 import { parse } from 'csv-parse/sync';
 import fs from 'fs';
 import settings from '../bootstrap/settings';
+import { govMigrate } from './govMigrate';
+import { newAccount } from './newAccount';
+import { transfer } from './transfer';
+import { addAuth } from './addAuth';
+import { deployContract } from './deployContract';
+import { addEosioCode } from './addEosioCode';
 import { printCliHelp } from '..';
 
 const eosioMsigContract = EosioMsigContract.Instance;
@@ -19,7 +23,7 @@ const governanceAccounts = ['1.found.tmy', '2.found.tmy', '3.found.tmy'];
 let newGovernanceAccounts = ['14.found.tmy', '5.found.tmy', '11.found.tmy', '12.found.tmy', '13.found.tmy'];
 
 if (!settings.isProduction()) {
-    newGovernanceAccounts.push(...governanceAccounts);
+    newGovernanceAccounts = governanceAccounts;
 }
 
 export default async function msig(args: string[]) {
@@ -48,8 +52,18 @@ export default async function msig(args: string[]) {
         }
     }
 
-    const proposer = settings.isProduction() ? '14.found.tmy' : '1.found.tmy';
-    const privateKey = PrivateKey.from(process.env.SIGNING_KEY || '');
+    const proposer = newGovernanceAccounts[0];
+    let signingKey: string | undefined = process.env.SIGNING_KEY;
+
+    if (!signingKey) {
+        if (!process.env.TONOMY_BOARD_PRIVATE_KEYS)
+            throw new Error('Neither SIGNING_KEY or TONOMY_BOARD_PRIVATE_KEYS are set');
+        const tonomyGovKeys: string[] = JSON.parse(process.env.TONOMY_BOARD_PRIVATE_KEYS).keys;
+
+        signingKey = tonomyGovKeys[0];
+    }
+
+    const privateKey = PrivateKey.from(signingKey);
     const signer = createSigner(privateKey);
 
     if (args[0] === 'cancel') {
@@ -69,111 +83,77 @@ export default async function msig(args: string[]) {
         const proposalName = Name.from(args[2]);
 
         if (proposalType === 'gov-migrate') {
-            const threshold = settings.isProduction() ? 3 : 2;
-            const action = {
-                account: 'tonomy',
-                name: 'updateauth',
-                authorization: [
-                    {
-                        actor: 'tonomy',
-                        permission: 'active',
-                    },
-                    {
-                        actor: 'tonomy',
-                        permission: 'owner',
-                    },
-                ],
-                data: {
-                    account: 'found.tmy',
-                    permission: 'owner',
-                    parent: '',
-                    auth: Authority.fromAccountArray(newGovernanceAccounts, 'active', threshold),
-                    // eslint-disable-next-line camelcase
-                    auth_parent: false, // should be true when a new permission is being created, otherwise false
-                },
-            };
-
-            const proposalHash = await createProposal(proposer, proposalName, [action], privateKey, governanceAccounts);
-
-            if (test) await executeProposal(proposer, proposalName, proposalHash);
-        } else if (proposalType === 'new-account') {
-            const newAccount = 'advteam.tmy';
-
-            const activeAuth = Authority.fromAccount({ actor: 'team.tmy', permission: 'active' });
-            const additionalAuthority = test ? governanceAccounts[2] : '11.found.tmy';
-
-            activeAuth.addAccount({ actor: additionalAuthority, permission: 'active' });
-            const action = {
-                account: 'tonomy',
-                name: 'newaccount',
-                authorization: [
-                    {
-                        actor: 'tonomy',
-                        permission: 'owner',
-                    },
-                    {
-                        actor: 'tonomy',
-                        permission: 'active',
-                    },
-                ],
-                data: {
-                    creator: 'tonomy',
-                    name: newAccount,
-                    owner: Authority.fromAccount({ actor: 'team.tmy', permission: 'owner' }),
-                    active: activeAuth,
-                },
-            };
-
-            const proposalHash = await createProposal(
-                proposer,
-                proposalName,
-                [action],
-                privateKey,
-                newGovernanceAccounts
+            await govMigrate(
+                { newGovernanceAccounts },
+                {
+                    proposer,
+                    proposalName,
+                    privateKey,
+                    requested: governanceAccounts,
+                    test,
+                }
             );
-
-            if (test) await executeProposal(proposer, proposalName, proposalHash);
+        } else if (proposalType === 'new-account') {
+            await newAccount(
+                { governanceAccounts },
+                {
+                    proposer,
+                    proposalName,
+                    privateKey,
+                    requested: newGovernanceAccounts,
+                    test,
+                }
+            );
         } else if (proposalType === 'transfer') {
             const from = 'team.tmy';
             const to = 'advteam.tmy';
 
-            const amountUsd = 100000;
-            const price = 0.012;
-            const amount = amountUsd / price;
-            const quantity = amount.toFixed(0) + '.000000 LEOS';
+            await transfer(
+                { from, to },
+                {
+                    proposer,
+                    proposalName,
+                    privateKey,
+                    requested: newGovernanceAccounts,
+                    test,
+                }
+            );
+        } else if (proposalType === 'deploy-contract') {
+            const contractName = args[3];
 
-            const balance = await EosioTokenContract.Instance.getBalance(from);
-
-            if (balance < amount) {
-                throw new Error(`Insufficient balance. Required: ${amount}, Available: ${balance}`);
-            }
-
-            const action = {
-                account: 'eosio.token',
-                name: 'transfer',
-                authorization: [
-                    {
-                        actor: from,
-                        permission: 'active',
-                    },
-                ],
-                data: {
-                    from,
-                    to,
-                    quantity,
-                    memo: 'To pay advisors',
-                },
-            };
-
-            const proposalHash = await createProposal(
+            await deployContract(
+                { contractName },
+                {
+                    proposer,
+                    proposalName,
+                    privateKey,
+                    requested: newGovernanceAccounts,
+                    test,
+                }
+            );
+        } else if (proposalType === 'eosio.code-permission') {
+            await addEosioCode({
                 proposer,
                 proposalName,
-                [action],
                 privateKey,
-                newGovernanceAccounts
+                requested: newGovernanceAccounts,
+                test,
+            });
+        } else if (proposalType === 'add-auth') {
+            await addAuth(
+                {
+                    account: 'coinsale.tmy',
+                    permission: 'active',
+                    newDelegate: settings.isProduction() ? '14.found.tmy' : governanceAccounts[2],
+                },
+                {
+                    proposer,
+                    proposalName,
+                    privateKey,
+                    requested: newGovernanceAccounts,
+                    test,
+                }
             );
-
-            if (test) await executeProposal(proposer, proposalName, proposalHash);
         } else if (proposalType === 'vesting-bulk') {
             const csvFilePath = '/home/dev/Downloads/allocate.csv';
 
@@ -379,7 +359,6 @@ export default async function msig(args: string[]) {
 
             if (test) await executeProposal(proposer, proposalName, proposalHash);
         } else {
-            printCliHelp();
             throw new Error(`Invalid msig proposal type ${proposalType}`);
         }
     } else if (args[0] === 'approve') {
@@ -412,7 +391,7 @@ export default async function msig(args: string[]) {
     }
 }
 
-async function createProposal(
+export async function createProposal(
     proposer: string,
     proposalName: Name,
     actions: ActionData[],
@@ -455,9 +434,9 @@ async function createProposal(
         console.log('You have 7 days to approve and execute the proposal.');
         return proposalHash;
     } catch (e) {
-        if (e?.error?.details[0]?.message.includes('transaction declares authority')) {
+        if (e?.error?.details[0]?.message === 'assertion failure with message: transaction authorization failed') {
             throw new Error(
-                'The transaction authorization requirements are not correct. Check the action authorizations, and the "requested" permissions.'
+                'The transaction authorization requirements are not correct. Check the action authorizations are correct, and the "requested" permissions.'
             );
         } else {
             console.error('Error: ', JSON.stringify(e, null, 2));
@@ -466,7 +445,7 @@ async function createProposal(
     }
 }
 
-async function executeProposal(proposer: string, proposalName: Name, proposalHash: Checksum256) {
+export async function executeProposal(proposer: string, proposalName: Name, proposalHash: Checksum256) {
     if (!process.env.TONOMY_BOARD_PRIVATE_KEYS) throw new Error('TONOMY_BOARD_PRIVATE_KEYS not set');
     const tonomyGovKeys: string[] = JSON.parse(process.env.TONOMY_BOARD_PRIVATE_KEYS).keys;
     const tonomyGovSigners = tonomyGovKeys.map((key) => createSigner(PrivateKey.from(key)));
@@ -492,3 +471,11 @@ async function executeProposal(proposer: string, proposalName: Name, proposalHas
         console.error('Transaction failed');
     }
 }
+
+export type StandardProposalOptions = {
+    proposer: string;
+    proposalName: Name;
+    privateKey: PrivateKey;
+    requested: string[];
+    test?: boolean;
+};

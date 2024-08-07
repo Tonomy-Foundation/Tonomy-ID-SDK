@@ -4,7 +4,7 @@ import { TextEncoder, TextDecoder } from 'util';
 import { jest } from '@jest/globals';
 
 global.TextEncoder = TextEncoder;
-// @ts-expect-error TextDecoder bs...
+// @ts-expect-error TextDecoder type error
 global.TextDecoder = TextDecoder;
 
 // Mocking ws module

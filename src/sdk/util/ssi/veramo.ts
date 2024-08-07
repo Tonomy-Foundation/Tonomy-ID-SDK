@@ -22,8 +22,11 @@ import { getResolver as webDidResolver } from 'web-did-resolver';
 import { Entities, KeyStore, DIDStore, PrivateKeyStore, migrations } from '@veramo/data-store';
 import { DataSource } from 'typeorm';
 import { Wallet } from 'ethers';
+import Debug from 'debug';
 
-const DATABASE_FILE = 'database.sqlite';
+const debug = Debug('tonomy-sdk:util:ssi:veramo');
+
+const DATABASE_FILE = '.database.sqlite.test';
 const INFURA_PROJECT_ID = 'e19492ad3c7d409ca266f23af0a097d7';
 const KMS_SECRET_KEY = 'a8add1db4f64e6117667708d261e6fd9f4de85209ba690ad254fa8ecb26ffe03';
 
@@ -31,7 +34,15 @@ type AgentType = IDIDManager & IKeyManager & IDataStore & IDataStoreORM & IResol
 
 export let dbConnection: DataSource;
 
-export async function setupDatabase() {
+export async function setupDatabase(datasource?: DataSource) {
+    debug('Setting up database');
+
+    if (datasource) {
+        debug('Using provided datasource');
+        dbConnection = await datasource.initialize();
+        return;
+    }
+
     dbConnection = await new DataSource({
         type: 'sqlite',
         database: DATABASE_FILE,
@@ -44,8 +55,10 @@ export async function setupDatabase() {
 }
 
 export async function veramo() {
+    debug('Running veramo');
     const agent = await setup();
 
+    debug('Listing identifiers');
     await listIdentifiers(agent);
     await createIdentifier(agent);
     const verifiableCredential = await createCredential(agent);
@@ -87,24 +100,22 @@ async function setup(): Promise<AgentType> {
 }
 
 async function listIdentifiers(agent: AgentType) {
-    await agent.didManagerFind({ alias: 'default' });
-    // const identifiers = await agent.didManagerFind({ alias: 'default' });
+    const identifiers = await agent.didManagerFind({ alias: 'default' });
 
-    // console.log(`There are ${identifiers.length} identifiers`)
+    debug(`There are ${identifiers.length} identifiers`);
 
-    // if (identifiers.length > 0) {
-    //     identifiers.map((id) => {
-    //         console.log(id)
-    //         console.log('..................')
-    //     })
-    // }
+    if (identifiers.length > 0) {
+        identifiers.map((id) => {
+            debug(id);
+        });
+    }
 }
 
 async function createIdentifier(agent: AgentType) {
-    await agent.didManagerCreate({ alias: 'default' });
-    // const identifier = await agent.didManagerCreate({ alias: 'default' });
-    // console.log(`New identifier created`, identifier.did)
-    // console.log(JSON.stringify(identifier, null, 2))
+    const identifier = await agent.didManagerCreate({ alias: 'default' });
+
+    debug(`New identifier created`, identifier.did);
+    debug(JSON.stringify(identifier, null, 2));
 }
 
 async function createCredential(agent: AgentType): Promise<VerifiableCredential> {
@@ -120,19 +131,22 @@ async function createCredential(agent: AgentType): Promise<VerifiableCredential>
         proofFormat: 'jwt',
     });
 
-    // console.log(`New credential created`, verifiableCredential.id)
-    // console.log(JSON.stringify(verifiableCredential, null, 2))
+    debug(`New credential created`, verifiableCredential.id);
+    debug(JSON.stringify(verifiableCredential, null, 2));
     return verifiableCredential;
 }
 
 async function verifyCredential(agent: AgentType, verifiableCredential: VerifiableCredential) {
     const result = await agent.verifyCredential({ credential: verifiableCredential });
-    // console.log(`Credential verified`, result.verified)
+
+    debug(`Credential verified`, result.verified);
 }
 
 export async function veramo2() {
     const kid = 'testing';
     const key = Wallet.createRandom().privateKey;
+
+    debug('Creating key', kid, key);
     const keyManager = new KeyManager({
         store: new KeyStore(dbConnection),
         kms: {
@@ -140,6 +154,8 @@ export async function veramo2() {
         },
     });
 
+    debug('Setup for key import');
     keyManager.keyManagerCreate({ type: 'Secp256k1', kms: 'local', meta: { encryption: ['ECDH-ES'] } });
+    debug('Importing key');
     keyManager.keyManagerImport({ type: 'Secp256k1', kms: 'local', privateKeyHex: key, kid });
 }

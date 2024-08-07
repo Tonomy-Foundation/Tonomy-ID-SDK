@@ -40,10 +40,6 @@ This builds to `/build` and runs the project in watch mode so any edits you save
 
 To do a one-off build, use `yarn run build`.
 
-## Tests
-
-To show logs during tests `export LOG=true`
-
 ### Unit tests
 
 Tests individual class and function logic within the SDK.
@@ -107,3 +103,7 @@ yarn run lint
 ## Error handling
 
 See [errors.ts](./src/services/errors.ts). All errors have a registered unique enumeration code.
+
+## Debugging
+
+Uses [debug](https://www.npmjs.com/package/debug) package. Use `export DEBUG="tonomy*"` to see all debug logs.

@@ -17,11 +17,14 @@ import { jsStorageFactory } from '../../src/cli/bootstrap/jsstorage';
 import { generatePrivateKeyFromPassword } from '../../src/cli/bootstrap/keys';
 import { createUser } from '../../src/cli/bootstrap/user';
 import { DIDurl } from '../../src/sdk/util/ssi/types';
-import { generateRandomKeywords, getSettings } from '../../src/sdk/util';
+import { generateRandomKeywords } from '../../src/sdk/util';
 import { RequestsManager } from '../../src/sdk/helpers/requestsManager';
 import { ExternalUserLoginTestOptions } from '../externalUser.integration.test';
 import { getTonomyOperationsKey } from '../../src/sdk/services/blockchain/eosio/eosio';
 import { createSigner } from '../../src/sdk/services/blockchain';
+import Debug from 'debug';
+
+const debug = Debug('tonomy-sdk-tests:helpers:user');
 
 export interface IUserPublic extends IUser {
     keyManager: KeyManager;
@@ -81,7 +84,7 @@ export async function loginToTonomyCommunication(user: IUserPublic) {
     // Login to Tonomy Communication as the user
     const authMessage = await AuthenticationMessage.signMessageWithoutRecipient({}, issuer);
 
-    if (getSettings().loggerLevel === 'debug') console.log('TONOMY_ID/appStart: connect to Tonomy Communication');
+    debug('TONOMY_ID/appStart: connect to Tonomy Communication');
 
     const loginResponse = await user.loginCommunication(authMessage);
 
@@ -89,7 +92,7 @@ export async function loginToTonomyCommunication(user: IUserPublic) {
 }
 
 export async function scanQrAndAck(user: IUserPublic, qrCodeData: string) {
-    if (getSettings().loggerLevel === 'debug') console.log('TONOMY_ID/scanQR: Scanning QR code with Tonomy ID app');
+    debug('TONOMY_ID/scanQR: Scanning QR code with Tonomy ID app');
 
     // BarCodeScannerResult. See Tonomy-ID/node_modules/expo-barcode-scanner/src/BarCodeScanner.tsx
     const barcodeScanResults = {
@@ -98,8 +101,7 @@ export async function scanQrAndAck(user: IUserPublic, qrCodeData: string) {
 
     const connectMessage = await IdentifyMessage.signMessage({}, await user.getIssuer(), barcodeScanResults.data);
 
-    if (getSettings().loggerLevel === 'debug')
-        console.log("TONOMY_ID/scanQr: connecting to Tonomy Login Website's with their did:key from the QR code");
+    debug("TONOMY_ID/scanQr: connecting to Tonomy Login Website's with their did:key from the QR code");
     const sendMessageResponse = await user.sendMessage(connectMessage);
 
     expect(sendMessageResponse).toBe(true);
@@ -116,14 +118,13 @@ export async function setupLoginRequestSubscriber(
         user.subscribeMessage(async (message) => {
             const loginRequestMessage = new LoginRequestsMessage(message);
 
-            if (getSettings().loggerLevel === 'debug')
-                console.log('TONOMY_ID/SSO: receive login requests from Tonomy Login Website');
+            debug('TONOMY_ID/SSO: receive login requests from Tonomy Login Website');
 
             // receive and verify the requests
             const requests = loginRequestMessage.getPayload().requests;
 
             // TODO check this throws an error if requests are not valid, or not signed correctly
-            if (getSettings().loggerLevel === 'debug') console.log('TONOMY_ID/SSO: verifying login request');
+            debug('TONOMY_ID/SSO: verifying login request');
             const managedRequests = new RequestsManager(requests);
 
             await managedRequests.verify();
@@ -138,8 +139,7 @@ export async function setupLoginRequestSubscriber(
 
             await managedResponses.fetchMeta({ accountName: await user.getAccountName() });
 
-            if (getSettings().loggerLevel === 'debug')
-                console.log('TONOMY_ID/SSO: accepting login requests and sending confirmation to Tonomy Login Website');
+            debug('TONOMY_ID/SSO: accepting login requests and sending confirmation to Tonomy Login Website');
             await user.acceptLoginRequest(managedResponses, 'browser', { messageRecipient: receiverDid });
 
             resolve(true);
