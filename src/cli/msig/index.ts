@@ -1,11 +1,6 @@
 import { PrivateKey, Name, Checksum256, PublicKey, Weight } from '@wharfkit/antelope';
 import { EosioMsigContract, SdkError, SdkErrors, setSettings } from '../../sdk';
-import {
-    ActionData,
-    createSigner,
-    getAccount,
-    getProducers,
-} from '../../sdk/services/blockchain';
+import { ActionData, createSigner, getAccount, getProducers } from '../../sdk/services/blockchain';
 import { parse } from 'csv-parse/sync';
 import fs from 'fs';
 import settings from '../bootstrap/settings';
@@ -173,6 +168,7 @@ export default async function msig(args: string[]) {
             const results: { accountName: string; usdQuantity: number }[] = [];
 
             const unfoundAccounts: string[] = [];
+
             await Promise.all(
                 records.map(async (data: any) => {
                     // accountName, usdQuantity
@@ -206,7 +202,10 @@ export default async function msig(args: string[]) {
             );
 
             if (unfoundAccounts.length > 0) {
-                console.log(`${unfoundAccounts.length} accounts were not found in environment ${settings.env}:`, unfoundAccounts);
+                console.log(
+                    `${unfoundAccounts.length} accounts were not found in environment ${settings.env}:`,
+                    unfoundAccounts
+                );
                 process.exit(1);
             }
 
