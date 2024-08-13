@@ -51,7 +51,7 @@ Then you will need to deploy each service, with configuration so that they conne
 5. Issue a specific amount of the newly created currency to the 'eosio.token' account using the `issue()` function
 6. Create the `id.tmy` account on the blockchain
 7. Deploy the [id.tmy](https://github.com/Tonomy-Foundation/Tonomy-Contracts/tree/master/contracts/tonomy) contract to the `id.tmy` account on the blockchain
-8. [Register your applications](../start/register-app.md) that you wish to connect to Pangea Passport
+8. [Register your applications](../build-web4-apps/start/register-app.md) that you wish to connect to Pangea Passport
 9. Configure the software with the `config.json` file in the repository so that they are connected correctly using your domains, and to white-label the applications:
    * Copy the following files and use environment variables to change which configuration file is used
    * [Pangea Passport config.json](https://github.com/Tonomy-Foundation/Tonomy-ID/blob/master/src/config/config.production.json)
@@ -66,13 +66,13 @@ Then you will need to deploy each service, with configuration so that they conne
 
 #### (Optional) Sign blockchain transactions in your apps
 
-If you want to have your applications sign blockchain transactions, see[ Sign a blockchain transaction ](../start/usage.md)for how to configure your smart contracts.
+If you want to have your applications sign blockchain transactions, see[ Sign a blockchain transaction ](../build-web4-apps/start/usage.md)for how to configure your smart contracts.
 
-#### (Optional) Run the [Demo website](<../README (1).md>)
+#### (Optional) Run the [Demo website](broken-reference)
 
-To run the [Demo website](../../examples/#tonomy-demo-integration-application)[ ](<../README (1).md>)in your network follow these extra steps:
+To run the [Demo website](../../examples/#tonomy-demo-integration-application)[ ](broken-reference)in your network follow these extra steps:
 
-1. [Register the application](../start/register-app.md) using the domain you wish to run the Demo website from
+1. [Register the application](../build-web4-apps/start/register-app.md) using the domain you wish to run the Demo website from
 2. Deploy the [demo.tmy](https://github.com/Tonomy-Foundation/Tonomy-Contracts/tree/master/contracts/demo.tmy) contract to the `demo.tmy` account (or modify the Demo website to connect to a different account)
 3. Call `addperm()` function with the account name of the registered Demo application (Step 1)
 4. Create dummy accounts as shown in the [bootstrap script here](https://github.com/Tonomy-Foundation/Tonomy-ID-SDK/blob/9061250ffceeddbbbf183a6ea03dfe7d5e1685c0/src/cli/bootstrap/bootstrap.ts#L88)

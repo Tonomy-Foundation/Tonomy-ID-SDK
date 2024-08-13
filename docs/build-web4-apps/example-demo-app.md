@@ -1,4 +1,4 @@
-# Example Applications
+# Example demo app
 
 Open-source applications that illustrate how to use Pangea Passport.
 

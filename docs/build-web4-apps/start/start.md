@@ -13,4 +13,4 @@ See a demo Reactjs website use SSO to log in with Pangea Passport and sign data 
 To integrate with Pangea Passport, **you must already have a deployed Pangea Passport network**.
 
 * Use the Pangea Passport Demo network to try out integrating for the first time (this tutorial will use the demo network).
-* To deploy your own white-labelled Pangea Passport identity system see [Deploy Pangea Passport](../guides/deploy.md).
+* To deploy your own white-labelled Pangea Passport identity system see [Deploy Pangea Passport](../../run-tonomy-gov-os/deploy.md).
