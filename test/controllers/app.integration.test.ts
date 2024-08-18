@@ -1,3 +1,6 @@
+/**
+ * @jest-environment jsdom
+ */
 // need to use API types from inside tonomy-id-sdk, otherwise type compatibility issues
 import { createRandomApp, createRandomID } from '../helpers/user';
 import { AppStatusEnum, generateRandomKeyPair } from '../../src/sdk/index';

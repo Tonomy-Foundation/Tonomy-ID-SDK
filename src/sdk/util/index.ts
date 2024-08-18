@@ -8,7 +8,7 @@ export * from './serializable';
 export * from './passphrase';
 export * from './settings';
 export * from './ssi/did';
-export * from './ssi/did-jwk';
+export * from './ssi/did-key';
 export * from './ssi/vc';
 export * from './ssi/types';
 export * from './time';

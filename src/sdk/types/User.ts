@@ -1,7 +1,7 @@
 import { Name, PrivateKey, Checksum256 } from '@wharfkit/antelope';
 import { GetPersonResponse } from '../services/blockchain/contracts/TonomyContract';
 import { TonomyUsername } from '../util/username';
-import { Issuer } from '@tonomy/did-jwt-vc';
+import { Issuer } from 'did-jwt-vc';
 import { AuthenticationMessage, Message } from '../services/communication/message';
 import { UserStatusEnum } from './UserStatusEnum';
 import { Subscriber } from '../services/communication/communication';

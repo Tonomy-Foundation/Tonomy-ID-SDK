@@ -1,4 +1,4 @@
-import address from 'address';
+import { ip } from 'address';
 import { LoggerLevel } from '../../sdk/util/settings';
 
 // cannot use NODE_ENV as it is always "production" on `yarn run build`
@@ -19,7 +19,7 @@ type ConfigType = {
     currencySymbol: string;
 };
 
-const ipAddress = address.ip();
+const ipAddress = ip();
 
 const defaultConfig = {
     environment: 'development',
