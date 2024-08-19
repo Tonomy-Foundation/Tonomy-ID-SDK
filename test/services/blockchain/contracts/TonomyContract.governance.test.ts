@@ -386,10 +386,7 @@ describe('TonomyContract class', () => {
                     const approve1Trx = await eosioMsigContract.approve(
                         proposer,
                         proposalName,
-                        {
-                            actor: Name.from(newAccounts[0]),
-                            permission: Name.from('active'),
-                        },
+                        Name.from(newAccounts[0]),
                         proposalHash,
                         newSigners[0]
                     );
@@ -399,10 +396,7 @@ describe('TonomyContract class', () => {
                     await eosioMsigContract.approve(
                         proposer,
                         proposalName,
-                        {
-                            actor: Name.from(newAccounts[1]),
-                            permission: Name.from('active'),
-                        },
+                        Name.from(newAccounts[1]),
                         proposalHash,
                         newSigners[1]
                     );
