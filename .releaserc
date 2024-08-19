@@ -12,10 +12,6 @@
     {
       "name": "development",
       "prerelease": "development"
-    },
-    {
-      "name": "feature/336-upgrade-to-veramo-2",
-      "prerelease": "test"
     }
   ],
   "plugins": [
