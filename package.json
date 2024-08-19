@@ -58,6 +58,7 @@
     "@wharfkit/antelope": "^1.0.7",
     "argon2": "^0.40.3",
     "cross-fetch": "^4.0.0",
+    "csv-parse": "^5.5.6",
     "debug": "^4.3.6",
     "ethers": "^6.13.1",
     "ethr-did-resolver": "^10.1.9",

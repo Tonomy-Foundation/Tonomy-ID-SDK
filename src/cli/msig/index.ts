@@ -1,6 +1,8 @@
-import { PrivateKey, Name, Checksum256 } from '@wharfkit/antelope';
-import { EosioMsigContract, setSettings } from '../../sdk';
-import { ActionData, createSigner } from '../../sdk/services/blockchain';
+import { PrivateKey, Name, Checksum256, PublicKey, Weight } from '@wharfkit/antelope';
+import { EosioMsigContract, SdkError, SdkErrors, setSettings } from '../../sdk';
+import { ActionData, createSigner, getAccount, getProducers } from '../../sdk/services/blockchain';
+import { parse } from 'csv-parse/sync';
+import fs from 'fs';
 import settings from '../bootstrap/settings';
 import { govMigrate } from './govMigrate';
 import { newAccount } from './newAccount';
@@ -147,8 +149,244 @@ export default async function msig(args: string[]) {
                     test,
                 }
             );
+        } else if (proposalType === 'vesting-bulk') {
+            const csvFilePath = '/home/dev/Downloads/allocate.csv';
+
+            console.log('Reading file: ', csvFilePath);
+            const sender = settings.isProduction() ? 'advteam.tmy' : 'team.tmy';
+            const requiredAuthority = test ? governanceAccounts[2] : '11.found.tmy';
+            const categoryId = 7; // Community and Marketing, Platform Dev, Infra Rewards
+            const leosPrice = 0.002; // Seed early bird price
+            // const leosPrice = 0.004; // Seed later comer price
+            // const leosPrice = 0.012; // TGE price
+
+            const records = parse(fs.readFileSync(csvFilePath, 'utf8'), {
+                columns: true,
+                // eslint-disable-next-line camelcase
+                skip_empty_lines: true,
+            });
+            const results: { accountName: string; usdQuantity: number }[] = [];
+
+            const unfoundAccounts: string[] = [];
+
+            await Promise.all(
+                records.map(async (data: any) => {
+                    // accountName, usdQuantity
+                    if (!data.accountName || !data.usdQuantity) {
+                        throw new Error(`Invalid CSV format on line ${results.length + 1}: ${data}`);
+                    }
+
+                    // check account exists
+                    try {
+                        await getAccount(data.accountName);
+
+                        data.usdQuantity = Number(data.usdQuantity);
+
+                        if (isNaN(data.usdQuantity)) {
+                            throw new Error(`Invalid quantity type on line ${results.length + 1}: ${data}`);
+                        }
+
+                        if (data.usdQuantity <= 0 || data.usdQuantity > 100000) {
+                            throw new Error(`Invalid quantity on line ${results.length + 1}: ${data}`);
+                        }
+
+                        results.push(data);
+                    } catch (e) {
+                        if (e instanceof SdkError && e.code === SdkErrors.AccountDoesntExist) {
+                            unfoundAccounts.push(data.accountName);
+                        } else {
+                            throw e;
+                        }
+                    }
+                })
+            );
+
+            if (unfoundAccounts.length > 0) {
+                console.log(
+                    `${unfoundAccounts.length} accounts were not found in environment ${settings.env}:`,
+                    unfoundAccounts
+                );
+                process.exit(1);
+            }
+
+            const actions = results.map((data) => {
+                const leosNumber = data.usdQuantity / leosPrice;
+
+                const leosQuantity = leosNumber.toFixed(0) + '.000000 LEOS';
+
+                console.log(
+                    `Assigning: ${leosQuantity} ($${data.usdQuantity} USD) vested in category ${categoryId} to ${data.accountName} at rate of $${leosPrice}/LEOS`
+                );
+                return {
+                    account: 'vesting.tmy',
+                    name: 'assigntokens',
+                    authorization: [
+                        {
+                            actor: sender.toString(),
+                            permission: 'active',
+                        },
+                    ],
+                    data: {
+                        sender,
+                        holder: data.accountName,
+                        amount: leosQuantity,
+                        category: categoryId,
+                    },
+                };
+            });
+
+            console.log(`Total ${actions.length} accounts to be paid`);
+
+            const proposalHash = await createProposal(proposer, proposalName, actions, privateKey, [requiredAuthority]);
+
+            if (test) await executeProposal(proposer, proposalName, proposalHash);
+        } else if (proposalType === 'add-prod') {
+            const producer = '1.found.tmy';
+            const signingKey = PublicKey.from('EOS6A3TosyQZPa9g186tqVFa52AfLdkvaosy1XVEEgziuAyp5PMUj');
+
+            // fetch the existing schedule and their keys
+            const { pending, proposed, active } = await getProducers();
+
+            if (pending || proposed) throw new Error("Can't add a producer while there is a pending schedule");
+
+            if (active.producers.find((p) => p.producer_name.equals(producer)))
+                throw new Error('Producer already in the schedule');
+
+            const newSchedule = active.producers.map((p) => {
+                return {
+                    // eslint-disable-next-line camelcase
+                    producer_name: p.producer_name,
+                    authority: [
+                        'block_signing_authority_v0',
+                        {
+                            threshold: 1,
+                            keys: p.authority[1].keys.map((k) => {
+                                return {
+                                    key: k.key,
+                                    weight: k.weight,
+                                };
+                            }),
+                        },
+                    ],
+                };
+            });
+
+            newSchedule.push({
+                // eslint-disable-next-line camelcase
+                producer_name: Name.from(producer),
+                authority: [
+                    'block_signing_authority_v0',
+                    {
+                        threshold: 1,
+                        keys: [
+                            {
+                                key: signingKey,
+                                weight: Weight.from(1),
+                            },
+                        ],
+                    },
+                ],
+            });
+            const action = {
+                account: 'tonomy',
+                name: 'setprods',
+                authorization: [
+                    {
+                        actor: 'tonomy',
+                        permission: 'owner',
+                    },
+                    {
+                        actor: 'tonomy',
+                        permission: 'active',
+                    },
+                ],
+                data: {
+                    schedule: newSchedule,
+                },
+            };
+
+            const proposalHash = await createProposal(
+                proposer,
+                proposalName,
+                [action],
+                privateKey,
+                newGovernanceAccounts
+            );
+
+            if (test) await executeProposal(proposer, proposalName, proposalHash);
+        } else if (proposalType === 'remove-prod') {
+            const producer = '1.found.tmy';
+
+            // fetch the existing schedule and their keys
+            const { pending, proposed, active } = await getProducers();
+
+            if (pending || proposed) throw new Error("Can't remove a producer while there is a pending schedule");
+
+            if (!active.producers.find((p) => p.producer_name.equals(producer)))
+                throw new Error('Producer not in the schedule');
+
+            const newSchedule = active.producers
+                .filter((p) => !p.producer_name.equals(producer))
+                .map((p) => {
+                    return {
+                        // eslint-disable-next-line camelcase
+                        producer_name: p.producer_name,
+                        authority: [
+                            'block_signing_authority_v0',
+                            {
+                                threshold: 1,
+                                keys: p.authority[1].keys.map((k) => {
+                                    return {
+                                        key: k.key,
+                                        weight: k.weight,
+                                    };
+                                }),
+                            },
+                        ],
+                    };
+                });
+
+            const action = {
+                account: 'tonomy',
+                name: 'setprods',
+                authorization: [
+                    {
+                        actor: 'tonomy',
+                        permission: 'owner',
+                    },
+                    {
+                        actor: 'tonomy',
+                        permission: 'active',
+                    },
+                ],
+                data: {
+                    schedule: newSchedule,
+                },
+            };
+
+            const proposalHash = await createProposal(
+                proposer,
+                proposalName,
+                [action],
+                privateKey,
+                newGovernanceAccounts
+            );
+
+            if (test) await executeProposal(proposer, proposalName, proposalHash);
         } else {
             throw new Error(`Invalid msig proposal type ${proposalType}`);
+        }
+    } else if (args[0] === 'approve') {
+        const proposalName = Name.from(args[1]);
+
+        try {
+            const transaction = await eosioMsigContract.approve(proposer, proposalName, proposer, undefined, signer);
+
+            console.log('Transaction: ', JSON.stringify(transaction, null, 2));
+            console.error('Transaction succeeded');
+        } catch (e) {
+            console.error('Error: ', JSON.stringify(e, null, 2));
+            console.error('Transaction failed');
         }
     } else if (args[0] === 'exec') {
         const proposalName = Name.from(args[1]);
@@ -232,7 +470,7 @@ export async function executeProposal(proposer: string, proposalName: Name, prop
             await eosioMsigContract.approve(
                 proposer,
                 proposalName,
-                { actor: governanceAccounts[i], permission: 'active' },
+                governanceAccounts[i],
                 proposalHash,
                 tonomyGovSigners[i]
             );
