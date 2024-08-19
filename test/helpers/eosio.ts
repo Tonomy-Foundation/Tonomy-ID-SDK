@@ -10,7 +10,7 @@ export const api = new APIClient({
 
 export function randomAccountName(): string {
     // replace all digits 06789 with another random digit
-    return ('test' + Math.floor(Math.random() * 100000000)).replace(/[06789]/g, (x) =>
+    return ('test' + Math.floor(Math.random() * 100000000)).replace(/[06789]/g, () =>
         Math.ceil(Math.random() * 5).toString()
     );
 }

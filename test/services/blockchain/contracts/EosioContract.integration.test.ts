@@ -42,6 +42,8 @@ describe('TonomyContract class', () => {
     test('newapp and getApp', async () => {
         const { appName, description, username, logoUrl, origin, accountName } = await createRandomApp();
 
+        if (!username) throw new Error('Username not found');
+
         let appInfo = await tonomyContract.getApp(username);
 
         expect(appInfo.app_name).toEqual(appName);
