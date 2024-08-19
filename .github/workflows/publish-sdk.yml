@@ -9,11 +9,15 @@ on:
       - development
       - testnet
       - master
+      - feature/336-upgrade-to-veramo-2
 
 jobs:
   publish-npm:
     runs-on: ubuntu-20.04
     steps:
+      - name: Install jq
+        run: sudo apt install jq -y
+      
       - name: 🏗 Setup repo
         uses: actions/checkout@v4
         with:
@@ -37,12 +41,17 @@ jobs:
       - run: |
           if [[ ${GITHUB_REF#refs/*/} == "development" ]]; then
             echo "Variable BRANCH_NAME is set to 'development'"
-            yarn config set tag development
+            jq --arg tag "development" '.publishConfig.tag = $tag' package.json > package.tmp.json && mv package.tmp.json package.json
           fi
 
           if [[ ${GITHUB_REF#refs/*/} == "testnet" ]]; then
             echo "Variable BRANCH_NAME is set to 'testnet'"
-            yarn config set tag rc
+            jq --arg tag "rc" '.publishConfig.tag = $tag' package.json > package.tmp.json && mv package.tmp.json package.json
+          fi
+
+          if [[ ${GITHUB_REF#refs/*/} == "feature/336-upgrade-to-veramo-2" ]]; then
+            echo "Variable BRANCH_NAME is set to 'feature/336-upgrade-to-veramo-2'"
+            jq --arg tag "test" '.publishConfig.tag = $tag' package.json > package.tmp.json && mv package.tmp.json package.json
           fi
       - run: yarn install --immutable
       - run: yarn run build
