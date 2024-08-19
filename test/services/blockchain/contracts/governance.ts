@@ -1,4 +1,4 @@
-import { Name } from '@wharfkit/antelope';
+import { API, Name } from '@wharfkit/antelope';
 import { EosioMsigContract } from '../../../../src/sdk/index';
 import { ActionData, createSigner, getTonomyOperationsKey } from '../../../../src/sdk/services/blockchain';
 import { randomAccountName, tonomyBoardSigners } from '../../../helpers/eosio';
@@ -11,7 +11,7 @@ export const tonomyOpsSigner = createSigner(getTonomyOperationsKey());
 export async function msigAction(
     actions: ActionData[],
     options: { satisfyRequireApproval?: boolean; requireTonomyOps?: boolean } = {}
-) {
+): Promise<API.v1.PushTransactionResponse | null> {
     const proposalName = randomAccountName();
     const proposer = '1.found.tmy';
 
@@ -50,10 +50,7 @@ export async function msigAction(
     const approve1Trx = await eosioMsigContract.approve(
         proposer,
         proposalName,
-        {
-            actor: Name.from('1.found.tmy'),
-            permission: Name.from('active'),
-        },
+        Name.from('1.found.tmy'),
         proposalHash,
         tonomyBoardSigners[0]
     );
@@ -64,26 +61,14 @@ export async function msigAction(
         await eosioMsigContract.approve(
             proposer,
             proposalName,
-            {
-                actor: Name.from('2.found.tmy'),
-                permission: Name.from('active'),
-            },
+            Name.from('2.found.tmy'),
             proposalHash,
             tonomyBoardSigners[1]
         );
     }
 
     if (options.requireTonomyOps ?? false) {
-        await eosioMsigContract.approve(
-            proposer,
-            proposalName,
-            {
-                actor: Name.from('tonomy'),
-                permission: Name.from('active'),
-            },
-            proposalHash,
-            tonomyOpsSigner
-        );
+        await eosioMsigContract.approve(proposer, proposalName, Name.from('tonomy'), proposalHash, tonomyOpsSigner);
     }
 
     try {
@@ -97,6 +82,7 @@ export async function msigAction(
     } catch (e) {
         if (!(options.satisfyRequireApproval ?? false)) {
             expect(e.error.details[0].message).toContain('transaction authorization failed');
+            return null;
         } else {
             throw e;
         }
