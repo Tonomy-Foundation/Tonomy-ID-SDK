@@ -1,4 +1,4 @@
-import { Issuer } from '@tonomy/did-jwt-vc';
+import { Issuer } from 'did-jwt-vc';
 import { DIDurl, URL } from '../../util/ssi/types';
 import { VerifiableCredentialWithType, VCWithTypeType } from '../../util/ssi/vc';
 import { WalletRequest } from '../../util';
@@ -196,8 +196,6 @@ export class LoginRequestResponseMessage extends Message<LoginRequestResponseMes
     ) {
         super(vc);
         const payload = this.getVc().getPayload().vc.credentialSubject.payload;
-
-        // console.log('LoginRequestResponseMessage', payload);
 
         if (payload.success) {
             if (!payload.response) {

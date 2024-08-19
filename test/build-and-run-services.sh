@@ -50,11 +50,11 @@ function start {
 
     # Run Communication server
     cd  "$SDK_DIR/Tonomy-Communication"
-    pm2 stop micro || true
-    pm2 delete micro || true
+    npx pm2 stop micro || true
+    npx pm2 delete micro || true
     unset TONOMY_OPS_PRIVATE_KEY
     unset HCAPTCHA_SECRET
-    pm2 start --interpreter /bin/bash yarn --name "micro" -- run start:dev
+    npx pm2 start --interpreter /bin/bash yarn --name "micro" -- run start
 }
 
 function bootstrap {
@@ -77,8 +77,8 @@ function stop {
     docker rm -f tonomy_blockchain_integration || true
 
     # Stop Communication server
-    pm2 stop micro || true
-    pm2 delete micro || true
+    npx pm2 stop micro || true
+    npx pm2 delete micro || true
 }
 
 function help {

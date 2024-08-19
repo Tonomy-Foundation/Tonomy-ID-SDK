@@ -15,6 +15,7 @@ import { addSeconds, sleepUntil, subtractSeconds } from '../../../../src/sdk/uti
 import { PrivateKey, Name } from '@wharfkit/antelope';
 import { createRandomAccount } from '../../../helpers/eosio';
 import { msigAction } from './governance';
+import { jest } from '@jest/globals';
 
 const vestingContract = VestingContract.Instance;
 const eosioTokenContract = EosioTokenContract.Instance;
@@ -236,6 +237,7 @@ describe('VestingContract class', () => {
         test(
             'Unsuccessful assignment due to number of purchases',
             async () => {
+                if (!process.env.CI) return; // Skip this test in local environment as it takes too long
                 expect.assertions(2 + VestingContract.MAX_ALLOCATIONS);
 
                 for (let i = 0; i < VestingContract.MAX_ALLOCATIONS; i++) {
@@ -582,10 +584,6 @@ describe('VestingContract class', () => {
             // 1st withdrawal after 1st allocation cliff end
             await sleepUntil(addSeconds(vestingPeriod.cliffEnd, 1));
             const trx = await vestingContract.withdraw(accountName, accountSigner);
-
-            // const trxConsole = JSON.parse(trx.processed.action_traces[0].console);
-            // console.log('trxConsole', trxConsole);
-            // console.log('allocations', allocations);
 
             const transferAmount = assetToAmount(trx.processed.action_traces[0].inline_traces[0].act.data.quantity);
             const allocations1 = await vestingContract.getAllocations(accountName);

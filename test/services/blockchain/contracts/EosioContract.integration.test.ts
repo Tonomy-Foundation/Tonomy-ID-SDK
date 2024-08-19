@@ -1,5 +1,9 @@
+/**
+ * @jest-environment jsdom
+ */
 import { TonomyContract } from '../../../../src/sdk/index';
 import { createRandomID, createRandomApp } from '../../../helpers/user';
+import { jest } from '@jest/globals';
 
 const tonomyContract = TonomyContract.Instance;
 
@@ -37,6 +41,8 @@ describe('TonomyContract class', () => {
 
     test('newapp and getApp', async () => {
         const { appName, description, username, logoUrl, origin, accountName } = await createRandomApp();
+
+        if (!username) throw new Error('Username not found');
 
         let appInfo = await tonomyContract.getApp(username);
 

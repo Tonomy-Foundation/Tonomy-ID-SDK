@@ -14,6 +14,10 @@ import fs from 'fs';
 import { sleep } from '../../../../src/sdk/util';
 import { randomAccountName, tonomyBoardAccounts, tonomyBoardSigners } from '../../../helpers/eosio';
 import { msigAction, tonomyOpsSigner } from './governance';
+import { jest } from '@jest/globals';
+import Debug from 'debug';
+
+const debug = Debug('tonomy-sdk-tests:services:blockchain:contracts:TonomyContract.governance.test');
 
 const eosioMsigContract = EosioMsigContract.Instance;
 const tonomyEosioProxyContract = TonomyEosioProxyContract.Instance;
@@ -84,7 +88,7 @@ describe('TonomyContract class', () => {
             try {
                 await msigAction([action], { satisfyRequireApproval: true });
             } catch (e) {
-                console.log(e.message, JSON.stringify(e, null, 2));
+                debug(e.message, JSON.stringify(e, null, 2));
                 throw e;
             }
         });
@@ -93,7 +97,7 @@ describe('TonomyContract class', () => {
             try {
                 await msigAction([action]);
             } catch (e) {
-                console.log(e.message, JSON.stringify(e, null, 2));
+                debug(e.message, JSON.stringify(e, null, 2));
                 throw e;
             }
         });
@@ -176,7 +180,7 @@ describe('TonomyContract class', () => {
 
                     expect(trx.processed.receipt.status).toBe('executed');
                 } catch (e) {
-                    console.log(e.message, JSON.stringify(e, null, 2));
+                    debug(e.message, JSON.stringify(e, null, 2));
                     throw e;
                 }
             });
@@ -210,7 +214,7 @@ describe('TonomyContract class', () => {
 
                     expect(trx.processed.receipt.status).toBe('executed');
                 } catch (e) {
-                    console.log(e.message, JSON.stringify(e, null, 2));
+                    debug(e.message, JSON.stringify(e, null, 2));
                     throw e;
                 }
             });
@@ -221,7 +225,7 @@ describe('TonomyContract class', () => {
                 try {
                     await msigAction([action], { satisfyRequireApproval: true });
                 } catch (e) {
-                    console.log(e.message, JSON.stringify(e, null, 2));
+                    debug(e.message, JSON.stringify(e, null, 2));
                     throw e;
                 }
             });
@@ -232,7 +236,7 @@ describe('TonomyContract class', () => {
                 try {
                     await msigAction([action]);
                 } catch (e) {
-                    console.log(e.message, JSON.stringify(e, null, 2));
+                    debug(e.message, JSON.stringify(e, null, 2));
                     throw e;
                 }
             });
@@ -304,7 +308,7 @@ describe('TonomyContract class', () => {
                     await transact(Name.from('tonomy'), [updateAuthAction], tonomyBoardSigners.slice(0, 2));
                     await restoreFoundTmyAuth();
                 } catch (e) {
-                    console.log(e.message, JSON.stringify(e, null, 2));
+                    debug(e.message, JSON.stringify(e, null, 2));
                     throw e;
                 }
             });
@@ -411,7 +415,7 @@ describe('TonomyContract class', () => {
 
                     expect(execTrx.processed.receipt.status).toBe('executed');
                 } catch (e) {
-                    console.log(e.message, JSON.stringify(e, null, 2));
+                    debug(e.message, JSON.stringify(e, null, 2));
                     throw e;
                 }
             });
