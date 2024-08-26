@@ -42,7 +42,7 @@ Usage:
         msig propose ... proposalName [--test]
         msig exec proposalName
         msig propose deploy-contract proposalName contractName 
-        msig propose eosio.code-permission proposalName
+        msig propose proposalName
 `);
         printCliHelp();
     }

@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { API, Checksum256, Checksum256Type, Name, NameType, PublicKey } from '@wharfkit/antelope';
+import { API, Authority, Checksum256, Checksum256Type, Name, NameType, PublicKey } from '@wharfkit/antelope';
 import { Signer, transact } from '../eosio/transaction';
 import { SdkErrors, TonomyUsername, sha256, throwError } from '../../../util';
 import { getAccount, getApi } from '../eosio/eosio';
@@ -457,6 +457,33 @@ export class TonomyContract {
             },
         };
 
+        return await transact(Name.from(CONTRACT_NAME), [action], signer);
+    }
+
+    async newaccount(
+        creator: NameType,
+        name: NameType,
+        owner: Authority,
+        active: Authority,
+        signer: Signer
+    ): Promise<API.v1.PushTransactionResponse> {
+        const action = {
+            authorization: [
+                {
+                    actor: creator.toString(),
+                    permission: 'active',
+                },
+            ],
+            account: CONTRACT_NAME,
+            name: 'newaccount',
+            data: {
+                creator,
+                name,
+                owner,
+                active,
+            },
+        };
+        console.log("actionss", JSON.stringify(action, null, 2))
         return await transact(Name.from(CONTRACT_NAME), [action], signer);
     }
 }
