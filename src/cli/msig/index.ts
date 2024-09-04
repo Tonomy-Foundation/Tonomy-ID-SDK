@@ -12,6 +12,7 @@ import { printCliHelp } from '..';
 import { vestingBulk } from './vestingBulk';
 import { hyphaContractSet } from './hyphaContractSet';
 import { setResourceConfig } from './setResourceConfig';
+import { setBlockchainConfig } from './setBlockchainConfig';
 
 const eosioMsigContract = EosioMsigContract.Instance;
 
@@ -303,6 +304,17 @@ export default async function msig(args: string[]) {
             );
         } else if (proposalType === 'res-config-set') {
             await setResourceConfig(
+                {},
+                {
+                    proposer,
+                    proposalName,
+                    privateKey,
+                    requested: newGovernanceAccounts,
+                    test,
+                }
+            );
+        } else if (proposalType === 'set-chain-config') {
+            await setBlockchainConfig(
                 {},
                 {
                     proposer,
