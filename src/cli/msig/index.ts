@@ -10,6 +10,7 @@ import { deployContract } from './deployContract';
 import { addEosioCode } from './addEosioCode';
 import { printCliHelp } from '..';
 import { vestingBulk } from './vestingBulk';
+import { hyphaContractSet } from './hyphaContractSet';
 
 const eosioMsigContract = EosioMsigContract.Instance;
 
@@ -25,6 +26,7 @@ export default async function msig(args: string[]) {
         blockchainUrl: settings.config.blockchainUrl,
         loggerLevel: settings.config.loggerLevel,
         currencySymbol: settings.config.currencySymbol,
+        accountSuffix: settings.config.accountSuffix,
     });
 
     console.log('Using environment', settings.env);
@@ -286,6 +288,17 @@ export default async function msig(args: string[]) {
             );
 
             if (test) await executeProposal(proposer, proposalName, proposalHash);
+        } else if (proposalType === 'hypha-contract-set') {
+            await hyphaContractSet(
+                {},
+                {
+                    proposer,
+                    proposalName,
+                    privateKey,
+                    requested: newGovernanceAccounts,
+                    test,
+                }
+            );
         } else {
             throw new Error(`Invalid msig proposal type ${proposalType}`);
         }

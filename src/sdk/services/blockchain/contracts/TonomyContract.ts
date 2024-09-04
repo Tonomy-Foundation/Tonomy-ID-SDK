@@ -1,7 +1,7 @@
 /* eslint-disable camelcase */
 import { API, Checksum256, Checksum256Type, Name, NameType, PublicKey } from '@wharfkit/antelope';
 import { Signer, transact } from '../eosio/transaction';
-import { SdkErrors, TonomyUsername, sha256, throwError } from '../../../util';
+import { SdkErrors, TonomyUsername, getSettings, sha256, throwError } from '../../../util';
 import { getAccount, getApi } from '../eosio/eosio';
 
 const CONTRACT_NAME = 'tonomy';
@@ -71,6 +71,19 @@ type AppTableRecord = {
     origin: string;
     version: number;
 };
+
+export const ramPrice = 173333.3333; // bytes/token
+export const fee = 0.25 / 100; // 0.25%
+
+/**
+ * Converts bytes to tokens.
+ *
+ * @param bytes The number of bytes to convert.
+ * @returns The converted value in tokens.
+ */
+export function bytesToTokens(bytes: number): string {
+    return ((bytes * (1 + fee)) / ramPrice).toFixed(6) + ` ${getSettings().currencySymbol}`;
+}
 
 export class TonomyContract {
     static singletonInstance: TonomyContract;
