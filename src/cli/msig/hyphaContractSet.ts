@@ -1,6 +1,7 @@
 import { Name } from '@wharfkit/antelope';
 import { StandardProposalOptions, createProposal, executeProposal } from '.';
 import { AccountType, bytesToTokens, getSettings, TonomyUsername } from '../../sdk';
+import { deployContract } from './deployContract';
 
 // @ts-expect-error args not used
 export async function hyphaContractSet(args: any, options: StandardProposalOptions) {
@@ -11,16 +12,12 @@ export async function hyphaContractSet(args: any, options: StandardProposalOptio
     const logoUrl = 'https://hypha.earth/wp-content/themes/hypha2023/img/logos/logo-white.svg';
     const origin = 'https://hypha.earth';
     const ramKb = 30000;
-    // const contractDir = '/home/dev/Downloads/pangea-hypha-deploy';
-    // const filename = 'dao';
+    const contractDir = `/home/dev/Downloads/pangea-hypha-deploy/${contract}`;
 
     const tonomyUsername = TonomyUsername.fromUsername(username, AccountType.APP, getSettings().accountSuffix);
     const tokens = bytesToTokens(ramKb * 1000);
 
     console.log(`Setting up hypha contract "${contract}" with ${tokens} tokens to buy ${ramKb}KB of RAM`);
-
-    // const wasmFile = `${contractDir}/${filename}.wasm`;
-    // const abiFile = `${contractDir}/${filename}.abi`;
 
     const adminSetAppAction = {
         authorization: [
@@ -74,7 +71,8 @@ export async function hyphaContractSet(args: any, options: StandardProposalOptio
         },
     };
 
-    // const deployContractAction = {
+    const deployActions = await deployContract({ contractName: contract, contractDir, returnActions: true }, options);
+
     //     account: 'tonomy',
     //     name: 'deployapp',
     //     authorization: [
@@ -89,9 +87,10 @@ export async function hyphaContractSet(args: any, options: StandardProposalOptio
     //         abi_file: abiFile,
     //     },
     // };
+    if (!deployActions) throw new Error('Expected deployActions to be defined');
 
     console.log('buyRamAction', buyRamAction);
-    const actions = [adminSetAppAction, transferTokensAction, buyRamAction];
+    const actions = [adminSetAppAction, transferTokensAction, buyRamAction, ...deployActions];
 
     const proposalHash = await createProposal(
         options.proposer,

@@ -5,8 +5,17 @@ import path from 'path';
 import fs from 'fs';
 import { getDeployableFilesFromDir } from '../bootstrap/deploy-contract';
 
-export async function deployContract(args: { contractName: string }, options: StandardProposalOptions) {
+export async function deployContract(
+    args: {
+        contractName: string;
+        contractDir?: string;
+        contractFilename?: string;
+        returnActions?: boolean;
+    },
+    options: StandardProposalOptions
+) {
     const contractName = Name.from(args.contractName);
+    const contractDir = args.contractDir ?? path.join(__dirname, `../../Tonomy-Contracts/contracts/${contractName}`);
 
     if (!contractName) {
         throw new Error('Contract name must be provided for deploy-contract proposal');
@@ -14,7 +23,7 @@ export async function deployContract(args: { contractName: string }, options: St
 
     const contractInfo = {
         account: contractName,
-        contractDir: path.join(__dirname, `../../Tonomy-Contracts/contracts/${contractName}`),
+        contractDir,
     };
 
     const { wasmPath, abiPath } = getDeployableFilesFromDir(contractInfo.contractDir);
@@ -78,13 +87,18 @@ export async function deployContract(args: { contractName: string }, options: St
         },
     };
 
+    const actions = [setCodeAction, setAbiAction];
+
+    if (args.returnActions ?? false) return actions;
+
     const proposalHash = await createProposal(
         options.proposer,
         options.proposalName,
-        [setCodeAction, setAbiAction],
+        actions,
         options.privateKey,
         options.requested
     );
 
     if (options.test) await executeProposal(options.proposer, options.proposalName, proposalHash);
+    return;
 }

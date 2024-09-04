@@ -402,11 +402,11 @@ export async function executeProposal(proposer: string, proposalName: Name, prop
             );
         }
 
-        console.error('Proposal approved succeeded');
+        console.log('Proposal approved succeeded');
 
         await eosioMsigContract.exec(proposer, proposalName, governanceAccounts[0], tonomyGovSigners[0]);
 
-        console.error('Proposal executed succeeded');
+        console.log('Proposal executed succeeded');
     } catch (e) {
         console.error('Error: ', JSON.stringify(e, null, 2));
         console.error('Transaction failed');
