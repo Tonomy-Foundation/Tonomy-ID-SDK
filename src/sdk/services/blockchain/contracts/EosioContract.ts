@@ -132,7 +132,7 @@ export class EosioContract {
                 active,
             },
         };
-
+        console.log("actionss", JSON.stringify(action, null, 2))
         return await transact(Name.from(CONTRACT_NAME), [action], signer);
     }
 

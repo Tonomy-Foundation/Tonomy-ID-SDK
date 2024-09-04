@@ -6,6 +6,7 @@ import fs from 'fs';
 import settings from '../bootstrap/settings';
 import { govMigrate } from './govMigrate';
 import { newAccount } from './newAccount';
+import { createHyphaAccounts, updateAccountPermissions } from './hyphaAccounts';
 import { transfer } from './transfer';
 import { addAuth } from './addAuth';
 import { deployContract } from './deployContract';
@@ -74,6 +75,7 @@ export default async function msig(args: string[]) {
             console.error('Transaction failed');
         }
     } else if (args[0] === 'propose') {
+
         const proposalType = args[1];
         const proposalName = Name.from(args[2]);
 
@@ -96,6 +98,30 @@ export default async function msig(args: string[]) {
                     proposalName,
                     privateKey,
                     requested: newGovernanceAccounts,
+                    test,
+                }
+            );
+        } else if (proposalType === 'hypha-new-account') {
+            // const requiredAuthority = test ? governanceAccounts[2] :'13.found.tmy';
+
+            await createHyphaAccounts(
+                {
+                    proposer,
+                    proposalName,
+                    privateKey,
+                    requested: newGovernanceAccounts,
+                    test,
+                }
+            );
+        }  else if (proposalType === 'update-hypha-account') {
+            // const requiredAuthority = test ? governanceAccounts[2] :'13.found.tmy';
+
+            await updateAccountPermissions(
+                {
+                    proposer,
+                    proposalName,
+                    privateKey,
+                    requested:newGovernanceAccounts,
                     test,
                 }
             );

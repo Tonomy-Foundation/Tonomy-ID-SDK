@@ -9,6 +9,8 @@ import { getSettings } from './settings';
  * @throws if QR code is invalid
  */
 export function validateQrCode(qrCode: string): string {
+    console.log('qrCode', qrCode);
+
     if (!qrCode) {
         throwError('QR code is empty', SdkErrors.InvalidQrCode);
     }
