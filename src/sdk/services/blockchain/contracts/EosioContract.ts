@@ -249,7 +249,7 @@ export const defaultBlockchainParams: BlockchainParams = {
     max_transaction_lifetime: 3600,
     deferred_trx_expiration_window: 600,
     max_transaction_delay: 3888000,
-    max_inline_action_size: 32 * 1024,
+    max_inline_action_size: 512 * 1024,
     max_inline_action_depth: 4,
     max_authority_depth: 6,
 };
