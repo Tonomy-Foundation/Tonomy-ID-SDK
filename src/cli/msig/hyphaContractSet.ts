@@ -5,9 +5,9 @@ import { deployContract } from './deployContract';
 
 // @ts-expect-error args not used
 export async function hyphaContractSet(args: any, options: StandardProposalOptions) {
-    const contract = 'dao.hypha';
+    const contract = 'hypha.hypha';
     const appName = 'Hypha DAO';
-    const username = 'hyphadao';
+    const username = 'hyphahypha';
     const description = 'Hypha DAO contract';
     const logoUrl = 'https://hypha.earth/wp-content/themes/hypha2023/img/logos/logo-white.svg';
     const origin = 'https://hypha.earth';
@@ -73,20 +73,6 @@ export async function hyphaContractSet(args: any, options: StandardProposalOptio
 
     const deployActions = await deployContract({ contractName: contract, contractDir, returnActions: true }, options);
 
-    //     account: 'tonomy',
-    //     name: 'deployapp',
-    //     authorization: [
-    //         {
-    //             actor: contract,
-    //             permission: 'active',
-    //         },
-    //     ],
-    //     data: {
-    //         account: contract,
-    //         wasm_file: wasmFile,
-    //         abi_file: abiFile,
-    //     },
-    // };
     if (!deployActions) throw new Error('Expected deployActions to be defined');
 
     console.log('buyRamAction', buyRamAction);
