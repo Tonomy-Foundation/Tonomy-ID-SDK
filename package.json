@@ -20,7 +20,8 @@
     "build"
   ],
   "engines": {
-    "node": ">=10"
+    "node": ">=20.0.0",
+    "yarn": "^4.3.1"
   },
   "scripts": {
     "start": "microbundle watch  -i ./src/sdk/index.ts -o build/sdk/index.js",
@@ -102,8 +103,7 @@
     "ws": "^8.18.0"
   },
   "publishConfig": {
-    "access": "public",
-    "tag": "development"
+    "access": "public"
   },
   "repository": {
     "type": "git",

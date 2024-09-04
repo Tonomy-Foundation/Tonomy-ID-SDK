@@ -101,8 +101,10 @@ export class Communication {
             this.socketServer
                 .timeout(SOCKET_TIMEOUT)
                 .emit(event, { message: message.toString() }, (error: any, response: any) => {
-                    if (response.error) {
-                        if (response.exception?.name === 'HttpException') {
+                    debug('emitMessage response', JSON.stringify(error, null, 2), JSON.stringify(response, null, 2));
+
+                    if (response?.error) {
+                        if (response?.exception?.name === 'HttpException') {
                             const communicationError = new CommunicationError(response);
 
                             reject(communicationError);
