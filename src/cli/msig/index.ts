@@ -11,6 +11,7 @@ import { addEosioCode } from './addEosioCode';
 import { printCliHelp } from '..';
 import { vestingBulk } from './vestingBulk';
 import { hyphaContractSet } from './hyphaContractSet';
+import { setResourceConfig } from './setResourceConfig';
 
 const eosioMsigContract = EosioMsigContract.Instance;
 
@@ -115,10 +116,11 @@ export default async function msig(args: string[]) {
                 }
             );
         } else if (proposalType === 'deploy-contract') {
-            const contractName = args[3];
+            const contractName = 'tonomy';
+            const contractDir = `/home/dev/Documents/Git/Tonomy/Tonomy-ID-Integration/Tonomy-ID-SDK/Tonomy-Contracts/contracts/${contractName}`;
 
             await deployContract(
-                { contractName },
+                { contractName, contractDir },
                 {
                     proposer,
                     proposalName,
@@ -290,6 +292,17 @@ export default async function msig(args: string[]) {
             if (test) await executeProposal(proposer, proposalName, proposalHash);
         } else if (proposalType === 'hypha-contract-set') {
             await hyphaContractSet(
+                {},
+                {
+                    proposer,
+                    proposalName,
+                    privateKey,
+                    requested: newGovernanceAccounts,
+                    test,
+                }
+            );
+        } else if (proposalType === 'res-config-set') {
+            await setResourceConfig(
                 {},
                 {
                     proposer,

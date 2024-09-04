@@ -1,21 +1,19 @@
 import { ActionData } from '../../sdk/services/blockchain';
 import { StandardProposalOptions, createProposal, executeProposal } from '.';
 import { Name, ABI, Serializer } from '@wharfkit/antelope';
-import path from 'path';
 import fs from 'fs';
 import { getDeployableFilesFromDir } from '../bootstrap/deploy-contract';
 
 export async function deployContract(
     args: {
         contractName: string;
-        contractDir?: string;
-        contractFilename?: string;
+        contractDir: string;
         returnActions?: boolean;
     },
     options: StandardProposalOptions
 ) {
     const contractName = Name.from(args.contractName);
-    const contractDir = args.contractDir ?? path.join(__dirname, `../../Tonomy-Contracts/contracts/${contractName}`);
+    const contractDir = args.contractDir;
 
     if (!contractName) {
         throw new Error('Contract name must be provided for deploy-contract proposal');

@@ -73,7 +73,8 @@ type AppTableRecord = {
 };
 
 export const ramPrice = 173333.3333; // bytes/token
-export const fee = 0.25 / 100; // 0.25%
+export const ramFee = 0.25 / 100; // 0.25%
+export const ramAvailable = 8 * 1024 * 1024 * 1024; // 8 GB
 
 /**
  * Converts bytes to tokens.
@@ -82,7 +83,7 @@ export const fee = 0.25 / 100; // 0.25%
  * @returns The converted value in tokens.
  */
 export function bytesToTokens(bytes: number): string {
-    return ((bytes * (1 + fee)) / ramPrice).toFixed(6) + ` ${getSettings().currencySymbol}`;
+    return ((bytes * (1 + ramFee)) / ramPrice).toFixed(6) + ` ${getSettings().currencySymbol}`;
 }
 
 export class TonomyContract {
