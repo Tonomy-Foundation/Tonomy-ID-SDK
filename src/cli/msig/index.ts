@@ -375,7 +375,9 @@ export default async function msig(args: string[]) {
 
             if (test) await executeProposal(proposer, proposalName, proposalHash);
         } else if (proposalType === 'add-new-ops-key') {
-            const action = await addOpsNewKey();
+            const publicKey = args[3];
+
+            const action = await addOpsNewKey(publicKey);
 
             const proposalHash = await createProposal(
                 proposer,

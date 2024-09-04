@@ -1,23 +1,15 @@
 import { Name } from '@wharfkit/antelope';
-import { generateRandomKeyPair, getAccountInfo } from '../../sdk';
+import { getAccountInfo } from '../../sdk';
 import { ActionData, Authority } from '../../sdk/services/blockchain';
 
-export default async function addOpsNewKey() {
-    console.log('Creating new key\n');
-
-    // Generate a new key pair
-    const keyPair = generateRandomKeyPair();
-
-    console.log('Public key: ', keyPair.publicKey.toString());
-    console.log('Private key: ', keyPair.privateKey.toString());
-
+export default async function addOpsNewKey(publicKey: string) {
     // Fetch account information for ops.tmy
     const accountInfo = await getAccountInfo(Name.from('ops.tmy'));
     const activePermission = accountInfo.getPermission('active');
 
     const activeAuthority = Authority.fromAccountPermission(activePermission);
 
-    activeAuthority.addKey(keyPair.publicKey.toString(), 1);
+    activeAuthority.addKey(publicKey.toString(), 1);
 
     // Create the ActionData for the updateauth action
     const action: ActionData = {
