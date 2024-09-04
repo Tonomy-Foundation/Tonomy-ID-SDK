@@ -1,8 +1,6 @@
 import { PrivateKey, Name, Checksum256, PublicKey, Weight } from '@wharfkit/antelope';
-import { EosioMsigContract, SdkError, SdkErrors, setSettings } from '../../sdk';
-import { ActionData, createSigner, getAccount, getProducers } from '../../sdk/services/blockchain';
-import { parse } from 'csv-parse/sync';
-import fs from 'fs';
+import { EosioMsigContract, setSettings } from '../../sdk';
+import { ActionData, createSigner, getProducers } from '../../sdk/services/blockchain';
 import settings from '../bootstrap/settings';
 import { govMigrate } from './govMigrate';
 import { newAccount } from './newAccount';
@@ -11,6 +9,7 @@ import { addAuth } from './addAuth';
 import { deployContract } from './deployContract';
 import { addEosioCode } from './addEosioCode';
 import { printCliHelp } from '..';
+import { vestingBulk } from './vestingBulk';
 
 const eosioMsigContract = EosioMsigContract.Instance;
 
@@ -150,96 +149,10 @@ export default async function msig(args: string[]) {
                 }
             );
         } else if (proposalType === 'vesting-bulk') {
-            const csvFilePath = '/home/dev/Downloads/allocate.csv';
-
-            console.log('Reading file: ', csvFilePath);
-            const sender = settings.isProduction() ? 'advteam.tmy' : 'team.tmy';
-            const requiredAuthority = test ? governanceAccounts[2] : '11.found.tmy';
-            const categoryId = 7; // Community and Marketing, Platform Dev, Infra Rewards
-            const leosPrice = 0.002; // Seed early bird price
-            // const leosPrice = 0.004; // Seed later comer price
-            // const leosPrice = 0.012; // TGE price
-
-            const records = parse(fs.readFileSync(csvFilePath, 'utf8'), {
-                columns: true,
-                // eslint-disable-next-line camelcase
-                skip_empty_lines: true,
-            });
-            const results: { accountName: string; usdQuantity: number }[] = [];
-
-            const unfoundAccounts: string[] = [];
-
-            await Promise.all(
-                records.map(async (data: any) => {
-                    // accountName, usdQuantity
-                    if (!data.accountName || !data.usdQuantity) {
-                        throw new Error(`Invalid CSV format on line ${results.length + 1}: ${data}`);
-                    }
-
-                    // check account exists
-                    try {
-                        await getAccount(data.accountName);
-
-                        data.usdQuantity = Number(data.usdQuantity);
-
-                        if (isNaN(data.usdQuantity)) {
-                            throw new Error(`Invalid quantity type on line ${results.length + 1}: ${data}`);
-                        }
-
-                        if (data.usdQuantity <= 0 || data.usdQuantity > 100000) {
-                            throw new Error(`Invalid quantity on line ${results.length + 1}: ${data}`);
-                        }
-
-                        results.push(data);
-                    } catch (e) {
-                        if (e instanceof SdkError && e.code === SdkErrors.AccountDoesntExist) {
-                            unfoundAccounts.push(data.accountName);
-                        } else {
-                            throw e;
-                        }
-                    }
-                })
+            await vestingBulk(
+                { governanceAccounts },
+                { proposer, proposalName, privateKey, requested: newGovernanceAccounts, test }
             );
-
-            if (unfoundAccounts.length > 0) {
-                console.log(
-                    `${unfoundAccounts.length} accounts were not found in environment ${settings.env}:`,
-                    unfoundAccounts
-                );
-                process.exit(1);
-            }
-
-            const actions = results.map((data) => {
-                const leosNumber = data.usdQuantity / leosPrice;
-
-                const leosQuantity = leosNumber.toFixed(0) + '.000000 LEOS';
-
-                console.log(
-                    `Assigning: ${leosQuantity} ($${data.usdQuantity} USD) vested in category ${categoryId} to ${data.accountName} at rate of $${leosPrice}/LEOS`
-                );
-                return {
-                    account: 'vesting.tmy',
-                    name: 'assigntokens',
-                    authorization: [
-                        {
-                            actor: sender.toString(),
-                            permission: 'active',
-                        },
-                    ],
-                    data: {
-                        sender,
-                        holder: data.accountName,
-                        amount: leosQuantity,
-                        category: categoryId,
-                    },
-                };
-            });
-
-            console.log(`Total ${actions.length} accounts to be paid`);
-
-            const proposalHash = await createProposal(proposer, proposalName, actions, privateKey, [requiredAuthority]);
-
-            if (test) await executeProposal(proposer, proposalName, proposalHash);
         } else if (proposalType === 'add-prod') {
             const producer = '1.found.tmy';
             const signingKey = PublicKey.from('EOS6A3TosyQZPa9g186tqVFa52AfLdkvaosy1XVEEgziuAyp5PMUj');
