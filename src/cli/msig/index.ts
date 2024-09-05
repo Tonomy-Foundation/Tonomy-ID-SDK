@@ -1,4 +1,4 @@
-import { PrivateKey, Name, Checksum256, PublicKey, Weight } from '@wharfkit/antelope';
+import { PrivateKey, Name, Checksum256, PublicKey, Weight, NameType } from '@wharfkit/antelope';
 import { EosioMsigContract, setSettings } from '../../sdk';
 import { ActionData, createSigner, getProducers } from '../../sdk/services/blockchain';
 import settings from '../bootstrap/settings';
@@ -141,9 +141,9 @@ export default async function msig(args: string[]) {
         } else if (proposalType === 'add-auth') {
             await addAuth(
                 {
-                    account: 'coinsale.tmy',
-                    permission: 'active',
-                    newDelegate: settings.isProduction() ? '14.found.tmy' : governanceAccounts[2],
+                    account: 'join.hypha',
+                    permission: 'owner',
+                    newDelegate: 'gov.tmy',
                 },
                 {
                     proposer,
@@ -357,17 +357,31 @@ export default async function msig(args: string[]) {
     }
 }
 
+type PermissionLevelType = {
+    actor: NameType;
+    permission: NameType;
+};
+
 export async function createProposal(
     proposer: string,
     proposalName: Name,
     actions: ActionData[],
     privateKey: PrivateKey,
-    requested: string[]
+    requested: (string | PermissionLevelType)[]
 ): Promise<Checksum256> {
-    const requestedPermissions = requested.map((actor) => ({
-        actor,
-        permission: 'active',
-    }));
+    const requestedPermissions = requested.map((actor) => {
+        if (typeof actor === 'string') {
+            return {
+                actor,
+                permission: 'active',
+            };
+        }
+
+        return {
+            actor: actor.actor.toString(),
+            permission: actor.permission.toString(),
+        };
+    });
 
     console.log(
         'Sending transaction',

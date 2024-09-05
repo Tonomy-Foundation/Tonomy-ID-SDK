@@ -40,12 +40,14 @@ export async function addAuth(
         },
     };
 
+    const requested = [...options.requested, { actor: args.account, permission: args.permission }];
+
     const proposalHash = await createProposal(
         options.proposer,
         options.proposalName,
         [action],
         options.privateKey,
-        options.requested
+        requested
     );
 
     if (options.test) await executeProposal(options.proposer, options.proposalName, proposalHash);
