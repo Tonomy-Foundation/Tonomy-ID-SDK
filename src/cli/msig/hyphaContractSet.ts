@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 import { Name } from '@wharfkit/antelope';
 import { StandardProposalOptions, createProposal, executeProposal } from '.';
 import { AccountType, bytesToTokens, getSettings, TonomyUsername } from '../../sdk';
@@ -10,7 +11,7 @@ export async function hyphaContractSet(args: any, options: StandardProposalOptio
     const username = 'hyphahypha';
     const description = 'Hypha DAO contract';
     const logoUrl = 'https://hypha.earth/wp-content/themes/hypha2023/img/logos/logo-white.svg';
-    const origin = 'https://hypha.earth';
+    const origin = 'https://hypha.pangea-test.hypha.earth';
     const ramKb = 30000;
     const contractDir = `/home/dev/Downloads/pangea-hypha-deploy/${contract}`;
 
@@ -78,13 +79,10 @@ export async function hyphaContractSet(args: any, options: StandardProposalOptio
     console.log('buyRamAction', buyRamAction);
     const actions = [adminSetAppAction, transferTokensAction, buyRamAction, ...deployActions];
 
-    const proposalHash = await createProposal(
-        options.proposer,
-        options.proposalName,
-        actions,
-        options.privateKey,
-        options.requested
-    );
+    const proposalHash = await createProposal(options.proposer, options.proposalName, actions, options.privateKey, [
+        ...options.requested,
+        contract,
+    ]);
 
     if (options.test) await executeProposal(options.proposer, options.proposalName, proposalHash);
 }

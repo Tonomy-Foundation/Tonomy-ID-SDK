@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 import { ramAvailable, ramFee, ramPrice } from '../../sdk/services/blockchain';
 import { StandardProposalOptions, createProposal, executeProposal } from '.';
 
