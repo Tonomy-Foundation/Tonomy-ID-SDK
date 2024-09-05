@@ -141,9 +141,10 @@ export default async function msig(args: string[]) {
         } else if (proposalType === 'add-auth') {
             await addAuth(
                 {
-                    account: 'join.hypha',
-                    permission: 'owner',
+                    account: 'srvice.hypha',
+                    permission: 'active',
                     newDelegate: 'gov.tmy',
+                    useParentAuth: true,
                 },
                 {
                     proposer,

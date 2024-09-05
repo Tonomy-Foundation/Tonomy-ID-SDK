@@ -6,13 +6,14 @@ import { deployContract } from './deployContract';
 
 // @ts-expect-error args not used
 export async function hyphaContractSet(args: any, options: StandardProposalOptions) {
-    const contract = 'hypha.hypha';
-    const appName = 'Hypha DAO';
-    const username = 'hyphahypha';
-    const description = 'Hypha DAO contract';
+    const name = 'join';
+    const contract = `${name}.hypha`;
+    const appName = `Hypha {${name.toUpperCase()}`;
+    const username = `${name}hypha`;
+    const description = `Hypha ${name} contract`;
     const logoUrl = 'https://hypha.earth/wp-content/themes/hypha2023/img/logos/logo-white.svg';
-    const origin = 'https://hypha.pangea-test.hypha.earth';
-    const ramKb = 30000;
+    const origin = `https://${name}.pangea-test.hypha.earth`;
+    const ramKb = 10000;
     const contractDir = `/home/dev/Downloads/pangea-hypha-deploy/${contract}`;
 
     const tonomyUsername = TonomyUsername.fromUsername(username, AccountType.APP, getSettings().accountSuffix);
