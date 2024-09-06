@@ -7,32 +7,9 @@ export async function addProd(args: any, options: StandardProposalOptions) {
     const producer = '1.found.tmy';
     const signingKey = PublicKey.from('EOS6A3TosyQZPa9g186tqVFa52AfLdkvaosy1XVEEgziuAyp5PMUj');
 
-    // fetch the existing schedule and their keys
-    const { pending, proposed, active } = await getProducers();
+    const newSchedule = await getSchedule();
 
-    if (pending || proposed) throw new Error("Can't add a producer while there is a pending schedule");
-
-    if (active.producers.find((p) => p.producer_name.equals(producer)))
-        throw new Error('Producer already in the schedule');
-
-    const newSchedule = active.producers.map((p) => {
-        return {
-            // eslint-disable-next-line camelcase
-            producer_name: p.producer_name,
-            authority: [
-                'block_signing_authority_v0',
-                {
-                    threshold: 1,
-                    keys: p.authority[1].keys.map((k) => {
-                        return {
-                            key: k.key,
-                            weight: k.weight,
-                        };
-                    }),
-                },
-            ],
-        };
-    });
+    if (newSchedule.find((p) => p.producer_name.equals(producer))) throw new Error('Producer already in the schedule');
 
     newSchedule.push({
         // eslint-disable-next-line camelcase
@@ -50,23 +27,8 @@ export async function addProd(args: any, options: StandardProposalOptions) {
             },
         ],
     });
-    const action = {
-        account: 'tonomy',
-        name: 'setprods',
-        authorization: [
-            {
-                actor: 'tonomy',
-                permission: 'owner',
-            },
-            {
-                actor: 'tonomy',
-                permission: 'active',
-            },
-        ],
-        data: {
-            schedule: newSchedule,
-        },
-    };
+
+    const action = createSetProdsAction(newSchedule);
 
     const proposalHash = await createProposal(
         options.proposer,
@@ -84,35 +46,52 @@ export async function removeProd(args: any, options: StandardProposalOptions) {
     const producer = '1.found.tmy';
 
     // fetch the existing schedule and their keys
+    let newSchedule = await getSchedule();
+
+    if (!newSchedule.find((p) => p.producer_name.equals(producer))) throw new Error('Producer not in the schedule');
+
+    newSchedule = newSchedule.filter((p) => !p.producer_name.equals(producer));
+
+    const action = createSetProdsAction(newSchedule);
+
+    const proposalHash = await createProposal(
+        options.proposer,
+        options.proposalName,
+        [action],
+        options.privateKey,
+        options.requested
+    );
+
+    if (options.test) await executeProposal(options.proposer, options.proposalName, proposalHash);
+}
+
+async function getSchedule() {
     const { pending, proposed, active } = await getProducers();
 
-    if (pending || proposed) throw new Error("Can't remove a producer while there is a pending schedule");
+    if (pending || proposed) throw new Error("Can't add a producer while there is a pending schedule");
 
-    if (!active.producers.find((p) => p.producer_name.equals(producer)))
-        throw new Error('Producer not in the schedule');
+    return active.producers.map((p) => {
+        return {
+            // eslint-disable-next-line camelcase
+            producer_name: p.producer_name,
+            authority: [
+                'block_signing_authority_v0',
+                {
+                    threshold: 1,
+                    keys: p.authority[1].keys.map((k) => {
+                        return {
+                            key: k.key,
+                            weight: k.weight,
+                        };
+                    }),
+                },
+            ],
+        };
+    });
+}
 
-    const newSchedule = active.producers
-        .filter((p) => !p.producer_name.equals(producer))
-        .map((p) => {
-            return {
-                // eslint-disable-next-line camelcase
-                producer_name: p.producer_name,
-                authority: [
-                    'block_signing_authority_v0',
-                    {
-                        threshold: 1,
-                        keys: p.authority[1].keys.map((k) => {
-                            return {
-                                key: k.key,
-                                weight: k.weight,
-                            };
-                        }),
-                    },
-                ],
-            };
-        });
-
-    const action = {
+function createSetProdsAction(schedule: any) {
+    return {
         account: 'tonomy',
         name: 'setprods',
         authorization: [
@@ -126,17 +105,7 @@ export async function removeProd(args: any, options: StandardProposalOptions) {
             },
         ],
         data: {
-            schedule: newSchedule,
+            schedule,
         },
     };
-
-    const proposalHash = await createProposal(
-        options.proposer,
-        options.proposalName,
-        [action],
-        options.privateKey,
-        options.requested
-    );
-
-    if (options.test) await executeProposal(options.proposer, options.proposalName, proposalHash);
 }
