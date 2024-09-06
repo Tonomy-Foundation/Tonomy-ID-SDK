@@ -10,7 +10,7 @@ Before start, make sure you go through these steps:
 
 Add the following values of p2p-peer-address at the end of your config.ini file so that it connects to existing nodes in the network.
 
-#### Pangea Mainnet
+### Pangea Mainnet
 
 ```
 p2p-nodes
@@ -23,6 +23,8 @@ p2p-peer-address = 5.161.199.183:9876
 # eosusa
 p2p-peer-address = pangea.eosusa.io:9886
 ```
+
+#### chainId: 66d565f72ac08f8321a3036e2d92eea7f96ddc90599bdbfc2d025d810c74c248
 
 #### genesis.json
 
@@ -53,13 +55,21 @@ p2p-peer-address = pangea.eosusa.io:9886
 }
 ```
 
-#### Pangea Testnet
+### Pangea Testnet
 
 ```
 p2p-nodes
-# pangea testnet
+# 1.prod.tmy
+p2p-peer-address = 135.181.110.165:9876
+# 2.prod.tmy
+p2p-peer-address = 188.245.89.160:9876
+# 3.prod.tmy
+p2p-peer-address = 5.161.58.243:9876
+# eosusa
 p2p-peer-address = test.pangea.eosusa.io:9886
 ```
+
+#### chainId: 8a34ec7df1b8cd06ff4a8abbaa7cc50300823350cadc59ab296cb00d104d2b8f
 
 #### genesis.json
 
