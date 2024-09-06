@@ -77,7 +77,6 @@ export async function hyphaContractSet(args: any, options: StandardProposalOptio
 
     if (!deployActions) throw new Error('Expected deployActions to be defined');
 
-    console.log('buyRamAction', buyRamAction);
     const actions = [adminSetAppAction, transferTokensAction, buyRamAction, ...deployActions];
 
     const proposalHash = await createProposal(options.proposer, options.proposalName, actions, options.privateKey, [

@@ -239,7 +239,7 @@ export default async function msig(args: string[]) {
             console.error('Transaction succeeded');
         } catch (e) {
             console.error('Error: ', JSON.stringify(e, null, 2));
-            console.error('Transaction failed');
+            throw new Error('Transaction failed');
         }
     } else if (args[0] === 'exec') {
         const proposalName = Name.from(args[1]);
@@ -251,7 +251,7 @@ export default async function msig(args: string[]) {
             console.error('Transaction succeeded');
         } catch (e) {
             console.error('Error: ', JSON.stringify(e, null, 2));
-            console.error('Transaction failed');
+            throw new Error('Transaction failed');
         }
     } else {
         printCliHelp();
@@ -345,12 +345,12 @@ export async function executeProposal(proposer: string, proposalName: Name, prop
 
         console.log('Proposal approved succeeded');
 
-        await eosioMsigContract.exec(proposer, proposalName, governanceAccounts[0], tonomyGovSigners[0]);
+        await eosioMsigContract.exec(proposer, proposalName, proposer, tonomyGovSigners[0]);
 
         console.log('Proposal executed succeeded');
     } catch (e) {
         console.error('Error: ', JSON.stringify(e, null, 2));
-        console.error('Transaction failed');
+        throw new Error('Transaction failed');
     }
 }
 
