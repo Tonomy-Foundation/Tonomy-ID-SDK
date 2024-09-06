@@ -13,7 +13,7 @@ import { vestingBulk } from './vestingBulk';
 import { hyphaContractSet } from './hyphaContractSet';
 import { setResourceConfig } from './setResourceConfig';
 import { setBlockchainConfig } from './setBlockchainConfig';
-import { addProd, removeProd } from './producers';
+import { addProd, changeProds, removeProd } from './producers';
 
 const eosioMsigContract = EosioMsigContract.Instance;
 
@@ -173,6 +173,17 @@ export default async function msig(args: string[]) {
             );
         } else if (proposalType === 'remove-prod') {
             await removeProd(
+                {},
+                {
+                    proposer,
+                    proposalName,
+                    privateKey,
+                    requested: newGovernanceAccounts,
+                    test,
+                }
+            );
+        } else if (proposalType === 'change-prod') {
+            await changeProds(
                 {},
                 {
                     proposer,

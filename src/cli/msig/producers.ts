@@ -65,6 +65,62 @@ export async function removeProd(args: any, options: StandardProposalOptions) {
     if (options.test) await executeProposal(options.proposer, options.proposalName, proposalHash);
 }
 
+// @ts-expect-error any not used
+export async function changeProds(args: any, options: StandardProposalOptions) {
+    const newProducers = [
+        {
+            producer: 'prod1.tmy',
+            signingKey: PublicKey.from('PUB_K1_4uTNHX8hdWxyhYppW1pSESS9FeYP4nAipozUerQCTvXFwN9vq5'),
+        },
+        {
+            producer: 'prod2.tmy',
+            signingKey: PublicKey.from('PUB_K1_7THhTGLvEm5MB9YD1JEyDfQmpQtXhh2PXfY3vLtNJ72z7zZ7HN'),
+        },
+        {
+            producer: 'prod3.tmy',
+            signingKey: PublicKey.from('PUB_K1_56SRzctzrZTC5xtVnNYqS5kwVPxMi5QbTMZEQgpMrNFGatUrUX'),
+        },
+    ];
+
+    const oldSchedule = await getSchedule();
+
+    for (const { producer } of newProducers) {
+        if (oldSchedule.find((p) => p.producer_name.equals(producer)))
+            throw new Error('Producer already in the schedule');
+    }
+
+    const newSchedule = newProducers.map(({ producer, signingKey }) => {
+        return {
+            // eslint-disable-next-line camelcase
+            producer_name: Name.from(producer),
+            authority: [
+                'block_signing_authority_v0',
+                {
+                    threshold: 1,
+                    keys: [
+                        {
+                            key: signingKey,
+                            weight: Weight.from(1),
+                        },
+                    ],
+                },
+            ],
+        };
+    });
+
+    const action = createSetProdsAction(newSchedule);
+
+    const proposalHash = await createProposal(
+        options.proposer,
+        options.proposalName,
+        [action],
+        options.privateKey,
+        options.requested
+    );
+
+    if (options.test) await executeProposal(options.proposer, options.proposalName, proposalHash);
+}
+
 async function getSchedule() {
     const { pending, proposed, active } = await getProducers();
 
