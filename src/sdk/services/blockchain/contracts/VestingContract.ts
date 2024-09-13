@@ -22,13 +22,26 @@ export interface VestingAllocation {
 
 const MICROSECONDS_PER_SECOND = 1000000;
 
-const vestingCategories: Map<number, { startDelay: number; cliffPeriod: number; vestingPeriod: number }> = new Map([
+const vestingCategories: Map<
+    number,
+    { startDelay: number; cliffPeriod: number; vestingPeriod: number; tgeUnlock: number }
+> = new Map([
     [
         999, // Testing Category
         {
             startDelay: 10 * MICROSECONDS_PER_SECOND,
             cliffPeriod: 10 * MICROSECONDS_PER_SECOND,
             vestingPeriod: 20 * MICROSECONDS_PER_SECOND,
+            tgeUnlock: 0.0,
+        },
+    ],
+    [
+        998, // Testing Category
+        {
+            startDelay: 10 * MICROSECONDS_PER_SECOND,
+            cliffPeriod: 10 * MICROSECONDS_PER_SECOND,
+            vestingPeriod: 20 * MICROSECONDS_PER_SECOND,
+            tgeUnlock: 0.5,
         },
     ],
 ]);
@@ -128,6 +141,39 @@ export class VestingContract {
             name: 'withdraw',
             data: {
                 holder,
+            },
+        };
+
+        return await transact(Name.from(CONTRACT_NAME), [action], signer);
+    }
+
+    async migrateAllocation(
+        sender: NameType,
+        holder: NameType,
+        allocationId: number,
+        amount: string,
+        categoryId: number,
+        signer: Signer
+    ): Promise<API.v1.PushTransactionResponse> {
+        const action = {
+            authorization: [
+                {
+                    actor: sender.toString(),
+                    permission: 'active',
+                },
+                {
+                    actor: CONTRACT_NAME,
+                    permission: 'active',
+                },
+            ],
+            account: CONTRACT_NAME,
+            name: 'migratealloc',
+            data: {
+                sender,
+                holder,
+                allocation_id: allocationId,
+                amount,
+                category_id: categoryId,
             },
         };
 
