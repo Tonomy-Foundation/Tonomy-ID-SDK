@@ -14,6 +14,7 @@ import { hyphaContractSet } from './hyphaContractSet';
 import { setResourceConfig } from './setResourceConfig';
 import { setBlockchainConfig } from './setBlockchainConfig';
 import { addProd, changeProds, removeProd } from './producers';
+import { hyphaAccountsCreate } from './hyphaAccountsCreate';
 
 const eosioMsigContract = EosioMsigContract.Instance;
 
@@ -53,6 +54,7 @@ export default async function msig(args: string[]) {
 
     const proposer = newGovernanceAccounts[0];
     let signingKey: string | undefined = process.env.SIGNING_KEY;
+    const signingAccount = proposer;
 
     if (!signingKey) {
         if (!process.env.TONOMY_BOARD_PRIVATE_KEYS)
@@ -69,7 +71,7 @@ export default async function msig(args: string[]) {
         const proposalName = Name.from(args[1]);
 
         try {
-            const transaction = await eosioMsigContract.cancel(proposer, proposalName, proposer, signer);
+            const transaction = await eosioMsigContract.cancel(proposer, proposalName, signingAccount, signer);
 
             console.log('Transaction: ', JSON.stringify(transaction, null, 2));
             console.error('Transaction succeeded');
@@ -204,6 +206,17 @@ export default async function msig(args: string[]) {
                     test,
                 }
             );
+        } else if (proposalType === 'hypha-accounts-create') {
+            await hyphaAccountsCreate(
+                {},
+                {
+                    proposer,
+                    proposalName,
+                    privateKey,
+                    requested: newGovernanceAccounts,
+                    test,
+                }
+            );
         } else if (proposalType === 'res-config-set') {
             await setResourceConfig(
                 {},
@@ -233,7 +246,13 @@ export default async function msig(args: string[]) {
         const proposalName = Name.from(args[1]);
 
         try {
-            const transaction = await eosioMsigContract.approve(proposer, proposalName, proposer, undefined, signer);
+            const transaction = await eosioMsigContract.approve(
+                proposer,
+                proposalName,
+                signingAccount,
+                undefined,
+                signer
+            );
 
             console.log('Transaction: ', JSON.stringify(transaction, null, 2));
             console.error('Transaction succeeded');
@@ -245,7 +264,7 @@ export default async function msig(args: string[]) {
         const proposalName = Name.from(args[1]);
 
         try {
-            const transaction = await eosioMsigContract.exec(proposer, proposalName, proposer, signer);
+            const transaction = await eosioMsigContract.exec(proposer, proposalName, signingAccount, signer);
 
             console.log('Transaction: ', JSON.stringify(transaction, null, 2));
             console.error('Transaction succeeded');
@@ -327,7 +346,12 @@ export async function createProposal(
     }
 }
 
-export async function executeProposal(proposer: string, proposalName: Name, proposalHash: Checksum256) {
+export async function executeProposal(
+    proposer: string,
+    proposalName: Name,
+    proposalHash: Checksum256,
+    signingAccount?: NameType
+) {
     if (!process.env.TONOMY_BOARD_PRIVATE_KEYS) throw new Error('TONOMY_BOARD_PRIVATE_KEYS not set');
     const tonomyGovKeys: string[] = JSON.parse(process.env.TONOMY_BOARD_PRIVATE_KEYS).keys;
     const tonomyGovSigners = tonomyGovKeys.map((key) => createSigner(PrivateKey.from(key)));
@@ -345,7 +369,7 @@ export async function executeProposal(proposer: string, proposalName: Name, prop
 
         console.log('Proposal approved succeeded');
 
-        await eosioMsigContract.exec(proposer, proposalName, proposer, tonomyGovSigners[0]);
+        await eosioMsigContract.exec(proposer, proposalName, signingAccount ?? proposer, tonomyGovSigners[0]);
 
         console.log('Proposal executed succeeded');
     } catch (e) {
