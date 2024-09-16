@@ -184,7 +184,17 @@ describe('VestingContract class', () => {
             }
         });
 
-        test('Sucessfull when signed by sender of coins key', async () => {
+        test('Unsuccessful assignment due to depreciated category', async () => {
+            expect.assertions(1);
+
+            try {
+                await vestingContract.assignTokens('coinsale.tmy', accountName, '10.000000 LEOS', 1, signer);
+            } catch (e) {
+                expect(e.error.details[0].message).toContain('Category is depreciated');
+            }
+        });
+
+        test('Successful when signed by sender of coins key', async () => {
             expect.assertions(1);
             const newAccountKey = PrivateKey.generate("K1")
             const newAccountSigner = createSigner(newAccountKey);
@@ -496,6 +506,51 @@ describe('VestingContract class', () => {
             const allocatedAmount = assetToAmount(allocations[0].tokens_claimed);
 
             expect(allocatedAmount).toBe(transferAmount);
+        });
+
+        test('Successful withdrawal after with TGE unlock', async () => {
+            expect.assertions(8);
+            await vestingContract.assignTokens('coinsale.tmy', accountName, '1.000000 LEOS', 998, signer);
+
+            let allocations = await vestingContract.getAllocations(accountName);
+            const vestingPeriod = VestingContract.calculateVestingPeriod(settings, allocations[0]);
+
+            await sleepUntil(addSeconds(vestingPeriod.vestingStart, 0));
+            const trx = await vestingContract.withdraw(accountName, accountSigner);
+            const transferTrx = trx.processed.action_traces[0].inline_traces[0];
+            const transferAmount = assetToAmount(transferTrx.act.data.quantity);
+
+            expect(transferAmount).toBeGreaterThan(0.5);
+            expect(transferAmount).toBeLessThan(1.0);
+
+            allocations = await vestingContract.getAllocations(accountName);
+            const allocatedAmount = assetToAmount(allocations[0].tokens_claimed);
+
+            expect(allocatedAmount).toBe(transferAmount);
+
+            await sleep(1000);
+            const trx2 = await vestingContract.withdraw(accountName, accountSigner);
+            const transferTrx2 = trx2.processed.action_traces[0].inline_traces[0];
+            const transferAmount2 = assetToAmount(transferTrx2.act.data.quantity);
+
+            expect(transferAmount2).toBeLessThan(transferAmount);
+            expect(transferAmount2).toBeLessThan(1.0 - transferAmount);
+
+            await sleepUntil(addSeconds(vestingPeriod.vestingEnd, 0));
+            const trx3 = await vestingContract.withdraw(accountName, accountSigner);
+            const transferTrx3 = trx3.processed.action_traces[0].inline_traces[0];
+            const transferAmount3 = assetToAmount(transferTrx3.act.data.quantity);
+
+            expect(transferAmount + transferAmount2 + transferAmount3).toBeCloseTo(1.0, 6);
+
+            const allocations2 = await vestingContract.getAllocations(accountName);
+
+            expect(assetToAmount(allocations2[0].tokens_claimed)).toBe(1.0);
+
+            await sleep(1000);
+            const trx4 = await vestingContract.withdraw(accountName, accountSigner);
+
+            expect(trx4.processed.action_traces[0].inline_traces.length).toBe(0);
         });
 
         test('Cannot withdraw more after all already withdrawn', async () => {
