@@ -16,6 +16,7 @@ import { PrivateKey, Name } from '@wharfkit/antelope';
 import { createRandomAccount } from '../../../helpers/eosio';
 import { msigAction } from './governance';
 import { jest } from '@jest/globals';
+import Debug from 'debug';
 
 const vestingContract = VestingContract.Instance;
 const eosioTokenContract = EosioTokenContract.Instance;
@@ -508,7 +509,7 @@ describe('VestingContract class', () => {
             expect(allocatedAmount).toBe(transferAmount);
         });
 
-        test('Successful withdrawal after with TGE unlock', async () => {
+        test('Successful withdrawal with TGE unlock', async () => {
             expect.assertions(8);
             await vestingContract.assignTokens('coinsale.tmy', accountName, '1.000000 LEOS', 998, signer);
 
@@ -713,6 +714,42 @@ describe('VestingContract class', () => {
                 expect(e.error.details[0].message).toContain('Launch date not yet reached');
             }
         });
+    });
+
+    describe('migratealloc()', () => {
+        test('Successful migrates tokens to new category and amount', async () => {
+            await vestingContract.assignTokens('coinsale.tmy', accountName, '1.000000 LEOS', 999, signer);
+
+            const allocations = await vestingContract.getAllocations(accountName);
+            const oldAllocation = allocations[0];
+
+            const trx = await vestingContract.migrateAllocation('coinsale.tmy', accountName, oldAllocation.id,
+                oldAllocation.tokens_allocated, "2.000000 LEOS",
+                oldAllocation.vesting_category_type, 998,
+                signer);
+
+            const allocations1 = await vestingContract.getAllocations(accountName);
+            const newAllocation = allocations1[0];
+
+            expect(newAllocation.tokens_allocated).toBe('2.000000 LEOS');
+            expect(newAllocation.vesting_category_type).toBe(998);
+
+            const transferTrx = trx.processed.action_traces[0].inline_traces[1];
+
+            expect(transferTrx.act.account).toBe('eosio.token');
+            expect(transferTrx.act.name).toBe('transfer');
+            expect(transferTrx.act.data.from).toBe('coinsale.tmy');
+            expect(transferTrx.act.data.to).toBe('vesting.tmy');
+            expect(transferTrx.act.data.quantity).toBe('1.000000 LEOS');
+        });
+
+        // TODO:
+        // Unsuccessful if oldCategory does not match
+        // Unsuccessful if oldAmount does not match
+        // Successful if some tokens already withdrawn
+        // Unsuccessful new amount is less than already withdrawn
+        // Sends coins to contract if new tokens are allocated
+        // Sends coins to the sender if tokens are un-allocated
     });
 });
 

@@ -12,6 +12,7 @@ export interface VestingSettings {
 }
 
 export interface VestingAllocation {
+    id: number;
     cliff_period_claimed: number;
     holder: string;
     time_since_sale_start: { _count: number };
@@ -176,7 +177,7 @@ export class VestingContract {
                 old_amount: oldAmount,
                 new_amount: newAmount,
                 old_category_id: oldCategoryId,
-                category_id: newCategoryId,
+                new_category_id: newCategoryId,
             },
         };
 

@@ -174,6 +174,8 @@ async function transact(
         debug('Pushing transaction', JSON.stringify(actions, null, 2));
         res = await api.v1.chain.push_transaction(signedTransaction);
     } catch (e) {
+        debug('Error pushing transaction', e);
+
         if (e.response?.headers) {
             if (e.response?.json) {
                 throw new AntelopePushTransactionError({ ...e.response.json, contract, actions });
