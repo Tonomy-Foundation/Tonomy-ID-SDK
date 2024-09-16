@@ -151,8 +151,10 @@ export class VestingContract {
         sender: NameType,
         holder: NameType,
         allocationId: number,
-        amount: string,
-        categoryId: number,
+        oldAmount: string,
+        newAmount: string,
+        oldCategoryId: number,
+        newCategoryId: number,
         signer: Signer
     ): Promise<API.v1.PushTransactionResponse> {
         const action = {
@@ -172,8 +174,10 @@ export class VestingContract {
                 sender,
                 holder,
                 allocation_id: allocationId,
-                amount,
-                category_id: categoryId,
+                old_amount: oldAmount,
+                new_amount: newAmount,
+                old_category_id: oldCategoryId,
+                category_id: newCategoryId,
             },
         };
 
