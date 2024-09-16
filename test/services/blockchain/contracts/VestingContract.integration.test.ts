@@ -717,7 +717,9 @@ describe('VestingContract class', () => {
     });
 
     describe('migratealloc()', () => {
-        test('Successful migrates tokens to new category and amount', async () => {
+        test('Successful migrates tokens to new category and higher amount', async () => {
+            expect.assertions(7);
+
             await vestingContract.assignTokens('coinsale.tmy', accountName, '1.000000 LEOS', 999, signer);
 
             const allocations = await vestingContract.getAllocations(accountName);
@@ -743,13 +745,95 @@ describe('VestingContract class', () => {
             expect(transferTrx.act.data.quantity).toBe('1.000000 LEOS');
         });
 
-        // TODO:
-        // Unsuccessful if oldCategory does not match
-        // Unsuccessful if oldAmount does not match
+        test('Successful migrates tokens to new category and lower amount', async () => {
+            expect.assertions(7);
+            await vestingContract.assignTokens('coinsale.tmy', accountName, '1.000000 LEOS', 999, signer);
+
+            const allocations = await vestingContract.getAllocations(accountName);
+            const oldAllocation = allocations[0];
+
+            const trx = await vestingContract.migrateAllocation('coinsale.tmy', accountName, oldAllocation.id,
+                oldAllocation.tokens_allocated, "0.500000 LEOS",
+                oldAllocation.vesting_category_type, 998,
+                signer);
+
+            const allocations1 = await vestingContract.getAllocations(accountName);
+            const newAllocation = allocations1[0];
+
+            expect(newAllocation.tokens_allocated).toBe('0.500000 LEOS');
+            expect(newAllocation.vesting_category_type).toBe(998);
+
+            const transferTrx = trx.processed.action_traces[0].inline_traces[1];
+
+            expect(transferTrx.act.account).toBe('eosio.token');
+            expect(transferTrx.act.name).toBe('transfer');
+            expect(transferTrx.act.data.to).toBe('coinsale.tmy');
+            expect(transferTrx.act.data.from).toBe('vesting.tmy');
+            expect(transferTrx.act.data.quantity).toBe('0.500000 LEOS');
+        });
+
+        test('Successfully withdraws after migration', async () => {
+            expect.assertions(1);
+
+            await vestingContract.assignTokens('coinsale.tmy', accountName, '1.000000 LEOS', 999, signer);
+
+            const allocations = await vestingContract.getAllocations(accountName);
+            const oldAllocation = allocations[0];
+
+            await vestingContract.migrateAllocation('coinsale.tmy', accountName, oldAllocation.id,
+                oldAllocation.tokens_allocated, "2.000000 LEOS",
+                oldAllocation.vesting_category_type, 998,
+                signer);
+
+            const allocations2 = await vestingContract.getAllocations(accountName);
+            const vestingPeriod2 = VestingContract.calculateVestingPeriod(settings, allocations2[0]);
+
+            await sleepUntil(vestingPeriod2.vestingEnd);
+            const trx = await vestingContract.withdraw(accountName, accountSigner);
+            const transferTrx = trx.processed.action_traces[0].inline_traces[0];
+            const transferAmount = assetToAmount(transferTrx.act.data.quantity);
+
+            expect(transferAmount).toBe(2.0);
+        });
+
+        test("Unsuccessful if old category does not match", async () => {
+            expect.assertions(1);
+
+            await vestingContract.assignTokens('coinsale.tmy', accountName, '1.000000 LEOS', 999, signer);
+
+            const allocations = await vestingContract.getAllocations(accountName);
+            const oldAllocation = allocations[0];
+
+            try {
+                await vestingContract.migrateAllocation('coinsale.tmy', accountName, oldAllocation.id,
+                    oldAllocation.tokens_allocated, "2.000000 LEOS",
+                    998, 998,
+                    signer);
+            } catch (e) {
+                expect(e.error.details[0].message).toContain("Old category does not match existing allocation");
+            }
+        });
+
+        test("Unsuccessful if old amount does not match", async () => {
+            expect.assertions(1);
+
+            await vestingContract.assignTokens('coinsale.tmy', accountName, '1.000000 LEOS', 999, signer);
+
+            const allocations = await vestingContract.getAllocations(accountName);
+            const oldAllocation = allocations[0];
+
+            try {
+                await vestingContract.migrateAllocation('coinsale.tmy', accountName, oldAllocation.id,
+                    "2.000000 LEOS", "2.000000 LEOS",
+                    oldAllocation.vesting_category_type, 998,
+                    signer);
+            } catch (e) {
+                expect(e.error.details[0].message).toContain("Old amount does not match existing allocation");
+            }
+        });
+
         // Successful if some tokens already withdrawn
         // Unsuccessful new amount is less than already withdrawn
-        // Sends coins to contract if new tokens are allocated
-        // Sends coins to the sender if tokens are un-allocated
     });
 });
 
