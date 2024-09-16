@@ -6,6 +6,10 @@ import { getSettings } from '../../../util';
 
 const CONTRACT_NAME = 'eosio.token';
 
+export function assetToAmount(asset: string): number {
+    return parseFloat(asset.split(' ')[0]);
+}
+
 class EosioTokenContract {
     static singletonInstande: EosioTokenContract;
 

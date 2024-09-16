@@ -5,6 +5,7 @@ import {
     Authority,
     EosioTokenContract,
     Signer,
+    assetToAmount,
     createKeyManagerSigner,
     createSigner,
     getTonomyOperationsKey,
@@ -21,10 +22,6 @@ import Debug from 'debug';
 const vestingContract = VestingContract.Instance;
 const eosioTokenContract = EosioTokenContract.Instance;
 const signer = createSigner(getTonomyOperationsKey());
-
-function assetToAmount(asset: string): number {
-    return parseFloat(asset.split(' ')[0]);
-}
 
 describe('VestingContract class', () => {
     jest.setTimeout(60000);

@@ -11,6 +11,7 @@ import { addAuth } from './addAuth';
 import { deployContract } from './deployContract';
 import { addEosioCode } from './addEosioCode';
 import { printCliHelp } from '..';
+import { vestingMigrate } from './vestingMigrateAllocate';
 
 const eosioMsigContract = EosioMsigContract.Instance;
 
@@ -141,6 +142,17 @@ export default async function msig(args: string[]) {
                     permission: 'active',
                     newDelegate: settings.isProduction() ? '14.found.tmy' : governanceAccounts[2],
                 },
+                {
+                    proposer,
+                    proposalName,
+                    privateKey,
+                    requested: newGovernanceAccounts,
+                    test,
+                }
+            );
+        } else if (proposalType === 'vesting-migrate') {
+            await vestingMigrate(
+                {},
                 {
                     proposer,
                     proposalName,
