@@ -115,7 +115,7 @@ describe('VestingContract class', () => {
             const trx1 = await vestingContract.assignTokens('coinsale.tmy', accountName, '1.000000 LEOS', 999, signer);
 
             await sleep(500); // Needs to wait to be in a separate block, otherwise primary key is the same. See https://github.com/Tonomy-Foundation/Tonomy-Contracts/pull/111/commits/93525ff460299b3c97d623da78281524d164868d#diff-603eb802bda54a8100f95221bfed922b002a61284728341bf9221cede61c01c4R71
-            const trx2 = await vestingContract.assignTokens('coinsale.tmy', accountName, '10.000000 LEOS', 1, signer);
+            const trx2 = await vestingContract.assignTokens('coinsale.tmy', accountName, '10.000000 LEOS', 998, signer);
 
             expect(trx1.processed.receipt.status).toBe('executed');
             expect(trx2.processed.receipt.status).toBe('executed');
@@ -127,7 +127,7 @@ describe('VestingContract class', () => {
             expect(allocations[0].vesting_category_type).toBe(999);
             expect(allocations[1].holder).toBe(accountName);
             expect(allocations[1].tokens_allocated).toBe('10.000000 LEOS');
-            expect(allocations[1].vesting_category_type).toBe(1);
+            expect(allocations[1].vesting_category_type).toBe(998);
         });
 
         test('Unsuccessful assignment due to invalid symbol', async () => {
@@ -574,40 +574,39 @@ describe('VestingContract class', () => {
             expect.assertions(9);
 
             await vestingContract.assignTokens('coinsale.tmy', accountName, '1.000000 LEOS', 999, signer);
-            await sleep(5000);
+            await sleep(1000);
             await vestingContract.assignTokens('coinsale.tmy', accountName, '1.000000 LEOS', 999, signer);
 
             const allocations = await vestingContract.getAllocations(accountName);
             const vestingPeriod = VestingContract.calculateVestingPeriod(settings, allocations[0]);
-            const vestingPeriod2 = VestingContract.calculateVestingPeriod(settings, allocations[1]);
 
-            // 1st withdrawal after 1st allocation cliff end
+            // 1st withdrawal after allocation cliff end
             await sleepUntil(addSeconds(vestingPeriod.cliffEnd, 1));
             const trx = await vestingContract.withdraw(accountName, accountSigner);
 
             const transferAmount = assetToAmount(trx.processed.action_traces[0].inline_traces[0].act.data.quantity);
             const allocations1 = await vestingContract.getAllocations(accountName);
 
-            expect(assetToAmount(allocations1[0].tokens_claimed)).toBe(transferAmount);
-            expect(assetToAmount(allocations1[1].tokens_claimed)).toBe(0.0);
+            expect(assetToAmount(allocations1[0].tokens_claimed)).toBe(transferAmount / 2);
+            expect(assetToAmount(allocations1[1].tokens_claimed)).toBe(transferAmount / 2);
 
-            // 2nd withdrawal after 2nd allocation cliff end
-            await sleepUntil(addSeconds(vestingPeriod2.cliffEnd, 1));
+            // 2nd withdrawal after a few more seconds
+            await sleep(2000);
             const trx2 = await vestingContract.withdraw(accountName, accountSigner);
             const transferAmount2 = assetToAmount(trx2.processed.action_traces[0].inline_traces[0].act.data.quantity);
             const allocations2 = await vestingContract.getAllocations(accountName);
 
-            expect(assetToAmount(allocations2[0].tokens_claimed)).toBeGreaterThan(transferAmount);
-            expect(assetToAmount(allocations2[1].tokens_claimed)).toBeGreaterThan(0.0);
-            expect(assetToAmount(allocations2[1].tokens_claimed)).toBeLessThan(1.0);
+            expect(assetToAmount(allocations2[0].tokens_claimed)).toBe(assetToAmount(allocations2[1].tokens_claimed));
+            expect(assetToAmount(allocations2[0].tokens_claimed)).toBeGreaterThan(transferAmount / 2);
+            expect(assetToAmount(allocations2[0].tokens_claimed)).toBeLessThan(1.0);
             expect(transferAmount2).toBeCloseTo(
-                assetToAmount(allocations2[1].tokens_claimed) +
-                assetToAmount(allocations2[0].tokens_claimed) -
+                assetToAmount(allocations2[0].tokens_claimed) +
+                assetToAmount(allocations2[1].tokens_claimed) -
                 transferAmount, 6
             );
 
-            // 3rd withdrawal after 2nd allocation vesting end
-            await sleepUntil(addSeconds(vestingPeriod2.vestingEnd, 1));
+            // 3rd withdrawal after allocation vesting end
+            await sleepUntil(addSeconds(vestingPeriod.vestingEnd, 1));
             const trx3 = await vestingContract.withdraw(accountName, accountSigner);
             const transferAmount3 = assetToAmount(trx3.processed.action_traces[0].inline_traces[0].act.data.quantity);
             const allocations3 = await vestingContract.getAllocations(accountName);
@@ -622,7 +621,7 @@ describe('VestingContract class', () => {
             expect.assertions(4);
 
             await vestingContract.assignTokens('coinsale.tmy', accountName, '1.000000 LEOS', 999, signer);
-            await vestingContract.assignTokens('coinsale.tmy', accountName, '1.000000 LEOS', 1, signer);
+            await vestingContract.assignTokens('coinsale.tmy', accountName, '1.000000 LEOS', 997, signer);
 
             const allocations = await vestingContract.getAllocations(accountName);
             const vestingPeriod = VestingContract.calculateVestingPeriod(settings, allocations[0]);

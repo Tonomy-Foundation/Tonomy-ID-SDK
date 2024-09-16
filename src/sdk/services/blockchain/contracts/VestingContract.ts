@@ -62,8 +62,7 @@ export class VestingContract {
         if (!vestingCategory) throw new Error('Invalid vesting category');
 
         const launchDate = new Date(settings.launch_date + 'Z');
-        const x = addMicroseconds(launchDate, allocation.time_since_sale_start._count);
-        const vestingStart = addMicroseconds(x, vestingCategory.startDelay);
+        const vestingStart = addMicroseconds(launchDate, vestingCategory.startDelay);
         const cliffEnd = addMicroseconds(vestingStart, vestingCategory.cliffPeriod);
         const vestingEnd = addMicroseconds(vestingStart, vestingCategory.vestingPeriod);
 
