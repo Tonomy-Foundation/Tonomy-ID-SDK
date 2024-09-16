@@ -832,8 +832,61 @@ describe('VestingContract class', () => {
             }
         });
 
-        // Successful if some tokens already withdrawn
-        // Unsuccessful new amount is less than already withdrawn
+        test("Successful if some tokens already withdrawn", async () => {
+            expect.assertions(3);
+
+            await vestingContract.assignTokens('coinsale.tmy', accountName, '1.000000 LEOS', 999, signer);
+
+            const allocations = await vestingContract.getAllocations(accountName);
+            const oldAllocation = allocations[0];
+
+            const allocations2 = await vestingContract.getAllocations(accountName);
+            const vestingPeriod2 = VestingContract.calculateVestingPeriod(settings, allocations2[0]);
+
+            await sleepUntil(vestingPeriod2.vestingEnd);
+            await vestingContract.withdraw(accountName, accountSigner);
+
+            await vestingContract.migrateAllocation('coinsale.tmy', accountName, oldAllocation.id,
+                oldAllocation.tokens_allocated, "2.000000 LEOS",
+                oldAllocation.vesting_category_type, 998,
+                signer);
+
+            const allocations3 = await vestingContract.getAllocations(accountName);
+            const newAllocation = allocations3[0];
+
+            expect(newAllocation.tokens_claimed).toBe('1.000000 LEOS');
+            expect(newAllocation.tokens_allocated).toBe('2.000000 LEOS');
+
+            const trx = await vestingContract.withdraw(accountName, accountSigner);
+            const transferTrx = trx.processed.action_traces[0].inline_traces[0];
+            const transferAmount = assetToAmount(transferTrx.act.data.quantity);
+
+            expect(transferAmount).toBe(1.0);
+        });
+
+        test("Unsuccessful new amount is less than already withdrawn", async () => {
+            expect.assertions(1);
+
+            await vestingContract.assignTokens('coinsale.tmy', accountName, '1.000000 LEOS', 999, signer);
+
+            const allocations = await vestingContract.getAllocations(accountName);
+            const oldAllocation = allocations[0];
+
+            const allocations2 = await vestingContract.getAllocations(accountName);
+            const vestingPeriod2 = VestingContract.calculateVestingPeriod(settings, allocations2[0]);
+
+            await sleepUntil(vestingPeriod2.vestingEnd);
+            await vestingContract.withdraw(accountName, accountSigner);
+
+            try {
+                await vestingContract.migrateAllocation('coinsale.tmy', accountName, oldAllocation.id,
+                    oldAllocation.tokens_allocated, "0.500000 LEOS",
+                    oldAllocation.vesting_category_type, 998,
+                    signer);
+            } catch (e) {
+                expect(e.error.details[0].message).toContain("New amount is less than the amount already claimed");
+            }
+        });
     });
 });
 
