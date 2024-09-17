@@ -4,7 +4,12 @@ import { ActionData, assetToAmount, VestingContract } from '../../sdk/services/b
 
 // @ts-expect-error args unused
 export async function vestingMigrate(args: {}, options: StandardProposalOptions) {
-    const migrateAccounts = [''];
+    // Testnet list
+    const migrateAccounts = [
+        'p42pwxofd1vy', // 36 allocations
+        'pwgvt1xn4ce5', // 10 allocations
+        'p2mbvozcqp2l', // 5 allocations
+    ];
 
     const actions: ActionData[] = [];
 
