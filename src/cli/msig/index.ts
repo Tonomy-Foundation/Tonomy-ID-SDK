@@ -11,6 +11,7 @@ import { addAuth } from './addAuth';
 import { deployContract } from './deployContract';
 import { addEosioCode } from './addEosioCode';
 import { printCliHelp } from '..';
+import addOpsNewKey from './addOpsKey';
 
 const eosioMsigContract = EosioMsigContract.Instance;
 
@@ -363,6 +364,20 @@ export default async function msig(args: string[]) {
                     schedule: newSchedule,
                 },
             };
+
+            const proposalHash = await createProposal(
+                proposer,
+                proposalName,
+                [action],
+                privateKey,
+                newGovernanceAccounts
+            );
+
+            if (test) await executeProposal(proposer, proposalName, proposalHash);
+        } else if (proposalType === 'add-new-ops-key') {
+            const publicKey = args[3];
+
+            const action = await addOpsNewKey(publicKey);
 
             const proposalHash = await createProposal(
                 proposer,
