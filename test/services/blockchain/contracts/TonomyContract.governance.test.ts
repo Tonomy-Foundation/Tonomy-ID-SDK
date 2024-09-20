@@ -13,14 +13,17 @@ import { getDeployableFilesFromDir } from '../../../../src/cli/bootstrap/deploy-
 import fs from 'fs';
 import { sleep } from '../../../../src/sdk/util';
 import { randomAccountName, tonomyBoardAccounts, tonomyBoardSigners } from '../../../helpers/eosio';
+import { msigAction, tonomyOpsSigner } from './governance';
+import { jest } from '@jest/globals';
+import Debug from 'debug';
+
+const debug = Debug('tonomy-sdk-tests:services:blockchain:contracts:TonomyContract.governance.test');
 
 const eosioMsigContract = EosioMsigContract.Instance;
 const tonomyEosioProxyContract = TonomyEosioProxyContract.Instance;
 const eosioContract = EosioContract.Instance;
 
 describe('TonomyContract class', () => {
-    const tonomyOpsSigner = createSigner(getTonomyOperationsKey());
-
     jest.setTimeout(60000);
 
     describe('native::newaccount()', () => {
@@ -85,7 +88,7 @@ describe('TonomyContract class', () => {
             try {
                 await msigAction([action], { satisfyRequireApproval: true });
             } catch (e) {
-                console.log(e.message, JSON.stringify(e, null, 2));
+                debug(e.message, JSON.stringify(e, null, 2));
                 throw e;
             }
         });
@@ -94,7 +97,7 @@ describe('TonomyContract class', () => {
             try {
                 await msigAction([action]);
             } catch (e) {
-                console.log(e.message, JSON.stringify(e, null, 2));
+                debug(e.message, JSON.stringify(e, null, 2));
                 throw e;
             }
         });
@@ -177,7 +180,7 @@ describe('TonomyContract class', () => {
 
                     expect(trx.processed.receipt.status).toBe('executed');
                 } catch (e) {
-                    console.log(e.message, JSON.stringify(e, null, 2));
+                    debug(e.message, JSON.stringify(e, null, 2));
                     throw e;
                 }
             });
@@ -211,7 +214,7 @@ describe('TonomyContract class', () => {
 
                     expect(trx.processed.receipt.status).toBe('executed');
                 } catch (e) {
-                    console.log(e.message, JSON.stringify(e, null, 2));
+                    debug(e.message, JSON.stringify(e, null, 2));
                     throw e;
                 }
             });
@@ -222,7 +225,7 @@ describe('TonomyContract class', () => {
                 try {
                     await msigAction([action], { satisfyRequireApproval: true });
                 } catch (e) {
-                    console.log(e.message, JSON.stringify(e, null, 2));
+                    debug(e.message, JSON.stringify(e, null, 2));
                     throw e;
                 }
             });
@@ -233,7 +236,7 @@ describe('TonomyContract class', () => {
                 try {
                     await msigAction([action]);
                 } catch (e) {
-                    console.log(e.message, JSON.stringify(e, null, 2));
+                    debug(e.message, JSON.stringify(e, null, 2));
                     throw e;
                 }
             });
@@ -305,7 +308,7 @@ describe('TonomyContract class', () => {
                     await transact(Name.from('tonomy'), [updateAuthAction], tonomyBoardSigners.slice(0, 2));
                     await restoreFoundTmyAuth();
                 } catch (e) {
-                    console.log(e.message, JSON.stringify(e, null, 2));
+                    debug(e.message, JSON.stringify(e, null, 2));
                     throw e;
                 }
             });
@@ -383,10 +386,7 @@ describe('TonomyContract class', () => {
                     const approve1Trx = await eosioMsigContract.approve(
                         proposer,
                         proposalName,
-                        {
-                            actor: Name.from(newAccounts[0]),
-                            permission: Name.from('active'),
-                        },
+                        Name.from(newAccounts[0]),
                         proposalHash,
                         newSigners[0]
                     );
@@ -396,10 +396,7 @@ describe('TonomyContract class', () => {
                     await eosioMsigContract.approve(
                         proposer,
                         proposalName,
-                        {
-                            actor: Name.from(newAccounts[1]),
-                            permission: Name.from('active'),
-                        },
+                        Name.from(newAccounts[1]),
                         proposalHash,
                         newSigners[1]
                     );
@@ -412,7 +409,7 @@ describe('TonomyContract class', () => {
 
                     expect(execTrx.processed.receipt.status).toBe('executed');
                 } catch (e) {
-                    console.log(e.message, JSON.stringify(e, null, 2));
+                    debug(e.message, JSON.stringify(e, null, 2));
                     throw e;
                 }
             });
@@ -825,98 +822,4 @@ describe('TonomyContract class', () => {
             expect(transaction.processed.receipt.status).toBe('executed');
         }
     });
-
-    // asserts = 3
-    async function msigAction(
-        actions: ActionData[],
-        options: { satisfyRequireApproval?: boolean; requireTonomyOps?: boolean } = {}
-    ) {
-        const proposalName = randomAccountName();
-        const proposer = '1.found.tmy';
-
-        const requested = [
-            {
-                actor: '1.found.tmy',
-                permission: 'active',
-            },
-            {
-                actor: '2.found.tmy',
-                permission: 'active',
-            },
-            {
-                actor: '3.found.tmy',
-                permission: 'active',
-            },
-        ];
-
-        if (options.requireTonomyOps ?? false) {
-            requested.push({
-                actor: 'tonomy',
-                permission: 'active',
-            });
-        }
-
-        const { proposalHash, transaction } = await eosioMsigContract.propose(
-            proposer,
-            proposalName,
-            requested,
-            actions,
-            tonomyBoardSigners[0]
-        );
-
-        expect(transaction.processed.receipt.status).toBe('executed');
-
-        const approve1Trx = await eosioMsigContract.approve(
-            proposer,
-            proposalName,
-            {
-                actor: Name.from('1.found.tmy'),
-                permission: Name.from('active'),
-            },
-            proposalHash,
-            tonomyBoardSigners[0]
-        );
-
-        expect(approve1Trx.processed.receipt.status).toBe('executed');
-
-        if (options.satisfyRequireApproval ?? false) {
-            await eosioMsigContract.approve(
-                proposer,
-                proposalName,
-                {
-                    actor: Name.from('2.found.tmy'),
-                    permission: Name.from('active'),
-                },
-                proposalHash,
-                tonomyBoardSigners[1]
-            );
-        }
-
-        if (options.requireTonomyOps ?? false) {
-            await eosioMsigContract.approve(
-                proposer,
-                proposalName,
-                {
-                    actor: Name.from('tonomy'),
-                    permission: Name.from('active'),
-                },
-                proposalHash,
-                tonomyOpsSigner
-            );
-        }
-
-        try {
-            const execTrx = await eosioMsigContract.exec(proposer, proposalName, '1.found.tmy', tonomyBoardSigners[0]);
-
-            if (options.satisfyRequireApproval ?? false) {
-                expect(execTrx.processed.receipt.status).toBe('executed');
-            }
-        } catch (e) {
-            if (!(options.satisfyRequireApproval ?? false)) {
-                expect(e.error.details[0].message).toContain('transaction authorization failed');
-            } else {
-                throw e;
-            }
-        }
-    }
 });

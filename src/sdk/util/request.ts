@@ -1,6 +1,6 @@
 import { PublicKey } from '@wharfkit/antelope';
 import { VCWithTypeType, VerifiableCredentialOptions, VerifiableCredentialWithType } from './ssi/vc';
-import { Issuer } from '@tonomy/did-jwt-vc';
+import { Issuer } from 'did-jwt-vc';
 
 export class WalletRequest<T extends object = any> extends VerifiableCredentialWithType<T> {
     protected static type = 'WalletRequest';

@@ -1,10 +1,8 @@
 import { LoginRequestsMessage, generateRandomKeyPair, randomString } from '../../src/sdk';
-import { createJWK } from '../../src/sdk/util/ssi/did-jwk';
-import { ES256KSigner } from '@tonomy/did-jwt';
-import { Issuer } from '@tonomy/did-jwt-vc';
-import { toDid } from '../../src/sdk/util/ssi/did-jwk';
+import { Issuer } from 'did-jwt-vc';
 import { LoginRequest, LoginRequestPayload } from '../../src/sdk/util/request';
 import { PublicKey } from '@wharfkit/antelope';
+import { toDidKeyIssuer } from '../../src/sdk/util/ssi/did-key';
 
 describe('Request class', () => {
     let issuer: Issuer;
@@ -12,15 +10,9 @@ describe('Request class', () => {
 
     beforeEach(async () => {
         const { privateKey, publicKey } = generateRandomKeyPair();
-        const signer = ES256KSigner(privateKey.data.array, true);
-        const jwk = await createJWK(publicKey);
-        const did = toDid(jwk);
 
-        issuer = {
-            did,
-            signer,
-            alg: 'ES256K-R',
-        };
+        issuer = await toDidKeyIssuer(privateKey);
+
         request = {
             randomString: randomString(32),
             origin: 'https://tonomy.foundation',
@@ -41,7 +33,7 @@ describe('Request class', () => {
         expect(loginRequest.toString).toBeDefined();
     });
 
-    it('creates a LoginRequest with a did-jwk', async () => {
+    it('creates a LoginRequest with a did-key', async () => {
         const loginRequest = await LoginRequest.signRequest(request, issuer);
 
         expect(loginRequest.getIssuer()).toBe(issuer.did);
@@ -63,15 +55,8 @@ describe('LoginRequest class', () => {
         const { privateKey, publicKey } = generateRandomKeyPair();
 
         myPublicKey = publicKey;
-        const signer = ES256KSigner(privateKey.data.array, true);
-        const jwk = await createJWK(publicKey);
-        const did = toDid(jwk);
+        issuer = await toDidKeyIssuer(privateKey);
 
-        issuer = {
-            did,
-            signer,
-            alg: 'ES256K-R',
-        };
         request = {
             randomString: randomString(32),
             origin: 'https://tonomy.foundation',
@@ -101,15 +86,8 @@ describe('LoginRequestMessage class', () => {
         const { privateKey, publicKey } = generateRandomKeyPair();
 
         myPublicKey = publicKey;
-        const signer = ES256KSigner(privateKey.data.array, true);
-        const jwk = await createJWK(publicKey);
-        const did = toDid(jwk);
+        issuer = await toDidKeyIssuer(privateKey);
 
-        issuer = {
-            did,
-            signer,
-            alg: 'ES256K-R',
-        };
         request = {
             randomString: randomString(32),
             origin: 'https://tonomy.foundation',

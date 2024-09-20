@@ -14,33 +14,41 @@ jobs:
   publish-npm:
     runs-on: ubuntu-20.04
     steps:
+      - name: Install jq
+        run: sudo apt install jq -y
+      
       - name: 🏗 Setup repo
         uses: actions/checkout@v4
         with:
           token: ${{secrets.MY_GITHUB_PERSONAL_ACCESS_TOKEN}}
+      
+      - name: Enable Corepack before setting up Node
+        run: corepack enable
 
       - name: 📦 Install
         uses: actions/setup-node@v4
         with:
-          node-version: 18.12.1
+          node-version: 22.3.0
           registry-url: https://registry.npmjs.org/
+      
       - name: 🚀 Build and publish SDK
         uses: actions/setup-node@v4
         with:
-          node-version: 18.12.1
+          node-version: 22.3.0
       - name: Check branch name
         run: echo ${GITHUB_REF#refs/*/}
       - run: |
           if [[ ${GITHUB_REF#refs/*/} == "development" ]]; then
             echo "Variable BRANCH_NAME is set to 'development'"
-            yarn config set tag development
+            jq --arg tag "development" '.publishConfig.tag = $tag' package.json > package.tmp.json && mv package.tmp.json package.json
           fi
 
           if [[ ${GITHUB_REF#refs/*/} == "testnet" ]]; then
             echo "Variable BRANCH_NAME is set to 'testnet'"
-            yarn config set tag rc
+            jq --arg tag "rc" '.publishConfig.tag = $tag' package.json > package.tmp.json && mv package.tmp.json package.json
           fi
       - run: yarn install --immutable
+      - run: yarn run build
       - run: yarn run release
         env:
           GITHUB_TOKEN: ${{secrets.MY_GITHUB_PERSONAL_ACCESS_TOKEN}}

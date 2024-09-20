@@ -98,24 +98,20 @@ export class EosioMsigContract {
     async approve(
         proposer: NameType,
         proposalName: NameType,
-        level: PermissionLevelType,
-        proposalHash: Checksum256Type,
+        approver: NameType,
+        proposalHash: undefined | Checksum256Type,
         signer: Signer
     ): Promise<API.v1.PushTransactionResponse> {
+        const auth = { actor: approver.toString(), permission: 'active' };
         const actions = [
             {
                 account: CONTRACT_NAME,
                 name: 'approve',
-                authorization: [
-                    {
-                        actor: level.actor.toString(),
-                        permission: level.permission.toString(),
-                    },
-                ],
+                authorization: [auth],
                 data: {
                     proposer,
                     proposal_name: proposalName,
-                    level,
+                    level: auth,
                     proposal_hash: proposalHash,
                 },
             },

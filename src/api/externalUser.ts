@@ -1,6 +1,6 @@
 import { KeyManager, KeyManagerLevel } from '../sdk/storage/keymanager';
 import { createVCSigner, randomString } from '../sdk/util/crypto';
-import { Issuer } from '@tonomy/did-jwt-vc';
+import { Issuer } from 'did-jwt-vc';
 import { getSettings } from '../sdk/util/settings';
 import { SdkError, SdkErrors, createSdkError, throwError } from '../sdk/util/errors';
 import { createStorage, PersistentStorageClean, StorageFactory, STORAGE_NAMESPACE } from '../sdk/storage/storage';
@@ -25,10 +25,13 @@ import { objToBase64Url } from '../sdk/util/base64';
 import { VerifiableCredential } from '../sdk/util/ssi/vc';
 import { DIDurl } from '../sdk/util/ssi/types';
 import { Signer, createKeyManagerSigner, transact } from '../sdk/services/blockchain/eosio/transaction';
-import { createJwkIssuerAndStore } from '../sdk/helpers/jwkStorage';
+import { createDidKeyIssuerAndStore } from '../sdk/helpers/didKeyStorage';
 import { getLoginRequestResponseFromUrl } from '../sdk/helpers/urls';
 import { verifyKeyExistsForApp } from '../sdk/helpers/user';
 import { IOnPressLoginOptions } from '../sdk/types/User';
+import Debug from 'debug';
+
+const debug = Debug('tonomy-sdk:externalUser');
 
 /**
  * The storage data for an external user that has logged in with Tonomy ID
@@ -255,7 +258,7 @@ export class ExternalUser {
         { redirect = true, callbackPath, dataRequest }: IOnPressLoginOptions,
         keyManager: KeyManager = new JsKeyManager()
     ): Promise<LoginWithTonomyMessages | void> {
-        const issuer = await createJwkIssuerAndStore(keyManager);
+        const issuer = await createDidKeyIssuerAndStore(keyManager);
         const publicKey = await keyManager.getKey({ level: KeyManagerLevel.BROWSER_LOCAL_STORAGE });
         let dataSharingRequest;
 
@@ -300,12 +303,11 @@ export class ExternalUser {
     /**
      * Returns the issuer of the user for use with did-jwt and VCs
      *
-     * @param {KeyManager} [keyManager] - the key manager to use to store the keys
      * @returns {Promise<Issuer>} - the issuer of the user
      */
-    async getIssuer(keyManager: KeyManager = new JsKeyManager()): Promise<Issuer> {
+    async getIssuer(): Promise<Issuer> {
         const did = await this.getDid();
-        const signer = createVCSigner(keyManager, KeyManagerLevel.BROWSER_LOCAL_STORAGE);
+        const signer = createVCSigner(this.keyManager, KeyManagerLevel.BROWSER_LOCAL_STORAGE);
 
         return {
             did,
@@ -457,11 +459,10 @@ export class ExternalUser {
         };
         const signer = this.getTransactionSigner();
 
-        if (getSettings().loggerLevel === 'debug')
-            console.log(
-                `signTransaction() called by ${account.toString()} with permission ${permission.toString()} to contract ${contractAccount.toString()}`,
-                JSON.stringify(newAction, null, 2)
-            );
+        debug(
+            `signTransaction() called by ${account.toString()} with permission ${permission.toString()} to contract ${contractAccount.toString()}`,
+            JSON.stringify(newAction, null, 2)
+        );
 
         return await transact(Name.from(contractAccount), [newAction], signer);
     }

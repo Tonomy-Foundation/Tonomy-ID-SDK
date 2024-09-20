@@ -46,17 +46,7 @@ Currently, only the `username` is able to be requested. We are working on suppor
 
 ### Styling the Tonomy login button
 
-To use the Tonomy login button styles, import the stylesheet and use the class `tonomy-login-button` on your button.
-
-```typescript
-import "@tonomy/tonomy-id-sdk/build/api/tonomy.css";
-```
-
-or
-
-```html
-<link href="https://unpkg.com/@tonomy/tonomy-id-sdk/build/api/tonomy.css" />
-```
+TODO: need to provide this in the gitbook docs
 
 ## 3. Callback page
 
