@@ -2,6 +2,9 @@ import { io, Socket } from 'socket.io-client';
 import { CommunicationError, createSdkError, SdkErrors, throwError } from '../../util/errors';
 import { getSettings } from '../../util/settings';
 import { AuthenticationMessage, Message } from '../../services/communication/message';
+import Debug from 'debug';
+
+const debug = Debug('tonomy-sdk:services:communication:communication');
 
 export type Subscriber = (message: Message) => void;
 
@@ -86,21 +89,22 @@ export class Communication {
      * @throws {SdkError} - CommunicationTimeout
      */
     private async emitMessage(event: string, message: Message): Promise<boolean> {
-        if (getSettings().loggerLevel === 'debug')
-            console.log(
-                'emitMessage',
-                event,
-                message.getType(),
-                message.getSender(),
-                message.getRecipient(),
-                message.getPayload()
-            );
+        debug(
+            'emitMessage',
+            event,
+            message.getType(),
+            message.getSender(),
+            message.getRecipient(),
+            message.getPayload()
+        );
         const ack = await new Promise<WebsocketReturnType>((resolve, reject) => {
             this.socketServer
                 .timeout(SOCKET_TIMEOUT)
                 .emit(event, { message: message.toString() }, (error: any, response: any) => {
-                    if (response.error) {
-                        if (response.exception?.name === 'HttpException') {
+                    debug('emitMessage response', JSON.stringify(error, null, 2), JSON.stringify(response, null, 2));
+
+                    if (response?.error) {
+                        if (response?.exception?.name === 'HttpException') {
                             const communicationError = new CommunicationError(response);
 
                             reject(communicationError);
@@ -181,8 +185,7 @@ export class Communication {
         const messageHandler = (message: any) => {
             const msg = new Message(message);
 
-            if (getSettings().loggerLevel === 'debug')
-                console.log('receiveMessage', msg.getType(), msg.getSender(), msg.getRecipient(), msg.getPayload());
+            debug('receiveMessage', msg.getType(), msg.getSender(), msg.getRecipient(), msg.getPayload());
 
             if (!type || msg.getType() === type) {
                 subscriber(msg);

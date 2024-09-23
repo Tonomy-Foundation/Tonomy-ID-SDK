@@ -1,5 +1,6 @@
 import deployContract from './deploy-contract';
 import path from 'path';
+import { fileURLToPath } from 'url';
 import { createAntelopeAccount, createApp } from './create-account';
 import {
     DemoTokenContract,
@@ -19,10 +20,6 @@ import { Checksum256, PrivateKey, PublicKey } from '@wharfkit/antelope';
 import { Authority, Signer, TonomyEosioProxyContract, defaultBlockchainParams } from '../../sdk/services/blockchain';
 import { createUser, mockCreateAccount, restoreCreateAccountFromMock } from './user';
 
-if (process.env.LOG === 'true') {
-    settings.config.loggerLevel = 'debug';
-}
-
 setSettings(settings.config);
 
 const demoTokenContract = DemoTokenContract.Instance;
@@ -34,6 +31,8 @@ const vestingContract = VestingContract.Instance;
 const ramPrice = 173333.3333; // bytes/token
 const fee = 0.25 / 100; // 0.25%
 const ramAvailable = 8 * 1024 * 1024 * 1024; // 8 GB
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 /**
  * Converts bytes to tokens.
@@ -89,7 +88,8 @@ export default async function bootstrap() {
 const foundControlledAccounts = ['gov.tmy', 'team.tmy', 'prod1.tmy', 'prod2.tmy', 'prod3.tmy'];
 const govControlledAccounts = ['ops.tmy'];
 const operationsAccount = 'ops.tmy';
-const opsControlledAccounts = [
+
+export const opsControlledAccounts = [
     'tonomy',
     'ecosystm.tmy',
     'coinsale.tmy',
@@ -104,6 +104,7 @@ const opsControlledAccounts = [
     'marketng.tmy',
     'infra.tmy',
 ];
+
 const systemAccount = 'eosio';
 
 async function createAccounts(govKeys: string[]) {
@@ -208,7 +209,8 @@ const allocations: [string, number][] = [
     ['infra.tmy', 0.1], // Infrastructure Rewards
     ['ecosystm.tmy', 0.3], // Ecosystem
 ];
-const addCodePermissionTo = allocations.map((allocation) => allocation[0]);
+
+export const addCodePermissionTo = allocations.map((allocation) => allocation[0]);
 
 async function createTokenDistribution() {
     console.log('Create token distribution');

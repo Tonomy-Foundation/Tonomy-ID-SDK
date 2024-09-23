@@ -1,5 +1,6 @@
 import { SettingsType } from '../../src/sdk/index';
-import { setSettings } from '../../src/sdk/util/settings';
+import { setFetch, setSettings } from '../../src/sdk/util/settings';
+import fetch from 'cross-fetch';
 
 export const settings: Partial<SettingsType> = {
     blockchainUrl: 'http://localhost:8888',
@@ -11,10 +12,7 @@ export const settings: Partial<SettingsType> = {
     currencySymbol: 'LEOS',
 };
 
-export function setTestSettings(debugLogger = false) {
-    if (debugLogger) {
-        settings.loggerLevel = 'debug';
-    }
-
+export function setTestSettings() {
     setSettings(settings);
+    setFetch(fetch);
 }
