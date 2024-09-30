@@ -15,6 +15,7 @@ import { setResourceConfig } from './setResourceConfig';
 import { setBlockchainConfig } from './setBlockchainConfig';
 import { addProd, changeProds, removeProd } from './producers';
 import { hyphaAccountsCreate } from './hyphaAccountsCreate';
+import { sleep } from '../../sdk/util';
 
 const eosioMsigContract = EosioMsigContract.Instance;
 
@@ -358,6 +359,7 @@ export async function executeProposal(
 
     try {
         for (let i = 0; i < 2; i++) {
+            await sleep(1000);
             await eosioMsigContract.approve(
                 proposer,
                 proposalName,
