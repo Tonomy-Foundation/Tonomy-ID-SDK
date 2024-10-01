@@ -3,7 +3,7 @@ import { StandardProposalOptions, createProposal, executeProposal } from '.';
 import { ActionData, assetToAmount, VestingContract } from '../../sdk/services/blockchain';
 
 // @ts-expect-error args unused
-export async function vestingMigrate(args: {}, options: StandardProposalOptions) {
+export async function vestingMigrate(args: any, options: StandardProposalOptions) {
     // Testnet list
     const migrateAccounts = [
         'p42pwxofd1vy', // 36 allocations
@@ -103,10 +103,15 @@ function createMigrateAction(
         data: {
             sender,
             holder,
+            // eslint-disable-next-line camelcase
             allocation_id: allocationId,
+            // eslint-disable-next-line camelcase
             old_amount: oldAmount,
+            // eslint-disable-next-line camelcase
             new_amount: newAmount,
+            // eslint-disable-next-line camelcase
             old_category_id: oldCategoryId,
+            // eslint-disable-next-line camelcase
             new_category_id: newCategoryId,
         },
     };
