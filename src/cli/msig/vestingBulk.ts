@@ -1,7 +1,7 @@
 import settings from '../bootstrap/settings';
 import { StandardProposalOptions, createProposal, executeProposal } from '.';
 import { SdkError, SdkErrors } from '../../sdk';
-import { getAccount } from '../../sdk/services/blockchain';
+import { getAccount, getAccountNameFromUsername } from '../../sdk/services/blockchain';
 import { parse } from 'csv-parse/sync';
 import fs from 'fs';
 
@@ -32,9 +32,17 @@ export async function vestingBulk(args: { governanceAccounts: string[] }, option
                 throw new Error(`Invalid CSV format on line ${results.length + 1}: ${data}`);
             }
 
-            // check account exists
             try {
-                await getAccount(data.accountName);
+                let accountName = data.accountName;
+
+                try {
+                    if (accountName.startsWith('@')) {
+                        accountName = getAccountNameFromUsername(data.accountName);
+                    }
+                } finally {
+                    // check the account exists. This will throw if not
+                    await getAccount(accountName);
+                }
 
                 data.usdQuantity = Number(data.usdQuantity);
 
@@ -58,7 +66,7 @@ export async function vestingBulk(args: { governanceAccounts: string[] }, option
     );
 
     if (unfoundAccounts.length > 0) {
-        console.log(
+        console.error(
             `${unfoundAccounts.length} accounts were not found in environment ${settings.env}:`,
             unfoundAccounts
         );
