@@ -168,9 +168,9 @@ export default async function msig(args: string[]) {
             const sender = settings.isProduction() ? 'advteam.tmy' : 'team.tmy';
             const requiredAuthority = test ? governanceAccounts[2] : '11.found.tmy';
             const categoryId = 7; // Community and Marketing, Platform Dev, Infra Rewards
-            const leosPrice = 0.0005; // Seed early bird price
-            // const leosPrice = 0.001; // Seed later comer price
-            // const leosPrice = 0.002; // TGE price
+            const leosPrice = 0.0002; // Seed early bird price
+            // const leosPrice = 0.0004; // Seed later comer price
+            // const leosPrice = 0.0012; // TGE price
 
             const records = parse(fs.readFileSync(csvFilePath, 'utf8'), {
                 columns: true,

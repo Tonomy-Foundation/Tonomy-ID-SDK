@@ -44,13 +44,13 @@ async function createAccountActions(account: NameType): Promise<ActionData[]> {
         if (oldCategory === 1 || oldCategory === 2) {
             if (oldCategory === 1) {
                 const oldLeosPrice = 0.002;
-                const newLeosPrice = 0.0005;
+                const newLeosPrice = 0.0002;
                 const amount = assetToAmount(allocation.tokens_allocated);
 
                 newAmount = (amount * oldLeosPrice) / newLeosPrice;
             } else {
                 const oldLeosPrice = 0.004;
-                const newLeosPrice = 0.001;
+                const newLeosPrice = 0.0004;
                 const amount = assetToAmount(allocation.tokens_allocated);
 
                 newAmount = (amount * oldLeosPrice) / newLeosPrice;
