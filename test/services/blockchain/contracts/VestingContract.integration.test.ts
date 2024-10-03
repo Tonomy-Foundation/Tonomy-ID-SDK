@@ -17,7 +17,6 @@ import { PrivateKey, Name } from '@wharfkit/antelope';
 import { createRandomAccount } from '../../../helpers/eosio';
 import { msigAction } from './governance';
 import { jest } from '@jest/globals';
-import Debug from 'debug';
 
 const vestingContract = VestingContract.Instance;
 const eosioTokenContract = EosioTokenContract.Instance;
