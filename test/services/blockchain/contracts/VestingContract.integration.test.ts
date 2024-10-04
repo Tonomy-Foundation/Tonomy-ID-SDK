@@ -177,7 +177,7 @@ describe('VestingContract class', () => {
             try {
                 await vestingContract.assignTokens('coinsale.tmy', accountName, '10.000000 LEOS', 100, signer);
             } catch (e) {
-                expect(e.error.details[0].message).toContain('Invalid vesting category');
+                expect(e.error.details[0].message).toContain('Invalid new vesting category');
             }
         });
 
@@ -187,7 +187,7 @@ describe('VestingContract class', () => {
             try {
                 await vestingContract.assignTokens('coinsale.tmy', accountName, '10.000000 LEOS', 1, signer);
             } catch (e) {
-                expect(e.error.details[0].message).toContain('Category is depreciated');
+                expect(e.error.details[0].message).toContain('New category is depreciated');
             }
         });
 
@@ -853,6 +853,7 @@ describe('VestingContract class', () => {
             expect(newAllocation.tokens_claimed).toBe('1.000000 LEOS');
             expect(newAllocation.tokens_allocated).toBe('2.000000 LEOS');
 
+            await sleep(1000);
             const trx = await vestingContract.withdraw(accountName, accountSigner);
             const transferTrx = trx.processed.action_traces[0].inline_traces[0];
             const transferAmount = assetToAmount(transferTrx.act.data.quantity);
