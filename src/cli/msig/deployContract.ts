@@ -4,6 +4,7 @@ import { Name, ABI, Serializer } from '@wharfkit/antelope';
 import path from 'path';
 import fs from 'fs';
 import { getDeployableFilesFromDir } from '../bootstrap/deploy-contract';
+import { fileURLToPath } from 'url';
 
 export async function deployContract(args: { contractName: string }, options: StandardProposalOptions) {
     const contractName = Name.from(args.contractName);
@@ -11,6 +12,9 @@ export async function deployContract(args: { contractName: string }, options: St
     if (!contractName) {
         throw new Error('Contract name must be provided for deploy-contract proposal');
     }
+
+    const __filenameNew = fileURLToPath(import.meta.url);
+    const __dirname = path.dirname(__filenameNew);
 
     const contractInfo = {
         account: contractName,
