@@ -22,7 +22,7 @@ export function validateQrCode(qrCode: string): string {
     const path = qrCode.replace(schema, '').split('?')[0];
     const query = qrCode.replace(schema, '').split('?')[1];
 
-    if (path !== 'UserHome') {
+    if (path !== 'ScanQR') {
         throwError('QR path is not correct', SdkErrors.InvalidQrCode);
     }
 
@@ -42,5 +42,5 @@ export function validateQrCode(qrCode: string): string {
 export function createLoginQrCode(did: string): string {
     const schema = getSettings().tonomyIdSchema;
 
-    return schema + 'UserHome?did=' + did;
+    return schema + 'ScanQR?did=' + did;
 }
