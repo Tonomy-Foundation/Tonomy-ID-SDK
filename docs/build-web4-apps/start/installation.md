@@ -8,6 +8,16 @@ npm install @tonomy/tonomy-id-sdk
 yarn add @tonomy/tonomy-id-sdk
 ```
 
+### Notes for yarn v2+
+
+If using yarn v2+ then you will need to also add the following to your `package.json` file.
+
+```json
+"resolutions": {
+    "jsonld": "link:./node_modules/@digitalcredentials/jsonld"
+  },
+```
+
 ## Compatibility
 
-Pangea SDK has been tested with `nodejs v18+`
+The Tonomy SDK requires `odejs v20+`

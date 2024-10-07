@@ -12,16 +12,16 @@ Examples below are for a Reactjs website.
 Configure to use a specific network (in this case, the Pangea demo network). Run this at the javascript root of your app (e.g. App.tsx in Reactjs) so they are set before used
 
 ```typescript
-import { api } from '@tonomy/tonomy-id-sdk';
+import { setSettings } from '@tonomy/tonomy-id-sdk';
 
 //Testnet Configuration
-api.setSettings({
+setSettings({
     ssoWebsiteOrigin: "https://accounts.testnet.pangea.web4.world",
     blockchainUrl: "https://blockchain-api-testnet.pangea.web4.world"
 });
 
 //Mainnet Configuration
-api.setSettings({
+setSettings({
     ssoWebsiteOrigin: "https://accounts.pangea.web4.world",
     blockchainUrl: "https://blockchain-api.pangea.web4.world"
 });
@@ -31,35 +31,22 @@ api.setSettings({
 
 On your login page set it to call the `ExternalUser.loginWithPangea` function when pressed. Set your `/callback` page path as shown below. This is where your the user will be redirect to in your application, after they complete the login process.
 
-```typescript
-async function onButtonPress() {
-    await api.ExternalUser.loginWithTonomy({ callbackPath: '/callback' });
+<pre class="language-typescript"><code class="lang-typescript"><strong>import { ExternalUser } from '@tonomy/tonomy-id-sdk';
+</strong><strong>
+</strong><strong>async function onButtonPress() {
+</strong>    await ExternalUser.loginWithTonomy({ callbackPath: '/callback' });
 }
-```
+</code></pre>
 
 ### Request data sharing
 
 During the login process, you can additionally request information from the user account by adding a `dataRequest` object when calling the `loginWithPangea` function.
 
 ```typescript
-await api.ExternalUser.loginWithTonomy({ callbackPath: '/callback', dataRequest: { username: true } });
+await ExternalUser.loginWithTonomy({ callbackPath: '/callback', dataRequest: { username: true } });
 ```
 
 Currently, only the `username` is able to be requested. We are working on supporting more data sharing options soon including basic personal information (name, date of birth, etc...) and sharing of data between applications.
-
-### Styling the Pangea login button
-
-To use the Pangea login button styles, import the stylesheet and use the class `tonomy-login-button` on your button.
-
-```typescript
-import "@tonomy/tonomy-id-sdk/build/api/tonomy.css";
-```
-
-or
-
-```html
-<link href="https://unpkg.com/@tonomy/tonomy-id-sdk/build/api/tonomy.css" />
-```
 
 ## 3. Callback page
 
@@ -68,7 +55,7 @@ In your `/callback` page, call the `ExternalUser.verifyLoginRequest()` function 
 ```typescript
 // call this when the page loads
 // e.g. in useEffect() in Reactjs
-const user = await api.ExternalUser.verifyLoginRequest();
+const user = await ExternalUser.verifyLoginRequest();
 ```
 
 ## 4. Home page
@@ -76,12 +63,12 @@ const user = await api.ExternalUser.verifyLoginRequest();
 On your home page or when your app first loads (App.tsx in reactjs), check if the user is already logged in.
 
 ```typescript
-import { api, SdkError, SdkErrors } from '@tonomy/tonomy-id-sdk';
+import { ExternalUser, SdkError, SdkErrors } from '@tonomy/tonomy-id-sdk';
 
 // call this when the page loads
 // e.g. in useEffect() in Reactjs
 try {
-    const user = await api.ExternalUser.getUser();
+    const user = await ExternalUser.getUser();
 } catch (e) {
     if (e instanceof SdkError) {
         switch (e.code) {
