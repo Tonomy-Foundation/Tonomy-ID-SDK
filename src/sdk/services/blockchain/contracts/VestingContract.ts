@@ -12,6 +12,7 @@ export interface VestingSettings {
 }
 
 export interface VestingAllocation {
+    id: number;
     cliff_period_claimed: number;
     holder: string;
     time_since_sale_start: { _count: number };
@@ -22,13 +23,26 @@ export interface VestingAllocation {
 
 const MICROSECONDS_PER_SECOND = 1000000;
 
-const vestingCategories: Map<number, { startDelay: number; cliffPeriod: number; vestingPeriod: number }> = new Map([
+const vestingCategories: Map<
+    number,
+    { startDelay: number; cliffPeriod: number; vestingPeriod: number; tgeUnlock: number }
+> = new Map([
     [
         999, // Testing Category
         {
             startDelay: 10 * MICROSECONDS_PER_SECOND,
             cliffPeriod: 10 * MICROSECONDS_PER_SECOND,
             vestingPeriod: 20 * MICROSECONDS_PER_SECOND,
+            tgeUnlock: 0.0,
+        },
+    ],
+    [
+        998, // Testing Category
+        {
+            startDelay: 10 * MICROSECONDS_PER_SECOND,
+            cliffPeriod: 10 * MICROSECONDS_PER_SECOND,
+            vestingPeriod: 20 * MICROSECONDS_PER_SECOND,
+            tgeUnlock: 0.5,
         },
     ],
 ]);
@@ -49,8 +63,7 @@ export class VestingContract {
         if (!vestingCategory) throw new Error('Invalid vesting category');
 
         const launchDate = new Date(settings.launch_date + 'Z');
-        const x = addMicroseconds(launchDate, allocation.time_since_sale_start._count);
-        const vestingStart = addMicroseconds(x, vestingCategory.startDelay);
+        const vestingStart = addMicroseconds(launchDate, vestingCategory.startDelay);
         const cliffEnd = addMicroseconds(vestingStart, vestingCategory.cliffPeriod);
         const vestingEnd = addMicroseconds(vestingStart, vestingCategory.vestingPeriod);
 
@@ -128,6 +141,43 @@ export class VestingContract {
             name: 'withdraw',
             data: {
                 holder,
+            },
+        };
+
+        return await transact(Name.from(CONTRACT_NAME), [action], signer);
+    }
+
+    async migrateAllocation(
+        sender: NameType,
+        holder: NameType,
+        allocationId: number,
+        oldAmount: string,
+        newAmount: string,
+        oldCategoryId: number,
+        newCategoryId: number,
+        signer: Signer
+    ): Promise<API.v1.PushTransactionResponse> {
+        const action = {
+            authorization: [
+                {
+                    actor: sender.toString(),
+                    permission: 'active',
+                },
+                {
+                    actor: CONTRACT_NAME,
+                    permission: 'active',
+                },
+            ],
+            account: CONTRACT_NAME,
+            name: 'migratealloc',
+            data: {
+                sender,
+                holder,
+                allocation_id: allocationId,
+                old_amount: oldAmount,
+                new_amount: newAmount,
+                old_category_id: oldCategoryId,
+                new_category_id: newCategoryId,
             },
         };
 
