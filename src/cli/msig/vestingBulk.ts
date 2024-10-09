@@ -1,7 +1,7 @@
 import settings from '../bootstrap/settings';
 import { StandardProposalOptions, createProposal, executeProposal } from '.';
 import { SdkError, SdkErrors } from '../../sdk';
-import { getAccount, getAccountNameFromUsername } from '../../sdk/services/blockchain';
+import { getAccount, getAccountNameFromUsername, LEOS_CURRENT_PRICE } from '../../sdk/services/blockchain';
 import { parse } from 'csv-parse/sync';
 import fs from 'fs';
 
@@ -12,9 +12,6 @@ export async function vestingBulk(args: { governanceAccounts: string[] }, option
     const sender = settings.isProduction() ? 'advteam.tmy' : 'team.tmy';
     const requiredAuthority = options.test ? args.governanceAccounts[2] : '11.found.tmy';
     const categoryId = 7; // Community and Marketing, Platform Dev, Infra Rewards
-    const leosPrice = 0.002; // Seed early bird price
-    // const leosPrice = 0.004; // Seed later comer price
-    // const leosPrice = 0.012; // TGE price
 
     const records = parse(fs.readFileSync(csvFilePath, 'utf8'), {
         columns: true,
@@ -74,12 +71,12 @@ export async function vestingBulk(args: { governanceAccounts: string[] }, option
     }
 
     const actions = results.map((data) => {
-        const leosNumber = data.usdQuantity / leosPrice;
+        const leosNumber = data.usdQuantity / LEOS_CURRENT_PRICE;
 
         const leosQuantity = leosNumber.toFixed(0) + '.000000 LEOS';
 
         console.log(
-            `Assigning: ${leosQuantity} ($${data.usdQuantity} USD) vested in category ${categoryId} to ${data.accountName} at rate of $${leosPrice}/LEOS`
+            `Assigning: ${leosQuantity} ($${data.usdQuantity} USD) vested in category ${categoryId} to ${data.accountName} at rate of $${LEOS_CURRENT_PRICE}/LEOS`
         );
         return {
             account: 'vesting.tmy',

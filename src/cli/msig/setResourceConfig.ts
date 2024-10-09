@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { ramAvailable, ramFee, ramPrice } from '../../sdk/services/blockchain';
+import { TOTAL_RAM_AVAILABLE, RAM_FEE, RAM_PRICE } from '../../sdk/services/blockchain';
 import { StandardProposalOptions, createProposal, executeProposal } from '.';
 
 // @ts-expect-error args not used
@@ -14,9 +14,9 @@ export async function setResourceConfig(args, options: StandardProposalOptions) 
         account: 'tonomy',
         name: 'setresparams',
         data: {
-            ram_price: ramPrice,
-            total_ram_available: ramAvailable,
-            ram_fee: ramFee,
+            ram_price: RAM_PRICE,
+            total_ram_available: TOTAL_RAM_AVAILABLE,
+            ram_fee: RAM_FEE,
         },
     };
     const proposalHash = await createProposal(

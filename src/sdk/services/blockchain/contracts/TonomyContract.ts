@@ -3,6 +3,7 @@ import { API, Checksum256, Checksum256Type, Name, NameType, PublicKey } from '@w
 import { Signer, transact } from '../eosio/transaction';
 import { SdkErrors, TonomyUsername, getSettings, sha256, throwError } from '../../../util';
 import { getAccount, getApi } from '../eosio/eosio';
+import { LEOS_PUBLIC_SALE_PRICE } from './VestingContract';
 
 const CONTRACT_NAME = 'tonomy';
 
@@ -72,9 +73,21 @@ type AppTableRecord = {
     version: number;
 };
 
-export const ramPrice = 173333.3333; // bytes/token
-export const ramFee = 0.25 / 100; // 0.25%
-export const ramAvailable = 8 * 1024 * 1024 * 1024; // 8 GB
+function calculateRamPrice(): number {
+    // See https://docs.google.com/spreadsheets/d/1_S0S7Gu-PHzt-IzCqNl3CaWnniAt1KwaXDB50roTZUQ/edit?gid=1773951365#gid=1773951365&range=C84
+
+    const ramPricePerGb = 7; // $7.00 per GB of RAM taken from standard AWS EC2 pricing
+    const numberOfNodes = 29;
+    const costOverhead = 1; // 100% overhead
+    const totalRamPrice = ramPricePerGb * numberOfNodes * (1 + costOverhead); // $ / Gb
+    const totalRamPriceBytes = totalRamPrice / (1024 * 1024 * 1024); // $ / byte
+
+    return LEOS_PUBLIC_SALE_PRICE / totalRamPriceBytes; // bytes / LEOS
+}
+
+export const RAM_PRICE = calculateRamPrice(); // bytes/token
+export const RAM_FEE = 0.25 / 100; // 0.25%
+export const TOTAL_RAM_AVAILABLE = 8 * 1024 * 1024 * 1024; // 8 GB
 
 /**
  * Converts bytes to tokens.
@@ -83,7 +96,7 @@ export const ramAvailable = 8 * 1024 * 1024 * 1024; // 8 GB
  * @returns The converted value in tokens.
  */
 export function bytesToTokens(bytes: number): string {
-    return ((bytes * (1 + ramFee)) / ramPrice).toFixed(6) + ` ${getSettings().currencySymbol}`;
+    return ((bytes * (1 + RAM_FEE)) / RAM_PRICE).toFixed(6) + ` ${getSettings().currencySymbol}`;
 }
 
 export class TonomyContract {

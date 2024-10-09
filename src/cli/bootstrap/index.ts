@@ -23,9 +23,9 @@ import {
     TonomyEosioProxyContract,
     bytesToTokens,
     defaultBlockchainParams,
-    ramAvailable,
-    ramFee,
-    ramPrice,
+    TOTAL_RAM_AVAILABLE,
+    RAM_FEE,
+    RAM_PRICE,
 } from '../../sdk/services/blockchain';
 import { createUser, mockCreateAccount, restoreCreateAccountFromMock } from './user';
 
@@ -289,8 +289,8 @@ async function createTonomyContractAndSetResources() {
     );
 
     console.log('Set Tonomy system contract params and allocate RAM');
-    console.log('Set resource params', ramPrice, ramAvailable, ramFee);
-    await tonomyContract.setResourceParams(ramPrice, ramAvailable, ramFee, signer);
+    console.log('Set resource params', RAM_PRICE, TOTAL_RAM_AVAILABLE, RAM_FEE);
+    await tonomyContract.setResourceParams(RAM_PRICE, TOTAL_RAM_AVAILABLE, RAM_FEE, signer);
 
     console.log('Allocate operational tokens to accounts');
     await tokenContract.transfer('ops.tmy', 'tonomy', bytesToTokens(3750000), signer);
