@@ -61,6 +61,9 @@ async function createAccountActions(account: NameType): Promise<ActionData[]> {
             const oldAmount = allocation.tokens_allocated;
             const newAsset = `${newAmount.toFixed(6)} LEOS`;
 
+            console.log(
+                `Migrating account ${account.toString()} allocation ${allocation.id} from ${oldAmount} to ${newAsset}`
+            );
             actions.push(
                 createMigrateAction(
                     'coinsale.tmy',
