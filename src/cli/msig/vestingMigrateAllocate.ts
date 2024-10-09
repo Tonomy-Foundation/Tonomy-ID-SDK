@@ -1,6 +1,12 @@
 import { NameType } from '@wharfkit/antelope';
 import { StandardProposalOptions, createProposal, executeProposal } from '.';
-import { ActionData, assetToAmount, VestingContract } from '../../sdk/services/blockchain';
+import {
+    ActionData,
+    assetToAmount,
+    LEOS_SEED_LATE_ROUND_PRICE,
+    LEOS_SEED_ROUND_PRICE,
+    VestingContract,
+} from '../../sdk/services/blockchain';
 
 // @ts-expect-error args unused
 export async function vestingMigrate(args: any, options: StandardProposalOptions) {
@@ -44,13 +50,13 @@ async function createAccountActions(account: NameType): Promise<ActionData[]> {
         if (oldCategory === 1 || oldCategory === 2) {
             if (oldCategory === 1) {
                 const oldLeosPrice = 0.002;
-                const newLeosPrice = 0.0002;
+                const newLeosPrice = LEOS_SEED_ROUND_PRICE;
                 const amount = assetToAmount(allocation.tokens_allocated);
 
                 newAmount = (amount * oldLeosPrice) / newLeosPrice;
             } else {
                 const oldLeosPrice = 0.004;
-                const newLeosPrice = 0.0004;
+                const newLeosPrice = LEOS_SEED_LATE_ROUND_PRICE;
                 const amount = assetToAmount(allocation.tokens_allocated);
 
                 newAmount = (amount * oldLeosPrice) / newLeosPrice;

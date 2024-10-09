@@ -85,7 +85,7 @@ function calculateRamPrice(): number {
     return LEOS_PUBLIC_SALE_PRICE / totalRamPriceBytes; // bytes / LEOS
 }
 
-export const RAM_PRICE = calculateRamPrice(); // bytes/token
+export const RAM_PRICE = calculateRamPrice(); // bytes / token
 export const RAM_FEE = 0.25 / 100; // 0.25%
 export const TOTAL_RAM_AVAILABLE = 8 * 1024 * 1024 * 1024; // 8 GB
 
