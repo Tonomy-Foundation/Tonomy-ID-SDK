@@ -16,6 +16,7 @@ import { setBlockchainConfig } from './setBlockchainConfig';
 import { addProd, changeProds, removeProd } from './producers';
 import { hyphaAccountsCreate } from './hyphaAccountsCreate';
 import { sleep } from '../../sdk/util';
+import { vestingMigrate } from './vestingMigrateAllocate';
 
 const eosioMsigContract = EosioMsigContract.Instance;
 
@@ -150,6 +151,17 @@ export default async function msig(args: string[]) {
                     newDelegate: 'gov.tmy',
                     useParentAuth: true,
                 },
+                {
+                    proposer,
+                    proposalName,
+                    privateKey,
+                    requested: newGovernanceAccounts,
+                    test,
+                }
+            );
+        } else if (proposalType === 'vesting-migrate') {
+            await vestingMigrate(
+                {},
                 {
                     proposer,
                     proposalName,
