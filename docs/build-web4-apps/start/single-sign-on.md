@@ -27,6 +27,13 @@ setSettings({
 });
 ```
 
+If you are getting an error about the fetch object like `TypeError: Failed to execute 'fetch' on 'Window'` you might also need to override the fetch object used by the SDK:
+
+<pre class="language-typescript"><code class="lang-typescript"><strong>import { setFetch } from '@tonomy/tonomy-id-sdk';
+</strong><strong>
+</strong><strong>setFetch(window.fetch.bind(window));
+</strong></code></pre>
+
 ## 2. Login page
 
 On your login page set it to call the `ExternalUser.loginWithPangea` function when pressed. Set your `/callback` page path as shown below. This is where your the user will be redirect to in your application, after they complete the login process.

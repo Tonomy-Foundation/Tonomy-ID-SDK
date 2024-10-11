@@ -12,6 +12,16 @@ Add the following values of p2p-peer-address at the end of your config.ini file 
 
 ### Pangea Mainnet
 
+#### Infrastructure requirements
+
+Pangea mainnet is currently low-throuput designed to supported a minimum set of Pangea functions for the citizens, digital identity tools and LEOS sales. Hardware requirements are:
+
+* 8+Gb RAM available after operating system loads (suggested 12+ Gb)
+* 4+ CPUs
+* can be run on VM or bare-metal machine
+
+#### p2p peers
+
 ```
 p2p-nodes
 # 1.prod.tmy
@@ -56,6 +66,16 @@ p2p-peer-address = pangea.eosusa.io:9886
 ```
 
 ### Pangea Testnet
+
+#### Infrastructure requirements
+
+Pangea testnet is currently low-throuput designed to supported testing of features for Pangea mainnet. Hardware requirements are:
+
+* 8+Gb RAM available after operating system loads (suggested 12+ Gb)
+* 4+ CPUs
+* can be run on VM or bare-metal machine
+
+#### p2p peers
 
 ```
 p2p-nodes
