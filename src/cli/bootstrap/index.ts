@@ -17,7 +17,16 @@ import {
 import { getSigner, updateAccountKey, updateControlByAccount } from './keys';
 import settings from './settings';
 import { Checksum256, PrivateKey, PublicKey } from '@wharfkit/antelope';
-import { Authority, Signer, TonomyEosioProxyContract, defaultBlockchainParams } from '../../sdk/services/blockchain';
+import {
+    Authority,
+    Signer,
+    TonomyEosioProxyContract,
+    bytesToTokens,
+    defaultBlockchainParams,
+    TOTAL_RAM_AVAILABLE,
+    RAM_FEE,
+    RAM_PRICE,
+} from '../../sdk/services/blockchain';
 import { createUser, mockCreateAccount, restoreCreateAccountFromMock } from './user';
 
 setSettings(settings.config);
@@ -28,21 +37,7 @@ const tonomyContract = TonomyContract.Instance;
 const eosioContract = EosioContract.Instance;
 const vestingContract = VestingContract.Instance;
 
-const ramPrice = 173333.3333; // bytes/token
-const fee = 0.25 / 100; // 0.25%
-const ramAvailable = 8 * 1024 * 1024 * 1024; // 8 GB
-
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
-/**
- * Converts bytes to tokens.
- *
- * @param bytes The number of bytes to convert.
- * @returns The converted value in tokens.
- */
-function bytesToTokens(bytes: number): string {
-    return ((bytes * (1 + fee)) / ramPrice).toFixed(6) + ` ${getSettings().currencySymbol}`;
-}
 
 const signer = getSigner();
 
@@ -294,7 +289,8 @@ async function createTonomyContractAndSetResources() {
     );
 
     console.log('Set Tonomy system contract params and allocate RAM');
-    await tonomyContract.setResourceParams(ramPrice, ramAvailable, fee, signer);
+    console.log('Set resource params', RAM_PRICE, TOTAL_RAM_AVAILABLE, RAM_FEE);
+    await tonomyContract.setResourceParams(RAM_PRICE, TOTAL_RAM_AVAILABLE, RAM_FEE, signer);
 
     console.log('Allocate operational tokens to accounts');
     await tokenContract.transfer('ops.tmy', 'tonomy', bytesToTokens(3750000), signer);
@@ -311,6 +307,8 @@ async function createTonomyContractAndSetResources() {
     for (const allocation of ramAllocations) {
         const account = allocation[0];
         const tokens = bytesToTokens(allocation[1]);
+
+        console.log(`Buying ${allocation[1] / 1000}KB of RAM for ${account} for ${tokens}`);
 
         await tokenContract.transfer('ops.tmy', account, tokens, signer);
         await tonomyContract.buyRam('ops.tmy', account, tokens, signer);

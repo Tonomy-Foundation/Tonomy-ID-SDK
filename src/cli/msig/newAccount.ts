@@ -1,13 +1,16 @@
 import { Authority } from '../../sdk/services/blockchain';
 import { StandardProposalOptions, createProposal, executeProposal } from '.';
 
+// @ts-expect-error args not used
 export async function newAccount(args: { governanceAccounts: string[] }, options: StandardProposalOptions) {
-    const newAccount = 'advteam.tmy';
+    const accountName = 'login.hypha';
 
-    const activeAuth = Authority.fromAccount({ actor: 'team.tmy', permission: 'active' });
-    const additionalAuthority = options.test ? args.governanceAccounts[2] : '11.found.tmy';
+    const active = Authority.fromKey('EOS5DMPJ4DsJ2Vc4f7g5o8z9o5HswcpXrE4C58r7wxxzZgYxQn8rB');
 
-    activeAuth.addAccount({ actor: additionalAuthority, permission: 'active' });
+    active.addAccount({ actor: 'gov.tmy', permission: 'active' });
+
+    const owner = active;
+
     const action = {
         account: 'tonomy',
         name: 'newaccount',
@@ -23,9 +26,9 @@ export async function newAccount(args: { governanceAccounts: string[] }, options
         ],
         data: {
             creator: 'tonomy',
-            name: newAccount,
-            owner: Authority.fromAccount({ actor: 'team.tmy', permission: 'owner' }),
-            active: activeAuth,
+            name: accountName,
+            owner,
+            active,
         },
     };
 

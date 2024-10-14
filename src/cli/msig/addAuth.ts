@@ -4,7 +4,7 @@ import { Name } from '@wharfkit/antelope';
 import { getAccountInfo } from '../../sdk';
 
 export async function addAuth(
-    args: { account: string; permission: string; newDelegate: string },
+    args: { account: string; permission: string; newDelegate: string; useParentAuth: boolean },
     options: StandardProposalOptions
 ) {
     const accountInfo = await getAccountInfo(Name.from(args.account));
@@ -13,13 +13,15 @@ export async function addAuth(
 
     newAuthority.addAccount({ actor: args.newDelegate, permission: 'active' });
 
+    const permission = (args.useParentAuth ?? false) ? perm.parent.toString() : args.permission;
+
     const action: ActionData = {
         account: 'tonomy',
         name: 'updateauth',
         authorization: [
             {
                 actor: args.account,
-                permission: args.permission,
+                permission,
             },
             {
                 actor: 'tonomy',
@@ -36,16 +38,18 @@ export async function addAuth(
             parent: perm.parent,
             auth: newAuthority,
             // eslint-disable-next-line camelcase
-            auth_parent: false,
+            auth_parent: args.useParentAuth ?? false,
         },
     };
+
+    const requested = [...options.requested, { actor: args.account, permission }];
 
     const proposalHash = await createProposal(
         options.proposer,
         options.proposalName,
         [action],
         options.privateKey,
-        options.requested
+        requested
     );
 
     if (options.test) await executeProposal(options.proposer, options.proposalName, proposalHash);

@@ -1,24 +1,27 @@
 import { ActionData } from '../../sdk/services/blockchain';
 import { StandardProposalOptions, createProposal, executeProposal } from '.';
 import { Name, ABI, Serializer } from '@wharfkit/antelope';
-import path from 'path';
 import fs from 'fs';
 import { getDeployableFilesFromDir } from '../bootstrap/deploy-contract';
-import { fileURLToPath } from 'url';
 
-export async function deployContract(args: { contractName: string }, options: StandardProposalOptions) {
+export async function deployContract(
+    args: {
+        contractName: string;
+        contractDir: string;
+        returnActions?: boolean;
+    },
+    options: StandardProposalOptions
+) {
     const contractName = Name.from(args.contractName);
+    const contractDir = args.contractDir;
 
     if (!contractName) {
         throw new Error('Contract name must be provided for deploy-contract proposal');
     }
 
-    const __filenameNew = fileURLToPath(import.meta.url);
-    const __dirname = path.dirname(__filenameNew);
-
     const contractInfo = {
         account: contractName,
-        contractDir: path.join(__dirname, `../../Tonomy-Contracts/contracts/${contractName}`),
+        contractDir,
     };
 
     const { wasmPath, abiPath } = getDeployableFilesFromDir(contractInfo.contractDir);
@@ -82,13 +85,18 @@ export async function deployContract(args: { contractName: string }, options: St
         },
     };
 
+    const actions = [setCodeAction, setAbiAction];
+
+    if (args.returnActions ?? false) return actions;
+
     const proposalHash = await createProposal(
         options.proposer,
         options.proposalName,
-        [setCodeAction, setAbiAction],
+        actions,
         options.privateKey,
         options.requested
     );
 
     if (options.test) await executeProposal(options.proposer, options.proposalName, proposalHash);
+    return;
 }
