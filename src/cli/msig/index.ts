@@ -10,11 +10,10 @@ import { deployContract } from './deployContract';
 import { addEosioCode } from './addEosioCode';
 import { printCliHelp } from '..';
 import { vestingBulk } from './vestingBulk';
-import { hyphaContractSet } from './hyphaContractSet';
 import { setResourceConfig } from './setResourceConfig';
 import { setBlockchainConfig } from './setBlockchainConfig';
 import { addProd, changeProds, removeProd } from './producers';
-import { hyphaAccountsCreate } from './hyphaAccountsCreate';
+import { hyphaAccountsCreate, hyphaContractSet, hyphaAddAccountPermissions } from './hypha';
 import { sleep } from '../../sdk/util';
 import { vestingMigrate } from './vestingMigrateAllocate';
 
@@ -208,8 +207,8 @@ export default async function msig(args: string[]) {
                     test,
                 }
             );
-        } else if (proposalType === 'hypha-contract-set') {
-            await hyphaContractSet(
+        } else if (proposalType === 'hypha-accounts-create') {
+            await hyphaAccountsCreate(
                 {},
                 {
                     proposer,
@@ -219,8 +218,19 @@ export default async function msig(args: string[]) {
                     test,
                 }
             );
-        } else if (proposalType === 'hypha-accounts-create') {
-            await hyphaAccountsCreate(
+        } else if (proposalType === 'hypha-add-permissions') {
+            await hyphaAddAccountPermissions(
+                {},
+                {
+                    proposer,
+                    proposalName,
+                    privateKey,
+                    requested: newGovernanceAccounts,
+                    test,
+                }
+            );
+        } else if (proposalType === 'hypha-contract-set') {
+            await hyphaContractSet(
                 {},
                 {
                     proposer,
