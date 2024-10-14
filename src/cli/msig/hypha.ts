@@ -242,14 +242,23 @@ export async function hyphaAddAccountPermissions(args: any, options: StandardPro
 
 // @ts-expect-error args not used
 export async function hyphaContractSet(args: any, options: StandardProposalOptions) {
-    const name = 'join';
+    const ramKb = 60000;
+    const name = 'dao';
+
+    // const ramKb = 2000;
+    // const name = 'husd';
+    // const name = 'hypha';
+    // const name = 'join';
+    // const name = 'kv';
+    // const name = 'login';
+    // const name = 'voice';
+
     const contract = `${name}.hypha`;
-    const appName = `Hypha {${name.toUpperCase()}`;
+    const appName = `Hypha ${name.toUpperCase()}`;
     const username = `${name}hypha`;
     const description = `Hypha ${name} contract`;
     const logoUrl = 'https://hypha.earth/wp-content/themes/hypha2023/img/logos/logo-white.svg';
-    const origin = `https://${name}.pangea-test.hypha.earth`;
-    const ramKb = 10000;
+    const origin = `https://${name}.pangea.hypha.earth`;
     const contractDir = `/home/dev/Downloads/pangea-hypha-deploy/${contract}`;
 
     const tonomyUsername = TonomyUsername.fromUsername(username, AccountType.APP, getSettings().accountSuffix);
