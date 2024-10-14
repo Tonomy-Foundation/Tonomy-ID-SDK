@@ -176,7 +176,7 @@ export default async function msig(args: string[]) {
                 { proposer, proposalName, privateKey, requested: newGovernanceAccounts, test }
             );
         } else if (proposalType === 'add-prod') {
-            addProd(
+            await addProd(
                 {},
                 {
                     proposer,
