@@ -153,7 +153,7 @@ export async function hyphaAddAccountPermissions(args: any, options: StandardPro
                 accounts: [],
                 keys: [
                     {
-                        key: 'EOS6Cmu3MiVXvXAnz3NFZ7sBztGh38Em7FsifT8in7XwMXhNePgNE',
+                        key: 'EOS8Et6mKgaNwQDBTSwPig9oDbgXKsjLyojbJg6rBNQ25M8YAoUiJ',
                         weight: 1,
                     },
                 ],
