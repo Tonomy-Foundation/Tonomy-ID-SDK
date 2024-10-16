@@ -123,11 +123,11 @@ export async function hyphaAccountsCreate(args: any, options: StandardProposalOp
 
 // @ts-expect-error args not used
 export async function hyphaAddAccountPermissions(args: any, options: StandardProposalOptions) {
-    const tonomyGovActivePermission = {
-        actor: 'gov.tmy',
+    const tonomyActivePermission = {
+        actor: 'tonomy',
         permission: 'active',
     };
-    const tonomyGovOwnerPermission = {
+    const tonomyOwnerPermission = {
         actor: 'tonomy',
         permission: 'owner',
     };
@@ -140,8 +140,8 @@ export async function hyphaAddAccountPermissions(args: any, options: StandardPro
                 actor: 'dao.hypha',
                 permission: 'active',
             },
-            tonomyGovOwnerPermission,
-            tonomyGovActivePermission,
+            tonomyOwnerPermission,
+            tonomyActivePermission,
         ],
         data: {
             account: 'dao.hypha',
@@ -185,8 +185,8 @@ export async function hyphaAddAccountPermissions(args: any, options: StandardPro
                 actor: 'dao.hypha',
                 permission: 'active',
             },
-            tonomyGovOwnerPermission,
-            tonomyGovActivePermission,
+            tonomyOwnerPermission,
+            tonomyActivePermission,
         ],
         data: {
             account: 'dao.hypha',
