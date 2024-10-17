@@ -12,7 +12,7 @@ import { printCliHelp } from '..';
 import { vestingBulk } from './vestingBulk';
 import { setResourceConfig } from './setResourceConfig';
 import { setBlockchainConfig } from './setBlockchainConfig';
-import { addProd, changeProds, removeProd } from './producers';
+import { addProd, changeProds, removeProd, updateProd } from './producers';
 import { hyphaAccountsCreate, hyphaContractSet, hyphaAddAccountPermissions } from './hypha';
 import { sleep } from '../../sdk/util';
 import { vestingMigrate } from './vestingMigrateAllocate';
@@ -187,6 +187,17 @@ export default async function msig(args: string[]) {
             );
         } else if (proposalType === 'remove-prod') {
             await removeProd(
+                {},
+                {
+                    proposer,
+                    proposalName,
+                    privateKey,
+                    requested: newGovernanceAccounts,
+                    test,
+                }
+            );
+        } else if (proposalType === 'update-prod') {
+            await updateProd(
                 {},
                 {
                     proposer,

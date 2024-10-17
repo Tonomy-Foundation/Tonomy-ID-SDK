@@ -42,6 +42,47 @@ export async function addProd(args: any, options: StandardProposalOptions) {
 }
 
 // @ts-expect-error any not used
+export async function updateProd(args: any, options: StandardProposalOptions) {
+    const producer = 'eosiodetroit';
+    const signingKey = PublicKey.from('PUB_K1_7EyKQTyVABvDdmnS3VZceuqCCTTUZft6ZaPqbwZBYW8DFCxwKe');
+
+    let newSchedule = await getSchedule();
+
+    if (!newSchedule.find((p) => p.producer_name.equals(producer))) throw new Error('Producer not in the schedule');
+
+    newSchedule = newSchedule.filter((p) => !p.producer_name.equals(producer));
+
+    newSchedule.push({
+        // eslint-disable-next-line camelcase
+        producer_name: Name.from(producer),
+        authority: [
+            'block_signing_authority_v0',
+            {
+                threshold: 1,
+                keys: [
+                    {
+                        key: signingKey,
+                        weight: Weight.from(1),
+                    },
+                ],
+            },
+        ],
+    });
+
+    const action = createSetProdsAction(newSchedule);
+
+    const proposalHash = await createProposal(
+        options.proposer,
+        options.proposalName,
+        [action],
+        options.privateKey,
+        options.requested
+    );
+
+    if (options.test) await executeProposal(options.proposer, options.proposalName, proposalHash);
+}
+
+// @ts-expect-error any not used
 export async function removeProd(args: any, options: StandardProposalOptions) {
     const producer = '1.found.tmy';
 
@@ -121,10 +162,31 @@ export async function changeProds(args: any, options: StandardProposalOptions) {
     if (options.test) await executeProposal(options.proposer, options.proposalName, proposalHash);
 }
 
-async function getSchedule() {
+type Authority = {
+    threshold: number;
+    keys: {
+        key: PublicKey;
+        weight: Weight;
+    }[];
+};
+
+interface ProducerSchedule {
+    producer_name: Name;
+    authority: (string | Authority)[];
+}
+
+async function getSchedule(): Promise<ProducerSchedule[]> {
     const { pending, proposed, active } = await getProducers();
 
     if (pending || proposed) throw new Error("Can't add a producer while there is a pending schedule");
+
+    console.log('Fetched schedule:');
+
+    for (const producer of active.producers) {
+        console.log(
+            `- ${producer.producer_name.toString().padEnd(13, ' ')} with signing key ${(producer.authority[1] as any).keys[0].key}`
+        );
+    }
 
     return active.producers.map((p) => {
         return {
@@ -146,7 +208,15 @@ async function getSchedule() {
     });
 }
 
-function createSetProdsAction(schedule: any) {
+function createSetProdsAction(schedule: ProducerSchedule[]) {
+    console.log('New schedule:');
+
+    for (const producer of schedule) {
+        console.log(
+            `- ${producer.producer_name.toString().padEnd(13, ' ')} with signing key ${(producer.authority[1] as any).keys[0].key}`
+        );
+    }
+
     return {
         account: 'tonomy',
         name: 'setprods',
