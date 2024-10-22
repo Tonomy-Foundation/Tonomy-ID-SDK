@@ -454,6 +454,10 @@ export class ExternalUser {
                     actor: account.toString(),
                     permission: permission.toString(),
                 },
+                {
+                    actor: contractAccount.toString(),
+                    permission: 'active',
+                },
             ],
             data: data,
         };
