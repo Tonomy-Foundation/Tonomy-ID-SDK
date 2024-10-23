@@ -39,54 +39,53 @@ export async function hyphaAccountsCreate(args: any, options: StandardProposalOp
         Authority.fromKey('EOS7pMcjCS15XKxEssnFqKeq5HUJVTuoXMBbjYfGrQJrya2TSxgNV').addAccount(
             tonomyGovActivePermission
         ),
-        Authority.fromKey('EOS7pMcjCS15XKxEssnFqKeq5HUJVTuoXMBbjYfGrQJrya2TSxgNV').addAccount(tonomyGovActivePermission)
+        Authority.fromKey('EOS7pMcjCS15XKxEssnFqKeq5HUJVTuoXMBbjYfGrQJrya2TSxgNV')
+            .addAccount(tonomyGovActivePermission)
+            .addCodePermission('dao.hypha')
     );
-    const voiceHyphaOwner = Authority.fromKey('EOS55WiNqboivthg3uERZkdj4saxbSt8D33KQzWqaMBCXASoqxFsP').addAccount(
-        tonomyGovActivePermission
+    const voiceHyphaAction = createNewAccountAction(
+        'voice.hypha',
+        Authority.fromKey('EOS55WiNqboivthg3uERZkdj4saxbSt8D33KQzWqaMBCXASoqxFsP')
+            .addAccount(tonomyGovActivePermission)
+            .addCodePermission('dao.hypha')
+            .addCodePermission('voice.hypha'),
+        Authority.fromKey('EOS55WiNqboivthg3uERZkdj4saxbSt8D33KQzWqaMBCXASoqxFsP').addAccount(tonomyGovActivePermission)
     );
-    const voiceHyphaActive = Authority.fromKey('EOS55WiNqboivthg3uERZkdj4saxbSt8D33KQzWqaMBCXASoqxFsP').addAccount(
-        tonomyGovActivePermission
-    );
-
-    voiceHyphaActive.addCodePermission('dao.hypha');
-    voiceHyphaActive.addCodePermission('voice.hypha');
-    const voiceHyphaAction = createNewAccountAction('voice.hypha', voiceHyphaActive, voiceHyphaOwner);
-
-    const hyphaHyphaOwner = Authority.fromKey('EOS6KTU2YYtnN8ZRXDcG4cdFpRGkRssrBgR1u7Y3YqUX3KYYcfpRP').addAccount(
-        tonomyGovActivePermission
-    );
-    const hyphaHyphaActive = Authority.fromKey('EOS6KTU2YYtnN8ZRXDcG4cdFpRGkRssrBgR1u7Y3YqUX3KYYcfpRP').addAccount(
-        tonomyGovActivePermission
-    );
-
-    hyphaHyphaActive.addCodePermission('dao.hypha');
-    hyphaHyphaActive.addCodePermission('hypha.hypha');
-    const hyphaHyphaAction = createNewAccountAction('hypha.hypha', hyphaHyphaActive, hyphaHyphaOwner);
-
-    const husdHyphaOwner = Authority.fromKey('EOS8ftihCrL5nVJDUo4Y5qCzcJpeHuLA1jezP38j3jHm8tGDiAsbQ').addAccount(
-        tonomyGovActivePermission
-    );
-    const husdHyphaActive = Authority.fromKey('EOS8ftihCrL5nVJDUo4Y5qCzcJpeHuLA1jezP38j3jHm8tGDiAsbQ').addAccount(
-        tonomyGovActivePermission
+    const hyphaHyphaAction = createNewAccountAction(
+        'hypha.hypha',
+        Authority.fromKey('EOS6KTU2YYtnN8ZRXDcG4cdFpRGkRssrBgR1u7Y3YqUX3KYYcfpRP')
+            .addAccount(tonomyGovActivePermission)
+            .addCodePermission('dao.hypha')
+            .addCodePermission('hypha.hypha'),
+        Authority.fromKey('EOS6KTU2YYtnN8ZRXDcG4cdFpRGkRssrBgR1u7Y3YqUX3KYYcfpRP').addAccount(tonomyGovActivePermission)
     );
 
-    husdHyphaActive.addCodePermission('dao.hypha');
-    husdHyphaActive.addCodePermission('husd.hypha');
-    const husdHyphaAction = createNewAccountAction('husd.hypha', husdHyphaActive, husdHyphaOwner);
+    const husdHyphaAction = createNewAccountAction(
+        'husd.hypha',
+        Authority.fromKey('EOS8ftihCrL5nVJDUo4Y5qCzcJpeHuLA1jezP38j3jHm8tGDiAsbQ')
+            .addAccount(tonomyGovActivePermission)
+            .addCodePermission('dao.hypha')
+            .addCodePermission('husd.hypha'),
+        Authority.fromKey('EOS8ftihCrL5nVJDUo4Y5qCzcJpeHuLA1jezP38j3jHm8tGDiAsbQ').addAccount(tonomyGovActivePermission)
+    );
 
     const kvHyphaAction = createNewAccountAction(
         'kv.hypha',
         Authority.fromKey('EOS8kcBzk6JrzDgoAqYMHzNFrgdkxJMM595kjJxWUPEfVtnHsdKLK').addAccount(
             tonomyGovActivePermission
         ),
-        Authority.fromKey('EOS8kcBzk6JrzDgoAqYMHzNFrgdkxJMM595kjJxWUPEfVtnHsdKLK').addAccount(tonomyGovActivePermission)
+        Authority.fromKey('EOS8kcBzk6JrzDgoAqYMHzNFrgdkxJMM595kjJxWUPEfVtnHsdKLK')
+            .addAccount(tonomyGovActivePermission)
+            .addCodePermission('kv.hypha')
     );
     const joinHyphaAction = createNewAccountAction(
         'join.hypha',
         Authority.fromKey('EOS52LPbWzd8iXUS3DWnn2CkU4HE4kVRSHVtyvWK4dDMLnAUYnogB').addAccount(
             tonomyGovActivePermission
         ),
-        Authority.fromKey('EOS52LPbWzd8iXUS3DWnn2CkU4HE4kVRSHVtyvWK4dDMLnAUYnogB').addAccount(tonomyGovActivePermission)
+        Authority.fromKey('EOS52LPbWzd8iXUS3DWnn2CkU4HE4kVRSHVtyvWK4dDMLnAUYnogB')
+            .addAccount(tonomyGovActivePermission)
+            .addCodePermission('join.hypha')
     );
     const srviceHyphaAction = createNewAccountAction(
         'srvice.hypha',
