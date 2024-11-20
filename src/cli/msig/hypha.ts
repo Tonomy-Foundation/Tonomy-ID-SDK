@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 import { Authority, bytesToTokens } from '../../sdk/services/blockchain';
 import { StandardProposalOptions, createProposal, executeProposal } from '.';
 import { deployContract } from './deployContract';
