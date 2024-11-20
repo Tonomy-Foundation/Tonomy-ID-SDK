@@ -87,7 +87,7 @@ jobs:
         run: rm -rf ./Tonomy-Contracts
 
       - name: Get Tonomy-Contracts directory from artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: Tonomy-Contracts
           path: ./Tonomy-Contracts
