@@ -34,7 +34,10 @@ export default async function msig(args: string[]) {
     let test = false;
 
     for (const arg of args) {
-        if (arg.includes('--test')) {
+        if (arg.includes('--help')) {
+            printMsigHelp();
+            return;
+        } else if (arg.includes('--test')) {
             console.log('Testing proposal by executing it');
 
             if (settings.isProduction()) {
@@ -506,3 +509,22 @@ export type StandardProposalOptions = {
     requested: string[];
     test?: boolean;
 };
+
+function printMsigHelp() {
+    console.log(`
+        Usage:
+            yarn run cli msig
+            
+            Commands:
+                approve proposalName
+                cancel proposalName
+                exec proposalName
+                propose add-prod proposalName
+                propose gov-migrate proposalName
+                propose new-account proposalName
+                propose remove-prod proposalName
+                propose transfer proposalName
+                propose vesting-bulk proposalName
+                propose ... --test
+        `);
+}

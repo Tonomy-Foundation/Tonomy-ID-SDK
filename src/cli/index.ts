@@ -26,24 +26,6 @@ async function main() {
     } else if (args[0] === 'msig') {
         await msig(args.slice(1));
     } else {
-        console.log(`
-Usage:
-    yarn run cli [commands]
-    
-    Commands:
-        apps create appName usernamePrefix description logoUrl origin publicKey
-        accounts get username/accountName
-        keys create
-        keys convert publicKey
-        authority publicKey/privateKey
-        authority account1 [account2] [account3] [accountN]
-        bootstrap privateKey
-        msig cancel proposalName
-        msig propose ... proposalName [--test]
-        msig exec proposalName
-        msig propose deploy-contract proposalName contractName 
-        msig propose eosio.code-permission proposalName
-`);
         printCliHelp();
     }
 }
@@ -54,23 +36,17 @@ export function printCliHelp() {
             yarn run cli [commands]
             
             Commands:
-                apps create appName usernamePrefix description logoUrl origin publicKey
                 accounts get username
-                keys create
-                keys convert publicKey
+                apps create appName usernamePrefix description logoUrl origin publicKey
                 authority publicKey/privateKey
                 authority account1 [account2] [account3] [accountN]
-                bootstrap privateKey
-                msig cancel proposalName
-                msig propose gov-migrate proposalName
-                msig propose new-account proposalName
-                msig propose transfer proposalName
-                msig propose vesting-bulk proposalName
-                msig propose add-prod proposalName
-                msig propose remove-prod proposalName
-                msig propose ... --test
-                msig approve proposalName
-                msig exec proposalName
+                bootstrap
+                keys create
+                keys convert publicKey
+                msig [commands]
+                vesting assign username/accountName amount
+                vesting setsettings
+                transfer from to amount memo
         `);
 }
 
