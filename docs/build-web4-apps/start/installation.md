@@ -20,4 +20,4 @@ If using yarn v2+ then you will need to also add the following to your `package.
 
 ## Compatibility
 
-The Tonomy SDK requires `odejs v20+`
+The Tonomy SDK requires `nodejs v20+`

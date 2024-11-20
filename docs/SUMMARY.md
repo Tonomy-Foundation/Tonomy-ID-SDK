@@ -25,6 +25,7 @@
   * [API Endpoints](run-pangea-infrastructure/api-endpoints.md)
   * [Hardware Requirement](run-pangea-infrastructure/hardware-requirement.md)
   * [Troubleshooting](run-pangea-infrastructure/troubleshooting.md)
+* [Connect as an Exchange](connect-as-an-exchange.md)
 * [Run Tonomy Gov OS](run-tonomy-gov-os/README.md)
   * [Technical requirements](run-tonomy-gov-os/requirements.md)
   * [Deploy Pangea Passport](run-tonomy-gov-os/deploy.md)

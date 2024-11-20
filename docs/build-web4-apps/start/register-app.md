@@ -35,7 +35,7 @@ Modify the `demoConfig` variable in `src/cli/bootstrap/settings.ts` to point to 
     
     //Mainnet Configuration
     blockchainUrl: 'https://blockchain-api.pangea.web4.world',
-    accountSuffix: '.production.pangea',
+    accountSuffix: '.pangea.id',
 }
 ```
 
