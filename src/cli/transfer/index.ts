@@ -1,15 +1,15 @@
 import { PrivateKey } from '@wharfkit/antelope';
 import { printCliHelp } from '..';
-import { AccountType, TonomyUsername, VestingContract } from '../../sdk';
+import { AccountType, TonomyUsername, EosioTokenContract } from '../../sdk';
 import { createSigner, getAccount, getAccountNameFromUsername } from '../../sdk/services/blockchain';
 import { setSettings } from '../../sdk/util/settings';
 import settings from '../bootstrap/settings';
 
 setSettings(settings.config);
 
-const vestingContract = VestingContract.Instance;
+const tokenContract = EosioTokenContract.Instance;
 
-export default async function vesting(args: string[]) {
+export default async function transfer(args: string[]) {
     if (args[0] === 'assign') {
         const privateKey = PrivateKey.from(process.env.SIGNING_KEY || '');
         const signer = createSigner(privateKey);
@@ -33,28 +33,19 @@ export default async function vesting(args: string[]) {
         console.log('Account name: ', recipient.toString());
 
         const quantity = args[3] as string;
-        const categoryId = Number(args[4] as string);
+        const memo = (args[4] as string) || '';
         const sender = args[1] as string;
 
         console.log('Assigning tokens to: ', {
-            sender,
-            holder: recipient,
+            from: sender,
+            to: recipient,
             quantity,
-            categoryId,
+            memo,
         });
 
-        const vestingSettings = await vestingContract.getSettings();
-
-        console.log('settings', vestingSettings);
-
-        const res = await vestingContract.assignTokens(sender, recipient, quantity, categoryId, signer);
+        const res = await tokenContract.transfer(sender, recipient, quantity, memo, signer);
 
         console.log('Transaction ID: ', JSON.stringify(res, null, 2));
-    } else if (args[0] === 'setsettings') {
-        const privateKey = PrivateKey.from(process.env.SIGNING_KEY || '');
-        const signer = createSigner(privateKey);
-
-        await vestingContract.setSettings('2024-04-30T12:00:00', '2030-01-01T00:00:00', signer);
     } else {
         printCliHelp();
         throw new Error(`Unknown command ${args[0]}`);

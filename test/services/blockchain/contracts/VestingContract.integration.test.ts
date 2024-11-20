@@ -200,7 +200,7 @@ describe('VestingContract class', () => {
             authority.addCodePermission("vesting.tmy");
             const { name: newAccountName } = await createRandomAccount(authority);
 
-            await eosioTokenContract.transfer('ops.tmy', newAccountName, '1.000000 LEOS', signer);
+            await eosioTokenContract.transfer('ops.tmy', newAccountName, '1.000000 LEOS', '', signer);
             const trx = await vestingContract.assignTokens(newAccountName, 'found.tmy', '1.000000 LEOS', 999, newAccountSigner);
 
             expect(trx.processed.receipt.status).toBe('executed');
@@ -214,7 +214,7 @@ describe('VestingContract class', () => {
 
             const { name: newAccountName } = await createRandomAccount(authority);
 
-            await eosioTokenContract.transfer('ops.tmy', newAccountName, '1.000000 LEOS', signer);
+            await eosioTokenContract.transfer('ops.tmy', newAccountName, '1.000000 LEOS', '', signer);
 
             try {
                 await vestingContract.assignTokens(newAccountName, 'found.tmy', '1.000000 LEOS', 999, newAccountSigner);
@@ -232,7 +232,7 @@ describe('VestingContract class', () => {
             authority.addCodePermission("vesting.tmy");
             const { name: newAccountName } = await createRandomAccount(authority);
 
-            await eosioTokenContract.transfer('ops.tmy', newAccountName, '1.000000 LEOS', signer);
+            await eosioTokenContract.transfer('ops.tmy', newAccountName, '1.000000 LEOS', '', signer);
 
             try {
                 await vestingContract.assignTokens(newAccountName, 'found.tmy', '1.000000 LEOS', 999, wrongSigner);

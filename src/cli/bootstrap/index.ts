@@ -228,6 +228,7 @@ async function createTokenDistribution() {
             'eosio.token',
             account,
             (percentage * totalSupply).toFixed(0) + `.000000 ${getSettings().currencySymbol}`,
+            'Initial allocation',
             signer
         );
     }
@@ -293,7 +294,7 @@ async function createTonomyContractAndSetResources() {
     await tonomyContract.setResourceParams(RAM_PRICE, TOTAL_RAM_AVAILABLE, RAM_FEE, signer);
 
     console.log('Allocate operational tokens to accounts');
-    await tokenContract.transfer('ops.tmy', 'tonomy', bytesToTokens(3750000), signer);
+    await tokenContract.transfer('ops.tmy', 'tonomy', bytesToTokens(3750000), 'Initial allocation', signer);
 
     console.log('Allocate RAM to system accounts');
     // See calculation: https://docs.google.com/spreadsheets/d/17cd4wt3oDHp6p7hty9njKsuukTTn9BYJ5z3Ab0N6pMM/edit?pli=1#gid=0&range=D30
@@ -310,7 +311,7 @@ async function createTonomyContractAndSetResources() {
 
         console.log(`Buying ${allocation[1] / 1000}KB of RAM for ${account} for ${tokens}`);
 
-        await tokenContract.transfer('ops.tmy', account, tokens, signer);
+        await tokenContract.transfer('ops.tmy', account, tokens, 'Initial allocation', signer);
         await tonomyContract.buyRam('ops.tmy', account, tokens, signer);
     }
 }
