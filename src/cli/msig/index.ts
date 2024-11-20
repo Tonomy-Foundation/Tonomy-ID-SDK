@@ -1,8 +1,6 @@
-import { PrivateKey, Name, Checksum256, PublicKey, Weight } from '@wharfkit/antelope';
-import { EosioMsigContract, SdkError, SdkErrors, setSettings } from '../../sdk';
-import { ActionData, createSigner, getAccount, getProducers } from '../../sdk/services/blockchain';
-import { parse } from 'csv-parse/sync';
-import fs from 'fs';
+import { PrivateKey, Name, Checksum256, NameType } from '@wharfkit/antelope';
+import { EosioMsigContract, setSettings } from '../../sdk';
+import { ActionData, createSigner } from '../../sdk/services/blockchain';
 import settings from '../bootstrap/settings';
 import { govMigrate } from './govMigrate';
 import { newAccount } from './newAccount';
@@ -11,6 +9,12 @@ import { addAuth } from './addAuth';
 import { deployContract } from './deployContract';
 import { addEosioCode } from './addEosioCode';
 import { printCliHelp } from '..';
+import { vestingBulk } from './vestingBulk';
+import { setResourceConfig } from './setResourceConfig';
+import { setBlockchainConfig } from './setBlockchainConfig';
+import { addProd, changeProds, removeProd, updateProd } from './producers';
+import { hyphaAccountsCreate, hyphaContractSet, hyphaAddAccountPermissions } from './hypha';
+import { sleep } from '../../sdk/util';
 import { vestingMigrate } from './vestingMigrateAllocate';
 
 const eosioMsigContract = EosioMsigContract.Instance;
@@ -27,6 +31,7 @@ export default async function msig(args: string[]) {
         blockchainUrl: settings.config.blockchainUrl,
         loggerLevel: settings.config.loggerLevel,
         currencySymbol: settings.config.currencySymbol,
+        accountSuffix: settings.config.accountSuffix,
     });
 
     console.log('Using environment', settings.env);
@@ -50,6 +55,7 @@ export default async function msig(args: string[]) {
 
     const proposer = newGovernanceAccounts[0];
     let signingKey: string | undefined = process.env.SIGNING_KEY;
+    const signingAccount = proposer;
 
     if (!signingKey) {
         if (!process.env.TONOMY_BOARD_PRIVATE_KEYS)
@@ -66,7 +72,7 @@ export default async function msig(args: string[]) {
         const proposalName = Name.from(args[1]);
 
         try {
-            const transaction = await eosioMsigContract.cancel(proposer, proposalName, proposer, signer);
+            const transaction = await eosioMsigContract.cancel(proposer, proposalName, signingAccount, signer);
 
             console.log('Transaction: ', JSON.stringify(transaction, null, 2));
             console.error('Transaction succeeded');
@@ -115,10 +121,11 @@ export default async function msig(args: string[]) {
                 }
             );
         } else if (proposalType === 'deploy-contract') {
-            const contractName = args[3];
+            const contractName = 'tonomy';
+            const contractDir = `/home/dev/Documents/Git/Tonomy/Tonomy-ID-Integration/Tonomy-ID-SDK/Tonomy-Contracts/contracts/${contractName}`;
 
             await deployContract(
-                { contractName },
+                { contractName, contractDir },
                 {
                     proposer,
                     proposalName,
@@ -138,9 +145,10 @@ export default async function msig(args: string[]) {
         } else if (proposalType === 'add-auth') {
             await addAuth(
                 {
-                    account: 'coinsale.tmy',
+                    account: 'srvice.hypha',
                     permission: 'active',
-                    newDelegate: settings.isProduction() ? '14.found.tmy' : governanceAccounts[2],
+                    newDelegate: 'gov.tmy',
+                    useParentAuth: true,
                 },
                 {
                     proposer,
@@ -162,229 +170,109 @@ export default async function msig(args: string[]) {
                 }
             );
         } else if (proposalType === 'vesting-bulk') {
-            const csvFilePath = '/home/dev/Downloads/allocate.csv';
-
-            console.log('Reading file: ', csvFilePath);
-            const sender = settings.isProduction() ? 'advteam.tmy' : 'team.tmy';
-            const requiredAuthority = test ? governanceAccounts[2] : '11.found.tmy';
-            const categoryId = 7; // Community and Marketing, Platform Dev, Infra Rewards
-            const leosPrice = 0.0002; // Seed early bird price
-            // const leosPrice = 0.0004; // Seed later comer price
-            // const leosPrice = 0.0012; // TGE price
-
-            const records = parse(fs.readFileSync(csvFilePath, 'utf8'), {
-                columns: true,
-                // eslint-disable-next-line camelcase
-                skip_empty_lines: true,
-            });
-            const results: { accountName: string; usdQuantity: number }[] = [];
-
-            const unfoundAccounts: string[] = [];
-
-            await Promise.all(
-                records.map(async (data: any) => {
-                    // accountName, usdQuantity
-                    if (!data.accountName || !data.usdQuantity) {
-                        throw new Error(`Invalid CSV format on line ${results.length + 1}: ${data}`);
-                    }
-
-                    // check account exists
-                    try {
-                        await getAccount(data.accountName);
-
-                        data.usdQuantity = Number(data.usdQuantity);
-
-                        if (isNaN(data.usdQuantity)) {
-                            throw new Error(`Invalid quantity type on line ${results.length + 1}: ${data}`);
-                        }
-
-                        if (data.usdQuantity <= 0 || data.usdQuantity > 100000) {
-                            throw new Error(`Invalid quantity on line ${results.length + 1}: ${data}`);
-                        }
-
-                        results.push(data);
-                    } catch (e) {
-                        if (e instanceof SdkError && e.code === SdkErrors.AccountDoesntExist) {
-                            unfoundAccounts.push(data.accountName);
-                        } else {
-                            throw e;
-                        }
-                    }
-                })
+            await vestingBulk(
+                { governanceAccounts },
+                { proposer, proposalName, privateKey, requested: newGovernanceAccounts, test }
             );
-
-            if (unfoundAccounts.length > 0) {
-                console.log(
-                    `${unfoundAccounts.length} accounts were not found in environment ${settings.env}:`,
-                    unfoundAccounts
-                );
-                process.exit(1);
-            }
-
-            const actions = results.map((data) => {
-                const leosNumber = data.usdQuantity / leosPrice;
-
-                const leosQuantity = leosNumber.toFixed(0) + '.000000 LEOS';
-
-                console.log(
-                    `Assigning: ${leosQuantity} ($${data.usdQuantity} USD) vested in category ${categoryId} to ${data.accountName} at rate of $${leosPrice}/LEOS`
-                );
-                return {
-                    account: 'vesting.tmy',
-                    name: 'assigntokens',
-                    authorization: [
-                        {
-                            actor: sender.toString(),
-                            permission: 'active',
-                        },
-                    ],
-                    data: {
-                        sender,
-                        holder: data.accountName,
-                        amount: leosQuantity,
-                        category: categoryId,
-                    },
-                };
-            });
-
-            console.log(`Total ${actions.length} accounts to be paid`);
-
-            const proposalHash = await createProposal(proposer, proposalName, actions, privateKey, [requiredAuthority]);
-
-            if (test) await executeProposal(proposer, proposalName, proposalHash);
         } else if (proposalType === 'add-prod') {
-            const producer = '1.found.tmy';
-            const signingKey = PublicKey.from('EOS6A3TosyQZPa9g186tqVFa52AfLdkvaosy1XVEEgziuAyp5PMUj');
-
-            // fetch the existing schedule and their keys
-            const { pending, proposed, active } = await getProducers();
-
-            if (pending || proposed) throw new Error("Can't add a producer while there is a pending schedule");
-
-            if (active.producers.find((p) => p.producer_name.equals(producer)))
-                throw new Error('Producer already in the schedule');
-
-            const newSchedule = active.producers.map((p) => {
-                return {
-                    // eslint-disable-next-line camelcase
-                    producer_name: p.producer_name,
-                    authority: [
-                        'block_signing_authority_v0',
-                        {
-                            threshold: 1,
-                            keys: p.authority[1].keys.map((k) => {
-                                return {
-                                    key: k.key,
-                                    weight: k.weight,
-                                };
-                            }),
-                        },
-                    ],
-                };
-            });
-
-            newSchedule.push({
-                // eslint-disable-next-line camelcase
-                producer_name: Name.from(producer),
-                authority: [
-                    'block_signing_authority_v0',
-                    {
-                        threshold: 1,
-                        keys: [
-                            {
-                                key: signingKey,
-                                weight: Weight.from(1),
-                            },
-                        ],
-                    },
-                ],
-            });
-            const action = {
-                account: 'tonomy',
-                name: 'setprods',
-                authorization: [
-                    {
-                        actor: 'tonomy',
-                        permission: 'owner',
-                    },
-                    {
-                        actor: 'tonomy',
-                        permission: 'active',
-                    },
-                ],
-                data: {
-                    schedule: newSchedule,
-                },
-            };
-
-            const proposalHash = await createProposal(
-                proposer,
-                proposalName,
-                [action],
-                privateKey,
-                newGovernanceAccounts
+            await addProd(
+                {},
+                {
+                    proposer,
+                    proposalName,
+                    privateKey,
+                    requested: newGovernanceAccounts,
+                    test,
+                }
             );
-
-            if (test) await executeProposal(proposer, proposalName, proposalHash);
         } else if (proposalType === 'remove-prod') {
-            const producer = '1.found.tmy';
-
-            // fetch the existing schedule and their keys
-            const { pending, proposed, active } = await getProducers();
-
-            if (pending || proposed) throw new Error("Can't remove a producer while there is a pending schedule");
-
-            if (!active.producers.find((p) => p.producer_name.equals(producer)))
-                throw new Error('Producer not in the schedule');
-
-            const newSchedule = active.producers
-                .filter((p) => !p.producer_name.equals(producer))
-                .map((p) => {
-                    return {
-                        // eslint-disable-next-line camelcase
-                        producer_name: p.producer_name,
-                        authority: [
-                            'block_signing_authority_v0',
-                            {
-                                threshold: 1,
-                                keys: p.authority[1].keys.map((k) => {
-                                    return {
-                                        key: k.key,
-                                        weight: k.weight,
-                                    };
-                                }),
-                            },
-                        ],
-                    };
-                });
-
-            const action = {
-                account: 'tonomy',
-                name: 'setprods',
-                authorization: [
-                    {
-                        actor: 'tonomy',
-                        permission: 'owner',
-                    },
-                    {
-                        actor: 'tonomy',
-                        permission: 'active',
-                    },
-                ],
-                data: {
-                    schedule: newSchedule,
-                },
-            };
-
-            const proposalHash = await createProposal(
-                proposer,
-                proposalName,
-                [action],
-                privateKey,
-                newGovernanceAccounts
+            await removeProd(
+                {},
+                {
+                    proposer,
+                    proposalName,
+                    privateKey,
+                    requested: newGovernanceAccounts,
+                    test,
+                }
             );
-
-            if (test) await executeProposal(proposer, proposalName, proposalHash);
+        } else if (proposalType === 'update-prod') {
+            await updateProd(
+                {},
+                {
+                    proposer,
+                    proposalName,
+                    privateKey,
+                    requested: newGovernanceAccounts,
+                    test,
+                }
+            );
+        } else if (proposalType === 'change-prod') {
+            await changeProds(
+                {},
+                {
+                    proposer,
+                    proposalName,
+                    privateKey,
+                    requested: newGovernanceAccounts,
+                    test,
+                }
+            );
+        } else if (proposalType === 'hypha-accounts-create') {
+            await hyphaAccountsCreate(
+                {},
+                {
+                    proposer,
+                    proposalName,
+                    privateKey,
+                    requested: newGovernanceAccounts,
+                    test,
+                }
+            );
+        } else if (proposalType === 'hypha-add-permissions') {
+            await hyphaAddAccountPermissions(
+                {},
+                {
+                    proposer,
+                    proposalName,
+                    privateKey,
+                    requested: newGovernanceAccounts,
+                    test,
+                }
+            );
+        } else if (proposalType === 'hypha-contract-set') {
+            await hyphaContractSet(
+                {},
+                {
+                    proposer,
+                    proposalName,
+                    privateKey,
+                    requested: newGovernanceAccounts,
+                    test,
+                }
+            );
+        } else if (proposalType === 'res-config-set') {
+            await setResourceConfig(
+                {},
+                {
+                    proposer,
+                    proposalName,
+                    privateKey,
+                    requested: newGovernanceAccounts,
+                    test,
+                }
+            );
+        } else if (proposalType === 'set-chain-config') {
+            await setBlockchainConfig(
+                {},
+                {
+                    proposer,
+                    proposalName,
+                    privateKey,
+                    requested: newGovernanceAccounts,
+                    test,
+                }
+            );
         } else {
             throw new Error(`Invalid msig proposal type ${proposalType}`);
         }
@@ -392,25 +280,31 @@ export default async function msig(args: string[]) {
         const proposalName = Name.from(args[1]);
 
         try {
-            const transaction = await eosioMsigContract.approve(proposer, proposalName, proposer, undefined, signer);
+            const transaction = await eosioMsigContract.approve(
+                proposer,
+                proposalName,
+                signingAccount,
+                undefined,
+                signer
+            );
 
             console.log('Transaction: ', JSON.stringify(transaction, null, 2));
             console.error('Transaction succeeded');
         } catch (e) {
             console.error('Error: ', JSON.stringify(e, null, 2));
-            console.error('Transaction failed');
+            throw new Error('Transaction failed');
         }
     } else if (args[0] === 'exec') {
         const proposalName = Name.from(args[1]);
 
         try {
-            const transaction = await eosioMsigContract.exec(proposer, proposalName, proposer, signer);
+            const transaction = await eosioMsigContract.exec(proposer, proposalName, signingAccount, signer);
 
             console.log('Transaction: ', JSON.stringify(transaction, null, 2));
             console.error('Transaction succeeded');
         } catch (e) {
             console.error('Error: ', JSON.stringify(e, null, 2));
-            console.error('Transaction failed');
+            throw new Error('Transaction failed');
         }
     } else {
         printCliHelp();
@@ -418,17 +312,31 @@ export default async function msig(args: string[]) {
     }
 }
 
+type PermissionLevelType = {
+    actor: NameType;
+    permission: NameType;
+};
+
 export async function createProposal(
     proposer: string,
     proposalName: Name,
     actions: ActionData[],
     privateKey: PrivateKey,
-    requested: string[]
+    requested: (string | PermissionLevelType)[]
 ): Promise<Checksum256> {
-    const requestedPermissions = requested.map((actor) => ({
-        actor,
-        permission: 'active',
-    }));
+    const requestedPermissions = requested.map((actor) => {
+        if (typeof actor === 'string') {
+            return {
+                actor,
+                permission: 'active',
+            };
+        }
+
+        return {
+            actor: actor.actor.toString(),
+            permission: actor.permission.toString(),
+        };
+    });
 
     console.log(
         'Sending transaction',
@@ -472,13 +380,19 @@ export async function createProposal(
     }
 }
 
-export async function executeProposal(proposer: string, proposalName: Name, proposalHash: Checksum256) {
+export async function executeProposal(
+    proposer: string,
+    proposalName: Name,
+    proposalHash: Checksum256,
+    signingAccount?: NameType
+) {
     if (!process.env.TONOMY_BOARD_PRIVATE_KEYS) throw new Error('TONOMY_BOARD_PRIVATE_KEYS not set');
     const tonomyGovKeys: string[] = JSON.parse(process.env.TONOMY_BOARD_PRIVATE_KEYS).keys;
     const tonomyGovSigners = tonomyGovKeys.map((key) => createSigner(PrivateKey.from(key)));
 
     try {
         for (let i = 0; i < 2; i++) {
+            await sleep(1000);
             await eosioMsigContract.approve(
                 proposer,
                 proposalName,
@@ -488,14 +402,14 @@ export async function executeProposal(proposer: string, proposalName: Name, prop
             );
         }
 
-        console.error('Proposal approved succeeded');
+        console.log('Proposal approved succeeded');
 
-        await eosioMsigContract.exec(proposer, proposalName, governanceAccounts[0], tonomyGovSigners[0]);
+        await eosioMsigContract.exec(proposer, proposalName, signingAccount ?? proposer, tonomyGovSigners[0]);
 
-        console.error('Proposal executed succeeded');
+        console.log('Proposal executed succeeded');
     } catch (e) {
         console.error('Error: ', JSON.stringify(e, null, 2));
-        console.error('Transaction failed');
+        throw new Error('Transaction failed');
     }
 }
 

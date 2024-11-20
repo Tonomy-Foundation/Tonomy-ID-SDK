@@ -29,7 +29,7 @@ export default async function vesting(args: string[]) {
 
         const amount = Number(args[2]);
         const quantity = amount.toFixed(0) + '.000000 LEOS';
-        const categoryId = 1;
+        const categoryId = 8;
         const sender = 'coinsale.tmy';
         const holder = account.toString();
 
