@@ -26,17 +26,18 @@ cleospangea get info
 {% tab title="Nodejs" %}
 Install the Pangea Javascript CLI on Ubuntu 22.04 with Nodejs 22.3.0. Check the [documentation](https://github.com/Tonomy-Foundation/Tonomy-ID-SDK) for more details.
 
-<pre class="language-bash"><code class="lang-bash"><strong>git clone https://github.com/Tonomy-Foundation/Tonomy-ID-SDK
-</strong><strong>cd Tonomy-ID-SDK
-</strong><strong>
-</strong><strong>corepack enable
-</strong>yarn
+```bash
+git clone https://github.com/Tonomy-Foundation/Tonomy-ID-SDK
+cd Tonomy-ID-SDK
+
+corepack enable
+yarn
 export NODE_ENV=production
 yarn run build:cli
 
 # check working
 yarn run cli --help
-</code></pre>
+```
 
 **Compatibility**
 
@@ -94,15 +95,16 @@ yarn run cli keys create
 {% endtab %}
 
 {% tab title="Javascript" %}
-<pre class="language-typescript"><code class="lang-typescript"><strong>import { setSettings, generateRandomKeyPair } from '@tonomy/tonomy-id-sdk';
-</strong>
+```typescript
+import { setSettings, generateRandomKeyPair } from '@tonomy/tonomy-id-sdk';
+
 setSettings({ blockchainUrl: "https://blockchain-api.pangea.web4.world" });
 
 const keyPair = generateRandomKeyPair();
 
 console.log('Public key: ', keyPair.publicKey.toString());
 console.log('Private key: ', keyPair.privateKey.toString());
-</code></pre>
+```
 {% endtab %}
 {% endtabs %}
 
@@ -124,17 +126,14 @@ As per your LEOS token issuance contract with the Tonomy Foundation, ensure that
 
 [https://explorer.pangea.web4.world](https://explorer.pangea.web4.world/network)
 
-### Step 4: Get the user to create a Pangea account and collect their username and account name - to be allocated LEOS to
+### Step 4: Collect user's Pangea account
 
-Tell your users to create a Pangea account by downloading and creating a new account on the United Citizens Wallet: [https://pangea.web4.world/united-citizens-wallet](https://pangea.web4.world/united-citizens-wallet)
+You will need to get the user to create a Pangea account and collect their username and account name. This is so that you know who to send the LEOS to.
 
-Set up the single-sign-on login to your exchange using the [Pangea Single Sign-On documentation](build-web4-apps/start/single-sign-on.md).
-
-After the user has logged in, you can get their account name from the user object that is provided and verified in the `/callback` page, as shown on the [Pangea Usage and signing data documentation](build-web4-apps/start/usage.md).
-
-```typescript
-const accountName = await user.getAccountName().toString();
-```
+1. Tell your users to create a Pangea account by downloading and creating a new account on the United Citizens Wallet: [https://pangea.web4.world/united-citizens-wallet](https://pangea.web4.world/united-citizens-wallet)
+2. Set up the single-sign-on login to your exchange using the [Pangea Single Sign-On documentation](build-web4-apps/start/single-sign-on.md).
+3. After the user has logged in, you can get their account name from the user object that is provided and verified on the `/callback` page, as shown in the [Pangea Usage and signing data documentation](build-web4-apps/start/usage.md).\
+   `const accountName = await user.getAccountName().toString();`
 
 ### Step 5: Allocate vested LEOS or transfer LEOS
 
@@ -148,7 +147,8 @@ Vested LEOS should be allocated during the private sale (seed) rounds.
 
 {% tabs %}
 {% tab title="Cleos" %}
-<pre class="language-bash"><code class="lang-bash">cleospangea wallet create --to-console
+```bash
+cleospangea wallet create --to-console
 # import your active key:
 cleospangea wallet import
 
@@ -158,8 +158,8 @@ AMOUNT="10.000000 LEOS"
 # use category 8 for seed round 1 "early bird, and category 9 for seed round 2 "last chance"
 CATEGORY=8
 
-<strong>cleospangea push action vesting.tmy assigntokens "{\"sender\":\"${SENDER}\",\"holder\":\"${RECIPIENT}\",\"amount\":\"${AMOUNT}\",\"category\":${CATEGORY}" -p "${SENDER}@active"
-</strong></code></pre>
+cleospangea push action vesting.tmy assigntokens "{\"sender\":\"${SENDER}\",\"holder\":\"${RECIPIENT}\",\"amount\":\"${AMOUNT}\",\"category\":${CATEGORY}" -p "${SENDER}@active"
+```
 {% endtab %}
 
 {% tab title="Nodejs" %}
@@ -215,6 +215,7 @@ SENDER=eosusa
 RECIPIENT=pegcnjcnnaqd
 AMOUNT="10.000000 LEOS"
 MEMO="my transfer memo"
+
 cleospangea transfer "${SENDER}" "${RECIPIENT}" "${AMOUNT}" "${MEMO}" -p "${SENDER}@active"
 ```
 {% endtab %}
