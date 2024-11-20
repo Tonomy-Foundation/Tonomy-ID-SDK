@@ -14,7 +14,10 @@ export default async function vesting(args: string[]) {
         const privateKey = PrivateKey.from(process.env.SIGNING_KEY || '');
         const signer = createSigner(privateKey);
 
+        const sender = args[1] as string;
         let recipient = args[2] as string;
+        const quantity = args[3] as string;
+        const categoryId = Number(args[4] as string);
 
         if (recipient.startsWith('@')) {
             console.log('Searching for username: ', recipient);
@@ -31,10 +34,6 @@ export default async function vesting(args: string[]) {
         }
 
         console.log('Account name: ', recipient.toString());
-
-        const quantity = args[3] as string;
-        const categoryId = Number(args[4] as string);
-        const sender = args[1] as string;
 
         console.log('Assigning tokens to: ', {
             sender,

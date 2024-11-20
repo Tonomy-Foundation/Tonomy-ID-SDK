@@ -427,7 +427,7 @@ export type StandardProposalOptions = {
 function printMsigHelp() {
     console.log(`
         Usage:
-            yarn run cli msig
+            yarn run cli msig [commands]
             
             Commands:
                 approve <proposalName>
