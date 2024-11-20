@@ -516,15 +516,23 @@ function printMsigHelp() {
             yarn run cli msig
             
             Commands:
-                approve proposalName
-                cancel proposalName
-                exec proposalName
-                propose add-prod proposalName
-                propose gov-migrate proposalName
-                propose new-account proposalName
-                propose remove-prod proposalName
-                propose transfer proposalName
-                propose vesting-bulk proposalName
+                approve <proposalName>
+                cancel <proposalName>
+                exec <proposalName>
+                propose add-auth <proposalName>
+                propose add-prod <proposalName>
+                propose change-prod <proposalName>
+                propose gov-migrate <proposalName>
+                propose hypha-accounts-create <proposalName>
+                propose hypha-add-permissions <proposalName>
+                propose hypha-contract-set <proposalName>
+                propose new-account <proposalName>
+                propose remove-prod <proposalName>
+                propose res-config-set <proposalName>
+                propose set-chain-config <proposalName>
+                propose transfer <proposalName>
+                propose update-prod <proposalName>
+                propose vesting-bulk <proposalName>
                 propose ... --test
         `);
 }

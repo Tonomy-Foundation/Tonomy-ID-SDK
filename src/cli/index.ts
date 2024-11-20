@@ -36,17 +36,17 @@ export function printCliHelp() {
             yarn run cli [commands]
             
             Commands:
-                accounts get username
-                apps create appName usernamePrefix description logoUrl origin publicKey
-                authority publicKey/privateKey
-                authority account1 [account2] [account3] [accountN]
+                accounts get <username>
+                apps create <appName> <usernamePrefix> <description> <logoUrl> <origin> <publicKey>
+                authority <publicKey/privateKey>
+                authority <account1> <account2> ... <accountN>
                 bootstrap
                 keys create
-                keys convert publicKey
+                keys convert <publicKey/privateKey>
                 msig [commands]
-                vesting assign username/accountName amount
+                vesting assign <username/accountName> <amount>
                 vesting setsettings
-                transfer from to amount memo
+                transfer <from> <to> <amount> <memo>
         `);
 }
 
