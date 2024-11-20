@@ -1,41 +1,43 @@
 import { PrivateKey } from '@wharfkit/antelope';
 import { printCliHelp } from '..';
-import { AccountType, TonomyContract, TonomyUsername, VestingContract } from '../../sdk';
-import { createSigner } from '../../sdk/services/blockchain';
+import { AccountType, TonomyUsername, VestingContract } from '../../sdk';
+import { createSigner, getAccount, getAccountNameFromUsername } from '../../sdk/services/blockchain';
 import { setSettings } from '../../sdk/util/settings';
 import settings from '../bootstrap/settings';
 
 setSettings(settings.config);
 
-const tonomyContract = TonomyContract.Instance;
 const vestingContract = VestingContract.Instance;
 
 export default async function vesting(args: string[]) {
     if (args[0] === 'assign') {
         const privateKey = PrivateKey.from(process.env.SIGNING_KEY || '');
         const signer = createSigner(privateKey);
-        const username = args[1];
 
-        console.log('Searching for username: ', username);
+        const sender = args[1] as string;
+        let recipient = args[2] as string;
+        const quantity = args[3] as string;
+        const categoryId = Number(args[4] as string);
 
-        const usernameInstance = TonomyUsername.fromUsername(
-            username,
-            AccountType.PERSON,
-            settings.config.accountSuffix
-        );
-        const { account_name: account } = await tonomyContract.getPerson(usernameInstance);
+        if (recipient.startsWith('@')) {
+            console.log('Searching for username: ', recipient);
+            const usernameInstance = TonomyUsername.fromUsername(
+                recipient,
+                AccountType.PERSON,
+                settings.config.accountSuffix
+            );
 
-        console.log('Account name: ', account.toString());
+            recipient = (await getAccountNameFromUsername(usernameInstance)).toString();
+        } else {
+            console.log('Searching for account name: ', recipient);
+            await getAccount(recipient);
+        }
 
-        const amount = Number(args[2]);
-        const quantity = amount.toFixed(0) + '.000000 LEOS';
-        const categoryId = 8;
-        const sender = 'coinsale.tmy';
-        const holder = account.toString();
+        console.log('Account name: ', recipient.toString());
 
         console.log('Assigning tokens to: ', {
-            username,
-            accountName: holder,
+            sender,
+            holder: recipient,
             quantity,
             categoryId,
         });
@@ -44,7 +46,7 @@ export default async function vesting(args: string[]) {
 
         console.log('settings', vestingSettings);
 
-        const res = await vestingContract.assignTokens(sender, holder, quantity, categoryId, signer);
+        const res = await vestingContract.assignTokens(sender, recipient, quantity, categoryId, signer);
 
         console.log('Transaction ID: ', JSON.stringify(res, null, 2));
     } else if (args[0] === 'setsettings') {

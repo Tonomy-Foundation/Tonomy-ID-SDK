@@ -1,6 +1,6 @@
 import settings from '../bootstrap/settings';
 import { StandardProposalOptions, createProposal, executeProposal } from '.';
-import { SdkError, SdkErrors } from '../../sdk';
+import { AccountType, SdkError, SdkErrors, TonomyUsername } from '../../sdk';
 import { getAccount, getAccountNameFromUsername, LEOS_CURRENT_PRICE } from '../../sdk/services/blockchain';
 import { parse } from 'csv-parse/sync';
 import fs from 'fs';
@@ -30,14 +30,17 @@ export async function vestingBulk(args: { governanceAccounts: string[] }, option
             }
 
             try {
-                let accountName = data.accountName;
+                let accountName = data.accountName as string;
 
-                try {
-                    if (accountName.startsWith('@')) {
-                        accountName = getAccountNameFromUsername(data.accountName);
-                    }
-                } finally {
-                    // check the account exists. This will throw if not
+                if (accountName.startsWith('@')) {
+                    const usernameInstance = TonomyUsername.fromUsername(
+                        accountName,
+                        AccountType.PERSON,
+                        settings.config.accountSuffix
+                    );
+
+                    accountName = (await getAccountNameFromUsername(usernameInstance)).toString();
+                } else {
                     await getAccount(accountName);
                 }
 
