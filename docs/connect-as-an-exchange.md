@@ -184,7 +184,7 @@ yarn run cli vesting assign "${SENDER}" "${RECIPIENT}" "${AMOUNT}" "${CATEGORY}"
 
 {% tab title="Javascript" %}
 ```typescript
-import { setSettings, VestingContract } from '@tonomy/tonomy-id-sdk';
+import { setSettings, VestingContract, createSigner } from '@tonomy/tonomy-id-sdk';
 import { PrivateKey } from '@wharfkit/antelope';
 
 setSettings({ blockchainUrl: "https://blockchain-api.pangea.web4.world" });
@@ -240,7 +240,7 @@ yarn run cli transfer "${SENDER}" "${RECIPIENT}" "${AMOUNT}"
 
 {% tab title="Javascript" %}
 ```typescript
-import { setSettings, EosioTokenContract } from '@tonomy/tonomy-id-sdk';
+import { setSettings, EosioTokenContract, createSigner } from '@tonomy/tonomy-id-sdk';
 import { PrivateKey } from '@wharfkit/antelope';
 
 setSettings({ blockchainUrl: "https://blockchain-api.pangea.web4.world" });
