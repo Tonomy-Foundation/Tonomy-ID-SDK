@@ -1,6 +1,6 @@
 # Connect as an Exchange
 
-Exchanges must connect to the Pangea network to transfer and sell LEOS and other tokens. This guide provides the steps to set up an account that can act as a LEOS token custodian for token sales and exchange listing management.
+Exchanges must connect to the Pangea network to sell LEOS tokens and allow users to withdraw coins. This guide provides the steps to set up an account that can act as a LEOS token custodian for token sales and allow the exchange to withdraw vested or unvested coins to external Pangea accounts.
 
 You can connect using the [official Antelope CLI tool called "cleos"](https://github.com/AntelopeIO/leap), or the [Tonomy Javascript SDK](https://github.com/Tonomy-Foundation/Tonomy-ID-SDK) with command line using nodejs or by integrating the Javascript library into your tools.
 
@@ -135,10 +135,14 @@ You will need to get the user to create a Pangea account and collect their usern
 3. After the user has logged in, you can get their account name from the user object that is provided and verified on the `/callback` page, as shown in the [Pangea Usage and signing data documentation](build-web4-apps/start/usage.md).\
    `const accountName = await user.getAccountName().toString();`
 
-### Step 5: Allocate vested LEOS or transfer LEOS
+### Step 5: Withdraw LEOS or allocate vested LEOS
 
-{% hint style="success" %}
-<mark style="color:green;">**Info: The quantity must be sent with 6 decimal places in the following format "10.000000 LEOS"**</mark>
+{% hint style="warning" %}
+<mark style="color:orange;">The quantity must be sent with exactly 6 decimal places in the following format "10.000000 LEOS"</mark>
+{% endhint %}
+
+{% hint style="info" %}
+<mark style="color:blue;">You can also batch multiple actions together. This can be done by adding multiple actions in one transaction. Check the</mark> [<mark style="color:blue;">Cleos</mark>](https://docs.eosnetwork.com/manuals/leap/latest/cleos/command-reference/push/push-transaction) <mark style="color:blue;">or</mark> [<mark style="color:blue;">Javascript</mark>](https://wharfkit.com/docs/session-kit/transact#actions) <mark style="color:blue;">documentation for more information.</mark>
 {% endhint %}
 
 #### Allocate vested LEOS
@@ -200,9 +204,9 @@ await vestingContract.assignTokens(sender, recipient, amount, category, signer);
 {% endtab %}
 {% endtabs %}
 
-#### Transfer (unvested) LEOS
+#### Withdraw (unvested) LEOS
 
-LEOS transfers can be used during the public sale or after to send users unvested LEOS.
+LEOS withdrawals can be used during the public sale or after to send users unvested LEOS.
 
 {% tabs %}
 {% tab title="Cleos" %}
