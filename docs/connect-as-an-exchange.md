@@ -1,6 +1,6 @@
 # Connect as an Exchange
 
-Exchanges must connect to the Pangea network to sell LEOS tokens and allow users to withdraw coins. This guide provides the steps to set up an account that can act as a LEOS token custodian for token sales and allow the exchange to withdraw vested or unvested coins to external Pangea accounts.
+to which you can withdraw LEOSExchanges must connect to the Pangea network to sell LEOS tokens and allow users to withdraw coins. This guide provides the steps to set up an account that can act as a LEOS token custodian for token sales and allow the exchange to withdraw vested or unvested coins to external Pangea accounts.
 
 You can connect using the [official Antelope CLI tool called "cleos"](https://github.com/AntelopeIO/leap), or the [Tonomy Javascript SDK](https://github.com/Tonomy-Foundation/Tonomy-ID-SDK) with command line using nodejs or by integrating the Javascript library into your tools.
 
@@ -128,12 +128,36 @@ As per your LEOS token issuance contract with the Tonomy Foundation, ensure that
 
 ### Step 4: Collect user's Pangea account
 
-You will need to get the user to create a Pangea account and collect their username and account name. This is so that you know who to send the LEOS to.
+If your users want to create a Pangea account they can do this by downloading and creating a new account on the United Citizens Wallet: [https://pangea.web4.world/united-citizens-wallet](https://pangea.web4.world/united-citizens-wallet)
 
-1. Tell your users to create a Pangea account by downloading and creating a new account on the United Citizens Wallet: [https://pangea.web4.world/united-citizens-wallet](https://pangea.web4.world/united-citizens-wallet)
-2. Set up the single-sign-on login to your exchange using the [Pangea Single Sign-On documentation](build-web4-apps/start/single-sign-on.md).
-3. After the user has logged in, you can get their account name from the user object that is provided and verified on the `/callback` page, as shown in the [Pangea Usage and signing data documentation](build-web4-apps/start/usage.md).\
-   `const accountName = await user.getAccountName().toString();`
+They can then send you their account name to which you can withdraw LEOS.
+
+If you want to verify if the account exists you can do so:
+
+{% tabs %}
+{% tab title="Cleos" %}
+```bash
+cleospangea get account pegcnjcnnaqd
+```
+{% endtab %}
+
+{% tab title="Nodejs" %}
+Not available yet. Let us know if you need this.
+{% endtab %}
+
+{% tab title="Javascript" %}
+```typescript
+import { setSettings, getAccount } from '@tonomy/tonomy-id-sdk';
+
+setSettings({ blockchainUrl: "https://blockchain-api.pangea.web4.world" });
+
+const accountName = "pegcnjcnnaqd";
+const account = await getAccount(accountName);
+```
+{% endtab %}
+{% endtabs %}
+
+
 
 ### Step 5: Withdraw LEOS or allocate vested LEOS
 
@@ -264,4 +288,4 @@ Antelope documentation: [https://docs.eosnetwork.com/docs/latest/quick-start/int
 
 Antelope telegram group: [https://t.me/antelopedevs](https://t.me/antelopedevs)
 
-Pangea telegram group: [https://t.me/pangea\_web4](https://t.me/pangea\_web4)
+Pangea telegram group: [https://t.me/pangea\_web4](https://t.me/pangea_web4)
