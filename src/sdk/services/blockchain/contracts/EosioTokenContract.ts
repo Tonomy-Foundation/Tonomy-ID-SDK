@@ -64,6 +64,7 @@ class EosioTokenContract {
         from: NameType,
         to: NameType,
         quantity: string,
+        memo: string,
         signer: Signer
     ): Promise<API.v1.PushTransactionResponse> {
         const actions = [
@@ -80,7 +81,7 @@ class EosioTokenContract {
                     from,
                     to,
                     quantity,
-                    memo: 'transferred',
+                    memo,
                 },
             },
         ];

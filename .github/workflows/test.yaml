@@ -56,7 +56,7 @@ jobs:
         run: ./Tonomy-Contracts/contracts/vesting.tmy/build.sh local
 
       - name: Add Tonomy-Contracts dir to artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: Tonomy-Contracts
           path: ./Tonomy-Contracts
@@ -87,7 +87,7 @@ jobs:
         run: rm -rf ./Tonomy-Contracts
 
       - name: Get Tonomy-Contracts directory from artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: Tonomy-Contracts
           path: ./Tonomy-Contracts
