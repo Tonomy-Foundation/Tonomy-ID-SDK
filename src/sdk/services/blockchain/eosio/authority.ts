@@ -93,7 +93,7 @@ export class Authority {
 
     // to add the eosio.code authority for smart contracts
     // https://developers.eos.io/welcome/v2.1/smart-contract-guides/adding-inline-actions#step-1-adding-eosiocode-to-permissions
-    addCodePermission(account: string) {
+    addCodePermission(account: string): Authority {
         this.accounts.push({
             permission: {
                 actor: account,
@@ -103,28 +103,32 @@ export class Authority {
         });
 
         this.sort();
+        return this;
     }
 
-    addAccount(permission: { actor: string; permission: string }) {
+    addAccount(permission: { actor: string; permission: string }): Authority {
         this.accounts.push({
             permission,
             weight: 1,
         });
 
         this.sort();
+        return this;
     }
 
-    addKey(key: string, weight: number) {
+    addKey(key: string, weight: number): Authority {
         this.keys.push({
             key,
             weight,
         });
 
         this.sort();
+        return this;
     }
 
-    setThreshold(threshold: number) {
+    setThreshold(threshold: number): Authority {
         this.threshold = threshold;
+        return this;
     }
 
     /**
