@@ -1,5 +1,5 @@
 import settings from '../bootstrap/settings';
-import { StandardProposalOptions, createProposal, executeProposal } from '.';
+import { createProposal, executeProposal, StandardProposalOptions } from '.';
 import { AccountType, SdkError, SdkErrors, TonomyUsername } from '../../sdk';
 import { getAccount, getAccountNameFromUsername, LEOS_CURRENT_PRICE } from '../../sdk/services/blockchain';
 import { parse } from 'csv-parse/sync';
@@ -30,18 +30,16 @@ export async function vestingBulk(args: { governanceAccounts: string[] }, option
             }
 
             try {
-                let accountName = data.accountName as string;
-
-                if (accountName.startsWith('@')) {
+                if (data.accountName.startsWith('@')) {
                     const usernameInstance = TonomyUsername.fromUsername(
-                        accountName,
+                        data.accountName.slice(1),
                         AccountType.PERSON,
                         settings.config.accountSuffix
                     );
 
-                    accountName = (await getAccountNameFromUsername(usernameInstance)).toString();
+                    data.accountName = (await getAccountNameFromUsername(usernameInstance)).toString();
                 } else {
-                    await getAccount(accountName);
+                    await getAccount(data.accountName);
                 }
 
                 data.usdQuantity = Number(data.usdQuantity);
@@ -101,9 +99,14 @@ export async function vestingBulk(args: { governanceAccounts: string[] }, option
 
     console.log(`Total ${actions.length} accounts to be paid`);
 
-    const proposalHash = await createProposal(options.proposer, options.proposalName, actions, options.privateKey, [
-        requiredAuthority,
-    ]);
+    const proposalHash = await createProposal(
+        options.proposer,
+        options.proposalName,
+        actions,
+        options.privateKey,
+        [requiredAuthority],
+        options.dryRun
+    );
 
-    if (options.test) await executeProposal(options.proposer, options.proposalName, proposalHash);
+    if (proposalHash && options.test) await executeProposal(options.proposer, options.proposalName, proposalHash);
 }

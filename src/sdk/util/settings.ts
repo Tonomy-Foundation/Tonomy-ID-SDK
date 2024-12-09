@@ -69,7 +69,7 @@ export function isProduction(): boolean {
     debug('Checking if production for environment:', settings.environment);
 
     if (!initialized) {
-        throwError('Settings not yet initialized', SdkErrors.SettingsNotInitialized);
+        throwError('Settings not yet initialized for isProduction()', SdkErrors.SettingsNotInitialized);
     }
 
     return ['production', 'staging', 'testnet'].includes(settings.environment);

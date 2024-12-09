@@ -49,8 +49,9 @@ export async function addAuth(
         options.proposalName,
         [action],
         options.privateKey,
-        requested
+        requested,
+        options.dryRun
     );
 
-    if (options.test) await executeProposal(options.proposer, options.proposalName, proposalHash);
+    if (proposalHash && options.test) await executeProposal(options.proposer, options.proposalName, proposalHash);
 }

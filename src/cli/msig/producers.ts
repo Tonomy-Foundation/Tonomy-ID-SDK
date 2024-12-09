@@ -35,10 +35,11 @@ export async function addProd(args: any, options: StandardProposalOptions) {
         options.proposalName,
         [action],
         options.privateKey,
-        options.requested
+        options.requested,
+        options.dryRun
     );
 
-    if (options.test) await executeProposal(options.proposer, options.proposalName, proposalHash);
+    if (proposalHash && options.test) await executeProposal(options.proposer, options.proposalName, proposalHash);
 }
 
 // @ts-expect-error any not used
@@ -76,10 +77,11 @@ export async function updateProd(args: any, options: StandardProposalOptions) {
         options.proposalName,
         [action],
         options.privateKey,
-        options.requested
+        options.requested,
+        options.dryRun
     );
 
-    if (options.test) await executeProposal(options.proposer, options.proposalName, proposalHash);
+    if (proposalHash && options.test) await executeProposal(options.proposer, options.proposalName, proposalHash);
 }
 
 // @ts-expect-error any not used
@@ -100,10 +102,11 @@ export async function removeProd(args: any, options: StandardProposalOptions) {
         options.proposalName,
         [action],
         options.privateKey,
-        options.requested
+        options.requested,
+        options.dryRun
     );
 
-    if (options.test) await executeProposal(options.proposer, options.proposalName, proposalHash);
+    if (proposalHash && options.test) await executeProposal(options.proposer, options.proposalName, proposalHash);
 }
 
 // @ts-expect-error any not used
@@ -156,10 +159,11 @@ export async function changeProds(args: any, options: StandardProposalOptions) {
         options.proposalName,
         [action],
         options.privateKey,
-        options.requested
+        options.requested,
+        options.dryRun
     );
 
-    if (options.test) await executeProposal(options.proposer, options.proposalName, proposalHash);
+    if (proposalHash && options.test) await executeProposal(options.proposer, options.proposalName, proposalHash);
 }
 
 type Authority = {
