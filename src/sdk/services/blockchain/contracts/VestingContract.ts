@@ -232,11 +232,56 @@ export class VestingContract {
         return totalBalance;
     }
 
-    async getUnlockableBalance(account: NameType): Promise<number> {
-        const allocations = await this.getAllocations(account);
-        const totalUnlockable = 0;
+    getVestingCategory(categoryId: number): {
+        startDelay: number;
+        cliffPeriod: number;
+        vestingPeriod: number;
+        tgeUnlock: number;
+    } {
+        const vestingCategory = vestingCategories.get(categoryId);
 
-        const currentTime = Math.floor(Date.now() / 1000);
+        if (!vestingCategory) {
+            throw new Error(`Vesting category ${categoryId} not found`);
+        }
+
+        return vestingCategory;
+    }
+
+    async getUnlockableBalance(account: NameType): Promise<number> {
+        const allocations = await this.getAllocations(account); // Fetch all allocations for the account
+        let totalUnlockable = 0;
+
+        const currentTime = Math.floor(Date.now() / 1000); // Current time in seconds
+
+        for (const allocation of allocations) {
+            const tokensAllocated = parseFloat(allocation.tokens_allocated.split(' ')[0]);
+            const tokensClaimed = parseFloat(allocation.tokens_claimed.split(' ')[0]);
+
+            // Extract vesting details
+            const categoryId = allocation.vesting_category_type;
+            const vestingCategory = this.getVestingCategory(categoryId);
+            const vestingStart = allocation.time_since_sale_start._count + vestingCategory.startDelay;
+            const cliffEnd = vestingStart + vestingCategory.cliffPeriod;
+            const vestingEnd = vestingStart + vestingCategory.vestingPeriod;
+
+            if (currentTime >= cliffEnd) {
+                let unlockable = 0;
+
+                if (currentTime >= vestingEnd) {
+                    // Vesting period complete, all tokens are unlockable
+                    unlockable = tokensAllocated;
+                } else {
+                    // Linear vesting calculation
+                    const timeSinceVestingStart = currentTime - vestingStart;
+                    const vestingRatio = timeSinceVestingStart / vestingCategory.vestingPeriod;
+
+                    unlockable = tokensAllocated * vestingRatio;
+                }
+
+                // Subtract already claimed tokens
+                totalUnlockable += unlockable - tokensClaimed;
+            }
+        }
 
         return totalUnlockable;
     }
