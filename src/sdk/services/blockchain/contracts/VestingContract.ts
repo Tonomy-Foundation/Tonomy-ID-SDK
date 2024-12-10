@@ -33,9 +33,8 @@ const vestingCategories: Map<
     number,
     { startDelay: number; cliffPeriod: number; vestingPeriod: number; tgeUnlock: number }
 > = new Map([
-    // TESTING ONLY:
     [
-        999, // TESTING ONLY
+        999, // Testing Category
         {
             startDelay: 10 * MICROSECONDS_PER_SECOND,
             cliffPeriod: 10 * MICROSECONDS_PER_SECOND,
@@ -44,9 +43,9 @@ const vestingCategories: Map<
         },
     ],
     [
-        998, // TESTING ONLY
+        998, // Testing Category
         {
-            startDelay: 0 * MICROSECONDS_PER_SECOND,
+            startDelay: 10 * MICROSECONDS_PER_SECOND,
             cliffPeriod: 10 * MICROSECONDS_PER_SECOND,
             vestingPeriod: 20 * MICROSECONDS_PER_SECOND,
             tgeUnlock: 0.5,
