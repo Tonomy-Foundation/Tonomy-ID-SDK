@@ -212,8 +212,10 @@ export class ResponsesManager {
     }
 
     async createResponses(user: IUserRequestsManager): Promise<WalletRequestAndResponse[]> {
-        debug('createResponses()', user);
+        debug('createResponses() user', user);
         const issuer = await user.getIssuer();
+
+        debug('createResponses() this.responses', this.responses);
 
         for (const response of this.responses) {
             const request = response.getRequest();
