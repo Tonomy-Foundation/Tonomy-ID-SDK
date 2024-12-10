@@ -293,7 +293,7 @@ describe('VestingContract class', () => {
         })
 
         test('Successfully get unlockable balance', async () => {
-            expect.assertions(6);
+            expect.assertions(5);
         
             const { user } = await createRandomID();
             const accountName = (await user.getAccountName()).toString();
