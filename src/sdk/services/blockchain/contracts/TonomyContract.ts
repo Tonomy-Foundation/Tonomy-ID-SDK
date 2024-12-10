@@ -4,6 +4,9 @@ import { Signer, transact } from '../eosio/transaction';
 import { SdkErrors, TonomyUsername, getSettings, sha256, throwError } from '../../../util';
 import { getAccount, getApi } from '../eosio/eosio';
 import { LEOS_PUBLIC_SALE_PRICE } from './VestingContract';
+import Debug from 'debug';
+
+const debug = Debug('tonomy-sdk:TonomyContract');
 
 const CONTRACT_NAME = 'tonomy';
 
@@ -304,6 +307,7 @@ export class TonomyContract {
         key: PublicKey,
         signer: Signer
     ): Promise<API.v1.PushTransactionResponse> {
+        debug('loginwithapp contract function');
         const action = {
             authorization: [
                 {
@@ -320,6 +324,8 @@ export class TonomyContract {
                 key,
             },
         };
+
+        debug('loginwithapp contract actions', action);
 
         return await transact(Name.from(CONTRACT_NAME), [action], signer);
     }

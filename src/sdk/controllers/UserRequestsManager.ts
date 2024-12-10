@@ -20,6 +20,9 @@ import { App } from './App';
 import { AppStatusEnum } from '../types/AppStatusEnum';
 import { getAccountInfo, verifyKeyExistsForApp } from '../helpers/user';
 import { UserCommunication } from './UserCommunication';
+import Debug from 'debug';
+
+const debug = Debug('tonomy-sdk:UserRequestsManager');
 
 const tonomyEosioProxyContract = TonomyEosioProxyContract.Instance;
 const tonomyContract = TonomyContract.Instance;
@@ -80,6 +83,7 @@ export class UserRequestsManager extends UserCommunication implements IUserReque
     }
 
     async loginWithApp(app: App, key: PublicKey): Promise<void> {
+        debug('loginWithApp', app);
         const myAccount = await this.getAccountName();
 
         const appRecord: IUserAppRecord = {
@@ -104,6 +108,8 @@ export class UserRequestsManager extends UserCommunication implements IUserReque
         try {
             (await getAccountInfo(myAccount)).getPermission(app.accountName);
         } catch (e) {
+            debug('getAccountInfo error', e);
+
             if (e.message === `Unknown permission ${app.accountName.toString()} on account ${myAccount.toString()}.`) {
                 linkAuth = true;
             }
@@ -124,6 +130,8 @@ export class UserRequestsManager extends UserCommunication implements IUserReque
         }
 
         appRecord.status = AppStatusEnum.READY;
+        debug('getAccountInfo appRecord status', appRecord.status);
+
         this.storage.appRecords = apps;
         await this.storage.appRecords;
     }
