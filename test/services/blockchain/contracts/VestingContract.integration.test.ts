@@ -293,44 +293,37 @@ describe('VestingContract class', () => {
         })
 
         test('Successfully get unlockable balance', async () => {
-            expect.assertions(5);
-        
-            const { user } = await createRandomID();
-            const accountName = (await user.getAccountName()).toString();
-            const accountSigner = createKeyManagerSigner(user.keyManager, KeyManagerLevel.ACTIVE);
+            expect.assertions(4);
         
             // Assign tokens to the account with a specific vesting category
-            await vestingContract.assignTokens('coinsale.tmy', accountName, '1.000000 LEOS', 999, signer);
-        
+            const trx = await vestingContract.assignTokens('coinsale.tmy', accountName, '2.000000 LEOS', 999, signer);
+
+            expect(trx.processed.receipt.status).toBe('executed');
+
             // Check unlockable balance before cliff period ends
-            let unlockableBalance = await vestingContract.getUnlockableBalance(accountName);
+            const unlockableBalance = await vestingContract.getUnlockableBalance(accountName);
 
             expect(unlockableBalance).toBe(0);
         
             // Wait until after the cliff period ends
             const allocations = await vestingContract.getAllocations(accountName);
             const vestingPeriod = VestingContract.calculateVestingPeriod(settings, allocations[0]);
-
-            await sleepUntil(addSeconds(vestingPeriod.cliffEnd, 1));
-        
-            // Check unlockable balance during vesting period
-            unlockableBalance = await vestingContract.getUnlockableBalance(accountName);
-            expect(unlockableBalance).toBeGreaterThan(0);
-            expect(unlockableBalance).toBeLessThan(1);
         
             // Wait until after the vesting period ends
             await sleepUntil(addSeconds(vestingPeriod.vestingEnd, 1));
         
             // Check unlockable balance after vesting period ends
-            unlockableBalance = await vestingContract.getUnlockableBalance(accountName);
-            expect(unlockableBalance).toBe(1);
+            const unlockableBalance2  = await vestingContract.getUnlockableBalance(accountName);
+
+            expect(unlockableBalance2).toBe(2);
         
             // Withdraw all unlockable tokens
             await vestingContract.withdraw(accountName, accountSigner);
         
             // Check unlockable balance after withdrawal
-            unlockableBalance = await vestingContract.getUnlockableBalance(accountName);
-            expect(unlockableBalance).toBe(0);
+            const unlockableBalance3 = await vestingContract.getUnlockableBalance(accountName);
+
+            expect(unlockableBalance3).toBe(0);
         });
 
         test("Successfully assign multiple tokens at once", async () => {

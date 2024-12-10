@@ -128,11 +128,11 @@ const vestingCategories: Map<
     ],
     // TESTING ONLY:
     [
-        997, // TESTING ONLY
+        999, // TESTING ONLY
         {
-            startDelay: 0 * MICROSECONDS_PER_DAY,
-            cliffPeriod: 6 * 30 * MICROSECONDS_PER_DAY,
-            vestingPeriod: 2 * 365 * MICROSECONDS_PER_DAY,
+            startDelay: 10 * MICROSECONDS_PER_SECOND,
+            cliffPeriod: 10 * MICROSECONDS_PER_SECOND,
+            vestingPeriod: 20 * MICROSECONDS_PER_SECOND,
             tgeUnlock: 0.0,
         },
     ],
@@ -143,15 +143,6 @@ const vestingCategories: Map<
             cliffPeriod: 10 * MICROSECONDS_PER_SECOND,
             vestingPeriod: 20 * MICROSECONDS_PER_SECOND,
             tgeUnlock: 0.5,
-        },
-    ],
-    [
-        999, // TESTING ONLY
-        {
-            startDelay: 10 * MICROSECONDS_PER_SECOND,
-            cliffPeriod: 10 * MICROSECONDS_PER_SECOND,
-            vestingPeriod: 20 * MICROSECONDS_PER_SECOND,
-            tgeUnlock: 0.0,
         },
     ],
 ]);
