@@ -26,28 +26,132 @@ export interface VestingAllocation {
     vesting_category_type: number;
 }
 
+const MICROSECONDS_PER_DAY = 24 * 60 * 60 * 1000000;
 const MICROSECONDS_PER_SECOND = 1000000;
 
 const vestingCategories: Map<
     number,
     { startDelay: number; cliffPeriod: number; vestingPeriod: number; tgeUnlock: number }
 > = new Map([
+    // DEPRECIATED:
     [
-        999, // Testing Category
+        1, // Seed Private Sale (DEPRECIATED)
+        {
+            startDelay: 0 * MICROSECONDS_PER_DAY,
+            cliffPeriod: 6 * 30 * MICROSECONDS_PER_DAY,
+            vestingPeriod: 2 * 365 * MICROSECONDS_PER_DAY,
+            tgeUnlock: 0.0,
+        },
+    ],
+    [
+        2, // Strategic Partnerships Private Sale (DEPRECIATED)
+        {
+            startDelay: 6 * 30 * MICROSECONDS_PER_DAY,
+            cliffPeriod: 6 * 30 * MICROSECONDS_PER_DAY,
+            vestingPeriod: 2 * 365 * MICROSECONDS_PER_DAY,
+            tgeUnlock: 0.0,
+        },
+    ],
+    // Unchanged:
+    [
+        3, // Public Sale (DO NOT USED YET)
+        {
+            startDelay: 0 * MICROSECONDS_PER_DAY,
+            cliffPeriod: 0 * MICROSECONDS_PER_DAY,
+            vestingPeriod: 0 * MICROSECONDS_PER_DAY,
+            tgeUnlock: 0.0,
+        },
+    ],
+    [
+        4, // Team and Advisors, Ecosystem
+        {
+            startDelay: 1 * 365 * MICROSECONDS_PER_DAY,
+            cliffPeriod: 0 * MICROSECONDS_PER_DAY,
+            vestingPeriod: 5 * 365 * MICROSECONDS_PER_DAY,
+            tgeUnlock: 0.0,
+        },
+    ],
+    [
+        5, // Legal and Compliance
+        {
+            startDelay: 0 * MICROSECONDS_PER_DAY,
+            cliffPeriod: 0 * MICROSECONDS_PER_DAY,
+            vestingPeriod: 1 * 365 * MICROSECONDS_PER_DAY,
+            tgeUnlock: 0.0,
+        },
+    ],
+    [
+        6, // Reserves, Partnerships, Liquidly Allocation
+        {
+            startDelay: 0 * MICROSECONDS_PER_DAY,
+            cliffPeriod: 0 * MICROSECONDS_PER_DAY,
+            vestingPeriod: 2 * 365 * MICROSECONDS_PER_DAY,
+            tgeUnlock: 0.0,
+        },
+    ],
+    [
+        7, // Community and Marketing, Platform Dev, Infra Rewards
+        {
+            startDelay: 0 * MICROSECONDS_PER_DAY,
+            cliffPeriod: 0 * MICROSECONDS_PER_DAY,
+            vestingPeriod: 5 * 365 * MICROSECONDS_PER_DAY,
+            tgeUnlock: 0.0,
+        },
+    ],
+    // New (replacing depreciated):
+    [
+        8, // Seed (Early Bird)
+        {
+            startDelay: 0 * MICROSECONDS_PER_DAY,
+            cliffPeriod: 0 * MICROSECONDS_PER_DAY,
+            vestingPeriod: 2 * 365 * MICROSECONDS_PER_DAY,
+            tgeUnlock: 0.05,
+        },
+    ],
+    [
+        9, // Seed (Last Chance)
+        {
+            startDelay: 0 * MICROSECONDS_PER_DAY,
+            cliffPeriod: 0 * MICROSECONDS_PER_DAY,
+            vestingPeriod: 2 * 365 * MICROSECONDS_PER_DAY,
+            tgeUnlock: 0.025,
+        },
+    ],
+    [
+        10, // Public (TGE)
+        {
+            startDelay: 14 * MICROSECONDS_PER_DAY,
+            cliffPeriod: 0 * MICROSECONDS_PER_DAY,
+            vestingPeriod: 0 * MICROSECONDS_PER_DAY,
+            tgeUnlock: 1.0,
+        },
+    ],
+    // TESTING ONLY:
+    [
+        997, // TESTING ONLY
+        {
+            startDelay: 0 * MICROSECONDS_PER_DAY,
+            cliffPeriod: 6 * 30 * MICROSECONDS_PER_DAY,
+            vestingPeriod: 2 * 365 * MICROSECONDS_PER_DAY,
+            tgeUnlock: 0.0,
+        },
+    ],
+    [
+        998, // TESTING ONLY
+        {
+            startDelay: 0 * MICROSECONDS_PER_SECOND,
+            cliffPeriod: 10 * MICROSECONDS_PER_SECOND,
+            vestingPeriod: 20 * MICROSECONDS_PER_SECOND,
+            tgeUnlock: 0.5,
+        },
+    ],
+    [
+        999, // TESTING ONLY
         {
             startDelay: 10 * MICROSECONDS_PER_SECOND,
             cliffPeriod: 10 * MICROSECONDS_PER_SECOND,
             vestingPeriod: 20 * MICROSECONDS_PER_SECOND,
             tgeUnlock: 0.0,
-        },
-    ],
-    [
-        998, // Testing Category
-        {
-            startDelay: 10 * MICROSECONDS_PER_SECOND,
-            cliffPeriod: 10 * MICROSECONDS_PER_SECOND,
-            vestingPeriod: 20 * MICROSECONDS_PER_SECOND,
-            tgeUnlock: 0.5,
         },
     ],
 ]);
@@ -251,35 +355,43 @@ export class VestingContract {
         const allocations = await this.getAllocations(account); // Fetch all allocations for the account
         let totalUnlockable = 0;
 
-        const currentTime = Math.floor(Date.now() / 1000); // Current time in seconds
+        const currentTime = new Date();
 
         for (const allocation of allocations) {
             const tokensAllocated = parseFloat(allocation.tokens_allocated.split(' ')[0]);
             const tokensClaimed = parseFloat(allocation.tokens_claimed.split(' ')[0]);
 
-            // Extract vesting details
-            const categoryId = allocation.vesting_category_type;
-            const vestingCategory = this.getVestingCategory(categoryId);
-            const vestingStart = allocation.time_since_sale_start._count + vestingCategory.startDelay;
-            const cliffEnd = vestingStart + vestingCategory.cliffPeriod;
-            const vestingEnd = vestingStart + vestingCategory.vestingPeriod;
+            // Fetch vesting settings
+            const settings = await this.getSettings();
+
+            const vestingPeriods = VestingContract.calculateVestingPeriod(settings, allocation);
+
+            // Destructure calculated periods
+            const { vestingStart, cliffEnd, vestingEnd } = vestingPeriods;
+
+            // Get the vesting category for `tge_unlock` details
+            const vestingCategory = this.getVestingCategory(allocation.vesting_category_type);
 
             if (currentTime >= cliffEnd) {
-                let unlockable = 0;
+                let claimable = 0;
 
                 if (currentTime >= vestingEnd) {
                     // Vesting period complete, all tokens are unlockable
-                    unlockable = tokensAllocated;
+                    claimable = tokensAllocated;
                 } else {
-                    // Linear vesting calculation
-                    const timeSinceVestingStart = currentTime - vestingStart;
-                    const vestingRatio = timeSinceVestingStart / vestingCategory.vestingPeriod;
+                    // Calculate the percentage of the vesting period that has passed
+                    const timeSinceVestingStart = (currentTime.getTime() - vestingStart.getTime()) / 1000; // Convert ms to seconds
+                    const vestingDuration = (vestingEnd.getTime() - vestingStart.getTime()) / 1000;
+                    const vestingProgress = Math.min(timeSinceVestingStart / vestingDuration, 1.0); // Ensure it doesn't exceed 100%
 
-                    unlockable = tokensAllocated * vestingRatio;
+                    // Calculate unlockable amount considering TGE unlock
+                    claimable =
+                        tokensAllocated *
+                        ((1.0 - vestingCategory.tgeUnlock) * vestingProgress + vestingCategory.tgeUnlock);
                 }
 
                 // Subtract already claimed tokens
-                totalUnlockable += unlockable - tokensClaimed;
+                totalUnlockable += claimable - tokensClaimed;
             }
         }
 
