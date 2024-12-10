@@ -33,7 +33,25 @@ const vestingCategories: Map<
     number,
     { startDelay: number; cliffPeriod: number; vestingPeriod: number; tgeUnlock: number }
 > = new Map([
-    // DEPRECIATED:
+    // TESTING ONLY:
+    [
+        999, // TESTING ONLY
+        {
+            startDelay: 10 * MICROSECONDS_PER_SECOND,
+            cliffPeriod: 10 * MICROSECONDS_PER_SECOND,
+            vestingPeriod: 20 * MICROSECONDS_PER_SECOND,
+            tgeUnlock: 0.0,
+        },
+    ],
+    [
+        998, // TESTING ONLY
+        {
+            startDelay: 0 * MICROSECONDS_PER_SECOND,
+            cliffPeriod: 10 * MICROSECONDS_PER_SECOND,
+            vestingPeriod: 20 * MICROSECONDS_PER_SECOND,
+            tgeUnlock: 0.5,
+        },
+    ],
     [
         1, // Seed Private Sale (DEPRECIATED)
         {
@@ -124,25 +142,6 @@ const vestingCategories: Map<
             cliffPeriod: 0 * MICROSECONDS_PER_DAY,
             vestingPeriod: 0 * MICROSECONDS_PER_DAY,
             tgeUnlock: 1.0,
-        },
-    ],
-    // TESTING ONLY:
-    [
-        999, // TESTING ONLY
-        {
-            startDelay: 10 * MICROSECONDS_PER_SECOND,
-            cliffPeriod: 10 * MICROSECONDS_PER_SECOND,
-            vestingPeriod: 20 * MICROSECONDS_PER_SECOND,
-            tgeUnlock: 0.0,
-        },
-    ],
-    [
-        998, // TESTING ONLY
-        {
-            startDelay: 0 * MICROSECONDS_PER_SECOND,
-            cliffPeriod: 10 * MICROSECONDS_PER_SECOND,
-            vestingPeriod: 20 * MICROSECONDS_PER_SECOND,
-            tgeUnlock: 0.5,
         },
     ],
 ]);
