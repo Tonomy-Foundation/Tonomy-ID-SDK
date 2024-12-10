@@ -231,4 +231,13 @@ export class VestingContract {
 
         return totalBalance;
     }
+
+    async getUnlockableBalance(account: NameType): Promise<number> {
+        const allocations = await this.getAllocations(account);
+        const totalUnlockable = 0;
+
+        const currentTime = Math.floor(Date.now() / 1000);
+
+        return totalUnlockable;
+    }
 }
