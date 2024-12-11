@@ -340,15 +340,39 @@ export class VestingContract {
         return vestingCategory;
     }
 
-    async getUnlockableBalance(
-        account: NameType
-    ): Promise<{ unlockable: number; locked: number; totalVested: number }> {
+    getVestingPeriod(categoryId: number): string {
+        const vestingCategory = vestingCategories.get(categoryId);
+
+        if (!vestingCategory) {
+            throw new Error(`Vesting category ${categoryId} not found`);
+        }
+
+        const vestingPeriod = vestingCategory.vestingPeriod;
+
+        // Convert to seconds for categories 999 and 998, otherwise to years
+        if (categoryId === 999 || categoryId === 998) {
+            return `${(vestingPeriod / MICROSECONDS_PER_SECOND).toFixed(2)}`;
+        } else {
+            return `${(vestingPeriod / MICROSECONDS_PER_DAY).toFixed(2)}`;
+        }
+    }
+
+    async getVestingAllocations(account: NameType): Promise<{
+        totalAllocation: number;
+        unlockable: number;
+        allocationsDetails: {
+            totalAllocation: number;
+            locked: number;
+            vestingStart: Date;
+            vestingPeriod: string;
+            unlockAtVestingStart: number;
+        }[];
+    }> {
         const allocations = await this.getAllocations(account); // Fetch all allocations for the account
         let totalUnlockable = 0;
-        let totalLocked = 0;
-        let totalVested = 0;
-
+        let totalAllocation = 0;
         const currentTime = new Date();
+        const allocationsDetails = [];
 
         for (const allocation of allocations) {
             const tokensAllocated = parseFloat(allocation.tokens_allocated.split(' ')[0]);
@@ -365,15 +389,15 @@ export class VestingContract {
             // Get the vesting category for `tge_unlock` details
             const vestingCategory = this.getVestingCategory(allocation.vesting_category_type);
 
-            if (currentTime >= cliffEnd) {
-                let claimable = 0;
+            let claimable = 0;
 
+            if (currentTime >= cliffEnd) {
                 if (currentTime >= vestingEnd) {
                     // Vesting period complete, all tokens are unlockable
                     claimable = tokensAllocated;
                 } else {
                     // Calculate the percentage of the vesting period that has passed
-                    const timeSinceVestingStart = (currentTime.getTime() - vestingStart.getTime()) / 1000; // Convert ms to seconds
+                    const timeSinceVestingStart = (currentTime.getTime() - vestingStart.getTime()) / 1000;
                     const vestingDuration = (vestingEnd.getTime() - vestingStart.getTime()) / 1000;
                     const vestingProgress = Math.min(timeSinceVestingStart / vestingDuration, 1.0); // Ensure it doesn't exceed 100%
 
@@ -385,19 +409,27 @@ export class VestingContract {
 
                 // Subtract already claimed tokens
                 totalUnlockable += claimable - tokensClaimed;
-                totalLocked += tokensAllocated - claimable;
-            } else {
-                // All tokens are locked if cliff period hasn't ended
-                totalLocked += tokensAllocated;
             }
 
-            totalVested += tokensAllocated;
+            const locked = tokensAllocated * (1 - vestingCategory.tgeUnlock) * 0.3; // Assuming "30% of total" locked
+            const unlockAtVestingStart = tokensAllocated * vestingCategory.tgeUnlock;
+
+            totalAllocation += tokensAllocated;
+
+            // Add allocation details
+            allocationsDetails.push({
+                totalAllocation: tokensAllocated,
+                locked,
+                vestingStart,
+                unlockAtVestingStart,
+                vestingPeriod: this.getVestingPeriod(allocation.vesting_category_type),
+            });
         }
 
         return {
+            totalAllocation,
             unlockable: totalUnlockable,
-            locked: totalLocked,
-            totalVested: totalVested,
+            allocationsDetails,
         };
     }
 }

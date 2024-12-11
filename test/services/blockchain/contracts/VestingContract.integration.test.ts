@@ -713,43 +713,65 @@ describe('VestingContract class', () => {
             }
         });
 
-        test('Successfully get unlockable, locked, and total vested balance', async () => {
-            expect.assertions(11);
-    
+        test('Successfully get unlockable, locked, and total allocations', async () => {
+            expect.assertions(22);
+        
             // Assign tokens to the account with a specific vesting category
             const trx = await vestingContract.assignTokens('coinsale.tmy', accountName, '2.000000 LEOS', 999, signer);
 
             expect(trx.processed.receipt.status).toBe('executed');
-    
+        
             // Check balances before cliff period ends
-            let balances = await vestingContract.getUnlockableBalance(accountName);
+            let balances = await vestingContract.getVestingAllocations(accountName);
 
+            expect(balances.totalAllocation).toBe(2);
             expect(balances.unlockable).toBe(0);
-            expect(balances.locked).toBe(2);
-            expect(balances.totalVested).toBe(2);
-    
+            expect(balances.allocationsDetails.length).toBe(1);
+            expect(balances.allocationsDetails[0].totalAllocation).toBe(2);
+            expect(balances.allocationsDetails[0].locked).toBe(2);
+            expect(balances.allocationsDetails[0].unlockAtVestingStart).toBe(0);
+        
             // Wait until after the cliff period ends
             const allocations = await vestingContract.getAllocations(accountName);
             const vestingPeriod = VestingContract.calculateVestingPeriod(settings, allocations[0]);
 
             await sleepUntil(addSeconds(vestingPeriod.cliffEnd, 1));
-    
+        
             // Check balances during vesting period
-            balances = await vestingContract.getUnlockableBalance(accountName);
+            balances = await vestingContract.getVestingAllocations(accountName);
+            expect(balances.totalAllocation).toBe(2);
             expect(balances.unlockable).toBeGreaterThan(0);
             expect(balances.unlockable).toBeLessThan(2);
-            expect(balances.locked).toBeLessThan(2);
-            expect(balances.totalVested).toBe(2);
-    
+          
             // Wait until after the vesting period ends
             await sleepUntil(addSeconds(vestingPeriod.vestingEnd, 1));
-    
+        
             // Check balances after vesting period ends
-            balances = await vestingContract.getUnlockableBalance(accountName);
+            balances = await vestingContract.getVestingAllocations(accountName);
+            expect(balances.totalAllocation).toBe(2);
             expect(balances.unlockable).toBe(2);
-            expect(balances.locked).toBe(0);
-            expect(balances.totalVested).toBe(2);
-        });    
+            expect(balances.allocationsDetails[0].totalAllocation).toBe(2);
+            expect(balances.allocationsDetails[0].locked).toBe(0);
+            expect(balances.allocationsDetails[0].unlockAtVestingStart).toBe(0);
+        
+            // Withdraw all unlockable tokens
+            await vestingContract.withdraw(accountName, accountSigner);
+        
+            // Check balances after withdrawal
+            balances = await vestingContract.getVestingAllocations(accountName);
+            expect(balances.totalAllocation).toBe(2);
+            expect(balances.unlockable).toBe(0);
+            expect(balances.allocationsDetails[0].totalAllocation).toBe(2);
+            expect(balances.allocationsDetails[0].locked).toBe(0);
+            expect(balances.allocationsDetails[0].unlockAtVestingStart).toBe(0);
+
+            const trx2 = await vestingContract.assignTokens('coinsale.tmy', accountName, '2.000000 LEOS', 999, signer);
+
+            expect(trx2.processed.receipt.status).toBe('executed');
+            balances = await vestingContract.getVestingAllocations(accountName);
+            expect(balances.allocationsDetails.length).toBe(2);
+
+        });
     
     });
 
