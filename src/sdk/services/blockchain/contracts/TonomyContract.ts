@@ -4,9 +4,6 @@ import { Signer, transact } from '../eosio/transaction';
 import { SdkErrors, TonomyUsername, getSettings, sha256, throwError } from '../../../util';
 import { getAccount, getApi } from '../eosio/eosio';
 import { LEOS_PUBLIC_SALE_PRICE } from './VestingContract';
-import Debug from 'debug';
-
-const debug = Debug('tonomy-sdk:TonomyContract');
 
 const CONTRACT_NAME = 'tonomy';
 
