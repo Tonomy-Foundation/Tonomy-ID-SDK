@@ -130,7 +130,6 @@ export class UserRequestsManager extends UserCommunication implements IUserReque
         }
 
         appRecord.status = AppStatusEnum.READY;
-        debug('getAccountInfo appRecord status', appRecord.status);
 
         this.storage.appRecords = apps;
         await this.storage.appRecords;
@@ -148,14 +147,10 @@ export class UserRequestsManager extends UserCommunication implements IUserReque
         debug('acceptLoginRequest() options', options);
         const finalResponses = await responsesManager.createResponses(this);
 
-        debug('acceptLoginRequest() finalResponses', finalResponses);
-
         const responsePayload: LoginRequestResponseMessagePayload = {
             success: true,
             response: finalResponses,
         };
-
-        debug('acceptLoginRequest() responsePayload', responsePayload);
 
         if (platform === 'mobile') {
             if (!options.callbackPath || !options.callbackOrigin)
@@ -173,8 +168,6 @@ export class UserRequestsManager extends UserCommunication implements IUserReque
                 issuer,
                 options.messageRecipient
             );
-
-            debug('acceptLoginRequest() message', message);
 
             await this.sendMessage(message);
         }

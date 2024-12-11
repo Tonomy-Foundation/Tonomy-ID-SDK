@@ -307,7 +307,6 @@ export class TonomyContract {
         key: PublicKey,
         signer: Signer
     ): Promise<API.v1.PushTransactionResponse> {
-        debug('loginwithapp contract function');
         const action = {
             authorization: [
                 {
@@ -324,8 +323,6 @@ export class TonomyContract {
                 key,
             },
         };
-
-        debug('loginwithapp contract actions', action);
 
         return await transact(Name.from(CONTRACT_NAME), [action], signer);
     }
