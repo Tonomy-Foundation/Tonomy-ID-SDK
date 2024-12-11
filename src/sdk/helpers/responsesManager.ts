@@ -212,24 +212,15 @@ export class ResponsesManager {
     }
 
     async createResponses(user: IUserRequestsManager): Promise<WalletRequestAndResponse[]> {
-        debug('createResponses() user', user);
         const issuer = await user.getIssuer();
-
-        debug('createResponses() this.responses', this.responses);
 
         for (const response of this.responses) {
             const request = response.getRequest();
 
+            debug('createResponses() getPayload', request.getPayload(), request.getType(), request.getIssuer());
+
             if (request instanceof LoginRequest) {
                 if (response.getMetaOrThrow().requiresLogin === true) {
-                    debug(
-                        'createResponses() getPayload',
-                        request.getPayload().publicKey,
-                        request.getPayload(),
-                        request.getType(),
-                        request.getIssuer()
-                    );
-
                     await user.loginWithApp(response.getAppOrThrow(), request.getPayload().publicKey);
                 }
 

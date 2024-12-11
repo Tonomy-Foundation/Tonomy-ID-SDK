@@ -83,7 +83,6 @@ export class UserRequestsManager extends UserCommunication implements IUserReque
     }
 
     async loginWithApp(app: App, key: PublicKey): Promise<void> {
-        debug('loginWithApp', app);
         const myAccount = await this.getAccountName();
 
         const appRecord: IUserAppRecord = {
@@ -108,12 +107,12 @@ export class UserRequestsManager extends UserCommunication implements IUserReque
         try {
             (await getAccountInfo(myAccount)).getPermission(app.accountName);
         } catch (e) {
-            debug('getAccountInfo error', e);
-
             if (e.message === `Unknown permission ${app.accountName.toString()} on account ${myAccount.toString()}.`) {
                 linkAuth = true;
             }
         }
+
+        debug('loginWithApp key', key);
 
         await tonomyContract.loginwithapp(myAccount.toString(), app.accountName.toString(), 'local', key, localSigner);
 
