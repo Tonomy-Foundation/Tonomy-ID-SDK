@@ -340,9 +340,13 @@ export class VestingContract {
         return vestingCategory;
     }
 
-    async getUnlockableBalance(account: NameType): Promise<number> {
+    async getUnlockableBalance(
+        account: NameType
+    ): Promise<{ unlockable: number; locked: number; totalVested: number }> {
         const allocations = await this.getAllocations(account); // Fetch all allocations for the account
         let totalUnlockable = 0;
+        let totalLocked = 0;
+        let totalVested = 0;
 
         const currentTime = new Date();
 
@@ -381,9 +385,19 @@ export class VestingContract {
 
                 // Subtract already claimed tokens
                 totalUnlockable += claimable - tokensClaimed;
+                totalLocked += tokensAllocated - claimable;
+            } else {
+                // All tokens are locked if cliff period hasn't ended
+                totalLocked += tokensAllocated;
             }
+
+            totalVested += tokensAllocated;
         }
 
-        return totalUnlockable;
+        return {
+            unlockable: totalUnlockable,
+            locked: totalLocked,
+            totalVested: totalVested,
+        };
     }
 }

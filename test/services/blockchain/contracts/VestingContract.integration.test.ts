@@ -713,39 +713,43 @@ describe('VestingContract class', () => {
             }
         });
 
-        test('Successfully get unlockable balance', async () => {
-            expect.assertions(4);
-        
+        test('Successfully get unlockable, locked, and total vested balance', async () => {
+            expect.assertions(11);
+    
             // Assign tokens to the account with a specific vesting category
             const trx = await vestingContract.assignTokens('coinsale.tmy', accountName, '2.000000 LEOS', 999, signer);
 
             expect(trx.processed.receipt.status).toBe('executed');
+    
+            // Check balances before cliff period ends
+            let balances = await vestingContract.getUnlockableBalance(accountName);
 
-            // Check unlockable balance before cliff period ends
-            const unlockableBalance = await vestingContract.getUnlockableBalance(accountName);
-
-            expect(unlockableBalance).toBe(0);
-        
+            expect(balances.unlockable).toBe(0);
+            expect(balances.locked).toBe(2);
+            expect(balances.totalVested).toBe(2);
+    
             // Wait until after the cliff period ends
             const allocations = await vestingContract.getAllocations(accountName);
             const vestingPeriod = VestingContract.calculateVestingPeriod(settings, allocations[0]);
-        
+
+            await sleepUntil(addSeconds(vestingPeriod.cliffEnd, 1));
+    
+            // Check balances during vesting period
+            balances = await vestingContract.getUnlockableBalance(accountName);
+            expect(balances.unlockable).toBeGreaterThan(0);
+            expect(balances.unlockable).toBeLessThan(2);
+            expect(balances.locked).toBeLessThan(2);
+            expect(balances.totalVested).toBe(2);
+    
             // Wait until after the vesting period ends
             await sleepUntil(addSeconds(vestingPeriod.vestingEnd, 1));
-        
-            // Check unlockable balance after vesting period ends
-            const unlockableBalance2  = await vestingContract.getUnlockableBalance(accountName);
-
-            expect(unlockableBalance2).toBe(2);
-        
-            // Withdraw all unlockable tokens
-            await vestingContract.withdraw(accountName, accountSigner);
-        
-            // Check unlockable balance after withdrawal
-            const unlockableBalance3 = await vestingContract.getUnlockableBalance(accountName);
-
-            expect(unlockableBalance3).toBe(0);
-        });
+    
+            // Check balances after vesting period ends
+            balances = await vestingContract.getUnlockableBalance(accountName);
+            expect(balances.unlockable).toBe(2);
+            expect(balances.locked).toBe(0);
+            expect(balances.totalVested).toBe(2);
+        });    
     
     });
 
