@@ -222,7 +222,7 @@ export class ResponsesManager {
 
             if (request instanceof LoginRequest) {
                 if (response.getMetaOrThrow().requiresLogin === true) {
-                    debug('createResponses() requiresLogin condition');
+                    debug('createResponses() requiresLogin condition', request.getPayload().publicKey);
 
                     await user.loginWithApp(response.getAppOrThrow(), request.getPayload().publicKey);
                 }
