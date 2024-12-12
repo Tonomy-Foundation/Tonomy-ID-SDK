@@ -714,7 +714,11 @@ describe('VestingContract class', () => {
         });
 
         test('Successfully get unlockable, locked, and total allocations', async () => {
-            expect.assertions(22);
+            expect.assertions(25);
+        
+            const { user } = await createRandomID();
+            const accountName = (await user.getAccountName()).toString();
+            const accountSigner = createKeyManagerSigner(user.keyManager, KeyManagerLevel.ACTIVE);
         
             // Assign tokens to the account with a specific vesting category
             const trx = await vestingContract.assignTokens('coinsale.tmy', accountName, '2.000000 LEOS', 999, signer);
@@ -728,7 +732,7 @@ describe('VestingContract class', () => {
             expect(balances.unlockable).toBe(0);
             expect(balances.allocationsDetails.length).toBe(1);
             expect(balances.allocationsDetails[0].totalAllocation).toBe(2);
-            expect(balances.allocationsDetails[0].locked).toBe(2);
+            expect(balances.allocationsDetails[0].locked).toBe(2); // Correct expected value
             expect(balances.allocationsDetails[0].unlockAtVestingStart).toBe(0);
         
             // Wait until after the cliff period ends
@@ -742,7 +746,10 @@ describe('VestingContract class', () => {
             expect(balances.totalAllocation).toBe(2);
             expect(balances.unlockable).toBeGreaterThan(0);
             expect(balances.unlockable).toBeLessThan(2);
-          
+            expect(balances.allocationsDetails[0].totalAllocation).toBe(2);
+            expect(balances.allocationsDetails[0].locked).toBeLessThan(2);
+            expect(balances.allocationsDetails[0].unlockAtVestingStart).toBe(0);
+        
             // Wait until after the vesting period ends
             await sleepUntil(addSeconds(vestingPeriod.vestingEnd, 1));
         
@@ -764,13 +771,12 @@ describe('VestingContract class', () => {
             expect(balances.allocationsDetails[0].totalAllocation).toBe(2);
             expect(balances.allocationsDetails[0].locked).toBe(0);
             expect(balances.allocationsDetails[0].unlockAtVestingStart).toBe(0);
-
+        
             const trx2 = await vestingContract.assignTokens('coinsale.tmy', accountName, '2.000000 LEOS', 999, signer);
 
             expect(trx2.processed.receipt.status).toBe('executed');
             balances = await vestingContract.getVestingAllocations(accountName);
             expect(balances.allocationsDetails.length).toBe(2);
-
         });
     
     });

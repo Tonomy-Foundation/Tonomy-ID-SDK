@@ -378,15 +378,12 @@ export class VestingContract {
             const tokensAllocated = parseFloat(allocation.tokens_allocated.split(' ')[0]);
             const tokensClaimed = parseFloat(allocation.tokens_claimed.split(' ')[0]);
 
-            // Fetch vesting settings
             const settings = await this.getSettings();
 
             const vestingPeriods = VestingContract.calculateVestingPeriod(settings, allocation);
 
-            // Destructure calculated periods
             const { vestingStart, cliffEnd, vestingEnd } = vestingPeriods;
 
-            // Get the vesting category for `tge_unlock` details
             const vestingCategory = this.getVestingCategory(allocation.vesting_category_type);
 
             let claimable = 0;
@@ -411,12 +408,11 @@ export class VestingContract {
                 totalUnlockable += claimable - tokensClaimed;
             }
 
-            const locked = tokensAllocated * (1 - vestingCategory.tgeUnlock) * 0.3; // Assuming "30% of total" locked
+            const locked = tokensAllocated - claimable; // Calculation for locked tokens
             const unlockAtVestingStart = tokensAllocated * vestingCategory.tgeUnlock;
 
             totalAllocation += tokensAllocated;
 
-            // Add allocation details
             allocationsDetails.push({
                 totalAllocation: tokensAllocated,
                 locked,
