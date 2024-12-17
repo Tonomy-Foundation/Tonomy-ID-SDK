@@ -429,7 +429,7 @@ export class VestingContract {
             }
 
             const unlockable = claimable - unlocked;
-            const locked = tokensAllocated - claimable - unlocked;
+            const locked = tokensAllocated - unlocked;
             const unlockAtVestingStart = vestingCategory.tgeUnlock;
 
             allocationsDetails.push({

@@ -780,7 +780,81 @@ describe('VestingContract class', () => {
             balances = await vestingContract.getVestingAllocations(accountName);
             expect(balances.allocationsDetails.length).toBe(2);
         });
-    
+
+    });
+
+    describe('vesting progress for unlockable coins getVestingAllocations()', () => {
+        test('Track vesting progress for category 998', async () => {
+            expect.assertions(14);
+           
+            // Assign tokens to the account with vesting category 998
+            const trx = await vestingContract.assignTokens('coinsale.tmy', accountName, '4.000000 LEOS', 998, signer);
+        
+            expect(trx.processed.receipt.status).toBe('executed');
+        
+            // Fetch initial balances before vesting starts
+            let balances = await vestingContract.getVestingAllocations(accountName);
+        
+            // Ensure initial values are correct
+            expect(balances.totalAllocation).toBe(4);
+            expect(balances.unlockable).toBe(0);
+            expect(balances.unlocked).toBe(0);
+            expect(balances.locked).toBe(4);
+            expect(balances.allocationsDetails.length).toBe(1);
+        
+            // Fetch vesting periods for category 998
+            const allocations = await vestingContract.getAllocations(accountName);
+            const vestingPeriod = VestingContract.calculateVestingPeriod(settings, allocations[0]);
+        
+            const { vestingStart, vestingEnd } = vestingPeriod;
+        
+            const totalAllocation = balances.totalAllocation;
+            const vestingProgress = [];
+
+            // Loop every second until vesting ends
+            for (let currentTime = vestingStart.getTime(); currentTime <= vestingEnd.getTime(); currentTime += 1000) {
+                await sleepUntil(new Date(currentTime));
+        
+                // Fetch updated balances
+                balances = await vestingContract.getVestingAllocations(accountName);
+        
+                const allocationDetails = balances.allocationsDetails[0];
+                const unlockablePercentage = (allocationDetails.unlockable / totalAllocation) * 100;
+                const unlockedPercentage = (allocationDetails.unlocked / totalAllocation) * 100;
+                const lockedPercentage = (allocationDetails.locked / totalAllocation) * 100;
+
+                // Store values in array
+                vestingProgress.push({
+                    time: new Date(currentTime).toISOString(),
+                    unlockable: `${allocationDetails.unlockable.toFixed(6)} LEOS (${unlockablePercentage.toFixed(2)}%)`,
+                    unlocked: `${allocationDetails.unlocked.toFixed(6)} LEOS (${unlockedPercentage.toFixed(2)}%)`,
+                    locked: `${allocationDetails.locked.toFixed(6)} LEOS (${lockedPercentage.toFixed(2)}%)`,
+                    totalAllocation: `${allocationDetails.totalAllocation.toFixed(6)} LEOS`,
+                  
+                });
+            }
+
+            console.log("vestingProgress:", vestingProgress);
+        
+            // Ensure final balances after vesting period
+            await sleepUntil(addSeconds(vestingEnd, 1));
+            balances = await vestingContract.getVestingAllocations(accountName);
+        
+            expect(balances.totalAllocation).toBe(4);
+            expect(balances.unlockable).toBe(4);
+            expect(balances.unlocked).toBe(0);
+            expect(balances.locked).toBe(0);
+            expect(balances.allocationsDetails.length).toBe(1);
+        
+            // Withdraw all unlockable tokens
+            await vestingContract.withdraw(accountName, accountSigner);
+        
+            // Verify post-withdrawal state
+            balances = await vestingContract.getVestingAllocations(accountName);
+            expect(balances.unlockable).toBe(0);
+            expect(balances.unlocked).toBe(4);
+            expect(balances.locked).toBe(0);
+        });
     });
 
     describe('migratealloc()', () => {
