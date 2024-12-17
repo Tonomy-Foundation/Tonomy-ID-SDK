@@ -714,7 +714,7 @@ describe('VestingContract class', () => {
         });
 
         test('Successfully get unlockable, locked, and total allocations', async () => {
-            expect.assertions(25);
+            expect.assertions(27);
         
             const { user } = await createRandomID();
             const accountName = (await user.getAccountName()).toString();
@@ -768,6 +768,8 @@ describe('VestingContract class', () => {
             balances = await vestingContract.getVestingAllocations(accountName);
             expect(balances.totalAllocation).toBe(2);
             expect(balances.unlockable).toBe(0);
+            expect(balances.unlocked).toBe(2);
+            expect(balances.locked).toBe(0);
             expect(balances.allocationsDetails[0].totalAllocation).toBe(2);
             expect(balances.allocationsDetails[0].locked).toBe(0);
             expect(balances.allocationsDetails[0].unlockAtVestingStart).toBe(0);

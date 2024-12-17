@@ -340,7 +340,7 @@ export class VestingContract {
         return vestingCategory;
     }
 
-    getVestingPeriod(categoryId: number): string {
+    getVestingPeriodYears(categoryId: number): string {
         const vestingCategory = vestingCategories.get(categoryId);
 
         if (!vestingCategory) {
@@ -360,8 +360,12 @@ export class VestingContract {
     async getVestingAllocations(account: NameType): Promise<{
         totalAllocation: number;
         unlockable: number;
+        unlocked: number;
+        locked: number;
         allocationsDetails: {
             totalAllocation: number;
+            unlockable: number;
+            unlocked: number;
             locked: number;
             vestingStart: Date;
             vestingPeriod: string;
@@ -369,14 +373,12 @@ export class VestingContract {
         }[];
     }> {
         const allocations = await this.getAllocations(account); // Fetch all allocations for the account
-        let totalUnlockable = 0;
-        let totalAllocation = 0;
         const currentTime = new Date();
         const allocationsDetails = [];
 
         for (const allocation of allocations) {
             const tokensAllocated = parseFloat(allocation.tokens_allocated.split(' ')[0]);
-            const tokensClaimed = parseFloat(allocation.tokens_claimed.split(' ')[0]);
+            const unlocked = parseFloat(allocation.tokens_claimed.split(' ')[0]);
 
             const settings = await this.getSettings();
 
@@ -389,42 +391,41 @@ export class VestingContract {
             let claimable = 0;
 
             if (currentTime >= cliffEnd) {
-                if (currentTime >= vestingEnd) {
-                    // Vesting period complete, all tokens are unlockable
-                    claimable = tokensAllocated;
-                } else {
-                    // Calculate the percentage of the vesting period that has passed
-                    const timeSinceVestingStart = (currentTime.getTime() - vestingStart.getTime()) / 1000;
-                    const vestingDuration = (vestingEnd.getTime() - vestingStart.getTime()) / 1000;
-                    const vestingProgress = Math.min(timeSinceVestingStart / vestingDuration, 1.0); // Ensure it doesn't exceed 100%
+                // Calculate the percentage of the vesting period that has passed
+                const timeSinceVestingStart = (currentTime.getTime() - vestingStart.getTime()) / 1000;
+                const vestingDuration = (vestingEnd.getTime() - vestingStart.getTime()) / 1000;
+                const vestingProgress = Math.min(timeSinceVestingStart / vestingDuration, 1.0); // Ensure it doesn't exceed 100%
 
-                    // Calculate unlockable amount considering TGE unlock
-                    claimable =
-                        tokensAllocated *
-                        ((1.0 - vestingCategory.tgeUnlock) * vestingProgress + vestingCategory.tgeUnlock);
-                }
-
-                // Subtract already claimed tokens
-                totalUnlockable += claimable - tokensClaimed;
+                // Calculate unlockable amount considering TGE unlock
+                claimable =
+                    tokensAllocated * ((1.0 - vestingCategory.tgeUnlock) * vestingProgress + vestingCategory.tgeUnlock);
             }
 
-            const locked = tokensAllocated - claimable; // Calculation for locked tokens
-            const unlockAtVestingStart = tokensAllocated * vestingCategory.tgeUnlock;
-
-            totalAllocation += tokensAllocated;
+            const unlockable = claimable - unlocked;
+            const locked = tokensAllocated - claimable;
+            const unlockAtVestingStart = vestingCategory.tgeUnlock;
 
             allocationsDetails.push({
                 totalAllocation: tokensAllocated,
+                unlockable,
+                unlocked,
                 locked,
                 vestingStart,
                 unlockAtVestingStart,
-                vestingPeriod: this.getVestingPeriod(allocation.vesting_category_type),
+                vestingPeriod: this.getVestingPeriodYears(allocation.vesting_category_type),
             });
         }
+
+        const totalAllocation = allocationsDetails.reduce((sum, allocation) => sum + allocation.totalAllocation, 0);
+        const totalUnlockable = allocationsDetails.reduce((sum, allocation) => sum + allocation.unlockable, 0);
+        const totalUnlocked = allocationsDetails.reduce((sum, allocation) => sum + allocation.unlocked, 0);
+        const totalLocked = allocationsDetails.reduce((sum, allocation) => sum + allocation.locked, 0);
 
         return {
             totalAllocation,
             unlockable: totalUnlockable,
+            unlocked: totalUnlocked,
+            locked: totalLocked,
             allocationsDetails,
         };
     }
