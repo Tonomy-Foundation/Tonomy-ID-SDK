@@ -714,7 +714,7 @@ describe('VestingContract class', () => {
         });
 
         test('Successfully get unlockable, locked, and total allocations', async () => {
-            expect.assertions(28);
+            expect.assertions(27);
         
             const { user } = await createRandomID();
             const accountName = (await user.getAccountName()).toString();
@@ -787,7 +787,9 @@ describe('VestingContract class', () => {
     describe('vesting progress for unlockable coins getVestingAllocations()', () => {
         test('Track vesting progress for category 998', async () => {
             expect.assertions(5);
-            
+            const { user } = await createRandomID();
+            const accountName = (await user.getAccountName()).toString();
+         
             // Assign tokens to the account with vesting category 998
             const trx = await vestingContract.assignTokens('coinsale.tmy', accountName, '4.000000 LEOS', 998, signer);
         
