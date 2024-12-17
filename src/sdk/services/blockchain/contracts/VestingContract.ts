@@ -357,6 +357,33 @@ export class VestingContract {
         }
     }
 
+    // Function to get vesting period in seconds (for categories 999 and 998)
+    getVestingPeriodInSeconds(categoryId: number): string {
+        const vestingCategory = vestingCategories.get(categoryId);
+
+        if (!vestingCategory) {
+            throw new Error(`Vesting category ${categoryId} not found`);
+        }
+
+        const vestingPeriod = vestingCategory.vestingPeriod;
+
+        return `${(vestingPeriod / MICROSECONDS_PER_SECOND).toFixed(2)}`;
+    }
+
+    // Function to get vesting period in years (for all categories other than 999 and 998)
+    getVestingPeriodInYears(categoryId: number): string {
+        const vestingCategory = vestingCategories.get(categoryId);
+
+        if (!vestingCategory) {
+            throw new Error(`Vesting category ${categoryId} not found`);
+        }
+
+        const vestingPeriod = vestingCategory.vestingPeriod;
+
+        // For all categories other than 999 or 998, convert to years
+        return `${(vestingPeriod / MICROSECONDS_PER_DAY).toFixed(2)}`;
+    }
+
     async getVestingAllocations(account: NameType): Promise<{
         totalAllocation: number;
         unlockable: number;
@@ -412,7 +439,10 @@ export class VestingContract {
                 locked,
                 vestingStart,
                 unlockAtVestingStart,
-                vestingPeriod: this.getVestingPeriodYears(allocation.vesting_category_type),
+                vestingPeriod:
+                    allocation.vesting_category_type === 999 || allocation.vesting_category_type === 998
+                        ? this.getVestingPeriodInSeconds(allocation.vesting_category_type)
+                        : this.getVestingPeriodInYears(allocation.vesting_category_type),
             });
         }
 
