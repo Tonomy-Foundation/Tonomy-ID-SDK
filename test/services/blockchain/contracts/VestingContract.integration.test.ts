@@ -17,6 +17,9 @@ import { PrivateKey, Name } from '@wharfkit/antelope';
 import { createRandomAccount } from '../../../helpers/eosio';
 import { msigAction } from './governance';
 import { jest } from '@jest/globals';
+import Debug from 'debug';
+
+const debug = Debug('tonomy-sdk-tests:services:vesting-contract');
 
 const vestingContract = VestingContract.Instance;
 const eosioTokenContract = EosioTokenContract.Instance;
@@ -828,15 +831,14 @@ describe('VestingContract class', () => {
                 // Store values in array
                 vestingProgress.push({
                     time: new Date(currentTime).toISOString(),
-                    unlockable: `${allocationDetails.unlockable.toFixed(6)} LEOS (${unlockablePercentage.toFixed(2)}%)`,
-                    unlocked: `${allocationDetails.unlocked.toFixed(6)} LEOS (${unlockedPercentage.toFixed(2)}%)`,
-                    locked: `${allocationDetails.locked.toFixed(6)} LEOS (${lockedPercentage.toFixed(2)}%)`,
+                    unlockable: `${unlockablePercentage.toFixed(2)}%`,
+                    unlocked: `${unlockedPercentage.toFixed(2)}%`,
+                    locked: `${lockedPercentage.toFixed(2)}%`,
                     totalAllocation: `${allocationDetails.totalAllocation.toFixed(6)} LEOS`,
-                  
                 });
             }
 
-            console.log("vestingProgress:", vestingProgress);
+            debug("vestingProgress:", vestingProgress);
 
         });
     });
