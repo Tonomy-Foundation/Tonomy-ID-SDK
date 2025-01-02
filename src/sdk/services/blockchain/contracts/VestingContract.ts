@@ -26,8 +26,10 @@ export interface VestingAllocation {
     vesting_category_type: number;
 }
 
-const MICROSECONDS_PER_DAY = 24 * 60 * 60 * 1000000;
 const MICROSECONDS_PER_SECOND = 1000000;
+const MICROSECONDS_PER_DAY = 24 * 60 * 60 * 1000000;
+const MICROSECONDS_PER_MONTH = 30 * MICROSECONDS_PER_DAY;
+const MICROSECONDS_PER_YEAR = 365 * MICROSECONDS_PER_DAY;
 
 const vestingCategories: Map<
     number,
@@ -357,8 +359,7 @@ export class VestingContract {
         }
     }
 
-    // Function to get vesting period in seconds (for categories 999 and 998)
-    getVestingPeriodInSeconds(categoryId: number): string {
+    getVestingPeriod(categoryId: number): string {
         const vestingCategory = vestingCategories.get(categoryId);
 
         if (!vestingCategory) {
@@ -367,21 +368,33 @@ export class VestingContract {
 
         const vestingPeriod = vestingCategory.vestingPeriod;
 
-        return `${(vestingPeriod / MICROSECONDS_PER_SECOND).toFixed(2)}`;
-    }
+        const vestingPeriodInDays = vestingPeriod / MICROSECONDS_PER_DAY;
 
-    // Function to get vesting period in years (for all categories other than 999 and 998)
-    getVestingPeriodInYears(categoryId: number): string {
-        const vestingCategory = vestingCategories.get(categoryId);
+        if (vestingPeriodInDays < 1) {
+            // If less than a day, check if it's less than an hour (in seconds)
+            const vestingPeriodInSeconds = vestingPeriod / MICROSECONDS_PER_SECOND;
 
-        if (!vestingCategory) {
-            throw new Error(`Vesting category ${categoryId} not found`);
+            if (vestingPeriodInSeconds < 60) {
+                // Return seconds if it's less than a minute
+                return `${vestingPeriodInSeconds.toFixed(0)} seconds`;
+            } else {
+                // Return hours if it's more than a minute but less than a day
+                return `${(vestingPeriodInSeconds / 3600).toFixed(1)} hours`;
+            }
+        } else if (vestingPeriodInDays < 30) {
+            // Return days if it's less than 30 days
+            return `${vestingPeriodInDays.toFixed(1)} days`;
+        } else {
+            // Calculate months or years if it's 30 days or more
+            const vestingPeriodInMonths = vestingPeriod / MICROSECONDS_PER_MONTH;
+            const vestingPeriodInYears = vestingPeriod / MICROSECONDS_PER_YEAR;
+
+            if (vestingPeriodInMonths < 12) {
+                return `${vestingPeriodInMonths.toFixed(1)} months`;
+            } else {
+                return `${vestingPeriodInYears.toFixed(1)} years`;
+            }
         }
-
-        const vestingPeriod = vestingCategory.vestingPeriod;
-
-        // For all categories other than 999 or 998, convert to years
-        return `${(vestingPeriod / MICROSECONDS_PER_DAY).toFixed(2)}`;
     }
 
     async getVestingAllocations(account: NameType): Promise<{
@@ -395,11 +408,12 @@ export class VestingContract {
             unlocked: number;
             locked: number;
             vestingStart: Date;
+            allocationDate: Date;
             vestingPeriod: string;
             unlockAtVestingStart: number;
         }[];
     }> {
-        const allocations = await this.getAllocations(account); // Fetch all allocations for the account
+        const allocations = await this.getAllocations(account);
         const currentTime = new Date();
         const allocationsDetails = [];
 
@@ -441,10 +455,7 @@ export class VestingContract {
                 vestingStart,
                 unlockAtVestingStart,
                 allocationDate: new Date(saleStart.getTime() + allocation.time_since_sale_start._count / 1000),
-                vestingPeriod:
-                    allocation.vesting_category_type === 999 || allocation.vesting_category_type === 998
-                        ? this.getVestingPeriodInSeconds(allocation.vesting_category_type)
-                        : this.getVestingPeriodInYears(allocation.vesting_category_type),
+                vestingPeriod: this.getVestingPeriod(allocation.vesting_category_type),
             });
         }
 
