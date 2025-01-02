@@ -431,6 +431,7 @@ export class VestingContract {
             const unlockable = claimable - unlocked;
             const locked = tokensAllocated - unlocked;
             const unlockAtVestingStart = vestingCategory.tgeUnlock;
+            const saleStart = new Date(settings.sales_start_date);
 
             allocationsDetails.push({
                 totalAllocation: tokensAllocated,
@@ -439,6 +440,7 @@ export class VestingContract {
                 locked,
                 vestingStart,
                 unlockAtVestingStart,
+                allocationDate: new Date(saleStart.getTime() + allocation.time_since_sale_start._count / 1000),
                 vestingPeriod:
                     allocation.vesting_category_type === 999 || allocation.vesting_category_type === 998
                         ? this.getVestingPeriodInSeconds(allocation.vesting_category_type)
