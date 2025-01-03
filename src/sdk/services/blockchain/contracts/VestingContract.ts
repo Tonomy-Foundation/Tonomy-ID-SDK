@@ -27,7 +27,8 @@ export interface VestingAllocation {
 }
 
 const MICROSECONDS_PER_SECOND = 1000000;
-const MICROSECONDS_PER_DAY = 24 * 60 * 60 * 1000000;
+const SECONDS_PER_HOUR = 3600;
+const MICROSECONDS_PER_DAY = 24 * SECONDS_PER_HOUR * MICROSECONDS_PER_SECOND;
 const MICROSECONDS_PER_MONTH = 30 * MICROSECONDS_PER_DAY;
 const MICROSECONDS_PER_YEAR = 365 * MICROSECONDS_PER_DAY;
 
@@ -379,7 +380,7 @@ export class VestingContract {
                 return `${vestingPeriodInSeconds.toFixed(0)} seconds`;
             } else {
                 // Return hours if it's more than a minute but less than a day
-                return `${(vestingPeriodInSeconds / 3600).toFixed(1)} hours`;
+                return `${(vestingPeriodInSeconds / SECONDS_PER_HOUR).toFixed(1)} hours`;
             }
         } else if (vestingPeriodInDays < 30) {
             // Return days if it's less than 30 days

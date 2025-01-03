@@ -865,11 +865,8 @@ describe('VestingContract class', () => {
         
             // Calculate expected allocation date
             const expectedAllocationDate = new Date(saleStart.getTime() + timeSinceSaleStart);
-        
-            // Validate allocation date matches expected allocation date
-            const tolerance = 1000; // 1 second in milliseconds
 
-            expect(Math.abs(allocationDate.getTime() - expectedAllocationDate.getTime())).toBeLessThanOrEqual(tolerance);
+            expect(allocationDate.getTime()).toBeCloseTo(expectedAllocationDate.getTime(), -3);
         });
         
     });
