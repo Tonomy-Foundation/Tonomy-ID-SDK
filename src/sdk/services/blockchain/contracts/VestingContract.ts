@@ -3,6 +3,7 @@ import { API, Name, NameType } from '@wharfkit/antelope';
 import { Signer, transact } from '../eosio/transaction';
 import { getApi } from '../eosio/eosio';
 import { addMicroseconds } from '../../../util';
+import Decimal from 'decimal.js';
 
 const CONTRACT_NAME = 'vesting.tmy';
 
@@ -220,15 +221,15 @@ export class VestingContract {
 
     async getBalance(account: NameType): Promise<number> {
         const allocations = await this.getAllocations(account);
-        let totalBalance = 0;
+        let totalBalance = new Decimal(0);
 
         for (const allocation of allocations) {
             const tokens = allocation.tokens_allocated.split(' ')[0];
-            const numberTokens = parseFloat(tokens);
+            const numberTokens = new Decimal(tokens);
 
-            totalBalance += numberTokens;
+            totalBalance = totalBalance.add(numberTokens);
         }
 
-        return totalBalance;
+        return totalBalance.toNumber();
     }
 }
