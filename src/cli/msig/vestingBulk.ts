@@ -34,7 +34,7 @@ export async function vestingBulk(args: { governanceAccounts: string[] }, option
 
                 if (accountName.startsWith('@')) {
                     const usernameInstance = TonomyUsername.fromUsername(
-                        accountName,
+                        accountName.split('@')[1],
                         AccountType.PERSON,
                         settings.config.accountSuffix
                     );
@@ -56,7 +56,10 @@ export async function vestingBulk(args: { governanceAccounts: string[] }, option
 
                 results.push(data);
             } catch (e) {
-                if (e instanceof SdkError && e.code === SdkErrors.AccountDoesntExist) {
+                if (
+                    e instanceof SdkError &&
+                    (e.code === SdkErrors.AccountDoesntExist || e.code === SdkErrors.UsernameNotFound)
+                ) {
                     unfoundAccounts.push(data.accountName);
                 } else {
                     throw e;
