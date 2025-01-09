@@ -460,4 +460,139 @@ export class VestingContract {
             allocationsDetails,
         };
     }
+
+    getVestingCategory(categoryId: number): {
+        startDelay: number;
+        cliffPeriod: number;
+        vestingPeriod: number;
+        tgeUnlock: number;
+    } {
+        const vestingCategory = vestingCategories.get(categoryId);
+
+        if (!vestingCategory) {
+            throw new Error(`Vesting category ${categoryId} not found`);
+        }
+
+        return vestingCategory;
+    }
+
+    getVestingPeriodYears(categoryId: number): string {
+        const vestingCategory = vestingCategories.get(categoryId);
+
+        if (!vestingCategory) {
+            throw new Error(`Vesting category ${categoryId} not found`);
+        }
+
+        const vestingPeriod = vestingCategory.vestingPeriod;
+
+        // Convert to seconds for categories 999 and 998, otherwise to years
+        if (categoryId === 999 || categoryId === 998) {
+            return `${(vestingPeriod / MICROSECONDS_PER_SECOND).toFixed(2)}`;
+        } else {
+            return `${(vestingPeriod / MICROSECONDS_PER_DAY).toFixed(2)}`;
+        }
+    }
+
+    // Function to get vesting period in seconds (for categories 999 and 998)
+    getVestingPeriodInSeconds(categoryId: number): string {
+        const vestingCategory = vestingCategories.get(categoryId);
+
+        if (!vestingCategory) {
+            throw new Error(`Vesting category ${categoryId} not found`);
+        }
+
+        const vestingPeriod = vestingCategory.vestingPeriod;
+
+        return `${(vestingPeriod / MICROSECONDS_PER_SECOND).toFixed(2)}`;
+    }
+
+    // Function to get vesting period in years (for all categories other than 999 and 998)
+    getVestingPeriodInYears(categoryId: number): string {
+        const vestingCategory = vestingCategories.get(categoryId);
+
+        if (!vestingCategory) {
+            throw new Error(`Vesting category ${categoryId} not found`);
+        }
+
+        const vestingPeriod = vestingCategory.vestingPeriod;
+
+        // For all categories other than 999 or 998, convert to years
+        return `${(vestingPeriod / MICROSECONDS_PER_DAY).toFixed(2)}`;
+    }
+
+    async getVestingAllocations(account: NameType): Promise<{
+        totalAllocation: number;
+        unlockable: number;
+        unlocked: number;
+        locked: number;
+        allocationsDetails: {
+            totalAllocation: number;
+            unlockable: number;
+            unlocked: number;
+            locked: number;
+            vestingStart: Date;
+            vestingPeriod: string;
+            unlockAtVestingStart: number;
+        }[];
+    }> {
+        const allocations = await this.getAllocations(account); // Fetch all allocations for the account
+        const currentTime = new Date();
+        const allocationsDetails = [];
+
+        for (const allocation of allocations) {
+            const tokensAllocated = parseFloat(allocation.tokens_allocated.split(' ')[0]);
+            const unlocked = parseFloat(allocation.tokens_claimed.split(' ')[0]);
+
+            const settings = await this.getSettings();
+
+            const vestingPeriods = VestingContract.calculateVestingPeriod(settings, allocation);
+
+            const { vestingStart, cliffEnd, vestingEnd } = vestingPeriods;
+
+            const vestingCategory = this.getVestingCategory(allocation.vesting_category_type);
+
+            let claimable = 0;
+
+            if (currentTime >= cliffEnd) {
+                // Calculate the percentage of the vesting period that has passed
+                const timeSinceVestingStart = (currentTime.getTime() - vestingStart.getTime()) / 1000;
+                const vestingDuration = (vestingEnd.getTime() - vestingStart.getTime()) / 1000;
+                const vestingProgress = Math.min(timeSinceVestingStart / vestingDuration, 1.0); // Ensure it doesn't exceed 100%
+
+                // Calculate unlockable amount considering TGE unlock
+                claimable =
+                    tokensAllocated * ((1.0 - vestingCategory.tgeUnlock) * vestingProgress + vestingCategory.tgeUnlock);
+            }
+
+            const unlockable = claimable - unlocked;
+            const locked = tokensAllocated - unlocked;
+            const unlockAtVestingStart = vestingCategory.tgeUnlock;
+
+            allocationsDetails.push({
+                totalAllocation: tokensAllocated,
+                unlockable,
+                unlocked,
+                locked,
+                vestingStart,
+                unlockAtVestingStart,
+                vestingPeriod:
+                    allocation.vesting_category_type === 999 || allocation.vesting_category_type === 998
+                        ? this.getVestingPeriodInSeconds(allocation.vesting_category_type)
+                        : this.getVestingPeriodInYears(allocation.vesting_category_type),
+            });
+        }
+
+        const totalAllocation = allocationsDetails.reduce((sum, allocation) => sum + allocation.totalAllocation, 0);
+        const totalUnlockable = allocationsDetails.reduce((sum, allocation) => sum + allocation.unlockable, 0);
+        const totalUnlocked = allocationsDetails.reduce((sum, allocation) => sum + allocation.unlocked, 0);
+        const totalLocked = allocationsDetails.reduce((sum, allocation) => sum + allocation.locked, 0);
+
+        return {
+            totalAllocation,
+            unlockable: totalUnlockable,
+            unlocked: totalUnlocked,
+            locked: totalLocked,
+            allocationsDetails,
+        };
+    }
 }
