@@ -3508,6 +3508,7 @@ __metadata:
     cross-fetch: "npm:^4.0.0"
     csv-parse: "npm:^5.5.6"
     debug: "npm:^4.3.6"
+    decimal.js: "npm:^10.4.3"
     eslint: "npm:^9.5.0"
     eslint-config-prettier: "npm:^9.1.0"
     eslint-plugin-jest: "npm:^28.6.0"
@@ -6313,7 +6314,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"decimal.js@npm:^10.4.2":
+"decimal.js@npm:^10.4.2, decimal.js@npm:^10.4.3":
   version: 10.4.3
   resolution: "decimal.js@npm:10.4.3"
   checksum: 10c0/6d60206689ff0911f0ce968d40f163304a6c1bc739927758e6efc7921cfa630130388966f16bf6ef6b838cb33679fbe8e7a78a2f3c478afce841fd55ac8fb8ee
