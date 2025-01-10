@@ -20,9 +20,6 @@ import { App } from './App';
 import { AppStatusEnum } from '../types/AppStatusEnum';
 import { getAccountInfo, verifyKeyExistsForApp } from '../helpers/user';
 import { UserCommunication } from './UserCommunication';
-import Debug from 'debug';
-
-const debug = Debug('tonomy-sdk:UserRequestsManager');
 
 const tonomyEosioProxyContract = TonomyEosioProxyContract.Instance;
 const tonomyContract = TonomyContract.Instance;
@@ -112,7 +109,6 @@ export class UserRequestsManager extends UserCommunication implements IUserReque
             }
         }
 
-
         await tonomyContract.loginwithapp(myAccount.toString(), app.accountName.toString(), 'local', key, localSigner);
 
         if (linkAuth) {
@@ -128,7 +124,6 @@ export class UserRequestsManager extends UserCommunication implements IUserReque
         }
 
         appRecord.status = AppStatusEnum.READY;
-
         this.storage.appRecords = apps;
         await this.storage.appRecords;
     }

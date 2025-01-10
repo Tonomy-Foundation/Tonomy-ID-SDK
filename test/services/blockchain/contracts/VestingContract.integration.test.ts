@@ -292,8 +292,6 @@ describe('VestingContract class', () => {
             expect(balance2).toBe(3);
         })
 
-        
-
         test("Successfully assign multiple tokens at once", async () => {
             expect.assertions(6 + 10 * 4);
 
