@@ -19,9 +19,6 @@ import {
 import { RequestsManager, castToWalletRequestSubclass } from './requestsManager';
 import { verifyKeyExistsForApp } from './user';
 import { IUserRequestsManager } from '../types/User';
-import Debug from 'debug';
-
-const debug = Debug('tonomy-sdk:responsesManager');
 
 type WalletResponseMeta = {
     app: App;
@@ -216,8 +213,6 @@ export class ResponsesManager {
 
         for (const response of this.responses) {
             const request = response.getRequest();
-
-            debug('createResponses() getPayload', request.getPayload(), request.getType(), request.getIssuer());
 
             if (request instanceof LoginRequest) {
                 if (response.getMetaOrThrow().requiresLogin === true) {

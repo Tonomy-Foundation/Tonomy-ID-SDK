@@ -112,7 +112,6 @@ export class UserRequestsManager extends UserCommunication implements IUserReque
             }
         }
 
-        debug('loginWithApp key', key);
 
         await tonomyContract.loginwithapp(myAccount.toString(), app.accountName.toString(), 'local', key, localSigner);
 
@@ -143,7 +142,6 @@ export class UserRequestsManager extends UserCommunication implements IUserReque
             messageRecipient?: DID;
         }
     ): Promise<void | URLtype> {
-        debug('acceptLoginRequest() options', options);
         const finalResponses = await responsesManager.createResponses(this);
 
         const responsePayload: LoginRequestResponseMessagePayload = {
