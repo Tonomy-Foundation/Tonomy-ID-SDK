@@ -12,6 +12,7 @@ export async function vestingBulk(args: { governanceAccounts: string[] }, option
     const sender = settings.isProduction() ? 'advteam.tmy' : 'team.tmy';
     const requiredAuthority = options.test ? args.governanceAccounts[2] : '11.found.tmy';
     const categoryId = 7; // Community and Marketing, Platform Dev, Infra Rewards
+    // https://github.com/Tonomy-Foundation/Tonomy-Contracts/blob/master/contracts/vesting.tmy/include/vesting.tmy/vesting.tmy.hpp#L31
 
     const records = parse(fs.readFileSync(csvFilePath, 'utf8'), {
         columns: true,
@@ -34,7 +35,7 @@ export async function vestingBulk(args: { governanceAccounts: string[] }, option
 
                 if (accountName.startsWith('@')) {
                     const usernameInstance = TonomyUsername.fromUsername(
-                        accountName,
+                        accountName.split('@')[1],
                         AccountType.PERSON,
                         settings.config.accountSuffix
                     );
@@ -43,6 +44,8 @@ export async function vestingBulk(args: { governanceAccounts: string[] }, option
                 } else {
                     await getAccount(accountName);
                 }
+
+                data.accountName = accountName;
 
                 data.usdQuantity = Number(data.usdQuantity);
 
@@ -56,7 +59,10 @@ export async function vestingBulk(args: { governanceAccounts: string[] }, option
 
                 results.push(data);
             } catch (e) {
-                if (e instanceof SdkError && e.code === SdkErrors.AccountDoesntExist) {
+                if (
+                    e instanceof SdkError &&
+                    (e.code === SdkErrors.AccountDoesntExist || e.code === SdkErrors.UsernameNotFound)
+                ) {
                     unfoundAccounts.push(data.accountName);
                 } else {
                     throw e;
