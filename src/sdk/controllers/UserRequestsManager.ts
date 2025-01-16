@@ -21,6 +21,9 @@ import { AppStatusEnum } from '../types/AppStatusEnum';
 import { getAccountInfo, verifyKeyExistsForApp } from '../helpers/user';
 import { UserCommunication } from './UserCommunication';
 import { sleep } from '../util';
+import Debug from 'debug';
+
+const debug = Debug('tonomy-sdk:UserRequestsManager');
 
 const tonomyEosioProxyContract = TonomyEosioProxyContract.Instance;
 const tonomyContract = TonomyContract.Instance;
@@ -110,6 +113,8 @@ export class UserRequestsManager extends UserCommunication implements IUserReque
             }
         }
 
+        debug('loginWithApp key', key);
+
         await tonomyContract.loginwithapp(myAccount.toString(), app.accountName.toString(), 'local', key, localSigner);
 
         // If the permission was only just created, we link it to the app (using its account name)
@@ -143,6 +148,8 @@ export class UserRequestsManager extends UserCommunication implements IUserReque
             messageRecipient?: DID;
         }
     ): Promise<void | URLtype> {
+        debug('acceptLoginRequest() options', options);
+
         const finalResponses = await responsesManager.createResponses(this);
 
         const responsePayload: LoginRequestResponseMessagePayload = {
