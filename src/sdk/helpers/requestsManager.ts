@@ -1,6 +1,9 @@
 import { SdkErrors, throwError } from '../util/errors';
 import { LoginRequest, WalletRequest } from '../util/request';
 import { DataSharingRequest } from '../util';
+import Debug from 'debug';
+
+const debug = Debug('tonomy-sdk:requestsManager');
 
 export class RequestsManager {
     requests: WalletRequest[] = [];
@@ -19,6 +22,7 @@ export class RequestsManager {
         const classInitializedRequests: WalletRequest[] = [];
 
         for (const request of checkedRequests) {
+            debug('RequestsManager from', request.getType(), request.getPayload());
             classInitializedRequests.push(castToWalletRequestSubclass(request));
         }
 

@@ -261,12 +261,7 @@ export class ResponsesManager {
 
     exportFinalResponses(): WalletRequestAndResponse[] {
         this.responses.forEach((response) => {
-            debug(
-                'exportFinalResponses():',
-                response.getRequest().getType(),
-                response.getRequest().getPayload(),
-                response.getResponse()
-            );
+            debug('exportFinalResponses():', response.getRequest().getType(), response.getRequest().getPayload());
         });
         return this.responses.map((response) => response.getRequestAndResponse());
     }
