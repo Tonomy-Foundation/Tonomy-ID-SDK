@@ -841,6 +841,34 @@ describe('VestingContract class', () => {
             debug("vestingProgress:", vestingProgress);
 
         });
+        test('should calculate the correct allocation date', async () => {
+            expect.assertions(2);
+        
+            const trx = await vestingContract.assignTokens(
+                'coinsale.tmy',
+                accountName,
+                '1.000000 LEOS',
+                999,
+                signer 
+            );
+        
+            expect(trx.processed.receipt.status).toBe('executed');
+        
+            const balances = await vestingContract.getVestingAllocations(accountName);
+        
+            const allocationDetails = balances.allocationsDetails[0];
+            const allocationDate = allocationDetails.vestingStart;
+        
+            const settings = await vestingContract.getSettings();
+            const saleStart = new Date(settings.sales_start_date); 
+            const timeSinceSaleStart = allocationDetails.vestingStart.getTime() - saleStart.getTime();
+        
+            // Calculate expected allocation date
+            const expectedAllocationDate = new Date(saleStart.getTime() + timeSinceSaleStart);
+
+            expect(allocationDate.getTime()).toBeCloseTo(expectedAllocationDate.getTime(), -3);
+        });
+        
     });
 
     describe('migratealloc()', () => {
