@@ -19,6 +19,9 @@ import {
 import { RequestsManager, castToWalletRequestSubclass } from './requestsManager';
 import { verifyKeyExistsForApp } from './user';
 import { IUserRequestsManager } from '../types/User';
+import Debug from 'debug';
+
+const debug = Debug('tonomy-sdk:responsesManager');
 
 type WalletResponseMeta = {
     app: App;
@@ -146,7 +149,17 @@ export class ResponsesManager {
         if (args instanceof RequestsManager) {
             this.fromRequestsManager(args);
         } else {
-            this.responses = args.map((response) => new WalletRequestAndResponseObject(response));
+            this.responses = args.map((response) => {
+                const responseObject = new WalletRequestAndResponseObject(response);
+
+                debug(
+                    'Response added:',
+                    responseObject.getRequest().getType(),
+                    responseObject.getRequest().getPayload(),
+                    responseObject.getRequest().getIssuer()
+                );
+                return responseObject;
+            });
         }
     }
 
@@ -214,6 +227,8 @@ export class ResponsesManager {
         for (const response of this.responses) {
             const request = response.getRequest();
 
+            debug('createResponses() getPayload', request.getPayload(), request.getType(), request.getIssuer());
+
             if (request instanceof LoginRequest) {
                 if (response.getMetaOrThrow().requiresLogin === true) {
                     await user.loginWithApp(response.getAppOrThrow(), request.getPayload().publicKey);
@@ -245,6 +260,9 @@ export class ResponsesManager {
     }
 
     exportFinalResponses(): WalletRequestAndResponse[] {
+        this.responses.forEach((response) => {
+            debug('exportFinalResponses():', response.getRequest().getType(), response.getRequest().getPayload());
+        });
         return this.responses.map((response) => response.getRequestAndResponse());
     }
 
