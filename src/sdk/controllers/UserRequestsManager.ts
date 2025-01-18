@@ -20,6 +20,7 @@ import { App } from './App';
 import { AppStatusEnum } from '../types/AppStatusEnum';
 import { getAccountInfo, verifyKeyExistsForApp } from '../helpers/user';
 import { UserCommunication } from './UserCommunication';
+import { sleep } from '../util';
 import Debug from 'debug';
 
 const debug = Debug('tonomy-sdk:UserRequestsManager');
@@ -116,7 +117,12 @@ export class UserRequestsManager extends UserCommunication implements IUserReque
 
         await tonomyContract.loginwithapp(myAccount.toString(), app.accountName.toString(), 'local', key, localSigner);
 
+        // If the permission was only just created, we link it to the app (using its account name)
+        // so that this permission can be used to sign transactions in the app immediately
+        // (otherwise a LinkAuthRequestMessage needs to be sent and executed with ExternalUser.checkLinkAuthRequirements())
+        // when a transaction attempt is made in the app
         if (linkAuth) {
+            await sleep(1000); // wait for the blockchain to catch up
             const activeSigner = createKeyManagerSigner(this.keyManager, KeyManagerLevel.ACTIVE);
 
             await tonomyEosioProxyContract.linkAuth(
@@ -129,7 +135,6 @@ export class UserRequestsManager extends UserCommunication implements IUserReque
         }
 
         appRecord.status = AppStatusEnum.READY;
-
         this.storage.appRecords = apps;
         await this.storage.appRecords;
     }
@@ -144,6 +149,7 @@ export class UserRequestsManager extends UserCommunication implements IUserReque
         }
     ): Promise<void | URLtype> {
         debug('acceptLoginRequest() options', options);
+
         const finalResponses = await responsesManager.createResponses(this);
 
         const responsePayload: LoginRequestResponseMessagePayload = {

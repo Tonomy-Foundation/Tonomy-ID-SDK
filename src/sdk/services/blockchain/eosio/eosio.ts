@@ -10,7 +10,6 @@ const debug = Debug('tonomy-sdk:services:blockchain:eosio:eosio');
 let api: APIClient;
 
 export async function getApi(): Promise<APIClient> {
-    debug('Fetching api', typeof api, typeof getFetch(), typeof fetch);
     if (api) return api;
 
     const settings = getSettings();

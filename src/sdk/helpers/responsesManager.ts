@@ -149,7 +149,17 @@ export class ResponsesManager {
         if (args instanceof RequestsManager) {
             this.fromRequestsManager(args);
         } else {
-            this.responses = args.map((response) => new WalletRequestAndResponseObject(response));
+            this.responses = args.map((response) => {
+                const responseObject = new WalletRequestAndResponseObject(response);
+
+                debug(
+                    'Response added:',
+                    responseObject.getRequest().getType(),
+                    responseObject.getRequest().getPayload(),
+                    responseObject.getRequest().getIssuer()
+                );
+                return responseObject;
+            });
         }
     }
 
@@ -250,6 +260,9 @@ export class ResponsesManager {
     }
 
     exportFinalResponses(): WalletRequestAndResponse[] {
+        this.responses.forEach((response) => {
+            debug('exportFinalResponses():', response.getRequest().getType(), response.getRequest().getPayload());
+        });
         return this.responses.map((response) => response.getRequestAndResponse());
     }
 
