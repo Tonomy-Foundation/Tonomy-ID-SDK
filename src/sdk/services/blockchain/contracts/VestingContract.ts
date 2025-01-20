@@ -413,6 +413,7 @@ export class VestingContract {
             allocationDate: Date;
             vestingPeriod: string;
             unlockAtVestingStart: number;
+            categoryId: number;
         }[];
     }> {
         const allocations = await this.getAllocations(account);
@@ -458,6 +459,7 @@ export class VestingContract {
                 unlockAtVestingStart,
                 allocationDate: new Date(saleStart.getTime() + allocation.time_since_sale_start._count / 1000),
                 vestingPeriod: this.getVestingPeriod(allocation.vesting_category_type),
+                categoryId: allocation.vesting_category_type,
             });
         }
 
