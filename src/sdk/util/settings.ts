@@ -41,7 +41,6 @@ export function setFetch(fetch: FetchType): void {
 }
 
 export function getFetch(): FetchType | undefined {
-    debug('Fetch requested', typeof fetchFunction);
     return fetchFunction;
 }
 
