@@ -184,7 +184,7 @@ export class Communication {
 
         const messageHandler = (message: any) => {
             const msg = new Message(message);
-            const payload = JSON.parse(msg.getPayload());
+            const payload = msg.getPayload();
 
             debug('receiveMessage', msg.getType(), msg.getSender(), msg.getRecipient(), payload.requests?.length);
 
