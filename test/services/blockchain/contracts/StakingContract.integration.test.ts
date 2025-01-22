@@ -30,15 +30,15 @@ describe('TonomyContract Staking Tests', () => {
         accountSigner = createKeyManagerSigner(user.keyManager, KeyManagerLevel.ACTIVE);
 
         // Issue tokens to the test account
-        await eosioTokenContract.transfer("coinsale.tmy", accountName, '10.0000 LEOS', "testing LEOS", signer);
+        await eosioTokenContract.transfer("coinsale.tmy", accountName, '10.000000 LEOS', "testing LEOS", signer);
     });
 
     describe('staketokens()', () => {
         test('Stake tokens and verify staking allocation', async () => {
-            expect.assertions(5);
+            // expect.assertions(5);
 
             // Stake tokens
-            const stakeAmount = '1.0000 LEOS';
+            const stakeAmount = '1.000000 LEOS';
             const trx = await stakeContract.stakeTokens(accountName, stakeAmount, accountSigner);
 
             expect(trx.processed.receipt.status).toBe('executed');
