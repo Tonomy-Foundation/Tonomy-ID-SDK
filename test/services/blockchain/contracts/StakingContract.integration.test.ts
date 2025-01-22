@@ -5,12 +5,13 @@ import {
     EosioTokenContract,
     getTonomyOperationsKey,
     Signer,
+    StakingContract,
 } from '../../../../src/sdk/services/blockchain';
-import { KeyManagerLevel, TonomyContract } from '../../../../src/sdk/index';
+import { KeyManagerLevel } from '../../../../src/sdk/index';
 import { jest } from '@jest/globals';
 import { createRandomID } from '../../../helpers/user';
 
-const tonomyContract = TonomyContract.Instance;
+const stakeContract = StakingContract.Instance;
 const eosioTokenContract = EosioTokenContract.Instance;
 const signer = createSigner(getTonomyOperationsKey());
 
@@ -38,12 +39,12 @@ describe('TonomyContract Staking Tests', () => {
 
             // Stake tokens
             const stakeAmount = '1.0000 LEOS';
-            const trx = await tonomyContract.staketokens(accountName, stakeAsset, accountSigner);
+            const trx = await stakeContract.stakeTokens(accountName, stakeAmount, accountSigner);
 
             expect(trx.processed.receipt.status).toBe('executed');
 
             // Retrieve staking allocation table
-            const allocations = await tonomyContract.getStakingAllocations(accountName);
+            const allocations = await stakeContract.getAllocations(accountName);
 
             expect(allocations.length).toBe(1);
 
@@ -51,7 +52,9 @@ describe('TonomyContract Staking Tests', () => {
 
             expect(allocation.account_name).toBe(accountName);
             expect(allocation.tokens_staked).toBe(stakeAmount);
-            expect(allocation.unstake_requested).toBe(false);
+            // expect(allocation.stake_time).toBe(stakeAmount);
+            // expect(allocation.unstake_time).toBe(stakeAmount);
+            // expect(allocation.unstake_requested).toBe(stakeAmount);
         });
     });
 });

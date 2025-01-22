@@ -13,7 +13,6 @@ import {
     AccountType,
     getSettings,
     VestingContract,
-    StakingContract,
 } from '../../sdk/index';
 import { getSigner, updateAccountKey, updateControlByAccount } from './keys';
 import settings from './settings';
@@ -37,7 +36,6 @@ const tokenContract = EosioTokenContract.Instance;
 const tonomyContract = TonomyContract.Instance;
 const eosioContract = EosioContract.Instance;
 const vestingContract = VestingContract.Instance;
-const stakingContract = StakingContract.Instance;
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
