@@ -19,7 +19,9 @@ export async function addEosioCode(options: StandardProposalOptions) {
         const activeAuthority = Authority.fromAccountPermission(activePermission);
 
         activeAuthority.addCodePermission('vesting.tmy');
+        activeAuthority.addCodePermission('staking.tmy');
         ownerAuthority.addCodePermission('vesting.tmy');
+        ownerAuthority.addCodePermission('staking.tmy');
 
         actions.push({
             account: 'tonomy',
