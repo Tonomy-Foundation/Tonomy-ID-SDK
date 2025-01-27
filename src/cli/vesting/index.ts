@@ -88,8 +88,10 @@ export default async function vesting(args: string[]) {
                 // eslint-disable-next-line camelcase
                 const { id, tokens_allocated, vesting_category_type } = allocation;
 
-                // eslint-disable-next-line camelcase
-                console.log(`Holder ${holder}: ${id} - ${tokens_allocated} LEOS in category ${vesting_category_type}`);
+                console.log(
+                    // eslint-disable-next-line camelcase
+                    `Holder ${holder}: Allocation ${id}: ${tokens_allocated} LEOS in category ${vesting_category_type}`
+                );
             }
         }
     } else if (args[0] === 'setsettings') {
