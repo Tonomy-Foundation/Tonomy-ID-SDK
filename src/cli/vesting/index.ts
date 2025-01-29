@@ -1,7 +1,7 @@
 import { PrivateKey } from '@wharfkit/antelope';
 import { printCliHelp } from '..';
 import { AccountType, TonomyUsername, VestingContract } from '../../sdk';
-import { createSigner, getAccount, getAccountNameFromUsername } from '../../sdk/services/blockchain';
+import { assetToAmount, createSigner, getAccount, getAccountNameFromUsername } from '../../sdk/services/blockchain';
 import { setSettings } from '../../sdk/util/settings';
 import settings from '../bootstrap/settings';
 
@@ -81,6 +81,9 @@ export default async function vesting(args: string[]) {
         console.log('Unique holders: ', uniqueHolders);
         console.log('');
 
+        let vestingAllocations = 0;
+        let totalVested = 0;
+
         for (const holder of uniqueHolders) {
             const allocations = await vestingContract.getAllocations(holder);
 
@@ -90,10 +93,20 @@ export default async function vesting(args: string[]) {
 
                 console.log(
                     // eslint-disable-next-line camelcase
-                    `Holder ${holder}: Allocation ${id}: ${tokens_allocated} LEOS in category ${vesting_category_type}`
+                    `Holder ${holder}: Allocation ${id}: ${tokens_allocated} in category ${vesting_category_type}`
                 );
+
+                totalVested += assetToAmount(tokens_allocated);
             }
+
+            vestingAllocations += allocations.length;
         }
+
+        console.log('');
+        console.log('Total unique holders: ', uniqueHolders.size);
+        console.log('Total vesting allocations: ', vestingAllocations);
+        console.log(`Total vested: ${totalVested} LEOS (${((100 * totalVested) / 50000000000).toFixed(2)}%)`);
+        console.log('');
     } else if (args[0] === 'setsettings') {
         const privateKey = PrivateKey.from(process.env.SIGNING_KEY || '');
         const signer = createSigner(privateKey);
