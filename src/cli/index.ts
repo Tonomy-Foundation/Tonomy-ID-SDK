@@ -48,6 +48,7 @@ export function printCliHelp() {
                 keys convert <publicKey/privateKey>
                 msig [commands]
                 vesting assign <sender> <username/accountName> <amount> <category>
+                vesting audit
                 vesting setsettings
                 transfer <from> <username/accountName> <amount> <memo>
         `);
