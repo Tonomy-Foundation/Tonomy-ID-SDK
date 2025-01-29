@@ -22,7 +22,6 @@ describe('TonomyContract Staking Tests', () => {
     let accountSigner: Signer;
 
     beforeEach(async () => {
-        // Create a random account for testing
         // Create a random user
         const { user } = await createRandomID();
 
