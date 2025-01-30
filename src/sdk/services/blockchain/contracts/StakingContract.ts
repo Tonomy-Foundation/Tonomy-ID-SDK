@@ -106,8 +106,8 @@ export class StakingContract {
         const allocationDetails: StakingAllocationDetails[] = [];
 
         for (const allocation of allocations) {
-            const stakedTime = new Date(allocation.stake_time.toString());
-            const unstakeTime = new Date(allocation.unstake_time.toString());
+            const stakedTime = new Date(allocation.stake_time.toString() + 'Z');
+            const unstakeTime = new Date(allocation.unstake_time.toString() + 'Z');
 
             allocationDetails.push({
                 id: allocation.id,

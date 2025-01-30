@@ -35,7 +35,7 @@ describe('TonomyContract Staking Tests', () => {
 
     describe('staketokens()', () => {
         test('Stake tokens and verify staking allocation', async () => {
-            // expect.assertions(7);
+            expect.assertions(8);
 
             // Stake tokens
             const stakeAmount = '1.000000 LEOS';
@@ -51,11 +51,8 @@ describe('TonomyContract Staking Tests', () => {
 
             const allocation = allocations[0];
 
-            console.log(allocation);
-
             expect(allocation.staker).toBe(accountName);
             expect(allocation.staked).toBe(stakeAmount);
-            console.log(now, allocation.stakedTime);
             expect(allocation.stakedTime.getTime()).toBeGreaterThan(now.getTime());
             expect(allocation.stakedTime.getTime()).toBeLessThanOrEqual(now.getTime() + MILLISECONDS_IN_SECOND);
             expect(allocation.unstakeableTime.getTime()).toBe(allocation.stakedTime.getTime() +
