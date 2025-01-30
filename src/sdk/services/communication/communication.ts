@@ -184,8 +184,9 @@ export class Communication {
 
         const messageHandler = (message: any) => {
             const msg = new Message(message);
+            const payload = msg.getPayload();
 
-            debug('receiveMessage', msg.getType(), msg.getSender(), msg.getRecipient(), msg.getPayload());
+            debug('receiveMessage', msg.getType(), msg.getSender(), msg.getRecipient(), payload.requests?.length);
 
             if (!type || msg.getType() === type) {
                 subscriber(msg);
