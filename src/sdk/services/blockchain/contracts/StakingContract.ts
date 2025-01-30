@@ -2,13 +2,14 @@
 import { API, Name, NameType } from '@wharfkit/antelope';
 import { Signer, transact } from '../eosio/transaction';
 import { getAccount, getApi } from '../eosio/eosio';
-import { TonomyEosioProxyContract } from './TonomyEosioProxyContract';
+import { TonomyContract } from './TonomyContract';
 import { Authority } from '../eosio/authority';
 import Debug from 'debug';
+import { addSeconds, SECONDS_IN_DAY } from '../../../util';
 
 const debug = Debug('tonomy-sdk:services:blockchain:contracts:staking');
 
-const tonomyProxyContract = TonomyEosioProxyContract.Instance;
+const tonomyContract = TonomyContract.Instance;
 const CONTRACT_NAME = 'staking.tmy';
 
 export interface StakingAllocation {
@@ -17,13 +18,26 @@ export interface StakingAllocation {
     tokens_staked: string;
     stake_time: { _count: number };
     unstake_time: { _count: number };
-    unstake_requested: boolean;
+    unstake_requested: number;
+}
+
+export interface StakingAllocationDetails {
+    id: number;
+    staker: string;
+    staked: string;
+    stakedTime: Date;
+    unstakeableTime: Date;
+    unstakeTime: Date;
+    releaseTime: Date;
+    unstakeRequested: boolean;
 }
 
 export class StakingContract {
     static singletonInstance: StakingContract;
     contractName = CONTRACT_NAME;
 
+    static LOCKED_DAYS = 30;
+    static RELEASE_DAYS = 5;
     static MAX_ALLOCATIONS = 150;
 
     public static get Instance() {
@@ -51,7 +65,7 @@ export class StakingContract {
 
             newPermission.addCodePermission(CONTRACT_NAME);
             debug('Adding staking.tmy@eosio.code to active permission', JSON.stringify(newPermission, null, 2));
-            await tonomyProxyContract.updateauth(staker.toString(), 'active', 'owner', newPermission, signer);
+            await tonomyContract.updateactive(staker.toString(), newPermission, signer);
         }
 
         const action = {
@@ -84,5 +98,29 @@ export class StakingContract {
         });
 
         return res.rows;
+    }
+
+    async getStakingAllocations(staker: NameType): Promise<StakingAllocationDetails[]> {
+        const allocations = await this.getAllocations(staker);
+
+        const allocationDetails: StakingAllocationDetails[] = [];
+
+        for (const allocation of allocations) {
+            const stakedTime = new Date(allocation.stake_time.toString());
+            const unstakeTime = new Date(allocation.unstake_time.toString());
+
+            allocationDetails.push({
+                id: allocation.id,
+                staker: allocation.account_name,
+                staked: allocation.tokens_staked,
+                stakedTime,
+                unstakeableTime: addSeconds(stakedTime, StakingContract.LOCKED_DAYS * SECONDS_IN_DAY),
+                unstakeTime,
+                releaseTime: addSeconds(unstakeTime, StakingContract.RELEASE_DAYS * SECONDS_IN_DAY),
+                unstakeRequested: allocation.unstake_requested === 1,
+            });
+        }
+
+        return allocationDetails;
     }
 }

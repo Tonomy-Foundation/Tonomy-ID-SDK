@@ -10,6 +10,7 @@ import {
 import { KeyManagerLevel } from '../../../../src/sdk/index';
 import { jest } from '@jest/globals';
 import { createRandomID } from '../../../helpers/user';
+import { MILLISECONDS_IN_SECOND, SECONDS_IN_DAY } from '../../../../src/sdk/util';
 
 const stakeContract = StakingContract.Instance;
 const eosioTokenContract = EosioTokenContract.Instance;
@@ -34,26 +35,32 @@ describe('TonomyContract Staking Tests', () => {
 
     describe('staketokens()', () => {
         test('Stake tokens and verify staking allocation', async () => {
-            // expect.assertions(5);
+            // expect.assertions(7);
 
             // Stake tokens
             const stakeAmount = '1.000000 LEOS';
+            const now = new Date();
             const trx = await stakeContract.stakeTokens(accountName, stakeAmount, accountSigner);
-
+            
             expect(trx.processed.receipt.status).toBe('executed');
 
             // Retrieve staking allocation table
-            const allocations = await stakeContract.getAllocations(accountName);
+            const allocations = await stakeContract.getStakingAllocations(accountName);
 
             expect(allocations.length).toBe(1);
 
             const allocation = allocations[0];
 
-            expect(allocation.account_name).toBe(accountName);
-            expect(allocation.tokens_staked).toBe(stakeAmount);
-            // expect(allocation.stake_time).toBe(stakeAmount);
-            // expect(allocation.unstake_time).toBe(stakeAmount);
-            // expect(allocation.unstake_requested).toBe(stakeAmount);
+            console.log(allocation);
+
+            expect(allocation.staker).toBe(accountName);
+            expect(allocation.staked).toBe(stakeAmount);
+            console.log(now, allocation.stakedTime);
+            expect(allocation.stakedTime.getTime()).toBeGreaterThan(now.getTime());
+            expect(allocation.stakedTime.getTime()).toBeLessThanOrEqual(now.getTime() + MILLISECONDS_IN_SECOND);
+            expect(allocation.unstakeableTime.getTime()).toBe(allocation.stakedTime.getTime() +
+                (StakingContract.LOCKED_DAYS * MILLISECONDS_IN_SECOND * SECONDS_IN_DAY));
+            expect(allocation.unstakeRequested).toBe(false);
         });
     });
 });
