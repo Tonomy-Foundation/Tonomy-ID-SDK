@@ -15,6 +15,7 @@ const CONTRACT_NAME = 'staking.tmy';
 export interface StakingAllocation {
     id: number;
     account_name: string;
+    initial_stake: string;
     tokens_staked: string;
     stake_time: { _count: number };
     unstake_time: { _count: number };
@@ -24,6 +25,7 @@ export interface StakingAllocation {
 export interface StakingAllocationDetails {
     id: number;
     staker: string;
+    initialStake: string;
     staked: string;
     stakedTime: Date;
     unstakeableTime: Date;
@@ -245,6 +247,7 @@ export class StakingContract {
             allocationDetails.push({
                 id: allocation.id,
                 staker: allocation.account_name,
+                initialStake: allocation.initial_stake,
                 staked: allocation.tokens_staked,
                 stakedTime,
                 unstakeableTime: addSeconds(stakedTime, StakingContract.LOCKED_DAYS * SECONDS_IN_DAY),
