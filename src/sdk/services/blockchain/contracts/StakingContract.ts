@@ -5,7 +5,7 @@ import { getAccount, getApi } from '../eosio/eosio';
 import { TonomyContract } from './TonomyContract';
 import { Authority } from '../eosio/authority';
 import Debug from 'debug';
-import { addSeconds, SECONDS_IN_DAY } from '../../../util';
+import { addSeconds, getSettings, SECONDS_IN_DAY } from '../../../util';
 import { assetToAmount } from './EosioTokenContract';
 
 const debug = Debug('tonomy-sdk:services:blockchain:contracts:staking');
@@ -69,9 +69,9 @@ export class StakingContract {
     static singletonInstance: StakingContract;
     contractName = CONTRACT_NAME;
 
-    static LOCKED_DAYS = 30;
-    static RELEASE_DAYS = 5;
-    static MAX_ALLOCATIONS = 150;
+    static LOCKED_DAYS = getSettings().environment !== 'test' ? 30 : 30 / SECONDS_IN_DAY;
+    static RELEASE_DAYS = getSettings().environment !== 'test' ? 5 : 5 / SECONDS_IN_DAY;
+    static MAX_ALLOCATIONS = 100;
 
     public static get Instance() {
         return this.singletonInstance || (this.singletonInstance = new this());
