@@ -296,7 +296,7 @@ export class VestingContract {
             json: true,
         });
 
-        if (res.rows.length === 0) throw new Error('Settings have not yet been set');
+        if (res.rows.length === 0) throw new Error('Vesting settings have not yet been set');
 
         return res.rows[0];
     }

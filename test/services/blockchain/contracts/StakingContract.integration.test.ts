@@ -35,7 +35,7 @@ describe('TonomyContract Staking Tests', () => {
 
         // Issue tokens to the test account
         await eosioTokenContract.transfer("coinsale.tmy", accountName, '10.000000 LEOS', "testing LEOS", signer);
-        stakeSettings = await stakeContract.getStakingSettings();
+        stakeSettings = await stakeContract.getSettings();
     });
 
     describe('staketokens()', () => {
@@ -50,7 +50,7 @@ describe('TonomyContract Staking Tests', () => {
             expect(trx.processed.receipt.status).toBe('executed');
 
             // Retrieve staking allocation table
-            const allocations = await stakeContract.getStakingAllocations(accountName, stakeSettings);
+            const allocations = await stakeContract.getAllocations(accountName, stakeSettings);
 
             expect(allocations.length).toBe(1);
 

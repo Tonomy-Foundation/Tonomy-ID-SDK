@@ -207,7 +207,7 @@ async function setupVestingAndStaking(newSigner: Signer) {
     await stakeContract.setSettings(amountToAsset(yearlyStakePool, 'LEOS'), newSigner);
     await sleep(1000);
     await stakeContract.addYield('infra.tmy', amountToAsset(yearlyStakePool / 2, 'LEOS'), newSigner); // 6 months budget in the account
-    console.log('Staking settings', await stakeContract.getStakingSettings());
+    console.log('Staking settings', await stakeContract.getSettings());
 }
 
 async function createNativeToken() {

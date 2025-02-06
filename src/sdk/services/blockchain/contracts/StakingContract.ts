@@ -57,7 +57,7 @@ export interface StakingAccount {
     version: number;
 }
 
-export interface FullStakingData extends StakingAccount {
+export interface StakingAccountAndAllocations extends StakingAccount {
     allocations: StakingAllocationDetails[];
     totalStaked: number;
     totalUnlockable: number;
@@ -217,7 +217,7 @@ export class StakingContract {
         return await transact(Name.from(CONTRACT_NAME), [action], signer);
     }
 
-    async getAllocations(staker: NameType): Promise<StakingAllocation[]> {
+    private async getAllocationsData(staker: NameType): Promise<StakingAllocation[]> {
         const res = await (
             await getApi()
         ).v1.chain.get_table_rows({
@@ -236,8 +236,8 @@ export class StakingContract {
      * @param staker - account name.
      * @param settings - current staking settings (including APY).
      */
-    async getStakingAllocations(staker: NameType, settings: StakingSettings): Promise<StakingAllocationDetails[]> {
-        const allocations = await this.getAllocations(staker);
+    async getAllocations(staker: NameType, settings: StakingSettings): Promise<StakingAllocationDetails[]> {
+        const allocations = await this.getAllocationsData(staker);
         const allocationDetails: StakingAllocationDetails[] = [];
 
         for (const allocation of allocations) {
@@ -270,7 +270,7 @@ export class StakingContract {
         return allocationDetails;
     }
 
-    async getSettings(): Promise<any> {
+    private async getSettingsData(): Promise<any> {
         const res = await (
             await getApi()
         ).v1.chain.get_table_rows({
@@ -281,6 +281,8 @@ export class StakingContract {
             limit: 1,
         });
 
+        if (res.rows.length === 0) throw new Error('Staking settings have not yet been set');
+
         return res.rows[0];
     }
 
@@ -290,8 +292,8 @@ export class StakingContract {
      * Calculated APY = min(yearlyStakePool / totalStaked, 2.0).
      * (If totalStaked is zero, APY is zero.)
      */
-    async getStakingSettings(): Promise<StakingSettings> {
-        const settings = await this.getSettings();
+    async getSettings(): Promise<StakingSettings> {
+        const settings = await this.getSettingsData();
         const yearlyStakePoolAmount = assetToAmount(settings.yearly_stake_pool);
         const totalStakedAmount = assetToAmount(settings.total_staked);
         const calculatedApy =
@@ -308,7 +310,7 @@ export class StakingContract {
         };
     }
 
-    async getStakingAccountRaw(account: NameType): Promise<StakingAccountRaw | null> {
+    private async getAccountData(account: NameType): Promise<StakingAccountRaw> {
         const res = await (
             await getApi()
         ).v1.chain.get_table_rows({
@@ -320,13 +322,15 @@ export class StakingContract {
             limit: 1,
         });
 
-        return res.rows.length ? res.rows[0] : null;
+        if (res.rows.length === 0 || res.rows[0].staker !== account.toString())
+            throw new Error('Account not found in staking contract');
+
+        return res.rows[0];
     }
 
-    async getStakingAccount(account: NameType): Promise<StakingAccount> {
-        const raw = await this.getStakingAccountRaw(account);
+    async getAccount(account: NameType): Promise<StakingAccount> {
+        const raw = await this.getAccountData(account);
 
-        if (!raw) throw new Error(`Staking account not found for ${account}`);
         return {
             staker: raw.staker,
             totalYield: raw.total_yield,
@@ -349,10 +353,10 @@ export class StakingContract {
      *    • totalUnlockable: Sum of allocations that have completed the release period.
      *    • totalUnlocking: Sum of allocations still within the release period.
      */
-    async getFullStakingData(account: NameType): Promise<FullStakingData> {
-        const settings = await this.getStakingSettings();
-        const allocations = await this.getStakingAllocations(account, settings);
-        const stakingAccount = await this.getStakingAccount(account);
+    async getAccountAndAllocations(account: NameType): Promise<StakingAccountAndAllocations> {
+        const settings = await this.getSettings();
+        const allocations = await this.getAllocations(account, settings);
+        const stakingAccount = await this.getAccount(account);
 
         let totalStaked = 0;
         let estimatedMonthlyYield = 0;
