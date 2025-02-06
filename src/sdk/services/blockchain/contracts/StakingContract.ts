@@ -243,11 +243,13 @@ export class StakingContract {
         for (const allocation of allocations) {
             const stakedTime = new Date(allocation.stake_time.toString() + 'Z');
             const unstakeTime = new Date(allocation.unstake_time.toString() + 'Z');
-            const monthlyYield = assetToAmount(allocation.tokens_staked) * (Math.pow(1 + settings.apy, 1 / 12) - 1); // Monthly yield from yearly APY.
+            const monthlyYield = amountToAsset(
+                assetToAmount(allocation.tokens_staked) * (Math.pow(1 + settings.apy, 1 / 12) - 1),
+                'LEOS'
+            ); // Monthly yield from yearly APY.
             const yieldSoFar = amountToAsset(
                 assetToAmount(allocation.tokens_staked) - assetToAmount(allocation.initial_stake),
-                'LEOS',
-                6
+                'LEOS'
             );
 
             allocationDetails.push({

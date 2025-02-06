@@ -1,6 +1,7 @@
 /* eslint-disable prettier/prettier */
 import {
     amountToAsset,
+    assetToAmount,
     createKeyManagerSigner,
     createSigner,
     EosioTokenContract,
@@ -34,12 +35,12 @@ describe('TonomyContract Staking Tests', () => {
 
         // Issue tokens to the test account
         await eosioTokenContract.transfer("coinsale.tmy", accountName, '10.000000 LEOS', "testing LEOS", signer);
-        stakeSettings = await stakeContract.getSettings();
+        stakeSettings = await stakeContract.getStakingSettings();
     });
 
     describe('staketokens()', () => {
         test('Stake tokens and verify staking allocation', async () => {
-            expect.assertions(8);
+            expect.assertions(11);
 
             // Stake tokens
             const stakeAmount = '1.000000 LEOS';
@@ -64,6 +65,7 @@ describe('TonomyContract Staking Tests', () => {
             expect(allocation.unstakeableTime.getTime()).toBe(allocation.stakedTime.getTime() +
                 (StakingContract.getLockedDays() * MILLISECONDS_IN_SECOND * SECONDS_IN_DAY));
             expect(allocation.unstakeRequested).toBe(false);
+            expect(allocation.monthlyYield).toBe(amountToAsset(assetToAmount(allocation.staked) * (Math.pow(1 + stakeSettings.apy, 1 / 12) - 1), 'LEOS'));
         });
     });
 });
