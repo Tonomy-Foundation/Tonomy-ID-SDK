@@ -26,8 +26,11 @@ import {
     TOTAL_RAM_AVAILABLE,
     RAM_FEE,
     RAM_PRICE,
+    StakingContract,
+    amountToAsset,
 } from '../../sdk/services/blockchain';
 import { createUser, mockCreateAccount, restoreCreateAccountFromMock } from './user';
+import { sleep } from '../../sdk/util';
 
 setSettings(settings.config);
 
@@ -36,6 +39,14 @@ const tokenContract = EosioTokenContract.Instance;
 const tonomyContract = TonomyContract.Instance;
 const eosioContract = EosioContract.Instance;
 const vestingContract = VestingContract.Instance;
+const stakeContract = StakingContract.Instance;
+
+const SALE_START_DATE = '2024-04-30T12:00:00';
+const VESTING_START_DATE = '2030-01-01T00:00:00';
+const STAKING_APY_TARGET = 50 / 100; // 50%
+// Use the TGE unlock: https://docs.google.com/spreadsheets/d/1uyvpgXC0th3Z1_bz4m18dJKy2yyVfYFmcaEyS9fveeA/edit?gid=1074294213#gid=1074294213&range=Q34
+const STAKING_ESTIMATED_STAKED_PERCENT = 15.1 / 100; // 15.1%
+const TOTAL_SUPPLY = 50000000000.0;
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -71,6 +82,7 @@ export default async function bootstrap() {
         await createTonomyApps(newPublicKey, newSigner);
         await configureDemoToken(newSigner);
         await updateAccountControllers(tonomyGovKeys, newPublicKey);
+        await setupVestingAndStaking(newSigner);
         await deployEosioTonomy(newSigner);
         await updateMsigControl(tonomyGovKeys, newSigner);
 
@@ -188,6 +200,16 @@ async function deployStaking() {
     );
 }
 
+async function setupVestingAndStaking(newSigner: Signer) {
+    await vestingContract.setSettings(SALE_START_DATE, VESTING_START_DATE, newSigner);
+    const yearlyStakePool = STAKING_APY_TARGET * STAKING_ESTIMATED_STAKED_PERCENT * TOTAL_SUPPLY;
+
+    await stakeContract.setSettings(amountToAsset(yearlyStakePool, 'LEOS'), newSigner);
+    await sleep(1000);
+    await stakeContract.addYield('infra.tmy', amountToAsset(yearlyStakePool / 2, 'LEOS'), newSigner); // 6 months budget in the account
+    console.log('Staking settings', await stakeContract.getStakingSettings());
+}
+
 async function createNativeToken() {
     console.log('Create and deploy native token contract');
     await deployContract(
@@ -222,7 +244,6 @@ export const addCodePermissionTo = allocations.map((allocation) => allocation[0]
 
 async function createTokenDistribution() {
     console.log('Create token distribution');
-    const totalSupply = 50000000000.0;
 
     let totalPercentage = 0;
 
@@ -235,12 +256,12 @@ async function createTokenDistribution() {
             'Allocate',
             ((percentage * 100).toFixed(1) + '% to').padStart(8),
             account.padEnd(13),
-            (percentage * totalSupply).toFixed(0) + `.000000 ${getSettings().currencySymbol}`
+            (percentage * TOTAL_SUPPLY).toFixed(0) + `.000000 ${getSettings().currencySymbol}`
         );
         await tokenContract.transfer(
             'eosio.token',
             account,
-            (percentage * totalSupply).toFixed(0) + `.000000 ${getSettings().currencySymbol}`,
+            (percentage * TOTAL_SUPPLY).toFixed(0) + `.000000 ${getSettings().currencySymbol}`,
             'Initial allocation',
             signer
         );
@@ -249,8 +270,6 @@ async function createTokenDistribution() {
     if (totalPercentage.toFixed(4) !== '1.0000') {
         throw new Error('Total percentage should be 100% but it is ' + totalPercentage.toFixed(4));
     }
-
-    await vestingContract.setSettings('2024-04-30T12:00:00', '2030-01-01T00:00:00', signer);
 }
 
 async function createTonomyContractAndSetResources() {
@@ -429,7 +448,6 @@ async function updateAccountControllers(govKeys: string[], newPublicKey: PublicK
 
     activeAuthority.addKey(newPublicKey.toString(), 1);
     activeAuthority.addCodePermission('vesting.tmy');
-    // activeAuthority.addCodePermission('staking.tmy'); // is this needed?
     await eosioContract.updateauth(operationsAccount, 'active', 'owner', activeAuthority, signer);
     await eosioContract.updateauth(operationsAccount, 'owner', 'owner', ownerAuthority, signer);
 
@@ -437,7 +455,14 @@ async function updateAccountControllers(govKeys: string[], newPublicKey: PublicK
     for (const account of opsControlledAccounts.filter(
         (account) => !['vesting.tmy', 'staking.tmy', 'tonomy'].includes(account)
     )) {
-        await updateControlByAccount(account, 'ops.tmy', signer, updateControlByOptions(account));
+        if (account === 'infra.tmy') {
+            // infra.tmy also have be able to call staking.tmy::addyield() which transfers tokens
+            await updateControlByAccount(account, 'ops.tmy', signer, {
+                addCodePermission: ['vesting.tmy', 'staking.tmy'],
+            });
+        } else {
+            await updateControlByAccount(account, 'ops.tmy', signer, updateControlByOptions(account));
+        }
     }
 
     // (contracts that are called by inline actions need eosio.code permission)

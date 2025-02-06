@@ -6,7 +6,7 @@ import { TonomyContract } from './TonomyContract';
 import { Authority } from '../eosio/authority';
 import Debug from 'debug';
 import { addSeconds, getSettings, SECONDS_IN_DAY } from '../../../util';
-import { assetToAmount } from './EosioTokenContract';
+import { amountToAsset, assetToAmount } from './EosioTokenContract';
 
 const debug = Debug('tonomy-sdk:services:blockchain:contracts:staking');
 const tonomyContract = TonomyContract.Instance;
@@ -14,7 +14,6 @@ const CONTRACT_NAME = 'staking.tmy';
 
 export interface StakingAllocation {
     id: number;
-    account_name: string;
     initial_stake: string;
     tokens_staked: string;
     stake_time: { _count: number };
@@ -27,6 +26,7 @@ export interface StakingAllocationDetails {
     staker: string;
     initialStake: string;
     staked: string;
+    yieldSoFar: string;
     stakedTime: Date;
     unstakeableTime: Date;
     unstakeTime: Date;
@@ -69,9 +69,10 @@ export class StakingContract {
     static singletonInstance: StakingContract;
     contractName = CONTRACT_NAME;
 
-    static LOCKED_DAYS = getSettings().environment !== 'test' ? 30 : 30 / SECONDS_IN_DAY;
-    static RELEASE_DAYS = getSettings().environment !== 'test' ? 5 : 5 / SECONDS_IN_DAY;
+    static getLockedDays = () => (getSettings().environment !== 'test' ? 30 : 30 / SECONDS_IN_DAY);
+    static getReleaseDays = () => (getSettings().environment !== 'test' ? 5 : 5 / SECONDS_IN_DAY);
     static MAX_ALLOCATIONS = 100;
+    static MAX_APY = 2.0;
 
     public static get Instance() {
         return this.singletonInstance || (this.singletonInstance = new this());
@@ -243,16 +244,22 @@ export class StakingContract {
             const stakedTime = new Date(allocation.stake_time.toString() + 'Z');
             const unstakeTime = new Date(allocation.unstake_time.toString() + 'Z');
             const monthlyYield = assetToAmount(allocation.tokens_staked) * (Math.pow(1 + settings.apy, 1 / 12) - 1); // Monthly yield from yearly APY.
+            const yieldSoFar = amountToAsset(
+                assetToAmount(allocation.tokens_staked) - assetToAmount(allocation.initial_stake),
+                'LEOS',
+                6
+            );
 
             allocationDetails.push({
                 id: allocation.id,
-                staker: allocation.account_name,
+                staker: staker.toString(),
                 initialStake: allocation.initial_stake,
                 staked: allocation.tokens_staked,
+                yieldSoFar,
                 stakedTime,
-                unstakeableTime: addSeconds(stakedTime, StakingContract.LOCKED_DAYS * SECONDS_IN_DAY),
+                unstakeableTime: addSeconds(stakedTime, StakingContract.getLockedDays() * SECONDS_IN_DAY),
                 unstakeTime,
-                releaseTime: addSeconds(unstakeTime, StakingContract.RELEASE_DAYS * SECONDS_IN_DAY),
+                releaseTime: addSeconds(unstakeTime, StakingContract.getReleaseDays() * SECONDS_IN_DAY),
                 unstakeRequested: allocation.unstake_requested === 1,
                 monthlyYield,
             });
@@ -285,7 +292,10 @@ export class StakingContract {
         const settings = await this.getSettings();
         const yearlyStakePoolAmount = assetToAmount(settings.yearly_stake_pool);
         const totalStakedAmount = assetToAmount(settings.total_staked);
-        const calculatedApy = totalStakedAmount > 0 ? Math.min(yearlyStakePoolAmount / totalStakedAmount, 2.0) : 0;
+        const calculatedApy =
+            totalStakedAmount > 0
+                ? Math.min(yearlyStakePoolAmount / totalStakedAmount, StakingContract.MAX_APY)
+                : StakingContract.MAX_APY;
 
         return {
             currentYieldPool: settings.current_yield_pool,

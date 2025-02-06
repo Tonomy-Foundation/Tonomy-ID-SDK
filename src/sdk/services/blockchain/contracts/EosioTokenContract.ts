@@ -10,6 +10,10 @@ export function assetToAmount(asset: string): number {
     return parseFloat(asset.split(' ')[0]);
 }
 
+export function amountToAsset(amount: number, symbol: string, precision = 6) {
+    return amount.toFixed(precision) + ' ' + symbol;
+}
+
 class EosioTokenContract {
     static singletonInstande: EosioTokenContract;
 
