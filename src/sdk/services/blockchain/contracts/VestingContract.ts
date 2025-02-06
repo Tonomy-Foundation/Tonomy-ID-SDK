@@ -126,7 +126,7 @@ const vestingCategories: Map<
             startDelay: 0 * MICROSECONDS_PER_DAY,
             cliffPeriod: 0 * MICROSECONDS_PER_DAY,
             vestingPeriod: 2 * 365 * MICROSECONDS_PER_DAY,
-            tgeUnlock: 0.05,
+            tgeUnlock: 0.1,
         },
     ],
     [
@@ -135,7 +135,7 @@ const vestingCategories: Map<
             startDelay: 0 * MICROSECONDS_PER_DAY,
             cliffPeriod: 0 * MICROSECONDS_PER_DAY,
             vestingPeriod: 2 * 365 * MICROSECONDS_PER_DAY,
-            tgeUnlock: 0.025,
+            tgeUnlock: 0.05,
         },
     ],
     [
