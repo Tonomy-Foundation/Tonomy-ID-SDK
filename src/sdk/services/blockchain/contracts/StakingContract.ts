@@ -32,7 +32,7 @@ export interface StakingAllocationDetails {
     unstakeTime: Date;
     releaseTime: Date;
     unstakeRequested: boolean;
-    monthlyYield: number;
+    monthlyYield: string;
 }
 
 export interface StakingSettings {
@@ -365,7 +365,7 @@ export class StakingContract {
 
             if (!alloc.unstakeRequested) {
                 totalStaked += stakedAmount;
-                estimatedMonthlyYield += alloc.monthlyYield;
+                estimatedMonthlyYield += assetToAmount(alloc.monthlyYield);
             } else {
                 // If unstake has been requested, check if release time has passed.
                 if (alloc.releaseTime <= now) {
