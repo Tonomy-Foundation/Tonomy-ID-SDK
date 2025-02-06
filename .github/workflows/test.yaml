@@ -26,6 +26,8 @@ jobs:
     name: Compiles contracts needed for bootstrap script
     runs-on: ubuntu-20.04
     container: tonomy/antelope
+    env:
+      BUILD_TEST: true
     steps:
       - uses: actions/checkout@v4
         with:
