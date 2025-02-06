@@ -32,7 +32,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: Tonomy-Foundation/Tonomy-Contracts
-          ref: development
+          ref: feature/127-staking-leos
           path: Tonomy-Contracts
 
       - name: Build demo.tmy contract
