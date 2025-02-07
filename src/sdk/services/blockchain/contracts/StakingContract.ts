@@ -71,6 +71,7 @@ export class StakingContract {
 
     static getLockedDays = () => (getSettings().environment !== 'test' ? 30 : 30 / SECONDS_IN_DAY);
     static getReleaseDays = () => (getSettings().environment !== 'test' ? 5 : 5 / SECONDS_IN_DAY);
+    static getMinimumTransfer = () => (getSettings().environment !== 'test' ? 1000 : 1);
     static MAX_ALLOCATIONS = 100;
     static MAX_APY = 2.0;
 

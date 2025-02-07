@@ -200,9 +200,10 @@ async function deployStaking() {
     );
 }
 
+export const yearlyStakePool = STAKING_APY_TARGET * STAKING_ESTIMATED_STAKED_PERCENT * TOTAL_SUPPLY;
+
 async function setupVestingAndStaking(newSigner: Signer) {
     await vestingContract.setSettings(SALE_START_DATE, VESTING_START_DATE, newSigner);
-    const yearlyStakePool = STAKING_APY_TARGET * STAKING_ESTIMATED_STAKED_PERCENT * TOTAL_SUPPLY;
 
     await stakeContract.setSettings(amountToAsset(yearlyStakePool, 'LEOS'), newSigner);
     await sleep(1000);
