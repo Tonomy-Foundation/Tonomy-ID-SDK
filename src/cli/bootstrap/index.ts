@@ -41,13 +41,6 @@ const eosioContract = EosioContract.Instance;
 const vestingContract = VestingContract.Instance;
 const stakeContract = StakingContract.Instance;
 
-const SALE_START_DATE = '2024-04-30T12:00:00';
-const VESTING_START_DATE = '2030-01-01T00:00:00';
-const STAKING_APY_TARGET = 50 / 100; // 50%
-// Use the TGE unlock: https://docs.google.com/spreadsheets/d/1uyvpgXC0th3Z1_bz4m18dJKy2yyVfYFmcaEyS9fveeA/edit?gid=1074294213#gid=1074294213&range=Q34
-const STAKING_ESTIMATED_STAKED_PERCENT = 15.1 / 100; // 15.1%
-const TOTAL_SUPPLY = 50000000000.0;
-
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const signer = getSigner();
@@ -200,14 +193,12 @@ async function deployStaking() {
     );
 }
 
-export const yearlyStakePool = STAKING_APY_TARGET * STAKING_ESTIMATED_STAKED_PERCENT * TOTAL_SUPPLY;
-
 async function setupVestingAndStaking(newSigner: Signer) {
-    await vestingContract.setSettings(SALE_START_DATE, VESTING_START_DATE, newSigner);
+    await vestingContract.setSettings(VestingContract.SALE_START_DATE, VestingContract.VESTING_START_DATE, newSigner);
 
-    await stakeContract.setSettings(amountToAsset(yearlyStakePool, 'LEOS'), newSigner);
+    await stakeContract.setSettings(amountToAsset(StakingContract.yearlyStakePool, 'LEOS'), newSigner);
     await sleep(1000);
-    await stakeContract.addYield('infra.tmy', amountToAsset(yearlyStakePool / 2, 'LEOS'), newSigner); // 6 months budget in the account
+    await stakeContract.addYield('infra.tmy', amountToAsset(StakingContract.yearlyStakePool / 2, 'LEOS'), newSigner); // 6 months budget in the account
     console.log('Staking settings', await stakeContract.getSettings());
 }
 
@@ -257,12 +248,12 @@ async function createTokenDistribution() {
             'Allocate',
             ((percentage * 100).toFixed(1) + '% to').padStart(8),
             account.padEnd(13),
-            (percentage * TOTAL_SUPPLY).toFixed(0) + `.000000 ${getSettings().currencySymbol}`
+            (percentage * EosioTokenContract.TOTAL_SUPPLY).toFixed(0) + `.000000 ${getSettings().currencySymbol}`
         );
         await tokenContract.transfer(
             'eosio.token',
             account,
-            (percentage * TOTAL_SUPPLY).toFixed(0) + `.000000 ${getSettings().currencySymbol}`,
+            (percentage * EosioTokenContract.TOTAL_SUPPLY).toFixed(0) + `.000000 ${getSettings().currencySymbol}`,
             'Initial allocation',
             signer
         );

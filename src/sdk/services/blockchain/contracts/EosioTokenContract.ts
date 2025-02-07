@@ -21,6 +21,8 @@ class EosioTokenContract {
         return this.singletonInstande || (this.singletonInstande = new this());
     }
 
+    static TOTAL_SUPPLY = 50000000000.0;
+
     async create(supply: string, signer: Signer): Promise<API.v1.PushTransactionResponse> {
         const actions = [
             {

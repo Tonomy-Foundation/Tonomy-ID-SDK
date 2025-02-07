@@ -14,9 +14,9 @@ import { KeyManagerLevel } from '../../../../src/sdk/index';
 import { jest } from '@jest/globals';
 import { createRandomID } from '../../../helpers/user';
 import { MILLISECONDS_IN_SECOND, SECONDS_IN_DAY } from '../../../../src/sdk/util';
-import { yearlyStakePool } from '../../../../src/cli/bootstrap';
 import { PrivateKey } from '@wharfkit/antelope';
 import Debug from 'debug';
+import { sleep } from '../../../helpers/sleep';
 
 const debug = Debug('tonomy-sdk-tests:services:staking-contract');
 
@@ -55,7 +55,7 @@ describe('TonomyContract Staking Tests', () => {
             expect(updatedSettings.yearlyStakePool).toBe(newYearlyStakePool);
 
             // Revert settings to previous
-            await stakeContract.setSettings(amountToAsset(yearlyStakePool, 'LEOS'), signer)
+            await stakeContract.setSettings(amountToAsset(StakingContract.yearlyStakePool, 'LEOS'), signer)
         });
 
         test('Fails update with wrong asset symbol', async () => {
@@ -156,10 +156,10 @@ describe('TonomyContract Staking Tests', () => {
             expect.assertions(11);
 
             // Stake tokens
-            const stakeAmount = '1.000000 LEOS';
+            const stakeAmount = '1.000000 LEOS'; // meets minimum requirement
             const now = new Date();
             const trx = await stakeContract.stakeTokens(accountName, stakeAmount, accountSigner);
-            
+
             expect(trx.processed.receipt.status).toBe('executed');
 
             // Retrieve staking allocation table
@@ -186,5 +186,51 @@ describe('TonomyContract Staking Tests', () => {
                 )
             );
         });
+
+        test('Fails staking tokens with invalid staker account', async () => {
+            expect.assertions(1);
+            // Use a staker account name outside the valid range.
+            const invalidStaker = "ops.tmy";
+
+            try {
+                await stakeContract.stakeTokens(invalidStaker, "1.000000 LEOS", signer);
+            } catch (e) {
+                expect(e.error.details[0].message).toContain("Invalid staker account");
+            }
+        });
+
+        test('Fails staking tokens with amount below minimum', async () => {
+            expect.assertions(1);
+
+            // Provide an amount below the minimum (assumed to be 1 LEOS)
+            try {
+                await stakeContract.stakeTokens(accountName, "0.500000 LEOS", accountSigner);
+            } catch (e) {
+                expect(e.error.details[0].message).toContain("Amount must be greater than or equal to 1.000000 LEOS");
+            }
+        });
+
+        test('Fails staking tokens when too many stakes are received', async () => {
+            expect.assertions(2 + StakingContract.getMaxAllocations());
+
+            for (let i = 0; i < StakingContract.getMaxAllocations(); i++) {
+                debug(`Iteration ${i} / ${StakingContract.getMaxAllocations()}`);
+                const trx = await stakeContract.stakeTokens(accountName, "1.000000 LEOS", accountSigner);
+
+                await sleep(1000); // Wait to ensure don't get duplicate transaction error
+                expect(trx.processed.receipt.status).toBe('executed');
+            }
+
+            const allocations = await stakeContract.getAllocations(accountName, stakeSettings);
+            
+            expect(allocations.length).toBe(StakingContract.getMaxAllocations());
+            
+            try {
+                debug('Iteration: final')
+                await stakeContract.stakeTokens(accountName, "1.000000 LEOS", accountSigner);
+            } catch (e) {
+                expect(e.error.details[0].message).toContain("Too many stakes received on this account");
+            }
+        }, 1.5 * StakingContract.getMaxAllocations() * 1000);
     });
 });

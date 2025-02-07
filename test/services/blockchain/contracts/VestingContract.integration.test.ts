@@ -251,7 +251,6 @@ describe('VestingContract class', () => {
 
                 for (let i = 0; i < VestingContract.getMaxAllocations(); i++) {
                     debug(`Iteration: ${i+1} / ${VestingContract.getMaxAllocations()}`);
-                    await sleep(1000); // Wait to ensure don't get duplicate transaction error
                     const trx = await vestingContract.assignTokens(
                         'coinsale.tmy',
                         accountName,
@@ -260,6 +259,7 @@ describe('VestingContract class', () => {
                         signer
                     );
 
+                    await sleep(1000); // Wait to ensure don't get duplicate transaction error
                     expect(trx.processed.receipt.status).toBe('executed');
                 }
 
@@ -269,7 +269,6 @@ describe('VestingContract class', () => {
 
                 try {
                     debug(`Iteration: final`)
-                    await sleep(1000); // Wait to ensure don't get duplicate transaction error
                     await vestingContract.assignTokens('coinsale.tmy', accountName, '1.000000 LEOS', 999, signer);
                 } catch (e) {
                     debug('e', e);

@@ -158,6 +158,8 @@ export class VestingContract {
     }
 
     static getMaxAllocations = () => (getSettings().environment !== 'test' ? 150 : 5);
+    static SALE_START_DATE = '2024-04-30T12:00:00';
+    static VESTING_START_DATE = '2030-01-01T00:00:00';
 
     static calculateVestingPeriod(settings: VestingSettings, allocation: VestingAllocation) {
         const vestingCategory = vestingCategories.get(allocation.vesting_category_type);

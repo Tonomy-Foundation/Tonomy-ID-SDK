@@ -6,7 +6,7 @@ import { TonomyContract } from './TonomyContract';
 import { Authority } from '../eosio/authority';
 import Debug from 'debug';
 import { addSeconds, getSettings, SECONDS_IN_DAY } from '../../../util';
-import { amountToAsset, assetToAmount } from './EosioTokenContract';
+import { amountToAsset, assetToAmount, EosioTokenContract } from './EosioTokenContract';
 
 const debug = Debug('tonomy-sdk:services:blockchain:contracts:staking');
 const tonomyContract = TonomyContract.Instance;
@@ -72,8 +72,15 @@ export class StakingContract {
     static getLockedDays = () => (getSettings().environment !== 'test' ? 30 : 30 / SECONDS_IN_DAY);
     static getReleaseDays = () => (getSettings().environment !== 'test' ? 5 : 5 / SECONDS_IN_DAY);
     static getMinimumTransfer = () => (getSettings().environment !== 'test' ? 1000 : 1);
-    static MAX_ALLOCATIONS = 100;
+    static getMaxAllocations = () => (getSettings().environment !== 'test' ? 100 : 5);
     static MAX_APY = 2.0;
+    static STAKING_APY_TARGET = 50 / 100; // 50%
+    // Use the TGE unlock: https://docs.google.com/spreadsheets/d/1uyvpgXC0th3Z1_bz4m18dJKy2yyVfYFmcaEyS9fveeA/edit?gid=1074294213#gid=1074294213&range=Q34
+    static STAKING_ESTIMATED_STAKED_PERCENT = 15.1 / 100; // 15.1%
+    static yearlyStakePool =
+        StakingContract.STAKING_APY_TARGET *
+        StakingContract.STAKING_ESTIMATED_STAKED_PERCENT *
+        EosioTokenContract.TOTAL_SUPPLY;
 
     public static get Instance() {
         return this.singletonInstance || (this.singletonInstance = new this());
@@ -226,7 +233,7 @@ export class StakingContract {
             scope: staker.toString(),
             table: 'stakingalloc',
             json: true,
-            limit: StakingContract.MAX_ALLOCATIONS + 1,
+            limit: StakingContract.getMaxAllocations() + 1,
         });
 
         return res.rows;
