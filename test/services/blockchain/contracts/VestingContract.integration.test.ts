@@ -247,10 +247,10 @@ describe('VestingContract class', () => {
         test(
             'Unsuccessful assignment due to number of purchases',
             async () => {
-                if (!process.env.CI) return; // Skip this test in local environment as it takes too long
                 expect.assertions(2 + VestingContract.getMaxAllocations());
 
                 for (let i = 0; i < VestingContract.getMaxAllocations(); i++) {
+                    debug(`Iteration: ${i+1} / ${VestingContract.getMaxAllocations()}`);
                     await sleep(1000); // Wait to ensure don't get duplicate transaction error
                     const trx = await vestingContract.assignTokens(
                         'coinsale.tmy',
@@ -268,9 +268,11 @@ describe('VestingContract class', () => {
                 expect(allocations.length).toBe(VestingContract.getMaxAllocations());
 
                 try {
+                    debug(`Iteration: final`)
                     await sleep(1000); // Wait to ensure don't get duplicate transaction error
                     await vestingContract.assignTokens('coinsale.tmy', accountName, '1.000000 LEOS', 999, signer);
                 } catch (e) {
+                    debug('e', e);
                     expect(e.error.details[0].message).toContain('Too many purchases received on this account.');
                 }
             },
@@ -294,8 +296,6 @@ describe('VestingContract class', () => {
 
             expect(balance2).toBe(3);
         })
-
-
 
         test("Successfully assign multiple tokens at once", async () => {
             expect.assertions(6 + 10 * 4);
@@ -472,6 +472,7 @@ describe('VestingContract class', () => {
 
             expect(trx.processed.receipt.status).toBe('executed');
             expect(trx.processed.receipt.cpu_usage_us).toBeLessThan(500);
+            debug(`CPU usage: ${trx.processed.receipt.cpu_usage_us}`);
             expect(trx.processed.action_traces[0].inline_traces.length).toBe(1);
             const transferTrx = trx.processed.action_traces[0].inline_traces[0];
 
@@ -505,8 +506,9 @@ describe('VestingContract class', () => {
             expect(transferAmount).toBe(1.0);
 
             allocations = await vestingContract.getAllocations(accountName);
+            const allocatedAmount = assetToAmount(allocations[0].tokens_claimed);
 
-            expect(allocations.length).toBe(0);
+            expect(allocatedAmount).toBe(transferAmount);
         });
 
         test('Successful withdrawal with TGE unlock', async () => {
