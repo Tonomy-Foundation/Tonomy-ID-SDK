@@ -50,7 +50,7 @@ Tests individual class and function logic within the SDK.
 
 Tests end-to-end functions across more than one service.
 
-Make sure that contracts are complied with the BUILD_TEST flag:
+First make sure that contracts are complied with the BUILD_TEST flag:
 
 ```bash
 export BUILD_TEST=true
@@ -58,7 +58,7 @@ export BUILD_TEST=true
 ./Tonomy-Contracts/build_contracts.sh
 ```
 
-First run the blockchain or Tonomy Communication service locally.
+Then run the blockchain or Tonomy Communication service locally.
 
 `yarn run test:setup`
 

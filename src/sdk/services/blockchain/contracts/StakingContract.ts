@@ -69,7 +69,7 @@ export class StakingContract {
     static singletonInstance: StakingContract;
     contractName = CONTRACT_NAME;
 
-    static getLockedDays = () => (getSettings().environment !== 'test' ? 30 : 30 / SECONDS_IN_DAY);
+    static getLockedDays = () => (getSettings().environment !== 'test' ? 30 : 10 / SECONDS_IN_DAY);
     static getReleaseDays = () => (getSettings().environment !== 'test' ? 5 : 5 / SECONDS_IN_DAY);
     static getMinimumTransfer = () => (getSettings().environment !== 'test' ? 1000 : 1);
     static getMaxAllocations = () => (getSettings().environment !== 'test' ? 100 : 5);

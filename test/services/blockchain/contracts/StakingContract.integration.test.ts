@@ -7,13 +7,14 @@ import {
     EosioTokenContract,
     getTonomyOperationsKey,
     Signer,
+    StakingAllocationDetails,
     StakingContract,
     StakingSettings,
 } from '../../../../src/sdk/services/blockchain';
 import { KeyManagerLevel } from '../../../../src/sdk/index';
 import { jest } from '@jest/globals';
 import { createRandomID } from '../../../helpers/user';
-import { MILLISECONDS_IN_SECOND, SECONDS_IN_DAY } from '../../../../src/sdk/util';
+import { addSeconds, MILLISECONDS_IN_SECOND, SECONDS_IN_DAY, sleepUntil } from '../../../../src/sdk/util';
 import { PrivateKey } from '@wharfkit/antelope';
 import Debug from 'debug';
 import { sleep } from '../../../helpers/sleep';
@@ -293,4 +294,100 @@ describe('TonomyContract Staking Tests', () => {
         });
     });
     
+    describe('requnstake()', () => {
+        // Tests that depend on the user having already staked tokens
+        describe('when staketokens() has already been called by the user', () => {
+            const stakeAmount = "1.000000 LEOS";
+            let allocation: StakingAllocationDetails;
+            let allocationId: number;
+      
+            beforeEach(async () => {
+                // Stake tokens and retrieve the allocation id
+                await stakeContract.stakeTokens(accountName, stakeAmount, accountSigner);
+                const allocations = await stakeContract.getAllocations(accountName, stakeSettings);
+
+                allocation = allocations[0];
+                allocationId = allocation.id;
+                stakeSettings = await stakeContract.getSettings();
+            });
+      
+            test('Successfully request unstake after lockup period and update tables', async () => {
+                expect.assertions(7);
+
+                await sleepUntil(addSeconds(allocation.unstakeableTime, 1));
+                const now = new Date();
+
+                console.log(now, allocation)
+                const unstakeTrx = await stakeContract.requestUnstake(accountName, allocationId, accountSigner);
+
+                expect(unstakeTrx.processed.receipt.status).toBe('executed');
+
+                // Verify the allocation is updated
+                const allocations = await stakeContract.getAllocations(accountName, stakeSettings);
+                const allocationAlterUnstake = allocations.find(a => a.id === allocationId);
+
+                if(!allocationAlterUnstake) throw new Error("Allocation not found");
+                expect(allocationAlterUnstake.unstakeRequested).toBe(true);
+                expect(allocationAlterUnstake.unstakeTime.getTime()).toBeGreaterThan(now.getTime());
+                expect(allocationAlterUnstake.unstakeTime.getTime()).toBeLessThanOrEqual(now.getTime() + MILLISECONDS_IN_SECOND);
+                expect(allocationAlterUnstake.releaseTime.getTime()).toBe(allocationAlterUnstake.unstakeTime.getTime() + StakingContract.getReleaseDays() * MILLISECONDS_IN_SECOND * SECONDS_IN_DAY);
+                
+                // Verify settings update: total_staked decreases and total_releasing increases by the staked amount
+                const updatedSettings = await stakeContract.getSettings();
+
+                expect(assetToAmount(updatedSettings.totalStaked) - assetToAmount(stakeSettings.totalStaked)).toBeCloseTo(-assetToAmount(stakeAmount));
+                expect(assetToAmount(updatedSettings.totalReleasing) - assetToAmount(stakeSettings.totalReleasing)).toBeCloseTo(assetToAmount(stakeAmount));
+            });
+      
+            test('Fails if unstake is requested twice for the same allocation', async () => {
+                expect.assertions(2)
+                await sleepUntil(addSeconds(allocation.unstakeableTime, 1));
+                const unstakeTrx1 = await stakeContract.requestUnstake(accountName, allocationId, accountSigner);
+
+                expect(unstakeTrx1.processed.receipt.status).toBe('executed');
+      
+                // Second unstake request should fail.
+                try {
+                    await sleep(1000);
+                    await stakeContract.requestUnstake(accountName, allocationId, accountSigner);
+                } catch (e) {
+                    expect(e.error.details[0].message).toContain("Unstake already requested");
+                }
+            });
+      
+            test('Fails if requnstake() is not signed by the staker', async () => {
+                expect.assertions(1);
+                const wrongSigner = createSigner(PrivateKey.generate("K1"));
+
+                try {
+                    await stakeContract.requestUnstake(accountName, allocationId, wrongSigner);
+                } catch (e) {
+                    expect(e.error.details[0].message).toContain("transaction declares authority");
+                }
+            });
+
+            test('Fails requnstake if tokens are no longer locked up', async () => {
+                expect.assertions(1);
+         
+                try {
+                    await stakeContract.requestUnstake(accountName, allocationId, accountSigner);
+                } catch (e) {
+                    expect(e.error.details[0].message).toContain("Tokens are still locked up");
+                }
+            });
+        });
+      
+        test('Fails requnstake for a non-existent allocation', async () => {
+            expect.assertions(1);
+
+            try {
+                await stakeContract.requestUnstake(accountName, 9999, accountSigner);
+            } catch (e) {
+                expect(e.error.details[0].message).toContain("Staking allocation not found");
+            }
+        });
+    });
+      
+          
+
 });
