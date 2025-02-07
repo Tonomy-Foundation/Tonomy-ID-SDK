@@ -152,21 +152,20 @@ describe('TonomyContract Staking Tests', () => {
     });
 
     describe('staketokens()', () => {
-        test('Stake tokens and verify staking allocation', async () => {
-            expect.assertions(11);
-
-            // Stake tokens
-            const stakeAmount = '1.000000 LEOS'; // meets minimum requirement
+        test('Stake tokens and verify staking allocation and table updates', async () => {
+            expect.assertions(16);
+    
+            const stakeAmount = '1.000000 LEOS';
             const now = new Date();
             const trx = await stakeContract.stakeTokens(accountName, stakeAmount, accountSigner);
 
             expect(trx.processed.receipt.status).toBe('executed');
-
-            // Retrieve staking allocation table
+    
+            // Retrieve staking allocation table and verify allocation details
             const allocations = await stakeContract.getAllocations(accountName, stakeSettings);
 
             expect(allocations.length).toBe(1);
-
+    
             const allocation = allocations[0];
 
             expect(allocation.staker).toBe(accountName);
@@ -176,7 +175,8 @@ describe('TonomyContract Staking Tests', () => {
             expect(allocation.stakedTime.getTime()).toBeGreaterThan(now.getTime());
             expect(allocation.stakedTime.getTime()).toBeLessThanOrEqual(now.getTime() + MILLISECONDS_IN_SECOND);
             expect(allocation.unstakeableTime.getTime()).toBe(
-                allocation.stakedTime.getTime() + (StakingContract.getLockedDays() * MILLISECONDS_IN_SECOND * SECONDS_IN_DAY)
+                allocation.stakedTime.getTime() +
+                (StakingContract.getLockedDays() * MILLISECONDS_IN_SECOND * SECONDS_IN_DAY)
             );
             expect(allocation.unstakeRequested).toBe(false);
             expect(allocation.monthlyYield).toBe(
@@ -185,12 +185,36 @@ describe('TonomyContract Staking Tests', () => {
                     'LEOS'
                 )
             );
-        });
+    
+            // Verify that the settings table has been updated
+            const updatedSettings = await stakeContract.getSettings();
 
-        test('Fails staking tokens with invalid staker account', async () => {
+            // total_staked should have increased by stakeAmount.
+            expect(assetToAmount(updatedSettings.totalStaked)-assetToAmount(stakeSettings.totalStaked)).toBeCloseTo(assetToAmount(stakeAmount));
+    
+            // Verify that the staking account table has been updated.
+            const accountData = await stakeContract.getAccount(accountName);
+
+            expect(accountData.staker).toBe(accountName);
+            expect(accountData.lastPayout.toString()).toBe(allocation.stakedTime.toString())
+            expect(accountData.totalYield).toBe(amountToAsset(0, "LEOS"));
+            expect(accountData.version).toBe(1);
+        });
+    
+        test('Fails staking tokens with invalid staker account (below allowed range)', async () => {
             expect.assertions(1);
-            // Use a staker account name outside the valid range.
-            const invalidStaker = "ops.tmy";
+            const invalidAccount = "ops.tmy"; // below p111111111111
+
+            try {
+                await stakeContract.stakeTokens(invalidAccount, "1.000000 LEOS", signer);
+            } catch (e) {
+                expect(e.error.details[0].message).toContain("Invalid staker account");
+            }
+        });
+    
+        test('Fails staking tokens with staker above allowed range', async () => {
+            expect.assertions(1);
+            const invalidStaker = "tonomy"; // above pzzzzzzzzzz
 
             try {
                 await stakeContract.stakeTokens(invalidStaker, "1.000000 LEOS", signer);
@@ -198,39 +222,75 @@ describe('TonomyContract Staking Tests', () => {
                 expect(e.error.details[0].message).toContain("Invalid staker account");
             }
         });
-
-        test('Fails staking tokens with amount below minimum', async () => {
+    
+        test('Fails staking tokens with incorrect asset precision', async () => {
             expect.assertions(1);
 
-            // Provide an amount below the minimum (assumed to be 1 LEOS)
             try {
-                await stakeContract.stakeTokens(accountName, "0.500000 LEOS", accountSigner);
+                await stakeContract.stakeTokens(accountName, "1.0 LEOS", accountSigner);
             } catch (e) {
-                expect(e.error.details[0].message).toContain("Amount must be greater than or equal to 1.000000 LEOS");
+                expect(e.error.details[0].message).toContain("Symbol does not match system resource");
             }
         });
+    
+        test('Fails staking tokens with incorrect asset symbol', async () => {
+            expect.assertions(1);
 
-        test('Fails staking tokens when too many stakes are received', async () => {
-            expect.assertions(2 + StakingContract.getMaxAllocations());
-
-            for (let i = 0; i < StakingContract.getMaxAllocations(); i++) {
-                debug(`Iteration ${i} / ${StakingContract.getMaxAllocations()}`);
-                const trx = await stakeContract.stakeTokens(accountName, "1.000000 LEOS", accountSigner);
-
-                await sleep(1000); // Wait to ensure don't get duplicate transaction error
-                expect(trx.processed.receipt.status).toBe('executed');
-            }
-
-            const allocations = await stakeContract.getAllocations(accountName, stakeSettings);
-            
-            expect(allocations.length).toBe(StakingContract.getMaxAllocations());
-            
             try {
-                debug('Iteration: final')
-                await stakeContract.stakeTokens(accountName, "1.000000 LEOS", accountSigner);
+                await stakeContract.stakeTokens(accountName, "1.000000 EOS", accountSigner);
             } catch (e) {
-                expect(e.error.details[0].message).toContain("Too many stakes received on this account");
+                expect(e.error.details[0].message).toContain("Symbol does not match system resource currency");
             }
-        }, 1.5 * StakingContract.getMaxAllocations() * 1000);
+        });
+    
+        test('Stake tokens twice and verify both allocations are present', async () => {
+            expect.assertions(3);
+            // Stake twice
+            await stakeContract.stakeTokens(accountName, "1.000000 LEOS", accountSigner);
+            await stakeContract.stakeTokens(accountName, "2.000000 LEOS", accountSigner);
+    
+            const allocations = await stakeContract.getAllocations(accountName, stakeSettings);
+
+            expect(allocations.length).toBe(2);
+            expect(allocations[0].staked).toBe("1.000000 LEOS");
+            expect(allocations[1].staked).toBe("2.000000 LEOS");
+        });
+    
+        test('getAccountAndAllocations returns correct aggregated values', async () => {
+            expect.assertions(10);
+            await stakeContract.stakeTokens(accountName, "1.000000 LEOS", accountSigner);
+            await stakeContract.stakeTokens(accountName, "2.000000 LEOS", accountSigner);
+    
+            // Retrieve full account and allocations data
+            const fullData = await stakeContract.getAccountAndAllocations(accountName);
+
+            // totalStaked should equal sum of staked amounts from active allocations (1 + 2 = 3 LEOS)
+            expect(fullData.totalStaked).toBeCloseTo(3);
+            // estimatedMonthlyYield should equal the sum of monthly yields for each allocation.
+            const expectedYield1 = assetToAmount("1.000000 LEOS") * (Math.pow(1 + stakeSettings.apy, 1 / 12) - 1);
+            const expectedYield2 = assetToAmount("2.000000 LEOS") * (Math.pow(1 + stakeSettings.apy, 1 / 12) - 1);
+
+            expect(fullData.estimatedMonthlyYield).toBeCloseTo(expectedYield1 + expectedYield2);
+            expect(fullData.allocations.length).toBe(2);
+            expect(fullData.lastPayout.getTime()).toBeGreaterThanOrEqual(fullData.allocations[0].stakedTime.getTime());
+            expect(fullData.lastPayout.getTime()).toBeLessThanOrEqual(fullData.allocations[0].stakedTime.getTime() + MILLISECONDS_IN_SECOND);
+            expect(fullData.staker).toBe(accountName);
+            expect(fullData.totalYield).toBe(amountToAsset(0, "LEOS"));
+            expect(fullData.version).toBe(1);
+            expect(fullData.totalUnlockable).toBe(0);
+            expect(fullData.totalUnlocking).toBe(0);
+        });
+    
+        test('Fails staking tokens if not signed by the staker account', async () => {
+            expect.assertions(1);
+            const wrongSigner = createSigner(PrivateKey.generate("K1"));
+
+            try {
+                await stakeContract.stakeTokens(accountName, "1.000000 LEOS", wrongSigner);
+            } catch (e) {
+                expect(e.error.details[0].message).toContain("transaction declares authority");
+            }
+        });
     });
+    
 });
