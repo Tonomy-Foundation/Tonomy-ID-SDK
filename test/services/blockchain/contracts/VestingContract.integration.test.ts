@@ -505,9 +505,8 @@ describe('VestingContract class', () => {
             expect(transferAmount).toBe(1.0);
 
             allocations = await vestingContract.getAllocations(accountName);
-            const allocatedAmount = assetToAmount(allocations[0].tokens_claimed);
 
-            expect(allocatedAmount).toBe(transferAmount);
+            expect(allocations.length).toBe(0);
         });
 
         test('Successful withdrawal with TGE unlock', async () => {
