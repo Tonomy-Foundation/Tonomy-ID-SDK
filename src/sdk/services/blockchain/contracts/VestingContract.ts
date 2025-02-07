@@ -2,7 +2,7 @@
 import { API, Name, NameType } from '@wharfkit/antelope';
 import { Signer, transact } from '../eosio/transaction';
 import { getApi } from '../eosio/eosio';
-import { addMicroseconds } from '../../../util';
+import { addMicroseconds, getSettings } from '../../../util';
 import Decimal from 'decimal.js';
 
 const CONTRACT_NAME = 'vesting.tmy';
@@ -157,7 +157,7 @@ export class VestingContract {
         return this.singletonInstance || (this.singletonInstance = new this());
     }
 
-    static MAX_ALLOCATIONS = 150;
+    static getMaxAllocations = () => (getSettings().environment !== 'test' ? 150 : 5);
 
     static calculateVestingPeriod(settings: VestingSettings, allocation: VestingAllocation) {
         const vestingCategory = vestingCategories.get(allocation.vesting_category_type);
@@ -309,7 +309,7 @@ export class VestingContract {
             scope: account.toString(),
             table: 'allocation',
             json: true,
-            limit: VestingContract.MAX_ALLOCATIONS + 1,
+            limit: VestingContract.getMaxAllocations() + 1,
         });
 
         return res.rows;

@@ -248,9 +248,9 @@ describe('VestingContract class', () => {
             'Unsuccessful assignment due to number of purchases',
             async () => {
                 if (!process.env.CI) return; // Skip this test in local environment as it takes too long
-                expect.assertions(2 + VestingContract.MAX_ALLOCATIONS);
+                expect.assertions(2 + VestingContract.getMaxAllocations());
 
-                for (let i = 0; i < VestingContract.MAX_ALLOCATIONS; i++) {
+                for (let i = 0; i < VestingContract.getMaxAllocations(); i++) {
                     await sleep(1000); // Wait to ensure don't get duplicate transaction error
                     const trx = await vestingContract.assignTokens(
                         'coinsale.tmy',
@@ -265,7 +265,7 @@ describe('VestingContract class', () => {
 
                 const allocations = await vestingContract.getAllocations(accountName);
 
-                expect(allocations.length).toBe(VestingContract.MAX_ALLOCATIONS);
+                expect(allocations.length).toBe(VestingContract.getMaxAllocations());
 
                 try {
                     await sleep(1000); // Wait to ensure don't get duplicate transaction error
@@ -274,7 +274,7 @@ describe('VestingContract class', () => {
                     expect(e.error.details[0].message).toContain('Too many purchases received on this account.');
                 }
             },
-            1.5 * VestingContract.MAX_ALLOCATIONS * 1000
+            1.5 * VestingContract.getMaxAllocations() * 1000
         );
 
         test("successfully get account balance ", async () => {
