@@ -31,6 +31,7 @@ describe('TonomyContract Staking Tests', () => {
     let accountName: string;
     let accountSigner: Signer;
     let stakeSettings: StakingSettings;
+    const stakeAmount = "1.000000 LEOS";
 
     beforeEach(async () => {
         // Create a random user
@@ -97,7 +98,7 @@ describe('TonomyContract Staking Tests', () => {
             const initialSettings = await stakeContract.getSettings();
             const initialYield = assetToAmount(initialSettings.currentYieldPool);
 
-            const additionalYield = "1.000000 LEOS";
+            const additionalYield = "10.000000 LEOS";
             const trx = await stakeContract.addYield("infra.tmy", additionalYield, signer);
 
             expect(trx.processed.receipt.status).toBe('executed');
@@ -145,7 +146,7 @@ describe('TonomyContract Staking Tests', () => {
             const wrongSigner = createSigner(PrivateKey.generate("K1"));
 
             try {
-                await stakeContract.addYield("infra.tmy", "1.000000 LEOS", wrongSigner);
+                await stakeContract.addYield("infra.tmy", stakeAmount, wrongSigner);
             } catch (e) {
                 expect(e.error.details[0].message).toContain("transaction declares authority");
             }
@@ -156,7 +157,6 @@ describe('TonomyContract Staking Tests', () => {
         test('Stake tokens and verify staking allocation and table updates', async () => {
             expect.assertions(16);
     
-            const stakeAmount = '1.000000 LEOS';
             const now = new Date();
             const trx = await stakeContract.stakeTokens(accountName, stakeAmount, accountSigner);
 
@@ -207,7 +207,7 @@ describe('TonomyContract Staking Tests', () => {
             const invalidAccount = "ops.tmy"; // below p111111111111
 
             try {
-                await stakeContract.stakeTokens(invalidAccount, "1.000000 LEOS", signer);
+                await stakeContract.stakeTokens(invalidAccount, stakeAmount, signer);
             } catch (e) {
                 expect(e.error.details[0].message).toContain("Invalid staker account");
             }
@@ -218,7 +218,7 @@ describe('TonomyContract Staking Tests', () => {
             const invalidStaker = "tonomy"; // above pzzzzzzzzzz
 
             try {
-                await stakeContract.stakeTokens(invalidStaker, "1.000000 LEOS", signer);
+                await stakeContract.stakeTokens(invalidStaker, stakeAmount, signer);
             } catch (e) {
                 expect(e.error.details[0].message).toContain("Invalid staker account");
             }
@@ -287,7 +287,7 @@ describe('TonomyContract Staking Tests', () => {
             const wrongSigner = createSigner(PrivateKey.generate("K1"));
 
             try {
-                await stakeContract.stakeTokens(accountName, "1.000000 LEOS", wrongSigner);
+                await stakeContract.stakeTokens(accountName, stakeAmount, wrongSigner);
             } catch (e) {
                 expect(e.error.details[0].message).toContain("transaction declares authority");
             }
@@ -297,7 +297,6 @@ describe('TonomyContract Staking Tests', () => {
     describe('requnstake()', () => {
         // Tests that depend on the user having already staked tokens
         describe('when staketokens() has already been called by the user', () => {
-            const stakeAmount = "1.000000 LEOS";
             let allocation: StakingAllocationDetails;
             let allocationId: number;
       
@@ -317,7 +316,6 @@ describe('TonomyContract Staking Tests', () => {
                 await sleepUntil(addSeconds(allocation.unstakeableTime, 1));
                 const now = new Date();
 
-                console.log(now, allocation)
                 const unstakeTrx = await stakeContract.requestUnstake(accountName, allocationId, accountSigner);
 
                 expect(unstakeTrx.processed.receipt.status).toBe('executed');
@@ -388,6 +386,107 @@ describe('TonomyContract Staking Tests', () => {
         });
     });
       
-          
+    describe('releasetoken()', () => {
+        let allocation: StakingAllocationDetails;
+        let allocationId: number;
+  
+        beforeEach(async () => {
+            // Stake tokens and retrieve the allocation id
+            await stakeContract.stakeTokens(accountName, stakeAmount, accountSigner);
+            const allocations = await stakeContract.getAllocations(accountName, stakeSettings);
 
+            allocation = allocations[0];
+            allocationId = allocation.id;
+            stakeSettings = await stakeContract.getSettings();
+        });
+
+        // Tests that require an unstake request to have been made
+        describe('when unstake has been requested', () => {
+            beforeEach(async () => {
+                await sleepUntil(addSeconds(allocation.unstakeableTime, 1));
+                await stakeContract.requestUnstake(accountName, allocationId, accountSigner);
+                const allocations = await stakeContract.getAllocations(accountName, stakeSettings);
+
+                allocation = allocations[0];
+                allocationId = allocation.id;
+                stakeSettings = await stakeContract.getSettings();
+            });
+
+            test('Successfully finalize unstake after release period and update tables', async () => {
+                expect.assertions(10);
+                await sleepUntil(addSeconds(allocation.releaseTime, 1));
+                const releaseTrx = await stakeContract.releaseToken(accountName, allocationId, accountSigner);
+
+                expect(releaseTrx.processed.receipt.status).toBe('executed');
+
+                // check the inline action sends the stake amount
+                const inlineActions = releaseTrx.processed.action_traces[0].inline_traces;
+
+                expect(inlineActions.length).toBe(1);
+                expect(inlineActions[0].act.name).toBe("transfer");
+                expect(inlineActions[0].act.account).toBe("eosio.token");
+                const data = inlineActions[0].act.data;
+
+                expect(data.to).toBe(accountName);
+                expect(data.from).toBe(stakeContract.contractName);
+                expect(data.quantity).toBe(allocation.staked);
+                expect(data.memo).toBe("unstake tokens");
+
+                // Verify that the allocation is removed from the table
+                const allocations = await stakeContract.getAllocations(accountName, stakeSettings);
+
+                expect(allocations.find(a => a.id === allocationId)).toBeUndefined();
+
+                // Verify settings update: total_releasing decreases accordingly (should be zero if only one allocation)
+                const updatedSettings = await stakeContract.getSettings();
+
+                expect(assetToAmount(updatedSettings.totalReleasing)-assetToAmount(stakeSettings.totalReleasing)).toBeCloseTo(-assetToAmount(stakeAmount));
+            });
+
+            test('Fails releasetoken if release period not completed', async () => {
+                expect.assertions(1);
+
+                // Do not wait for the release period to elapse
+                try {
+                    await stakeContract.releaseToken(accountName, allocationId, accountSigner);
+                } catch (e) {
+                    expect(e.error.details[0].message).toContain("Release period not yet completed");
+                }
+            });
+        });
+
+        test('Fails releasetoken for non-existent allocation', async () => {
+            expect.assertions(1);
+
+            try {
+                await stakeContract.releaseToken(accountName, 9999, accountSigner);
+            } catch (e) {
+                expect(e.error.details[0].message).toContain("Staking allocation not found");
+            }
+        });
+
+        test('Fails releasetoken if unstake not requested', async () => {
+            expect.assertions(1);
+
+            try {
+                await stakeContract.releaseToken(accountName, allocationId, accountSigner);
+            } catch (e) {
+                expect(e.error.details[0].message).toContain("Unstake not requested");
+            }
+        });
+
+        test('Fails releasetoken if not signed by the staker', async () => {
+            expect.assertions(1);
+
+            const wrongSigner = createSigner(PrivateKey.generate("K1"));
+
+            try {
+                await stakeContract.releaseToken(accountName, allocationId, wrongSigner);
+            } catch (e) {
+                expect(e.error.details[0].message).toContain("transaction declares authority");
+            }
+        });
+    });
+       
+    // TODO: yield, apy, cron, staking pool
 });
