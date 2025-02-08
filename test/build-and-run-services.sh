@@ -60,7 +60,7 @@ function start {
 function bootstrap {
     echo "WARNING: Make sure you have built the smart contract with:"
     echo "export BUILD_TEST=true"
-    echo "./Tonomy-Contracts/delete-buildt-contracts.sh"
+    echo "./Tonomy-Contracts/delete-built-contracts.sh"
     echo "./Tonomy-Contracts/build_contracts.sh"
     sleep 2
 
