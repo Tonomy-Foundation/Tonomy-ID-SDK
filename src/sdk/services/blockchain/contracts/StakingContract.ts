@@ -47,6 +47,7 @@ export interface StakingAccountRaw {
     staker: string;
     total_yield: string;
     last_payout: string;
+    payments: number;
     version: number;
 }
 
@@ -54,6 +55,7 @@ export interface StakingAccount {
     staker: string;
     totalYield: string;
     lastPayout: Date;
+    payments: number;
     version: number;
 }
 
@@ -69,11 +71,11 @@ export class StakingContract {
     static singletonInstance: StakingContract;
     contractName = CONTRACT_NAME;
 
-    static getLockedDays = () => (getSettings().environment !== 'test' ? 30 : 10 / SECONDS_IN_DAY);
-    static getReleaseDays = () => (getSettings().environment !== 'test' ? 5 : 5 / SECONDS_IN_DAY);
-    static getMinimumTransfer = () => (getSettings().environment !== 'test' ? 1000 : 1);
-    static getMaxAllocations = () => (getSettings().environment !== 'test' ? 100 : 5);
-    static getStakingCycleHours = () => (getSettings().environment !== 'test' ? 24 : 1 / 60);
+    static getLockedDays = () => (getSettings().environment !== 'test' ? 30 : 10 / SECONDS_IN_DAY); // 30 days or 10 seconds
+    static getReleaseDays = () => (getSettings().environment !== 'test' ? 5 : 5 / SECONDS_IN_DAY); // 5 days or 5 seconds
+    static getMinimumTransfer = () => (getSettings().environment !== 'test' ? 1000 : 1); // 1000 LEOS or 1 LEOS
+    static getMaxAllocations = () => (getSettings().environment !== 'test' ? 100 : 5); // 100 allocations or 5 allocations
+    static getStakingCycleHours = () => (getSettings().environment !== 'test' ? 24 : 1 / 60); // 24 hours or 1 minute
     static MAX_APY = 2.0;
     static STAKING_APY_TARGET = 50 / 100; // 50%
     // Use the TGE unlock: https://docs.google.com/spreadsheets/d/1uyvpgXC0th3Z1_bz4m18dJKy2yyVfYFmcaEyS9fveeA/edit?gid=1074294213#gid=1074294213&range=Q34
@@ -360,6 +362,7 @@ export class StakingContract {
             staker: raw.staker,
             totalYield: raw.total_yield,
             lastPayout: new Date(raw.last_payout + 'Z'),
+            payments: raw.payments,
             version: raw.version,
         };
     }

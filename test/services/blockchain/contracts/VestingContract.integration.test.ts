@@ -11,8 +11,7 @@ import {
     getTonomyOperationsKey,
     transact,
 } from '../../../../src/sdk/services/blockchain';
-import { sleep } from '../../../helpers/sleep';
-import { addSeconds, sleepUntil, subtractSeconds } from '../../../../src/sdk/util';
+import { addSeconds, sleepUntil, subtractSeconds, sleep } from '../../../../src/sdk/util';
 import { PrivateKey, Name } from '@wharfkit/antelope';
 import { createRandomAccount } from '../../../helpers/eosio';
 import { msigAction } from './governance';

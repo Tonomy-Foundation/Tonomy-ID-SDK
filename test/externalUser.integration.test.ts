@@ -30,7 +30,7 @@ import {
     scanQrAndAck,
     setupLoginRequestSubscriber,
 } from './helpers/user';
-import { sleep } from './helpers/sleep';
+import { sleep } from '../src/sdk/util/time';
 import {
     externalWebsiteOnCallback,
     externalWebsiteOnReload,
