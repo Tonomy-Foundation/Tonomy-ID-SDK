@@ -25,6 +25,12 @@ const stakeContract = StakingContract.Instance;
 const eosioTokenContract = EosioTokenContract.Instance;
 const signer = createSigner(getTonomyOperationsKey());
 
+async function resetContract() {
+    await stakeContract.resetAll(signer);
+    await stakeContract.setSettings(amountToAsset(StakingContract.yearlyStakePool, 'LEOS'), signer);
+    await stakeContract.addYield('infra.tmy', amountToAsset(StakingContract.yearlyStakePool / 2, 'LEOS'), signer); // 6 months budget in the account
+}
+
 describe('TonomyContract Staking Tests', () => {
     jest.setTimeout(60000);
 
@@ -292,6 +298,72 @@ describe('TonomyContract Staking Tests', () => {
                 expect(e.error.details[0].message).toContain("transaction declares authority");
             }
         });
+
+        test('APY decreases below 2.0 if yield pool is low relative to staked tokens', async () => {
+            await resetContract();
+            expect.assertions(1);
+            // Set a low yearly stake pool (e.g. 50 LEOS) so that APY = 50/total_staked.
+            await stakeContract.setSettings("50.000000 LEOS", signer);
+          
+            // Staker1 stakes 1000 LEOS.
+            await eosioTokenContract.transfer("coinsale.tmy", accountName, '1000.000000 LEOS', "testing LEOS", signer);
+            await stakeContract.stakeTokens(accountName, "1000.000000 LEOS", accountSigner);
+          
+            // Create a second staker.
+            const { user: user2 } = await createRandomID();
+            const accountName2 = (await user2.getAccountName()).toString();
+            const accountSigner2 = createKeyManagerSigner(user2.keyManager, KeyManagerLevel.ACTIVE);
+
+            await eosioTokenContract.transfer("coinsale.tmy", accountName2, "1000.000000 LEOS", "testing", signer);
+            await stakeContract.stakeTokens(accountName2, "1000.000000 LEOS", accountSigner2);
+          
+            // Total staked = 2000 LEOS, so APY = 50/2000 = 0.025.
+            const settingsAfter = await stakeContract.getSettings();
+
+            expect(settingsAfter.apy).toBeCloseTo(0.025, 6);
+        });
+
+        test('APY decreases when additional stake is added, and increases when stake is removed', async () => {
+            await resetContract();
+
+            expect.assertions(3);
+            // Set a fixed yearly stake pool.
+            await eosioTokenContract.transfer("coinsale.tmy", accountName, '1001.000000 LEOS', "testing LEOS", signer);
+            await stakeContract.setSettings("1000.000000 LEOS", signer);
+          
+            // Staker1 stakes 1000 LEOS.
+            await stakeContract.stakeTokens(accountName, "1000.000000 LEOS", accountSigner);
+            const settings1 = await stakeContract.getSettings();
+            const apy1 = settings1.apy; // Expected: 1000/1000 = 1.0.
+
+            expect(apy1).toBeCloseTo(1.0, 6);
+          
+            // Create a second staker.
+            const { user: user2 } = await createRandomID();
+            const accountName2 = (await user2.getAccountName()).toString();
+            const accountSigner2 = createKeyManagerSigner(user2.keyManager, KeyManagerLevel.ACTIVE);
+
+            await eosioTokenContract.transfer("coinsale.tmy", accountName2, "1000.000000 LEOS", "testing", signer);
+            await stakeContract.stakeTokens(accountName2, "1000.000000 LEOS", accountSigner2);
+            const settings2 = await stakeContract.getSettings();
+            const apy2 = settings2.apy; // Expected: 1000/2000 = 0.5.
+
+            expect(apy2).toBeCloseTo(0.5, 6);
+          
+            // Have staker1 request unstake.
+            const allocations1 = await stakeContract.getAllocations(accountName, settings2);
+            const allocationId1 = allocations1[0].id;
+
+            // Wait until lockup period expires.
+            await sleepUntil(addSeconds(allocations1[0].unstakeableTime, 1));
+            await stakeContract.requestUnstake(accountName, allocationId1, accountSigner);
+            const settings3 = await stakeContract.getSettings();
+            const apy3 = settings3.apy; // Expected: total staked decreases back to 1000, so APY = 1.0.
+
+            expect(apy3).toBeCloseTo(1.0, 6);
+        });
+          
+          
     });
     
     describe('requnstake()', () => {
@@ -487,6 +559,117 @@ describe('TonomyContract Staking Tests', () => {
             }
         });
     });
-       
-    // TODO: yield, apy, cron, staking pool
+    
+    describe('cron()', () => {
+        test('cron() can be called successfully with contract authority', async () => {
+            const cronTrx = await stakeContract.cron(signer);
+
+            expect(cronTrx.processed.receipt.status).toBe('executed');
+        });
+      
+        test('cron() fails when called with an unauthorized signer', async () => {
+            expect.assertions(1);
+            const wrongSigner = createSigner(PrivateKey.generate("K1"));
+
+            try {
+                await stakeContract.cron(wrongSigner);
+            } catch (e) {
+                expect(e.error.details[0].message).toContain("transaction declares authority");
+            }
+        });
+      
+        test('cron() distributes yield over two staking cycles', async () => {
+            // Use a large stake to minimize rounding issues.
+            const largeStake = "1000000.000000 LEOS";
+
+            await eosioTokenContract.transfer("coinsale.tmy", accountName, largeStake, "testing LEOS", signer);
+            await stakeContract.stakeTokens(accountName, largeStake, accountSigner);
+      
+            // Retrieve initial data
+            const allocationsBefore = await stakeContract.getAllocations(accountName, stakeSettings);
+
+            stakeSettings = await stakeContract.getSettings();
+
+            if (allocationsBefore.length === 0) {
+                throw new Error("No allocation found");
+            }
+
+            const initialAllocation = allocationsBefore[0];
+            const initialStaked = assetToAmount(initialAllocation.staked);
+            const accountBefore = await stakeContract.getAccount(accountName);
+            const lastPayoutTime = accountBefore.lastPayout.getTime();
+            const initialAccountYield = assetToAmount(accountBefore.totalYield);
+            const settingsBefore = await stakeContract.getSettings();
+            const initialTotalStaked = assetToAmount(settingsBefore.totalStaked);
+            const initialYieldPool = assetToAmount(settingsBefore.currentYieldPool);
+      
+            // Wait for one full staking cycles
+            await sleep(StakingContract.getStakingCycleHours() * 3600 * 1000);
+            const accountAfter = await stakeContract.getAccount(accountName);
+
+            const payoutAfterCycle = accountAfter.lastPayout.getTime();
+
+            expect(payoutAfterCycle).toBeGreaterThan(lastPayoutTime)
+
+            // Wait for one full staking cycles
+            await sleep(StakingContract.getStakingCycleHours() * 3600 * 1000);
+      
+            // Retrieve updated values
+            const allocationsAfter = await stakeContract.getAllocations(accountName, stakeSettings);
+            const updatedAllocation = allocationsAfter.find(a => a.id === initialAllocation.id);
+
+            if (!updatedAllocation) {
+                throw new Error("Allocation disappeared unexpectedly");
+            }
+
+            const updatedStaked = assetToAmount(updatedAllocation.staked);
+            const accountAfter2Cycles = await stakeContract.getAccount(accountName);
+            const updatedAccountYield = assetToAmount(accountAfter2Cycles.totalYield);
+            const settingsAfter = await stakeContract.getSettings();
+            const updatedTotalStaked = assetToAmount(settingsAfter.totalStaked);
+            const updatedYieldPool = assetToAmount(settingsAfter.currentYieldPool);
+      
+            // Compute elapsed time in microseconds between payouts
+            const payoutAfter2Cycles = accountAfter2Cycles.lastPayout.getTime();
+
+            expect(payoutAfter2Cycles).toBeGreaterThan(payoutAfterCycle);
+            const elapsedMicroseconds = (payoutAfter2Cycles - lastPayoutTime) * 1000; // ms -> µs
+      
+            // Expected yield using the contract's formula:
+            // expected_yield = stake * ( (1 + apy)^(elapsed / MICROSECONDS_PER_YEAR) - 1 )
+            const MICROSECONDS_PER_YEAR = 365.25 * 24 * 3600 * 1e6;
+            const apy = stakeSettings.apy; // from settings obtained earlier
+            const expectedYield = initialStaked * (Math.pow(1 + apy, elapsedMicroseconds / MICROSECONDS_PER_YEAR) - 1);
+      
+            // Check that allocation's staked amount increased by roughly the expected yield
+            expect(updatedStaked - initialStaked).toBeCloseTo(expectedYield, 6);
+      
+            // Check that the account's total yield increased by roughly the same amount
+            expect(updatedAccountYield - initialAccountYield).toBeCloseTo(expectedYield, 6);
+      
+            // Check that settings.totalStaked increased by about the expected yield
+            expect(updatedTotalStaked - initialTotalStaked).toBeCloseTo(expectedYield, 6);
+      
+            // Check that settings.currentYieldPool decreased by about the expected yield
+            expect(initialYieldPool - updatedYieldPool).toBeCloseTo(expectedYield, 6);
+        }, 2 * StakingContract.getStakingCycleHours() * 3600 * 1000 + 10000);
+      
+        // Test 4: Check that cron() does nothing when there are no staking allocations
+        test('cron() does not change settings if no staking accounts exist', async () => {
+            // For this test we assume a new random account that has not staked
+            // (i.e. its staking account is not present in the staking_accounts table).
+            // Retrieve settings before calling cron()
+            await resetContract();
+            const settingsBefore = await stakeContract.getSettings();
+
+            await sleep(StakingContract.getStakingCycleHours() * 3600 * 1000);
+            const settingsAfter = await stakeContract.getSettings();
+
+            // Expect no changes in yield-related values.
+            expect(settingsAfter.currentYieldPool).toBe(settingsBefore.currentYieldPool);
+            expect(settingsAfter.totalStaked).toBe(settingsBefore.totalStaked);
+        });
+    });
+      
+      
 });

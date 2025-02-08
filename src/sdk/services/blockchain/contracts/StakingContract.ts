@@ -73,6 +73,7 @@ export class StakingContract {
     static getReleaseDays = () => (getSettings().environment !== 'test' ? 5 : 5 / SECONDS_IN_DAY);
     static getMinimumTransfer = () => (getSettings().environment !== 'test' ? 1000 : 1);
     static getMaxAllocations = () => (getSettings().environment !== 'test' ? 100 : 5);
+    static getStakingCycleHours = () => (getSettings().environment !== 'test' ? 24 : 1 / 60);
     static MAX_APY = 2.0;
     static STAKING_APY_TARGET = 50 / 100; // 50%
     // Use the TGE unlock: https://docs.google.com/spreadsheets/d/1uyvpgXC0th3Z1_bz4m18dJKy2yyVfYFmcaEyS9fveeA/edit?gid=1074294213#gid=1074294213&range=Q34
@@ -182,6 +183,22 @@ export class StakingContract {
             ],
             account: CONTRACT_NAME,
             name: 'cron',
+            data: {},
+        };
+
+        return await transact(Name.from(CONTRACT_NAME), [action], signer);
+    }
+
+    async resetAll(signer: Signer): Promise<API.v1.PushTransactionResponse> {
+        const action = {
+            authorization: [
+                {
+                    actor: CONTRACT_NAME,
+                    permission: 'active',
+                },
+            ],
+            account: CONTRACT_NAME,
+            name: 'resetall',
             data: {},
         };
 
