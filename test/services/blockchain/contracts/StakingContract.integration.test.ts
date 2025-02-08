@@ -7,7 +7,7 @@ import {
     EosioTokenContract,
     getTonomyOperationsKey,
     Signer,
-    StakingAllocationDetails,
+    StakingAllocation,
     StakingContract,
     StakingSettings,
 } from '../../../../src/sdk/services/blockchain';
@@ -363,7 +363,7 @@ describe('TonomyContract Staking Tests', () => {
     describe('requnstake()', () => {
         // Tests that depend on the user having already staked tokens
         describe('when staketokens() has already been called by the user', () => {
-            let allocation: StakingAllocationDetails;
+            let allocation: StakingAllocation;
             let allocationId: number;
       
             beforeEach(async () => {
@@ -453,7 +453,7 @@ describe('TonomyContract Staking Tests', () => {
     });
       
     describe('releasetoken()', () => {
-        let allocation: StakingAllocationDetails;
+        let allocation: StakingAllocation;
         let allocationId: number;
   
         beforeEach(async () => {
@@ -774,20 +774,20 @@ describe('TonomyContract Staking Tests', () => {
             expect(afterUnstake.settings.yieldPool).toBe(afterTwoCycles.settings.yieldPool); // Stayed the same
         }, 3 * cycleSeconds * 1000 + 10000);
       
-        test('does not change settings if no staking accounts exist', async () => {
-            // For this test we assume a new random account that has not staked
-            // (i.e. its staking account is not present in the staking_accounts table).
-            // Retrieve settings before calling cron()
+        test('does not change settings if no staking accounts exist while cron runs', async () => {
+            expect.assertions(2);
             await resetContract();
             const settingsBefore = await stakeContract.getSettings();
 
-            await sleep(StakingContract.getStakingCycleHours() * 3600 * 1000);
+            // Wait for staking cycle, then compare settings to before
+            debug(`Waiting for one staking cycle: (${cycleSeconds} seconds)`);
+            await sleep(cycleSeconds * 1000);
             const settingsAfter = await stakeContract.getSettings();
 
             // Expect no changes in yield-related values.
             expect(settingsAfter.currentYieldPool).toBe(settingsBefore.currentYieldPool);
             expect(settingsAfter.totalStaked).toBe(settingsBefore.totalStaked);
-        });
+        }, cycleSeconds * 1000 + 5000);
     });
       
       

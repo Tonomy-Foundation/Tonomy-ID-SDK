@@ -12,7 +12,7 @@ const debug = Debug('tonomy-sdk:services:blockchain:contracts:staking');
 const tonomyContract = TonomyContract.Instance;
 const CONTRACT_NAME = 'staking.tmy';
 
-export interface StakingAllocation {
+export interface StakingAllocationData {
     id: number;
     initial_stake: string;
     tokens_staked: string;
@@ -21,7 +21,7 @@ export interface StakingAllocation {
     unstake_requested: number;
 }
 
-export interface StakingAllocationDetails {
+export interface StakingAllocation {
     id: number;
     staker: string;
     initialStake: string;
@@ -35,6 +35,13 @@ export interface StakingAllocationDetails {
     monthlyYield: string;
 }
 
+export interface StakingSettingsData {
+    current_yield_pool: string;
+    yearly_stake_pool: string;
+    total_staked: string;
+    total_releasing: string;
+}
+
 export interface StakingSettings {
     currentYieldPool: string;
     yearlyStakePool: string;
@@ -43,7 +50,7 @@ export interface StakingSettings {
     apy: number;
 }
 
-export interface StakingAccountRaw {
+export interface StakingAccountData {
     staker: string;
     total_yield: string;
     last_payout: string;
@@ -60,7 +67,7 @@ export interface StakingAccount {
 }
 
 export interface StakingAccountState extends StakingAccount {
-    allocations: StakingAllocationDetails[];
+    allocations: StakingAllocation[];
     totalStaked: number;
     totalUnlockable: number;
     totalUnlocking: number;
@@ -245,7 +252,7 @@ export class StakingContract {
         return await transact(Name.from(CONTRACT_NAME), [action], signer);
     }
 
-    private async getAllocationsData(staker: NameType): Promise<StakingAllocation[]> {
+    private async getAllocationsData(staker: NameType): Promise<StakingAllocationData[]> {
         const res = await (
             await getApi()
         ).v1.chain.get_table_rows({
@@ -264,9 +271,9 @@ export class StakingContract {
      * @param staker - account name.
      * @param settings - current staking settings (including APY).
      */
-    async getAllocations(staker: NameType, settings: StakingSettings): Promise<StakingAllocationDetails[]> {
+    async getAllocations(staker: NameType, settings: StakingSettings): Promise<StakingAllocation[]> {
         const allocations = await this.getAllocationsData(staker);
-        const allocationDetails: StakingAllocationDetails[] = [];
+        const allocationDetails: StakingAllocation[] = [];
 
         for (const allocation of allocations) {
             const stakedTime = new Date(allocation.stake_time.toString() + 'Z');
@@ -300,7 +307,7 @@ export class StakingContract {
         return allocationDetails;
     }
 
-    private async getSettingsData(): Promise<any> {
+    private async getSettingsData(): Promise<StakingSettingsData> {
         const res = await (
             await getApi()
         ).v1.chain.get_table_rows({
@@ -340,7 +347,7 @@ export class StakingContract {
         };
     }
 
-    private async getAccountData(account: NameType): Promise<StakingAccountRaw> {
+    private async getAccountData(account: NameType): Promise<StakingAccountData> {
         const res = await (
             await getApi()
         ).v1.chain.get_table_rows({
