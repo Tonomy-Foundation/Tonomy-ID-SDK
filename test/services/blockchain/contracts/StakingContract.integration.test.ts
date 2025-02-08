@@ -265,13 +265,13 @@ describe('TonomyContract Staking Tests', () => {
             expect(allocations[1].staked).toBe("2.000000 LEOS");
         });
     
-        test('getAccountAndAllocations returns correct aggregated values', async () => {
+        test('getAccountState() returns correct aggregated values', async () => {
             expect.assertions(10);
             await stakeContract.stakeTokens(accountName, "1.000000 LEOS", accountSigner);
             await stakeContract.stakeTokens(accountName, "2.000000 LEOS", accountSigner);
     
             // Retrieve full account and allocations data
-            const fullData = await stakeContract.getAccountAndAllocations(accountName);
+            const fullData = await stakeContract.getAccountState(accountName);
 
             // totalStaked should equal sum of staked amounts from active allocations (1 + 2 = 3 LEOS)
             expect(fullData.totalStaked).toBeCloseTo(3);
@@ -555,6 +555,39 @@ describe('TonomyContract Staking Tests', () => {
     });
     
     describe('cron()', () => {
+        async function getStakingState() {
+            const accountAndAllocations = await stakeContract.getAccountState(accountName);
+            const settings = accountAndAllocations.settings;
+
+            if (accountAndAllocations.allocations.length === 0) throw new Error("No allocation found");
+            const allocation = accountAndAllocations.allocations[0];
+
+            const maxCyclePercentageYield = Math.pow(1 + settings.apy, cycleSeconds / SECONDS_IN_YEAR) - 1;
+
+            return {
+                allocation:{
+                    stakedTime: allocation.stakedTime,
+                    staked: assetToAmount(allocation.staked),
+                    yieldSoFar: assetToAmount(allocation.yieldSoFar),
+                    monthlyYield: assetToAmount(allocation.monthlyYield),
+                    cycleYieldMax: assetToAmount(allocation.staked) * maxCyclePercentageYield,
+                },
+                account: {
+                    lastPayoutTime: accountAndAllocations.lastPayout,
+                    payments: accountAndAllocations.payments,
+                    totalYield: assetToAmount(accountAndAllocations.totalYield),
+                },
+                settings: {
+                    totalStaked: assetToAmount(settings.totalStaked),
+                    totalReleasing: assetToAmount(settings.totalReleasing),
+                    yieldPool: assetToAmount(settings.currentYieldPool),
+                    yearlyStakePool: assetToAmount(settings.yearlyStakePool),
+                    maxCyclePercentageYield,
+                    apy: settings.apy,
+                }
+            }
+        }
+
         test('can be called successfully with contract authority', async () => {
             const cronTrx = await stakeContract.cron(signer);
 
@@ -572,6 +605,83 @@ describe('TonomyContract Staking Tests', () => {
             }
         });
         
+        test('watch and print the account stake and yield', async () => {
+            // only run on local machine to understand the staking yield. No tests are run.
+            if (process.env.CI) return;
+            await resetContract();
+
+            // Use a large stake to minimize rounding issues.
+            const largeStake = "1000000.000000 LEOS"; // 1M LEOS
+            const yearlyStakePool = largeStake; // To make APY 1.0
+
+            await stakeContract.setSettings(yearlyStakePool, signer); // APY 1.0
+
+            await eosioTokenContract.transfer("coinsale.tmy", accountName, largeStake, "testing LEOS", signer);
+            await stakeContract.stakeTokens(accountName, largeStake, accountSigner);
+            
+            const startTime = new Date();
+            let watching = true;
+            const stakingAllocationLog: any[] = [];
+
+            async function watchAllocation() {
+                while (watching) {
+                    const now = new Date();
+                    const state = await getStakingState();
+
+                    stakingAllocationLog.push({ now, state })
+                    await sleep(5000);
+                }
+            }
+
+            function printAllocationStateLog() {
+                const columns = ['Seconds', 'Staked', 'Yield', 'Last Payment', 'Payments', 'Total Staked', 'Total Yield', 'Max Yield'];
+                const columnWidths = [7, 14, 8, 24, 8, 14, 8, 9];
+                let printString = '\n' + columns.map((c, i) => c.padEnd(columnWidths[i])).join(' | ');
+
+                for (const row of stakingAllocationLog) {
+                    const seconds = ((row.now.getTime() - startTime.getTime()) / 1000).toFixed(1);
+                    let printValues = "\n";
+
+                    if (row.unstaked) printValues += seconds.padEnd(columnWidths[0]) + ' | UNSTAKED';
+                    else {
+                        const values = [
+                            seconds,
+                            row.state.allocation.staked.toFixed(6),
+                            row.state.allocation.yieldSoFar.toFixed(6),
+                            row.state.account.lastPayoutTime.toISOString(),
+                            row.state.account.payments,
+                            row.state.settings.totalStaked.toFixed(6),
+                            row.state.account.totalYield.toFixed(6),
+                            row.state.allocation.cycleYieldMax.toFixed(6),
+                        ];
+
+                        printValues += values.map((v, i) => v.toString().padEnd(columnWidths[i])).join(' | ');
+                    }
+
+                    printString += printValues;
+                }
+
+                debug(printString);
+            }
+
+            watchAllocation();
+            const allocations = await stakeContract.getAllocations(accountName, stakeSettings);
+
+            debug(`Waiting for till end of 2nd staking cycle: (${2*cycleSeconds} seconds)`);
+            await sleepUntil(addSeconds(startTime, 2*cycleSeconds));
+
+            debug('Unstaking');
+            await stakeContract.requestUnstake(accountName, allocations[0].id, accountSigner);
+            stakingAllocationLog.push({ now: new Date(), unstaked: true });
+
+            // Wait for one full staking cycles
+            debug(`Waiting for till end of 3nd staking cycle: (${cycleSeconds} seconds)`);
+            await sleepUntil(addSeconds(startTime, 3*cycleSeconds));
+            watching = false;
+            printAllocationStateLog();
+            
+        }, 3 * cycleSeconds * 1000 + 10000);
+
         test(`distributes yield over staking cycles but not after release with APY 2.0 (3x ${cycleSeconds}s)`, async () => {
             expect.assertions(39);
             await resetContract();
@@ -585,39 +695,6 @@ describe('TonomyContract Staking Tests', () => {
             await eosioTokenContract.transfer("coinsale.tmy", accountName, largeStake, "testing LEOS", signer);
             await stakeContract.stakeTokens(accountName, largeStake, accountSigner);
       
-            async function getStakingState() {
-                const accountAndAllocations = await stakeContract.getAccountAndAllocations(accountName);
-                const settings = await stakeContract.getSettings();
-    
-                if (accountAndAllocations.allocations.length === 0) throw new Error("No allocation found");
-                const allocation = accountAndAllocations.allocations[0];
-    
-                const maxCyclePercentageYield = Math.pow(1 + settings.apy, cycleSeconds / SECONDS_IN_YEAR) - 1;
-
-                return {
-                    allocation:{
-                        stakedTime: allocation.stakedTime,
-                        staked: assetToAmount(allocation.staked),
-                        yieldSoFar: assetToAmount(allocation.yieldSoFar),
-                        monthlyYield: assetToAmount(allocation.monthlyYield),
-                        cycleYieldMax: assetToAmount(allocation.staked) * maxCyclePercentageYield,
-                    },
-                    account: {
-                        lastPayoutTime: accountAndAllocations.lastPayout,
-                        payments: accountAndAllocations.payments,
-                        totalYield: assetToAmount(accountAndAllocations.totalYield),
-                    },
-                    settings: {
-                        totalStaked: assetToAmount(settings.totalStaked),
-                        totalReleasing: assetToAmount(settings.totalReleasing),
-                        yieldPool: assetToAmount(settings.currentYieldPool),
-                        yearlyStakePool: assetToAmount(settings.yearlyStakePool),
-                        maxCyclePercentageYield,
-                        apy: settings.apy,
-                    }
-                }
-            }
-
             const initial = await getStakingState();
             const initialStakedTime = initial.allocation.stakedTime;
 
@@ -633,8 +710,8 @@ describe('TonomyContract Staking Tests', () => {
             expect(initial.settings.apy).toBeCloseTo(initial.settings.yearlyStakePool / initial.settings.totalStaked, 6);
       
             // Wait for one full staking cycles
-            debug(`Waiting for till end of 2nd staking cycle: (${cycleSeconds} seconds)`);
-            await sleepUntil(addSeconds(initialStakedTime, 2*cycleSeconds));
+            debug(`Waiting for till end of 1st staking cycle: (${cycleSeconds} seconds)`);
+            await sleepUntil(addSeconds(initialStakedTime, cycleSeconds));
 
             const afterOneCycle = await getStakingState();
 
@@ -653,8 +730,8 @@ describe('TonomyContract Staking Tests', () => {
             expect(afterOneCycle.settings.yieldPool).toBe(initial.settings.yieldPool - afterOneCycle.allocation.yieldSoFar);
 
             // Wait for one full staking cycles
-            debug(`Waiting for till end of 3rd staking cycle: (${cycleSeconds} seconds)`);
-            await sleepUntil(addSeconds(initialStakedTime, 3*cycleSeconds));
+            debug(`Waiting for till end of 2nd staking cycle: (${cycleSeconds} seconds)`);
+            await sleepUntil(addSeconds(initialStakedTime, 2*cycleSeconds));
 
             const afterTwoCycles = await getStakingState();
 
@@ -679,17 +756,17 @@ describe('TonomyContract Staking Tests', () => {
             await stakeContract.requestUnstake(accountName, allocations[0].id, accountSigner);
 
             // Wait for one full staking cycles
-            debug(`Waiting for ${cycleSeconds} seconds`);
-            await sleep(cycleSeconds * MILLISECONDS_IN_SECOND);
+            debug(`Waiting for till end of 3nd staking cycle: (${cycleSeconds} seconds)`);
+            await sleepUntil(addSeconds(initialStakedTime, 3*cycleSeconds));
 
             const afterUnstake = await getStakingState();
 
             debug('afterUnstake', afterUnstake);
 
             expect(afterUnstake.allocation.staked).toBe(afterTwoCycles.allocation.staked); // Stayed the same
-            expect(afterUnstake.account.payments).toBe(2);
+            expect(afterUnstake.account.payments).toBe(afterTwoCycles.account.payments); // Stayed the same
             expect(afterUnstake.allocation.yieldSoFar).toBe(afterTwoCycles.allocation.yieldSoFar); // Stayed the same
-            expect(afterUnstake.allocation.monthlyYield).toBeCloseTo(afterTwoCycles.allocation.staked * (Math.pow(1 + afterTwoCycles.settings.apy, 1 / 12) - 1), 4);
+            expect(afterUnstake.allocation.monthlyYield).toBe(0); // No yield after unstake
             expect(afterUnstake.account.totalYield).toBe(afterUnstake.allocation.yieldSoFar);
             expect(afterUnstake.account.lastPayoutTime.getTime()).toBe(afterTwoCycles.account.lastPayoutTime.getTime()); // Stayed the same
             expect(afterUnstake.settings.totalReleasing).toBe(afterUnstake.allocation.staked); // Unstaked

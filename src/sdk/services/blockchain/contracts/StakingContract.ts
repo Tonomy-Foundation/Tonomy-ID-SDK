@@ -59,12 +59,13 @@ export interface StakingAccount {
     version: number;
 }
 
-export interface StakingAccountAndAllocations extends StakingAccount {
+export interface StakingAccountState extends StakingAccount {
     allocations: StakingAllocationDetails[];
     totalStaked: number;
     totalUnlockable: number;
     totalUnlocking: number;
     estimatedMonthlyYield: number;
+    settings: StakingSettings;
 }
 
 export class StakingContract {
@@ -271,7 +272,9 @@ export class StakingContract {
             const stakedTime = new Date(allocation.stake_time.toString() + 'Z');
             const unstakeTime = new Date(allocation.unstake_time.toString() + 'Z');
             const monthlyYield = amountToAsset(
-                assetToAmount(allocation.tokens_staked) * (Math.pow(1 + settings.apy, 1 / 12) - 1),
+                allocation.unstake_requested
+                    ? 0
+                    : assetToAmount(allocation.tokens_staked) * (Math.pow(1 + settings.apy, 1 / 12) - 1),
                 'LEOS'
             ); // Monthly yield from yearly APY.
             const yieldSoFar = amountToAsset(
@@ -381,7 +384,7 @@ export class StakingContract {
      *    • totalUnlockable: Sum of allocations that have completed the release period.
      *    • totalUnlocking: Sum of allocations still within the release period.
      */
-    async getAccountAndAllocations(account: NameType): Promise<StakingAccountAndAllocations> {
+    async getAccountState(account: NameType): Promise<StakingAccountState> {
         const settings = await this.getSettings();
         const allocations = await this.getAllocations(account, settings);
         const stakingAccount = await this.getAccount(account);
@@ -415,6 +418,7 @@ export class StakingContract {
             totalUnlockable,
             totalUnlocking,
             estimatedMonthlyYield,
+            settings,
         };
     }
 }
