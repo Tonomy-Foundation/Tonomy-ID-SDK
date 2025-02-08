@@ -14,7 +14,7 @@ import {
 import { KeyManagerLevel } from '../../../../src/sdk/index';
 import { jest } from '@jest/globals';
 import { createRandomID } from '../../../helpers/user';
-import { addSeconds, MILLISECONDS_IN_SECOND, SECONDS_IN_DAY, sleepUntil, sleep, SECONDS_IN_YEAR, getSettings, SECONDS_IN_HOUR} from '../../../../src/sdk/util';
+import { addSeconds, MILLISECONDS_IN_SECOND, SECONDS_IN_DAY, sleepUntil, sleep, SECONDS_IN_YEAR, SECONDS_IN_HOUR} from '../../../../src/sdk/util';
 import { PrivateKey } from '@wharfkit/antelope';
 import Debug from 'debug';
 
