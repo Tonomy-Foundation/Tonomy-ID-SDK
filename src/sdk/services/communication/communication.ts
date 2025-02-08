@@ -20,7 +20,7 @@ export class Communication {
     socketServer: Socket;
     private static singleton: Communication;
     private static identifier: 0;
-    // TODO fix problem: if server restarts, this will be lost and all clients will need to reconnect
+    // TODO: fix problem: if server restarts, this will be lost and all clients will need to reconnect
     private subscribers = new Map<number, Subscriber>();
     private authMessage?: AuthenticationMessage;
     private loggedIn = false;

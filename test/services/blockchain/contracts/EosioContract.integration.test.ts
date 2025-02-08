@@ -24,8 +24,8 @@ describe('TonomyContract class', () => {
 
         expect(idInfo.account_name).toEqual(accountName);
         expect(idInfo.username_hash.toString()).toEqual(username.usernameHash);
-        expect(idInfo.status).toEqual(1); // 1 = READY. TODO turn into enum string
-        // expect(idInfo.type).toEqual(0); // 0 = Person // TODO bring back type property (as enum string) based on account_name[0] character
+        expect(idInfo.status).toEqual(1); // 1 = READY. TODO: turn into enum string
+        // expect(idInfo.type).toEqual(0); // 0 = Person // TODO: bring back type property (as enum string) based on account_name[0] character
         expect(idInfo.account_name.toString()[0]).toEqual('p'); // p = person
         expect(idInfo.password_salt).toEqual(salt);
         // expect(idInfo.version).toBe(1);

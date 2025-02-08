@@ -139,7 +139,7 @@ describe('Login to external website', () => {
         debug('finished test');
 
         // for some reason this is needed to ensure all the code lines execute. Not sure why needed
-        // TODO figure out why this is needed and remove issue
+        // TODO: figure out why this is needed and remove issue
         await sleep(500);
     });
 

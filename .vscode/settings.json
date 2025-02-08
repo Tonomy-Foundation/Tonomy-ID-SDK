@@ -14,7 +14,7 @@
         "onStartup": false
     },
     "jest.debugMode": false,
-    "jest.jestCommandLine": "yarn run test",
+    "jest.jestCommandLine": "DEBUG=tonomy* yarn run test",
     "jest.testExplorer": {
         "enabled": true
     },
@@ -30,4 +30,5 @@
         "development"
     ],
     "jest.runMode": "on-demand",
+    "editor.formatOnSave": false,
 }
