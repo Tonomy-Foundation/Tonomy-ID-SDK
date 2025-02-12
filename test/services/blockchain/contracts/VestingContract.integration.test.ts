@@ -11,8 +11,7 @@ import {
     getTonomyOperationsKey,
     transact,
 } from '../../../../src/sdk/services/blockchain';
-import { sleep } from '../../../helpers/sleep';
-import { addSeconds, sleepUntil, subtractSeconds } from '../../../../src/sdk/util';
+import { addSeconds, sleepUntil, subtractSeconds, sleep } from '../../../../src/sdk/util';
 import { PrivateKey, Name } from '@wharfkit/antelope';
 import { createRandomAccount } from '../../../helpers/eosio';
 import { msigAction } from './governance';
@@ -247,11 +246,10 @@ describe('VestingContract class', () => {
         test(
             'Unsuccessful assignment due to number of purchases',
             async () => {
-                if (!process.env.CI) return; // Skip this test in local environment as it takes too long
-                expect.assertions(2 + VestingContract.MAX_ALLOCATIONS);
+                expect.assertions(2 + VestingContract.getMaxAllocations());
 
-                for (let i = 0; i < VestingContract.MAX_ALLOCATIONS; i++) {
-                    await sleep(1000); // Wait to ensure don't get duplicate transaction error
+                for (let i = 0; i < VestingContract.getMaxAllocations(); i++) {
+                    debug(`Iteration: ${i+1} / ${VestingContract.getMaxAllocations()}`);
                     const trx = await vestingContract.assignTokens(
                         'coinsale.tmy',
                         accountName,
@@ -260,21 +258,23 @@ describe('VestingContract class', () => {
                         signer
                     );
 
+                    await sleep(1000); // Wait to ensure don't get duplicate transaction error
                     expect(trx.processed.receipt.status).toBe('executed');
                 }
 
                 const allocations = await vestingContract.getAllocations(accountName);
 
-                expect(allocations.length).toBe(VestingContract.MAX_ALLOCATIONS);
+                expect(allocations.length).toBe(VestingContract.getMaxAllocations());
 
                 try {
-                    await sleep(1000); // Wait to ensure don't get duplicate transaction error
+                    debug(`Iteration: final`)
                     await vestingContract.assignTokens('coinsale.tmy', accountName, '1.000000 LEOS', 999, signer);
                 } catch (e) {
+                    debug('e', e);
                     expect(e.error.details[0].message).toContain('Too many purchases received on this account.');
                 }
             },
-            1.5 * VestingContract.MAX_ALLOCATIONS * 1000
+            1.5 * VestingContract.getMaxAllocations() * 1000
         );
 
         test("successfully get account balance ", async () => {
@@ -294,8 +294,6 @@ describe('VestingContract class', () => {
 
             expect(balance2).toBe(3);
         })
-
-
 
         test("Successfully assign multiple tokens at once", async () => {
             expect.assertions(6 + 10 * 4);
@@ -472,6 +470,7 @@ describe('VestingContract class', () => {
 
             expect(trx.processed.receipt.status).toBe('executed');
             expect(trx.processed.receipt.cpu_usage_us).toBeLessThan(500);
+            debug(`CPU usage: ${trx.processed.receipt.cpu_usage_us}`);
             expect(trx.processed.action_traces[0].inline_traces.length).toBe(1);
             const transferTrx = trx.processed.action_traces[0].inline_traces[0];
 

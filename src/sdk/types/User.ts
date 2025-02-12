@@ -22,7 +22,7 @@ export interface IUserStorage {
     username: TonomyUsername;
     salt: Checksum256;
     did: string;
-    // TODO update to have all data from blockchain
+    // TODO: update to have all data from blockchain
 
     captchaToken: string;
 
