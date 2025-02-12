@@ -170,7 +170,7 @@ describe('User class', () => {
         await expect(user.checkKeysStillValid()).rejects.toThrowError(SdkErrors.KeyNotFound);
 
         // Close connections
-        // TODO if expect fails, then the user.logout() is not called and we dont cleanup. We need to fix this
+        // TODO: if expect fails, then the user.logout() is not called and we dont cleanup. We need to fix this
         await user.logout();
     });
 

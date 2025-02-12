@@ -304,7 +304,7 @@ export async function externalWebsiteSignTransaction(externalUser: ExternalUser,
     expect(trx).toBeDefined();
     expect(typeof trx.transaction_id).toBe('string');
     expect(trx.processed.receipt.status).toBe('executed');
-    // TODO check action trace for action and the link auth
+    // TODO: check action trace for action and the link auth
 
     debug('EXTERNAL_WEBSITE/sign-trx: signing transaction transfer() again)');
     trx = await externalUser.signTransaction(externalApp.accountName, 'transfer', {
@@ -317,7 +317,7 @@ export async function externalWebsiteSignTransaction(externalUser: ExternalUser,
     expect(trx).toBeDefined();
     expect(typeof trx.transaction_id).toBe('string');
     expect(trx.processed.receipt.status).toBe('executed');
-    // TODO check action trace for action and the does not contain link auth
+    // TODO: check action trace for action and the does not contain link auth
 }
 
 export async function setupLinkAuthSubscriber(user: IUserPublic): Promise<void> {

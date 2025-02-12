@@ -4,7 +4,7 @@ export interface PersistentStorageClean {
     clear: () => Promise<void>;
 }
 
-// TODO make into abstract class which constructs with cache and scope
+// TODO: make into abstract class which constructs with cache and scope
 export interface PersistentStorage extends PersistentStorageClean {
     [x: string]: any; // this makes sure that the storage can be accessed with any key
     scope: string;
@@ -21,10 +21,10 @@ export interface PersistentStorage extends PersistentStorageClean {
      * @returns The data stored under the key
      * @throws {Error} If the data could not be retrieved
      */
-    // TODO change to get()?
+    // TODO: change to get()?
     retrieve(key: string): Promise<any>;
 
-    // TODO remove item function
+    // TODO: remove item function
     // remove(key: string): Promise<void>;
 
     /**

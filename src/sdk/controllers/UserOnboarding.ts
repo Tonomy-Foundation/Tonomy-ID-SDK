@@ -53,7 +53,7 @@ export class UserOnboarding extends UserCommunication implements IUserOnboarding
         });
 
         const accountData = await getAccountInfo(idData.account_name);
-        const onchainKey = accountData.getPermission('owner').required_auth.keys[0].key; // TODO change to active/other permissions when we make the change
+        const onchainKey = accountData.getPermission('owner').required_auth.keys[0].key; // TODO: change to active/other permissions when we make the change
 
         if (passwordKey.toString() !== onchainKey.toString())
             throwError('Password is incorrect', SdkErrors.PasswordInvalid);
