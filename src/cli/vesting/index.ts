@@ -1,7 +1,7 @@
 import { PrivateKey } from '@wharfkit/antelope';
 import { printCliHelp } from '..';
 import { AccountType, TonomyUsername, VestingContract } from '../../sdk';
-import { createSigner, getAccount, getAccountNameFromUsername } from '../../sdk/services/blockchain';
+import { assetToAmount, createSigner, getAccount, getAccountNameFromUsername } from '../../sdk/services/blockchain';
 import { setSettings } from '../../sdk/util/settings';
 import settings from '../bootstrap/settings';
 
@@ -49,6 +49,64 @@ export default async function vesting(args: string[]) {
         const res = await vestingContract.assignTokens(sender, recipient, quantity, categoryId, signer);
 
         console.log('Transaction ID: ', JSON.stringify(res, null, 2));
+    } else if (args[0] === 'audit') {
+        const action = 'assigntokens';
+        const contract = 'vesting.tmy';
+        const limit = 100;
+        let skip = 0;
+        let actionsFound = 0;
+
+        const uniqueHolders = new Set<string>();
+
+        do {
+            const url = `https://pangea.eosusa.io/v2/history/get_actions?act.name=${action}&sort=desc&skip=${skip}&limit=${limit}&account=${contract}&global_sequence=0-45539775`;
+            const res = await fetch(url);
+            const data = await res.json();
+            const actions = data.actions;
+
+            actionsFound = data?.actions?.length || 0;
+
+            for (const action of actions) {
+                const { sender, holder, amount, category } = action.act.data;
+
+                uniqueHolders.add(holder);
+
+                console.log(`${action.timestamp}: Sent ${amount} from ${sender} to ${holder} in category ${category}`);
+            }
+
+            skip += limit;
+        } while (actionsFound > 0);
+
+        console.log('');
+        console.log('Unique holders: ', uniqueHolders);
+        console.log('');
+
+        let vestingAllocations = 0;
+        let totalVested = 0;
+
+        for (const holder of uniqueHolders) {
+            const allocations = await vestingContract.getAllocations(holder);
+
+            for (const allocation of allocations) {
+                // eslint-disable-next-line camelcase
+                const { id, tokens_allocated, vesting_category_type } = allocation;
+
+                console.log(
+                    // eslint-disable-next-line camelcase
+                    `Holder ${holder}: Allocation ${id}: ${tokens_allocated} in category ${vesting_category_type}`
+                );
+
+                totalVested += assetToAmount(tokens_allocated);
+            }
+
+            vestingAllocations += allocations.length;
+        }
+
+        console.log('');
+        console.log('Total unique holders: ', uniqueHolders.size);
+        console.log('Total vesting allocations: ', vestingAllocations);
+        console.log(`Total vested: ${totalVested} LEOS (${((100 * totalVested) / 50000000000).toFixed(2)}%)`);
+        console.log('');
     } else if (args[0] === 'setsettings') {
         const privateKey = PrivateKey.from(process.env.SIGNING_KEY || '');
         const signer = createSigner(privateKey);
