@@ -128,7 +128,7 @@ As per your LEOS token issuance contract with the Tonomy Foundation, ensure that
 
 ### Step 4: Collect user's Pangea account
 
-If your users want to create a Pangea account they can do this by downloading and creating a new account on the United Citizens Wallet: [https://pangea.web4.world/united-citizens-wallet](https://pangea.web4.world/united-citizens-wallet)
+If your users want to create a Pangea account they can do this by downloading and creating a new account on the Pangea ID: [https://pangea.web4.world/pangea-id](https://pangea.web4.world/united-citizens-wallet)
 
 They can then send you their account name to which you can withdraw LEOS.
 

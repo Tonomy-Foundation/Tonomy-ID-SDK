@@ -1,12 +1,12 @@
 # Deploy a web wallet with the SDK
 
-The Pangea SDK powers Pangea Passport to manage users keys. You can use it to create your own wallet (web or mobile) with a fully customized UI to suite your needs.
+The Pangea SDK powers Pangea ID to manage users keys. You can use it to create your own wallet (web or mobile) with a fully customized UI to suite your needs.
 
 We suggest one of the following strategies:
 
-## 1. Deploy a web version of the Pangea Passport wallet
+## 1. Deploy a web version of the Pangea ID wallet
 
-Run [Pangea Passport](https://github.com/Tonomy-Foundation/Tonomy-ID/tree/master) and instead of compiling the Android and iOS applications, compile to web instead. Fork the repository to customize the UI.
+Run [Pangea ID](https://github.com/Tonomy-Foundation/Tonomy-ID/tree/master) and instead of compiling the Android and iOS applications, compile to web instead. Fork the repository to customize the UI.
 
 Please [contact us](https://pangea.web4.world/contact-us) for assistance in deploying your bespoke solution.
 
@@ -22,7 +22,7 @@ How to use the SDK as a web wallet:
 2. Choose a `Storage` class implementation:
    * [browserStorage](https://github.com/Tonomy-Foundation/Tonomy-ID-SDK/blob/master/src/sdk/storage/browserStorage.ts) - for web browsers
    * [storage](https://github.com/Tonomy-Foundation/Tonomy-ID/blob/master/src/utils/storage.ts) - for React Native mobile apps
-3. Create a new user. We suggest you familiarize yourself with how this is done by looking at the integration tests by checking the [User controller](https://github.com/Tonomy-Foundation/Tonomy-ID-SDK/blob/master/test/helpers/user.ts) test which manages a Pangea Passport account and DID
+3. Create a new user. We suggest you familiarize yourself with how this is done by looking at the integration tests by checking the [User controller](https://github.com/Tonomy-Foundation/Tonomy-ID-SDK/blob/master/test/helpers/user.ts) test which manages a Pangea ID account and DID
 4. Get the `KeyManager` object from the `User` object
 
 ```ts

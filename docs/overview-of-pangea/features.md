@@ -1,12 +1,12 @@
 # Features
 
-Pangea Passport supports the following developer features. Take advantage of these features in your applications by integrating with the Pangea SDK.
+Pangea ID supports the following developer features. Take advantage of these features in your applications by integrating with the Pangea SDK.
 
-Read the White Paper for more details: [Pangea Passport - White Paper](https://www.canva.com/design/DAFnktNOWKU/Ps1zXw3XICaEMiB0R4Ghkg/view)
+Read the White Paper for more details: [Pangea ID - White Paper](https://www.canva.com/design/DAFnktNOWKU/Ps1zXw3XICaEMiB0R4Ghkg/view)
 
 ## Single Sign On
 
-Users can sign into applications integrated with Pangea Passport.
+Users can sign into applications integrated with Pangea ID.
 
 It's like Google Sign On, but without having third party (Google) storing user data and authentication secrets
 
@@ -26,7 +26,7 @@ Sign:
 
 ## Sovereign Data Vault
 
-Use Pangea Passport to store data (user-generated or not). This effectively turns Pangea Passport into a decentralized data storage system.
+Use Pangea ID to store data (user-generated or not). This effectively turns Pangea ID into a decentralized data storage system.
 
 Apps can request verifiable data from other applications to speed up form-filling and onboarding processes.
 

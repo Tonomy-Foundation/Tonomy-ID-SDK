@@ -1,17 +1,17 @@
-# Deploy Pangea Passport
+# Deploy Pangea ID
 
-Deployment of the full Pangea Passport involves several integrated services and is **expected to take several hours for someone not familiar with the system**
+Deployment of the full Pangea ID involves several integrated services and is **expected to take several hours for someone not familiar with the system**
 
 Please [contact us](https://pangea.web4.world/contact-us) for assistance in your on-site deployment, or to help run a fully managed service with updates.
 
 ## Prerequisites
 
-* Pangea Passport services run exclusively in `Linux`, we recommend Ubuntu 20.04 or 22.04.
+* Pangea ID services run exclusively in `Linux`, we recommend Ubuntu 20.04 or 22.04.
 * `npm` with `corepack enabled`, we recommend v18.12.1. Suggested to install with nvm v0.35+
 
-## Services to run Pangea Passport
+## Services to run Pangea ID
 
-* Pangea Passport (React Native mobile wallet) - [Github source](https://github.com/Tonomy-Foundation/Tonomy-ID/tree/master)
+* Pangea ID (React Native mobile wallet) - [Github source](https://github.com/Tonomy-Foundation/Tonomy-ID/tree/master)
 * Pangea Account Website (Reactjs) - [Github source](https://github.com/Tonomy-Foundation/Tonomy-App-Websites/tree/master)
 * Blockchain and `tonomy` smart contracts (Antelope protocol) - [Github source](https://github.com/Tonomy-Foundation/Tonomy-Contracts/tree/master)
 * Pangea Communication (nestjs) - [Github source](https://github.com/Tonomy-Foundation/Tonomy-Communication/tree/master)
@@ -51,14 +51,14 @@ Then you will need to deploy each service, with configuration so that they conne
 5. Issue a specific amount of the newly created currency to the 'eosio.token' account using the `issue()` function
 6. Create the `id.tmy` account on the blockchain
 7. Deploy the [id.tmy](https://github.com/Tonomy-Foundation/Tonomy-Contracts/tree/master/contracts/tonomy) contract to the `id.tmy` account on the blockchain
-8. [Register your applications](../build-web4-apps/start/register-app.md) that you wish to connect to Pangea Passport
+8. [Register your applications](../build-web4-apps/start/register-app.md) that you wish to connect to Pangea ID
 9. Configure the software with the `config.json` file in the repository so that they are connected correctly using your domains, and to white-label the applications:
    * Copy the following files and use environment variables to change which configuration file is used
-   * [Pangea Passport config.json](https://github.com/Tonomy-Foundation/Tonomy-ID/blob/master/src/config/config.production.json)
+   * [Pangea ID config.json](https://github.com/Tonomy-Foundation/Tonomy-ID/blob/master/src/config/config.production.json)
    * [Pangea App Websites config.json](https://github.com/Tonomy-Foundation/Tonomy-App-Websites/blob/master/src/common/config/config.production.json)
    * [Pangea Communication config.json](https://github.com/Tonomy-Foundation/Tonomy-Communication/blob/master/src/config/config.production.json)
 10. Create a new Google Play store and Apple App store listing.
-11. Use [Expo](https://expo.dev) or [Expo Application Services](https://expo.dev/eas) to build Pangea Passport and submit it to your app store listings.
+11. Use [Expo](https://expo.dev) or [Expo Application Services](https://expo.dev/eas) to build Pangea ID and submit it to your app store listings.
 12. Deploy [Pangea App Websites](https://github.com/Tonomy-Foundation/Tonomy-App-Websites/tree/master)
     * You need to use the `accounts.` subdomain to run the Pangea Accounts website
     * You need to use the `demo.` subdomain to run the Pangea Demo website

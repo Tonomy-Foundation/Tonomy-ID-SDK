@@ -1,6 +1,6 @@
 # Application Interface (API)
 
-The API is used by integration applications to do interact with Pangea Passport, such as using the single sign-on (SSO) flow and signing data.
+The API is used by integration applications to do interact with Pangea ID, such as using the single sign-on (SSO) flow and signing data.
 
 * [ExternalUser class reference](https://unpkg.com/@tonomy/tonomy-id-sdk/build/sdk/types/api/externalUser.d.ts)
 

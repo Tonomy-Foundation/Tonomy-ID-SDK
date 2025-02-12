@@ -1,7 +1,7 @@
 # Single Sign-On
 
 1. Configuration - Set the network
-2. `/login` page - add login button and send to Pangea Passport
+2. `/login` page - add login button and send to Pangea ID
 3. `/callback` page - receive callback
 4. `/` home page - check for logged in users
 

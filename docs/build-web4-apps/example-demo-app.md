@@ -1,17 +1,17 @@
 # Example demo app
 
-Open-source applications that illustrate how to use Pangea Passport.
+Open-source applications that illustrate how to use Pangea ID.
 
 ## Pangea Demo integration application
 
-A web app that shows how to integrate with Pangea Passport.
+A web app that shows how to integrate with Pangea ID.
 
 * [Try me out here](https://demo.pangea.web4.world/)
 * [Github code](https://github.com/Tonomy-Foundation/Tonomy-App-Websites/tree/master/src/demo)
 
-## Pangea Passport - Demo wallet
+## Pangea ID- Demo wallet
 
-Pangea Passport mobile wallet (Android and iOS)
+Pangea ID mobile wallet (Android and iOS)
 
 * [Try me out here Android](https://play.google.com/store/apps/details?id=foundation.tonomy.projects.pangeatestnet)
 * [Try me out here iOS](https://testflight.apple.com/join/ou7KmYiE)

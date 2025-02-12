@@ -28,7 +28,7 @@
 * [Connect as an Exchange](connect-as-an-exchange.md)
 * [Run Tonomy Gov OS](run-tonomy-gov-os/README.md)
   * [Technical requirements](run-tonomy-gov-os/requirements.md)
-  * [Deploy Pangea Passport](run-tonomy-gov-os/deploy.md)
+  * [Deploy Pangea ID](run-tonomy-gov-os/deploy.md)
   * [Deploy a web wallet with the SDK](run-tonomy-gov-os/deploy-wallet.md)
   * [Reference](run-tonomy-gov-os/reference/README.md)
     * [Application Interface (API)](run-tonomy-gov-os/reference/api.md)
