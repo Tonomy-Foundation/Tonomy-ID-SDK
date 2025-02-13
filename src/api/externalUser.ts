@@ -62,6 +62,12 @@ export type LoginWithTonomyMessages = {
 
 const tonomyContract = TonomyContract.Instance;
 
+/**
+ * The data of a client authorization request
+ *
+ * @param {string} [username] - the username of the user
+ *
+ */
 type ClientAuthorizationData = object & {
     username?: string;
 };
@@ -402,6 +408,13 @@ export class ExternalUser {
         return await VerifiableCredential.sign<T>(id, type, data, issuer, options);
     }
 
+    /**
+     * Creates a client authorization request
+     *
+     * @param {T} data - the data of the client authorization request
+     *
+     * @returns {Promise<VerifiableCredential<T>>} - the signed client authorization request (a JWT string)
+     */
     async createClientAuthorization<T extends ClientAuthorizationData = object>(
         data: T
     ): Promise<VerifiableCredential<T>> {
@@ -564,6 +577,17 @@ export class ExternalUser {
     }
 }
 
+/**
+ * A verified client authorization request
+ *
+ * @param {JWT} request.jwt - the JWT of the request
+ * @param {string} request.id - the unique id of the request
+ * @param {string} [request.origin] - the unverified origin of the request
+ * @param {string} did - the DID of the user
+ * @param {string} account - the account name of the user
+ * @param {string} [username] - the username of the user
+ * @param {T} data - the data of the request
+ */
 interface VerifiedClientAuthorization<T extends ClientAuthorizationData = object> {
     request: {
         jwt: JWT;
@@ -572,11 +596,18 @@ interface VerifiedClientAuthorization<T extends ClientAuthorizationData = object
     };
     did: string;
     account: string;
-    data: T;
     username?: string;
+    data: T;
 }
 
-export async function verifyClientAuthorizationPackage<T extends ClientAuthorizationData = object>(
+/**
+ * Verifies a client authorization request
+ *
+ * @param {string} clientAuthorization - the client authorization request (JWT string)
+ *
+ * @returns {Promise<VerifiedClientAuthorization<T>>} - the verified client authorization request with data type T
+ */
+export async function verifyClientAuthorizationPackage<T extends ClientAuthorizationData = ClientAuthorizationData>(
     clientAuthorization: JWT
 ): Promise<VerifiedClientAuthorization<T>> {
     const vc = new VerifiableCredential(clientAuthorization);
