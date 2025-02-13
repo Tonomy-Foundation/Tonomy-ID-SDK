@@ -16,6 +16,7 @@ import { addProd, changeProds, removeProd, updateProd } from './producers';
 import { hyphaAccountsCreate, hyphaContractSet, hyphaAddAccountPermissions } from './hypha';
 import { sleep } from '../../sdk/util';
 import { vestingMigrate } from './vestingMigrateAllocate';
+import { newApp } from './newApp';
 
 const eosioMsigContract = EosioMsigContract.Instance;
 
@@ -36,23 +37,30 @@ export default async function msig(args: string[]) {
 
     console.log('Using environment', settings.env);
 
-    let test = false;
+    let autoExecute = false,
+        dryRun = false;
 
     for (const arg of args) {
         if (arg.includes('--help')) {
             printMsigHelp();
             return;
-        } else if (arg.includes('--test')) {
-            console.log('Testing proposal by executing it');
+        } else if (arg.includes('--auto-execute')) {
+            console.log('Will attempt to execute the proposal');
 
             if (settings.isProduction()) {
                 throw new Error(`Cannot test proposal on a live environment. Environment: ${settings.env}`);
             }
 
-            test = true;
+            autoExecute = true;
 
             args.splice(args.indexOf(arg), 1);
             newGovernanceAccounts = governanceAccounts;
+        } else if (arg.includes('--dry-run')) {
+            console.log('Dry run proposal');
+
+            dryRun = true;
+
+            args.splice(args.indexOf(arg), 1);
         }
     }
 
@@ -87,64 +95,37 @@ export default async function msig(args: string[]) {
         const proposalType = args[1];
         const proposalName = Name.from(args[2]);
 
+        const options = {
+            proposer,
+            proposalName,
+            privateKey,
+            requested: newGovernanceAccounts,
+            autoExecute,
+            dryRun,
+        };
+
         if (proposalType === 'gov-migrate') {
             await govMigrate(
                 { newGovernanceAccounts },
                 {
-                    proposer,
-                    proposalName,
-                    privateKey,
+                    ...options,
                     requested: governanceAccounts,
-                    test,
                 }
             );
         } else if (proposalType === 'new-account') {
-            await newAccount(
-                { governanceAccounts },
-                {
-                    proposer,
-                    proposalName,
-                    privateKey,
-                    requested: newGovernanceAccounts,
-                    test,
-                }
-            );
+            await newAccount({ governanceAccounts }, options);
         } else if (proposalType === 'transfer') {
             const from = 'team.tmy';
             const to = 'advteam.tmy';
 
-            await transfer(
-                { from, to },
-                {
-                    proposer,
-                    proposalName,
-                    privateKey,
-                    requested: newGovernanceAccounts,
-                    test,
-                }
-            );
+            await transfer({ from, to }, options);
         } else if (proposalType === 'deploy-contract') {
             const contractName = 'tonomy';
-            const contractDir = `/home/dev/Documents/Git/Tonomy/Tonomy-ID-Integration/Tonomy-ID-SDK/Tonomy-Contracts/contracts/${contractName}`;
+            const contractDir = `/home/dev/Documents/git/tonomy/Tonomy-ID-Integration/Tonomy-ID-SDK/Tonomy-Contracts/contracts/${contractName}`;
 
-            await deployContract(
-                { contractName, contractDir },
-                {
-                    proposer,
-                    proposalName,
-                    privateKey,
-                    requested: newGovernanceAccounts,
-                    test,
-                }
-            );
+            await deployContract({ contractName, contractDir }, options);
         } else if (proposalType === 'eosio.code-permission') {
-            await addEosioCode({
-                proposer,
-                proposalName,
-                privateKey,
-                requested: newGovernanceAccounts,
-                test,
-            });
+            await addEosioCode(options);
         } else if (proposalType === 'add-auth') {
             await addAuth(
                 {
@@ -153,129 +134,32 @@ export default async function msig(args: string[]) {
                     newDelegate: 'gov.tmy',
                     useParentAuth: true,
                 },
-                {
-                    proposer,
-                    proposalName,
-                    privateKey,
-                    requested: newGovernanceAccounts,
-                    test,
-                }
+                options
             );
         } else if (proposalType === 'vesting-migrate') {
-            await vestingMigrate(
-                {},
-                {
-                    proposer,
-                    proposalName,
-                    privateKey,
-                    requested: newGovernanceAccounts,
-                    test,
-                }
-            );
+            await vestingMigrate({}, options);
         } else if (proposalType === 'vesting-bulk') {
-            await vestingBulk(
-                { governanceAccounts },
-                { proposer, proposalName, privateKey, requested: newGovernanceAccounts, test }
-            );
+            await vestingBulk({ governanceAccounts }, options);
         } else if (proposalType === 'add-prod') {
-            await addProd(
-                {},
-                {
-                    proposer,
-                    proposalName,
-                    privateKey,
-                    requested: newGovernanceAccounts,
-                    test,
-                }
-            );
+            await addProd({}, options);
         } else if (proposalType === 'remove-prod') {
-            await removeProd(
-                {},
-                {
-                    proposer,
-                    proposalName,
-                    privateKey,
-                    requested: newGovernanceAccounts,
-                    test,
-                }
-            );
+            await removeProd({}, options);
         } else if (proposalType === 'update-prod') {
-            await updateProd(
-                {},
-                {
-                    proposer,
-                    proposalName,
-                    privateKey,
-                    requested: newGovernanceAccounts,
-                    test,
-                }
-            );
+            await updateProd({}, options);
         } else if (proposalType === 'change-prod') {
-            await changeProds(
-                {},
-                {
-                    proposer,
-                    proposalName,
-                    privateKey,
-                    requested: newGovernanceAccounts,
-                    test,
-                }
-            );
+            await changeProds({}, options);
         } else if (proposalType === 'hypha-accounts-create') {
-            await hyphaAccountsCreate(
-                {},
-                {
-                    proposer,
-                    proposalName,
-                    privateKey,
-                    requested: newGovernanceAccounts,
-                    test,
-                }
-            );
+            await hyphaAccountsCreate({}, options);
         } else if (proposalType === 'hypha-add-permissions') {
-            await hyphaAddAccountPermissions(
-                {},
-                {
-                    proposer,
-                    proposalName,
-                    privateKey,
-                    requested: newGovernanceAccounts,
-                    test,
-                }
-            );
+            await hyphaAddAccountPermissions({}, options);
         } else if (proposalType === 'hypha-contract-set') {
-            await hyphaContractSet(
-                {},
-                {
-                    proposer,
-                    proposalName,
-                    privateKey,
-                    requested: newGovernanceAccounts,
-                    test,
-                }
-            );
+            await hyphaContractSet({}, options);
         } else if (proposalType === 'res-config-set') {
-            await setResourceConfig(
-                {},
-                {
-                    proposer,
-                    proposalName,
-                    privateKey,
-                    requested: newGovernanceAccounts,
-                    test,
-                }
-            );
+            await setResourceConfig({}, options);
         } else if (proposalType === 'set-chain-config') {
-            await setBlockchainConfig(
-                {},
-                {
-                    proposer,
-                    proposalName,
-                    privateKey,
-                    requested: newGovernanceAccounts,
-                    test,
-                }
-            );
+            await setBlockchainConfig({}, options);
+        } else if (proposalType === 'new-app') {
+            await newApp(options);
         } else {
             throw new Error(`Invalid msig proposal type ${proposalType}`);
         }
@@ -325,7 +209,8 @@ export async function createProposal(
     proposalName: Name,
     actions: ActionData[],
     privateKey: PrivateKey,
-    requested: (string | PermissionLevelType)[]
+    requested: (string | PermissionLevelType)[],
+    dryRun?: boolean
 ): Promise<Checksum256> {
     const requestedPermissions = requested.map((actor) => {
         if (typeof actor === 'string') {
@@ -355,6 +240,12 @@ export async function createProposal(
             2
         )
     );
+
+    if (dryRun) {
+        console.log('Dry run finished');
+        // return a random hash to exit early
+        return Checksum256.from('8e95684a0d281d0ed23ebf02f5888774dafb56d47174c4402122f05aef935bdd');
+    }
 
     try {
         const { transaction, proposalHash } = await eosioMsigContract.propose(
@@ -421,7 +312,8 @@ export type StandardProposalOptions = {
     proposalName: Name;
     privateKey: PrivateKey;
     requested: string[];
-    test?: boolean;
+    autoExecute: boolean;
+    dryRun: boolean;
 };
 
 function printMsigHelp() {
@@ -447,6 +339,7 @@ function printMsigHelp() {
                 propose transfer <proposalName>
                 propose update-prod <proposalName>
                 propose vesting-bulk <proposalName>
-                propose ... --test
+                propose ... --auto-execute
+                propose ... --dry-run
         `);
 }
