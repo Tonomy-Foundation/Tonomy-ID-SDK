@@ -24,10 +24,13 @@ export async function newApp(options: StandardProposalOptions) {
             },
         ],
         data: {
+            // eslint-disable-next-line camelcase
             app_name: appName,
             description,
+            // eslint-disable-next-line camelcase
             logo_url: logoUrl,
             origin: origin,
+            // eslint-disable-next-line camelcase
             username_hash: username.usernameHash,
             key,
         },
