@@ -1,4 +1,3 @@
-import { Authority } from '../../sdk/services/blockchain';
 import { StandardProposalOptions, createProposal, executeProposal } from '.';
 import { AccountType, getSettings, TonomyUsername } from '../../sdk';
 
@@ -9,7 +8,7 @@ export async function newApp(options: StandardProposalOptions) {
     const origin = 'https://fiddl.art';
     const usernameShort = 'fiddlart';
     const username = TonomyUsername.fromUsername(usernameShort, AccountType.APP, getSettings().accountSuffix);
-    const key = Authority.fromKey('EOS4xnrCGUT688wFvinQoCuiu7E3Qpn8Phq76TRKNTb87XFMjzsJu');
+    const key = 'EOS4xnrCGUT688wFvinQoCuiu7E3Qpn8Phq76TRKNTb87XFMjzsJu';
 
     const action = {
         account: 'tonomy',
@@ -44,6 +43,5 @@ export async function newApp(options: StandardProposalOptions) {
     );
 
     if (options.dryRun) return;
-
     if (options.autoExecute) await executeProposal(options.proposer, options.proposalName, proposalHash);
 }

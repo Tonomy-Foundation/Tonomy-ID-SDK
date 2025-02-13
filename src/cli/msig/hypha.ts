@@ -114,10 +114,16 @@ export async function hyphaAccountsCreate(args: any, options: StandardProposalOp
         loginHyphaAction,
     ];
 
-    const proposalHash = await createProposal(options.proposer, options.proposalName, actions, options.privateKey, [
-        ...options.requested,
-    ]);
+    const proposalHash = await createProposal(
+        options.proposer,
+        options.proposalName,
+        actions,
+        options.privateKey,
+        [...options.requested],
+        options.dryRun
+    );
 
+    if (options.dryRun) return;
     if (options.autoExecute) await executeProposal(options.proposer, options.proposalName, proposalHash);
 }
 
@@ -233,10 +239,16 @@ export async function hyphaAddAccountPermissions(args: any, options: StandardPro
         hyphaDaoLinkauthAutoenroll,
     ];
 
-    const proposalHash = await createProposal(options.proposer, options.proposalName, actions, options.privateKey, [
-        ...options.requested,
-    ]);
+    const proposalHash = await createProposal(
+        options.proposer,
+        options.proposalName,
+        actions,
+        options.privateKey,
+        [...options.requested],
+        options.dryRun
+    );
 
+    if (options.dryRun) return;
     if (options.autoExecute) await executeProposal(options.proposer, options.proposalName, proposalHash);
 }
 
@@ -324,10 +336,15 @@ export async function hyphaContractSet(args: any, options: StandardProposalOptio
 
     const actions = [adminSetAppAction, transferTokensAction, buyRamAction, ...deployActions];
 
-    const proposalHash = await createProposal(options.proposer, options.proposalName, actions, options.privateKey, [
-        ...options.requested,
-        contract,
-    ]);
+    const proposalHash = await createProposal(
+        options.proposer,
+        options.proposalName,
+        actions,
+        options.privateKey,
+        [...options.requested, contract],
+        options.dryRun
+    );
 
+    if (options.dryRun) return;
     if (options.autoExecute) await executeProposal(options.proposer, options.proposalName, proposalHash);
 }

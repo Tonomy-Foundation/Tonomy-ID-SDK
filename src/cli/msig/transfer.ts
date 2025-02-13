@@ -35,8 +35,10 @@ export async function transfer(args: { to: string; from: string }, options: Stan
         options.proposalName,
         [action],
         options.privateKey,
-        options.requested
+        options.requested,
+        options.dryRun
     );
 
+    if (options.dryRun) return;
     if (options.autoExecute) await executeProposal(options.proposer, options.proposalName, proposalHash);
 }

@@ -107,9 +107,15 @@ export async function vestingBulk(args: { governanceAccounts: string[] }, option
 
     console.log(`Total ${actions.length} accounts to be paid`);
 
-    const proposalHash = await createProposal(options.proposer, options.proposalName, actions, options.privateKey, [
-        requiredAuthority,
-    ]);
+    const proposalHash = await createProposal(
+        options.proposer,
+        options.proposalName,
+        actions,
+        options.privateKey,
+        [requiredAuthority],
+        options.dryRun
+    );
 
+    if (options.dryRun) return;
     if (options.autoExecute) await executeProposal(options.proposer, options.proposalName, proposalHash);
 }

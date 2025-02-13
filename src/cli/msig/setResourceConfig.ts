@@ -24,8 +24,10 @@ export async function setResourceConfig(args, options: StandardProposalOptions) 
         options.proposalName,
         [action],
         options.privateKey,
-        options.requested
+        options.requested,
+        options.dryRun
     );
 
+    if (options.dryRun) return;
     if (options.autoExecute) await executeProposal(options.proposer, options.proposalName, proposalHash);
 }

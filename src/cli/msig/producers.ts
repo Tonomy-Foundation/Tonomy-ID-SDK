@@ -35,9 +35,11 @@ export async function addProd(args: any, options: StandardProposalOptions) {
         options.proposalName,
         [action],
         options.privateKey,
-        options.requested
+        options.requested,
+        options.dryRun
     );
 
+    if (options.dryRun) return;
     if (options.autoExecute) await executeProposal(options.proposer, options.proposalName, proposalHash);
 }
 
@@ -76,9 +78,11 @@ export async function updateProd(args: any, options: StandardProposalOptions) {
         options.proposalName,
         [action],
         options.privateKey,
-        options.requested
+        options.requested,
+        options.dryRun
     );
 
+    if (options.dryRun) return;
     if (options.autoExecute) await executeProposal(options.proposer, options.proposalName, proposalHash);
 }
 
@@ -100,9 +104,11 @@ export async function removeProd(args: any, options: StandardProposalOptions) {
         options.proposalName,
         [action],
         options.privateKey,
-        options.requested
+        options.requested,
+        options.dryRun
     );
 
+    if (options.dryRun) return;
     if (options.autoExecute) await executeProposal(options.proposer, options.proposalName, proposalHash);
 }
 
@@ -156,9 +162,11 @@ export async function changeProds(args: any, options: StandardProposalOptions) {
         options.proposalName,
         [action],
         options.privateKey,
-        options.requested
+        options.requested,
+        options.dryRun
     );
 
+    if (options.dryRun) return;
     if (options.autoExecute) await executeProposal(options.proposer, options.proposalName, proposalHash);
 }
 
