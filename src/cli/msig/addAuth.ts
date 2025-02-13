@@ -52,5 +52,5 @@ export async function addAuth(
         requested
     );
 
-    if (options.test) await executeProposal(options.proposer, options.proposalName, proposalHash);
+    if (options.autoExecute) await executeProposal(options.proposer, options.proposalName, proposalHash);
 }

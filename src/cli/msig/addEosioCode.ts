@@ -86,5 +86,5 @@ export async function addEosioCode(options: StandardProposalOptions) {
         options.requested
     );
 
-    if (options.test) await executeProposal(options.proposer, options.proposalName, proposalHash);
+    if (options.autoExecute) await executeProposal(options.proposer, options.proposalName, proposalHash);
 }

@@ -37,23 +37,30 @@ export default async function msig(args: string[]) {
 
     console.log('Using environment', settings.env);
 
-    let test = false;
+    let autoExecute = false,
+        dryRun = false;
 
     for (const arg of args) {
         if (arg.includes('--help')) {
             printMsigHelp();
             return;
-        } else if (arg.includes('--test')) {
-            console.log('Testing proposal by executing it');
+        } else if (arg.includes('--auto-execute')) {
+            console.log('Will attempt to execute the proposal');
 
             if (settings.isProduction()) {
                 throw new Error(`Cannot test proposal on a live environment. Environment: ${settings.env}`);
             }
 
-            test = true;
+            autoExecute = true;
 
             args.splice(args.indexOf(arg), 1);
             newGovernanceAccounts = governanceAccounts;
+        } else if (arg.includes('--dry-run')) {
+            console.log('Dry run proposal');
+
+            dryRun = true;
+
+            args.splice(args.indexOf(arg), 1);
         }
     }
 
@@ -93,7 +100,8 @@ export default async function msig(args: string[]) {
             proposalName,
             privateKey,
             requested: newGovernanceAccounts,
-            test,
+            autoExecute,
+            dryRun,
         };
 
         if (proposalType === 'gov-migrate') {
@@ -201,7 +209,8 @@ export async function createProposal(
     proposalName: Name,
     actions: ActionData[],
     privateKey: PrivateKey,
-    requested: (string | PermissionLevelType)[]
+    requested: (string | PermissionLevelType)[],
+    dryRun?: boolean
 ): Promise<Checksum256> {
     const requestedPermissions = requested.map((actor) => {
         if (typeof actor === 'string') {
@@ -231,6 +240,12 @@ export async function createProposal(
             2
         )
     );
+
+    if (dryRun) {
+        console.log('Dry run finished');
+        // return a random hash to exit early
+        return Checksum256.from('8e95684a0d281d0ed23ebf02f5888774dafb56d47174c4402122f05aef935bdd');
+    }
 
     try {
         const { transaction, proposalHash } = await eosioMsigContract.propose(
@@ -297,7 +312,8 @@ export type StandardProposalOptions = {
     proposalName: Name;
     privateKey: PrivateKey;
     requested: string[];
-    test?: boolean;
+    autoExecute: boolean;
+    dryRun: boolean;
 };
 
 function printMsigHelp() {
@@ -323,6 +339,7 @@ function printMsigHelp() {
                 propose transfer <proposalName>
                 propose update-prod <proposalName>
                 propose vesting-bulk <proposalName>
-                propose ... --test
+                propose ... --auto-execute
+                propose ... --dry-run
         `);
 }

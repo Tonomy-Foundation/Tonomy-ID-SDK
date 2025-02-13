@@ -38,5 +38,5 @@ export async function transfer(args: { to: string; from: string }, options: Stan
         options.requested
     );
 
-    if (options.test) await executeProposal(options.proposer, options.proposalName, proposalHash);
+    if (options.autoExecute) await executeProposal(options.proposer, options.proposalName, proposalHash);
 }

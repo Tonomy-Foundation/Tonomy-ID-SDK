@@ -38,7 +38,7 @@ export async function addProd(args: any, options: StandardProposalOptions) {
         options.requested
     );
 
-    if (options.test) await executeProposal(options.proposer, options.proposalName, proposalHash);
+    if (options.autoExecute) await executeProposal(options.proposer, options.proposalName, proposalHash);
 }
 
 // @ts-expect-error any not used
@@ -79,7 +79,7 @@ export async function updateProd(args: any, options: StandardProposalOptions) {
         options.requested
     );
 
-    if (options.test) await executeProposal(options.proposer, options.proposalName, proposalHash);
+    if (options.autoExecute) await executeProposal(options.proposer, options.proposalName, proposalHash);
 }
 
 // @ts-expect-error any not used
@@ -103,7 +103,7 @@ export async function removeProd(args: any, options: StandardProposalOptions) {
         options.requested
     );
 
-    if (options.test) await executeProposal(options.proposer, options.proposalName, proposalHash);
+    if (options.autoExecute) await executeProposal(options.proposer, options.proposalName, proposalHash);
 }
 
 // @ts-expect-error any not used
@@ -159,7 +159,7 @@ export async function changeProds(args: any, options: StandardProposalOptions) {
         options.requested
     );
 
-    if (options.test) await executeProposal(options.proposer, options.proposalName, proposalHash);
+    if (options.autoExecute) await executeProposal(options.proposer, options.proposalName, proposalHash);
 }
 
 type Authority = {

@@ -10,7 +10,7 @@ export async function vestingBulk(args: { governanceAccounts: string[] }, option
 
     console.log('Reading file: ', csvFilePath);
     const sender = settings.isProduction() ? 'advteam.tmy' : 'team.tmy';
-    const requiredAuthority = options.test ? args.governanceAccounts[2] : '11.found.tmy';
+    const requiredAuthority = options.autoExecute ? args.governanceAccounts[2] : '11.found.tmy';
     const categoryId = 7; // Community and Marketing, Platform Dev, Infra Rewards
     // https://github.com/Tonomy-Foundation/Tonomy-Contracts/blob/master/contracts/vesting.tmy/include/vesting.tmy/vesting.tmy.hpp#L31
 
@@ -111,5 +111,5 @@ export async function vestingBulk(args: { governanceAccounts: string[] }, option
         requiredAuthority,
     ]);
 
-    if (options.test) await executeProposal(options.proposer, options.proposalName, proposalHash);
+    if (options.autoExecute) await executeProposal(options.proposer, options.proposalName, proposalHash);
 }
