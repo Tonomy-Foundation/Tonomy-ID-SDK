@@ -619,7 +619,7 @@ export async function verifyClientAuthorizationPackage<T extends ClientAuthoriza
     const account = await getAccountNameFromDid(issuer).toString();
 
     // verify the chain
-    const { chain_id } = await getChainInfo();
+    const { chain_id: chainId } = await getChainInfo();
     const { method, id } = parseDid(issuer);
 
     if (method !== 'antelope') {
@@ -628,8 +628,8 @@ export async function verifyClientAuthorizationPackage<T extends ClientAuthoriza
 
     const didChainId = id.split(':')[0];
 
-    if (didChainId !== chain_id.toString()) {
-        throwError(`Invalid chain ID expected ${chain_id.toString()} found ${didChainId}`, SdkErrors.InvalidData);
+    if (didChainId !== chainId.toString()) {
+        throwError(`Invalid chain ID expected ${chainId.toString()} found ${didChainId}`, SdkErrors.InvalidData);
     }
 
     // verify the username
