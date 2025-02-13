@@ -10,7 +10,7 @@ import { browserStorageFactory } from '../sdk/storage/browserStorage';
 import { getAccount, getChainInfo } from '../sdk/services/blockchain/eosio/eosio';
 import { JsKeyManager } from '../sdk/storage/jsKeyManager';
 import { LoginRequest, LoginRequestPayload } from '../sdk/util/request';
-import { DataSharingRequest, DataSharingRequestPayload } from '../sdk/util';
+import { DataSharingRequest, DataSharingRequestPayload, getAccountNameFromDid, parseDid } from '../sdk/util';
 import {
     AuthenticationMessage,
     Communication,
@@ -23,7 +23,7 @@ import {
 } from '../sdk';
 import { objToBase64Url } from '../sdk/util/base64';
 import { VerifiableCredential } from '../sdk/util/ssi/vc';
-import { DIDurl } from '../sdk/util/ssi/types';
+import { DIDurl, JWT } from '../sdk/util/ssi/types';
 import { Signer, createKeyManagerSigner, transact } from '../sdk/services/blockchain/eosio/transaction';
 import { createDidKeyIssuerAndStore } from '../sdk/helpers/didKeyStorage';
 import { getLoginRequestResponseFromUrl } from '../sdk/helpers/urls';
@@ -61,6 +61,10 @@ export type LoginWithTonomyMessages = {
 };
 
 const tonomyContract = TonomyContract.Instance;
+
+type ClientAuthorizationData = object & {
+    username?: string;
+};
 
 /**
  * An external user on a website that is being logged into by a Tonomy ID user
@@ -398,6 +402,17 @@ export class ExternalUser {
         return await VerifiableCredential.sign<T>(id, type, data, issuer, options);
     }
 
+    async createClientAuthorization<T extends ClientAuthorizationData = object>(
+        data: T
+    ): Promise<VerifiableCredential<T>> {
+        const origin = window?.location?.origin || '';
+        const random = randomString(8);
+        const id = origin + '/vc/auth/' + random;
+        const type = 'ClientAuthorization';
+
+        return await this.signVc(id, type, data);
+    }
+
     /**
      * Return a signer to use to sign transactions
      *
@@ -547,4 +562,69 @@ export class ExternalUser {
             await this.communication.login(authMessage);
         }
     }
+}
+
+interface VerifiedClientAuthorization<T extends ClientAuthorizationData = object> {
+    request: {
+        jwt: JWT;
+        id: string;
+        origin?: string; // this is not verified
+    };
+    did: string;
+    account: string;
+    data: T;
+    username?: string;
+}
+
+export async function verifyClientAuthorizationPackage<T extends ClientAuthorizationData = object>(
+    clientAuthorization: JWT
+): Promise<VerifiedClientAuthorization<T>> {
+    const vc = new VerifiableCredential(clientAuthorization);
+
+    await vc.verify();
+    const vcId = vc.getId();
+    const issuer = vc.getIssuer();
+    const data: T = vc.getCredentialSubject() as T;
+    const account = await getAccountNameFromDid(issuer).toString();
+
+    // verify the chain
+    const { chain_id } = await getChainInfo();
+    const { method, id } = parseDid(issuer);
+
+    if (method !== 'antelope') {
+        throwError(`Invalid DID method: ${method}`, SdkErrors.InvalidData);
+    }
+
+    const didChainId = id.split(':')[0];
+
+    if (didChainId !== chain_id.toString()) {
+        throwError(`Invalid chain ID expected ${chain_id.toString()} found ${didChainId}`, SdkErrors.InvalidData);
+    }
+
+    // verify the username
+    const { username } = data;
+
+    if (username) {
+        const tonomyUsername = TonomyUsername.fromFullUsername(username);
+
+        // this will throw if the username is not valid
+        await tonomyContract.getPerson(tonomyUsername);
+    }
+
+    const origin = vcId?.split('/')[0];
+    const requestId = vcId?.split('/vc/auth/')[1];
+
+    const request = {
+        jwt: clientAuthorization,
+        origin: origin && origin !== '' ? origin : undefined,
+        id: requestId ? requestId : '',
+    };
+
+    return {
+        request,
+        did: issuer,
+        account,
+        data,
+        username: username,
+    };
 }
