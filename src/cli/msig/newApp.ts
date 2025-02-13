@@ -5,11 +5,11 @@ import { AccountType, getSettings, TonomyUsername } from '../../sdk';
 export async function newApp(options: StandardProposalOptions) {
     const appName = 'Fiddl.Art';
     const description = 'Create and Earn with AI Art';
-    const logoUrl = 'https://fiddle.art/logo.png';
+    const logoUrl = 'https://fiddl.art/fiddlLogoWithText.png';
     const origin = 'https://fiddl.art';
-    const usernameShort = 'fiddle';
+    const usernameShort = 'fiddlart';
     const username = TonomyUsername.fromUsername(usernameShort, AccountType.APP, getSettings().accountSuffix);
-    const key = Authority.fromKey('EOS5DMPJ4DsJ2Vc4f7g5o8z9o5HswcpXrE4C58r7wxxzZgYxQn8rB');
+    const key = Authority.fromKey('EOS4xnrCGUT688wFvinQoCuiu7E3Qpn8Phq76TRKNTb87XFMjzsJu');
 
     const action = {
         account: 'tonomy',

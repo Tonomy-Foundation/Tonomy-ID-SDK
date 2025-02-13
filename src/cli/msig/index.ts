@@ -113,7 +113,7 @@ export default async function msig(args: string[]) {
             await transfer({ from, to }, options);
         } else if (proposalType === 'deploy-contract') {
             const contractName = 'tonomy';
-            const contractDir = `/home/dev/Documents/Git/Tonomy/Tonomy-ID-Integration/Tonomy-ID-SDK/Tonomy-Contracts/contracts/${contractName}`;
+            const contractDir = `/home/dev/Documents/git/tonomy/Tonomy-ID-Integration/Tonomy-ID-SDK/Tonomy-Contracts/contracts/${contractName}`;
 
             await deployContract({ contractName, contractDir }, options);
         } else if (proposalType === 'eosio.code-permission') {
@@ -150,7 +150,7 @@ export default async function msig(args: string[]) {
             await setResourceConfig({}, options);
         } else if (proposalType === 'set-chain-config') {
             await setBlockchainConfig({}, options);
-        } else if (proposalType === 'add-app') {
+        } else if (proposalType === 'new-app') {
             await newApp(options);
         } else {
             throw new Error(`Invalid msig proposal type ${proposalType}`);
