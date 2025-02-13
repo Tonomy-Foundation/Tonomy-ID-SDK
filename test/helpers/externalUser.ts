@@ -17,6 +17,7 @@ import {
     LoginRequestsMessagePayload,
     IOnPressLoginOptions,
     ResponsesManager,
+    verifyClientAuthorization,
 } from '../../src/sdk';
 import { ExternalUser, LoginWithTonomyMessages } from '../../src/api/externalUser';
 import { objToBase64Url } from '../../src/sdk/util/base64';
@@ -318,6 +319,39 @@ export async function externalWebsiteSignTransaction(externalUser: ExternalUser,
     expect(typeof trx.transaction_id).toBe('string');
     expect(trx.processed.receipt.status).toBe('executed');
     // TODO: check action trace for action and the does not contain link auth
+}
+
+export async function externalWebsiteClientAuth(
+    externalUser: ExternalUser,
+    externalApp: App,
+    options: ExternalUserLoginTestOptions
+) {
+    debug('EXTERNAL_WEBSITE/client-auth: signing client auth');
+
+    const data: any = {
+        foo: 'bar',
+    };
+
+    if (options.dataRequestUsername) {
+        data.username = await externalUser.getUsername().toString();
+    }
+
+    const clientAuth = await externalUser.createClientAuthorization(data);
+
+    const verifiedAuth = await verifyClientAuthorization(clientAuth);
+
+    expect(verifiedAuth).toBeDefined();
+    expect(verifiedAuth.account).toBe((await externalUser.getAccountName()).toString());
+    expect(verifiedAuth.request.jwt).toBe(clientAuth);
+    expect(typeof verifiedAuth.request.id).toBe('string');
+    expect(verifiedAuth.request.origin).toBe(externalApp.origin);
+    expect(verifiedAuth.did).toBe(await externalUser.getDid());
+    expect(verifiedAuth.data.foo).toBe('bar');
+
+    if (options.dataRequestUsername) {
+        expect(verifiedAuth.username).toBe(externalUser.getUsername().toString());
+        expect(verifiedAuth.data.username).toBe(externalUser.getUsername().toString());
+    }
 }
 
 export async function setupLinkAuthSubscriber(user: IUserPublic): Promise<void> {

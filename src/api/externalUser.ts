@@ -68,9 +68,10 @@ const tonomyContract = TonomyContract.Instance;
  * @param {string} [username] - the username of the user
  *
  */
-type ClientAuthorizationData = object & {
-    username?: string;
-};
+type ClientAuthorizationData = Record<string, any> &
+    object & {
+        username?: string;
+    };
 
 /**
  * An external user on a website that is being logged into by a Tonomy ID user
@@ -413,17 +414,15 @@ export class ExternalUser {
      *
      * @param {T} data - the data of the client authorization request
      *
-     * @returns {Promise<VerifiableCredential<T>>} - the signed client authorization request (a JWT string)
+     * @returns {Promise<JWT>} - the signed client authorization request (a JWT string)
      */
-    async createClientAuthorization<T extends ClientAuthorizationData = object>(
-        data: T
-    ): Promise<VerifiableCredential<T>> {
+    async createClientAuthorization<T extends ClientAuthorizationData = object>(data: T): Promise<JWT> {
         const origin = window?.location?.origin || '';
         const random = randomString(8);
         const id = origin + '/vc/auth/' + random;
         const type = 'ClientAuthorization';
 
-        return await this.signVc(id, type, data);
+        return (await this.signVc(id, type, data)).toString();
     }
 
     /**
@@ -607,7 +606,7 @@ interface VerifiedClientAuthorization<T extends ClientAuthorizationData = object
  *
  * @returns {Promise<VerifiedClientAuthorization<T>>} - the verified client authorization request with data type T
  */
-export async function verifyClientAuthorizationPackage<T extends ClientAuthorizationData = ClientAuthorizationData>(
+export async function verifyClientAuthorization<T extends ClientAuthorizationData = ClientAuthorizationData>(
     clientAuthorization: JWT
 ): Promise<VerifiedClientAuthorization<T>> {
     const vc = new VerifiableCredential(clientAuthorization);
