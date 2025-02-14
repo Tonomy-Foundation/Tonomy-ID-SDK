@@ -630,14 +630,15 @@ export async function verifyClientAuthorization<T extends ClientAuthorizationDat
     const data: T = vc.getCredentialSubject() as T;
     const account = await getAccountNameFromDid(issuer).toString();
 
+    const { method, id } = parseDid(issuer);
+
+    if (method !== 'antelope') {
+        throwError(`Invalid DID method: ${method}`, SdkErrors.InvalidData);
+    }
+
     // verify the chain
     if (options.verifyChainId) {
         const { chain_id: chainId } = await getChainInfo();
-        const { method, id } = parseDid(issuer);
-
-        if (method !== 'antelope') {
-            throwError(`Invalid DID method: ${method}`, SdkErrors.InvalidData);
-        }
 
         const didChainId = id.split(':')[0];
 
