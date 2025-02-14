@@ -18,6 +18,7 @@ import {
     IOnPressLoginOptions,
     ResponsesManager,
     verifyClientAuthorization,
+    ClientAuthorizationData,
 } from '../../src/sdk';
 import { ExternalUser, LoginWithTonomyMessages } from '../../src/api/externalUser';
 import { objToBase64Url } from '../../src/sdk/util/base64';
@@ -328,12 +329,15 @@ export async function externalWebsiteClientAuth(
 ) {
     debug('EXTERNAL_WEBSITE/client-auth: signing client auth');
 
-    const data: any = {
+    const data: ClientAuthorizationData = {
         foo: 'bar',
     };
 
     if (options.dataRequestUsername) {
-        data.username = await externalUser.getUsername().toString();
+        const username = await externalUser.getUsername();
+
+        if (!username) throw new Error('Username not found');
+        data.username = username.toString();
     }
 
     const clientAuth = await externalUser.createClientAuthorization(data);
@@ -344,13 +348,19 @@ export async function externalWebsiteClientAuth(
     expect(verifiedAuth.account).toBe((await externalUser.getAccountName()).toString());
     expect(verifiedAuth.request.jwt).toBe(clientAuth);
     expect(typeof verifiedAuth.request.id).toBe('string');
+    expect(verifiedAuth.request.id.length).toBe(16);
+
     expect(verifiedAuth.request.origin).toBe(externalApp.origin);
     expect(verifiedAuth.did).toBe(await externalUser.getDid());
     expect(verifiedAuth.data.foo).toBe('bar');
 
     if (options.dataRequestUsername) {
-        expect(verifiedAuth.username).toBe(externalUser.getUsername().toString());
-        expect(verifiedAuth.data.username).toBe(externalUser.getUsername().toString());
+        const username = await externalUser.getUsername();
+
+        if (!username) throw new Error('Username not found');
+
+        expect(verifiedAuth.username).toBe(username.toString());
+        expect(verifiedAuth.data.username).toBe(username.toString());
     }
 }
 

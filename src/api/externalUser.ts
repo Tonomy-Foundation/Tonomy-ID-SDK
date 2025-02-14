@@ -68,7 +68,7 @@ const tonomyContract = TonomyContract.Instance;
  * @param {string} [username] - the username of the user
  *
  */
-type ClientAuthorizationData = Record<string, any> &
+export type ClientAuthorizationData = Record<string, any> &
     object & {
         username?: string;
     };
@@ -417,7 +417,7 @@ export class ExternalUser {
      * @returns {Promise<JWT>} - the signed client authorization request (a JWT string)
      */
     async createClientAuthorization<T extends ClientAuthorizationData = object>(data: T): Promise<JWT> {
-        const origin = window?.location?.origin || '';
+        const origin = window?.location?.origin || 'undefined';
         const random = randomString(8);
         const id = origin + '/vc/auth/' + random;
         const type = 'ClientAuthorization';
@@ -599,6 +599,16 @@ interface VerifiedClientAuthorization<T extends ClientAuthorizationData = object
     data: T;
 }
 
+interface VerifyClientOptions {
+    verifyChainId?: boolean;
+    verifyUsername?: boolean;
+}
+
+const defaultVerifyClientOptions: VerifyClientOptions = {
+    verifyChainId: true,
+    verifyUsername: true,
+};
+
 /**
  * Verifies a client authorization request
  *
@@ -607,8 +617,11 @@ interface VerifiedClientAuthorization<T extends ClientAuthorizationData = object
  * @returns {Promise<VerifiedClientAuthorization<T>>} - the verified client authorization request with data type T
  */
 export async function verifyClientAuthorization<T extends ClientAuthorizationData = ClientAuthorizationData>(
-    clientAuthorization: JWT
+    clientAuthorization: JWT,
+    options?: VerifyClientOptions
 ): Promise<VerifiedClientAuthorization<T>> {
+    options = { ...defaultVerifyClientOptions, ...options };
+
     const vc = new VerifiableCredential(clientAuthorization);
 
     await vc.verify();
@@ -618,35 +631,40 @@ export async function verifyClientAuthorization<T extends ClientAuthorizationDat
     const account = await getAccountNameFromDid(issuer).toString();
 
     // verify the chain
-    const { chain_id: chainId } = await getChainInfo();
-    const { method, id } = parseDid(issuer);
+    if (options.verifyChainId) {
+        const { chain_id: chainId } = await getChainInfo();
+        const { method, id } = parseDid(issuer);
 
-    if (method !== 'antelope') {
-        throwError(`Invalid DID method: ${method}`, SdkErrors.InvalidData);
-    }
+        if (method !== 'antelope') {
+            throwError(`Invalid DID method: ${method}`, SdkErrors.InvalidData);
+        }
 
-    const didChainId = id.split(':')[0];
+        const didChainId = id.split(':')[0];
 
-    if (didChainId !== chainId.toString()) {
-        throwError(`Invalid chain ID expected ${chainId.toString()} found ${didChainId}`, SdkErrors.InvalidData);
+        if (didChainId !== chainId.toString()) {
+            throwError(`Invalid chain ID expected ${chainId.toString()} found ${didChainId}`, SdkErrors.InvalidData);
+        }
     }
 
     // verify the username
     const { username } = data;
 
-    if (username) {
-        const tonomyUsername = TonomyUsername.fromFullUsername(username);
+    if (options.verifyUsername) {
+        if (username) {
+            const tonomyUsername = TonomyUsername.fromFullUsername(username);
 
-        // this will throw if the username is not valid
-        await tonomyContract.getPerson(tonomyUsername);
+            // this will throw if the username is not valid
+            await tonomyContract.getPerson(tonomyUsername);
+        }
     }
 
-    const origin = vcId?.split('/')[0];
+    // get the origin of the vcId or return undefined
+    const origin = vcId?.split('/vc/auth/')[0];
     const requestId = vcId?.split('/vc/auth/')[1];
 
     const request = {
         jwt: clientAuthorization,
-        origin: origin && origin !== '' ? origin : undefined,
+        origin: origin && origin !== 'undefined' ? origin : undefined,
         id: requestId ? requestId : '',
     };
 
