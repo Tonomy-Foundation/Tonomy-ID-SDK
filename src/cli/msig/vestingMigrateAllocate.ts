@@ -30,10 +30,12 @@ export async function vestingMigrate(args: any, options: StandardProposalOptions
         options.proposalName,
         actions,
         options.privateKey,
-        options.requested
+        options.requested,
+        options.dryRun
     );
 
-    if (options.test) await executeProposal(options.proposer, options.proposalName, proposalHash);
+    if (options.dryRun) return;
+    if (options.autoExecute) await executeProposal(options.proposer, options.proposalName, proposalHash);
 }
 
 async function createAccountActions(account: NameType): Promise<ActionData[]> {
