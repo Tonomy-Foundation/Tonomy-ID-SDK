@@ -11,6 +11,7 @@
     * [Single Sign-On](build-web4-apps/start/single-sign-on.md)
     * [Usage and signing data](build-web4-apps/start/usage.md)
   * [Wallet Connect](build-web4-apps/wallet-connect.md)
+  * [Antelope Sigining Request (ESR)](build-web4-apps/antelope-sigining-request-esr.md)
   * [API reference](build-web4-apps/api-reference.md)
   * [Example demo app](build-web4-apps/example-demo-app.md)
 * [Run Pangea Infrastructure](run-pangea-infrastructure/README.md)
