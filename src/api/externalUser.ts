@@ -29,6 +29,7 @@ import { createDidKeyIssuerAndStore } from '../sdk/helpers/didKeyStorage';
 import { getLoginRequestResponseFromUrl } from '../sdk/helpers/urls';
 import { verifyKeyExistsForApp } from '../sdk/helpers/user';
 import { IOnPressLoginOptions } from '../sdk/types/User';
+import { App } from '../sdk/controllers/App';
 import Debug from 'debug';
 
 const debug = Debug('tonomy-sdk:externalUser');
@@ -602,11 +603,13 @@ interface VerifiedClientAuthorization<T extends ClientAuthorizationData = object
 interface VerifyClientOptions {
     verifyChainId?: boolean;
     verifyUsername?: boolean;
+    verifyOrigin?: boolean;
 }
 
 const defaultVerifyClientOptions: VerifyClientOptions = {
     verifyChainId: true,
     verifyUsername: true,
+    verifyOrigin: true,
 };
 
 /**
@@ -630,7 +633,7 @@ export async function verifyClientAuthorization<T extends ClientAuthorizationDat
     const data: T = vc.getCredentialSubject() as T;
     const account = await getAccountNameFromDid(issuer).toString();
 
-    const { method, id } = parseDid(issuer);
+    const { method, id, fragment } = parseDid(issuer);
 
     if (method !== 'antelope') {
         throwError(`Invalid DID method: ${method}`, SdkErrors.InvalidData);
@@ -662,6 +665,14 @@ export async function verifyClientAuthorization<T extends ClientAuthorizationDat
     // get the origin of the vcId or return undefined
     const origin = vcId?.split('/vc/auth/')[0];
     const requestId = vcId?.split('/vc/auth/')[1];
+
+    // verify the origin
+    if (options.verifyOrigin) {
+        if (!origin) throwError('Invalid origin', SdkErrors.InvalidData);
+        const app = await App.getApp(origin);
+
+        if (fragment !== app.accountName.toString()) throwError('Invalid app', SdkErrors.InvalidData);
+    }
 
     const request = {
         jwt: clientAuthorization,
