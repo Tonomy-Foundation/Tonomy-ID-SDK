@@ -582,7 +582,7 @@ export class ExternalUser {
  *
  * @param {JWT} request.jwt - the JWT of the request
  * @param {string} request.id - the unique id of the request
- * @param {string} [request.origin] - the unverified origin of the request
+ * @param {string} [request.origin] - the origin of the request
  * @param {string} did - the DID of the user
  * @param {string} account - the account name of the user
  * @param {string} [username] - the username of the user
@@ -623,11 +623,10 @@ export async function verifyClientAuthorization<T extends ClientAuthorizationDat
     clientAuthorization: JWT,
     options?: VerifyClientOptions
 ): Promise<VerifiedClientAuthorization<T>> {
-    options = { ...defaultVerifyClientOptions, ...options };
+    const optionsWithDefaults = { ...defaultVerifyClientOptions, ...options };
 
     const vc = new VerifiableCredential(clientAuthorization);
 
-    await vc.verify();
     const vcId = vc.getId();
     const issuer = vc.getIssuer();
     const data: T = vc.getCredentialSubject() as T;
@@ -639,40 +638,48 @@ export async function verifyClientAuthorization<T extends ClientAuthorizationDat
         throwError(`Invalid DID method: ${method}`, SdkErrors.InvalidData);
     }
 
-    // verify the chain
-    if (options.verifyChainId) {
-        const { chain_id: chainId } = await getChainInfo();
+    async function verifyChainId() {
+        if (optionsWithDefaults.verifyChainId) {
+            const { chain_id: chainId } = await getChainInfo();
 
-        const didChainId = id.split(':')[0];
+            const didChainId = id.split(':')[0];
 
-        if (didChainId !== chainId.toString()) {
-            throwError(`Invalid chain ID expected ${chainId.toString()} found ${didChainId}`, SdkErrors.InvalidData);
+            if (didChainId !== chainId.toString()) {
+                throwError(
+                    `Invalid chain ID expected ${chainId.toString()} found ${didChainId}`,
+                    SdkErrors.InvalidData
+                );
+            }
         }
     }
 
-    // verify the username
     const { username } = data;
 
-    if (options.verifyUsername) {
-        if (username) {
-            const tonomyUsername = TonomyUsername.fromFullUsername(username);
+    async function verifyUsername() {
+        if (optionsWithDefaults.verifyUsername) {
+            if (username) {
+                const tonomyUsername = TonomyUsername.fromFullUsername(username);
 
-            // this will throw if the username is not valid
-            await tonomyContract.getPerson(tonomyUsername);
+                // this will throw if the username is not valid
+                await tonomyContract.getPerson(tonomyUsername);
+            }
         }
     }
 
-    // get the origin of the vcId or return undefined
+    // get the request origin and id
     const origin = vcId?.split('/vc/auth/')[0];
     const requestId = vcId?.split('/vc/auth/')[1];
 
-    // verify the origin
-    if (options.verifyOrigin) {
-        if (!origin) throwError('Invalid origin', SdkErrors.InvalidData);
-        const app = await App.getApp(origin);
+    async function verifyOrigin() {
+        if (optionsWithDefaults.verifyOrigin) {
+            if (!origin) throwError('Invalid origin', SdkErrors.InvalidData);
+            const app = await App.getApp(origin);
 
-        if (fragment !== app.accountName.toString()) throwError('Invalid app', SdkErrors.InvalidData);
+            if (fragment !== app.accountName.toString()) throwError('Invalid app', SdkErrors.InvalidData);
+        }
     }
+
+    await Promise.all([vc.verify(), verifyChainId(), verifyUsername(), verifyOrigin()]);
 
     const request = {
         jwt: clientAuthorization,
