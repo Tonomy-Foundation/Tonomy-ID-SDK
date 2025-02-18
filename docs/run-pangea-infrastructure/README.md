@@ -1,2 +1,6 @@
-# How to run Pangea Blockchain node
+---
+icon: server
+---
+
+# Run Pangea Infrastructure
 

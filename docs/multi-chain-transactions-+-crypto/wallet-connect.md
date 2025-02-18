@@ -12,7 +12,7 @@ Wallet Connect enables a seamless connection between your dAPP and a wallet. We 
 
 &#x20;To establish a pairing, use the following code:
 
-```
+```typescript
 const uri = 'xxx'; // pairing uri
 try {
     await web3wallet.core.pairing.pair({ uri })
@@ -33,7 +33,7 @@ web3wallet.on('session_proposal', onSessionProposal);
 
 To approve a session proposal, construct the appropriate namespaces and call the `approveSession` method:
 
-```
+```typescript
 await web3wallet.approveSession({
     id: proposal.id,
     namespaces,
@@ -44,7 +44,7 @@ await web3wallet.approveSession({
 
 To reject a session proposal, use the `rejectSession` method, providing the session ID and a reason for the rejection:
 
-```
+```typescript
 import { getSdkError } from '@walletconnect/utils';
 
 await web3wallet.rejectSession({
@@ -57,7 +57,7 @@ await web3wallet.rejectSession({
 
 When a dApp sends a transaction request to a wallet, it triggers a `session_request` event. To handle this event, you need to set up an event listener and define the logic for processing the request.
 
-```
+```typescript
 web3wallet.on('session_request', onSessionRequest);
 ```
 
@@ -65,7 +65,7 @@ web3wallet.on('session_request', onSessionRequest);
 
 To approve a transaction request, construct the appropriate transaction details and call the `approveTransaction` method:
 
-```
+```typescript
 await web3wallet.respondSessionRequest({ topic: session.topic, response });
 ```
 
@@ -73,7 +73,7 @@ await web3wallet.respondSessionRequest({ topic: session.topic, response });
 
 To reject a transaction request, use the `rejectTransaction` method, providing the request ID and a reason for the rejection:
 
-```
+```typescript
 import { getSdkError } from '@walletconnect/utils';
 
 await web3wallet.rejectTransaction({

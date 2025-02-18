@@ -1,6 +1,10 @@
+---
+icon: display-chart-up
+---
+
 # Connect as an Exchange
 
-to which you can withdraw LEOSExchanges must connect to the Pangea network to sell LEOS tokens and allow users to withdraw coins. This guide provides the steps to set up an account that can act as a LEOS token custodian for token sales and allow the exchange to withdraw vested or unvested coins to external Pangea accounts.
+Exchanges must connect to the Pangea network to allow users to withdraw coins. This guide provides the steps to set up an account that can act as a LEOS token custodian for exchange coins and allow the exchange to withdraw vested or unvested coins to external Pangea accounts.
 
 You can connect using the [official Antelope CLI tool called "cleos"](https://github.com/AntelopeIO/leap), or the [Tonomy Javascript SDK](https://github.com/Tonomy-Foundation/Tonomy-ID-SDK) with command line using nodejs or by integrating the Javascript library into your tools.
 

@@ -1,13 +1,29 @@
-# Overview of Pangea
+---
+icon: play
+---
 
-Welcome to the Pangea developer documentation. Pangea ID is a self-sovereign identity and single-sign on system with the ability to use end-to-end cryptography in user devices.
+# Introduction
 
-Read the White Paper to understand Pangea Passport features and how it works:
+Welcome to the Pangea SDK developer documentation.
 
-[**Pangea ID - White Paper**](https://www.canva.com/design/DAFnktNOWKU/Ps1zXw3XICaEMiB0R4Ghkg/view)
+Pangea enables developers to **integrate self-sovereign identity and secure data storage** into their **Web2 and Web3 applications**. Whether you’re building a **SaaS platform requiring high-security logins** or a **Web3 dApp needing user-controlled digital signatures and credentials**, Pangea provides a privacy-first, developer-friendly solution.
 
-## Try it out now
+With **Pangea ID**, users log in without passwords, sign data with private keys stored securely on their devices, and control their personal data—**without relying on third parties**.
 
-Integrate your existing app in less then 10 minutes. Follow the [Quick start](build-web4-apps/start/start.md) with the Demo network (default).
+### Why Integrate Pangea?
 
-Check out how it works by using the Demo integration app on the Demo network. [Click here](https://demo.pangea.web4.world/)
+* **Frictionless User Authentication**: Passwordless Single Sign-On (SSO)
+* **Strong User Verification**: W3C Verifiable Credentials
+* **High-Security Digital Signatures**: Non-repudiation for documents, transactions, and data
+* **Data Privacy by Default**: Sovereign Data Vault for user-controlled storage
+* **Flexible for Web2 & Web3**: Use in SaaS platforms, enterprise apps, dApps, and beyond
+
+
+
+{% hint style="info" %}
+Try it out now: [Demo App](https://demo.pangea.web4.world)
+{% endhint %}
+
+{% hint style="info" %}
+Read the [Pangea ID White Paper](https://pangea.web4.world/about/whitepapers)
+{% endhint %}
