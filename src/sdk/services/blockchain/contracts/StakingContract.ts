@@ -84,7 +84,7 @@ export class StakingContract {
     static getMinimumTransfer = () => (getSettings().environment !== 'test' ? 1000 : 1); // 1000 LEOS or 1 LEOS
     static getMaxAllocations = () => (getSettings().environment !== 'test' ? 100 : 5); // 100 allocations or 5 allocations
     static getStakingCycleHours = () => (getSettings().environment !== 'test' ? 24 : 1 / 60); // 24 hours or 1 minute
-    static MAX_APY = 2.0;
+    static MAX_APY = 1.0;
     static STAKING_APY_TARGET = 50 / 100; // 50%
     // Use the TGE unlock: https://docs.google.com/spreadsheets/d/1uyvpgXC0th3Z1_bz4m18dJKy2yyVfYFmcaEyS9fveeA/edit?gid=1074294213#gid=1074294213&range=Q34
     static STAKING_ESTIMATED_STAKED_PERCENT = 15.1 / 100; // 15.1%

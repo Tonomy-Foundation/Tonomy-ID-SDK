@@ -323,9 +323,15 @@ export class VestingContract {
 
         for (const allocation of allocations) {
             const tokens = allocation.tokens_allocated.split(' ')[0];
-            const numberTokens = new Decimal(tokens);
 
-            totalBalance = totalBalance.add(numberTokens);
+            const tokensAllocated = parseFloat(tokens);
+            const unlocked = parseFloat(allocation.tokens_claimed.split(' ')[0]);
+
+            if (tokensAllocated !== unlocked) {
+                const numberTokens = new Decimal(tokens);
+
+                totalBalance = totalBalance.add(numberTokens);
+            }
         }
 
         return totalBalance.toNumber();
@@ -426,43 +432,46 @@ export class VestingContract {
             const tokensAllocated = parseFloat(allocation.tokens_allocated.split(' ')[0]);
             const unlocked = parseFloat(allocation.tokens_claimed.split(' ')[0]);
 
-            const settings = await this.getSettings();
+            if (tokensAllocated !== unlocked) {
+                const settings = await this.getSettings();
 
-            const vestingPeriods = VestingContract.calculateVestingPeriod(settings, allocation);
+                const vestingPeriods = VestingContract.calculateVestingPeriod(settings, allocation);
 
-            const { vestingStart, cliffEnd, vestingEnd } = vestingPeriods;
+                const { vestingStart, cliffEnd, vestingEnd } = vestingPeriods;
 
-            const vestingCategory = this.getVestingCategory(allocation.vesting_category_type);
+                const vestingCategory = this.getVestingCategory(allocation.vesting_category_type);
 
-            let claimable = 0;
+                let claimable = 0;
 
-            if (currentTime >= cliffEnd) {
-                // Calculate the percentage of the vesting period that has passed
-                const timeSinceVestingStart = (currentTime.getTime() - vestingStart.getTime()) / 1000;
-                const vestingDuration = (vestingEnd.getTime() - vestingStart.getTime()) / 1000;
-                const vestingProgress = Math.min(timeSinceVestingStart / vestingDuration, 1.0); // Ensure it doesn't exceed 100%
+                if (currentTime >= cliffEnd) {
+                    // Calculate the percentage of the vesting period that has passed
+                    const timeSinceVestingStart = (currentTime.getTime() - vestingStart.getTime()) / 1000;
+                    const vestingDuration = (vestingEnd.getTime() - vestingStart.getTime()) / 1000;
+                    const vestingProgress = Math.min(timeSinceVestingStart / vestingDuration, 1.0); // Ensure it doesn't exceed 100%
 
-                // Calculate unlockable amount considering TGE unlock
-                claimable =
-                    tokensAllocated * ((1.0 - vestingCategory.tgeUnlock) * vestingProgress + vestingCategory.tgeUnlock);
+                    // Calculate unlockable amount considering TGE unlock
+                    claimable =
+                        tokensAllocated *
+                        ((1.0 - vestingCategory.tgeUnlock) * vestingProgress + vestingCategory.tgeUnlock);
+                }
+
+                const unlockable = claimable - unlocked;
+                const locked = tokensAllocated - unlocked;
+                const unlockAtVestingStart = vestingCategory.tgeUnlock;
+                const saleStart = new Date(settings.sales_start_date);
+
+                allocationsDetails.push({
+                    totalAllocation: tokensAllocated,
+                    unlockable,
+                    unlocked,
+                    locked,
+                    vestingStart,
+                    unlockAtVestingStart,
+                    allocationDate: new Date(saleStart.getTime() + allocation.time_since_sale_start._count / 1000),
+                    vestingPeriod: this.getVestingPeriod(allocation.vesting_category_type),
+                    categoryId: allocation.vesting_category_type,
+                });
             }
-
-            const unlockable = claimable - unlocked;
-            const locked = tokensAllocated - unlocked;
-            const unlockAtVestingStart = vestingCategory.tgeUnlock;
-            const saleStart = new Date(settings.sales_start_date);
-
-            allocationsDetails.push({
-                totalAllocation: tokensAllocated,
-                unlockable,
-                unlocked,
-                locked,
-                vestingStart,
-                unlockAtVestingStart,
-                allocationDate: new Date(saleStart.getTime() + allocation.time_since_sale_start._count / 1000),
-                vestingPeriod: this.getVestingPeriod(allocation.vesting_category_type),
-                categoryId: allocation.vesting_category_type,
-            });
         }
 
         const totalAllocation = allocationsDetails.reduce((sum, allocation) => sum + allocation.totalAllocation, 0);
