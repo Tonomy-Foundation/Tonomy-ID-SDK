@@ -10,7 +10,7 @@ import { browserStorageFactory } from '../sdk/storage/browserStorage';
 import { getAccount, getChainInfo } from '../sdk/services/blockchain/eosio/eosio';
 import { JsKeyManager } from '../sdk/storage/jsKeyManager';
 import { LoginRequest, LoginRequestPayload } from '../sdk/util/request';
-import { DataSharingRequest, DataSharingRequestPayload } from '../sdk/util';
+import { DataSharingRequest, DataSharingRequestPayload, getAccountNameFromDid, parseDid } from '../sdk/util';
 import {
     AuthenticationMessage,
     Communication,
@@ -23,12 +23,13 @@ import {
 } from '../sdk';
 import { objToBase64Url } from '../sdk/util/base64';
 import { VerifiableCredential } from '../sdk/util/ssi/vc';
-import { DIDurl } from '../sdk/util/ssi/types';
+import { DIDurl, JWT } from '../sdk/util/ssi/types';
 import { Signer, createKeyManagerSigner, transact } from '../sdk/services/blockchain/eosio/transaction';
 import { createDidKeyIssuerAndStore } from '../sdk/helpers/didKeyStorage';
 import { getLoginRequestResponseFromUrl } from '../sdk/helpers/urls';
 import { verifyKeyExistsForApp } from '../sdk/helpers/user';
 import { IOnPressLoginOptions } from '../sdk/types/User';
+import { App } from '../sdk/controllers/App';
 import Debug from 'debug';
 
 const debug = Debug('tonomy-sdk:externalUser');
@@ -61,6 +62,17 @@ export type LoginWithTonomyMessages = {
 };
 
 const tonomyContract = TonomyContract.Instance;
+
+/**
+ * The data of a client authorization request
+ *
+ * @param {string} [username] - the username of the user
+ *
+ */
+export type ClientAuthorizationData = Record<string, any> &
+    object & {
+        username?: string;
+    };
 
 /**
  * An external user on a website that is being logged into by a Tonomy ID user
@@ -399,6 +411,22 @@ export class ExternalUser {
     }
 
     /**
+     * Creates a client authorization request
+     *
+     * @param {T} data - the data of the client authorization request
+     *
+     * @returns {Promise<JWT>} - the signed client authorization request (a JWT string)
+     */
+    async createClientAuthorization<T extends ClientAuthorizationData = object>(data: T): Promise<JWT> {
+        const origin = window?.location?.origin || 'undefined';
+        const random = randomString(8);
+        const id = origin + '/vc/auth/' + random;
+        const type = 'ClientAuthorization';
+
+        return (await this.signVc(id, type, data)).toString();
+    }
+
+    /**
      * Return a signer to use to sign transactions
      *
      * @returns {Promise<Signer>} - the signer to use to sign transactions
@@ -547,4 +575,123 @@ export class ExternalUser {
             await this.communication.login(authMessage);
         }
     }
+}
+
+/**
+ * A verified client authorization request
+ *
+ * @param {JWT} request.jwt - the JWT of the request
+ * @param {string} request.id - the unique id of the request
+ * @param {string} [request.origin] - the origin of the request
+ * @param {string} did - the DID of the user
+ * @param {string} account - the account name of the user
+ * @param {string} [username] - the username of the user
+ * @param {T} data - the data of the request
+ */
+interface VerifiedClientAuthorization<T extends ClientAuthorizationData = object> {
+    request: {
+        jwt: JWT;
+        id: string;
+        origin?: string; // this is not verified
+    };
+    did: string;
+    account: string;
+    username?: string;
+    data: T;
+}
+
+interface VerifyClientOptions {
+    verifyChainId?: boolean;
+    verifyUsername?: boolean;
+    verifyOrigin?: boolean;
+}
+
+const defaultVerifyClientOptions: VerifyClientOptions = {
+    verifyChainId: true,
+    verifyUsername: true,
+    verifyOrigin: true,
+};
+
+/**
+ * Verifies a client authorization request
+ *
+ * @param {string} clientAuthorization - the client authorization request (JWT string)
+ *
+ * @returns {Promise<VerifiedClientAuthorization<T>>} - the verified client authorization request with data type T
+ */
+export async function verifyClientAuthorization<T extends ClientAuthorizationData = ClientAuthorizationData>(
+    clientAuthorization: JWT,
+    options?: VerifyClientOptions
+): Promise<VerifiedClientAuthorization<T>> {
+    const optionsWithDefaults = { ...defaultVerifyClientOptions, ...options };
+
+    const vc = new VerifiableCredential(clientAuthorization);
+
+    const vcId = vc.getId();
+    const issuer = vc.getIssuer();
+    const data: T = vc.getCredentialSubject() as T;
+    const account = await getAccountNameFromDid(issuer).toString();
+
+    const { method, id, fragment } = parseDid(issuer);
+
+    if (method !== 'antelope') {
+        throwError(`Invalid DID method: ${method}`, SdkErrors.InvalidData);
+    }
+
+    async function verifyChainId() {
+        if (optionsWithDefaults.verifyChainId) {
+            const { chain_id: chainId } = await getChainInfo();
+
+            const didChainId = id.split(':')[0];
+
+            if (didChainId !== chainId.toString()) {
+                throwError(
+                    `Invalid chain ID expected ${chainId.toString()} found ${didChainId}`,
+                    SdkErrors.InvalidData
+                );
+            }
+        }
+    }
+
+    const { username } = data;
+
+    async function verifyUsername() {
+        if (optionsWithDefaults.verifyUsername) {
+            if (username) {
+                const tonomyUsername = TonomyUsername.fromFullUsername(username);
+
+                // this will throw if the username is not valid
+                await tonomyContract.getPerson(tonomyUsername);
+            }
+        }
+    }
+
+    // get the request origin and id
+    const origin = vcId?.split('/vc/auth/')[0];
+    const requestId = vcId?.split('/vc/auth/')[1];
+
+    async function verifyOrigin() {
+        if (optionsWithDefaults.verifyOrigin) {
+            if (!origin) throwError('Invalid origin', SdkErrors.InvalidData);
+            const app = await App.getApp(origin);
+
+            if (fragment !== app.accountName.toString()) throwError('Invalid app', SdkErrors.InvalidData);
+        }
+    }
+
+    await Promise.all([vc.verify(), verifyChainId(), verifyUsername(), verifyOrigin()]);
+
+    const request = {
+        jwt: clientAuthorization,
+        origin: origin && origin !== 'undefined' ? origin : undefined,
+        id: requestId ? requestId : '',
+    };
+
+    return {
+        request,
+        did: issuer,
+        account,
+        data,
+        username: username,
+    };
 }
