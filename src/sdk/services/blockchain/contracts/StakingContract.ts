@@ -5,7 +5,7 @@ import { getAccount, getApi } from '../eosio/eosio';
 import { TonomyContract } from './TonomyContract';
 import { Authority } from '../eosio/authority';
 import Debug from 'debug';
-import { addSeconds, getSettings, SECONDS_IN_DAY } from '../../../util';
+import { addSeconds, getSettings, SdkErrors, SECONDS_IN_DAY, throwError } from '../../../util';
 import { amountToAsset, assetToAmount, EosioTokenContract } from './EosioTokenContract';
 
 const debug = Debug('tonomy-sdk:services:blockchain:contracts:staking');
@@ -360,7 +360,7 @@ export class StakingContract {
         });
 
         if (res.rows.length === 0 || res.rows[0].staker !== account.toString())
-            throw new Error('Account not found in staking contract');
+            throwError('Account not found in staking contract', SdkErrors.AccountNotFound);
 
         return res.rows[0];
     }
@@ -427,5 +427,9 @@ export class StakingContract {
             estimatedMonthlyYield,
             settings,
         };
+    }
+
+    async calculateYield(amount: number): Promise<number> {
+        return amount * (Math.pow(1 + StakingContract.MAX_APY, 1 / 12) - 1);
     }
 }
