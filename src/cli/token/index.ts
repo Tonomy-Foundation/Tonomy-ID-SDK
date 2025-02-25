@@ -109,6 +109,24 @@ export async function audit() {
     );
 
     console.log('App accounts: ', appAccounts);
+
+    const peopleAccounts = new Map<string, AccountTokenData>();
+    const people = await getAllPeople();
+
+    await Promise.all(
+        people.map(async (person) => {
+            const balance = await tokenContract.getBalance(person.account_name);
+
+            peopleAccounts.set(person.account_name, {
+                description: 'Person',
+                tokens: balance,
+                vested: 0,
+            });
+        })
+    );
+
+    console.log('People', peopleAccounts);
+
     // get all bootstrap account, apps, people, advisors, block producers and team
     // check allocations on all bootstrapped accounts
     // check all allocations on all apps
@@ -117,7 +135,7 @@ export async function audit() {
     // check all staking allocations in staking contract
 }
 
-export async function getAllApps() {
+async function getAllApps() {
     const api = await getApi();
     const data = await api.v1.chain.get_table_rows({
         code: 'tonomy',
@@ -137,4 +155,45 @@ export async function getAllApps() {
             version: row.version,
         };
     });
+}
+
+async function getAllPeople() {
+    const api = await getApi();
+
+    const limit = 100;
+    let lowerBound = Name.from('1');
+    let peopleFound = 0;
+
+    const people: any[] = [];
+
+    do {
+        console.log(`get_table_rows: people, ${limit}, ${lowerBound.toString()}`);
+        const data = await api.v1.chain.get_table_rows({
+            code: 'tonomy',
+            scope: 'tonomy',
+            table: 'people',
+            limit,
+            lower_bound: lowerBound,
+        });
+
+        const rows = data.rows;
+
+        peopleFound = rows.length;
+
+        people.push(
+            ...rows.map((row) => {
+                return {
+                    account_name: row.account_name,
+                    status: row.status,
+                    username_hash: row.username_hash,
+                    password_salt: row.password_salt,
+                    version: row.version,
+                };
+            })
+        );
+
+        lowerBound = Name.from(rows[rows.length - 1].account_name);
+    } while (peopleFound === limit);
+
+    return people;
 }
