@@ -11,6 +11,7 @@ import {
     opsControlledAccounts,
     systemAccount,
 } from '../bootstrap';
+import Decimal from 'decimal.js';
 
 setSettings(settings.config);
 
@@ -55,9 +56,12 @@ export async function transfer(args: string[]) {
 
 interface AccountTokenData {
     description: string;
-    tokens: number;
-    vested: number;
+    tokens: Decimal;
+    vested: Decimal;
 }
+
+const ZERO_DECIMAL = new Decimal(0);
+const LEOS_SUPPLY = new Decimal(EosioTokenContract.TOTAL_SUPPLY);
 
 interface AppTokenData extends AccountTokenData {
     ramQuota: number;
@@ -77,31 +81,35 @@ export async function audit() {
 
     await Promise.all(
         Array.from(bootstrappedAccounts).map(async (account) => {
-            const balance = await tokenContract.getBalance(account);
+            const balance = new Decimal(await tokenContract.getBalance(account));
 
             bootstrappedData.set(account, {
                 description: 'Bootstrapped',
                 tokens: balance,
-                vested: 0,
+                vested: ZERO_DECIMAL,
             });
         })
     );
 
-    console.log('Bootstrap accounts: ', bootstrappedData);
+    bootstrappedData.forEach((data, key) => {
+        const fraction = data.tokens.div(LEOS_SUPPLY).mul(100).toFixed(8) + '%';
 
+        console.log(`${key.padEnd(14)} ${fraction.padStart(12)} (${data.tokens.toFixed(4).padStart(15)} LEOS)`);
+    });
+    return;
     const appAccounts = new Map<string, AppTokenData>();
 
     const apps = await getAllApps();
 
     await Promise.all(
         apps.map(async (app) => {
-            const balance = await tokenContract.getBalance(app.account_name);
+            const balance = new Decimal(await tokenContract.getBalance(app.account_name));
             const account = await getAccount(app.account_name);
 
             appAccounts.set(app.account_name.toString(), {
                 description: app.description,
                 tokens: balance,
-                vested: 0,
+                vested: ZERO_DECIMAL,
                 ramQuota: account.ram_quota.toNumber(),
                 ramUsage: account.ram_usage.toNumber(),
             });
@@ -115,12 +123,12 @@ export async function audit() {
 
     await Promise.all(
         people.map(async (person) => {
-            const balance = await tokenContract.getBalance(person.account_name);
+            const balance = new Decimal(await tokenContract.getBalance(person.account_name));
 
             peopleAccounts.set(person.account_name, {
                 description: 'Person',
                 tokens: balance,
-                vested: 0,
+                vested: ZERO_DECIMAL,
             });
         })
     );
