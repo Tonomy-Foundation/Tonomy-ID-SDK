@@ -716,7 +716,7 @@ describe('VestingContract class', () => {
         });
 
         test('Successfully get unlockable, locked, and total allocations', async () => {
-            expect.assertions(27);
+            expect.assertions(25);
 
             const { user } = await createRandomID();
             const accountName = (await user.getAccountName()).toString();
@@ -771,10 +771,8 @@ describe('VestingContract class', () => {
             expect(balances.unlockable).toBe(0);
             expect(balances.unlocked).toBe(0);
             expect(balances.locked).toBe(0);
-            expect(balances.allocationsDetails[0].totalAllocation).toBe(0);
-            expect(balances.allocationsDetails[0].locked).toBe(0);
-            expect(balances.allocationsDetails[0].unlockAtVestingStart).toBe(0);
-
+            expect(balances.allocationsDetails.length).toBe(0);
+          
 
             const trx2 = await vestingContract.assignTokens('coinsale.tmy', accountName, '2.000000 LEOS', 999, signer);
 
