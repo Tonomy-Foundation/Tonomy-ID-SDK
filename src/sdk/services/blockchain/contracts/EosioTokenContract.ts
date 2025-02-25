@@ -102,7 +102,8 @@ class EosioTokenContract {
 
         if (assets.length === 0) return 0;
 
-        return assets[0].value;
+        // @ts-expect-error quantity is not number
+        return assets[0].quantity;
     }
 }
 

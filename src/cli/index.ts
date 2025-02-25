@@ -5,7 +5,7 @@ import bootstrap from './bootstrap';
 import msig from './msig';
 import accounts from './accounts';
 import vesting from './vesting';
-import { transfer } from './token';
+import { audit, transfer } from './token';
 
 const args: string[] = process.argv.slice(2);
 
@@ -26,8 +26,14 @@ async function main() {
         await msig(args.slice(1));
     } else if (args[0] === 'vesting') {
         await vesting(args.slice(1));
-    } else if (args[0] === 'transfer') {
-        await transfer(args.slice(1));
+    } else if (args[0] === 'token') {
+        if (args[1] === 'transfer') {
+            await transfer(args.slice(1));
+        } else if (args[1] === 'audit') {
+            await audit();
+        } else {
+            printCliHelp();
+        }
     } else {
         printCliHelp();
     }
