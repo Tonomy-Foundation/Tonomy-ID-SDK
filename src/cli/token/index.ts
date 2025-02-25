@@ -8,7 +8,7 @@ setSettings(settings.config);
 
 const tokenContract = EosioTokenContract.Instance;
 
-export default async function transfer(args: string[]) {
+export async function transfer(args: string[]) {
     const privateKey = PrivateKey.from(process.env.SIGNING_KEY || '');
     const signer = createSigner(privateKey);
 

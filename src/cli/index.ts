@@ -5,7 +5,7 @@ import bootstrap from './bootstrap';
 import msig from './msig';
 import accounts from './accounts';
 import vesting from './vesting';
-import transfer from './transfer';
+import { transfer } from './token';
 
 const args: string[] = process.argv.slice(2);
 
