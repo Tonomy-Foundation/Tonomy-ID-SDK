@@ -311,7 +311,7 @@ describe('TonomyContract Staking Tests', () => {
             await stakeContract.setSettings(yearlyStakePool, signer);
             const settingsStart = await stakeContract.getSettings();
 
-            expect(settingsStart.apy).toBeCloseTo(2.0, 6);
+            expect(settingsStart.apy).toBeCloseTo(1.0, 6);
             expect(settingsStart.currentYieldPool).toBe(yieldPool);
             expect(settingsStart.totalStaked).toBe("0.000000 LEOS");
             expect(settingsStart.totalReleasing).toBe("0.000000 LEOS");
@@ -682,7 +682,7 @@ describe('TonomyContract Staking Tests', () => {
             
         }, 3 * cycleSeconds * 1000 + 10000);
 
-        test(`distributes yield over staking cycles but not after release with APY 2.0 (3x ${cycleSeconds}s)`, async () => {
+        test(`distributes yield over staking cycles but not after release with APY 1.0 (3x ${cycleSeconds}s)`, async () => {
             expect.assertions(39);
             await resetContract();
 

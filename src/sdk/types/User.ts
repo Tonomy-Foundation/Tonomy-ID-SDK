@@ -10,6 +10,8 @@ import { DID, LoginRequest, WalletRequest, URL as URLtype } from '../util';
 import { PublicKey } from '@wharfkit/antelope';
 import { ResponsesManager } from '../helpers/responsesManager';
 import { AppStatusEnum } from './AppStatusEnum';
+import { Signer } from '../services/blockchain';
+import { KeyManagerLevel } from '../storage/keymanager';
 
 type KeyFromPasswordFn = (
     password: string,
@@ -65,6 +67,7 @@ export interface IUserBase {
     getUsername(): Promise<TonomyUsername>;
     getDid(): Promise<string>;
     getIssuer(): Promise<Issuer>;
+    getSigner(level: KeyManagerLevel): Promise<Signer>;
 }
 
 export interface IUserAuthentication extends IUserBase {
