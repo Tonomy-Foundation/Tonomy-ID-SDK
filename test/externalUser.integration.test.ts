@@ -43,6 +43,7 @@ import {
     externalWebsiteOnLogout,
     externalWebsiteSignVc,
     externalWebsiteSignTransaction,
+    externalWebsiteClientAuth,
 } from './helpers/externalUser';
 import { createStorageFactory } from './helpers/storageFactory';
 import { objToBase64Url } from '../src/sdk/util/base64';
@@ -158,11 +159,11 @@ describe('Login to external website', () => {
     });
 
     async function runExternalUserLoginTest(testOptions: ExternalUserLoginTestOptions) {
-        let expectedTests = 47;
+        let expectedTests = 55;
 
         if (testOptions.dataRequest) {
             expectedTests += 1;
-            if (testOptions.dataRequestUsername) expectedTests += 1;
+            if (testOptions.dataRequestUsername) expectedTests += 3;
         }
 
         expect.assertions(expectedTests);
@@ -338,9 +339,9 @@ describe('Login to external website', () => {
 
         await externalWebsiteSignVc(EXTERNAL_WEBSITE_user);
 
-        // #####External website user (callback page) #####
-        // ################################
         await externalWebsiteSignTransaction(EXTERNAL_WEBSITE_user, externalApp);
+
+        await externalWebsiteClientAuth(EXTERNAL_WEBSITE_user, externalApp, testOptions);
 
         await externalWebsiteOnLogout(EXTERNAL_WEBSITE_jsKeyManager, EXTERNAL_WEBSITE_storage_factory);
 
