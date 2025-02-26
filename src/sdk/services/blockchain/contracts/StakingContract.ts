@@ -269,9 +269,8 @@ export class StakingContract {
     /**
      * Get staking allocation details with improved types and calculated monthly yield.
      * @param staker - account name.
-     * @param settings - current staking settings (including APY).
      */
-    async getAllocations(staker: NameType, settings: StakingSettings): Promise<StakingAllocation[]> {
+    async getAllocations(staker: NameType): Promise<StakingAllocation[]> {
         const allocations = await this.getAllocationsData(staker);
         const allocationDetails: StakingAllocation[] = [];
 
@@ -393,7 +392,7 @@ export class StakingContract {
      */
     async getAccountState(account: NameType): Promise<StakingAccountState> {
         const settings = await this.getSettings();
-        const allocations = await this.getAllocations(account, settings);
+        const allocations = await this.getAllocations(account);
         const stakingAccount = await this.getAccount(account);
 
         let totalStaked = 0;
