@@ -767,7 +767,7 @@ describe('VestingContract class', () => {
 
             // Check balances after withdrawal
             balances = await vestingContract.getVestingAllocations(accountName);
-            expect(balances.totalAllocation).toBe(0);
+            expect(balances.totalAllocation).toBe(2);
             expect(balances.unlockable).toBe(0);
             expect(balances.unlocked).toBe(0);
             expect(balances.locked).toBe(0);

@@ -269,8 +269,9 @@ export class StakingContract {
     /**
      * Get staking allocation details with improved types and calculated monthly yield.
      * @param staker - account name.
+     * @param settings - current staking settings (including APY).
      */
-    async getAllocations(staker: NameType): Promise<StakingAllocation[]> {
+    async getAllocations(staker: NameType, settings: StakingSettings): Promise<StakingAllocation[]> {
         const allocations = await this.getAllocationsData(staker);
         const allocationDetails: StakingAllocation[] = [];
 
@@ -280,7 +281,7 @@ export class StakingContract {
             const monthlyYield = amountToAsset(
                 allocation.unstake_requested
                     ? 0
-                    : await this.calculateMonthlyYield(assetToAmount(allocation.tokens_staked)),
+                    : await this.calculateMonthlyYield(assetToAmount(allocation.tokens_staked), settings),
                 'LEOS'
             ); // Monthly yield from yearly APY.
             const yieldSoFar = amountToAsset(
@@ -392,7 +393,7 @@ export class StakingContract {
      */
     async getAccountState(account: NameType): Promise<StakingAccountState> {
         const settings = await this.getSettings();
-        const allocations = await this.getAllocations(account);
+        const allocations = await this.getAllocations(account, settings);
         const stakingAccount = await this.getAccount(account);
 
         let totalStaked = 0;
@@ -428,9 +429,7 @@ export class StakingContract {
         };
     }
 
-    async calculateMonthlyYield(amount: number): Promise<number> {
-        const settings = await this.getSettings();
-
+    async calculateMonthlyYield(amount: number, settings: StakingSettings): Promise<number> {
         return amount * (Math.pow(1 + settings.apy, 1 / 12) - 1);
     }
 }
