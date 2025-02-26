@@ -771,8 +771,7 @@ describe('VestingContract class', () => {
             expect(balances.unlockable).toBe(0);
             expect(balances.unlocked).toBe(2);
             expect(balances.locked).toBe(0);
-            expect(balances.allocationsDetails.length).toBe(0);
-          
+            expect(balances.allocationsDetails.length).toBe(1);
 
             const trx2 = await vestingContract.assignTokens('coinsale.tmy', accountName, '2.000000 LEOS', 999, signer);
 
