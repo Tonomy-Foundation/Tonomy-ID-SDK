@@ -27,8 +27,8 @@ export async function getAllUniqueHolders(print = false) {
 
     if (getSettings().environment === 'testnet') {
         host = 'test.pangea.eosusa.io';
-    } else {
-        throw new Error('environment not supported for fetching all vesting holders');
+    } else if (getSettings().environment !== 'production') {
+        throw new Error(`environment ${getSettings().environment} not supported for fetching all vesting holders`);
     }
 
     do {

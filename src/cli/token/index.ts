@@ -1,6 +1,12 @@
 import { Checksum256, Name, PrivateKey } from '@wharfkit/antelope';
 import { AccountType, TonomyUsername, EosioTokenContract } from '../../sdk';
-import { assetToAmount, createSigner, getAccount, getAccountNameFromUsername } from '../../sdk/services/blockchain';
+import {
+    assetToAmount,
+    createSigner,
+    getAccount,
+    getAccountNameFromUsername,
+    vestingCategories as vestingCategoriesList,
+} from '../../sdk/services/blockchain';
 import { getApi } from '../../sdk/services/blockchain/eosio/eosio';
 import settings from '../settings';
 import {
@@ -126,9 +132,10 @@ export async function audit() {
     );
     vestedTokensPerCategory.forEach((tokens, category) => {
         const fraction = tokens.mul(100).dividedBy(EosioTokenContract.TOTAL_SUPPLY).toFixed(8) + '%';
+        const categoryName = vestingCategoriesList.get(category)?.name;
 
         console.log(
-            `> category ${category.toString().padStart(2)}: ${tokens.toFixed(4).padStart(15)} LEOS (${fraction.padStart(12)})`
+            `> category ${category.toString().padStart(2)}: ${tokens.toFixed(4).padStart(15)} LEOS (${fraction.padStart(12)}) ${categoryName}`
         );
     });
 
