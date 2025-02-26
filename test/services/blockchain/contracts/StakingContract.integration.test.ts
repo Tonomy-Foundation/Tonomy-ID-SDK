@@ -125,7 +125,7 @@ describe('TonomyContract Staking Tests', () => {
                 await stakeContract.addYield("infra.tmy", "0.500000 LEOS", signer);
             } catch (e) {
                 debug('Fails add yield if below minimum amount', e)
-                expect(e.error.details[0].message).toContain("Amount must be greater than or equal to 1000.000000 LEOS");
+                expect(e.error.details[0].message).toContain("Amount must be greater than or equal to 1.000000 LEOS");
             }
         });
 
