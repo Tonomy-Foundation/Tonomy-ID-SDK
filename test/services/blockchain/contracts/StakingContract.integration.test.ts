@@ -377,7 +377,7 @@ describe('TonomyContract Staking Tests', () => {
             });
       
             test('Successfully request unstake after lockup period and update tables', async () => {
-                expect.assertions(7);
+                expect.assertions(10);
 
                 await sleepUntil(addSeconds(allocation.unstakeableTime, 1));
                 const now = new Date();
@@ -401,6 +401,19 @@ describe('TonomyContract Staking Tests', () => {
 
                 expect(assetToAmount(updatedSettings.totalStaked) - assetToAmount(stakeSettings.totalStaked)).toBeCloseTo(-assetToAmount(stakeAmount));
                 expect(assetToAmount(updatedSettings.totalReleasing) - assetToAmount(stakeSettings.totalReleasing)).toBeCloseTo(assetToAmount(stakeAmount));
+                const cronTrx = await stakeContract.cron(signer);
+
+                expect(cronTrx.processed.receipt.status).toBe('executed');
+                // Verify that the allocation is removed from the table
+                const allocations2 = await stakeContract.getAllocations(accountName, stakeSettings);
+
+                expect(allocations2.find(a => a.id === allocationId)).toBeUndefined();
+ 
+                // Verify settings update: total_releasing decreases accordingly (should be zero if only one allocation)
+                const updatedSettings2 = await stakeContract.getSettings();
+ 
+                expect(assetToAmount(updatedSettings2.totalReleasing)-assetToAmount(stakeSettings.totalReleasing)).toBeCloseTo(-assetToAmount(stakeAmount));
+ 
             });
       
             test('Fails if unstake is requested twice for the same allocation', async () => {
@@ -450,6 +463,8 @@ describe('TonomyContract Staking Tests', () => {
                 expect(e.error.details[0].message).toContain("Staking allocation not found");
             }
         });
+
+       
     });
       
     describe('releasetoken()', () => {
