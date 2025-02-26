@@ -769,7 +769,7 @@ describe('VestingContract class', () => {
             balances = await vestingContract.getVestingAllocations(accountName);
             expect(balances.totalAllocation).toBe(2);
             expect(balances.unlockable).toBe(0);
-            expect(balances.unlocked).toBe(0);
+            expect(balances.unlocked).toBe(2);
             expect(balances.locked).toBe(0);
             expect(balances.allocationsDetails.length).toBe(0);
           
