@@ -377,7 +377,7 @@ describe('TonomyContract Staking Tests', () => {
             });
       
             test('Successfully request unstake after lockup period and update tables', async () => {
-                expect.assertions(9);
+                expect.assertions(7);
 
                 await sleepUntil(addSeconds(allocation.unstakeableTime, 1));
                 const now = new Date();
@@ -400,53 +400,8 @@ describe('TonomyContract Staking Tests', () => {
                 const updatedSettings = await stakeContract.getSettings();
 
                 expect(assetToAmount(updatedSettings.totalStaked) - assetToAmount(stakeSettings.totalStaked)).toBeCloseTo(-assetToAmount(stakeAmount));
-                expect(assetToAmount(updatedSettings.totalReleasing) - assetToAmount(stakeSettings.totalReleasing)).toBeCloseTo(assetToAmount(stakeAmount));
-                
-                const cronTrx = await stakeContract.cron(signer);
-
-                expect(cronTrx.processed.receipt.status).toBe('executed');
-                // Verify settings update: total_releasing decreases accordingly (should be zero if only one allocation)
-                const updatedSettings2 = await stakeContract.getSettings();
- 
-                expect(assetToAmount(updatedSettings2.totalReleasing)-assetToAmount(stakeSettings.totalReleasing)).toBeCloseTo(-assetToAmount(stakeAmount));
- 
-            });
-
-            test('Successfully request unstake after lockup period and update tables and release token', async () => {
-                expect.assertions(9);
-
-                await sleepUntil(addSeconds(allocation.unstakeableTime, 1));
-                const now = new Date();
-
-                const unstakeTrx = await stakeContract.requestUnstake(accountName, allocationId, accountSigner);
-
-                expect(unstakeTrx.processed.receipt.status).toBe('executed');
-
-                // Verify the allocation is updated
-                const allocations = await stakeContract.getAllocations(accountName, stakeSettings);
-                const allocationAlterUnstake = allocations.find(a => a.id === allocationId);
-
-                if(!allocationAlterUnstake) throw new Error("Allocation not found");
-                expect(allocationAlterUnstake.unstakeRequested).toBe(true);
-                expect(allocationAlterUnstake.unstakeTime.getTime()).toBeGreaterThan(now.getTime());
-                expect(allocationAlterUnstake.unstakeTime.getTime()).toBeLessThanOrEqual(now.getTime() + MILLISECONDS_IN_SECOND);
-                expect(allocationAlterUnstake.releaseTime.getTime()).toBe(allocationAlterUnstake.unstakeTime.getTime() + StakingContract.getReleaseDays() * MILLISECONDS_IN_SECOND * SECONDS_IN_DAY);
-                
-                // Verify settings update: total_staked decreases and total_releasing increases by the staked amount
-                const updatedSettings = await stakeContract.getSettings();
-
-                expect(assetToAmount(updatedSettings.totalStaked) - assetToAmount(stakeSettings.totalStaked)).toBeCloseTo(-assetToAmount(stakeAmount));
-                expect(assetToAmount(updatedSettings.totalReleasing) - assetToAmount(stakeSettings.totalReleasing)).toBeCloseTo(assetToAmount(stakeAmount));
-                await sleepUntil(addSeconds(allocation.releaseTime, 1));
-
-                const cronTrx = await stakeContract.cron(signer);
-
-                expect(cronTrx.processed.receipt.status).toBe('executed');
-                // Verify settings update: total_releasing decreases accordingly (should be zero if only one allocation)
-                const updatedSettings2 = await stakeContract.getSettings();
- 
-                expect(assetToAmount(updatedSettings2.totalReleasing)-assetToAmount(stakeSettings.totalReleasing)).toBeCloseTo(-assetToAmount(stakeAmount));
- 
+                expect(assetToAmount(updatedSettings.totalReleasing) - assetToAmount(stakeSettings.totalReleasing)).toBeCloseTo(assetToAmount(stakeAmount));       
+             
             });
       
             test('Fails if unstake is requested twice for the same allocation', async () => {

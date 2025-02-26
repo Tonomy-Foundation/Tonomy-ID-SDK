@@ -281,7 +281,7 @@ export class StakingContract {
             const monthlyYield = amountToAsset(
                 allocation.unstake_requested
                     ? 0
-                    : assetToAmount(allocation.tokens_staked) * (Math.pow(1 + settings.apy, 1 / 12) - 1),
+                    : await this.calculateMonthlyYield(assetToAmount(allocation.tokens_staked)),
                 'LEOS'
             ); // Monthly yield from yearly APY.
             const yieldSoFar = amountToAsset(
@@ -429,7 +429,9 @@ export class StakingContract {
         };
     }
 
-    async calculateYield(amount: number): Promise<number> {
-        return amount * (Math.pow(1 + StakingContract.MAX_APY, 1 / 12) - 1);
+    async calculateMonthlyYield(amount: number): Promise<number> {
+        const settings = await this.getSettings();
+
+        return amount * (Math.pow(1 + settings.apy, 1 / 12) - 1);
     }
 }
