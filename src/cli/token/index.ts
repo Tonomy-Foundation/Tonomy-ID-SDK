@@ -58,12 +58,6 @@ export async function transfer(args: string[]) {
     console.log('Transaction ID: ', JSON.stringify(res, null, 2));
 }
 
-interface AccountTokenData {
-    description: string;
-    tokens: Decimal;
-    vested: Decimal;
-}
-
 const ZERO_DECIMAL = new Decimal(0);
 const LEOS_SUPPLY_DECIMAL = new Decimal(EosioTokenContract.TOTAL_SUPPLY);
 
@@ -78,24 +72,27 @@ export async function audit() {
     for (const account of foundControlledAccounts) bootstrappedAccounts.add(account);
     for (const account of opsControlledAccounts) bootstrappedAccounts.add(account);
 
-    const bootstrappedData = new Map<string, AccountTokenData>();
+    // const bootstrappedData = new Map<string, AccountTokenData>();
 
-    await Promise.all(
-        Array.from(bootstrappedAccounts).map(async (account) => {
-            const balance = new Decimal(await tokenContract.getBalance(account));
+    const bootstrappedData = (
+        await Promise.all(
+            Array.from(bootstrappedAccounts).map(async (account) => {
+                const balance = await tokenContract.getBalanceDecimal(account);
 
-            bootstrappedData.set(account, {
-                description: 'Bootstrapped',
-                tokens: balance,
-                vested: ZERO_DECIMAL,
-            });
-        })
-    );
+                return {
+                    account,
+                    description: 'Bootstrapped',
+                    tokens: balance,
+                    vested: ZERO_DECIMAL,
+                };
+            })
+        )
+    ).sort((a, b) => b.tokens.cmp(a.tokens));
 
-    bootstrappedData.forEach((data, account) => {
-        const fraction = data.tokens.div(LEOS_SUPPLY_DECIMAL).mul(100).toFixed(8) + '%';
+    bootstrappedData.forEach(({ account, tokens }) => {
+        const fraction = tokens.div(LEOS_SUPPLY_DECIMAL).mul(100).toFixed(8) + '%';
 
-        console.log(`${account.padEnd(14)} ${data.tokens.toFixed(4).padStart(15)} LEOS (${fraction.padStart(12)})`);
+        console.log(`${account.padEnd(14)} ${tokens.toFixed(4).padStart(16)} LEOS (${fraction.padStart(12)})`);
     });
 
     console.log('');
@@ -144,21 +141,23 @@ export async function audit() {
 
     const apps = await getAllApps();
 
-    const appAccounts = await Promise.all(
-        apps.map(async (app) => {
-            const balance = new Decimal(await tokenContract.getBalance(app.account_name));
-            const account = await getAccount(app.account_name);
+    const appAccounts = (
+        await Promise.all(
+            apps.map(async (app) => {
+                const balance = await tokenContract.getBalanceDecimal(app.account_name);
+                const account = await getAccount(app.account_name);
 
-            return {
-                account: app.account_name.toString(),
-                description: app.description,
-                tokens: balance,
-                vested: ZERO_DECIMAL,
-                ramQuota: account.ram_quota.toNumber(),
-                ramUsage: account.ram_usage.toNumber(),
-            };
-        })
-    );
+                return {
+                    account: app.account_name.toString(),
+                    description: app.description,
+                    tokens: balance,
+                    vested: ZERO_DECIMAL,
+                    ramQuota: account.ram_quota.toNumber(),
+                    ramUsage: account.ram_usage.toNumber(),
+                };
+            })
+        )
+    ).sort((a, b) => b.tokens.cmp(a.tokens));
 
     const totalAllTokens = appAccounts.reduce((previous, app) => previous.add(app.tokens), ZERO_DECIMAL);
 
@@ -166,6 +165,15 @@ export async function audit() {
     console.log(
         `Total app tokens:  ${totalAllTokens.toFixed(4).padStart(14)} LEOS (${totalAllTokens.mul(100).dividedBy(EosioTokenContract.TOTAL_SUPPLY).toFixed(8).padStart(11)}%)`
     );
+
+    for (const app of appAccounts) {
+        if (app.tokens?.eq(ZERO_DECIMAL)) continue;
+        const fraction = app.tokens.mul(100).div(EosioTokenContract.TOTAL_SUPPLY).toFixed(8) + '%';
+
+        console.log(
+            `> ${app.account.padEnd(14)} ${app.tokens.toFixed(4).padStart(16)} LEOS (${fraction.padStart(12)}) ${app.description}`
+        );
+    }
 
     console.log('');
     console.log('Fetching people tokens');
@@ -179,7 +187,7 @@ export async function audit() {
 
         const batchResults = await Promise.all(
             batch.map(async (person) => {
-                const balance = new Decimal(await tokenContract.getBalance(person.account_name));
+                const balance = await tokenContract.getBalanceDecimal(person.account_name);
 
                 return {
                     account: person.account_name,
@@ -193,12 +201,25 @@ export async function audit() {
         peopleAccounts.push(...batchResults);
     }
 
+    peopleAccounts.sort((a, b) => b.tokens.cmp(a.tokens));
+
     const totalPeopleTokens = peopleAccounts.reduce((previous, person) => previous.add(person.tokens), ZERO_DECIMAL);
 
     console.log('Total people', people.length);
     console.log(
         `Total people tokens:  ${totalPeopleTokens.toFixed(4).padStart(14)} LEOS (${totalPeopleTokens.mul(100).dividedBy(EosioTokenContract.TOTAL_SUPPLY).toFixed(8).padStart(11)}%)`
     );
+
+    for (const person of peopleAccounts) {
+        if (person.tokens.eq(ZERO_DECIMAL)) continue;
+        const fraction = person.tokens.mul(100).div(EosioTokenContract.TOTAL_SUPPLY).toFixed(8) + '%';
+
+        console.log(
+            `> ${person.account.toString().padEnd(14)} ${person.tokens.toFixed(4).padStart(15)} LEOS (${fraction.padStart(12)})`
+        );
+    }
+
+    // TODO: check block producer accounts
 
     // TODO: check all staking allocations in staking contract
 }

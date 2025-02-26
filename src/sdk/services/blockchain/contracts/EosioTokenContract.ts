@@ -3,6 +3,7 @@ import { API, Name, NameType } from '@wharfkit/antelope';
 import { Signer, transact } from '../eosio/transaction';
 import { getApi } from '../eosio/eosio';
 import { getSettings } from '../../../util';
+import Decimal from 'decimal.js';
 
 const CONTRACT_NAME = 'eosio.token';
 
@@ -102,8 +103,16 @@ class EosioTokenContract {
 
         if (assets.length === 0) return 0;
 
-        // @ts-expect-error quantity is not number
-        return assets[0].quantity;
+        return assets[0].value;
+    }
+
+    async getBalanceDecimal(account: NameType): Promise<Decimal> {
+        const assets = await (
+            await getApi()
+        ).v1.chain.get_currency_balance(CONTRACT_NAME, account, getSettings().currencySymbol);
+
+        if (assets.length === 0) return new Decimal(0);
+        return new Decimal(assets[0].quantity);
     }
 }
 
