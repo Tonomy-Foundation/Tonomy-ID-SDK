@@ -1,4 +1,4 @@
-import settings from '../bootstrap/settings';
+import settings from '../settings';
 import { StandardProposalOptions, createProposal, executeProposal } from '.';
 import { AccountType, SdkError, SdkErrors, TonomyUsername } from '../../sdk';
 import { getAccount, getAccountNameFromUsername, LEOS_CURRENT_PRICE } from '../../sdk/services/blockchain';

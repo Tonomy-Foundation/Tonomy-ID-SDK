@@ -6,8 +6,13 @@ import msig from './msig';
 import accounts from './accounts';
 import vesting from './vesting';
 import { audit, transfer } from './token';
+import { setSettings } from '../sdk';
+import settings from './settings';
 
 const args: string[] = process.argv.slice(2);
+
+setSettings(settings.config);
+console.log('Using environment', settings.env);
 
 async function main() {
     console.log('Arguments: ', args);
@@ -56,7 +61,8 @@ export function printCliHelp() {
                 vesting assign <sender> <username/accountName> <amount> <category>
                 vesting audit
                 vesting setsettings
-                transfer <from> <username/accountName> <amount> <memo>
+                token transfer <from> <username/accountName> <amount> <memo>
+                token audit
         `);
 }
 

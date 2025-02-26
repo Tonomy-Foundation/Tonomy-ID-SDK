@@ -1,4 +1,4 @@
-import settings from '../bootstrap/settings';
+import settings from '../settings';
 import { Authority } from '../../sdk/services/blockchain';
 import { StandardProposalOptions, createProposal, executeProposal } from '.';
 

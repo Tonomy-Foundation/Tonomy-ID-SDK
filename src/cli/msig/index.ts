@@ -1,7 +1,7 @@
 import { PrivateKey, Name, Checksum256, NameType } from '@wharfkit/antelope';
-import { EosioMsigContract, setSettings } from '../../sdk';
+import { EosioMsigContract } from '../../sdk';
 import { ActionData, createSigner } from '../../sdk/services/blockchain';
-import settings from '../bootstrap/settings';
+import settings from '../settings';
 import { govMigrate } from './govMigrate';
 import { newAccount } from './newAccount';
 import { transfer } from './transfer';
@@ -28,15 +28,6 @@ if (!settings.isProduction()) {
 }
 
 export default async function msig(args: string[]) {
-    setSettings({
-        blockchainUrl: settings.config.blockchainUrl,
-        loggerLevel: settings.config.loggerLevel,
-        currencySymbol: settings.config.currencySymbol,
-        accountSuffix: settings.config.accountSuffix,
-    });
-
-    console.log('Using environment', settings.env);
-
     let autoExecute = false,
         dryRun = false;
 

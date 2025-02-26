@@ -2,8 +2,7 @@ import { Checksum256, Name, PrivateKey } from '@wharfkit/antelope';
 import { AccountType, TonomyUsername, EosioTokenContract } from '../../sdk';
 import { createSigner, getAccount, getAccountNameFromUsername } from '../../sdk/services/blockchain';
 import { getApi } from '../../sdk/services/blockchain/eosio/eosio';
-import { setSettings } from '../../sdk/util/settings';
-import settings from '../bootstrap/settings';
+import settings from '../settings';
 import {
     foundAccount,
     foundControlledAccounts,
@@ -12,8 +11,6 @@ import {
     systemAccount,
 } from '../bootstrap';
 import Decimal from 'decimal.js';
-
-setSettings(settings.config);
 
 const tokenContract = EosioTokenContract.Instance;
 
@@ -97,6 +94,8 @@ export async function audit() {
         console.log(`${key.padEnd(14)} ${fraction.padStart(12)} (${data.tokens.toFixed(4).padStart(15)} LEOS)`);
     });
     return;
+
+    // check how much total vested LEOS there is in the different categories and print. this shows us sales
     const appAccounts = new Map<string, AppTokenData>();
 
     const apps = await getAllApps();

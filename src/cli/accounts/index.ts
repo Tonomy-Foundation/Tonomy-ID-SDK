@@ -1,9 +1,6 @@
 import { Name } from '@wharfkit/antelope';
 import { AccountType, SdkError, SdkErrors, TonomyContract, TonomyUsername, getAccountInfo } from '../../sdk';
-import { setSettings } from '../../sdk/util/settings';
-import settings from '../bootstrap/settings';
-
-setSettings(settings.config);
+import settings from '../settings';
 
 const tonomyContract = TonomyContract.Instance;
 
