@@ -55,7 +55,7 @@ First make sure that contracts are complied with the BUILD_TEST flag:
 ```bash
 export BUILD_TEST=true
 ./Tonomy-Contracts/delete-built-contracts.sh
-./Tonomy-Contracts/build_contracts.sh
+./Tonomy-Contracts/build-contracts.sh
 ```
 
 Then run the blockchain or Tonomy Communication service locally.
