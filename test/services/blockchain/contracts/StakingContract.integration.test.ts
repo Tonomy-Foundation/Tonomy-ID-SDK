@@ -759,7 +759,7 @@ describe('TonomyContract Staking Tests', () => {
             await stakeContract.requestUnstake(accountName, allocations[0].id, accountSigner);
 
             // Wait for one full staking cycles
-            debug(`Waiting for till end of 3nd staking cycle: (${cycleSeconds} seconds)`);
+            debug(`Waiting for till end of 3rd staking cycle: (${cycleSeconds} seconds)`);
             await sleepUntil(addSeconds(initialStakedTime, 3*cycleSeconds));
 
             const afterUnstake = await getStakingState();
