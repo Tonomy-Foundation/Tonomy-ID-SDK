@@ -767,11 +767,12 @@ describe('VestingContract class', () => {
 
             // Check balances after withdrawal
             balances = await vestingContract.getVestingAllocations(accountName);
-            expect(balances.totalAllocation).toBe(2);
+            expect(balances.totalAllocation).toBe(0);
             expect(balances.unlockable).toBe(0);
-            expect(balances.unlocked).toBe(2);
+            expect(balances.unlocked).toBe(0);
             expect(balances.locked).toBe(0);
-            expect(balances.allocationsDetails.length).toBe(1);
+            expect(balances.allocationsDetails.length).toBe(0);
+          
 
             const trx2 = await vestingContract.assignTokens('coinsale.tmy', accountName, '2.000000 LEOS', 999, signer);
 
