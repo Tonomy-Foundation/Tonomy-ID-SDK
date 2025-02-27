@@ -82,7 +82,7 @@ export class StakingContract {
     static getLockedDays = () => (getSettings().environment !== 'test' ? 14 : 10 / SECONDS_IN_DAY); // 14 days or 10 seconds
     static getReleaseDays = () => (getSettings().environment !== 'test' ? 5 : 5 / SECONDS_IN_DAY); // 5 days or 5 seconds
     static getMinimumTransfer = () => (getSettings().environment !== 'test' ? 1000 : 1); // 1000 LEOS or 1 LEOS
-    static getMaxAllocations = () => (getSettings().environment !== 'test' ? 100 : 5); // 100 allocations or 5 allocations
+    static getMaxAllocations = () => (getSettings().environment !== 'test' ? 20 : 5); // 100 allocations or 5 allocations
     static getStakingCycleHours = () => (getSettings().environment !== 'test' ? 24 : 1 / 60); // 24 hours or 1 minute
     static MAX_APY = 1.0;
     static STAKING_APY_TARGET = 50 / 100; // 50%
