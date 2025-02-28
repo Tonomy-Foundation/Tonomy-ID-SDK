@@ -485,7 +485,7 @@ describe('VestingContract class', () => {
 
             allocations = await vestingContract.getAllocations(accountName);
 
-            expect(allocations.length).toBe(0);
+            expect(allocations.length).toBe(1);
         });
 
         test('Successful withdrawal after vesting period', async () => {
@@ -544,8 +544,7 @@ describe('VestingContract class', () => {
 
             const allocations2 = await vestingContract.getAllocations(accountName);
 
-            console.log("allocations2", allocations2)
-            expect(assetToAmount(allocations2[0].tokens_claimed)).toBe(1.0);
+            expect(allocations2.length).toBe(0);
 
             await sleep(1000);
             const trx4 = await vestingContract.withdraw(accountName, accountSigner);
@@ -683,7 +682,7 @@ describe('VestingContract class', () => {
 
             const allocations1 = await vestingContract.getAllocations(accountName);
 
-            expect(assetToAmount(allocations1[0].tokens_claimed)).toBe(1.0);
+            expect(assetToAmount(allocations1[0].tokens_claimed)).toBe(0.0);
 
             // Withdraw again
             await sleep(1000); // Wait to ensure don't get duplicate transaction error

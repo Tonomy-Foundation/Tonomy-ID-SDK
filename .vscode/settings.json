@@ -14,7 +14,7 @@
         "onStartup": false
     },
     "jest.debugMode": false,
-    "jest.jestCommandLine": "yarn run test",
+    "jest.jestCommandLine": "DEBUG=* yarn run test",
     "jest.testExplorer": {
         "enabled": true
     },

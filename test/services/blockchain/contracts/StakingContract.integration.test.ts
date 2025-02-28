@@ -485,11 +485,13 @@ describe('TonomyContract Staking Tests', () => {
                 await sleepUntil(addSeconds(allocation.releaseTime, 1));
                 const releaseTrx = await stakeContract.releaseToken(accountName, allocationId, accountSigner);
 
+                debug("releaseTrxr eleaseTrx", releaseTrx)
                 expect(releaseTrx.processed.receipt.status).toBe('executed');
 
                 // check the inline action sends the stake amount
                 const inlineActions = releaseTrx.processed.action_traces[0].inline_traces;
 
+                debug("inlineActions inlineActions", inlineActions)
                 expect(inlineActions.length).toBe(1);
                 expect(inlineActions[0].act.name).toBe("transfer");
                 expect(inlineActions[0].act.account).toBe("eosio.token");
