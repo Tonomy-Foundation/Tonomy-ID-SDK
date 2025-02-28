@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 import { Checksum256, Name, PrivateKey } from '@wharfkit/antelope';
 import { AccountType, TonomyUsername, EosioTokenContract } from '../../sdk';
 import {
@@ -69,6 +70,7 @@ export async function audit() {
     bootstrappedAccounts.add(foundAccount);
     bootstrappedAccounts.add(operationsAccount);
     bootstrappedAccounts.add(systemAccount);
+    if (settings.env === 'production') bootstrappedAccounts.add('advteam.tmy');
     for (const account of foundControlledAccounts) bootstrappedAccounts.add(account);
     for (const account of opsControlledAccounts) bootstrappedAccounts.add(account);
 
