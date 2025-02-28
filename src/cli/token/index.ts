@@ -2,7 +2,9 @@
 import { Checksum256, Name, PrivateKey } from '@wharfkit/antelope';
 import { AccountType, TonomyUsername, EosioTokenContract } from '../../sdk';
 import {
+    amountToSupplyPercentage,
     assetToAmount,
+    assetToDecimal,
     createSigner,
     getAccount,
     getAccountNameFromUsername,
@@ -60,7 +62,6 @@ export async function transfer(args: string[]) {
 }
 
 const ZERO_DECIMAL = new Decimal(0);
-const LEOS_SUPPLY_DECIMAL = new Decimal(EosioTokenContract.TOTAL_SUPPLY);
 
 export async function audit() {
     console.log('');
@@ -92,7 +93,7 @@ export async function audit() {
     ).sort((a, b) => b.tokens.cmp(a.tokens));
 
     bootstrappedData.forEach(({ account, tokens }) => {
-        const fraction = tokens.div(LEOS_SUPPLY_DECIMAL).mul(100).toFixed(8) + '%';
+        const fraction = amountToSupplyPercentage(tokens);
 
         console.log(`${account.padEnd(14)} ${tokens.toFixed(4).padStart(16)} LEOS (${fraction.padStart(12)})`);
     });
@@ -114,7 +115,7 @@ export async function audit() {
         const categoryTokens = vestedTokensPerCategory.get(allocation.vesting_category_type);
 
         if (!categoryTokens) throw new Error('categoryTokens undefined');
-        const allocationTokens = new Decimal(allocation.tokens_allocated.split(' ')[0]);
+        const allocationTokens = assetToDecimal(allocation.tokens_allocated);
 
         vestedTokensPerCategory.set(allocation.vesting_category_type, categoryTokens.add(allocationTokens));
     }
@@ -130,7 +131,7 @@ export async function audit() {
         `Total vested:  ${totalVested.toFixed(4).padStart(15)} LEOS (${((100 * totalVested) / EosioTokenContract.TOTAL_SUPPLY).toFixed(8).padStart(11)}%)`
     );
     vestedTokensPerCategory.forEach((tokens, category) => {
-        const fraction = tokens.mul(100).dividedBy(EosioTokenContract.TOTAL_SUPPLY).toFixed(8) + '%';
+        const fraction = amountToSupplyPercentage(tokens);
         const categoryName = vestingCategoriesList.get(category)?.name;
 
         console.log(
@@ -165,12 +166,12 @@ export async function audit() {
 
     console.log('Total apps', apps.length);
     console.log(
-        `Total app tokens:  ${totalAllTokens.toFixed(4).padStart(14)} LEOS (${totalAllTokens.mul(100).dividedBy(EosioTokenContract.TOTAL_SUPPLY).toFixed(8).padStart(11)}%)`
+        `Total app tokens:  ${totalAllTokens.toFixed(4).padStart(14)} LEOS (${amountToSupplyPercentage(totalAllTokens).padStart(10)})`
     );
 
     for (const app of appAccounts) {
         if (app.tokens?.eq(ZERO_DECIMAL)) continue;
-        const fraction = app.tokens.mul(100).div(EosioTokenContract.TOTAL_SUPPLY).toFixed(8) + '%';
+        const fraction = amountToSupplyPercentage(app.tokens);
 
         console.log(
             `> ${app.account.padEnd(14)} ${app.tokens.toFixed(4).padStart(16)} LEOS (${fraction.padStart(12)}) ${app.description}`
@@ -209,12 +210,12 @@ export async function audit() {
 
     console.log('Total people', people.length);
     console.log(
-        `Total people tokens:  ${totalPeopleTokens.toFixed(4).padStart(14)} LEOS (${totalPeopleTokens.mul(100).dividedBy(EosioTokenContract.TOTAL_SUPPLY).toFixed(8).padStart(11)}%)`
+        `Total people tokens:  ${totalPeopleTokens.toFixed(4).padStart(14)} LEOS (${amountToSupplyPercentage(totalPeopleTokens).padStart(10)})`
     );
 
     for (const person of peopleAccounts) {
         if (person.tokens.eq(ZERO_DECIMAL)) continue;
-        const fraction = person.tokens.mul(100).div(EosioTokenContract.TOTAL_SUPPLY).toFixed(8) + '%';
+        const fraction = amountToSupplyPercentage(person.tokens);
 
         console.log(
             `> ${person.account.toString().padEnd(14)} ${person.tokens.toFixed(4).padStart(15)} LEOS (${fraction.padStart(12)})`

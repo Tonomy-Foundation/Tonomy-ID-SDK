@@ -7,12 +7,24 @@ import Decimal from 'decimal.js';
 
 const CONTRACT_NAME = 'eosio.token';
 
-export function assetToAmount(asset: string): number {
-    return parseFloat(asset.split(' ')[0]);
+function assetToNumberString(asset: string): string {
+    return asset.split(' ')[0];
 }
 
-export function amountToAsset(amount: number, symbol: string, precision = 6) {
+export function assetToAmount(asset: string): number {
+    return parseFloat(assetToNumberString(asset));
+}
+
+export function assetToDecimal(asset: string): Decimal {
+    return new Decimal(assetToNumberString(asset));
+}
+
+export function amountToAsset(amount: number, symbol: string, precision = 6): string {
     return amount.toFixed(precision) + ' ' + symbol;
+}
+
+export function amountToSupplyPercentage(amount: Decimal): string {
+    return amount.mul(100).div(EosioTokenContract.TOTAL_SUPPLY).toFixed(8) + '%';
 }
 
 class EosioTokenContract {
@@ -101,6 +113,7 @@ class EosioTokenContract {
             await getApi()
         ).v1.chain.get_currency_balance(CONTRACT_NAME, account, getSettings().currencySymbol);
 
+        console.log(account.toString(), assets);
         if (assets.length === 0) return 0;
 
         return assets[0].value;

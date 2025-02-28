@@ -4,6 +4,7 @@ import { Signer, transact } from '../eosio/transaction';
 import { getApi } from '../eosio/eosio';
 import { addMicroseconds, getSettings } from '../../../util';
 import Decimal from 'decimal.js';
+import { assetToAmount, assetToDecimal } from './EosioTokenContract';
 
 const CONTRACT_NAME = 'vesting.tmy';
 
@@ -334,10 +335,9 @@ export class VestingContract {
         let totalBalance = new Decimal(0);
 
         for (const allocation of allocations) {
-            const tokens = allocation.tokens_allocated.split(' ')[0];
-            const numberTokens = new Decimal(tokens);
+            const tokens = assetToDecimal(allocation.tokens_allocated);
 
-            totalBalance = totalBalance.add(numberTokens);
+            totalBalance = totalBalance.add(tokens);
         }
 
         return totalBalance.toNumber();
@@ -435,8 +435,8 @@ export class VestingContract {
         const allocationsDetails = [];
 
         for (const allocation of allocations) {
-            const tokensAllocated = parseFloat(allocation.tokens_allocated.split(' ')[0]);
-            const unlocked = parseFloat(allocation.tokens_claimed.split(' ')[0]);
+            const tokensAllocated = assetToAmount(allocation.tokens_allocated);
+            const unlocked = assetToAmount(allocation.tokens_claimed);
 
             const settings = await this.getSettings();
 

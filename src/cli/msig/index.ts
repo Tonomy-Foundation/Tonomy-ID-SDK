@@ -106,10 +106,7 @@ export default async function msig(args: string[]) {
         } else if (proposalType === 'new-account') {
             await newAccount({ governanceAccounts }, options);
         } else if (proposalType === 'transfer') {
-            const from = 'team.tmy';
-            const to = 'advteam.tmy';
-
-            await transfer({ from, to }, options);
+            await transfer(options);
         } else if (proposalType === 'deploy-contract') {
             const contractName = 'tonomy';
             const contractDir = `/home/dev/Documents/git/tonomy/Tonomy-ID-Integration/Tonomy-ID-SDK/Tonomy-Contracts/contracts/${contractName}`;
