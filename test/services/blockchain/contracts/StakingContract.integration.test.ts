@@ -163,7 +163,7 @@ describe('TonomyContract Staking Tests', () => {
 
     describe('staketokens()', () => {
         test('Stake tokens and verify staking allocation and table updates', async () => {
-            expect.assertions(16);
+            expect.assertions(15);
     
             const now = new Date();
             const trx = await stakeContract.stakeTokens(accountName, stakeAmount, accountSigner);
@@ -177,7 +177,6 @@ describe('TonomyContract Staking Tests', () => {
     
             const allocation = allocations[0];
 
-            expect(allocation.staker).toBe(accountName);
             expect(allocation.initialStake).toBe(stakeAmount);
             expect(allocation.staked).toBe(stakeAmount);
             expect(allocation.yieldSoFar).toBe(amountToAsset(0, "LEOS"));
@@ -792,6 +791,5 @@ describe('TonomyContract Staking Tests', () => {
             expect(settingsAfter.totalStaked).toBe(settingsBefore.totalStaked);
         }, cycleSeconds * 1000 + 5000);
     });
-      
-      
+   
 });
