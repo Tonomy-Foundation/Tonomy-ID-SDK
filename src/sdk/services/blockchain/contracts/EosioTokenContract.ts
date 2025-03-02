@@ -11,6 +11,10 @@ function assetToNumberString(asset: string): string {
     return asset.split(' ')[0];
 }
 
+// FIXME: Remove use of this function. We should never use a number to represent tokens as they are not precise and cannot handle large numbers.
+/**
+ * @deprecated use assetToDecimal instead
+ */
 export function assetToAmount(asset: string): number {
     return parseFloat(assetToNumberString(asset));
 }
@@ -19,6 +23,10 @@ export function assetToDecimal(asset: string): Decimal {
     return new Decimal(assetToNumberString(asset));
 }
 
+/**
+ * @deprecated
+ * see FIXME above
+ */
 export function amountToAsset(amount: number, symbol: string, precision = 6): string {
     return amount.toFixed(precision) + ' ' + symbol;
 }

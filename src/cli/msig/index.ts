@@ -15,7 +15,7 @@ import { setBlockchainConfig } from './setBlockchainConfig';
 import { addProd, changeProds, removeProd, updateProd } from './producers';
 import { hyphaAccountsCreate, hyphaContractSet, hyphaAddAccountPermissions } from './hypha';
 import { sleep } from '../../sdk/util';
-import { vestingMigrate } from './vestingMigrateAllocate';
+import { vestingMigrate, vestingMigrate2 } from './vestingMigrateAllocate';
 import { newApp } from './newApp';
 
 const eosioMsigContract = EosioMsigContract.Instance;
@@ -125,7 +125,9 @@ export default async function msig(args: string[]) {
                 options
             );
         } else if (proposalType === 'vesting-migrate') {
-            await vestingMigrate({}, options);
+            await vestingMigrate(options);
+        } else if (proposalType === 'vesting-migrate2') {
+            await vestingMigrate2(options);
         } else if (proposalType === 'vesting-bulk') {
             await vestingBulk({ governanceAccounts }, options);
         } else if (proposalType === 'add-prod') {
@@ -327,6 +329,8 @@ function printMsigHelp() {
                 propose transfer <proposalName>
                 propose update-prod <proposalName>
                 propose vesting-bulk <proposalName>
+                propose vesting-migrate <proposalName>
+                propose vesting-migrate2 <proposalName>
                 propose ... --auto-execute
                 propose ... --dry-run
         `);

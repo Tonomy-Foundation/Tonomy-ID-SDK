@@ -1,15 +1,16 @@
-import { NameType } from '@wharfkit/antelope';
+import { Name, NameType } from '@wharfkit/antelope';
 import { StandardProposalOptions, createProposal, executeProposal } from '.';
 import {
     ActionData,
     assetToAmount,
+    assetToDecimal,
     LEOS_SEED_LATE_ROUND_PRICE,
     LEOS_SEED_ROUND_PRICE,
     VestingContract,
 } from '../../sdk/services/blockchain';
+import { getAllAllocations, getAllUniqueHolders } from '../vesting';
 
-// @ts-expect-error args unused
-export async function vestingMigrate(args: any, options: StandardProposalOptions) {
+export async function vestingMigrate(options: StandardProposalOptions) {
     // Testnet list
     const migrateAccounts = [
         'p42pwxofd1vy', // 36 allocations
@@ -36,6 +37,55 @@ export async function vestingMigrate(args: any, options: StandardProposalOptions
 
     if (options.dryRun) return;
     if (options.autoExecute) await executeProposal(options.proposer, options.proposalName, proposalHash);
+}
+
+export async function vestingMigrate2(options: StandardProposalOptions) {
+    const priceMultiplier = 2.0;
+    const uniqueHolders = await getAllUniqueHolders();
+    const allAllocations = await getAllAllocations(uniqueHolders);
+
+    const batchSize = 100;
+
+    for (let i = 0; i < allAllocations.length; i += batchSize) {
+        const batch = allAllocations.slice(i, i + batchSize);
+
+        const actions: ActionData[] = batch.map((allocation) => {
+            const newAmount = assetToDecimal(allocation.tokens_allocated).mul(priceMultiplier);
+            const newAsset = `${newAmount.toFixed(6)} LEOS`;
+
+            console.log(
+                `Migrating account ${allocation.holder} allocation ${allocation.id} in category ${allocation.vesting_category_type} from ${allocation.tokens_allocated} to ${newAsset}`
+            );
+
+            return createMigrateAction(
+                'coinsale.tmy',
+                allocation.holder,
+                allocation.id,
+                allocation.tokens_allocated,
+                newAsset,
+                allocation.vesting_category_type,
+                allocation.vesting_category_type
+            );
+        });
+
+        const proposalName = Name.from(`${options.proposalName}${Math.floor(i / batchSize) + 1}`);
+
+        console.log(
+            `Creating proposal ${proposalName.toString()} with ${actions.length} actions: ${i} - ${i + batchSize}`
+        );
+        console.log('----------------------------------------');
+        const proposalHash = await createProposal(
+            options.proposer,
+            proposalName,
+            actions,
+            options.privateKey,
+            options.requested,
+            options.dryRun
+        );
+
+        if (options.dryRun) return;
+        if (options.autoExecute) await executeProposal(options.proposer, proposalName, proposalHash);
+    }
 }
 
 async function createAccountActions(account: NameType): Promise<ActionData[]> {
