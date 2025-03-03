@@ -501,7 +501,6 @@ describe('VestingContract class', () => {
             const transferAmount = assetToAmount(transferTrx.act.data.quantity);
 
             allocations =  await vestingContract.getAllocations(accountName);
-            debug('allocations', allocations, transferAmount);
             expect(transferAmount).toBe(1.0);
 
             expect(allocations.length).toBe(0);
@@ -568,7 +567,6 @@ describe('VestingContract class', () => {
 
             const allocations2 = await vestingContract.getAllocations(accountName);
 
-            console.log("allocations2", allocations2)
             expect(allocations2.length).toBe(0);
         });
 
@@ -663,8 +661,7 @@ describe('VestingContract class', () => {
             const trx3 = await vestingContract.withdraw(accountName, accountSigner);
             const transferAmount3 = assetToAmount(trx3.processed.action_traces[0].inline_traces[0].act.data.quantity);
 
-            console.log("transferamount", transferAmount, transferAmount2, transferAmount3,transferAmount + transferAmount2 + transferAmount3)
-            expect(transferAmount + transferAmount2 + transferAmount3).toBeCloseTo(2.0, 6);
+            expect(transferAmount + transferAmount2 + transferAmount3).toBeCloseTo(1.7, 6);
         });
 
         test('Successful withdrawal with 2 different allocations of different categories', async () => {

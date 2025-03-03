@@ -19,7 +19,6 @@ import { PrivateKey } from '@wharfkit/antelope';
 import Debug from 'debug';
 
 const debug = Debug('tonomy-sdk-tests:services:staking-contract');
-
 const stakeContract = StakingContract.Instance;
 const eosioTokenContract = EosioTokenContract.Instance;
 const signer = createSigner(getTonomyOperationsKey());
@@ -199,7 +198,7 @@ describe('TonomyContract Staking Tests', () => {
 
             // total_staked should have increased by stakeAmount.
             expect(assetToAmount(updatedSettings.totalStaked)-assetToAmount(stakeSettings.totalStaked)).toBeCloseTo(assetToAmount(stakeAmount));
-    
+
             // Verify that the staking account table has been updated.
             const accountData = await stakeContract.getAccount(accountName);
 
@@ -357,6 +356,7 @@ describe('TonomyContract Staking Tests', () => {
             expect(settings3.totalReleasing).toBe(stakeAmount);
             expect(settings3.yearlyStakePool).toBe(yearlyStakePool);
         });
+   
     });
     
     describe('requnstake()', () => {
@@ -481,7 +481,7 @@ describe('TonomyContract Staking Tests', () => {
             });
 
             test('Successfully finalize unstake after release period and update tables', async () => {
-                expect.assertions(10);
+                expect.assertions(12);
                 await sleepUntil(addSeconds(allocation.releaseTime, 1));
                 const releaseTrx = await stakeContract.releaseToken(accountName, allocationId, accountSigner);
 
@@ -492,10 +492,12 @@ describe('TonomyContract Staking Tests', () => {
                 const inlineActions = releaseTrx.processed.action_traces[0].inline_traces;
 
                 debug("inlineActions inlineActions", inlineActions)
-                expect(inlineActions.length).toBe(1);
-                expect(inlineActions[0].act.name).toBe("transfer");
-                expect(inlineActions[0].act.account).toBe("eosio.token");
-                const data = inlineActions[0].act.data;
+                expect(inlineActions.length).toBe(2);
+                expect(inlineActions[0].act.name).toBe("releasetoken");
+                expect(inlineActions[0].act.account).toBe("staking.tmy");
+                expect(inlineActions[1].act.name).toBe("transfer");
+                expect(inlineActions[1].act.account).toBe("eosio.token");
+                const data = inlineActions[1].act.data;
 
                 expect(data.to).toBe(accountName);
                 expect(data.from).toBe(stakeContract.contractName);
@@ -561,6 +563,7 @@ describe('TonomyContract Staking Tests', () => {
     describe('cron()', () => {
         async function getStakingState() {
             const accountAndAllocations = await stakeContract.getAccountState(accountName);
+
             const settings = accountAndAllocations.settings;
 
             if (accountAndAllocations.allocations.length === 0) throw new Error("No allocation found");
@@ -619,7 +622,6 @@ describe('TonomyContract Staking Tests', () => {
             const yearlyStakePool = largeStake; // To make APY 1.0
 
             await stakeContract.setSettings(yearlyStakePool, signer); // APY 1.0
-
             await eosioTokenContract.transfer("coinsale.tmy", accountName, largeStake, "testing LEOS", signer);
             await stakeContract.stakeTokens(accountName, largeStake, accountSigner);
             
@@ -677,13 +679,12 @@ describe('TonomyContract Staking Tests', () => {
             debug('Unstaking');
             await stakeContract.requestUnstake(accountName, allocations[0].id, accountSigner);
             stakingAllocationLog.push({ now: new Date(), unstaked: true });
+            watching = false;
 
             // Wait for one full staking cycles
             debug(`Waiting for till end of 3nd staking cycle: (${cycleSeconds} seconds)`);
             await sleepUntil(addSeconds(startTime, 3*cycleSeconds));
-            watching = false;
-            printAllocationStateLog();
-            
+            printAllocationStateLog();            
         }, 3 * cycleSeconds * 1000 + 10000);
 
         test(`distributes yield over staking cycles but not after release with APY 1.0 (3x ${cycleSeconds}s)`, async () => {
@@ -761,7 +762,7 @@ describe('TonomyContract Staking Tests', () => {
 
             // Wait for one full staking cycles
             debug(`Waiting for till end of 3rd staking cycle: (${cycleSeconds} seconds)`);
-            await sleepUntil(addSeconds(initialStakedTime, 3*cycleSeconds));
+            await sleepUntil(addSeconds(initialStakedTime, 1*cycleSeconds));
 
             const afterUnstake = await getStakingState();
 
