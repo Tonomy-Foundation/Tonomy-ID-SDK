@@ -398,6 +398,7 @@ describe('TonomyContract Staking Tests', () => {
                 // Verify settings update: total_staked decreases and total_releasing increases by the staked amount
                 const updatedSettings = await stakeContract.getSettings();
 
+                debug("updatedSettings", updatedSettings, stakeSettings)
                 expect(assetToAmount(updatedSettings.totalStaked) - assetToAmount(stakeSettings.totalStaked)).toBeCloseTo(-assetToAmount(stakeAmount));
                 expect(assetToAmount(updatedSettings.totalReleasing) - assetToAmount(stakeSettings.totalReleasing)).toBeCloseTo(assetToAmount(stakeAmount));       
              

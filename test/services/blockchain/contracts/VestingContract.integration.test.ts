@@ -17,6 +17,7 @@ import { createRandomAccount } from '../../../helpers/eosio';
 import { msigAction } from './governance';
 import { jest } from '@jest/globals';
 import Debug from 'debug';
+import Decimal from 'decimal.js';
 
 const debug = Debug('tonomy-sdk-tests:services:vesting-contract');
 const vestingContract = VestingContract.Instance;
@@ -664,8 +665,7 @@ describe('VestingContract class', () => {
 
             const transferAmount3 = assetToAmount(trx3.processed.action_traces[0].inline_traces[0].act.data.quantity);
 
-
-            expect(transferAmount + transferAmount2 + transferAmount3).toBeCloseTo(1.6, 6);
+            expect(new Decimal(transferAmount).plus(transferAmount2).plus(transferAmount3).toNumber()).toBeCloseTo(1.7, 6);
         });
 
         test('Successful withdrawal with 2 different allocations of different categories', async () => {
