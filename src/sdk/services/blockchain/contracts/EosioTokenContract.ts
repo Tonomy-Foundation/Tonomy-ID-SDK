@@ -3,12 +3,11 @@ import { API, Name, NameType } from '@wharfkit/antelope';
 import { Signer, transact } from '../eosio/transaction';
 import { getApi } from '../eosio/eosio';
 import { getSettings } from '../../../util';
-import Decimal from 'decimal.js';
 
 const CONTRACT_NAME = 'eosio.token';
 
 export function assetToAmount(asset: string): number {
-    return new Decimal(asset.split(' ')[0]).toNumber();
+    return parseFloat(asset.split(' ')[0]);
 }
 
 export function amountToAsset(amount: number, symbol: string, precision = 6) {
