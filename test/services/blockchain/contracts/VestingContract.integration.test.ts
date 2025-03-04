@@ -17,7 +17,6 @@ import { createRandomAccount } from '../../../helpers/eosio';
 import { msigAction } from './governance';
 import { jest } from '@jest/globals';
 import Debug from 'debug';
-import Decimal from 'decimal.js';
 
 const debug = Debug('tonomy-sdk-tests:services:vesting-contract');
 const vestingContract = VestingContract.Instance;
@@ -622,7 +621,7 @@ describe('VestingContract class', () => {
         });
 
         test('Successful withdrawal with 2 different allocations of same category', async () => {
-            expect.assertions(7);
+            expect.assertions(8);
 
             await vestingContract.assignTokens('coinsale.tmy', accountName, '1.000000 LEOS', 999, signer);
             await sleep(1000);
@@ -631,8 +630,10 @@ describe('VestingContract class', () => {
             const allocations = await vestingContract.getAllocations(accountName);
             const vestingPeriod = VestingContract.calculateVestingPeriod(settings, allocations[0]);
 
+            ``
             // 1st withdrawal after allocation cliff end
             await sleepUntil(addSeconds(vestingPeriod.cliffEnd, 1));
+
             const trx = await vestingContract.withdraw(accountName, accountSigner);
 
             const transferAmount = assetToAmount(trx.processed.action_traces[0].inline_traces[0].act.data.quantity);
@@ -650,6 +651,8 @@ describe('VestingContract class', () => {
 
             const allocations2 = await vestingContract.getAllocations(accountName);
 
+            debug("allocations3 allocations2", allocations2)
+
             expect(assetToAmount(allocations2[0].tokens_claimed)).toBe(assetToAmount(allocations2[1].tokens_claimed));
             expect(assetToAmount(allocations2[0].tokens_claimed)).toBeGreaterThan(transferAmount / 2);
             expect(assetToAmount(allocations2[0].tokens_claimed)).toBeLessThan(1.0);
@@ -658,14 +661,28 @@ describe('VestingContract class', () => {
                 assetToAmount(allocations2[1].tokens_claimed) -
                 transferAmount, 6
             );
+            // Store claimed tokens before the final withdrawal
+            const totalClaimedBeforeFinal = allocations2.reduce(
+                (sum, alloc) => sum + assetToAmount(alloc.tokens_claimed),
+                0
+            );
 
             // 3rd withdrawal after allocation vesting end
             await sleepUntil(addSeconds(vestingPeriod.vestingEnd, 1));
-            const trx3 = await vestingContract.withdraw(accountName, accountSigner);
 
+            const trx3 = await vestingContract.withdraw(accountName, accountSigner);
             const transferAmount3 = assetToAmount(trx3.processed.action_traces[0].inline_traces[0].act.data.quantity);
 
-            expect(new Decimal(transferAmount).plus(transferAmount2).plus(transferAmount3).toNumber()).toBeCloseTo(1.7, 6);
+            await sleep(2000);
+
+            const trx4 = await vestingContract.withdraw(accountName, accountSigner);
+            const transferAmount4 = assetToAmount(trx4.processed.action_traces[0].inline_traces[0].act.data.quantity);
+
+            expect(transferAmount3 + transferAmount4+ totalClaimedBeforeFinal).toBeCloseTo(2.0, 6);
+            const allocations4 = await vestingContract.getAllocations(accountName);
+
+            expect(allocations4.length).toBe(0);
+
         });
 
         test('Successful withdrawal with 2 different allocations of different categories', async () => {

@@ -17,6 +17,7 @@ import { createRandomID } from '../../../helpers/user';
 import { addSeconds, MILLISECONDS_IN_SECOND, SECONDS_IN_DAY, sleepUntil, sleep, SECONDS_IN_YEAR, SECONDS_IN_HOUR} from '../../../../src/sdk/util';
 import { PrivateKey } from '@wharfkit/antelope';
 import Debug from 'debug';
+import Decimal from 'decimal.js';
 
 const debug = Debug('tonomy-sdk-tests:services:staking-contract');
 const stakeContract = StakingContract.Instance;
@@ -398,7 +399,6 @@ describe('TonomyContract Staking Tests', () => {
                 // Verify settings update: total_staked decreases and total_releasing increases by the staked amount
                 const updatedSettings = await stakeContract.getSettings();
 
-                debug("updatedSettings", updatedSettings, stakeSettings)
                 expect(assetToAmount(updatedSettings.totalStaked) - assetToAmount(stakeSettings.totalStaked)).toBeCloseTo(-assetToAmount(stakeAmount));
                 expect(assetToAmount(updatedSettings.totalReleasing) - assetToAmount(stakeSettings.totalReleasing)).toBeCloseTo(assetToAmount(stakeAmount));       
              
@@ -725,7 +725,11 @@ describe('TonomyContract Staking Tests', () => {
             
             expect(afterOneCycle.allocation.staked).toBeGreaterThan(initial.allocation.staked);
             expect(afterOneCycle.account.payments).toBe(1);
-            expect(afterOneCycle.allocation.staked).toBeLessThanOrEqual(initial.allocation.staked + initial.allocation.cycleYieldMax);
+            expect(afterOneCycle.allocation.staked).toBeLessThanOrEqual(
+                new Decimal(initial.allocation.staked)
+                    .plus(initial.allocation.cycleYieldMax)
+                    .toNumber()
+            );
             expect(afterOneCycle.allocation.yieldSoFar).toBeCloseTo(afterOneCycle.allocation.staked - initial.allocation.staked, 6);
             expect(afterOneCycle.allocation.monthlyYield).toBeCloseTo(afterOneCycle.allocation.staked * (Math.pow(1 + afterOneCycle.settings.apy, 1 / 12) - 1), 4);
             expect(afterOneCycle.account.totalYield).toBe(afterOneCycle.allocation.yieldSoFar);
