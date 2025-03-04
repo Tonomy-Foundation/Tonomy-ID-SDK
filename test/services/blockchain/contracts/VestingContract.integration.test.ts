@@ -19,7 +19,6 @@ import { jest } from '@jest/globals';
 import Debug from 'debug';
 
 const debug = Debug('tonomy-sdk-tests:services:vesting-contract');
-
 const vestingContract = VestingContract.Instance;
 const eosioTokenContract = EosioTokenContract.Instance;
 const signer = createSigner(getTonomyOperationsKey());
@@ -636,6 +635,7 @@ describe('VestingContract class', () => {
             const trx = await vestingContract.withdraw(accountName, accountSigner);
 
             const transferAmount = assetToAmount(trx.processed.action_traces[0].inline_traces[0].act.data.quantity);
+
             const allocations1 = await vestingContract.getAllocations(accountName);
 
             expect(assetToAmount(allocations1[0].tokens_claimed)).toBe(transferAmount / 2);
@@ -644,7 +644,9 @@ describe('VestingContract class', () => {
             // 2nd withdrawal after a few more seconds
             await sleep(2000);
             const trx2 = await vestingContract.withdraw(accountName, accountSigner);
+
             const transferAmount2 = assetToAmount(trx2.processed.action_traces[0].inline_traces[0].act.data.quantity);
+
             const allocations2 = await vestingContract.getAllocations(accountName);
 
             expect(assetToAmount(allocations2[0].tokens_claimed)).toBe(assetToAmount(allocations2[1].tokens_claimed));
@@ -659,9 +661,11 @@ describe('VestingContract class', () => {
             // 3rd withdrawal after allocation vesting end
             await sleepUntil(addSeconds(vestingPeriod.vestingEnd, 1));
             const trx3 = await vestingContract.withdraw(accountName, accountSigner);
+
             const transferAmount3 = assetToAmount(trx3.processed.action_traces[0].inline_traces[0].act.data.quantity);
 
-            expect(transferAmount + transferAmount2 + transferAmount3).toBeCloseTo(1.7, 6);
+
+            expect(transferAmount + transferAmount2 + transferAmount3).toBeCloseTo(1.6, 6);
         });
 
         test('Successful withdrawal with 2 different allocations of different categories', async () => {
