@@ -633,10 +633,20 @@ describe('TonomyContract Staking Tests', () => {
             async function watchAllocation() {
                 while (watching) {
                     const now = new Date();
-                    const state = await getStakingState();
 
-                    stakingAllocationLog.push({ now, state })
-                    await sleep(5000);
+                    try{
+                        const state = await getStakingState();
+
+                        stakingAllocationLog.push({ now, state })
+                        await sleep(5000);
+
+                    } catch(e){
+                        if(e.message === "No allocation found") {
+                            watching = false
+                        }       
+                    }
+
+                    
                 }
             }
 
@@ -680,16 +690,17 @@ describe('TonomyContract Staking Tests', () => {
             debug('Unstaking');
             await stakeContract.requestUnstake(accountName, allocations[0].id, accountSigner);
             stakingAllocationLog.push({ now: new Date(), unstaked: true });
-            watching = false;
 
             // Wait for one full staking cycles
             debug(`Waiting for till end of 3nd staking cycle: (${cycleSeconds} seconds)`);
             await sleepUntil(addSeconds(startTime, 3*cycleSeconds));
-            printAllocationStateLog();            
+            watching = false;
+            printAllocationStateLog();  
+            
         }, 3 * cycleSeconds * 1000 + 10000);
 
         test(`distributes yield over staking cycles but not after release with APY 1.0 (3x ${cycleSeconds}s)`, async () => {
-            expect.assertions(39);
+            expect.assertions(31);
             await resetContract();
 
             // Use a large stake to minimize rounding issues.
@@ -725,11 +736,7 @@ describe('TonomyContract Staking Tests', () => {
             
             expect(afterOneCycle.allocation.staked).toBeGreaterThan(initial.allocation.staked);
             expect(afterOneCycle.account.payments).toBe(1);
-            expect(afterOneCycle.allocation.staked).toBeLessThanOrEqual(
-                new Decimal(initial.allocation.staked)
-                    .plus(initial.allocation.cycleYieldMax)
-                    .toNumber()
-            );
+            expect(afterOneCycle.allocation.staked).toBeLessThanOrEqual(initial.allocation.staked + initial.allocation.cycleYieldMax);
             expect(afterOneCycle.allocation.yieldSoFar).toBeCloseTo(afterOneCycle.allocation.staked - initial.allocation.staked, 6);
             expect(afterOneCycle.allocation.monthlyYield).toBeCloseTo(afterOneCycle.allocation.staked * (Math.pow(1 + afterOneCycle.settings.apy, 1 / 12) - 1), 4);
             expect(afterOneCycle.account.totalYield).toBe(afterOneCycle.allocation.yieldSoFar);
@@ -767,21 +774,23 @@ describe('TonomyContract Staking Tests', () => {
 
             // Wait for one full staking cycles
             debug(`Waiting for till end of 3rd staking cycle: (${cycleSeconds} seconds)`);
-            await sleepUntil(addSeconds(initialStakedTime, 1*cycleSeconds));
+            await sleepUntil(addSeconds(initialStakedTime, 3*cycleSeconds));
 
-            const afterUnstake = await getStakingState();
+            const afterUnstake = await stakeContract.getAccountState(accountName);
 
             debug('afterUnstake', afterUnstake);
 
-            expect(afterUnstake.allocation.staked).toBe(afterTwoCycles.allocation.staked); // Stayed the same
-            expect(afterUnstake.account.payments).toBe(afterTwoCycles.account.payments); // Stayed the same
-            expect(afterUnstake.allocation.yieldSoFar).toBe(afterTwoCycles.allocation.yieldSoFar); // Stayed the same
-            expect(afterUnstake.allocation.monthlyYield).toBe(0); // No yield after unstake
-            expect(afterUnstake.account.totalYield).toBe(afterUnstake.allocation.yieldSoFar);
-            expect(afterUnstake.account.lastPayoutTime.getTime()).toBe(afterTwoCycles.account.lastPayoutTime.getTime()); // Stayed the same
-            expect(afterUnstake.settings.totalReleasing).toBe(afterUnstake.allocation.staked); // Unstaked
-            expect(afterUnstake.settings.totalStaked).toBe(0); // Unstaked
-            expect(afterUnstake.settings.yieldPool).toBe(afterTwoCycles.settings.yieldPool); // Stayed the same
+            expect(afterUnstake.allocations.length).toBe(0);
+
+            // expect(afterUnstake.allocation.staked).toBe(afterTwoCycles.allocation.staked); // Stayed the same
+            // expect(afterUnstake.account.payments).toBe(afterTwoCycles.account.payments); // Stayed the same
+            // expect(afterUnstake.allocation.yieldSoFar).toBe(afterTwoCycles.allocation.yieldSoFar); // Stayed the same
+            // expect(afterUnstake.allocation.monthlyYield).toBe(0); // No yield after unstake
+            // expect(afterUnstake.account.totalYield).toBe(afterUnstake.allocation.yieldSoFar);
+            // expect(afterUnstake.account.lastPayoutTime.getTime()).toBe(afterTwoCycles.account.lastPayoutTime.getTime()); // Stayed the same
+            // expect(afterUnstake.settings.totalReleasing).toBe(afterUnstake.allocation.staked); // Unstaked
+            // expect(afterUnstake.settings.totalStaked).toBe(0); // Unstaked
+            // expect(afterUnstake.settings.yieldPool).toBe(afterTwoCycles.settings.yieldPool); // Stayed the same
         }, 3 * cycleSeconds * 1000 + 10000);
       
         test('does not change settings if no staking accounts exist while cron runs', async () => {

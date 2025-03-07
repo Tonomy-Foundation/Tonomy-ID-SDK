@@ -631,7 +631,6 @@ describe('VestingContract class', () => {
             const allocations = await vestingContract.getAllocations(accountName);
             const vestingPeriod = VestingContract.calculateVestingPeriod(settings, allocations[0]);
 
-            ``
             // 1st withdrawal after allocation cliff end
             await sleepUntil(addSeconds(vestingPeriod.cliffEnd, 1));
 
@@ -660,24 +659,14 @@ describe('VestingContract class', () => {
                 assetToAmount(allocations2[1].tokens_claimed) -
                 transferAmount, 6
             );
-            // Store claimed tokens before the final withdrawal
-            const totalClaimedBeforeFinal = allocations2.reduce(
-                (sum, alloc) => sum + assetToAmount(alloc.tokens_claimed),
-                0
-            );
-
+           
             // 3rd withdrawal after allocation vesting end
             await sleepUntil(addSeconds(vestingPeriod.vestingEnd, 1));
 
             const trx3 = await vestingContract.withdraw(accountName, accountSigner);
             const transferAmount3 = assetToAmount(trx3.processed.action_traces[0].inline_traces[0].act.data.quantity);
 
-            await sleep(2000);
-
-            const trx4 = await vestingContract.withdraw(accountName, accountSigner);
-            const transferAmount4 = assetToAmount(trx4.processed.action_traces[0].inline_traces[0].act.data.quantity);
-
-            expect(transferAmount3 + transferAmount4+ totalClaimedBeforeFinal).toBeCloseTo(2.0, 6);
+            expect(transferAmount + transferAmount2 + transferAmount3).toBeCloseTo(2.0, 6);         
             const allocations4 = await vestingContract.getAllocations(accountName);
 
             expect(allocations4.length).toBe(0);
