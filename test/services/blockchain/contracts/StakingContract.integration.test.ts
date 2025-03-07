@@ -17,7 +17,6 @@ import { createRandomID } from '../../../helpers/user';
 import { addSeconds, MILLISECONDS_IN_SECOND, SECONDS_IN_DAY, sleepUntil, sleep, SECONDS_IN_YEAR, SECONDS_IN_HOUR} from '../../../../src/sdk/util';
 import { PrivateKey } from '@wharfkit/antelope';
 import Debug from 'debug';
-import Decimal from 'decimal.js';
 
 const debug = Debug('tonomy-sdk-tests:services:staking-contract');
 const stakeContract = StakingContract.Instance;
