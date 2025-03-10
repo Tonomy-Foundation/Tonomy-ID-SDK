@@ -323,6 +323,7 @@ export class VestingContract {
 
         for (const allocation of allocations) {
             const tokens = allocation.tokens_allocated.split(' ')[0];
+
             const numberTokens = new Decimal(tokens);
 
             totalBalance = totalBalance.add(numberTokens);

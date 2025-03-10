@@ -5,7 +5,7 @@ import { getAccount, getApi } from '../eosio/eosio';
 import { TonomyContract } from './TonomyContract';
 import { Authority } from '../eosio/authority';
 import Debug from 'debug';
-import { addSeconds, getSettings, SECONDS_IN_DAY } from '../../../util';
+import { addSeconds, getSettings, SdkErrors, SECONDS_IN_DAY, throwError } from '../../../util';
 import { amountToAsset, assetToAmount, EosioTokenContract } from './EosioTokenContract';
 
 const debug = Debug('tonomy-sdk:services:blockchain:contracts:staking');
@@ -82,9 +82,9 @@ export class StakingContract {
     static getLockedDays = () => (getSettings().environment !== 'test' ? 14 : 10 / SECONDS_IN_DAY); // 14 days or 10 seconds
     static getReleaseDays = () => (getSettings().environment !== 'test' ? 5 : 5 / SECONDS_IN_DAY); // 5 days or 5 seconds
     static getMinimumTransfer = () => (getSettings().environment !== 'test' ? 1000 : 1); // 1000 LEOS or 1 LEOS
-    static getMaxAllocations = () => (getSettings().environment !== 'test' ? 100 : 5); // 100 allocations or 5 allocations
+    static getMaxAllocations = () => (getSettings().environment !== 'test' ? 20 : 5); // 100 allocations or 5 allocations
     static getStakingCycleHours = () => (getSettings().environment !== 'test' ? 24 : 1 / 60); // 24 hours or 1 minute
-    static MAX_APY = 2.0;
+    static MAX_APY = 1.0;
     static STAKING_APY_TARGET = 50 / 100; // 50%
     // Use the TGE unlock: https://docs.google.com/spreadsheets/d/1uyvpgXC0th3Z1_bz4m18dJKy2yyVfYFmcaEyS9fveeA/edit?gid=1074294213#gid=1074294213&range=Q34
     static STAKING_ESTIMATED_STAKED_PERCENT = 15.1 / 100; // 15.1%
@@ -281,7 +281,7 @@ export class StakingContract {
             const monthlyYield = amountToAsset(
                 allocation.unstake_requested
                     ? 0
-                    : assetToAmount(allocation.tokens_staked) * (Math.pow(1 + settings.apy, 1 / 12) - 1),
+                    : await this.calculateMonthlyYield(assetToAmount(allocation.tokens_staked), settings),
                 'LEOS'
             ); // Monthly yield from yearly APY.
             const yieldSoFar = amountToAsset(
@@ -360,7 +360,7 @@ export class StakingContract {
         });
 
         if (res.rows.length === 0 || res.rows[0].staker !== account.toString())
-            throw new Error('Account not found in staking contract');
+            throwError('Account not found in staking contract', SdkErrors.AccountNotFound);
 
         return res.rows[0];
     }
@@ -427,5 +427,9 @@ export class StakingContract {
             estimatedMonthlyYield,
             settings,
         };
+    }
+
+    async calculateMonthlyYield(amount: number, settings: StakingSettings): Promise<number> {
+        return amount * (Math.pow(1 + settings.apy, 1 / 12) - 1);
     }
 }

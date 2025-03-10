@@ -19,7 +19,6 @@ import { jest } from '@jest/globals';
 import Debug from 'debug';
 
 const debug = Debug('tonomy-sdk-tests:services:vesting-contract');
-
 const vestingContract = VestingContract.Instance;
 const eosioTokenContract = EosioTokenContract.Instance;
 const signer = createSigner(getTonomyOperationsKey());
@@ -464,7 +463,7 @@ describe('VestingContract class', () => {
 
             let allocations = await vestingContract.getAllocations(accountName);
             const vestingPeriod = VestingContract.calculateVestingPeriod(settings, allocations[0]);
-
+            
             await sleepUntil(addSeconds(vestingPeriod.cliffEnd, 1));
             const trx = await vestingContract.withdraw(accountName, accountSigner);
 
@@ -501,12 +500,10 @@ describe('VestingContract class', () => {
             const transferTrx = trx.processed.action_traces[0].inline_traces[0];
             const transferAmount = assetToAmount(transferTrx.act.data.quantity);
 
+            allocations =  await vestingContract.getAllocations(accountName);
             expect(transferAmount).toBe(1.0);
 
-            allocations = await vestingContract.getAllocations(accountName);
-            const allocatedAmount = assetToAmount(allocations[0].tokens_claimed);
-
-            expect(allocatedAmount).toBe(transferAmount);
+            expect(allocations.length).toBe(0);
         });
 
         test('Successful withdrawal with TGE unlock', async () => {
@@ -546,7 +543,7 @@ describe('VestingContract class', () => {
 
             const allocations2 = await vestingContract.getAllocations(accountName);
 
-            expect(assetToAmount(allocations2[0].tokens_claimed)).toBe(1.0);
+            expect(allocations2.length).toBe(0);
 
             await sleep(1000);
             const trx4 = await vestingContract.withdraw(accountName, accountSigner);
@@ -558,7 +555,7 @@ describe('VestingContract class', () => {
             expect.assertions(2);
             await vestingContract.assignTokens('coinsale.tmy', accountName, '1.000000 LEOS', 999, signer);
 
-            let allocations = await vestingContract.getAllocations(accountName);
+            const allocations = await vestingContract.getAllocations(accountName);
             const vestingPeriod = VestingContract.calculateVestingPeriod(settings, allocations[0]);
 
             await sleepUntil(addSeconds(vestingPeriod.vestingEnd, 1));
@@ -568,10 +565,9 @@ describe('VestingContract class', () => {
 
             expect(trx.processed.action_traces[0].inline_traces.length).toBe(0);
 
-            allocations = await vestingContract.getAllocations(accountName);
-            const allocatedAmount = assetToAmount(allocations[0].tokens_claimed);
+            const allocations2 = await vestingContract.getAllocations(accountName);
 
-            expect(allocatedAmount).toBe(1.0);
+            expect(allocations2.length).toBe(0);
         });
 
         test('Successful withdrawal during and after vesting period', async () => {
@@ -603,9 +599,8 @@ describe('VestingContract class', () => {
             expect(transferAmount2).toBeCloseTo(1.0 - transferAmount, 6);
 
             allocations = await vestingContract.getAllocations(accountName);
-            const allocatedAmount2 = assetToAmount(allocations[0].tokens_claimed);
 
-            expect(allocatedAmount2).toBe(1.0);
+            expect(allocations.length).toBe(0);
         });
 
         test('Successful 0.0 LEOS withdrawal before cliff end', async () => {
@@ -627,7 +622,7 @@ describe('VestingContract class', () => {
         });
 
         test('Successful withdrawal with 2 different allocations of same category', async () => {
-            expect.assertions(9);
+            expect.assertions(8);
 
             await vestingContract.assignTokens('coinsale.tmy', accountName, '1.000000 LEOS', 999, signer);
             await sleep(1000);
@@ -638,9 +633,11 @@ describe('VestingContract class', () => {
 
             // 1st withdrawal after allocation cliff end
             await sleepUntil(addSeconds(vestingPeriod.cliffEnd, 1));
+
             const trx = await vestingContract.withdraw(accountName, accountSigner);
 
             const transferAmount = assetToAmount(trx.processed.action_traces[0].inline_traces[0].act.data.quantity);
+
             const allocations1 = await vestingContract.getAllocations(accountName);
 
             expect(assetToAmount(allocations1[0].tokens_claimed)).toBe(transferAmount / 2);
@@ -649,7 +646,9 @@ describe('VestingContract class', () => {
             // 2nd withdrawal after a few more seconds
             await sleep(2000);
             const trx2 = await vestingContract.withdraw(accountName, accountSigner);
+
             const transferAmount2 = assetToAmount(trx2.processed.action_traces[0].inline_traces[0].act.data.quantity);
+
             const allocations2 = await vestingContract.getAllocations(accountName);
 
             expect(assetToAmount(allocations2[0].tokens_claimed)).toBe(assetToAmount(allocations2[1].tokens_claimed));
@@ -660,21 +659,22 @@ describe('VestingContract class', () => {
                 assetToAmount(allocations2[1].tokens_claimed) -
                 transferAmount, 6
             );
-
+           
             // 3rd withdrawal after allocation vesting end
             await sleepUntil(addSeconds(vestingPeriod.vestingEnd, 1));
+
             const trx3 = await vestingContract.withdraw(accountName, accountSigner);
             const transferAmount3 = assetToAmount(trx3.processed.action_traces[0].inline_traces[0].act.data.quantity);
-            const allocations3 = await vestingContract.getAllocations(accountName);
 
-            expect(assetToAmount(allocations3[0].tokens_claimed)).toBe(1.0);
-            expect(assetToAmount(allocations3[1].tokens_claimed)).toBe(1.0);
+            expect(transferAmount + transferAmount2 + transferAmount3).toBeCloseTo(2.0, 6);         
+            const allocations4 = await vestingContract.getAllocations(accountName);
 
-            expect(transferAmount + transferAmount2 + transferAmount3).toBeCloseTo(2.0, 6);
+            expect(allocations4.length).toBe(0);
+
         });
 
         test('Successful withdrawal with 2 different allocations of different categories', async () => {
-            expect.assertions(4);
+            expect.assertions(2);
 
             await vestingContract.assignTokens('coinsale.tmy', accountName, '1.000000 LEOS', 999, signer);
             await vestingContract.assignTokens('coinsale.tmy', accountName, '1.000000 LEOS', 997, signer);
@@ -688,16 +688,15 @@ describe('VestingContract class', () => {
 
             const allocations1 = await vestingContract.getAllocations(accountName);
 
-            expect(assetToAmount(allocations1[0].tokens_claimed)).toBe(1.0);
-            expect(assetToAmount(allocations1[1].tokens_claimed)).toBe(0.0);
+            expect(assetToAmount(allocations1[0].tokens_claimed)).toBe(0.0);
 
             // Withdraw again
             await sleep(1000); // Wait to ensure don't get duplicate transaction error
             await vestingContract.withdraw(accountName, accountSigner);
             const allocations2 = await vestingContract.getAllocations(accountName);
 
-            expect(assetToAmount(allocations2[0].tokens_claimed)).toBe(1.0);
-            expect(assetToAmount(allocations2[1].tokens_claimed)).toBe(0.0);
+            expect(allocations2.length).toBe(1);
+
         });
 
         test('Unsuccessful when launch has not started', async () => {
@@ -716,7 +715,7 @@ describe('VestingContract class', () => {
         });
 
         test('Successfully get unlockable, locked, and total allocations', async () => {
-            expect.assertions(27);
+            expect.assertions(25);
 
             const { user } = await createRandomID();
             const accountName = (await user.getAccountName()).toString();
@@ -767,25 +766,24 @@ describe('VestingContract class', () => {
 
             // Check balances after withdrawal
             balances = await vestingContract.getVestingAllocations(accountName);
-            expect(balances.totalAllocation).toBe(2);
+            expect(balances.totalAllocation).toBe(0);
             expect(balances.unlockable).toBe(0);
-            expect(balances.unlocked).toBe(2);
+            expect(balances.unlocked).toBe(0);
             expect(balances.locked).toBe(0);
-            expect(balances.allocationsDetails[0].totalAllocation).toBe(2);
-            expect(balances.allocationsDetails[0].locked).toBe(0);
-            expect(balances.allocationsDetails[0].unlockAtVestingStart).toBe(0);
+            expect(balances.allocationsDetails.length).toBe(0);
+          
 
             const trx2 = await vestingContract.assignTokens('coinsale.tmy', accountName, '2.000000 LEOS', 999, signer);
 
             expect(trx2.processed.receipt.status).toBe('executed');
             balances = await vestingContract.getVestingAllocations(accountName);
-            expect(balances.allocationsDetails.length).toBe(2);
-            expect(balances.totalAllocation).toBe(4);
+            expect(balances.allocationsDetails.length).toBe(1);
+            expect(balances.totalAllocation).toBe(2);
 
         });
-
-    });
-
+      
+    }); 
+    
     describe('vesting progress for unlockable coins getVestingAllocations()', () => {
         test('Track vesting progress for category 998', async () => {
             expect.assertions(5);
@@ -842,7 +840,7 @@ describe('VestingContract class', () => {
         });
         test('should calculate the correct allocation date', async () => {
             expect.assertions(2);
-        
+
             const trx = await vestingContract.assignTokens(
                 'coinsale.tmy',
                 accountName,
@@ -850,24 +848,23 @@ describe('VestingContract class', () => {
                 999,
                 signer 
             );
-        
+
             expect(trx.processed.receipt.status).toBe('executed');
-        
+
             const balances = await vestingContract.getVestingAllocations(accountName);
-        
+
             const allocationDetails = balances.allocationsDetails[0];
             const allocationDate = allocationDetails.vestingStart;
-        
+
             const settings = await vestingContract.getSettings();
             const saleStart = new Date(settings.sales_start_date); 
             const timeSinceSaleStart = allocationDetails.vestingStart.getTime() - saleStart.getTime();
-        
+
             // Calculate expected allocation date
             const expectedAllocationDate = new Date(saleStart.getTime() + timeSinceSaleStart);
 
             expect(allocationDate.getTime()).toBeCloseTo(expectedAllocationDate.getTime(), -3);
         });
-        
     });
 
     describe('migratealloc()', () => {
@@ -987,7 +984,7 @@ describe('VestingContract class', () => {
         });
 
         test("Successful if some tokens already withdrawn", async () => {
-            expect.assertions(3);
+            expect.assertions(5);
 
             await vestingContract.assignTokens('coinsale.tmy', accountName, '1.000000 LEOS', 999, signer);
 
@@ -997,8 +994,13 @@ describe('VestingContract class', () => {
             const allocations2 = await vestingContract.getAllocations(accountName);
             const vestingPeriod2 = VestingContract.calculateVestingPeriod(settings, allocations2[0]);
 
-            await sleepUntil(vestingPeriod2.vestingEnd);
-            await vestingContract.withdraw(accountName, accountSigner);
+            await sleepUntil(vestingPeriod2.cliffEnd);
+            const trx1 = await vestingContract.withdraw(accountName, accountSigner);
+            const transferTrx1 = trx1.processed.action_traces[0].inline_traces[0];
+            const transferAmount1 = assetToAmount(transferTrx1.act.data.quantity);
+
+            expect(transferAmount1).toBeLessThan(1.0);
+            expect(transferAmount1).toBeGreaterThan(0.5);
 
             await vestingContract.migrateAllocation('coinsale.tmy', accountName, oldAllocation.id,
                 oldAllocation.tokens_allocated, "2.000000 LEOS",
@@ -1008,15 +1010,15 @@ describe('VestingContract class', () => {
             const allocations3 = await vestingContract.getAllocations(accountName);
             const newAllocation = allocations3[0];
 
-            expect(newAllocation.tokens_claimed).toBe('1.000000 LEOS');
-            expect(newAllocation.tokens_allocated).toBe('2.000000 LEOS');
-
+            expect(assetToAmount(newAllocation.tokens_claimed)).toBe(transferAmount1);    
+            expect(newAllocation.tokens_allocated).toBe('2.000000 LEOS');    
             await sleep(1000);
             const trx = await vestingContract.withdraw(accountName, accountSigner);
             const transferTrx = trx.processed.action_traces[0].inline_traces[0];
             const transferAmount = assetToAmount(transferTrx.act.data.quantity);
 
-            expect(transferAmount).toBe(1.0);
+            debug("transferAmount", transferAmount)
+            expect(transferAmount).toBeGreaterThan(1.0);
         });
 
         test("Unsuccessful new amount is less than already withdrawn", async () => {
@@ -1030,12 +1032,12 @@ describe('VestingContract class', () => {
             const allocations2 = await vestingContract.getAllocations(accountName);
             const vestingPeriod2 = VestingContract.calculateVestingPeriod(settings, allocations2[0]);
 
-            await sleepUntil(vestingPeriod2.vestingEnd);
+            await sleepUntil(vestingPeriod2.cliffEnd);
             await vestingContract.withdraw(accountName, accountSigner);
 
             try {
                 await vestingContract.migrateAllocation('coinsale.tmy', accountName, oldAllocation.id,
-                    oldAllocation.tokens_allocated, "0.500000 LEOS",
+                    oldAllocation.tokens_allocated, "0.400000 LEOS",
                     oldAllocation.vesting_category_type, 998,
                     signer);
             } catch (e) {

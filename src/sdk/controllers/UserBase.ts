@@ -7,6 +7,7 @@ import { Issuer } from 'did-jwt-vc';
 import { createVCSigner } from '../util/crypto';
 import { UserStatusEnum } from '../types/UserStatusEnum';
 import { IUserBase, IUserStorage } from '../types/User';
+import { createKeyManagerSigner, Signer } from '../services/blockchain';
 
 export class UserBase implements IUserBase {
     protected keyManager: KeyManager;
@@ -51,5 +52,9 @@ export class UserBase implements IUserBase {
             signer: signer.sign as any,
             alg: 'ES256K-R',
         };
+    }
+
+    async getSigner(level: KeyManagerLevel): Promise<Signer> {
+        return createKeyManagerSigner(this.keyManager, level);
     }
 }
