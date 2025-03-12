@@ -50,8 +50,9 @@ export async function stakingContractSetup(options: StandardProposalOptions) {
     const ramKb = 4680000;
 
     const contract = 'staking.tmy';
-
-    const contractDir = `/home/sadia/TonomyFoundation/january/Tonomy-ID-Integration/Tonomy-ID-SDK/Tonomy-Contracts/contracts/staking.tmy`;
+    const directory =
+        '/home/sadia/TonomyFoundation/january/Tonomy-ID-Integration/Tonomy-ID-SDK/Tonomy-Contracts/contracts/';
+    const contractDir = directory + `staking.tmy`;
 
     const tonomyUsername = TonomyUsername.fromUsername('staking', AccountType.APP, '.testnet.pangea');
     const tokens = bytesToTokens(ramKb * 1000);
@@ -98,6 +99,27 @@ export async function stakingContractSetup(options: StandardProposalOptions) {
     const deployActions = await deployContract({ contractName: contract, contractDir, returnActions: true }, options);
 
     if (!deployActions) throw new Error('Expected deployActions to be defined');
+
+    const vestingDeployActions = await deployContract(
+        { contractName: 'vesting.tmy', contractDir: directory + 'vesting.tmy', returnActions: true },
+        options
+    );
+
+    if (!vestingDeployActions) throw new Error('Expected vestingDeployActions to be defined');
+
+    const eosioDeployActions = await deployContract(
+        { contractName: 'eosio', contractDir: directory + 'eosio', returnActions: true },
+        options
+    );
+
+    if (!eosioDeployActions) throw new Error('Expected eosioDeployActions to be defined');
+
+    const tonomyDeployActions = await deployContract(
+        { contractName: 'tonomy', contractDir: directory + 'tonomy', returnActions: true },
+        options
+    );
+
+    if (!tonomyDeployActions) throw new Error('Expected tonomyDeployActions to be defined');
 
     const actions = [adminSetAppAction, buyRamAction, ...deployActions];
 
