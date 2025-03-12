@@ -356,7 +356,7 @@ function getAppUsernameHash(username: string): Checksum256 {
     return Checksum256.from(fullUername.usernameHash);
 }
 
-function createSubdomainOnOrigin(origin: string, subdomain: string): string {
+export function createSubdomainOnOrigin(origin: string, subdomain: string): string {
     const url = new URL(origin);
 
     return url.protocol + '//' + subdomain + '.' + url.host;

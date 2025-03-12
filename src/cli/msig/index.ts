@@ -17,6 +17,7 @@ import { hyphaAccountsCreate, hyphaContractSet, hyphaAddAccountPermissions } fro
 import { sleep } from '../../sdk/util';
 import { vestingMigrate } from './vestingMigrateAllocate';
 import { newApp } from './newApp';
+import { createStakingTmyAccount, stakingContractSetup } from './staking';
 
 const eosioMsigContract = EosioMsigContract.Instance;
 
@@ -113,15 +114,15 @@ export default async function msig(args: string[]) {
                 }
             );
         } else if (proposalType === 'new-account') {
-            await newAccount({ governanceAccounts }, options);
+            await newAccount(options);
         } else if (proposalType === 'transfer') {
             const from = 'team.tmy';
             const to = 'advteam.tmy';
 
             await transfer({ from, to }, options);
         } else if (proposalType === 'deploy-contract') {
-            const contractName = 'tonomy';
-            const contractDir = `/home/dev/Documents/git/tonomy/Tonomy-ID-Integration/Tonomy-ID-SDK/Tonomy-Contracts/contracts/${contractName}`;
+            const contractName = 'vesting.tmy';
+            const contractDir = `/home/sadia/TonomyFoundation/january/Tonomy-ID-Integration/Tonomy-ID-SDK/Tonomy-Contracts/contracts/vesting.tmy`;
 
             await deployContract({ contractName, contractDir }, options);
         } else if (proposalType === 'eosio.code-permission') {
@@ -160,6 +161,10 @@ export default async function msig(args: string[]) {
             await setBlockchainConfig({}, options);
         } else if (proposalType === 'new-app') {
             await newApp(options);
+        } else if (proposalType === 'staking-account') {
+            await createStakingTmyAccount(options);
+        } else if (proposalType === 'staking-contract') {
+            await stakingContractSetup(options);
         } else {
             throw new Error(`Invalid msig proposal type ${proposalType}`);
         }
