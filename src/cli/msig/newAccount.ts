@@ -1,7 +1,8 @@
 import { Authority } from '../../sdk/services/blockchain';
 import { StandardProposalOptions, createProposal, executeProposal } from '.';
 
-export async function newAccount(options: StandardProposalOptions) {
+// @ts-expect-error args not used
+export async function newAccount(args: { governanceAccounts: string[] }, options: StandardProposalOptions) {
     const accountName = 'login.hypha';
 
     const active = Authority.fromKey('EOS5DMPJ4DsJ2Vc4f7g5o8z9o5HswcpXrE4C58r7wxxzZgYxQn8rB');
