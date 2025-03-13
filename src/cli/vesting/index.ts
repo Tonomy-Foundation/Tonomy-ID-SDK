@@ -93,7 +93,7 @@ export default async function vesting(args: string[]) {
         if (recipient.startsWith('@')) {
             console.log('Searching for username: ', recipient);
             const usernameInstance = TonomyUsername.fromUsername(
-                recipient,
+                recipient.slice(1),
                 AccountType.PERSON,
                 settings.config.accountSuffix
             );
