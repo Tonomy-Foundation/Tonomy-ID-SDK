@@ -28,15 +28,15 @@ export async function transfer(args: string[]) {
     const privateKey = PrivateKey.from(process.env.SIGNING_KEY || '');
     const signer = createSigner(privateKey);
 
-    const sender = args[0] as string;
-    let recipient = args[1] as string;
-    const quantity = args[2] as string;
-    const memo = (args[3] as string) || '';
+    const sender = args[1] as string;
+    let recipient = args[2] as string;
+    const quantity = args[3] as string;
+    const memo = (args[4] as string) || '';
 
     if (recipient.startsWith('@')) {
         console.log('Searching for username: ', recipient);
         const usernameInstance = TonomyUsername.fromUsername(
-            recipient,
+            recipient.slice(1),
             AccountType.PERSON,
             settings.config.accountSuffix
         );
