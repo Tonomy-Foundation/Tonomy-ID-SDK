@@ -33,12 +33,81 @@ export async function createStakingTmyAccount(options: StandardProposalOptions) 
 
     const activeAuthority = Authority.fromAccount({ actor: 'ops.tmy', permission: 'active' });
     const ownerAuthority = Authority.fromAccount({ actor: 'ops.tmy', permission: 'owner' });
+
+    activeAuthority.addCodePermission('staking.tmy');
+    ownerAuthority.addCodePermission('staking.tmy');
+
     const action = createNewAccountAction('staking.tmy', activeAuthority, ownerAuthority);
+
+    //add staking permission to infra.tmy
+    const accountInfo = await getAccountInfo(Name.from('infra.tmy'));
+
+    const ownerPermission = accountInfo.getPermission('owner');
+    const activePermission = accountInfo.getPermission('active');
+
+    const ownerAuthorityInfra = Authority.fromAccountPermission(ownerPermission);
+    const activeAuthorityInfra = Authority.fromAccountPermission(activePermission);
+
+    ownerAuthorityInfra.addCodePermission('staking.tmy');
+    activeAuthorityInfra.addCodePermission('staking.tmy');
+    const updateInfraOwnerPermission = {
+        account: 'tonomy',
+        name: 'updateauth',
+        authorization: [
+            {
+                actor: 'infra.tmy',
+                permission: 'owner',
+            },
+            {
+                actor: 'tonomy',
+                permission: 'active',
+            },
+            {
+                actor: 'tonomy',
+                permission: 'owner',
+            },
+        ],
+        data: {
+            account: 'infra.tmy',
+            permission: 'owner',
+            parent: '',
+            auth: ownerAuthority,
+
+            auth_parent: false,
+        },
+    };
+
+    const updateInfraActivePermission = {
+        account: 'tonomy',
+        name: 'updateauth',
+        authorization: [
+            {
+                actor: 'infra.tmy',
+                permission: 'active',
+            },
+            {
+                actor: 'tonomy',
+                permission: 'active',
+            },
+            {
+                actor: 'tonomy',
+                permission: 'owner',
+            },
+        ],
+        data: {
+            account: 'infra.tmy',
+            permission: 'active',
+            parent: 'owner',
+            auth: activeAuthority,
+
+            auth_parent: false,
+        },
+    };
 
     const proposalHash = await createProposal(
         options.proposer,
         options.proposalName,
-        [action],
+        [action, updateInfraOwnerPermission, updateInfraActivePermission],
         options.privateKey,
         [...options.requested],
         options.dryRun
@@ -113,45 +182,17 @@ export async function stakingContractSetup(options: StandardProposalOptions) {
 }
 
 // deploy the new staking.tmy contract
-// re-deploy the vesting, eosio and tonomy contracts
-export async function reDeployContract(options: StandardProposalOptions) {
-    const ramKb = 4680000;
-
+export async function deployStakingContract(options: StandardProposalOptions) {
     const contract = 'staking.tmy';
     const directory =
         '/home/sadia/TonomyFoundation/january/Tonomy-ID-Integration/Tonomy-ID-SDK/Tonomy-Contracts/contracts/';
     const contractDir = directory + `staking.tmy`;
 
-    const tokens = bytesToTokens(ramKb * 1000);
-
-    console.log(`Setting up hypha contract "${contract}" with ${tokens} tokens to buy ${ramKb}KB of RAM`);
-
     const deployActions = await deployContract({ contractName: contract, contractDir, returnActions: true }, options);
 
     if (!deployActions) throw new Error('Expected deployActions to be defined');
 
-    const vestingDeployActions = await deployContract(
-        { contractName: 'vesting.tmy', contractDir: directory + 'vesting.tmy', returnActions: true },
-        options
-    );
-
-    if (!vestingDeployActions) throw new Error('Expected vestingDeployActions to be defined');
-
-    const eosioDeployActions = await deployContract(
-        { contractName: 'eosio', contractDir: directory + 'eosio.tonomy', returnActions: true },
-        options
-    );
-
-    if (!eosioDeployActions) throw new Error('Expected eosioDeployActions to be defined');
-
-    const tonomyDeployActions = await deployContract(
-        { contractName: 'tonomy', contractDir: directory + 'tonomy', returnActions: true },
-        options
-    );
-
-    if (!tonomyDeployActions) throw new Error('Expected tonomyDeployActions to be defined');
-
-    const actions = [...deployActions, ...vestingDeployActions, ...eosioDeployActions, ...tonomyDeployActions];
+    const actions = [...deployActions];
 
     const proposalHash = await createProposal(
         options.proposer,
@@ -166,85 +207,74 @@ export async function reDeployContract(options: StandardProposalOptions) {
     if (options.autoExecute) await executeProposal(options.proposer, options.proposalName, proposalHash);
 }
 
-//add the staking.tmy@eosio.code to the active permission of infra.tmy and staking.tmy account
-export async function addEosioCode(options: StandardProposalOptions) {
-    const actions = [];
+// re-deploy the vesting contract
+export async function reDeployVestingContract(options: StandardProposalOptions) {
+    const directory =
+        '/home/sadia/TonomyFoundation/january/Tonomy-ID-Integration/Tonomy-ID-SDK/Tonomy-Contracts/contracts/';
 
-    const accountsToUpdate = ['staking.tmy', 'infra.tmy'];
+    const vestingDeployActions = await deployContract(
+        { contractName: 'vesting.tmy', contractDir: directory + 'vesting.tmy', returnActions: true },
+        options
+    );
 
-    for (const account of accountsToUpdate) {
-        const accountInfo = await getAccountInfo(Name.from('infra.tmy'));
-
-        const ownerPermission = accountInfo.getPermission('owner');
-        const activePermission = accountInfo.getPermission('active');
-
-        const ownerAuthority = Authority.fromAccountPermission(ownerPermission);
-        const activeAuthority = Authority.fromAccountPermission(activePermission);
-
-        activeAuthority.addCodePermission('staking.tmy');
-        ownerAuthority.addCodePermission('staking.tmy');
-
-        actions.push({
-            account: 'tonomy',
-            name: 'updateauth',
-            authorization: [
-                {
-                    actor: account,
-                    permission: 'owner',
-                },
-                {
-                    actor: 'tonomy',
-                    permission: 'active',
-                },
-                {
-                    actor: 'tonomy',
-                    permission: 'owner',
-                },
-            ],
-            data: {
-                account: account,
-                permission: 'owner',
-                parent: '',
-                auth: ownerAuthority,
-
-                auth_parent: false,
-            },
-        });
-
-        actions.push({
-            account: 'tonomy',
-            name: 'updateauth',
-            authorization: [
-                {
-                    actor: account,
-                    permission: 'active',
-                },
-                {
-                    actor: 'tonomy',
-                    permission: 'active',
-                },
-                {
-                    actor: 'tonomy',
-                    permission: 'owner',
-                },
-            ],
-            data: {
-                account: account,
-                permission: 'active',
-                parent: 'owner',
-                auth: activeAuthority,
-
-                auth_parent: false,
-            },
-        });
-    }
+    if (!vestingDeployActions) throw new Error('Expected vestingDeployActions to be defined');
 
     const proposalHash = await createProposal(
         options.proposer,
         options.proposalName,
-        [...actions],
+        [...vestingDeployActions],
         options.privateKey,
-        options.requested,
+        [...options.requested],
+        options.dryRun
+    );
+
+    if (options.dryRun) return;
+    if (options.autoExecute) await executeProposal(options.proposer, options.proposalName, proposalHash);
+}
+
+// re-deploy the eosio contract
+export async function reDeployEosioContract(options: StandardProposalOptions) {
+    const directory =
+        '/home/sadia/TonomyFoundation/january/Tonomy-ID-Integration/Tonomy-ID-SDK/Tonomy-Contracts/contracts/';
+
+    const eosioDeployActions = await deployContract(
+        { contractName: 'eosio', contractDir: directory + 'eosio.tonomy', returnActions: true },
+        options
+    );
+
+    if (!eosioDeployActions) throw new Error('Expected eosioDeployActions to be defined');
+
+    const proposalHash = await createProposal(
+        options.proposer,
+        options.proposalName,
+        [...eosioDeployActions],
+        options.privateKey,
+        [...options.requested],
+        options.dryRun
+    );
+
+    if (options.dryRun) return;
+    if (options.autoExecute) await executeProposal(options.proposer, options.proposalName, proposalHash);
+}
+
+// re-deploy the tonomy contracts
+export async function reDeployTonomyContract(options: StandardProposalOptions) {
+    const directory =
+        '/home/sadia/TonomyFoundation/january/Tonomy-ID-Integration/Tonomy-ID-SDK/Tonomy-Contracts/contracts/';
+
+    const tonomyDeployActions = await deployContract(
+        { contractName: 'tonomy', contractDir: directory + 'tonomy', returnActions: true },
+        options
+    );
+
+    if (!tonomyDeployActions) throw new Error('Expected tonomyDeployActions to be defined');
+
+    const proposalHash = await createProposal(
+        options.proposer,
+        options.proposalName,
+        [...tonomyDeployActions],
+        options.privateKey,
+        [...options.requested],
         options.dryRun
     );
 
