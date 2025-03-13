@@ -1,12 +1,13 @@
-import { amountToAsset, Authority, StakingContract } from '../../sdk/services/blockchain';
+import { Authority } from '../../sdk/services/blockchain';
 import { StandardProposalOptions, createProposal, executeProposal } from '.';
 import { Name } from '@wharfkit/antelope';
 import { getAccountInfo } from '../../sdk';
+import { addCodePermissionTo } from '../bootstrap';
 
 export async function addEosioCode(options: StandardProposalOptions) {
     const actions = [];
 
-    const accountsToUpdate = ['staking.tmy', 'infra.tmy'];
+    const accountsToUpdate = [...addCodePermissionTo, 'advteam.tmy'];
 
     for (const account of accountsToUpdate) {
         const accountInfo = await getAccountInfo(Name.from(account));
@@ -17,8 +18,10 @@ export async function addEosioCode(options: StandardProposalOptions) {
         const ownerAuthority = Authority.fromAccountPermission(ownerPermission);
         const activeAuthority = Authority.fromAccountPermission(activePermission);
 
-        activeAuthority.addCodePermission(account);
-        ownerAuthority.addCodePermission(account);
+        activeAuthority.addCodePermission('vesting.tmy');
+        activeAuthority.addCodePermission('staking.tmy');
+        ownerAuthority.addCodePermission('vesting.tmy');
+        ownerAuthority.addCodePermission('staking.tmy');
 
         actions.push({
             account: 'tonomy',
@@ -75,40 +78,10 @@ export async function addEosioCode(options: StandardProposalOptions) {
         });
     }
 
-    const setSettings = {
-        authorization: [
-            {
-                actor: 'staking.tmy',
-                permission: 'active',
-            },
-        ],
-        account: 'staking.tmy',
-        name: 'setsettings',
-        data: {
-            // eslint-disable-next-line camelcase
-            yearly_stake_pool: amountToAsset(StakingContract.yearlyStakePool, 'LEOS'),
-        },
-    };
-
-    const setYearlyYield = {
-        authorization: [
-            {
-                actor: 'infra.tmy',
-                permission: 'active',
-            },
-        ],
-        account: 'staking.tmy',
-        name: 'addyield',
-        data: {
-            sender: 'infra.tmy',
-            quantity: amountToAsset(StakingContract.yearlyStakePool / 2, 'LEOS'),
-        },
-    };
-
     const proposalHash = await createProposal(
         options.proposer,
         options.proposalName,
-        [...actions, setSettings, setYearlyYield],
+        actions,
         options.privateKey,
         options.requested,
         options.dryRun

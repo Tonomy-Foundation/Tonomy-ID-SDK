@@ -17,7 +17,7 @@ import { hyphaAccountsCreate, hyphaContractSet, hyphaAddAccountPermissions } fro
 import { sleep } from '../../sdk/util';
 import { vestingMigrate } from './vestingMigrateAllocate';
 import { newApp } from './newApp';
-import { createStakingTmyAccount, stakingContractSetup } from './staking';
+import { createStakingTmyAccount, reDeployContract, stakingContractSetup, stakingSettings } from './staking';
 
 const eosioMsigContract = EosioMsigContract.Instance;
 
@@ -165,6 +165,12 @@ export default async function msig(args: string[]) {
             await createStakingTmyAccount(options);
         } else if (proposalType === 'staking-contract') {
             await stakingContractSetup(options);
+        } else if (proposalType === 'deploy-staking-contracts') {
+            await reDeployContract(options);
+        } else if (proposalType === 'staking-addEosioCode') {
+            await addEosioCode(options);
+        } else if (proposalType === 'staking-setSettings') {
+            await stakingSettings(options);
         } else {
             throw new Error(`Invalid msig proposal type ${proposalType}`);
         }
@@ -346,5 +352,10 @@ function printMsigHelp() {
                 propose vesting-bulk <proposalName>
                 propose ... --auto-execute
                 propose ... --dry-run
+                propose staking-account <proposalName>
+                propose staking-contract <proposalName>
+                propose deploy-staking-contracts <proposalName>
+                propose staking-addEosioCode <proposalName>
+                propose staking-setSettings <proposalName>
         `);
 }
