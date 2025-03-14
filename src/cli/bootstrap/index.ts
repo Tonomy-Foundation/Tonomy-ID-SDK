@@ -348,13 +348,13 @@ async function createTonomyContractAndSetResources() {
     }
 }
 
-function getAppUsernameHash(username: string): Checksum256 {
+export function getAppUsernameHash(username: string): Checksum256 {
     const fullUername = TonomyUsername.fromUsername(username, AccountType.APP, getSettings().accountSuffix);
 
     return Checksum256.from(fullUername.usernameHash);
 }
 
-function createSubdomainOnOrigin(origin: string, subdomain: string): string {
+export function createSubdomainOnOrigin(origin: string, subdomain: string): string {
     const url = new URL(origin);
 
     return url.protocol + '//' + subdomain + '.' + url.host;

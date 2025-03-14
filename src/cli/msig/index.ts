@@ -17,6 +17,15 @@ import { hyphaAccountsCreate, hyphaContractSet, hyphaAddAccountPermissions } fro
 import { sleep } from '../../sdk/util';
 import { vestingMigrate, vestingMigrate2 } from './vestingMigrateAllocate';
 import { newApp } from './newApp';
+import {
+    createStakingTmyAccount,
+    deployStakingContract,
+    reDeployEosioContract,
+    reDeployTonomyContract,
+    reDeployVestingContract,
+    stakingContractSetup,
+    stakingSettings,
+} from './staking';
 
 const eosioMsigContract = EosioMsigContract.Instance;
 
@@ -150,6 +159,24 @@ export default async function msig(args: string[]) {
             await setBlockchainConfig({}, options);
         } else if (proposalType === 'new-app') {
             await newApp(options);
+        } else if (proposalType === 'staking') {
+            const stakingSubcommand = args[2];
+
+            if (stakingSubcommand === 'account') {
+                await createStakingTmyAccount(options);
+            } else if (stakingSubcommand === 'contract') {
+                await stakingContractSetup(options);
+            } else if (stakingSubcommand === 'deploy-staking-contract') {
+                await deployStakingContract(options);
+            } else if (stakingSubcommand === 'redeploy-vesting-contract') {
+                await reDeployVestingContract(options);
+            } else if (stakingSubcommand === 'redeploy-eosio-contract') {
+                await reDeployEosioContract(options);
+            } else if (stakingSubcommand === 'redeploy-tonomy-contract') {
+                await reDeployTonomyContract(options);
+            } else if (stakingSubcommand === 'setSettings') {
+                await stakingSettings(options);
+            }
         } else {
             throw new Error(`Invalid msig proposal type ${proposalType}`);
         }
@@ -326,6 +353,13 @@ function printMsigHelp() {
                 propose remove-prod <proposalName>
                 propose res-config-set <proposalName>
                 propose set-chain-config <proposalName>
+                propose staking account <proposalName>
+                propose staking contract <proposalName>
+                propose staking deploy-staking-contract <proposalName>
+                propose staking redeploy-vesting-contract <proposalName>
+                propose staking redeploy-eosio-contract <proposalName>
+                propose staking redeploy-tonomy-contract <proposalName>
+                propose staking setSettings <proposalName>
                 propose transfer <proposalName>
                 propose update-prod <proposalName>
                 propose vesting-bulk <proposalName>
