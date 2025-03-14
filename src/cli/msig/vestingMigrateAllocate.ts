@@ -39,7 +39,18 @@ export async function vestingMigrate(options: StandardProposalOptions) {
     if (options.autoExecute) await executeProposal(options.proposer, options.proposalName, proposalHash);
 }
 
+function toBase6Plus1(num: number): string {
+    const base6 = num.toString(6);
+
+    return base6
+        .split('')
+        .map((digit) => (parseInt(digit, 6) + 1).toString())
+        .join('');
+}
+
 export async function vestingMigrate2(options: StandardProposalOptions) {
+    let count = 0;
+    let proposals = 0;
     const priceMultiplier = 2.0;
     const uniqueHolders = await getAllUniqueHolders();
     const allAllocations = await getAllAllocations(uniqueHolders);
@@ -56,6 +67,7 @@ export async function vestingMigrate2(options: StandardProposalOptions) {
             console.log(
                 `Migrating account ${allocation.holder} allocation ${allocation.id} in category ${allocation.vesting_category_type} from ${allocation.tokens_allocated} to ${newAsset}`
             );
+            count++;
 
             return createMigrateAction(
                 'coinsale.tmy',
@@ -68,12 +80,13 @@ export async function vestingMigrate2(options: StandardProposalOptions) {
             );
         });
 
-        const proposalName = Name.from(`${options.proposalName}${Math.floor(i / batchSize) + 1}`);
+        const proposalName = Name.from(`${options.proposalName}${toBase6Plus1(Math.floor(i / batchSize))}`);
 
         console.log(
             `Creating proposal ${proposalName.toString()} with ${actions.length} actions: ${i} - ${i + batchSize}`
         );
         console.log('----------------------------------------');
+        proposals++;
         const proposalHash = await createProposal(
             options.proposer,
             proposalName,
@@ -83,9 +96,14 @@ export async function vestingMigrate2(options: StandardProposalOptions) {
             options.dryRun
         );
 
-        if (options.dryRun) return;
-        if (options.autoExecute) await executeProposal(options.proposer, proposalName, proposalHash);
+        if (!options.dryRun && options.autoExecute) await executeProposal(options.proposer, proposalName, proposalHash);
+
+        console.log('----------------------------------------');
     }
+
+    console.log(`Batch size: ${batchSize}`);
+    console.log(`Proposals created: ${proposals}`);
+    console.log(`Processed ${count} / ${allAllocations.length} allocations`);
 }
 
 async function createAccountActions(account: NameType): Promise<ActionData[]> {
