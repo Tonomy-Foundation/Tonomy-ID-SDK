@@ -17,7 +17,6 @@ export const LEOS_SEED_LATE_ROUND_PRICE = 0.0004;
 export const LEOS_PUBLIC_SALE_PRICE = 0.0012;
 export const LEOS_CURRENT_PRICE = LEOS_SEED_ROUND_PRICE;
 
-const environment = getSettings().environment;
 
 export interface VestingAllocation {
     id: number;
@@ -158,7 +157,7 @@ export class VestingContract {
     public static get Instance() {
         return this.singletonInstance || (this.singletonInstance = new this());
     }
-    static getMaxAllocations = () => (environment === 'test' || environment === 'staging' ? 5 : 150);
+    static getMaxAllocations = () => (getSettings().environment === 'test' || getSettings().environment === 'staging' ? 5 : 150);
     static SALE_START_DATE = '2024-04-30T12:00:00';
     static VESTING_START_DATE = '2030-01-01T00:00:00';
 

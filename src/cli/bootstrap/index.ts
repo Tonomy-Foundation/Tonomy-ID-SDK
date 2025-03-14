@@ -2,18 +2,7 @@ import deployContract from './deploy-contract';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { createAntelopeAccount, createApp } from './create-account';
-import {
-    DemoTokenContract,
-    setSettings,
-    EosioTokenContract,
-    EosioContract,
-    TonomyContract,
-    EosioUtil,
-    TonomyUsername,
-    AccountType,
-    getSettings,
-    VestingContract,
-} from '../../sdk/index';
+
 import { getSigner, updateAccountKey, updateControlByAccount } from './keys';
 import settings from './settings';
 import { Checksum256, PrivateKey, PublicKey } from '@wharfkit/antelope';
@@ -33,6 +22,18 @@ import { createUser, mockCreateAccount, restoreCreateAccountFromMock } from './u
 import { sleep } from '../../sdk/util';
 
 setSettings(settings.config);
+import {
+    DemoTokenContract,
+    setSettings,
+    EosioTokenContract,
+    EosioContract,
+    TonomyContract,
+    EosioUtil,
+    TonomyUsername,
+    AccountType,
+    getSettings,
+    VestingContract,
+} from '../../sdk/index';
 
 const demoTokenContract = DemoTokenContract.Instance;
 const tokenContract = EosioTokenContract.Instance;
