@@ -17,6 +17,15 @@ import { hyphaAccountsCreate, hyphaContractSet, hyphaAddAccountPermissions } fro
 import { sleep } from '../../sdk/util';
 import { vestingMigrate } from './vestingMigrateAllocate';
 import { newApp } from './newApp';
+import {
+    createStakingTmyAccount,
+    deployStakingContract,
+    reDeployEosioContract,
+    reDeployTonomyContract,
+    reDeployVestingContract,
+    stakingContractSetup,
+    stakingSettings,
+} from './staking';
 
 const eosioMsigContract = EosioMsigContract.Instance;
 
@@ -92,76 +101,105 @@ export default async function msig(args: string[]) {
             console.error('Transaction failed');
         }
     } else if (args[0] === 'propose') {
-        const proposalType = args[1];
-        const proposalName = Name.from(args[2]);
+        if (args[1] === 'staking') {
+            const proposalType = args[2];
+            const proposalName = Name.from(args[3]);
+            const options = {
+                proposer,
+                proposalName,
+                privateKey,
+                requested: newGovernanceAccounts,
+                autoExecute,
+                dryRun,
+            };
 
-        const options = {
-            proposer,
-            proposalName,
-            privateKey,
-            requested: newGovernanceAccounts,
-            autoExecute,
-            dryRun,
-        };
-
-        if (proposalType === 'gov-migrate') {
-            await govMigrate(
-                { newGovernanceAccounts },
-                {
-                    ...options,
-                    requested: governanceAccounts,
-                }
-            );
-        } else if (proposalType === 'new-account') {
-            await newAccount({ governanceAccounts }, options);
-        } else if (proposalType === 'transfer') {
-            const from = 'team.tmy';
-            const to = 'advteam.tmy';
-
-            await transfer({ from, to }, options);
-        } else if (proposalType === 'deploy-contract') {
-            const contractName = 'tonomy';
-            const contractDir = `/home/dev/Documents/git/tonomy/Tonomy-ID-Integration/Tonomy-ID-SDK/Tonomy-Contracts/contracts/${contractName}`;
-
-            await deployContract({ contractName, contractDir }, options);
-        } else if (proposalType === 'eosio.code-permission') {
-            await addEosioCode(options);
-        } else if (proposalType === 'add-auth') {
-            await addAuth(
-                {
-                    account: 'srvice.hypha',
-                    permission: 'active',
-                    newDelegate: 'gov.tmy',
-                    useParentAuth: true,
-                },
-                options
-            );
-        } else if (proposalType === 'vesting-migrate') {
-            await vestingMigrate({}, options);
-        } else if (proposalType === 'vesting-bulk') {
-            await vestingBulk({ governanceAccounts }, options);
-        } else if (proposalType === 'add-prod') {
-            await addProd({}, options);
-        } else if (proposalType === 'remove-prod') {
-            await removeProd({}, options);
-        } else if (proposalType === 'update-prod') {
-            await updateProd({}, options);
-        } else if (proposalType === 'change-prod') {
-            await changeProds({}, options);
-        } else if (proposalType === 'hypha-accounts-create') {
-            await hyphaAccountsCreate({}, options);
-        } else if (proposalType === 'hypha-add-permissions') {
-            await hyphaAddAccountPermissions({}, options);
-        } else if (proposalType === 'hypha-contract-set') {
-            await hyphaContractSet({}, options);
-        } else if (proposalType === 'res-config-set') {
-            await setResourceConfig({}, options);
-        } else if (proposalType === 'set-chain-config') {
-            await setBlockchainConfig({}, options);
-        } else if (proposalType === 'new-app') {
-            await newApp(options);
+            if (proposalType === 'account') {
+                await createStakingTmyAccount(options);
+            } else if (proposalType === 'contract') {
+                await stakingContractSetup(options);
+            } else if (proposalType === 'deploy-staking-contract') {
+                await deployStakingContract(options);
+            } else if (proposalType === 'redeploy-vesting-contract') {
+                await reDeployVestingContract(options);
+            } else if (proposalType === 'redeploy-eosio-contract') {
+                await reDeployEosioContract(options);
+            } else if (proposalType === 'redeploy-tonomy-contract') {
+                await reDeployTonomyContract(options);
+            } else if (proposalType === 'setSettings') {
+                await stakingSettings(options);
+            }
         } else {
-            throw new Error(`Invalid msig proposal type ${proposalType}`);
+            const proposalType = args[1];
+            const proposalName = Name.from(args[2]);
+
+            const options = {
+                proposer,
+                proposalName,
+                privateKey,
+                requested: newGovernanceAccounts,
+                autoExecute,
+                dryRun,
+            };
+
+            if (proposalType === 'gov-migrate') {
+                await govMigrate(
+                    { newGovernanceAccounts },
+                    {
+                        ...options,
+                        requested: governanceAccounts,
+                    }
+                );
+            } else if (proposalType === 'new-account') {
+                await newAccount({ governanceAccounts }, options);
+            } else if (proposalType === 'transfer') {
+                const from = 'team.tmy';
+                const to = 'advteam.tmy';
+
+                await transfer({ from, to }, options);
+            } else if (proposalType === 'deploy-contract') {
+                const contractName = 'tonomy';
+                const contractDir = `/home/dev/Documents/git/tonomy/Tonomy-ID-Integration/Tonomy-ID-SDK/Tonomy-Contracts/contracts/${contractName}`;
+
+                await deployContract({ contractName, contractDir }, options);
+            } else if (proposalType === 'eosio.code-permission') {
+                await addEosioCode(options);
+            } else if (proposalType === 'add-auth') {
+                await addAuth(
+                    {
+                        account: 'srvice.hypha',
+                        permission: 'active',
+                        newDelegate: 'gov.tmy',
+                        useParentAuth: true,
+                    },
+                    options
+                );
+            } else if (proposalType === 'vesting-migrate') {
+                await vestingMigrate({}, options);
+            } else if (proposalType === 'vesting-bulk') {
+                await vestingBulk({ governanceAccounts }, options);
+            } else if (proposalType === 'add-prod') {
+                await addProd({}, options);
+            } else if (proposalType === 'remove-prod') {
+                await removeProd({}, options);
+            } else if (proposalType === 'update-prod') {
+                await updateProd({}, options);
+            } else if (proposalType === 'change-prod') {
+                await changeProds({}, options);
+            } else if (proposalType === 'hypha-accounts-create') {
+                await hyphaAccountsCreate({}, options);
+            } else if (proposalType === 'hypha-add-permissions') {
+                await hyphaAddAccountPermissions({}, options);
+            } else if (proposalType === 'hypha-contract-set') {
+                await hyphaContractSet({}, options);
+            } else if (proposalType === 'res-config-set') {
+                await setResourceConfig({}, options);
+            } else if (proposalType === 'set-chain-config') {
+                await setBlockchainConfig({}, options);
+            } else if (proposalType === 'new-app') {
+                await newApp(options);
+            } else {
+                throw new Error(`Invalid msig proposal type ${proposalType}`);
+            }
         }
     } else if (args[0] === 'approve') {
         const proposalName = Name.from(args[1]);
@@ -341,5 +379,12 @@ function printMsigHelp() {
                 propose vesting-bulk <proposalName>
                 propose ... --auto-execute
                 propose ... --dry-run
+                propose staking account <proposalName>
+                propose staking contract <proposalName>
+                propose staking deploy-staking-contract <proposalName>
+                propose staking redeploy-vesting-contract <proposalName>
+                propose staking redeploy-eosio-contract <proposalName>
+                propose staking redeploy-tonomy-contract <proposalName>
+                propose staking setSettings <proposalName>
         `);
 }
