@@ -11,6 +11,7 @@ import { amountToAsset, assetToAmount, EosioTokenContract } from './EosioTokenCo
 const debug = Debug('tonomy-sdk:services:blockchain:contracts:staking');
 const tonomyContract = TonomyContract.Instance;
 const CONTRACT_NAME = 'staking.tmy';
+const environment = getSettings().environment;
 
 export interface StakingAllocationData {
     id: number;
@@ -79,11 +80,11 @@ export class StakingContract {
     static singletonInstance: StakingContract;
     contractName = CONTRACT_NAME;
 
-    static getLockedDays = () => (getSettings().environment !== 'test' ? 14 : 10 / SECONDS_IN_DAY); // 14 days or 10 seconds
-    static getReleaseDays = () => (getSettings().environment !== 'test' ? 5 : 5 / SECONDS_IN_DAY); // 5 days or 5 seconds
-    static getMinimumTransfer = () => (getSettings().environment !== 'test' ? 1000 : 1); // 1000 LEOS or 1 LEOS
-    static getMaxAllocations = () => (getSettings().environment !== 'test' ? 20 : 5); // 100 allocations or 5 allocations
-    static getStakingCycleHours = () => (getSettings().environment !== 'test' ? 24 : 1 / 60); // 24 hours or 1 minute
+    static getLockedDays = () => (environment === 'test' || environment === 'staging' ? 10 / SECONDS_IN_DAY : 14); // 14 days or 10 seconds
+    static getReleaseDays = () => (environment === 'test' || environment === 'staging' ? 5 / SECONDS_IN_DAY : 5); // 5 days or 5 seconds
+    static getMinimumTransfer = () => (environment === 'test' || environment === 'staging' ? 1 : 1000); // 1000 LEOS or 1 LEOS
+    static getMaxAllocations = () => (environment === 'test' || environment === 'staging' ? 5 : 20); // 100 allocations or 5 allocations
+    static getStakingCycleHours = () => (environment === 'test' || environment === 'staging' ? 1 / 60 : 24); // 24 hours or 1 minute
     static MAX_APY = 1.0;
     static STAKING_APY_TARGET = 50 / 100; // 50%
     // Use the TGE unlock: https://docs.google.com/spreadsheets/d/1uyvpgXC0th3Z1_bz4m18dJKy2yyVfYFmcaEyS9fveeA/edit?gid=1074294213#gid=1074294213&range=Q34
