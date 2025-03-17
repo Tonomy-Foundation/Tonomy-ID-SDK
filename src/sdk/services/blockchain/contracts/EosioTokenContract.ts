@@ -121,7 +121,6 @@ class EosioTokenContract {
             await getApi()
         ).v1.chain.get_currency_balance(CONTRACT_NAME, account, getSettings().currencySymbol);
 
-        console.log(account.toString(), assets);
         if (assets.length === 0) return 0;
 
         return assets[0].value;
