@@ -403,9 +403,8 @@ export class StakingContract {
 
         let totalStaked = 0;
         let estimatedMonthlyYield = 0;
-        let totalUnlockable = 0;
+        const totalUnlockable = 0;
         let totalUnlocking = 0;
-        const now = new Date();
 
         for (const alloc of allocations) {
             const stakedAmount = assetToAmount(alloc.staked);
@@ -415,11 +414,7 @@ export class StakingContract {
                 estimatedMonthlyYield += assetToAmount(alloc.monthlyYield);
             } else {
                 // If unstake has been requested, check if release time has passed.
-                if (alloc.releaseTime <= now) {
-                    totalUnlockable += stakedAmount;
-                } else {
-                    totalUnlocking += stakedAmount;
-                }
+                totalUnlocking += stakedAmount;
             }
         }
 
