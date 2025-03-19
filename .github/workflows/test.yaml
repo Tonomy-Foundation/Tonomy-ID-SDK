@@ -33,7 +33,7 @@ jobs:
         with:
           repository: Tonomy-Foundation/Tonomy-Contracts
           # update ref to change contract branch, if needed for temporary CI testing
-          ref: feature/developer-logs
+          ref: development
           path: Tonomy-Contracts
 
       - name: Build demo.tmy contract
