@@ -1,7 +1,7 @@
 import { PrivateKey, Name, Checksum256, NameType } from '@wharfkit/antelope';
-import { EosioMsigContract, setSettings } from '../../sdk';
+import { EosioMsigContract } from '../../sdk';
 import { ActionData, createSigner } from '../../sdk/services/blockchain';
-import settings from '../bootstrap/settings';
+import settings from '../settings';
 import { govMigrate } from './govMigrate';
 import { newAccount } from './newAccount';
 import { transfer } from './transfer';
@@ -15,7 +15,7 @@ import { setBlockchainConfig } from './setBlockchainConfig';
 import { addProd, changeProds, removeProd, updateProd } from './producers';
 import { hyphaAccountsCreate, hyphaContractSet, hyphaAddAccountPermissions } from './hypha';
 import { sleep } from '../../sdk/util';
-import { vestingMigrate } from './vestingMigrateAllocate';
+import { vestingMigrate, vestingMigrate2 } from './vestingMigrateAllocate';
 import { newApp } from './newApp';
 import {
     createStakingTmyAccount,
@@ -37,15 +37,6 @@ if (!settings.isProduction()) {
 }
 
 export default async function msig(args: string[]) {
-    setSettings({
-        blockchainUrl: settings.config.blockchainUrl,
-        loggerLevel: settings.config.loggerLevel,
-        currencySymbol: settings.config.currencySymbol,
-        accountSuffix: settings.config.accountSuffix,
-    });
-
-    console.log('Using environment', settings.env);
-
     let autoExecute = false,
         dryRun = false;
 
@@ -101,105 +92,93 @@ export default async function msig(args: string[]) {
             console.error('Transaction failed');
         }
     } else if (args[0] === 'propose') {
-        if (args[1] === 'staking') {
-            const proposalType = args[2];
-            const proposalName = Name.from(args[3]);
-            const options = {
-                proposer,
-                proposalName,
-                privateKey,
-                requested: newGovernanceAccounts,
-                autoExecute,
-                dryRun,
-            };
+        const proposalType = args[1];
+        const proposalName = Name.from(args[2]);
 
-            if (proposalType === 'account') {
+        const options = {
+            proposer,
+            proposalName,
+            privateKey,
+            requested: newGovernanceAccounts,
+            autoExecute,
+            dryRun,
+        };
+
+        if (proposalType === 'gov-migrate') {
+            await govMigrate(
+                { newGovernanceAccounts },
+                {
+                    ...options,
+                    requested: governanceAccounts,
+                }
+            );
+        } else if (proposalType === 'new-account') {
+            await newAccount({ governanceAccounts }, options);
+        } else if (proposalType === 'transfer') {
+            await transfer(options);
+        } else if (proposalType === 'deploy-contract') {
+            const contractName = 'tonomy';
+            const contractDir = `/home/dev/Documents/git/tonomy/Tonomy-ID-Integration/Tonomy-ID-SDK/Tonomy-Contracts/contracts/${contractName}`;
+
+            await deployContract({ contractName, contractDir }, options);
+        } else if (proposalType === 'eosio.code-permission') {
+            await addEosioCode(options);
+        } else if (proposalType === 'add-auth') {
+            await addAuth(
+                {
+                    account: 'srvice.hypha',
+                    permission: 'active',
+                    newDelegate: 'gov.tmy',
+                    useParentAuth: true,
+                },
+                options
+            );
+        } else if (proposalType === 'vesting-migrate') {
+            await vestingMigrate(options);
+        } else if (proposalType === 'vesting-migrate2') {
+            await vestingMigrate2(options);
+        } else if (proposalType === 'vesting-bulk') {
+            await vestingBulk({ governanceAccounts }, options);
+        } else if (proposalType === 'add-prod') {
+            await addProd({}, options);
+        } else if (proposalType === 'remove-prod') {
+            await removeProd({}, options);
+        } else if (proposalType === 'update-prod') {
+            await updateProd({}, options);
+        } else if (proposalType === 'change-prod') {
+            await changeProds({}, options);
+        } else if (proposalType === 'hypha-accounts-create') {
+            await hyphaAccountsCreate({}, options);
+        } else if (proposalType === 'hypha-add-permissions') {
+            await hyphaAddAccountPermissions({}, options);
+        } else if (proposalType === 'hypha-contract-set') {
+            await hyphaContractSet({}, options);
+        } else if (proposalType === 'res-config-set') {
+            await setResourceConfig({}, options);
+        } else if (proposalType === 'set-chain-config') {
+            await setBlockchainConfig({}, options);
+        } else if (proposalType === 'new-app') {
+            await newApp(options);
+        } else if (proposalType === 'staking') {
+            const stakingSubcommand = args[2];
+
+            if (stakingSubcommand === 'account') {
                 await createStakingTmyAccount(options);
-            } else if (proposalType === 'contract') {
+            } else if (stakingSubcommand === 'contract') {
                 await stakingContractSetup(options);
-            } else if (proposalType === 'deploy-staking-contract') {
+            } else if (stakingSubcommand === 'deploy-staking-contract') {
                 await deployStakingContract(options);
-            } else if (proposalType === 'redeploy-vesting-contract') {
+            } else if (stakingSubcommand === 'redeploy-vesting-contract') {
                 await reDeployVestingContract(options);
-            } else if (proposalType === 'redeploy-eosio-contract') {
+            } else if (stakingSubcommand === 'redeploy-eosio-contract') {
                 await reDeployEosioContract(options);
-            } else if (proposalType === 'redeploy-tonomy-contract') {
+            } else if (stakingSubcommand === 'redeploy-tonomy-contract') {
                 await reDeployTonomyContract(options);
-            } else if (proposalType === 'setSettings') {
+            } else if (stakingSubcommand === 'setSettings') {
                 await stakingSettings(options);
             }
         } else {
-            const proposalType = args[1];
-            const proposalName = Name.from(args[2]);
-
-            const options = {
-                proposer,
-                proposalName,
-                privateKey,
-                requested: newGovernanceAccounts,
-                autoExecute,
-                dryRun,
-            };
-
-            if (proposalType === 'gov-migrate') {
-                await govMigrate(
-                    { newGovernanceAccounts },
-                    {
-                        ...options,
-                        requested: governanceAccounts,
-                    }
-                );
-            } else if (proposalType === 'new-account') {
-                await newAccount({ governanceAccounts }, options);
-            } else if (proposalType === 'transfer') {
-                const from = 'team.tmy';
-                const to = 'advteam.tmy';
-
-                await transfer({ from, to }, options);
-            } else if (proposalType === 'deploy-contract') {
-                const contractName = 'tonomy';
-                const contractDir = `/home/dev/Documents/git/tonomy/Tonomy-ID-Integration/Tonomy-ID-SDK/Tonomy-Contracts/contracts/${contractName}`;
-
-                await deployContract({ contractName, contractDir }, options);
-            } else if (proposalType === 'eosio.code-permission') {
-                await addEosioCode(options);
-            } else if (proposalType === 'add-auth') {
-                await addAuth(
-                    {
-                        account: 'srvice.hypha',
-                        permission: 'active',
-                        newDelegate: 'gov.tmy',
-                        useParentAuth: true,
-                    },
-                    options
-                );
-            } else if (proposalType === 'vesting-migrate') {
-                await vestingMigrate({}, options);
-            } else if (proposalType === 'vesting-bulk') {
-                await vestingBulk({ governanceAccounts }, options);
-            } else if (proposalType === 'add-prod') {
-                await addProd({}, options);
-            } else if (proposalType === 'remove-prod') {
-                await removeProd({}, options);
-            } else if (proposalType === 'update-prod') {
-                await updateProd({}, options);
-            } else if (proposalType === 'change-prod') {
-                await changeProds({}, options);
-            } else if (proposalType === 'hypha-accounts-create') {
-                await hyphaAccountsCreate({}, options);
-            } else if (proposalType === 'hypha-add-permissions') {
-                await hyphaAddAccountPermissions({}, options);
-            } else if (proposalType === 'hypha-contract-set') {
-                await hyphaContractSet({}, options);
-            } else if (proposalType === 'res-config-set') {
-                await setResourceConfig({}, options);
-            } else if (proposalType === 'set-chain-config') {
-                await setBlockchainConfig({}, options);
-            } else if (proposalType === 'new-app') {
-                await newApp(options);
-            } else {
-                throw new Error(`Invalid msig proposal type ${proposalType}`);
-            }
+            throw new Error(`Invalid msig proposal type ${proposalType}`);
         }
     } else if (args[0] === 'approve') {
         const proposalName = Name.from(args[1]);
@@ -374,11 +353,6 @@ function printMsigHelp() {
                 propose remove-prod <proposalName>
                 propose res-config-set <proposalName>
                 propose set-chain-config <proposalName>
-                propose transfer <proposalName>
-                propose update-prod <proposalName>
-                propose vesting-bulk <proposalName>
-                propose ... --auto-execute
-                propose ... --dry-run
                 propose staking account <proposalName>
                 propose staking contract <proposalName>
                 propose staking deploy-staking-contract <proposalName>
@@ -386,5 +360,12 @@ function printMsigHelp() {
                 propose staking redeploy-eosio-contract <proposalName>
                 propose staking redeploy-tonomy-contract <proposalName>
                 propose staking setSettings <proposalName>
+                propose transfer <proposalName>
+                propose update-prod <proposalName>
+                propose vesting-bulk <proposalName>
+                propose vesting-migrate <proposalName>
+                propose vesting-migrate2 <proposalName>
+                propose ... --auto-execute
+                propose ... --dry-run
         `);
 }

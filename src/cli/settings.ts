@@ -1,5 +1,5 @@
 import { ip } from 'address';
-import { LoggerLevel } from '../../sdk/util/settings';
+import { LoggerLevel } from '../sdk/util/settings';
 
 // cannot use NODE_ENV as it is always "production" on `yarn run build`
 const env = process.env.NODE_ENV || 'development';
@@ -52,7 +52,7 @@ const stagingConfig = {
 };
 
 const testnetConfig = {
-    environment: 'demo',
+    environment: 'testnet',
     ssoWebsiteOrigin: `https://accounts.testnet.pangea.web4.world`,
     demoWebsiteOrigin: `https://demo.testnet.pangea.web4.world`,
     consoleWebsiteOrigin: `https://console.developers.testnet.pangea.web4.world`,

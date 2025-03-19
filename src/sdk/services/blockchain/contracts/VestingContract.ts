@@ -4,6 +4,7 @@ import { Signer, transact } from '../eosio/transaction';
 import { getApi } from '../eosio/eosio';
 import { addMicroseconds, getSettings } from '../../../util';
 import Decimal from 'decimal.js';
+import { assetToAmount, assetToDecimal } from './EosioTokenContract';
 
 const CONTRACT_NAME = 'vesting.tmy';
 
@@ -12,9 +13,9 @@ export interface VestingSettings {
     launch_date: string;
 }
 
-export const LEOS_SEED_ROUND_PRICE = 0.0002;
-export const LEOS_SEED_LATE_ROUND_PRICE = 0.0004;
-export const LEOS_PUBLIC_SALE_PRICE = 0.0012;
+export const LEOS_SEED_ROUND_PRICE = 0.0001;
+export const LEOS_SEED_LATE_ROUND_PRICE = 0.0002;
+export const LEOS_PUBLIC_SALE_PRICE = 0.0006;
 export const LEOS_CURRENT_PRICE = LEOS_SEED_ROUND_PRICE;
 
 export interface VestingAllocation {
@@ -33,118 +34,130 @@ const MICROSECONDS_PER_DAY = 24 * SECONDS_PER_HOUR * MICROSECONDS_PER_SECOND;
 const MICROSECONDS_PER_MONTH = 30 * MICROSECONDS_PER_DAY;
 const MICROSECONDS_PER_YEAR = 365 * MICROSECONDS_PER_DAY;
 
-const vestingCategories: Map<
+export const vestingCategories: Map<
     number,
-    { startDelay: number; cliffPeriod: number; vestingPeriod: number; tgeUnlock: number }
+    { startDelay: number; cliffPeriod: number; vestingPeriod: number; tgeUnlock: number; name: string }
 > = new Map([
     [
-        999, // Testing Category
+        999,
         {
             startDelay: 10 * MICROSECONDS_PER_SECOND,
             cliffPeriod: 10 * MICROSECONDS_PER_SECOND,
             vestingPeriod: 20 * MICROSECONDS_PER_SECOND,
             tgeUnlock: 0.0,
+            name: 'Testing Category (no unlock)',
         },
     ],
     [
-        998, // Testing Category
+        998,
         {
             startDelay: 10 * MICROSECONDS_PER_SECOND,
             cliffPeriod: 10 * MICROSECONDS_PER_SECOND,
             vestingPeriod: 20 * MICROSECONDS_PER_SECOND,
             tgeUnlock: 0.5,
+            name: 'Testing Category (50% unlock)',
         },
     ],
     [
-        1, // Seed Private Sale (DEPRECIATED)
+        1,
         {
             startDelay: 0 * MICROSECONDS_PER_DAY,
             cliffPeriod: 6 * 30 * MICROSECONDS_PER_DAY,
             vestingPeriod: 2 * 365 * MICROSECONDS_PER_DAY,
             tgeUnlock: 0.0,
+            name: 'Seed Private Sale (DEPRECIATED)',
         },
     ],
     [
-        2, // Strategic Partnerships Private Sale (DEPRECIATED)
+        2,
         {
             startDelay: 6 * 30 * MICROSECONDS_PER_DAY,
             cliffPeriod: 6 * 30 * MICROSECONDS_PER_DAY,
             vestingPeriod: 2 * 365 * MICROSECONDS_PER_DAY,
             tgeUnlock: 0.0,
+            name: 'Strategic Partnerships Private Sale (DEPRECIATED)',
         },
     ],
     // Unchanged:
     [
-        3, // Public Sale (DO NOT USED YET)
+        3,
         {
             startDelay: 0 * MICROSECONDS_PER_DAY,
             cliffPeriod: 0 * MICROSECONDS_PER_DAY,
             vestingPeriod: 0 * MICROSECONDS_PER_DAY,
             tgeUnlock: 0.0,
+            name: 'Public Sale (DEPRECIATED)',
         },
     ],
     [
-        4, // Team and Advisors, Ecosystem
+        4,
         {
             startDelay: 1 * 365 * MICROSECONDS_PER_DAY,
             cliffPeriod: 0 * MICROSECONDS_PER_DAY,
             vestingPeriod: 5 * 365 * MICROSECONDS_PER_DAY,
             tgeUnlock: 0.0,
+            name: 'Team and Advisors, Ecosystem',
         },
     ],
     [
-        5, // Legal and Compliance
+        5,
         {
             startDelay: 0 * MICROSECONDS_PER_DAY,
             cliffPeriod: 0 * MICROSECONDS_PER_DAY,
             vestingPeriod: 1 * 365 * MICROSECONDS_PER_DAY,
             tgeUnlock: 0.0,
+            name: 'Legal and Compliance',
         },
     ],
     [
-        6, // Reserves, Partnerships, Liquidly Allocation
+        6,
         {
             startDelay: 0 * MICROSECONDS_PER_DAY,
             cliffPeriod: 0 * MICROSECONDS_PER_DAY,
             vestingPeriod: 2 * 365 * MICROSECONDS_PER_DAY,
             tgeUnlock: 0.0,
+            name: 'Reserves, Partnerships, Liquidly Allocation',
         },
     ],
     [
-        7, // Community and Marketing, Platform Dev, Infra Rewards
+        7,
         {
             startDelay: 0 * MICROSECONDS_PER_DAY,
             cliffPeriod: 0 * MICROSECONDS_PER_DAY,
             vestingPeriod: 5 * 365 * MICROSECONDS_PER_DAY,
             tgeUnlock: 0.0,
+            name: 'Community and Marketing, Platform Dev, Infra Rewards',
         },
     ],
     // New (replacing depreciated):
     [
-        8, // Seed (Early Bird)
+        8,
         {
             startDelay: 0 * MICROSECONDS_PER_DAY,
             cliffPeriod: 0 * MICROSECONDS_PER_DAY,
             vestingPeriod: 2 * 365 * MICROSECONDS_PER_DAY,
             tgeUnlock: 0.1,
+            name: 'Seed sale',
         },
     ],
     [
-        9, // Seed (Last Chance)
+        9,
         {
             startDelay: 0 * MICROSECONDS_PER_DAY,
             cliffPeriod: 0 * MICROSECONDS_PER_DAY,
             vestingPeriod: 2 * 365 * MICROSECONDS_PER_DAY,
             tgeUnlock: 0.05,
+            name: 'Pre-sale',
         },
     ],
     [
-        10, // Public (TGE)
+        10,
         {
             startDelay: 14 * MICROSECONDS_PER_DAY,
             cliffPeriod: 0 * MICROSECONDS_PER_DAY,
             vestingPeriod: 0 * MICROSECONDS_PER_DAY,
             tgeUnlock: 1.0,
+            name: 'Public sale',
         },
     ],
 ]);
@@ -322,11 +335,9 @@ export class VestingContract {
         let totalBalance = new Decimal(0);
 
         for (const allocation of allocations) {
-            const tokens = allocation.tokens_allocated.split(' ')[0];
+            const tokens = assetToDecimal(allocation.tokens_allocated);
 
-            const numberTokens = new Decimal(tokens);
-
-            totalBalance = totalBalance.add(numberTokens);
+            totalBalance = totalBalance.add(tokens);
         }
 
         return totalBalance.toNumber();
@@ -424,8 +435,8 @@ export class VestingContract {
         const allocationsDetails = [];
 
         for (const allocation of allocations) {
-            const tokensAllocated = parseFloat(allocation.tokens_allocated.split(' ')[0]);
-            const unlocked = parseFloat(allocation.tokens_claimed.split(' ')[0]);
+            const tokensAllocated = assetToAmount(allocation.tokens_allocated);
+            const unlocked = assetToAmount(allocation.tokens_claimed);
 
             const settings = await this.getSettings();
 

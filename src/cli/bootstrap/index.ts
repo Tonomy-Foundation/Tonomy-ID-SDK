@@ -4,7 +4,6 @@ import { fileURLToPath } from 'url';
 import { createAntelopeAccount, createApp } from './create-account';
 import {
     DemoTokenContract,
-    setSettings,
     EosioTokenContract,
     EosioContract,
     TonomyContract,
@@ -15,7 +14,7 @@ import {
     VestingContract,
 } from '../../sdk/index';
 import { getSigner, updateAccountKey, updateControlByAccount } from './keys';
-import settings from './settings';
+import settings from '../settings';
 import { Checksum256, PrivateKey, PublicKey } from '@wharfkit/antelope';
 import {
     Authority,
@@ -31,8 +30,6 @@ import {
 } from '../../sdk/services/blockchain';
 import { createUser, mockCreateAccount, restoreCreateAccountFromMock } from './user';
 import { sleep } from '../../sdk/util';
-
-setSettings(settings.config);
 
 const demoTokenContract = DemoTokenContract.Instance;
 const tokenContract = EosioTokenContract.Instance;
@@ -86,9 +83,10 @@ export default async function bootstrap() {
     }
 }
 
-const foundControlledAccounts = ['gov.tmy', 'team.tmy', 'prod1.tmy', 'prod2.tmy', 'prod3.tmy'];
-const govControlledAccounts = ['ops.tmy'];
-const operationsAccount = 'ops.tmy';
+export const foundAccount = 'found.tmy';
+export const foundControlledAccounts = ['gov.tmy', 'team.tmy', 'prod1.tmy', 'prod2.tmy', 'prod3.tmy'];
+export const govControlledAccounts = ['ops.tmy'];
+export const operationsAccount = 'ops.tmy';
 
 export const opsControlledAccounts = [
     'tonomy',
@@ -107,11 +105,11 @@ export const opsControlledAccounts = [
     'infra.tmy',
 ];
 
-const systemAccount = 'eosio';
+export const systemAccount = 'eosio';
 
 async function createAccounts(govKeys: string[]) {
     console.log('Create accounts');
-    await createAntelopeAccount({ account: 'found.tmy' }, signer);
+    await createAntelopeAccount({ account: foundAccount }, signer);
 
     // found.tmy should control the following accounts
     for (const account of foundControlledAccounts) {
