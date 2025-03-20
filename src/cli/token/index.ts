@@ -3,7 +3,6 @@ import { Checksum256, Name, PrivateKey } from '@wharfkit/antelope';
 import { AccountType, TonomyUsername, EosioTokenContract } from '../../sdk';
 import {
     amountToSupplyPercentage,
-    assetToAmount,
     assetToDecimal,
     createSigner,
     getAccount,
@@ -111,35 +110,35 @@ export async function audit() {
             description: 'Vesting',
             tokens: assetToDecimal(allocation.tokens_allocated),
             vested: ZERO_DECIMAL,
-            vesting_category_type: allocation.vesting_category_type,
+            category: allocation.vesting_category_type,
         };
     });
     const vestingCategories = vestingAllocations.reduce<number[]>((previous, allocation) => {
-        if (previous.includes(allocation.vesting_category_type)) return previous;
-        else return [...previous, allocation.vesting_category_type];
+        if (previous.includes(allocation.category)) return previous;
+        else return [...previous, allocation.category];
     }, []);
     const vestedTokensPerCategory = vestingCategories.reduce<Map<number, Decimal>>(
-        (map, category) => map.set(category, new Decimal(0)),
+        (map, category) => map.set(category, ZERO_DECIMAL),
         new Map<number, Decimal>()
     );
 
     for (const allocation of vestingAllocations) {
-        const categoryTokens = vestedTokensPerCategory.get(allocation.vesting_category_type);
+        const categoryTokens = vestedTokensPerCategory.get(allocation.category);
 
         if (!categoryTokens) throw new Error('categoryTokens undefined');
 
-        vestedTokensPerCategory.set(allocation.vesting_category_type, categoryTokens.add(allocation.tokens));
+        vestedTokensPerCategory.set(allocation.category, categoryTokens.add(allocation.tokens));
     }
 
     const totalVested = vestingAllocations.reduce(
-        (previous, allocation) => (previous += assetToAmount(allocation.tokens_allocated)),
-        0
+        (previous, allocation) => previous.add(allocation.tokens),
+        ZERO_DECIMAL
     );
 
     console.log('Total unique holders: ', vestingHolders.size);
     console.log('Total vesting allocations: ', vestingAllocations.length);
     console.log(
-        `Total vested:  ${totalVested.toFixed(4).padStart(15)} LEOS (${((100 * totalVested) / EosioTokenContract.TOTAL_SUPPLY).toFixed(8).padStart(11)}%)`
+        `Total vested:  ${totalVested.toFixed(4).padStart(15)} LEOS (${amountToSupplyPercentage(totalVested).padStart(12)})`
     );
     vestedTokensPerCategory.forEach((tokens, category) => {
         const fraction = amountToSupplyPercentage(tokens);
@@ -233,7 +232,53 @@ export async function audit() {
         );
     }
 
-    // TODO: check block producer accounts
+    console.log('');
+    console.log('Fetching producer tokens');
+
+    const producerAccounts = ['prod1.tmy', 'prod2.tmy', 'prod3.tmy'];
+    const producers: AccountBalance[] = [];
+
+    if (settings.env === 'production') producerAccounts.push('stakeworks', 'bp.adex', 'eosusa', 'eosiodetroit');
+
+    for (const producer of producerAccounts) {
+        const balance = await tokenContract.getBalanceDecimal(producer);
+
+        producers.push({
+            account: producer,
+            description: 'Block Producer',
+            tokens: balance,
+            vested: ZERO_DECIMAL,
+        });
+    }
+
+    const producerTokens = producers.reduce((previous, producer) => previous.add(producer.tokens), ZERO_DECIMAL);
+
+    console.log('Total producers', producerAccounts.length);
+    console.log(
+        `Total producer tokens:  ${producerTokens.toFixed(4).padStart(14)} LEOS (${amountToSupplyPercentage(producerTokens).padStart(10)})`
+    );
+
+    console.log('');
+    console.log('Calculating all tokens');
+
+    const allUniqueAccounts: Map<string, AccountBalance> = [
+        ...bootstrappedData,
+        ...vestingAllocations,
+        ...appAccounts,
+        ...peopleAccounts,
+        ...producers,
+    ].reduce((map, account) => map.set(account.account, account), new Map<string, AccountBalance>());
+
+    const allTokens = Array.from(allUniqueAccounts.values()).reduce(
+        (previous, account) => previous.add(account.tokens),
+        ZERO_DECIMAL
+    );
+
+    console.log('Total unique accounts: ', allUniqueAccounts.size);
+    console.log(
+        `Total tokens:  ${allTokens.toFixed(4).padStart(14)} LEOS (${amountToSupplyPercentage(allTokens).padStart(10)})`
+    );
+    console.log(`Token supply: ${EosioTokenContract.TOTAL_SUPPLY.toFixed(4).padStart(14)} LEOS`);
 
     // TODO: check all staking allocations in staking contract
 }
