@@ -80,7 +80,7 @@ export async function audit() {
     for (const account of foundControlledAccounts) bootstrappedAccounts.add(account);
     for (const account of opsControlledAccounts) bootstrappedAccounts.add(account);
 
-    const bootstrappedData: Required<AccountBalance>[] = (
+    const bootstrappedData: AccountBalance[] = (
         await Promise.all(
             Array.from(bootstrappedAccounts).map(async (account) => {
                 const balance = await tokenContract.getBalanceDecimal(account);
@@ -101,6 +101,15 @@ export async function audit() {
         console.log(`${account.padEnd(14)} ${tokens.toFixed(4).padStart(16)} LEOS (${fraction.padStart(12)})`);
     });
 
+    const totalBoostrappedTokens = bootstrappedData.reduce(
+        (previous, account) => previous.add(account.tokens),
+        ZERO_DECIMAL
+    );
+
+    console.log(
+        `Total bootstrapped tokens:  ${totalBoostrappedTokens.toFixed(4).padStart(14)} LEOS (${amountToSupplyPercentage(totalBoostrappedTokens).padStart(10)})`
+    );
+
     console.log('');
     console.log('Fetching vested tokens');
     const vestingHolders = await getAllUniqueHolders();
@@ -108,8 +117,8 @@ export async function audit() {
         return {
             account: allocation.account,
             description: 'Vesting',
-            tokens: assetToDecimal(allocation.tokens_allocated),
-            vested: ZERO_DECIMAL,
+            tokens: ZERO_DECIMAL,
+            vested: assetToDecimal(allocation.tokens_allocated),
             category: allocation.vesting_category_type,
         };
     });
@@ -127,11 +136,11 @@ export async function audit() {
 
         if (!categoryTokens) throw new Error('categoryTokens undefined');
 
-        vestedTokensPerCategory.set(allocation.category, categoryTokens.add(allocation.tokens));
+        vestedTokensPerCategory.set(allocation.category, categoryTokens.add(allocation.vested));
     }
 
     const totalVested = vestingAllocations.reduce(
-        (previous, allocation) => previous.add(allocation.tokens),
+        (previous, allocation) => previous.add(allocation.vested),
         ZERO_DECIMAL
     );
 
@@ -262,11 +271,11 @@ export async function audit() {
     console.log('Calculating all tokens');
 
     const allUniqueAccounts: Map<string, AccountBalance> = [
-        ...bootstrappedData,
-        ...vestingAllocations,
+        ...vestingAllocations, // TODO: for this list to work in any order, vestingAllocations data needs to fetch (unvested) token balance as well
         ...appAccounts,
         ...peopleAccounts,
         ...producers,
+        ...bootstrappedData,
     ].reduce((map, account) => map.set(account.account, account), new Map<string, AccountBalance>());
 
     const allTokens = Array.from(allUniqueAccounts.values()).reduce(
