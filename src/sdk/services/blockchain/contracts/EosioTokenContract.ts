@@ -7,8 +7,18 @@ import Decimal from 'decimal.js';
 
 const CONTRACT_NAME = 'eosio.token';
 
-function assetToNumberString(asset: string): string {
-    return asset.split(' ')[0];
+function assetToNumberString(asset: string, symbol?: string): string {
+    if (!symbol) {
+        symbol = getSettings().currencySymbol;
+    }
+
+    const [res, currency] = asset.split(' ');
+
+    if (currency !== symbol) {
+        throw new Error(`Invalid currency symbol: expected ${symbol}, got ${currency}`);
+    }
+
+    return res;
 }
 
 // FIXME: Remove use of this function. We should never use a number to represent tokens as they are not precise and cannot handle large numbers.

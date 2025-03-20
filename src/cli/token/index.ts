@@ -1,6 +1,6 @@
 /* eslint-disable camelcase */
 import { Checksum256, Name, PrivateKey } from '@wharfkit/antelope';
-import { AccountType, TonomyUsername, EosioTokenContract } from '../../sdk';
+import { AccountType, TonomyUsername, EosioTokenContract, setSettings } from '../../sdk';
 import {
     amountToSupplyPercentage,
     assetToDecimal,
@@ -69,6 +69,15 @@ type AccountBalance = {
 } & Record<string, any>;
 
 export async function audit() {
+    const symbol = 'TONO';
+
+    console.log('Token symbol: ', symbol);
+
+    setSettings({
+        ...settings.config,
+        currencySymbol: symbol,
+    });
+
     console.log('');
     console.log('Fetching tokens for bootstrap accounts');
     const bootstrappedAccounts = new Set<string>();
@@ -98,7 +107,7 @@ export async function audit() {
     bootstrappedData.forEach(({ account, tokens }) => {
         const fraction = amountToSupplyPercentage(tokens);
 
-        console.log(`${account.padEnd(14)} ${tokens.toFixed(4).padStart(16)} TONO (${fraction.padStart(12)})`);
+        console.log(`${account.padEnd(14)} ${tokens.toFixed(4).padStart(16)} ${symbol} (${fraction.padStart(12)})`);
     });
 
     const totalBoostrappedTokens = bootstrappedData.reduce(
@@ -107,56 +116,67 @@ export async function audit() {
     );
 
     console.log(
-        `Total bootstrapped tokens:  ${totalBoostrappedTokens.toFixed(4).padStart(14)} TONO (${amountToSupplyPercentage(totalBoostrappedTokens).padStart(10)})`
+        `Total bootstrapped tokens:  ${totalBoostrappedTokens.toFixed(4).padStart(14)} ${symbol} (${amountToSupplyPercentage(totalBoostrappedTokens).padStart(10)})`
     );
 
     console.log('');
     console.log('Fetching vested tokens');
     const vestingHolders = await getAllUniqueHolders();
-    const vestingAllocations: AccountBalance[] = (await getAllAllocations(vestingHolders)).map((allocation) => {
-        return {
-            account: allocation.account,
-            description: 'Vesting',
-            tokens: ZERO_DECIMAL,
-            vested: assetToDecimal(allocation.tokens_allocated),
-            category: allocation.vesting_category_type,
-        };
-    });
-    const vestingCategories = vestingAllocations.reduce<number[]>((previous, allocation) => {
-        if (previous.includes(allocation.category)) return previous;
-        else return [...previous, allocation.category];
-    }, []);
-    const vestedTokensPerCategory = vestingCategories.reduce<Map<number, Decimal>>(
-        (map, category) => map.set(category, ZERO_DECIMAL),
-        new Map<number, Decimal>()
-    );
+    let vestingAllocations: AccountBalance[] = [];
 
-    for (const allocation of vestingAllocations) {
-        const categoryTokens = vestedTokensPerCategory.get(allocation.category);
+    try {
+        vestingAllocations = (await getAllAllocations(vestingHolders)).map((allocation) => {
+            return {
+                account: allocation.account,
+                description: 'Vesting',
+                tokens: ZERO_DECIMAL,
+                vested: assetToDecimal(allocation.tokens_allocated),
+                category: allocation.vesting_category_type,
+            };
+        });
 
-        if (!categoryTokens) throw new Error('categoryTokens undefined');
-
-        vestedTokensPerCategory.set(allocation.category, categoryTokens.add(allocation.vested));
-    }
-
-    const totalVested = vestingAllocations.reduce(
-        (previous, allocation) => previous.add(allocation.vested),
-        ZERO_DECIMAL
-    );
-
-    console.log('Total unique holders: ', vestingHolders.size);
-    console.log('Total vesting allocations: ', vestingAllocations.length);
-    console.log(
-        `Total vested:  ${totalVested.toFixed(4).padStart(15)} TONO (${amountToSupplyPercentage(totalVested).padStart(12)})`
-    );
-    vestedTokensPerCategory.forEach((tokens, category) => {
-        const fraction = amountToSupplyPercentage(tokens);
-        const categoryName = vestingCategoriesList.get(category)?.name;
-
-        console.log(
-            `> category ${category.toString().padStart(2)}: ${tokens.toFixed(4).padStart(15)} TONO (${fraction.padStart(12)}) ${categoryName}`
+        const vestingCategories = vestingAllocations.reduce<number[]>((previous, allocation) => {
+            if (previous.includes(allocation.category)) return previous;
+            else return [...previous, allocation.category];
+        }, []);
+        const vestedTokensPerCategory = vestingCategories.reduce<Map<number, Decimal>>(
+            (map, category) => map.set(category, ZERO_DECIMAL),
+            new Map<number, Decimal>()
         );
-    });
+
+        for (const allocation of vestingAllocations) {
+            const categoryTokens = vestedTokensPerCategory.get(allocation.category);
+
+            if (!categoryTokens) throw new Error('categoryTokens undefined');
+
+            vestedTokensPerCategory.set(allocation.category, categoryTokens.add(allocation.vested));
+        }
+
+        const totalVested = vestingAllocations.reduce(
+            (previous, allocation) => previous.add(allocation.vested),
+            ZERO_DECIMAL
+        );
+
+        console.log('Total unique holders: ', vestingHolders.size);
+        console.log('Total vesting allocations: ', vestingAllocations.length);
+        console.log(
+            `Total vested:  ${totalVested.toFixed(4).padStart(15)} ${symbol} (${amountToSupplyPercentage(totalVested).padStart(12)})`
+        );
+        vestedTokensPerCategory.forEach((tokens, category) => {
+            const fraction = amountToSupplyPercentage(tokens);
+            const categoryName = vestingCategoriesList.get(category)?.name;
+
+            console.log(
+                `> category ${category.toString().padStart(2)}: ${tokens.toFixed(4).padStart(15)} ${symbol} (${fraction.padStart(12)}) ${categoryName}`
+            );
+        });
+    } catch (e) {
+        if (e.message.includes('Invalid currency symbol')) {
+            console.error('Vesting allocations with invalid currency symbol found', e.message);
+        } else {
+            throw e;
+        }
+    }
 
     console.log('');
     console.log('Fetching apps tokens');
@@ -185,7 +205,7 @@ export async function audit() {
 
     console.log('Total apps', apps.length);
     console.log(
-        `Total app tokens:  ${totalAllTokens.toFixed(4).padStart(14)} TONO (${amountToSupplyPercentage(totalAllTokens).padStart(10)})`
+        `Total app tokens:  ${totalAllTokens.toFixed(4).padStart(14)} ${symbol} (${amountToSupplyPercentage(totalAllTokens).padStart(10)})`
     );
 
     for (const app of appAccounts) {
@@ -193,7 +213,7 @@ export async function audit() {
         const fraction = amountToSupplyPercentage(app.tokens);
 
         console.log(
-            `> ${app.account.padEnd(14)} ${app.tokens.toFixed(4).padStart(16)} TONO (${fraction.padStart(12)}) ${app.description}`
+            `> ${app.account.padEnd(14)} ${app.tokens.toFixed(4).padStart(16)} ${symbol} (${fraction.padStart(12)}) ${app.description}`
         );
     }
 
@@ -229,7 +249,7 @@ export async function audit() {
 
     console.log('Total people', people.length);
     console.log(
-        `Total people tokens:  ${totalPeopleTokens.toFixed(4).padStart(14)} TONO (${amountToSupplyPercentage(totalPeopleTokens).padStart(10)})`
+        `Total people tokens:  ${totalPeopleTokens.toFixed(4).padStart(14)} ${symbol} (${amountToSupplyPercentage(totalPeopleTokens).padStart(10)})`
     );
 
     for (const person of peopleAccounts) {
@@ -237,7 +257,7 @@ export async function audit() {
         const fraction = amountToSupplyPercentage(person.tokens);
 
         console.log(
-            `> ${person.account.toString().padEnd(14)} ${person.tokens.toFixed(4).padStart(15)} TONO (${fraction.padStart(12)})`
+            `> ${person.account.toString().padEnd(14)} ${person.tokens.toFixed(4).padStart(15)} ${symbol} (${fraction.padStart(12)})`
         );
     }
 
@@ -264,7 +284,7 @@ export async function audit() {
 
     console.log('Total producers', producerAccounts.length);
     console.log(
-        `Total producer tokens:  ${producerTokens.toFixed(4).padStart(14)} TONO (${amountToSupplyPercentage(producerTokens).padStart(10)})`
+        `Total producer tokens:  ${producerTokens.toFixed(4).padStart(14)} ${symbol} (${amountToSupplyPercentage(producerTokens).padStart(10)})`
     );
 
     console.log('');
@@ -285,9 +305,9 @@ export async function audit() {
 
     console.log('Total unique accounts: ', allUniqueAccounts.size);
     console.log(
-        `Total tokens:  ${allTokens.toFixed(4).padStart(14)} TONO (${amountToSupplyPercentage(allTokens).padStart(10)})`
+        `Total tokens:  ${allTokens.toFixed(4).padStart(14)} ${symbol} (${amountToSupplyPercentage(allTokens).padStart(10)})`
     );
-    console.log(`Token supply: ${EosioTokenContract.TOTAL_SUPPLY.toFixed(4).padStart(14)} TONO`);
+    console.log(`Token supply: ${EosioTokenContract.TOTAL_SUPPLY.toFixed(4).padStart(14)} ${symbol}`);
 
     // TODO: check all staking allocations in staking contract
 }
