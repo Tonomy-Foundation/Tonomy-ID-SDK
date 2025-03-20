@@ -71,7 +71,7 @@ type AccountBalance = {
 export async function audit() {
     const symbol = 'TONO';
 
-    console.log('Token symbol: ', symbol);
+    console.log('Token symbol:', symbol);
 
     setSettings({
         ...settings.config,
@@ -172,8 +172,10 @@ export async function audit() {
         });
     } catch (e) {
         if (e.message.includes('Invalid currency symbol')) {
-            console.error('Vesting allocations with invalid currency symbol found', e.message);
+            console.log('Vesting allocations with invalid currency symbol found', e.message);
+            console.log('Skipping vesting allocations');
         } else {
+            console.error('Error fetching vesting allocations', e);
             throw e;
         }
     }
