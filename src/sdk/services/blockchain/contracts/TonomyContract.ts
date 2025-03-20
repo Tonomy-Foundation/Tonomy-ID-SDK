@@ -3,7 +3,7 @@ import { API, Checksum256, Checksum256Type, Name, NameType, PublicKey } from '@w
 import { Signer, transact } from '../eosio/transaction';
 import { SdkErrors, TonomyUsername, getSettings, sha256, throwError } from '../../../util';
 import { getAccount, getApi } from '../eosio/eosio';
-import { LEOS_PUBLIC_SALE_PRICE } from './VestingContract';
+import { TONO_PUBLIC_SALE_PRICE } from './VestingContract';
 import { Authority } from '../eosio/authority';
 
 const CONTRACT_NAME = 'tonomy';
@@ -83,7 +83,7 @@ function calculateRamPrice(): number {
     const totalRamPrice = ramPricePerGb * numberOfNodes * (1 + costOverhead); // $ / Gb
     const totalRamPriceBytes = totalRamPrice / (1024 * 1024 * 1024); // $ / byte
 
-    return LEOS_PUBLIC_SALE_PRICE / totalRamPriceBytes; // bytes / LEOS
+    return TONO_PUBLIC_SALE_PRICE / totalRamPriceBytes; // bytes / TONO
 }
 
 export const RAM_PRICE = calculateRamPrice(); // bytes / token

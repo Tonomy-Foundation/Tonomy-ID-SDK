@@ -84,7 +84,7 @@ export class StakingContract {
     static getReleaseDays = () =>
         getSettings().environment === 'test' || getSettings().environment === 'staging' ? 5 / SECONDS_IN_DAY : 5; // 5 days or 5 seconds
     static getMinimumTransfer = () =>
-        getSettings().environment === 'test' || getSettings().environment === 'staging' ? 1 : 1000; // 1000 LEOS or 1 LEOS
+        getSettings().environment === 'test' || getSettings().environment === 'staging' ? 1 : 1000; // 1000 TONO or 1 TONO
     static getMaxAllocations = () =>
         getSettings().environment === 'test' || getSettings().environment === 'staging' ? 5 : 20; // 100 allocations or 5 allocations
     static getStakingCycleHours = () =>
@@ -287,11 +287,11 @@ export class StakingContract {
                 allocation.unstake_requested
                     ? 0
                     : await this.calculateMonthlyYield(assetToAmount(allocation.tokens_staked), settings),
-                'LEOS'
+                'TONO'
             ); // Monthly yield from yearly APY.
             const yieldSoFar = amountToAsset(
                 assetToAmount(allocation.tokens_staked) - assetToAmount(allocation.initial_stake),
-                'LEOS'
+                'TONO'
             );
 
             allocationDetails.push({

@@ -140,8 +140,8 @@ export async function stakingContractSetup(options: StandardProposalOptions) {
         name: 'adminsetapp',
         data: {
             account_name: 'staking.tmy',
-            app_name: 'LEOS Staking',
-            description: 'LEOS Staking contract',
+            app_name: 'TONO Staking',
+            description: 'TONO Staking contract',
             username_hash: tonomyUsername,
             logo_url:
                 createSubdomainOnOrigin('https://accounts.testnet.pangea.web4.world', 'staking') +
@@ -294,7 +294,7 @@ export async function stakingSettings(options: StandardProposalOptions) {
         account: 'staking.tmy',
         name: 'setsettings',
         data: {
-            yearly_stake_pool: amountToAsset(StakingContract.yearlyStakePool, 'LEOS'),
+            yearly_stake_pool: amountToAsset(StakingContract.yearlyStakePool, 'TONO'),
         },
     };
 
@@ -309,7 +309,7 @@ export async function stakingSettings(options: StandardProposalOptions) {
         name: 'addyield',
         data: {
             sender: 'infra.tmy',
-            quantity: amountToAsset(StakingContract.yearlyStakePool / 2, 'LEOS'),
+            quantity: amountToAsset(StakingContract.yearlyStakePool / 2, 'TONO'),
         },
     };
 

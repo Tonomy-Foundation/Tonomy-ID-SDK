@@ -33,7 +33,7 @@ const defaultConfig = {
     tonomyIdSchema: 'tonomy-id-development://',
     loggerLevel: 'info' as LoggerLevel,
     ecosystemName: 'Tonomy - Development',
-    currencySymbol: 'LEOS',
+    currencySymbol: 'TONO',
 };
 
 const stagingConfig = {
@@ -48,7 +48,7 @@ const stagingConfig = {
     tonomyIdSchema: 'tonomy-id-staging://',
     loggerLevel: 'info' as LoggerLevel,
     ecosystemName: 'Tonomy - Staging',
-    currencySymbol: 'LEOS',
+    currencySymbol: 'TONO',
 };
 
 const testnetConfig = {
@@ -63,7 +63,7 @@ const testnetConfig = {
     tonomyIdSchema: 'pangea-testnet://',
     loggerLevel: 'info' as LoggerLevel,
     ecosystemName: 'Pangea Testnet',
-    currencySymbol: 'LEOS',
+    currencySymbol: 'TONO',
 };
 
 const productionConfig = {
@@ -78,7 +78,7 @@ const productionConfig = {
     tonomyIdSchema: 'united-wallet://',
     loggerLevel: 'info' as LoggerLevel,
     ecosystemName: 'Pangea',
-    currencySymbol: 'LEOS',
+    currencySymbol: 'TONO',
 };
 
 type SettingsType = {

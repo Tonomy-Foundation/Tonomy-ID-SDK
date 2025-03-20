@@ -89,7 +89,7 @@ token::transfer(const name &from,
 const trx = await user.signTransaction('eosio.token', 'transfer', {
     from: "me",
     to: "you",
-    quantity: '1 LEOS',
+    quantity: '1 TONO',
     memo: 'test memo',
 });
 ```

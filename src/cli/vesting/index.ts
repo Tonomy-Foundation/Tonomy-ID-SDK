@@ -137,7 +137,7 @@ export default async function vesting(args: string[]) {
         console.log('Total unique holders: ', uniqueHolders.size);
         console.log('Total vesting allocations: ', allAllocations.length);
         console.log(
-            `Total vested: ${totalVested} LEOS (${((100 * totalVested) / EosioTokenContract.TOTAL_SUPPLY).toFixed(2)}%)`
+            `Total vested: ${totalVested} TONO (${((100 * totalVested) / EosioTokenContract.TOTAL_SUPPLY).toFixed(2)}%)`
         );
         console.log('');
     } else if (args[0] === 'setsettings') {
