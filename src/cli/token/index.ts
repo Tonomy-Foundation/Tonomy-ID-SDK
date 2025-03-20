@@ -63,6 +63,12 @@ export async function transfer(args: string[]) {
 
 const ZERO_DECIMAL = new Decimal(0);
 
+type AccountBalance = {
+    account: string;
+    tokens: Decimal;
+    vested: Decimal;
+} & Record<string, any>;
+
 export async function audit() {
     console.log('');
     console.log('Fetching tokens for bootstrap accounts');
@@ -75,9 +81,7 @@ export async function audit() {
     for (const account of foundControlledAccounts) bootstrappedAccounts.add(account);
     for (const account of opsControlledAccounts) bootstrappedAccounts.add(account);
 
-    // const bootstrappedData = new Map<string, AccountTokenData>();
-
-    const bootstrappedData = (
+    const bootstrappedData: Required<AccountBalance>[] = (
         await Promise.all(
             Array.from(bootstrappedAccounts).map(async (account) => {
                 const balance = await tokenContract.getBalanceDecimal(account);
@@ -101,7 +105,15 @@ export async function audit() {
     console.log('');
     console.log('Fetching vested tokens');
     const vestingHolders = await getAllUniqueHolders();
-    const vestingAllocations = await getAllAllocations(vestingHolders);
+    const vestingAllocations: AccountBalance[] = (await getAllAllocations(vestingHolders)).map((allocation) => {
+        return {
+            account: allocation.account,
+            description: 'Vesting',
+            tokens: assetToDecimal(allocation.tokens_allocated),
+            vested: ZERO_DECIMAL,
+            vesting_category_type: allocation.vesting_category_type,
+        };
+    });
     const vestingCategories = vestingAllocations.reduce<number[]>((previous, allocation) => {
         if (previous.includes(allocation.vesting_category_type)) return previous;
         else return [...previous, allocation.vesting_category_type];
@@ -115,9 +127,8 @@ export async function audit() {
         const categoryTokens = vestedTokensPerCategory.get(allocation.vesting_category_type);
 
         if (!categoryTokens) throw new Error('categoryTokens undefined');
-        const allocationTokens = assetToDecimal(allocation.tokens_allocated);
 
-        vestedTokensPerCategory.set(allocation.vesting_category_type, categoryTokens.add(allocationTokens));
+        vestedTokensPerCategory.set(allocation.vesting_category_type, categoryTokens.add(allocation.tokens));
     }
 
     const totalVested = vestingAllocations.reduce(
@@ -144,7 +155,7 @@ export async function audit() {
 
     const apps = await getAllApps();
 
-    const appAccounts = (
+    const appAccounts: AccountBalance[] = (
         await Promise.all(
             apps.map(async (app) => {
                 const balance = await tokenContract.getBalanceDecimal(app.account_name);
@@ -182,13 +193,13 @@ export async function audit() {
     console.log('Fetching people tokens');
     const people = await getAllPeople();
 
-    const peopleAccounts = [];
+    const peopleAccounts: AccountBalance[] = [];
     const batchSize = 100;
 
     for (let i = 0; i < people.length; i += batchSize) {
         const batch = people.slice(i, i + batchSize);
 
-        const batchResults = await Promise.all(
+        const batchResults: AccountBalance[] = await Promise.all(
             batch.map(async (person) => {
                 const balance = await tokenContract.getBalanceDecimal(person.account_name);
 

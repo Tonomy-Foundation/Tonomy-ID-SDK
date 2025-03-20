@@ -58,7 +58,7 @@ interface VestingAllocationAndAccount extends VestingAllocation {
     account: string;
 }
 
-export async function getAllAllocations(accounts: Set<string>, print = false) {
+export async function getAllAllocations(accounts: Set<string>, print = false): Promise<VestingAllocationAndAccount[]> {
     const allocations: VestingAllocationAndAccount[] = [];
 
     for (const account of accounts) {
