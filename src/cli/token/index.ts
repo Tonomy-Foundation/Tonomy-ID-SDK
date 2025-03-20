@@ -69,7 +69,7 @@ type AccountBalance = {
 } & Record<string, any>;
 
 export async function audit() {
-    const symbol = 'TONO';
+    const symbol = 'LEOS';
 
     console.log('Token symbol:', symbol);
 

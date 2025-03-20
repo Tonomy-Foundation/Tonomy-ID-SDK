@@ -26,6 +26,7 @@ import {
     stakingContractSetup,
     stakingSettings,
 } from './staking';
+import { symbolMigrate } from './symbolMigrate';
 
 const eosioMsigContract = EosioMsigContract.Instance;
 
@@ -190,6 +191,10 @@ export default async function msig(args: string[]) {
             } else if (proposalSubtype === 'setSettings') {
                 await stakingSettings(options);
             }
+        } else if (proposalType === 'symbol') {
+            if (proposalSubtype === 'migrate') {
+                await symbolMigrate(options);
+            } else printMsigHelp();
         } else {
             throw new Error(`Invalid msig proposal type ${proposalType}`);
         }
@@ -376,6 +381,7 @@ function printMsigHelp() {
                 propose staking redeploy-eosio-contract <proposalName>
                 propose staking redeploy-tonomy-contract <proposalName>
                 propose staking setSettings <proposalName>
+                propose symbol migrate <proposalName>
                 propose token transfer <proposalName>
                 propose vesting bulk <proposalName>
                 propose vesting migrate <proposalName>
