@@ -171,7 +171,7 @@ const vestingCategories: Map<
             startDelay: 0 * MICROSECONDS_PER_MONTH,
             cliffPeriod: 0 * MICROSECONDS_PER_DAY,
             vestingPeriod: 0 * MICROSECONDS_PER_DAY,
-            tgeUnlock: 0.47,
+            tgeUnlock: 0.7,
         },
     ],
 ]);
