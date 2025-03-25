@@ -123,19 +123,19 @@ const vestingCategories: Map<
     [
         8, // Seed (Early Bird)
         {
-            startDelay: 0 * MICROSECONDS_PER_DAY,
+            startDelay: 6 * MICROSECONDS_PER_DAY,
             cliffPeriod: 0 * MICROSECONDS_PER_DAY,
-            vestingPeriod: 2 * 365 * MICROSECONDS_PER_DAY,
-            tgeUnlock: 0.1,
+            vestingPeriod: 12 * MICROSECONDS_PER_MONTH,
+            tgeUnlock: 0.05,
         },
     ],
     [
-        9, // Seed (Last Chance)
+        9, // Seed (Pre-Sale)
         {
-            startDelay: 0 * MICROSECONDS_PER_DAY,
+            startDelay: 4 * MICROSECONDS_PER_DAY,
             cliffPeriod: 0 * MICROSECONDS_PER_DAY,
-            vestingPeriod: 2 * 365 * MICROSECONDS_PER_DAY,
-            tgeUnlock: 0.05,
+            vestingPeriod: 12 * MICROSECONDS_PER_MONTH,
+            tgeUnlock: 0.075,
         },
     ],
     [
@@ -143,8 +143,35 @@ const vestingCategories: Map<
         {
             startDelay: 14 * MICROSECONDS_PER_DAY,
             cliffPeriod: 0 * MICROSECONDS_PER_DAY,
+            vestingPeriod: 3 * MICROSECONDS_PER_MONTH,
+            tgeUnlock: 0.25,
+        },
+    ],
+    [
+        11, // Private
+        {
+            startDelay: 3 * MICROSECONDS_PER_DAY,
+            cliffPeriod: 0 * MICROSECONDS_PER_DAY,
+            vestingPeriod: 9 * MICROSECONDS_PER_MONTH,
+            tgeUnlock: 0.25,
+        },
+    ],
+    [
+        12, // KOL
+        {
+            startDelay: 1 * MICROSECONDS_PER_DAY,
+            cliffPeriod: 0 * MICROSECONDS_PER_DAY,
+            vestingPeriod: 3 * MICROSECONDS_PER_MONTH,
+            tgeUnlock: 0.25,
+        },
+    ],
+    [
+        13, // Incubator
+        {
+            startDelay: 1 * MICROSECONDS_PER_DAY,
+            cliffPeriod: 0 * MICROSECONDS_PER_DAY,
             vestingPeriod: 0 * MICROSECONDS_PER_DAY,
-            tgeUnlock: 1.0,
+            tgeUnlock: 0.47,
         },
     ],
 ]);
