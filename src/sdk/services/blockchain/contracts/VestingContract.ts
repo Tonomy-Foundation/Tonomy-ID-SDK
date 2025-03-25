@@ -123,7 +123,7 @@ const vestingCategories: Map<
     [
         8, // Seed (Early Bird)
         {
-            startDelay: 6 * MICROSECONDS_PER_DAY,
+            startDelay: 6 * MICROSECONDS_PER_MONTH,
             cliffPeriod: 0 * MICROSECONDS_PER_DAY,
             vestingPeriod: 12 * MICROSECONDS_PER_MONTH,
             tgeUnlock: 0.05,
@@ -132,7 +132,7 @@ const vestingCategories: Map<
     [
         9, // Seed (Pre-Sale)
         {
-            startDelay: 4 * MICROSECONDS_PER_DAY,
+            startDelay: 4 * MICROSECONDS_PER_MONTH,
             cliffPeriod: 0 * MICROSECONDS_PER_DAY,
             vestingPeriod: 12 * MICROSECONDS_PER_MONTH,
             tgeUnlock: 0.075,
@@ -141,7 +141,7 @@ const vestingCategories: Map<
     [
         10, // Public (TGE)
         {
-            startDelay: 14 * MICROSECONDS_PER_DAY,
+            startDelay: 1 * MICROSECONDS_PER_MONTH,
             cliffPeriod: 0 * MICROSECONDS_PER_DAY,
             vestingPeriod: 3 * MICROSECONDS_PER_MONTH,
             tgeUnlock: 0.25,
@@ -150,7 +150,7 @@ const vestingCategories: Map<
     [
         11, // Private
         {
-            startDelay: 3 * MICROSECONDS_PER_DAY,
+            startDelay: 3 * MICROSECONDS_PER_MONTH,
             cliffPeriod: 0 * MICROSECONDS_PER_DAY,
             vestingPeriod: 9 * MICROSECONDS_PER_MONTH,
             tgeUnlock: 0.25,
@@ -159,7 +159,7 @@ const vestingCategories: Map<
     [
         12, // KOL
         {
-            startDelay: 1 * MICROSECONDS_PER_DAY,
+            startDelay: 1 * MICROSECONDS_PER_MONTH,
             cliffPeriod: 0 * MICROSECONDS_PER_DAY,
             vestingPeriod: 3 * MICROSECONDS_PER_MONTH,
             tgeUnlock: 0.25,
@@ -168,7 +168,7 @@ const vestingCategories: Map<
     [
         13, // Incubator
         {
-            startDelay: 1 * MICROSECONDS_PER_DAY,
+            startDelay: 0 * MICROSECONDS_PER_MONTH,
             cliffPeriod: 0 * MICROSECONDS_PER_DAY,
             vestingPeriod: 0 * MICROSECONDS_PER_DAY,
             tgeUnlock: 0.47,
