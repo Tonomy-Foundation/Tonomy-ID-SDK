@@ -400,6 +400,9 @@ async function createTonomyApps(newPublicKey: PublicKey, newSigner: Signer): Pro
         description: `Demo of ${settings.config.ecosystemName} login and features`,
         origin: settings.config.demoWebsiteOrigin,
         logoUrl: settings.config.demoWebsiteOrigin + '/market.com.png',
+        backgroundColor: '#ffffff',
+        textColor: '#000000',
+        brandingColor: '#CBCBCB',
         publicKey: newPublicKey,
         signer,
     });
@@ -419,6 +422,9 @@ async function createTonomyApps(newPublicKey: PublicKey, newSigner: Signer): Pro
         description: `${settings.config.ecosystemName} website to manager your ID and Data`,
         origin: settings.config.ssoWebsiteOrigin,
         logoUrl: settings.config.ssoWebsiteOrigin + '/tonomy-logo1024.png',
+        backgroundColor: '#ffffff',
+        textColor: '#000000',
+        brandingColor: '#CBCBCB',
         publicKey: newPublicKey,
         signer,
     });
@@ -429,6 +435,9 @@ async function createTonomyApps(newPublicKey: PublicKey, newSigner: Signer): Pro
         description: `Developer console to manage ${settings.config.ecosystemName} applications and infrastucture`,
         origin: settings.config.consoleWebsiteOrigin,
         logoUrl: settings.config.consoleWebsiteOrigin + '/tonomy-logo1024.png',
+        backgroundColor: '#ffffff',
+        textColor: '#000000',
+        brandingColor: '#CBCBCB',
         publicKey: newPublicKey,
         signer,
     });
