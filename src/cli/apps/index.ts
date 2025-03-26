@@ -12,7 +12,10 @@ export default async function apps(args: string[]) {
             description: args[3],
             logoUrl: args[4],
             origin: args[5],
-            publicKey: PublicKey.from(args[6]),
+            backgroundColor: args[6],
+            textColor: args[7],
+            brandingColor: args[8],
+            publicKey: PublicKey.from(args[9]),
             signer: createSigner(getTonomyOperationsKey()),
         };
 

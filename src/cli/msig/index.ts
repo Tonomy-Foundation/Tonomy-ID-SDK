@@ -26,6 +26,7 @@ import {
     stakingContractSetup,
     stakingSettings,
 } from './staking';
+import { migrateApps } from './migrateApps';
 
 const eosioMsigContract = EosioMsigContract.Instance;
 
@@ -177,6 +178,8 @@ export default async function msig(args: string[]) {
             } else if (stakingSubcommand === 'setSettings') {
                 await stakingSettings(options);
             }
+        } else if (proposalType === 'migrate-apps') {
+            await migrateApps(options);
         } else {
             throw new Error(`Invalid msig proposal type ${proposalType}`);
         }

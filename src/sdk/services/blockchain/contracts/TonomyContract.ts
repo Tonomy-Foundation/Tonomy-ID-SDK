@@ -299,12 +299,18 @@ export class TonomyContract {
         /^(((http:\/\/)|(https:\/\/))?)(([a-zA-Z0-9.])+)((:{1}[0-9]+)?)([?#/a-zA-Z0-9.]*)$/g.test(logo_url);
         // Combine the individual fields into a JSON string
         const json_data = JSON.stringify({
-            name: app_name,
+            app_name: app_name,
             description: description,
             logo_url: logo_url,
             background_color: background_color,
             text_color: text_color,
             branding_color: branding_color,
+        });
+
+        console.log('newappconsole', {
+            json_data,
+            username_hash,
+            origin: origin,
         });
         const action = {
             authorization: [
@@ -420,7 +426,7 @@ export class TonomyContract {
             data = await api.v1.chain.get_table_rows({
                 code: CONTRACT_NAME,
                 scope: CONTRACT_NAME,
-                table: 'apps',
+                table: 'appsv2',
 
                 lower_bound: Checksum256.from(usernameHash),
                 limit: 1,
@@ -437,7 +443,7 @@ export class TonomyContract {
             data = await api.v1.chain.get_table_rows({
                 code: CONTRACT_NAME,
                 scope: CONTRACT_NAME,
-                table: 'apps',
+                table: 'appsv2',
 
                 lower_bound: account,
                 limit: 1,
@@ -455,7 +461,7 @@ export class TonomyContract {
             data = await api.v1.chain.get_table_rows({
                 code: CONTRACT_NAME,
                 scope: CONTRACT_NAME,
-                table: 'apps',
+                table: 'appsv2',
 
                 lower_bound: Checksum256.from(originHash),
                 limit: 1,
