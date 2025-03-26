@@ -281,6 +281,9 @@ async function createTonomyContractAndSetResources() {
         getAppUsernameHash('system'),
         createSubdomainOnOrigin(getSettings().ssoWebsiteOrigin, 'eosio') + '/tonomy-logo1024.png',
         createSubdomainOnOrigin(getSettings().ssoWebsiteOrigin, 'eosio'),
+        '#ffffff',
+        '#000000',
+        '#CBCBCB',
         signer
     );
     await tonomyContract.adminSetApp(
@@ -290,6 +293,9 @@ async function createTonomyContractAndSetResources() {
         getAppUsernameHash('currency'),
         createSubdomainOnOrigin(getSettings().ssoWebsiteOrigin, 'eosio.token') + '/tonomy-logo1024.png',
         createSubdomainOnOrigin(getSettings().ssoWebsiteOrigin, 'eosio.token'),
+        '#ffffff',
+        '#000000',
+        '#CBCBCB',
         signer
     );
     await tonomyContract.adminSetApp(
@@ -299,6 +305,9 @@ async function createTonomyContractAndSetResources() {
         getAppUsernameHash('tonomy'),
         createSubdomainOnOrigin(getSettings().ssoWebsiteOrigin, 'tonomy') + '/tonomy-logo1024.png',
         createSubdomainOnOrigin(getSettings().ssoWebsiteOrigin, 'tonomy'),
+        '#ffffff',
+        '#000000',
+        '#CBCBCB',
         signer
     );
     await tonomyContract.adminSetApp(
@@ -308,6 +317,9 @@ async function createTonomyContractAndSetResources() {
         getAppUsernameHash('vesting'),
         createSubdomainOnOrigin(getSettings().ssoWebsiteOrigin, 'vesting') + '/tonomy-logo1024.png',
         createSubdomainOnOrigin(getSettings().ssoWebsiteOrigin, 'vesting'),
+        '#ffffff',
+        '#000000',
+        '#CBCBCB',
         signer
     );
     await tonomyContract.adminSetApp(
@@ -317,6 +329,9 @@ async function createTonomyContractAndSetResources() {
         getAppUsernameHash('staking'),
         createSubdomainOnOrigin(getSettings().ssoWebsiteOrigin, 'staking') + '/tonomy-logo1024.png',
         createSubdomainOnOrigin(getSettings().ssoWebsiteOrigin, 'staking'),
+        '#ffffff',
+        '#000000',
+        '#CBCBCB',
         signer
     );
 
