@@ -289,12 +289,23 @@ export class TonomyContract {
         username_hash: string,
         logo_url: string,
         origin: string,
+        background_color: string,
+        text_color: string,
+        branding_color: string,
         key: PublicKey,
         signer: Signer
     ): Promise<API.v1.PushTransactionResponse> {
         /^(((http:\/\/)|(https:\/\/))?)(([a-zA-Z0-9.])+)((:{1}[0-9]+)?)$/g.test(origin);
         /^(((http:\/\/)|(https:\/\/))?)(([a-zA-Z0-9.])+)((:{1}[0-9]+)?)([?#/a-zA-Z0-9.]*)$/g.test(logo_url);
-
+        // Combine the individual fields into a JSON string
+        const json_data = JSON.stringify({
+            name: app_name,
+            description: description,
+            logo_url: logo_url,
+            background_color: background_color,
+            text_color: text_color,
+            branding_color: branding_color,
+        });
         const action = {
             authorization: [
                 {
@@ -305,11 +316,9 @@ export class TonomyContract {
             account: CONTRACT_NAME,
             name: 'newapp',
             data: {
-                app_name,
-                description,
-                logo_url,
-                origin: origin,
+                json_data,
                 username_hash,
+                origin: origin,
                 key,
             },
         };
@@ -483,8 +492,19 @@ export class TonomyContract {
         usernameHash: Checksum256Type,
         logoUrl: string,
         origin: string,
+        backgroundColor: string,
+        textColor: string,
+        brandingColor: string,
         signer: Signer
     ): Promise<API.v1.PushTransactionResponse> {
+        const json_data = JSON.stringify({
+            name: appName,
+            description: description,
+            logo_url: logoUrl,
+            background_color: backgroundColor,
+            text_color: textColor,
+            branding_color: brandingColor,
+        });
         const action = {
             authorization: [
                 {
@@ -496,10 +516,8 @@ export class TonomyContract {
             name: 'adminsetapp',
             data: {
                 account_name: Name.from(accountName),
-                app_name: appName,
-                description,
+                json_data,
                 username_hash: usernameHash,
-                logo_url: logoUrl,
                 origin,
             },
         };
