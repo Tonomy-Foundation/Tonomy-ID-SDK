@@ -96,14 +96,13 @@ export class App implements AppData {
 
     static async getApp(origin: string): Promise<App> {
         const contractAppData = await tonomyContract.getApp(origin);
-        const appData = JSON.parse(contractAppData.json_data);
 
         return new App({
             accountName: contractAppData.account_name,
-            appName: appData.app_name,
+            appName: contractAppData.app_name,
             usernameHash: contractAppData.username_hash,
-            description: appData.description,
-            logoUrl: appData.logo_url,
+            description: contractAppData.description,
+            logoUrl: contractAppData.logo_url,
             origin: contractAppData.origin,
             version: contractAppData.version,
             status: AppStatusEnum.READY,

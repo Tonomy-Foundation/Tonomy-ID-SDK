@@ -64,19 +64,16 @@ export type GetPersonResponse = {
     version: number;
 };
 
-// {
-//     app_name: string;
-//     description: string;
-//     logo_url: string;
-//     background_color: string;
-//     text_color: string;
-//     branding_color: string;
-// }
 type AppTableRecord = {
     account_name: Name;
-    json_data: string;
+    app_name: string;
     username_hash: Checksum256;
+    description: string;
+    logo_url: string;
     origin: string;
+    background_color: string;
+    text_color: string;
+    branding_color: string;
     version: number;
 };
 
@@ -477,16 +474,18 @@ export class TonomyContract {
         }
 
         const idData = data.rows[0];
+        const appInfo = JSON.parse(idData.json_data);
 
         return {
-            app_name: idData.app_name,
-            description: idData.description,
+            app_name: appInfo.app_name,
+            description: appInfo.description,
 
-            logo_url: idData.logo_url,
+            logo_url: appInfo.logo_url,
             origin: idData.origin,
-
             account_name: Name.from(idData.account_name),
-
+            background_color: appInfo.background_color,
+            text_color: appInfo.text_color,
+            branding_color: appInfo.branding_color,
             username_hash: Checksum256.from(idData.username_hash),
             version: idData.version,
         };
