@@ -74,6 +74,9 @@ export async function createRandomApp(logoUrl?: string, origin?: string): Promis
         description: description,
         logoUrl,
         origin,
+        backgroundColor: '#ffffff',
+        textColor: '#000000',
+        brandingColor: '#CBCBCB',
         publicKey: getTonomyOperationsKey().toPublic(),
         signer: createSigner(getTonomyOperationsKey()),
     });
