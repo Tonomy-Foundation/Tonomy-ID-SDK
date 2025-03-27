@@ -45,29 +45,30 @@ describe('TonomyContract class', () => {
         if (!username) throw new Error('Username not found');
 
         let appInfo = await tonomyContract.getApp(username);
+        const appInfov2 = JSON.parse(appInfo.json_data);
 
-        expect(appInfo.app_name).toEqual(appName);
-        expect(appInfo.description).toEqual(description);
+        expect(appInfov2.app_name).toEqual(appName);
+        expect(appInfov2.description).toEqual(description);
         expect(appInfo.username_hash.toString()).toEqual(username.usernameHash);
-        expect(appInfo.logo_url).toEqual(logoUrl);
+        expect(appInfov2.logo_url).toEqual(logoUrl);
         expect(appInfo.origin).toEqual(origin);
         expect(appInfo.account_name.toString()).toEqual(accountName.toString());
 
         appInfo = await tonomyContract.getApp(origin);
 
-        expect(appInfo.app_name).toEqual(appName);
-        expect(appInfo.description).toEqual(description);
+        expect(appInfov2.app_name).toEqual(appName);
+        expect(appInfov2.description).toEqual(description);
         expect(appInfo.username_hash.toString()).toEqual(username.usernameHash);
-        expect(appInfo.logo_url).toEqual(logoUrl);
+        expect(appInfov2.logo_url).toEqual(logoUrl);
         expect(appInfo.origin).toEqual(origin);
         expect(appInfo.account_name.toString()).toEqual(accountName.toString());
 
         appInfo = await tonomyContract.getApp(accountName);
 
-        expect(appInfo.app_name).toEqual(appName);
-        expect(appInfo.description).toEqual(description);
+        expect(appInfov2.app_name).toEqual(appName);
+        expect(appInfov2.description).toEqual(description);
         expect(appInfo.username_hash.toString()).toEqual(username.usernameHash);
-        expect(appInfo.logo_url).toEqual(logoUrl);
+        expect(appInfov2.logo_url).toEqual(logoUrl);
         expect(appInfo.origin).toEqual(origin);
         expect(appInfo.account_name.toString()).toEqual(accountName.toString());
     });

@@ -64,12 +64,18 @@ export type GetPersonResponse = {
     version: number;
 };
 
+// {
+//     app_name: string;
+//     description: string;
+//     logo_url: string;
+//     background_color: string;
+//     text_color: string;
+//     branding_color: string;
+// }
 type AppTableRecord = {
     account_name: Name;
-    app_name: string;
+    json_data: string;
     username_hash: Checksum256;
-    description: string;
-    logo_url: string;
     origin: string;
     version: number;
 };
@@ -307,11 +313,6 @@ export class TonomyContract {
             branding_color: branding_color,
         });
 
-        console.log('newappconsole', {
-            json_data,
-            username_hash,
-            origin: origin,
-        });
         const action = {
             authorization: [
                 {
