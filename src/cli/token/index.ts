@@ -73,9 +73,9 @@ type AccountBalance = {
     vested: Decimal;
 } & Record<string, any>;
 
-export async function audit() {
-    const symbol = 'LEOS';
+const symbol = 'TONO';
 
+export async function audit() {
     console.log('Token symbol:', symbol);
 
     setSettings({
@@ -241,14 +241,14 @@ export async function audit() {
     console.log('Total unique holders: ', vestingHolders.size);
     console.log('Total vesting allocations: ', vestingAllocations.length);
     console.log(
-        `Total vested:  ${totalVested.toFixed(4).padStart(15)} LEOS (${((100 * totalVested) / EosioTokenContract.TOTAL_SUPPLY).toFixed(8).padStart(11)}%)`
+        `Total vested:  ${totalVested.toFixed(4).padStart(15)} ${symbol} (${((100 * totalVested) / EosioTokenContract.TOTAL_SUPPLY).toFixed(8).padStart(11)}%)`
     );
     vestedTokensPerCategory.forEach((tokens, category) => {
         const fraction = amountToSupplyPercentage(tokens);
         const categoryName = vestingCategoriesList.get(category)?.name;
 
         console.log(
-            `> category ${category.toString().padStart(2)}: ${tokens.toFixed(4).padStart(15)} LEOS (${fraction.padStart(12)}) ${categoryName}`
+            `> category ${category.toString().padStart(2)}: ${tokens.toFixed(4).padStart(15)} ${symbol} (${fraction.padStart(12)}) ${categoryName}`
         );
     });
 
@@ -290,7 +290,7 @@ async function checkMissedVestingAllocations(
     console.log('People not in vesting holders: ', Array.from(peopleNotInVestingHolders).length);
     console.log('Total allocations: ', peopleNotInVestingHoldersAllocations.length);
     console.log(
-        `Total tokens: ${totalPeopleNotInVestingHolders.toFixed(4).padStart(14)} LEOS (${amountToSupplyPercentage(
+        `Total tokens: ${totalPeopleNotInVestingHolders.toFixed(4).padStart(14)} ${symbol} (${amountToSupplyPercentage(
             totalPeopleNotInVestingHolders
         ).padStart(10)})`
     );
@@ -322,7 +322,7 @@ async function checkMissedVestingAllocations(
     console.log('Apps not in vesting holders: ', Array.from(appsNotInVestingHolders).length);
     console.log('Total allocations: ', appsNotInVestingHoldersAllocations.length);
     console.log(
-        `Total tokens: ${totalAppsNotInVestingHolders.toFixed(4).padStart(14)} LEOS (${amountToSupplyPercentage(
+        `Total tokens: ${totalAppsNotInVestingHolders.toFixed(4).padStart(14)} ${symbol} (${amountToSupplyPercentage(
             totalAppsNotInVestingHolders
         ).padStart(10)})`
     );
@@ -357,7 +357,7 @@ async function checkMissedVestingAllocations(
     console.log('Bootstrapped accounts not in vesting holders: ', Array.from(bootstrappedNotInVestingHolders).length);
     console.log('Total allocations: ', bootstrappedNotInVestingHoldersAllocations.length);
     console.log(
-        `Total tokens: ${totalBootstrappedNotInVestingHolders.toFixed(4).padStart(14)} LEOS (${amountToSupplyPercentage(
+        `Total tokens: ${totalBootstrappedNotInVestingHolders.toFixed(4).padStart(14)} ${symbol} (${amountToSupplyPercentage(
             totalBootstrappedNotInVestingHolders
         ).padStart(10)})`
     );

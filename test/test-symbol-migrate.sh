@@ -48,6 +48,7 @@ yarn run cli vesting assign coinsale.tmy team.tmy "1000.000000 LEOS" 7
 yarn run cli vesting assign coinsale.tmy team.tmy "1000.000000 LEOS" 8
 yarn run cli vesting assign coinsale.tmy found.tmy "1000.000000 LEOS" 7
 echo "finished setting up some vesting allocations"
+yarn run cli token audit  > token-audit-before.log 2>&1
 
 installbranch "after"
 echo "finished installing branch after"
@@ -56,3 +57,4 @@ cd "${SDK_DIR}"
 echo "finished exporting test keys"
 yarn run cli msig propose symbol migrate symmig --auto-execute > out.log 2>&1
 echo "finished proposing symbol migrate"
+yarn run cli token audit  > token-audit-after.log 2>&1
