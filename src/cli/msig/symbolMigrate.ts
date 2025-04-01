@@ -1,3 +1,4 @@
+import { Name } from '@wharfkit/antelope';
 import { createProposal, executeProposal, StandardProposalOptions } from '.';
 import { TonomyContract } from '../../sdk';
 import {
@@ -66,7 +67,7 @@ async function migrateEosioToken(options: StandardProposalOptions) {
 
     const proposalHash = await createProposal(
         options.proposer,
-        options.proposalName,
+        Name.from(options.proposalName.toString() + '1'),
         actions,
         options.privateKey,
         options.requested,
@@ -103,7 +104,7 @@ async function migrateVesting(options: StandardProposalOptions) {
 
     const proposalHash = await createProposal(
         options.proposer,
-        options.proposalName,
+        Name.from(options.proposalName.toString() + '2'),
         actions,
         options.privateKey,
         options.requested,
@@ -128,7 +129,7 @@ async function migrateStaking(options: StandardProposalOptions) {
     };
     const proposalHash = await createProposal(
         options.proposer,
-        options.proposalName,
+        Name.from(options.proposalName.toString() + '3'),
         [action],
         options.privateKey,
         options.requested,
@@ -166,7 +167,7 @@ export async function migrateRebrand(options: StandardProposalOptions) {
 
     const proposalHash = await createProposal(
         options.proposer,
-        options.proposalName,
+        Name.from(options.proposalName.toString() + '4'),
         actions,
         options.privateKey,
         options.requested,
