@@ -476,6 +476,32 @@ export class TonomyContract {
         };
     }
 
+    async getApps(): Promise<AppTableRecord[]> {
+        const api = await getApi();
+        const data = await api.v1.chain.get_table_rows({
+            code: CONTRACT_NAME,
+            scope: CONTRACT_NAME,
+            table: 'apps',
+            limit: 1000,
+        });
+
+        if (!data || !data.rows) throwError('No data found', SdkErrors.DataQueryNoRowDataFound);
+
+        if (data.rows.length === 0) {
+            throwError('No apps found', SdkErrors.DataQueryNoRowDataFound);
+        }
+
+        return data.rows.map((row) => ({
+            app_name: row.app_name,
+            description: row.description,
+            logo_url: row.logo_url,
+            origin: row.origin,
+            account_name: Name.from(row.account_name),
+            username_hash: Checksum256.from(row.username_hash),
+            version: row.version,
+        }));
+    }
+
     async adminSetApp(
         accountName: NameType,
         appName: string,
