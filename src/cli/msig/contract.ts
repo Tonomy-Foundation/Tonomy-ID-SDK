@@ -3,8 +3,15 @@ import { StandardProposalOptions, createProposal, executeProposal } from '.';
 import { Name, ABI, Serializer } from '@wharfkit/antelope';
 import fs from 'fs';
 import { getDeployableFilesFromDir } from '../bootstrap/deploy-contract';
+import path, { dirname } from 'path';
+import { fileURLToPath } from 'url';
 
-const contractDirectory = `/home/dev/Documents/git/tonomy/Tonomy-ID-Integration/Tonomy-ID-SDK/Tonomy-Contracts/contracts/`;
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const thisFileDirectory = __dirname;
+const defaultContractDirectory = path.join(thisFileDirectory, '..', '..', 'Tonomy-Contracts', 'contracts');
+
+console.log('defaultContractDirectory', defaultContractDirectory);
 
 export async function deployContract(
     options: {
@@ -14,7 +21,7 @@ export async function deployContract(
     } & StandardProposalOptions
 ) {
     const contractName = Name.from(options.contract);
-    const contractDir = `${options.directory ?? contractDirectory}${contractName.toString()}`;
+    const contractDir = `${options.directory ?? defaultContractDirectory}/${contractName.toString()}`;
 
     if (!contractName) {
         throw new Error('Contract name must be provided for deploy-contract proposal');

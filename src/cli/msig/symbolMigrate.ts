@@ -10,8 +10,11 @@ import {
 } from '../bootstrap';
 import settings from '../settings';
 import { getAllUniqueHolders } from '../vesting';
+import { deployContract } from './contract';
 
 export async function symbolMigrate(options: StandardProposalOptions) {
+    await redoployContracts(options);
+    console.log('');
     await migrateEosioToken(options);
     console.log('');
     await migrateVesting(options);
@@ -21,6 +24,30 @@ export async function symbolMigrate(options: StandardProposalOptions) {
     await migrateRebrand(options);
     console.log('');
     console.log('Migration complete');
+}
+
+async function redoployContracts(options: StandardProposalOptions) {
+    console.log('### Redploying contracts');
+    await deployContract({
+        ...options,
+        proposalName: Name.from(options.proposalName.toString() + '1a'),
+        contract: 'eosio.token',
+    });
+    await deployContract({
+        ...options,
+        proposalName: Name.from(options.proposalName.toString() + '1b'),
+        contract: 'tonomy',
+    });
+    await deployContract({
+        ...options,
+        proposalName: Name.from(options.proposalName.toString() + '1c'),
+        contract: 'vesting.tmy',
+    });
+    await deployContract({
+        ...options,
+        proposalName: Name.from(options.proposalName.toString() + '1d'),
+        contract: 'staking.tmy',
+    });
 }
 
 async function migrateEosioToken(options: StandardProposalOptions) {
