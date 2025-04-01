@@ -41,12 +41,18 @@ cd "${SDK_DIR}"
 yarn run test:setup
 . ./test/export_test_keys.sh
 export SIGNING_KEY="${TONOMY_OPS_PRIVATE_KEY}"
+echo "finished exporting test keys"
+echo "setting up some vesting allocations"
 yarn run cli vesting assign coinsale.tmy team.tmy "1000.000000 LEOS" 7
 yarn run cli vesting assign coinsale.tmy team.tmy "1000.000000 LEOS" 7
 yarn run cli vesting assign coinsale.tmy team.tmy "1000.000000 LEOS" 8
 yarn run cli vesting assign coinsale.tmy found.tmy "1000.000000 LEOS" 7
+echo "finished setting up some vesting allocations"
 
 installbranch "after"
+echo "finished installing branch after"
 cd "${SDK_DIR}"
 . ./test/export_test_keys.sh
+echo "finished exporting test keys"
 yarn run cli msig propose symbol migrate symmig --auto-execute > out.log 2>&1
+echo "finished proposing symbol migrate"
