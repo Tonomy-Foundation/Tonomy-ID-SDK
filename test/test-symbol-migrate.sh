@@ -39,10 +39,12 @@ function installbranch {
 installbranch "before"
 cd "${SDK_DIR}"
 yarn run test:setup
-yarn run vesting assign coinsale.tmy team.tmy "1000.000000 LEOS" 7
-yarn run vesting assign coinsale.tmy team.tmy "1000.000000 LEOS" 7
-yarn run vesting assign coinsale.tmy team.tmy "1000.000000 LEOS" 8
-yarn run vesting assign coinsale.tmy found.tmy "1000.000000 LEOS" 7
+. ./test/export_test_keys.sh
+export SIGNING_KEY="${TONOMY_OPS_PRIVATE_KEY}"
+yarn run cli vesting assign coinsale.tmy team.tmy "1000.000000 LEOS" 7
+yarn run cli vesting assign coinsale.tmy team.tmy "1000.000000 LEOS" 7
+yarn run cli vesting assign coinsale.tmy team.tmy "1000.000000 LEOS" 8
+yarn run cli vesting assign coinsale.tmy found.tmy "1000.000000 LEOS" 7
 
 installbranch "after"
 cd "${SDK_DIR}"
