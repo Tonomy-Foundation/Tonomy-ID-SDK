@@ -14,7 +14,7 @@ import settings from '../settings';
 
 const vestingContract = VestingContract.Instance;
 
-export async function getAllUniqueHolders(print = false) {
+export async function getAllUniqueHolders(print = false): Promise<Set<string>> {
     const action = 'assigntokens';
     const contract = 'vesting.tmy';
     const limit = 100;
