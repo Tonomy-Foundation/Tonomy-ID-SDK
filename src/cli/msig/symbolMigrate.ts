@@ -1,6 +1,6 @@
 import { Name } from '@wharfkit/antelope';
 import { createProposal, executeProposal, StandardProposalOptions } from '.';
-import { TonomyContract } from '../../sdk';
+import { getSettings, TonomyContract } from '../../sdk';
 import {
     foundAccount,
     foundControlledAccounts,
@@ -108,7 +108,10 @@ async function migrateEosioToken(options: StandardProposalOptions) {
 async function migrateVesting(options: StandardProposalOptions) {
     console.log('### Migrating vesting.tmy');
     console.log('Fetching vested tokens');
-    const vestingHolders = await getAllUniqueHolders();
+    const vestingHolders =
+        getSettings().environment === 'development'
+            ? new Set<string>(['team.tmy', 'found.tmy'])
+            : await getAllUniqueHolders();
 
     const actions = Array.from(vestingHolders).map((holder) => {
         console.log(`vesting.tmy::migrateacc(${holder})`);
