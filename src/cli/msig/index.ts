@@ -20,7 +20,6 @@ import { newApp } from './newApp';
 import {
     createStakingTmyAccount,
     deployStakingContract,
-    migrateRebrand,
     reDeployEosioContract,
     reDeployTonomyContract,
     reDeployVestingContract,
@@ -191,8 +190,6 @@ export default async function msig(args: string[]) {
                 await reDeployTonomyContract(options);
             } else if (proposalSubtype === 'setSettings') {
                 await stakingSettings(options);
-            } else if (proposalSubtype === 'migrate-rebrand') {
-                await migrateRebrand(options);
             } else printMsigHelp();
         } else if (proposalType === 'symbol') {
             if (proposalSubtype === 'migrate') {

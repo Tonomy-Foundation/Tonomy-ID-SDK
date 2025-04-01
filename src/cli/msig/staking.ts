@@ -1,11 +1,5 @@
 /* eslint-disable camelcase */
-import {
-    amountToAsset,
-    Authority,
-    bytesToTokens,
-    StakingContract,
-    TonomyContract,
-} from '../../sdk/services/blockchain';
+import { amountToAsset, Authority, bytesToTokens, StakingContract } from '../../sdk/services/blockchain';
 import { StandardProposalOptions, createProposal, executeProposal } from '.';
 import { deployContract } from './deployContract';
 import { createSubdomainOnOrigin, getAppUsernameHash } from '../bootstrap';
@@ -330,42 +324,4 @@ export async function stakingSettings(options: StandardProposalOptions) {
 
     if (options.dryRun) return;
     if (options.autoExecute) await executeProposal(options.proposer, options.proposalName, proposalHash);
-}
-
-export async function migrateRebrand(options: StandardProposalOptions) {
-    const apps = await TonomyContract.Instance.getApps();
-    const actions = await apps
-        .filter((app) => app.origin.includes('pangea.web4.world'))
-        .map((app) => {
-            return {
-                account: 'tonomy',
-                name: 'adminsetapp',
-                authorization: [
-                    {
-                        actor: 'tonomy',
-                        permission: 'active',
-                    },
-                ],
-                data: {
-                    account_name: app.account_name,
-                    app_name: app.app_name.replace('Pangea', 'Tonomy'),
-                    description: app.description.replace('Pangea', 'Tonomy'),
-                    username_hash: app.username_hash,
-                    logo_url: app.logo_url.replace('pangea.web4.world', 'tonomy.io'),
-                    origin: app.origin.replace('pangea.web4.world', 'tonomy.io'),
-                },
-            };
-        });
-
-    const proposalHash = await createProposal(
-        options.proposer,
-        options.proposalName,
-        actions,
-        options.privateKey,
-        options.requested,
-        options.dryRun
-    );
-
-    if (!options.dryRun && options.autoExecute)
-        await executeProposal(options.proposer, options.proposalName, proposalHash);
 }

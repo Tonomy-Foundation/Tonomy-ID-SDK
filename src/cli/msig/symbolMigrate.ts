@@ -1,4 +1,5 @@
 import { createProposal, executeProposal, StandardProposalOptions } from '.';
+import { TonomyContract } from '../../sdk';
 import {
     foundAccount,
     foundControlledAccounts,
@@ -14,7 +15,10 @@ export async function symbolMigrate(options: StandardProposalOptions) {
     console.log('');
     await migrateVesting(options);
     console.log('');
-    // TODO: staking migration
+    await migrateStaking(options);
+    console.log('');
+    await migrateRebrand(options);
+    console.log('');
     console.log('Migration complete');
 }
 
@@ -96,6 +100,69 @@ async function migrateVesting(options: StandardProposalOptions) {
     });
 
     console.log(`Total accounts to migrate: ${actions.length}`);
+
+    const proposalHash = await createProposal(
+        options.proposer,
+        options.proposalName,
+        actions,
+        options.privateKey,
+        options.requested,
+        options.dryRun
+    );
+
+    if (!options.dryRun && options.autoExecute)
+        await executeProposal(options.proposer, options.proposalName, proposalHash);
+}
+
+async function migrateStaking(options: StandardProposalOptions) {
+    const action = {
+        account: 'staking.tmy',
+        name: 'resetall',
+        authorization: [
+            {
+                actor: 'staking.tmy',
+                permission: 'active',
+            },
+        ],
+        data: {},
+    };
+    const proposalHash = await createProposal(
+        options.proposer,
+        options.proposalName,
+        [action],
+        options.privateKey,
+        options.requested,
+        options.dryRun
+    );
+
+    if (!options.dryRun && options.autoExecute)
+        await executeProposal(options.proposer, options.proposalName, proposalHash);
+}
+
+export async function migrateRebrand(options: StandardProposalOptions) {
+    const apps = await TonomyContract.Instance.getApps();
+    const actions = await apps
+        .filter((app) => app.origin.includes('pangea.web4.world'))
+        .map((app) => {
+            return {
+                account: 'tonomy',
+                name: 'adminsetapp',
+                authorization: [
+                    {
+                        actor: 'tonomy',
+                        permission: 'active',
+                    },
+                ],
+                data: {
+                    account_name: app.account_name,
+                    app_name: app.app_name.replace('Pangea', 'Tonomy'),
+                    description: app.description.replace('Pangea', 'Tonomy'),
+                    username_hash: app.username_hash,
+                    logo_url: app.logo_url.replace('pangea.web4.world', 'tonomy.io'),
+                    origin: app.origin.replace('pangea.web4.world', 'tonomy.io'),
+                },
+            };
+        });
 
     const proposalHash = await createProposal(
         options.proposer,
