@@ -92,17 +92,17 @@ async function migrateEosioToken(options: StandardProposalOptions) {
         data: {},
     });
 
+    const proposalName = Name.from(options.proposalName.toString() + '2');
     const proposalHash = await createProposal(
         options.proposer,
-        Name.from(options.proposalName.toString() + '2'),
+        proposalName,
         actions,
         options.privateKey,
         options.requested,
         options.dryRun
     );
 
-    if (!options.dryRun && options.autoExecute)
-        await executeProposal(options.proposer, options.proposalName, proposalHash);
+    if (!options.dryRun && options.autoExecute) await executeProposal(options.proposer, proposalName, proposalHash);
 }
 
 async function migrateVesting(options: StandardProposalOptions) {
@@ -129,17 +129,17 @@ async function migrateVesting(options: StandardProposalOptions) {
 
     console.log(`Total accounts to migrate: ${actions.length}`);
 
+    const proposalName = Name.from(options.proposalName.toString() + '3');
     const proposalHash = await createProposal(
         options.proposer,
-        Name.from(options.proposalName.toString() + '3'),
+        proposalName,
         actions,
         options.privateKey,
         options.requested,
         options.dryRun
     );
 
-    if (!options.dryRun && options.autoExecute)
-        await executeProposal(options.proposer, options.proposalName, proposalHash);
+    if (!options.dryRun && options.autoExecute) await executeProposal(options.proposer, proposalName, proposalHash);
 }
 
 async function migrateStaking(options: StandardProposalOptions) {
@@ -155,17 +155,18 @@ async function migrateStaking(options: StandardProposalOptions) {
         ],
         data: {},
     };
+    const proposalName = Name.from(options.proposalName.toString() + '4');
+
     const proposalHash = await createProposal(
         options.proposer,
-        Name.from(options.proposalName.toString() + '4'),
+        proposalName,
         [action],
         options.privateKey,
         options.requested,
         options.dryRun
     );
 
-    if (!options.dryRun && options.autoExecute)
-        await executeProposal(options.proposer, options.proposalName, proposalHash);
+    if (!options.dryRun && options.autoExecute) await executeProposal(options.proposer, proposalName, proposalHash);
 }
 
 export async function migrateRebrand(options: StandardProposalOptions) {
@@ -195,15 +196,16 @@ export async function migrateRebrand(options: StandardProposalOptions) {
             };
         });
 
+    const proposalName = Name.from(options.proposalName.toString() + '5');
+
     const proposalHash = await createProposal(
         options.proposer,
-        Name.from(options.proposalName.toString() + '5'),
+        proposalName,
         actions,
         options.privateKey,
         options.requested,
         options.dryRun
     );
 
-    if (!options.dryRun && options.autoExecute)
-        await executeProposal(options.proposer, options.proposalName, proposalHash);
+    if (!options.dryRun && options.autoExecute) await executeProposal(options.proposer, proposalName, proposalHash);
 }
