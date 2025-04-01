@@ -38,7 +38,7 @@ function installbranch {
 
 installbranch "before"
 cd "${SDK_DIR}"
-yarn run init
+yarn run test:setup
 
 installbranch "after"
 cd "${SDK_DIR}"
