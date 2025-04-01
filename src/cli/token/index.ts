@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { Checksum256, Name, PrivateKey } from '@wharfkit/antelope';
+import { Name, PrivateKey } from '@wharfkit/antelope';
 import { AccountType, TonomyUsername, EosioTokenContract, setSettings } from '../../sdk';
 import {
     amountToSupplyPercentage,
@@ -7,6 +7,7 @@ import {
     createSigner,
     getAccount,
     getAccountNameFromUsername,
+    TonomyContract,
     vestingCategories as vestingCategoriesList,
 } from '../../sdk/services/blockchain';
 import { getApi } from '../../sdk/services/blockchain/eosio/eosio';
@@ -183,7 +184,7 @@ export async function audit() {
     console.log('');
     console.log('Fetching apps tokens');
 
-    const apps = await getAllApps();
+    const apps = await TonomyContract.Instance.getApps();
 
     const appAccounts: AccountBalance[] = (
         await Promise.all(
@@ -312,28 +313,6 @@ export async function audit() {
     console.log(`Token supply: ${EosioTokenContract.TOTAL_SUPPLY.toFixed(4).padStart(14)} ${symbol}`);
 
     // TODO: check all staking allocations in staking contract
-}
-
-async function getAllApps() {
-    const api = await getApi();
-    const data = await api.v1.chain.get_table_rows({
-        code: 'tonomy',
-        scope: 'tonomy',
-        table: 'apps',
-        limit: 100,
-    });
-
-    return data.rows.map((row) => {
-        return {
-            app_name: row.app_name,
-            description: row.description,
-            logo_url: row.logo_url,
-            origin: row.origin,
-            account_name: Name.from(row.account_name),
-            username_hash: Checksum256.from(row.username_hash),
-            version: row.version,
-        };
-    });
 }
 
 async function getAllPeople(print = false) {
