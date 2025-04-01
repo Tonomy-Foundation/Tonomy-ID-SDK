@@ -20,14 +20,14 @@ function installbranch {
 
     # Build Tonomy Blockchain image
     cd "${SDK_DIR}/Tonomy-Contracts"
-    git checkout "${SDK_BRANCH}"
+    git checkout "${CONTRACT_BRANCH}"
     export BUILD_TEST=true
     ./delete-built-contracts.sh
     ./build-contracts.sh
 
     # Install dependencies Tonomy Communication
     cd "${SDK_DIR}"
-    git checkout "${BRANCH}"
+    git checkout "${SDK_BRANCH}"
     yarn
     yarn run build:cli
 }
