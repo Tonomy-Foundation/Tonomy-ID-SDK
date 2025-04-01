@@ -39,7 +39,12 @@ function installbranch {
 installbranch "before"
 cd "${SDK_DIR}"
 yarn run test:setup
+yarn run vesting assign coinsale.tmy team.tmy "1000.000000 LEOS" 7
+yarn run vesting assign coinsale.tmy team.tmy "1000.000000 LEOS" 7
+yarn run vesting assign coinsale.tmy team.tmy "1000.000000 LEOS" 8
+yarn run vesting assign coinsale.tmy found.tmy "1000.000000 LEOS" 7
 
 installbranch "after"
 cd "${SDK_DIR}"
-yarn run cli msig propose symbol migrate --auto-execute
+. ./test/export_test_keys.sh
+yarn run cli msig propose symbol migrate symmig --auto-execute > out.log 2>&1

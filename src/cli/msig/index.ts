@@ -6,7 +6,7 @@ import { govMigrate } from './govMigrate';
 import { newAccount } from './newAccount';
 import { transfer } from './token';
 import { addAuth } from './addAuth';
-import { deployContract } from './deployContract';
+import { deployContract } from './contract';
 import { addEosioCode } from './addEosioCode';
 import { printCliHelp } from '..';
 import { vestingBulk } from './vestingBulk';
@@ -115,10 +115,9 @@ export default async function msig(args: string[]) {
                 await transfer(options);
             } else printMsigHelp();
         } else if (proposalType === 'deploy-contract') {
-            const contractName = 'tonomy';
-            const contractDir = `/home/dev/Documents/git/tonomy/Tonomy-ID-Integration/Tonomy-ID-SDK/Tonomy-Contracts/contracts/${contractName}`;
+            const contractName = args[3] ?? 'tonomy';
 
-            await deployContract({ contractName, contractDir }, options);
+            await deployContract({ contract: contractName, ...options });
         } else if (proposalType === 'auth') {
             if (proposalSubtype === 'add-eosiocode') {
                 await addEosioCode(options);

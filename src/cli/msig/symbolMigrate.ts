@@ -24,7 +24,7 @@ export async function symbolMigrate(options: StandardProposalOptions) {
 }
 
 async function migrateEosioToken(options: StandardProposalOptions) {
-    console.log('Migrating eosio.token');
+    console.log('### Migrating eosio.token');
     const bootstrappedAccounts = new Set<string>();
 
     bootstrappedAccounts.add(foundAccount);
@@ -67,7 +67,7 @@ async function migrateEosioToken(options: StandardProposalOptions) {
 
     const proposalHash = await createProposal(
         options.proposer,
-        Name.from(options.proposalName.toString() + '1'),
+        Name.from(options.proposalName.toString() + '2'),
         actions,
         options.privateKey,
         options.requested,
@@ -79,7 +79,7 @@ async function migrateEosioToken(options: StandardProposalOptions) {
 }
 
 async function migrateVesting(options: StandardProposalOptions) {
-    console.log('Migrating vesting.tmy');
+    console.log('### Migrating vesting.tmy');
     console.log('Fetching vested tokens');
     const vestingHolders = await getAllUniqueHolders();
 
@@ -104,7 +104,7 @@ async function migrateVesting(options: StandardProposalOptions) {
 
     const proposalHash = await createProposal(
         options.proposer,
-        Name.from(options.proposalName.toString() + '2'),
+        Name.from(options.proposalName.toString() + '3'),
         actions,
         options.privateKey,
         options.requested,
@@ -116,6 +116,7 @@ async function migrateVesting(options: StandardProposalOptions) {
 }
 
 async function migrateStaking(options: StandardProposalOptions) {
+    console.log('### Migrating staking.tmy');
     const action = {
         account: 'staking.tmy',
         name: 'resetall',
@@ -129,7 +130,7 @@ async function migrateStaking(options: StandardProposalOptions) {
     };
     const proposalHash = await createProposal(
         options.proposer,
-        Name.from(options.proposalName.toString() + '3'),
+        Name.from(options.proposalName.toString() + '4'),
         [action],
         options.privateKey,
         options.requested,
@@ -141,6 +142,8 @@ async function migrateStaking(options: StandardProposalOptions) {
 }
 
 export async function migrateRebrand(options: StandardProposalOptions) {
+    console.log('### Migrating rebranding');
+
     const apps = await TonomyContract.Instance.getApps();
     const actions = await apps
         .filter((app) => app.origin.includes('pangea.web4.world'))
@@ -167,7 +170,7 @@ export async function migrateRebrand(options: StandardProposalOptions) {
 
     const proposalHash = await createProposal(
         options.proposer,
-        Name.from(options.proposalName.toString() + '4'),
+        Name.from(options.proposalName.toString() + '5'),
         actions,
         options.privateKey,
         options.requested,

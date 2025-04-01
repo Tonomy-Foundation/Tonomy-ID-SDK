@@ -4,16 +4,17 @@ import { Name, ABI, Serializer } from '@wharfkit/antelope';
 import fs from 'fs';
 import { getDeployableFilesFromDir } from '../bootstrap/deploy-contract';
 
+const contractDirectory = `/home/dev/Documents/git/tonomy/Tonomy-ID-Integration/Tonomy-ID-SDK/Tonomy-Contracts/contracts/`;
+
 export async function deployContract(
-    args: {
-        contractName: string;
-        contractDir: string;
+    options: {
+        contract: string;
+        directory?: string;
         returnActions?: boolean;
-    },
-    options: StandardProposalOptions
+    } & StandardProposalOptions
 ) {
-    const contractName = Name.from(args.contractName);
-    const contractDir = args.contractDir;
+    const contractName = Name.from(options.contract);
+    const contractDir = `${options.directory ?? contractDirectory}${contractName.toString()}`;
 
     if (!contractName) {
         throw new Error('Contract name must be provided for deploy-contract proposal');
@@ -87,7 +88,7 @@ export async function deployContract(
 
     const actions = [setCodeAction, setAbiAction];
 
-    if (args.returnActions ?? false) return actions;
+    if (options.returnActions ?? false) return actions;
 
     const proposalHash = await createProposal(
         options.proposer,
@@ -98,7 +99,7 @@ export async function deployContract(
         options.dryRun
     );
 
-    if (options.dryRun) return;
-    if (options.autoExecute) await executeProposal(options.proposer, options.proposalName, proposalHash);
+    if (!options.dryRun && options.autoExecute)
+        await executeProposal(options.proposer, options.proposalName, proposalHash);
     return;
 }
