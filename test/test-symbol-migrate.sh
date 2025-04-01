@@ -20,9 +20,13 @@ function installbranch {
 
     # Build Tonomy Blockchain image
     cd "${SDK_DIR}/Tonomy-Contracts"
-    git checkout "${CONTRACT_BRANCH}"
+    git checkout "${CONTRACTS_BRANCH}"
     export BUILD_TEST=true
-    ./delete-built-contracts.sh
+    cd "${SDK_DIR}/Tonomy-Contracts/contracts/tonomy" && rm -rf *.wasm && rm -rf *.abi
+    cd "${SDK_DIR}/Tonomy-Contracts/contracts/eosio.token" && rm -rf *.wasm && rm -rf *.abi
+    cd "${SDK_DIR}/Tonomy-Contracts/contracts/staking.tmy" && rm -rf *.wasm && rm -rf *.abi
+    cd "${SDK_DIR}/Tonomy-Contracts/contracts/vesting.tmy" && rm -rf *.wasm && rm -rf *.abi
+    cd "${SDK_DIR}/Tonomy-Contracts"
     ./build-contracts.sh
 
     # Install dependencies Tonomy Communication
