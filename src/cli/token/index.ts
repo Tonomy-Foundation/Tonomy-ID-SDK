@@ -1,13 +1,17 @@
+/* eslint-disable no-console */
 /* eslint-disable camelcase */
 import { Name, PrivateKey } from '@wharfkit/antelope';
 import { AccountType, TonomyUsername, EosioTokenContract, setSettings } from '../../sdk';
 import {
     amountToSupplyPercentage,
+    AppTableRecord,
+    assetToAmount,
     assetToDecimal,
     createSigner,
     getAccount,
     getAccountNameFromUsername,
     TonomyContract,
+    GetPersonResponse,
     vestingCategories as vestingCategoriesList,
 } from '../../sdk/services/blockchain';
 import { getApi } from '../../sdk/services/blockchain/eosio/eosio';
@@ -20,7 +24,7 @@ import {
     systemAccount,
 } from '../bootstrap';
 import Decimal from 'decimal.js';
-import { getAllAllocations, getAllUniqueHolders } from '../vesting';
+import { getAllAllocations } from '../vesting';
 
 const tokenContract = EosioTokenContract.Instance;
 
@@ -90,7 +94,7 @@ export async function audit() {
     for (const account of foundControlledAccounts) bootstrappedAccounts.add(account);
     for (const account of opsControlledAccounts) bootstrappedAccounts.add(account);
 
-    const bootstrappedData: AccountBalance[] = (
+    const bootstrappedData = (
         await Promise.all(
             Array.from(bootstrappedAccounts).map(async (account) => {
                 const balance = await tokenContract.getBalanceDecimal(account);
@@ -119,67 +123,6 @@ export async function audit() {
     console.log(
         `Total bootstrapped tokens:  ${totalBoostrappedTokens.toFixed(4).padStart(14)} ${symbol} (${amountToSupplyPercentage(totalBoostrappedTokens).padStart(10)})`
     );
-
-    console.log('');
-    console.log('Fetching vested tokens');
-    const vestingHolders = await getAllUniqueHolders();
-    let vestingAllocations: AccountBalance[] = [];
-
-    try {
-        vestingAllocations = (await getAllAllocations(vestingHolders)).map((allocation) => {
-            return {
-                account: allocation.account,
-                description: 'Vesting',
-                tokens: ZERO_DECIMAL,
-                vested: assetToDecimal(allocation.tokens_allocated),
-                category: allocation.vesting_category_type,
-            };
-        });
-
-        const vestingCategories = vestingAllocations.reduce<number[]>((previous, allocation) => {
-            if (previous.includes(allocation.category)) return previous;
-            else return [...previous, allocation.category];
-        }, []);
-        const vestedTokensPerCategory = vestingCategories.reduce<Map<number, Decimal>>(
-            (map, category) => map.set(category, ZERO_DECIMAL),
-            new Map<number, Decimal>()
-        );
-
-        for (const allocation of vestingAllocations) {
-            const categoryTokens = vestedTokensPerCategory.get(allocation.category);
-
-            if (!categoryTokens) throw new Error('categoryTokens undefined');
-
-            vestedTokensPerCategory.set(allocation.category, categoryTokens.add(allocation.vested));
-        }
-
-        const totalVested = vestingAllocations.reduce(
-            (previous, allocation) => previous.add(allocation.vested),
-            ZERO_DECIMAL
-        );
-
-        console.log('Total unique holders: ', vestingHolders.size);
-        console.log('Total vesting allocations: ', vestingAllocations.length);
-        console.log(
-            `Total vested:  ${totalVested.toFixed(4).padStart(15)} ${symbol} (${amountToSupplyPercentage(totalVested).padStart(12)})`
-        );
-        vestedTokensPerCategory.forEach((tokens, category) => {
-            const fraction = amountToSupplyPercentage(tokens);
-            const categoryName = vestingCategoriesList.get(category)?.name;
-
-            console.log(
-                `> category ${category.toString().padStart(2)}: ${tokens.toFixed(4).padStart(15)} ${symbol} (${fraction.padStart(12)}) ${categoryName}`
-            );
-        });
-    } catch (e) {
-        if (e.message.includes('Invalid currency symbol')) {
-            console.log('Vesting allocations with invalid currency symbol found', e.message);
-            console.log('Skipping vesting allocations');
-        } else {
-            console.error('Error fetching vesting allocations', e);
-            throw e;
-        }
-    }
 
     console.log('');
     console.log('Fetching apps tokens');
@@ -235,7 +178,7 @@ export async function audit() {
                 const balance = await tokenContract.getBalanceDecimal(person.account_name);
 
                 return {
-                    account: person.account_name,
+                    account: person.account_name.toString(),
                     description: person.status,
                     tokens: balance,
                     vested: ZERO_DECIMAL,
@@ -265,64 +208,170 @@ export async function audit() {
     }
 
     console.log('');
-    console.log('Fetching producer tokens');
+    console.log('Fetching vested tokens');
+    // const vestingHolders = await getAllUniqueHolders();
+    const vestingHolders = people.reduce<Set<string>>((previous, person) => {
+        previous.add(person.account_name.toString());
+        return previous;
+    }, new Set<string>());
+    const vestingAllocations = await getAllAllocations(vestingHolders, false);
+    const vestingCategories = vestingAllocations.reduce<number[]>((previous, allocation) => {
+        if (previous.includes(allocation.vesting_category_type)) return previous;
+        else return [...previous, allocation.vesting_category_type];
+    }, []);
+    const vestedTokensPerCategory = vestingCategories.reduce<Map<number, Decimal>>(
+        (map, category) => map.set(category, new Decimal(0)),
+        new Map<number, Decimal>()
+    );
 
-    const producerAccounts = ['prod1.tmy', 'prod2.tmy', 'prod3.tmy'];
-    const producers: AccountBalance[] = [];
+    for (const allocation of vestingAllocations) {
+        const categoryTokens = vestedTokensPerCategory.get(allocation.vesting_category_type);
 
-    if (settings.env === 'production') producerAccounts.push('stakeworks', 'bp.adex', 'eosusa', 'eosiodetroit');
+        if (!categoryTokens) throw new Error('categoryTokens undefined');
+        const allocationTokens = assetToDecimal(allocation.tokens_allocated);
 
-    for (const producer of producerAccounts) {
-        const balance = await tokenContract.getBalanceDecimal(producer);
-
-        producers.push({
-            account: producer,
-            description: 'Block Producer',
-            tokens: balance,
-            vested: ZERO_DECIMAL,
-        });
+        vestedTokensPerCategory.set(allocation.vesting_category_type, categoryTokens.add(allocationTokens));
     }
 
-    const producerTokens = producers.reduce((previous, producer) => previous.add(producer.tokens), ZERO_DECIMAL);
+    const totalVested = vestingAllocations.reduce(
+        (previous, allocation) => (previous += assetToAmount(allocation.tokens_allocated)),
+        0
+    );
 
-    console.log('Total producers', producerAccounts.length);
+    console.log('Total unique holders: ', vestingHolders.size);
+    console.log('Total vesting allocations: ', vestingAllocations.length);
     console.log(
-        `Total producer tokens:  ${producerTokens.toFixed(4).padStart(14)} ${symbol} (${amountToSupplyPercentage(producerTokens).padStart(10)})`
+        `Total vested:  ${totalVested.toFixed(4).padStart(15)} LEOS (${((100 * totalVested) / EosioTokenContract.TOTAL_SUPPLY).toFixed(8).padStart(11)}%)`
     );
+    vestedTokensPerCategory.forEach((tokens, category) => {
+        const fraction = amountToSupplyPercentage(tokens);
+        const categoryName = vestingCategoriesList.get(category)?.name;
 
-    console.log('');
-    console.log('Calculating all tokens');
+        console.log(
+            `> category ${category.toString().padStart(2)}: ${tokens.toFixed(4).padStart(15)} LEOS (${fraction.padStart(12)}) ${categoryName}`
+        );
+    });
 
-    const allUniqueAccounts: Map<string, AccountBalance> = [
-        ...vestingAllocations, // TODO: for this list to work in any order, vestingAllocations data needs to fetch (unvested) token balance as well
-        ...appAccounts,
-        ...peopleAccounts,
-        ...producers,
-        ...bootstrappedData,
-    ].reduce((map, account) => map.set(account.account, account), new Map<string, AccountBalance>());
-
-    const allTokens = Array.from(allUniqueAccounts.values()).reduce(
-        (previous, account) => previous.add(account.tokens),
-        ZERO_DECIMAL
-    );
-
-    console.log('Total unique accounts: ', allUniqueAccounts.size);
-    console.log(
-        `Total tokens:  ${allTokens.toFixed(4).padStart(14)} ${symbol} (${amountToSupplyPercentage(allTokens).padStart(10)})`
-    );
-    console.log(`Token supply: ${EosioTokenContract.TOTAL_SUPPLY.toFixed(4).padStart(14)} ${symbol}`);
+    await checkMissedVestingAllocations(bootstrappedAccounts, vestingHolders, apps, people);
+    // TODO: check block producer accounts
 
     // TODO: check all staking allocations in staking contract
 }
 
-async function getAllPeople(print = false) {
+async function checkMissedVestingAllocations(
+    bootstrappedAccounts: Set<string>,
+    vestingHolders: Set<string>,
+    apps: AppTableRecord[],
+    people: GetPersonResponse[]
+) {
+    console.log('');
+    console.log('Checking if any people have allocations that were not considered above');
+    const peopleNotInVestingHolders: Set<string> = new Set();
+
+    for (const person of people) {
+        if (!vestingHolders.has(person.account_name.toString())) {
+            peopleNotInVestingHolders.add(person.account_name.toString());
+        }
+    }
+
+    const peopleNotInVestingHoldersAllocations = await getAllAllocations(peopleNotInVestingHolders, true);
+    const totalPeopleNotInVestingHolders = peopleNotInVestingHoldersAllocations.reduce(
+        (previous, allocation) => assetToDecimal(allocation.tokens_allocated).add(previous),
+        ZERO_DECIMAL
+    );
+    const uniquePeopleNotInVestingHolders = peopleNotInVestingHoldersAllocations.reduce((previous, allocation) => {
+        if (!previous.includes(allocation.account)) {
+            return [...previous, allocation.account];
+        } else {
+            return previous;
+        }
+    }, [] as string[]);
+
+    console.log('People not in vesting holders: ', Array.from(peopleNotInVestingHolders).length);
+    console.log('Total allocations: ', peopleNotInVestingHoldersAllocations.length);
+    console.log(
+        `Total tokens: ${totalPeopleNotInVestingHolders.toFixed(4).padStart(14)} LEOS (${amountToSupplyPercentage(
+            totalPeopleNotInVestingHolders
+        ).padStart(10)})`
+    );
+    console.log('Unique people not in vesting holders: ', uniquePeopleNotInVestingHolders.length);
+
+    console.log('');
+    console.log('Checking if any apps have allocations that were not considered above');
+    const appsNotInVestingHolders: Set<string> = new Set();
+
+    for (const app of apps) {
+        if (!vestingHolders.has(app.account_name.toString())) {
+            appsNotInVestingHolders.add(app.account_name.toString());
+        }
+    }
+
+    const appsNotInVestingHoldersAllocations = await getAllAllocations(appsNotInVestingHolders, true);
+    const totalAppsNotInVestingHolders = appsNotInVestingHoldersAllocations.reduce(
+        (previous, allocation) => assetToDecimal(allocation.tokens_allocated).add(previous),
+        ZERO_DECIMAL
+    );
+    const uniqueAppsNotInVestingHolders = appsNotInVestingHoldersAllocations.reduce((previous, allocation) => {
+        if (!previous.includes(allocation.account)) {
+            return [...previous, allocation.account];
+        } else {
+            return previous;
+        }
+    }, [] as string[]);
+
+    console.log('Apps not in vesting holders: ', Array.from(appsNotInVestingHolders).length);
+    console.log('Total allocations: ', appsNotInVestingHoldersAllocations.length);
+    console.log(
+        `Total tokens: ${totalAppsNotInVestingHolders.toFixed(4).padStart(14)} LEOS (${amountToSupplyPercentage(
+            totalAppsNotInVestingHolders
+        ).padStart(10)})`
+    );
+    console.log('Unique apps not in vesting holders: ', uniqueAppsNotInVestingHolders.length);
+
+    console.log('');
+    console.log('Checking if any bootstrapped accounts have allocations that were not considered above');
+    const bootstrappedNotInVestingHolders: Set<string> = new Set();
+
+    for (const account of bootstrappedAccounts) {
+        if (!vestingHolders.has(account)) {
+            peopleNotInVestingHolders.add(account);
+        }
+    }
+
+    const bootstrappedNotInVestingHoldersAllocations = await getAllAllocations(bootstrappedNotInVestingHolders, true);
+    const totalBootstrappedNotInVestingHolders = bootstrappedNotInVestingHoldersAllocations.reduce(
+        (previous, allocation) => assetToDecimal(allocation.tokens_allocated).add(previous),
+        ZERO_DECIMAL
+    );
+    const uniqueBootstrappedNotInVestingHolders = bootstrappedNotInVestingHoldersAllocations.reduce(
+        (previous, allocation) => {
+            if (!previous.includes(allocation.account)) {
+                return [...previous, allocation.account];
+            } else {
+                return previous;
+            }
+        },
+        [] as string[]
+    );
+
+    console.log('Bootstrapped accounts not in vesting holders: ', Array.from(bootstrappedNotInVestingHolders).length);
+    console.log('Total allocations: ', bootstrappedNotInVestingHoldersAllocations.length);
+    console.log(
+        `Total tokens: ${totalBootstrappedNotInVestingHolders.toFixed(4).padStart(14)} LEOS (${amountToSupplyPercentage(
+            totalBootstrappedNotInVestingHolders
+        ).padStart(10)})`
+    );
+    console.log('Unique bootstrapped accounts not in vesting holders: ', uniqueBootstrappedNotInVestingHolders.length);
+}
+
+export async function getAllPeople(print = false): Promise<GetPersonResponse[]> {
     const api = await getApi();
 
     const limit = 100;
     let lowerBound = Name.from('1');
     let peopleFound = 0;
 
-    const people: any[] = [];
+    const people: GetPersonResponse[] = [];
 
     do {
         if (print) console.log(`get_table_rows: people, ${limit}, ${lowerBound.toString()}`);

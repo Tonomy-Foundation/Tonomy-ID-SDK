@@ -15,7 +15,7 @@ import { setBlockchainConfig } from './setBlockchainConfig';
 import { addProd, changeProds, removeProd, updateProd } from './producers';
 import { hyphaAccountsCreate, hyphaContractSet, hyphaAddAccountPermissions } from './hypha';
 import { sleep } from '../../sdk/util';
-import { vestingMigrate, vestingMigrate2 } from './vestingMigrateAllocate';
+import { vestingMigrate, vestingMigrate2, vestingMigrate3 } from './vestingMigrateAllocate';
 import { newApp } from './newApp';
 import {
     createStakingTmyAccount,
@@ -146,6 +146,8 @@ export default async function msig(args: string[]) {
                 await vestingMigrate(options);
             } else if (proposalSubtype === 'migrate2') {
                 await vestingMigrate2(options);
+            } else if (proposalSubtype === 'migrate3') {
+                await vestingMigrate3(options);
             } else if (proposalSubtype === 'bulk') {
                 await vestingBulk({ governanceAccounts }, options);
             } else printMsigHelp();
@@ -386,6 +388,7 @@ function printMsigHelp() {
                 propose vesting bulk <proposalName>
                 propose vesting migrate <proposalName>
                 propose vesting migrate2 <proposalName>
+                propose vesting migrate3 <proposalName>
                 propose ... --auto-execute
                 propose ... --dry-run
         `);
