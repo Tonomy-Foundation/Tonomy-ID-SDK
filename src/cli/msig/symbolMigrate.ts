@@ -1,6 +1,7 @@
 import { Name } from '@wharfkit/antelope';
 import { createProposal, executeProposal, StandardProposalOptions } from '.';
-import { getSettings, TonomyContract } from '../../sdk';
+import { TonomyContract } from '../../sdk';
+import { getSettings } from '../../sdk';
 import {
     foundAccount,
     foundControlledAccounts,
@@ -15,17 +16,18 @@ import { deployContract } from './contract';
 export async function symbolMigrate(options: StandardProposalOptions) {
     await redoployContracts(options);
     console.log('');
+    await migrateStaking(options);
+    console.log('');
     await migrateEosioToken(options);
     console.log('');
     await migrateVesting(options);
     console.log('');
-    await migrateStaking(options);
-    console.log('');
-    await migrateRebrand(options);
+    await migrateRebrandApps(options);
     console.log('');
     console.log('Migration complete');
 }
 
+// // @ts-expect-error options not used
 async function redoployContracts(options: StandardProposalOptions) {
     console.log('### Redploying contracts');
     await deployContract({
@@ -172,7 +174,7 @@ async function migrateStaking(options: StandardProposalOptions) {
     if (!options.dryRun && options.autoExecute) await executeProposal(options.proposer, proposalName, proposalHash);
 }
 
-export async function migrateRebrand(options: StandardProposalOptions) {
+export async function migrateRebrandApps(options: StandardProposalOptions) {
     console.log('### Migrating rebranding');
 
     const apps = await TonomyContract.Instance.getApps();
