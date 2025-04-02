@@ -333,7 +333,7 @@ describe('VestingContract class', () => {
 
             let vestedBalance = await vestingContract.getBalance(accountName);
             let vestedBalance2 = await vestingContract.getBalance(accountName2);
-            const senderLeosBalance = await eosioTokenContract.getBalance(sender);
+            const senderBalance = await eosioTokenContract.getBalance(sender);
 
             expect(vestedBalance).toBe(0);
             expect(vestedBalance2).toBe(0);
@@ -365,11 +365,11 @@ describe('VestingContract class', () => {
 
             vestedBalance = await vestingContract.getBalance(accountName);
             vestedBalance2 = await vestingContract.getBalance(accountName2);
-            const senderLeosBalanceAfter = await eosioTokenContract.getBalance(sender);
+            const senderBalanceAfter = await eosioTokenContract.getBalance(sender);
 
             expect(vestedBalance).toBe(2);
             expect(vestedBalance2).toBe(2);
-            expect(senderLeosBalance - senderLeosBalanceAfter).toBe(4);
+            expect(senderBalance - senderBalanceAfter).toBe(4);
         })
 
         test("Successfully assign multiple tokens at once (msig transaction)", async () => {
@@ -411,7 +411,7 @@ describe('VestingContract class', () => {
 
             let vestedBalance = await vestingContract.getBalance(accountName);
             let vestedBalance2 = await vestingContract.getBalance(accountName2);
-            const senderLeosBalance = await eosioTokenContract.getBalance(sender);
+            const senderBalance = await eosioTokenContract.getBalance(sender);
 
             expect(vestedBalance).toBe(0);
             expect(vestedBalance2).toBe(0);
@@ -448,11 +448,11 @@ describe('VestingContract class', () => {
 
             vestedBalance = await vestingContract.getBalance(accountName);
             vestedBalance2 = await vestingContract.getBalance(accountName2);
-            const senderLeosBalanceAfter = await eosioTokenContract.getBalance(sender);
+            const senderBalanceAfter = await eosioTokenContract.getBalance(sender);
 
             expect(vestedBalance).toBe(2);
             expect(vestedBalance2).toBe(2);
-            expect(senderLeosBalance - senderLeosBalanceAfter).toBe(4);
+            expect(senderBalance - senderBalanceAfter).toBe(4);
         })
     });
 
