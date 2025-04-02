@@ -84,7 +84,7 @@ const vestingCategories: Map<
         },
     ],
     [
-        4, // Team and Advisors, Ecosystem
+        4, // Team
         {
             startDelay: 1 * 365 * MICROSECONDS_PER_DAY,
             cliffPeriod: 0 * MICROSECONDS_PER_DAY,
@@ -102,7 +102,7 @@ const vestingCategories: Map<
         },
     ],
     [
-        6, // Reserves, Partnerships, Liquidly Allocation
+        6, // Reserves, Partnerships
         {
             startDelay: 0 * MICROSECONDS_PER_DAY,
             cliffPeriod: 0 * MICROSECONDS_PER_DAY,
@@ -111,7 +111,7 @@ const vestingCategories: Map<
         },
     ],
     [
-        7, // Community and Marketing, Platform Dev, Infra Rewards
+        7, // Community and Marketing, Platform Dev, Infra Rewards, Ecosystem
         {
             startDelay: 0 * MICROSECONDS_PER_DAY,
             cliffPeriod: 0 * MICROSECONDS_PER_DAY,
@@ -121,7 +121,7 @@ const vestingCategories: Map<
     ],
     // New (replacing depreciated):
     [
-        8, // Seed (Early Bird)
+        8, // Seed
         {
             startDelay: 6 * MICROSECONDS_PER_MONTH,
             cliffPeriod: 0 * MICROSECONDS_PER_DAY,
@@ -130,7 +130,7 @@ const vestingCategories: Map<
         },
     ],
     [
-        9, // Seed (Pre-Sale)
+        9, // Pre-Sale
         {
             startDelay: 4 * MICROSECONDS_PER_MONTH,
             cliffPeriod: 0 * MICROSECONDS_PER_DAY,
@@ -153,7 +153,7 @@ const vestingCategories: Map<
             startDelay: 3 * MICROSECONDS_PER_MONTH,
             cliffPeriod: 0 * MICROSECONDS_PER_DAY,
             vestingPeriod: 9 * MICROSECONDS_PER_MONTH,
-            tgeUnlock: 0.25,
+            tgeUnlock: 0.125,
         },
     ],
     [
@@ -172,6 +172,15 @@ const vestingCategories: Map<
             cliffPeriod: 0 * MICROSECONDS_PER_DAY,
             vestingPeriod: 6 * MICROSECONDS_PER_DAY,
             tgeUnlock: 0.7,
+        },
+    ],
+    [
+        14, // Liquidity
+        {
+            startDelay: 0 * MICROSECONDS_PER_MONTH,
+            cliffPeriod: 0 * MICROSECONDS_PER_DAY,
+            vestingPeriod: 6 * MICROSECONDS_PER_DAY,
+            tgeUnlock: 0.25,
         },
     ],
 ]);
