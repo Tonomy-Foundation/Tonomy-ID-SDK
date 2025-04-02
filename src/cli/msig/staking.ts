@@ -144,9 +144,9 @@ export async function stakingContractSetup(options: StandardProposalOptions) {
             description: 'TONO Staking contract',
             username_hash: tonomyUsername,
             logo_url:
-                createSubdomainOnOrigin('https://accounts.testnet.pangea.web4.world', 'staking') +
+                createSubdomainOnOrigin('https://accounts.testnet.tonomy.io', 'staking') +
                 '/tonomy-logo1024.png',
-            origin: createSubdomainOnOrigin('https://accounts.testnet.pangea.web4.world', 'staking'),
+            origin: createSubdomainOnOrigin('https://accounts.testnet.tonomy.io', 'staking'),
         },
     };
 

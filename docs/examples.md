@@ -9,9 +9,9 @@ A web app that shows how to integrate with Tonomy ID.
 - <a href="https://demo.demo.tonomy.foundation" target="_blank">Try me out here</a>
 - <a href="https://github.com/Tonomy-Foundation/Tonomy-App-Websites/tree/master/src/demo" target="_blank">Github code</a>
 
-## Pangea Testnet - Demo wallet
+## Tonomy Testnet - Demo wallet
 
-Pangea Testnet mobile wallet (Android and iOS)
+Tonomy Testnet mobile wallet (Android and iOS)
 
 - <a href="https://play.google.com/store/apps/details?id=foundation.tonomy.projects.pangeatestnet" target="_blank">Try me out here Android</a>
 - <a href="https://testflight.apple.com/join/7Bdd9jdB" target="_blank">Try me out here iOS</a>
