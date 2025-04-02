@@ -27,14 +27,14 @@ jobs:
     name: Compiles contracts needed for bootstrap script
     runs-on: ubuntu-20.04
     container: tonomy/antelope
-    env:
-      # BUILD_TEST environment variable is sent to the cdt compiler to control compiled code
-      BUILD_TEST: true
+    # env:
+    #   # BUILD_TEST environment variable is sent to the cdt compiler to control compiled code
+    #   BUILD_TEST: true
     steps:
       - uses: actions/checkout@v4
         with:
           repository: Tonomy-Foundation/Tonomy-Contracts
-          ref: development
+          ref: master
           path: Tonomy-Contracts
 
       - name: Build demo.tmy contract
