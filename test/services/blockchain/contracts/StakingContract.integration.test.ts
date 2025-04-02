@@ -23,12 +23,12 @@ const stakeContract = StakingContract.Instance;
 const eosioTokenContract = EosioTokenContract.Instance;
 const signer = createSigner(getTonomyOperationsKey());
 
-const yieldPool = amountToAsset(StakingContract.yearlyStakePool / 2, 'LEOS');
+const yieldPool = amountToAsset(StakingContract.yearlyStakePool / 2, 'TONO');
 const cycleSeconds = StakingContract.getStakingCycleHours() * SECONDS_IN_HOUR;
 
 async function resetContract() {
     await stakeContract.resetAll(signer);
-    await stakeContract.setSettings(amountToAsset(StakingContract.yearlyStakePool, 'LEOS'), signer);
+    await stakeContract.setSettings(amountToAsset(StakingContract.yearlyStakePool, 'TONO'), signer);
     await stakeContract.addYield('infra.tmy', yieldPool, signer); // 6 months budget in the account
 }
 
@@ -38,7 +38,7 @@ describe('TonomyContract Staking Tests', () => {
     let accountName: string;
     let accountSigner: Signer;
     let stakeSettings: StakingSettings;
-    const stakeAmount = "1.000000 LEOS";
+    const stakeAmount = "1.000000 TONO";
 
     beforeEach(async () => {
         // Create a random user
@@ -48,13 +48,13 @@ describe('TonomyContract Staking Tests', () => {
         accountSigner = createKeyManagerSigner(user.keyManager, KeyManagerLevel.ACTIVE);
 
         // Issue tokens to the test account
-        await eosioTokenContract.transfer("coinsale.tmy", accountName, '10.000000 LEOS', "testing LEOS", signer);
+        await eosioTokenContract.transfer("coinsale.tmy", accountName, '10.000000 TONO', "testing TONO", signer);
         stakeSettings = await stakeContract.getSettings();
     });
 
     describe('setsettings()', () => {
         test('Successfully update settings with valid asset', async () => {
-            const newYearlyStakePool = "100.000000 LEOS";
+            const newYearlyStakePool = "100.000000 TONO";
             const trx = await stakeContract.setSettings(newYearlyStakePool, signer);
 
             expect(trx.processed.receipt.status).toBe('executed');
@@ -64,7 +64,7 @@ describe('TonomyContract Staking Tests', () => {
             expect(updatedSettings.yearlyStakePool).toBe(newYearlyStakePool);
 
             // Revert settings to previous
-            await stakeContract.setSettings(amountToAsset(StakingContract.yearlyStakePool, 'LEOS'), signer)
+            await stakeContract.setSettings(amountToAsset(StakingContract.yearlyStakePool, 'TONO'), signer)
         });
 
         test('Fails update with wrong asset symbol', async () => {
@@ -81,7 +81,7 @@ describe('TonomyContract Staking Tests', () => {
             expect.assertions(1);
 
             try {
-                await stakeContract.setSettings("0.000000 LEOS", signer);
+                await stakeContract.setSettings("0.000000 TONO", signer);
             } catch (e) {
                 expect(e.error.details[0].message).toContain("Amount must be greater than 0");
             }
@@ -92,7 +92,7 @@ describe('TonomyContract Staking Tests', () => {
             const wrongSigner = createSigner(PrivateKey.generate("K1"));
 
             try {
-                await stakeContract.setSettings("100.000000 LEOS", wrongSigner);
+                await stakeContract.setSettings("100.000000 TONO", wrongSigner);
             } catch (e) {
                 expect(e.error.details[0].message).toContain("transaction declares authority");
             }
@@ -105,7 +105,7 @@ describe('TonomyContract Staking Tests', () => {
             const initialSettings = await stakeContract.getSettings();
             const initialYield = assetToAmount(initialSettings.currentYieldPool);
 
-            const additionalYield = "10.000000 LEOS";
+            const additionalYield = "10.000000 TONO";
             const trx = await stakeContract.addYield("infra.tmy", additionalYield, signer);
 
             expect(trx.processed.receipt.status).toBe('executed');
@@ -121,10 +121,10 @@ describe('TonomyContract Staking Tests', () => {
             expect.assertions(1);
 
             try {
-                await stakeContract.addYield("infra.tmy", "0.500000 LEOS", signer);
+                await stakeContract.addYield("infra.tmy", "0.500000 TONO", signer);
             } catch (e) {
                 debug('Fails add yield if below minimum amount', e)
-                expect(e.error.details[0].message).toContain("Amount must be greater than or equal to 1.000000 LEOS");
+                expect(e.error.details[0].message).toContain("Amount must be greater than or equal to 1.000000 TONO");
             }
         });
 
@@ -142,7 +142,7 @@ describe('TonomyContract Staking Tests', () => {
             expect.assertions(1);
 
             try {
-                await stakeContract.addYield("infra.tmy", "0.000000 LEOS", signer);
+                await stakeContract.addYield("infra.tmy", "0.000000 TONO", signer);
             } catch (e) {
                 expect(e.error.details[0].message).toContain("Amount must be greater than 0");
             }
@@ -178,7 +178,7 @@ describe('TonomyContract Staking Tests', () => {
 
             expect(allocation.initialStake).toBe(stakeAmount);
             expect(allocation.staked).toBe(stakeAmount);
-            expect(allocation.yieldSoFar).toBe(amountToAsset(0, "LEOS"));
+            expect(allocation.yieldSoFar).toBe(amountToAsset(0, "TONO"));
             expect(allocation.stakedTime.getTime()).toBeGreaterThan(now.getTime());
             expect(allocation.stakedTime.getTime()).toBeLessThanOrEqual(now.getTime() + MILLISECONDS_IN_SECOND);
             expect(allocation.unstakeableTime.getTime()).toBe(
@@ -189,7 +189,7 @@ describe('TonomyContract Staking Tests', () => {
             expect(allocation.monthlyYield).toBe(
                 amountToAsset(
                     assetToAmount(allocation.staked) * (Math.pow(1 + stakeSettings.apy, 1 / 12) - 1),
-                    'LEOS'
+                    'TONO'
                 )
             );
     
@@ -204,7 +204,7 @@ describe('TonomyContract Staking Tests', () => {
 
             expect(accountData.staker).toBe(accountName);
             expect(accountData.lastPayout.toString()).toBe(allocation.stakedTime.toString())
-            expect(accountData.totalYield).toBe(amountToAsset(0, "LEOS"));
+            expect(accountData.totalYield).toBe(amountToAsset(0, "TONO"));
             expect(accountData.version).toBe(1);
         });
     
@@ -234,7 +234,7 @@ describe('TonomyContract Staking Tests', () => {
             expect.assertions(1);
 
             try {
-                await stakeContract.stakeTokens(accountName, "1.0 LEOS", accountSigner);
+                await stakeContract.stakeTokens(accountName, "1.0 TONO", accountSigner);
             } catch (e) {
                 expect(e.error.details[0].message).toContain("Symbol does not match system resource");
             }
@@ -253,36 +253,36 @@ describe('TonomyContract Staking Tests', () => {
         test('Stake tokens twice and verify both allocations are present', async () => {
             expect.assertions(3);
             // Stake twice
-            await stakeContract.stakeTokens(accountName, "1.000000 LEOS", accountSigner);
-            await stakeContract.stakeTokens(accountName, "2.000000 LEOS", accountSigner);
+            await stakeContract.stakeTokens(accountName, "1.000000 TONO", accountSigner);
+            await stakeContract.stakeTokens(accountName, "2.000000 TONO", accountSigner);
     
             const allocations = await stakeContract.getAllocations(accountName, stakeSettings);
 
             expect(allocations.length).toBe(2);
-            expect(allocations[0].staked).toBe("1.000000 LEOS");
-            expect(allocations[1].staked).toBe("2.000000 LEOS");
+            expect(allocations[0].staked).toBe("1.000000 TONO");
+            expect(allocations[1].staked).toBe("2.000000 TONO");
         });
     
         test('getAccountState() returns correct aggregated values', async () => {
             expect.assertions(10);
-            await stakeContract.stakeTokens(accountName, "1.000000 LEOS", accountSigner);
-            await stakeContract.stakeTokens(accountName, "2.000000 LEOS", accountSigner);
+            await stakeContract.stakeTokens(accountName, "1.000000 TONO", accountSigner);
+            await stakeContract.stakeTokens(accountName, "2.000000 TONO", accountSigner);
     
             // Retrieve full account and allocations data
             const fullData = await stakeContract.getAccountState(accountName);
 
-            // totalStaked should equal sum of staked amounts from active allocations (1 + 2 = 3 LEOS)
+            // totalStaked should equal sum of staked amounts from active allocations (1 + 2 = 3 TONO)
             expect(fullData.totalStaked).toBeCloseTo(3);
             // estimatedMonthlyYield should equal the sum of monthly yields for each allocation.
-            const expectedYield1 = assetToAmount("1.000000 LEOS") * (Math.pow(1 + stakeSettings.apy, 1 / 12) - 1);
-            const expectedYield2 = assetToAmount("2.000000 LEOS") * (Math.pow(1 + stakeSettings.apy, 1 / 12) - 1);
+            const expectedYield1 = assetToAmount("1.000000 TONO") * (Math.pow(1 + stakeSettings.apy, 1 / 12) - 1);
+            const expectedYield2 = assetToAmount("2.000000 TONO") * (Math.pow(1 + stakeSettings.apy, 1 / 12) - 1);
 
             expect(fullData.estimatedMonthlyYield).toBeCloseTo(expectedYield1 + expectedYield2);
             expect(fullData.allocations.length).toBe(2);
             expect(fullData.lastPayout.getTime()).toBeGreaterThanOrEqual(fullData.allocations[0].stakedTime.getTime());
             expect(fullData.lastPayout.getTime()).toBeLessThanOrEqual(fullData.allocations[0].stakedTime.getTime() + MILLISECONDS_IN_SECOND);
             expect(fullData.staker).toBe(accountName);
-            expect(fullData.totalYield).toBe(amountToAsset(0, "LEOS"));
+            expect(fullData.totalYield).toBe(amountToAsset(0, "TONO"));
             expect(fullData.version).toBe(1);
             expect(fullData.totalUnlockable).toBe(0);
             expect(fullData.totalUnlocking).toBe(0);
@@ -302,8 +302,8 @@ describe('TonomyContract Staking Tests', () => {
         test('APY decreases when additional stake is added, and increases when stake is removed', async () => {
             expect.assertions(20);
             await resetContract();
-            const yearlyStakePool = "1000.000000 LEOS";
-            const stakeAmount = "1000.000000 LEOS";
+            const yearlyStakePool = "1000.000000 TONO";
+            const stakeAmount = "1000.000000 TONO";
 
             // Set a fixed yearly stake pool.
             await stakeContract.setSettings(yearlyStakePool, signer);
@@ -311,19 +311,19 @@ describe('TonomyContract Staking Tests', () => {
 
             expect(settingsStart.apy).toBeCloseTo(1.0, 6);
             expect(settingsStart.currentYieldPool).toBe(yieldPool);
-            expect(settingsStart.totalStaked).toBe("0.000000 LEOS");
-            expect(settingsStart.totalReleasing).toBe("0.000000 LEOS");
+            expect(settingsStart.totalStaked).toBe("0.000000 TONO");
+            expect(settingsStart.totalReleasing).toBe("0.000000 TONO");
             expect(settingsStart.yearlyStakePool).toBe(yearlyStakePool);
 
-            // Staker1 stakes 1000 LEOS.
-            await eosioTokenContract.transfer("coinsale.tmy", accountName, stakeAmount, "testing LEOS", signer);
+            // Staker1 stakes 1000 TONO.
+            await eosioTokenContract.transfer("coinsale.tmy", accountName, stakeAmount, "testing TONO", signer);
             await stakeContract.stakeTokens(accountName, stakeAmount, accountSigner);
             const settings1 = await stakeContract.getSettings();
             
             expect(settings1.apy).toBeCloseTo(1.0, 6); // Expected: 1000/1000 = 1.0.
             expect(settings1.currentYieldPool).toBe(yieldPool);
             expect(settings1.totalStaked).toBe(stakeAmount);
-            expect(settings1.totalReleasing).toBe("0.000000 LEOS");
+            expect(settings1.totalReleasing).toBe("0.000000 TONO");
             expect(settings1.yearlyStakePool).toBe(yearlyStakePool);
                       
             // Create a second staker.
@@ -337,8 +337,8 @@ describe('TonomyContract Staking Tests', () => {
 
             expect(settings2.apy).toBeCloseTo(0.5, 6); // Expected: 1000/2000 = 0.5.
             expect(settings2.currentYieldPool).toBe(yieldPool);
-            expect(settings2.totalStaked).toBe(amountToAsset(assetToAmount(stakeAmount) * 2, "LEOS"));
-            expect(settings2.totalReleasing).toBe("0.000000 LEOS");
+            expect(settings2.totalStaked).toBe(amountToAsset(assetToAmount(stakeAmount) * 2, "TONO"));
+            expect(settings2.totalReleasing).toBe("0.000000 TONO");
             expect(settings2.yearlyStakePool).toBe(yearlyStakePool);
           
             // Have staker1 request unstake.
@@ -618,11 +618,11 @@ describe('TonomyContract Staking Tests', () => {
             await resetContract();
 
             // Use a large stake to minimize rounding issues.
-            const largeStake = "1000000.000000 LEOS"; // 1M LEOS
+            const largeStake = "1000000.000000 TONO"; // 1M TONO
             const yearlyStakePool = largeStake; // To make APY 1.0
 
             await stakeContract.setSettings(yearlyStakePool, signer); // APY 1.0
-            await eosioTokenContract.transfer("coinsale.tmy", accountName, largeStake, "testing LEOS", signer);
+            await eosioTokenContract.transfer("coinsale.tmy", accountName, largeStake, "testing TONO", signer);
             await stakeContract.stakeTokens(accountName, largeStake, accountSigner);
             
             const startTime = new Date();
@@ -703,12 +703,12 @@ describe('TonomyContract Staking Tests', () => {
             await resetContract();
 
             // Use a large stake to minimize rounding issues.
-            const largeStake = "1000000.000000 LEOS"; // 1M LEOS
+            const largeStake = "1000000.000000 TONO"; // 1M TONO
             const yearlyStakePool = largeStake; // To make APY 1.0
 
             await stakeContract.setSettings(yearlyStakePool, signer); // APY 1.0
 
-            await eosioTokenContract.transfer("coinsale.tmy", accountName, largeStake, "testing LEOS", signer);
+            await eosioTokenContract.transfer("coinsale.tmy", accountName, largeStake, "testing TONO", signer);
             await stakeContract.stakeTokens(accountName, largeStake, accountSigner);
       
             const initial = await getStakingState();

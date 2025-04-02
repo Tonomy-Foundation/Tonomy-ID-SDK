@@ -1,10 +1,10 @@
 /* eslint-disable camelcase */
 import { amountToAsset, Authority, bytesToTokens, StakingContract } from '../../sdk/services/blockchain';
 import { StandardProposalOptions, createProposal, executeProposal } from '.';
-import { deployContract } from './deployContract';
 import { createSubdomainOnOrigin, getAppUsernameHash } from '../bootstrap';
 import { getAccountInfo } from '../../sdk';
 import { Name } from '@wharfkit/antelope';
+import { deployContract } from './contract';
 
 //create staking.tmy account controlled by ops.tmy
 export async function createStakingTmyAccount(options: StandardProposalOptions) {
@@ -140,13 +140,11 @@ export async function stakingContractSetup(options: StandardProposalOptions) {
         name: 'adminsetapp',
         data: {
             account_name: 'staking.tmy',
-            app_name: 'LEOS Staking',
-            description: 'LEOS Staking contract',
+            app_name: 'TONO Staking',
+            description: 'TONO Staking contract',
             username_hash: tonomyUsername,
-            logo_url:
-                createSubdomainOnOrigin('https://accounts.testnet.pangea.web4.world', 'staking') +
-                '/tonomy-logo1024.png',
-            origin: createSubdomainOnOrigin('https://accounts.testnet.pangea.web4.world', 'staking'),
+            logo_url: createSubdomainOnOrigin('https://accounts.testnet.tonomy.io', 'staking') + '/tonomy-logo1024.png',
+            origin: createSubdomainOnOrigin('https://accounts.testnet.tonomy.io', 'staking'),
         },
     };
 
@@ -183,103 +181,34 @@ export async function stakingContractSetup(options: StandardProposalOptions) {
 
 // deploy the new staking.tmy contract
 export async function deployStakingContract(options: StandardProposalOptions) {
-    const contract = 'staking.tmy';
-    const directory =
-        '/home/sadia/TonomyFoundation/january/Tonomy-ID-Integration/Tonomy-ID-SDK/Tonomy-Contracts/contracts/';
-    const contractDir = directory + `staking.tmy`;
-
-    const deployActions = await deployContract({ contractName: contract, contractDir, returnActions: true }, options);
-
-    if (!deployActions) throw new Error('Expected deployActions to be defined');
-
-    const actions = [...deployActions];
-
-    const proposalHash = await createProposal(
-        options.proposer,
-        options.proposalName,
-        actions,
-        options.privateKey,
-        [...options.requested, contract],
-        options.dryRun
-    );
-
-    if (options.dryRun) return;
-    if (options.autoExecute) await executeProposal(options.proposer, options.proposalName, proposalHash);
+    await deployContract({
+        ...options,
+        contract: 'staking.tmy',
+    });
 }
 
 // re-deploy the vesting contract
 export async function reDeployVestingContract(options: StandardProposalOptions) {
-    const directory =
-        '/home/sadia/TonomyFoundation/january/Tonomy-ID-Integration/Tonomy-ID-SDK/Tonomy-Contracts/contracts/';
-
-    const vestingDeployActions = await deployContract(
-        { contractName: 'vesting.tmy', contractDir: directory + 'vesting.tmy', returnActions: true },
-        options
-    );
-
-    if (!vestingDeployActions) throw new Error('Expected vestingDeployActions to be defined');
-
-    const proposalHash = await createProposal(
-        options.proposer,
-        options.proposalName,
-        [...vestingDeployActions],
-        options.privateKey,
-        [...options.requested],
-        options.dryRun
-    );
-
-    if (options.dryRun) return;
-    if (options.autoExecute) await executeProposal(options.proposer, options.proposalName, proposalHash);
+    await deployContract({
+        ...options,
+        contract: 'vesting.tmy',
+    });
 }
 
 // re-deploy the eosio contract
 export async function reDeployEosioContract(options: StandardProposalOptions) {
-    const directory =
-        '/home/sadia/TonomyFoundation/january/Tonomy-ID-Integration/Tonomy-ID-SDK/Tonomy-Contracts/contracts/';
-
-    const eosioDeployActions = await deployContract(
-        { contractName: 'eosio', contractDir: directory + 'eosio.tonomy', returnActions: true },
-        options
-    );
-
-    if (!eosioDeployActions) throw new Error('Expected eosioDeployActions to be defined');
-
-    const proposalHash = await createProposal(
-        options.proposer,
-        options.proposalName,
-        [...eosioDeployActions],
-        options.privateKey,
-        [...options.requested],
-        options.dryRun
-    );
-
-    if (options.dryRun) return;
-    if (options.autoExecute) await executeProposal(options.proposer, options.proposalName, proposalHash);
+    await deployContract({
+        ...options,
+        contract: 'eosio',
+    });
 }
 
 // re-deploy the tonomy contracts
 export async function reDeployTonomyContract(options: StandardProposalOptions) {
-    const directory =
-        '/home/sadia/TonomyFoundation/january/Tonomy-ID-Integration/Tonomy-ID-SDK/Tonomy-Contracts/contracts/';
-
-    const tonomyDeployActions = await deployContract(
-        { contractName: 'tonomy', contractDir: directory + 'tonomy', returnActions: true },
-        options
-    );
-
-    if (!tonomyDeployActions) throw new Error('Expected tonomyDeployActions to be defined');
-
-    const proposalHash = await createProposal(
-        options.proposer,
-        options.proposalName,
-        [...tonomyDeployActions],
-        options.privateKey,
-        [...options.requested],
-        options.dryRun
-    );
-
-    if (options.dryRun) return;
-    if (options.autoExecute) await executeProposal(options.proposer, options.proposalName, proposalHash);
+    await deployContract({
+        ...options,
+        contract: 'tonomy',
+    });
 }
 
 //setup staking by calling setSettings() and addYield()
@@ -294,7 +223,7 @@ export async function stakingSettings(options: StandardProposalOptions) {
         account: 'staking.tmy',
         name: 'setsettings',
         data: {
-            yearly_stake_pool: amountToAsset(StakingContract.yearlyStakePool, 'LEOS'),
+            yearly_stake_pool: amountToAsset(StakingContract.yearlyStakePool, 'TONO'),
         },
     };
 
@@ -309,7 +238,7 @@ export async function stakingSettings(options: StandardProposalOptions) {
         name: 'addyield',
         data: {
             sender: 'infra.tmy',
-            quantity: amountToAsset(StakingContract.yearlyStakePool / 2, 'LEOS'),
+            quantity: amountToAsset(StakingContract.yearlyStakePool / 2, 'TONO'),
         },
     };
 

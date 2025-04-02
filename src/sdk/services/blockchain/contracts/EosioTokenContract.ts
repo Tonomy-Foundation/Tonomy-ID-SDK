@@ -4,11 +4,25 @@ import { Signer, transact } from '../eosio/transaction';
 import { getApi } from '../eosio/eosio';
 import { getSettings } from '../../../util';
 import Decimal from 'decimal.js';
+import Debug from 'debug';
+
+const debug = Debug('tonomy-id-sdk:services:blockchain:contracts:token');
 
 const CONTRACT_NAME = 'eosio.token';
 
-function assetToNumberString(asset: string): string {
-    return asset.split(' ')[0];
+function assetToNumberString(asset: string, symbol?: string): string {
+    if (!symbol) {
+        symbol = getSettings().currencySymbol;
+    }
+
+    const [res, currency] = asset.split(' ');
+
+    if (currency !== symbol) {
+        debug(`Invalid currency symbol: expected ${symbol}, for asset ${asset}`);
+        throw new Error(`Invalid currency symbol: expected ${symbol}, got ${currency}`);
+    }
+
+    return res;
 }
 
 // FIXME: Remove use of this function. We should never use a number to represent tokens as they are not precise and cannot handle large numbers.

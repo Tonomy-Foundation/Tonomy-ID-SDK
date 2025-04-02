@@ -1,7 +1,7 @@
 /* eslint-disable camelcase */
 import { Authority, bytesToTokens } from '../../sdk/services/blockchain';
 import { StandardProposalOptions, createProposal, executeProposal } from '.';
-import { deployContract } from './deployContract';
+import { deployContract } from './contract';
 import { AccountType, getSettings, TonomyUsername } from '../../sdk';
 import { Name } from '@wharfkit/antelope';
 
@@ -330,7 +330,12 @@ export async function hyphaContractSet(args: any, options: StandardProposalOptio
         },
     };
 
-    const deployActions = await deployContract({ contractName: contract, contractDir, returnActions: true }, options);
+    const deployActions = await deployContract({
+        contract: contract,
+        directory: contractDir,
+        returnActions: true,
+        ...options,
+    });
 
     if (!deployActions) throw new Error('Expected deployActions to be defined');
 

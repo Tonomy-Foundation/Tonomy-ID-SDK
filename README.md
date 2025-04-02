@@ -2,7 +2,7 @@
 
 The Software Development Kit is used in the Tonomy ID ecosystems to interact with Tonomy identities and services.
 
-**See <https://docs.pangea.web4.world> for documentation.**
+**See <https://docs.tonomy.io> for documentation.**
 
 The SDK is written in typescript with jest to run tests.
 

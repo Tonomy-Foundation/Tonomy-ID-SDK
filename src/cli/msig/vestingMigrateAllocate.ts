@@ -4,8 +4,8 @@ import {
     ActionData,
     assetToAmount,
     assetToDecimal,
-    LEOS_SEED_LATE_ROUND_PRICE,
-    LEOS_SEED_ROUND_PRICE,
+    TONO_SEED_LATE_ROUND_PRICE,
+    TONO_SEED_ROUND_PRICE,
     VestingContract,
 } from '../../sdk/services/blockchain';
 import { getAllAllocations, getAllUniqueHolders } from '../vesting';
@@ -63,7 +63,7 @@ export async function vestingMigrate2(options: StandardProposalOptions) {
 
         const actions: ActionData[] = batch.map((allocation) => {
             const newAmount = assetToDecimal(allocation.tokens_allocated).mul(priceMultiplier);
-            const newAsset = `${newAmount.toFixed(6)} LEOS`;
+            const newAsset = `${newAmount.toFixed(6)} TONO`;
 
             console.log(
                 `Migrating account ${allocation.holder} allocation ${allocation.id} in category ${allocation.vesting_category_type} from ${allocation.tokens_allocated} to ${newAsset}`
@@ -131,7 +131,7 @@ export async function vestingMigrate3(options: StandardProposalOptions) {
 
         const actions: ActionData[] = batch.map((allocation) => {
             const newAmount = assetToDecimal(allocation.tokens_allocated).mul(priceMultiplier);
-            const newAsset = `${newAmount.toFixed(6)} LEOS`;
+            const newAsset = `${newAmount.toFixed(6)} TONO`;
 
             console.log(
                 `Migrating account ${allocation.holder} allocation ${allocation.id} in category ${allocation.vesting_category_type} from ${allocation.tokens_allocated} to ${newAsset}`
@@ -188,23 +188,23 @@ async function createAccountActions(account: NameType): Promise<ActionData[]> {
 
         if (oldCategory === 1 || oldCategory === 2) {
             if (oldCategory === 1) {
-                const oldLeosPrice = 0.002;
-                const newLeosPrice = LEOS_SEED_ROUND_PRICE;
+                const oldTokenPrice = 0.002;
+                const newTokenPrice = TONO_SEED_ROUND_PRICE;
                 const amount = assetToAmount(allocation.tokens_allocated);
 
-                newAmount = (amount * oldLeosPrice) / newLeosPrice;
+                newAmount = (amount * oldTokenPrice) / newTokenPrice;
             } else {
-                const oldLeosPrice = 0.004;
-                const newLeosPrice = LEOS_SEED_LATE_ROUND_PRICE;
+                const oldTokenPrice = 0.004;
+                const newTokenPrice = TONO_SEED_LATE_ROUND_PRICE;
                 const amount = assetToAmount(allocation.tokens_allocated);
 
-                newAmount = (amount * oldLeosPrice) / newLeosPrice;
+                newAmount = (amount * oldTokenPrice) / newTokenPrice;
 
                 newCategory = 9;
             }
 
             const oldAmount = allocation.tokens_allocated;
-            const newAsset = `${newAmount.toFixed(6)} LEOS`;
+            const newAsset = `${newAmount.toFixed(6)} TONO`;
 
             console.log(
                 `Migrating account ${account.toString()} allocation ${allocation.id} from ${oldAmount} to ${newAsset}`

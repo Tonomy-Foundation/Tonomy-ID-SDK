@@ -194,9 +194,9 @@ async function deployStaking() {
 async function setupVestingAndStaking(newSigner: Signer) {
     await vestingContract.setSettings(VestingContract.SALE_START_DATE, VestingContract.VESTING_START_DATE, newSigner);
 
-    await stakeContract.setSettings(amountToAsset(StakingContract.yearlyStakePool, 'LEOS'), newSigner);
+    await stakeContract.setSettings(amountToAsset(StakingContract.yearlyStakePool, 'TONO'), newSigner);
     await sleep(1000);
-    await stakeContract.addYield('infra.tmy', amountToAsset(StakingContract.yearlyStakePool / 2, 'LEOS'), newSigner); // 6 months budget in the account
+    await stakeContract.addYield('infra.tmy', amountToAsset(StakingContract.yearlyStakePool / 2, 'TONO'), newSigner); // 6 months budget in the account
     console.log('Staking settings', await stakeContract.getSettings());
 }
 
@@ -303,8 +303,8 @@ async function createTonomyContractAndSetResources() {
     );
     await tonomyContract.adminSetApp(
         'vesting.tmy',
-        'LEOS Vesting',
-        'LEOS Vesting contract',
+        'TONO Vesting',
+        'TONO Vesting contract',
         getAppUsernameHash('vesting'),
         createSubdomainOnOrigin(getSettings().ssoWebsiteOrigin, 'vesting') + '/tonomy-logo1024.png',
         createSubdomainOnOrigin(getSettings().ssoWebsiteOrigin, 'vesting'),
@@ -312,8 +312,8 @@ async function createTonomyContractAndSetResources() {
     );
     await tonomyContract.adminSetApp(
         'staking.tmy',
-        'LEOS Staking',
-        'LEOS Staking contract',
+        'TONO Staking',
+        'TONO Staking contract',
         getAppUsernameHash('staking'),
         createSubdomainOnOrigin(getSettings().ssoWebsiteOrigin, 'staking') + '/tonomy-logo1024.png',
         createSubdomainOnOrigin(getSettings().ssoWebsiteOrigin, 'staking'),

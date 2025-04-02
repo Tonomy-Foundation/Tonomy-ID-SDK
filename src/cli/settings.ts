@@ -33,7 +33,7 @@ const defaultConfig = {
     tonomyIdSchema: 'tonomy-id-development://',
     loggerLevel: 'info' as LoggerLevel,
     ecosystemName: 'Tonomy - Development',
-    currencySymbol: 'LEOS',
+    currencySymbol: 'TONO',
 };
 
 const stagingConfig = {
@@ -48,37 +48,37 @@ const stagingConfig = {
     tonomyIdSchema: 'tonomy-id-staging://',
     loggerLevel: 'info' as LoggerLevel,
     ecosystemName: 'Tonomy - Staging',
-    currencySymbol: 'LEOS',
+    currencySymbol: 'TONO',
 };
 
 const testnetConfig = {
     environment: 'testnet',
-    ssoWebsiteOrigin: `https://accounts.testnet.pangea.web4.world`,
-    demoWebsiteOrigin: `https://demo.testnet.pangea.web4.world`,
-    consoleWebsiteOrigin: `https://console.developers.testnet.pangea.web4.world`,
-    blockchainUrl: `https://blockchain-api-testnet.pangea.web4.world`,
+    ssoWebsiteOrigin: `https://accounts.testnet.tonomy.io`,
+    demoWebsiteOrigin: `https://demo.testnet.tonomy.io`,
+    consoleWebsiteOrigin: `https://console.developers.testnet.tonomy.io`,
+    blockchainUrl: `https://blockchain-api-testnet.tonomy.io`,
     accountSuffix: '.testnet.pangea',
-    communicationUrl: 'wss://communication.testnet.pangea.web4.world',
-    accountsServiceUrl: 'http://communication.testnet.pangea.web4.world',
+    communicationUrl: 'wss://communication.testnet.tonomy.io',
+    accountsServiceUrl: 'http://communication.testnet.tonomy.io',
     tonomyIdSchema: 'pangea-testnet://',
     loggerLevel: 'info' as LoggerLevel,
-    ecosystemName: 'Pangea Testnet',
-    currencySymbol: 'LEOS',
+    ecosystemName: 'Tonomy Testnet',
+    currencySymbol: 'TONO',
 };
 
 const productionConfig = {
     environment: 'production',
-    ssoWebsiteOrigin: `https://accounts.pangea.web4.world`,
-    demoWebsiteOrigin: `https://demo.pangea.web4.world`,
-    consoleWebsiteOrigin: `https://console.developers.pangea.web4.world`,
-    blockchainUrl: `https://blockchain-api.pangea.web4.world`,
+    ssoWebsiteOrigin: `https://accounts.tonomy.io`,
+    demoWebsiteOrigin: `https://demo.tonomy.io`,
+    consoleWebsiteOrigin: `https://console.developers.tonomy.io`,
+    blockchainUrl: `https://blockchain-api.tonomy.io`,
     accountSuffix: '.pangea.id',
-    communicationUrl: 'wss://communication.pangea.web4.world',
-    accountsServiceUrl: 'http://communication.pangea.web4.world',
+    communicationUrl: 'wss://communication.tonomy.io',
+    accountsServiceUrl: 'http://communication.tonomy.io',
     tonomyIdSchema: 'united-wallet://',
     loggerLevel: 'info' as LoggerLevel,
-    ecosystemName: 'Pangea',
-    currencySymbol: 'LEOS',
+    ecosystemName: 'Tonomy',
+    currencySymbol: 'TONO',
 };
 
 type SettingsType = {
