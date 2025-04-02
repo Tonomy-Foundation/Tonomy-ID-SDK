@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 import { Name } from '@wharfkit/antelope';
 import { createProposal, executeProposal, StandardProposalOptions } from '.';
 import { TonomyContract } from '../../sdk';
