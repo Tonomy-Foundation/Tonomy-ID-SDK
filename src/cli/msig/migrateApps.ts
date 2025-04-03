@@ -4,7 +4,7 @@ import { StandardProposalOptions, createProposal, executeProposal } from '.';
 
 const CONTRACT_NAME = 'tonomy';
 
-function getDefaultColors(): { background: string; text: string; branding: string } {
+function getDefaultColors(): { background: string; branding: string } {
     return {
         background: '#ffffff', // white background
         branding: '#CBCBCB', // grey color
