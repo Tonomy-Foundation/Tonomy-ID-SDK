@@ -7,7 +7,6 @@ const CONTRACT_NAME = 'tonomy';
 function getDefaultColors(): { background: string; text: string; branding: string } {
     return {
         background: '#ffffff', // white background
-        text: '#000000', // black text
         branding: '#CBCBCB', // grey color
     };
 }

@@ -13,8 +13,8 @@ export default async function apps(args: string[]) {
             logoUrl: args[4],
             origin: args[5],
             backgroundColor: args[6],
-            accentColor: args[8],
-            publicKey: PublicKey.from(args[9]),
+            accentColor: args[7],
+            publicKey: PublicKey.from(args[8]),
             signer: createSigner(getTonomyOperationsKey()),
         };
 
