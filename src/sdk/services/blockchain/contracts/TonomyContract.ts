@@ -64,7 +64,7 @@ export type GetPersonResponse = {
     version: number;
 };
 
-type AppTableRecord = {
+export type AppTableRecord = {
     account_name: Name;
     app_name: string;
     username_hash: Checksum256;
