@@ -37,7 +37,7 @@ export async function migrateApps(options: StandardProposalOptions) {
     for (const row of data.rows) {
         // Retrieve default color values.
         const colors = customColorMapping[row.app_name] || getDefaultColors();
-        const { background, text, branding } = colors;
+        const { background, branding } = colors;
 
         console.log(`Migrating app: ${row.app_name}`);
 
@@ -46,8 +46,7 @@ export async function migrateApps(options: StandardProposalOptions) {
             description: row.description,
             logo_url: row.logo_url,
             background_color: background,
-            text_color: text,
-            branding_color: branding,
+            accent_color: branding,
         });
 
         actions.push({

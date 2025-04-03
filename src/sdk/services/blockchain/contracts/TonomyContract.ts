@@ -72,8 +72,7 @@ type AppTableRecord = {
     logo_url: string;
     origin: string;
     background_color: string;
-    text_color: string;
-    branding_color: string;
+    accent_color: string;
     version: number;
 };
 
@@ -293,8 +292,7 @@ export class TonomyContract {
         logo_url: string,
         origin: string,
         background_color: string,
-        text_color: string,
-        branding_color: string,
+        accent_color: string,
         key: PublicKey,
         signer: Signer
     ): Promise<API.v1.PushTransactionResponse> {
@@ -306,8 +304,7 @@ export class TonomyContract {
             description: description,
             logo_url: logo_url,
             background_color: background_color,
-            text_color: text_color,
-            branding_color: branding_color,
+            accent_color: accent_color,
         });
 
         const action = {
@@ -484,8 +481,7 @@ export class TonomyContract {
             origin: idData.origin,
             account_name: Name.from(idData.account_name),
             background_color: appInfo.background_color,
-            text_color: appInfo.text_color,
-            branding_color: appInfo.branding_color,
+            accent_color: appInfo.accent_color,
             username_hash: Checksum256.from(idData.username_hash),
             version: idData.version,
         };
@@ -499,8 +495,7 @@ export class TonomyContract {
         logoUrl: string,
         origin: string,
         backgroundColor: string,
-        textColor: string,
-        brandingColor: string,
+        accentColor: string,
         signer: Signer
     ): Promise<API.v1.PushTransactionResponse> {
         const json_data = JSON.stringify({
@@ -508,8 +503,7 @@ export class TonomyContract {
             description: description,
             logo_url: logoUrl,
             background_color: backgroundColor,
-            text_color: textColor,
-            branding_color: brandingColor,
+            accent_color: accentColor,
         });
         const action = {
             authorization: [

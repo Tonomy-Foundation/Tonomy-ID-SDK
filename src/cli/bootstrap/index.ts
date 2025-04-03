@@ -401,8 +401,7 @@ async function createTonomyApps(newPublicKey: PublicKey, newSigner: Signer): Pro
         origin: settings.config.demoWebsiteOrigin,
         logoUrl: settings.config.demoWebsiteOrigin + '/market.com.png',
         backgroundColor: '#ffffff',
-        textColor: '#000000',
-        brandingColor: '#CBCBCB',
+        accentColor: '#CBCBCB',
         publicKey: newPublicKey,
         signer,
     });
@@ -423,8 +422,7 @@ async function createTonomyApps(newPublicKey: PublicKey, newSigner: Signer): Pro
         origin: settings.config.ssoWebsiteOrigin,
         logoUrl: settings.config.ssoWebsiteOrigin + '/tonomy-logo1024.png',
         backgroundColor: '#ffffff',
-        textColor: '#000000',
-        brandingColor: '#CBCBCB',
+        accentColor: '#CBCBCB',
         publicKey: newPublicKey,
         signer,
     });
@@ -436,8 +434,7 @@ async function createTonomyApps(newPublicKey: PublicKey, newSigner: Signer): Pro
         origin: settings.config.consoleWebsiteOrigin,
         logoUrl: settings.config.consoleWebsiteOrigin + '/tonomy-logo1024.png',
         backgroundColor: '#ffffff',
-        textColor: '#000000',
-        brandingColor: '#CBCBCB',
+        accentColor: '#CBCBCB',
         publicKey: newPublicKey,
         signer,
     });
