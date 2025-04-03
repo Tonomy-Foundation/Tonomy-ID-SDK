@@ -58,8 +58,14 @@ function start {
 }
 
 function bootstrap {
+    echo "WARNING: Make sure you have built the smart contract with:"
+    echo "export BUILD_TEST=true"
+    echo "./Tonomy-Contracts/delete-built-contracts.sh"
+    echo "./Tonomy-Contracts/build_contracts.sh"
+    sleep 2
+
     # Run bootstrap script
-    cd  "$SDK_DIR"
+    cd "$SDK_DIR"
 
     # For development environment use set keys, otherwise these should be set in the environment
     NODE_ENV="${NODE_ENV:-development}"

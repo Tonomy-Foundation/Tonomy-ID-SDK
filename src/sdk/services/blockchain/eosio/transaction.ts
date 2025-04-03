@@ -129,7 +129,7 @@ export class AntelopePushTransactionError extends Error {
     }
 
     hasTonomyErrorCode(code: string): boolean {
-        // TODO iterate over deatils array instead of only looking at first element
+        // TODO: iterate over deatils array instead of only looking at first element
         return this.error.details[0].message.search(code) > 0;
     }
 }

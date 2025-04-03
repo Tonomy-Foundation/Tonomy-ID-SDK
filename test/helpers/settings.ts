@@ -10,6 +10,7 @@ export const settings: Partial<SettingsType> = {
     tonomyIdSchema: 'tonomy-id-test://',
     loggerLevel: 'info',
     currencySymbol: 'LEOS',
+    environment: 'test',
 };
 
 export function setTestSettings() {

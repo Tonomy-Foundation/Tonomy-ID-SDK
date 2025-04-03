@@ -36,7 +36,6 @@ export function setSettings(newSettings: Partial<SettingsType>): void {
 }
 
 export function setFetch(fetch: FetchType): void {
-    debug('Fetch initialized', typeof fetch);
     fetchFunction = fetch;
 }
 

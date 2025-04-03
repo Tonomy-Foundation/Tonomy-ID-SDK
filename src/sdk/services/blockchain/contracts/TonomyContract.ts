@@ -4,6 +4,7 @@ import { Signer, transact } from '../eosio/transaction';
 import { SdkErrors, TonomyUsername, getSettings, sha256, throwError } from '../../../util';
 import { getAccount, getApi } from '../eosio/eosio';
 import { LEOS_PUBLIC_SALE_PRICE } from './VestingContract';
+import { Authority } from '../eosio/authority';
 
 const CONTRACT_NAME = 'tonomy';
 
@@ -63,7 +64,7 @@ export type GetPersonResponse = {
     version: number;
 };
 
-type AppTableRecord = {
+export type AppTableRecord = {
     account_name: Name;
     app_name: string;
     username_hash: Checksum256;
@@ -261,6 +262,25 @@ export class TonomyContract {
         }
 
         return await transact(Name.from(CONTRACT_NAME), actions, signer);
+    }
+
+    async updateactive(account: string, active: Authority, signer: Signer): Promise<API.v1.PushTransactionResponse> {
+        const action = {
+            authorization: [
+                {
+                    actor: account,
+                    permission: 'active',
+                },
+            ],
+            account: CONTRACT_NAME,
+            name: 'updateactive',
+            data: {
+                account,
+                active,
+            },
+        };
+
+        return await transact(Name.from(CONTRACT_NAME), [action], signer);
     }
 
     async newapp(

@@ -4,7 +4,6 @@ import { fileURLToPath } from 'url';
 import { createAntelopeAccount, createApp } from './create-account';
 import {
     DemoTokenContract,
-    setSettings,
     EosioTokenContract,
     EosioContract,
     TonomyContract,
@@ -15,7 +14,7 @@ import {
     VestingContract,
 } from '../../sdk/index';
 import { getSigner, updateAccountKey, updateControlByAccount } from './keys';
-import settings from './settings';
+import settings from '../settings';
 import { Checksum256, PrivateKey, PublicKey } from '@wharfkit/antelope';
 import {
     Authority,
@@ -26,16 +25,18 @@ import {
     TOTAL_RAM_AVAILABLE,
     RAM_FEE,
     RAM_PRICE,
+    StakingContract,
+    amountToAsset,
 } from '../../sdk/services/blockchain';
 import { createUser, mockCreateAccount, restoreCreateAccountFromMock } from './user';
-
-setSettings(settings.config);
+import { sleep } from '../../sdk/util';
 
 const demoTokenContract = DemoTokenContract.Instance;
 const tokenContract = EosioTokenContract.Instance;
 const tonomyContract = TonomyContract.Instance;
 const eosioContract = EosioContract.Instance;
 const vestingContract = VestingContract.Instance;
+const stakeContract = StakingContract.Instance;
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -63,6 +64,7 @@ export default async function bootstrap() {
         await setBlockchainParameters();
         await deployEosioMsig();
         await deployVesting();
+        await deployStaking();
         await createNativeToken();
         await createTokenDistribution();
         await createTonomyContractAndSetResources();
@@ -70,6 +72,7 @@ export default async function bootstrap() {
         await createTonomyApps(newPublicKey, newSigner);
         await configureDemoToken(newSigner);
         await updateAccountControllers(tonomyGovKeys, newPublicKey);
+        await setupVestingAndStaking(newSigner);
         await deployEosioTonomy(newSigner);
         await updateMsigControl(tonomyGovKeys, newSigner);
 
@@ -80,9 +83,10 @@ export default async function bootstrap() {
     }
 }
 
-const foundControlledAccounts = ['gov.tmy', 'team.tmy', 'prod1.tmy', 'prod2.tmy', 'prod3.tmy'];
-const govControlledAccounts = ['ops.tmy'];
-const operationsAccount = 'ops.tmy';
+export const foundAccount = 'found.tmy';
+export const foundControlledAccounts = ['gov.tmy', 'team.tmy', 'prod1.tmy', 'prod2.tmy', 'prod3.tmy'];
+export const govControlledAccounts = ['ops.tmy'];
+export const operationsAccount = 'ops.tmy';
 
 export const opsControlledAccounts = [
     'tonomy',
@@ -92,6 +96,7 @@ export const opsControlledAccounts = [
     'eosio.msig',
     'demo.tmy',
     'vesting.tmy',
+    'staking.tmy',
     'legal.tmy',
     'reserves.tmy',
     'partners.tmy',
@@ -100,11 +105,11 @@ export const opsControlledAccounts = [
     'infra.tmy',
 ];
 
-const systemAccount = 'eosio';
+export const systemAccount = 'eosio';
 
 async function createAccounts(govKeys: string[]) {
     console.log('Create accounts');
-    await createAntelopeAccount({ account: 'found.tmy' }, signer);
+    await createAntelopeAccount({ account: foundAccount }, signer);
 
     // found.tmy should control the following accounts
     for (const account of foundControlledAccounts) {
@@ -175,6 +180,26 @@ async function deployVesting() {
     );
 }
 
+async function deployStaking() {
+    console.log('Deploy staking.tmy contract');
+    await deployContract(
+        {
+            account: 'staking.tmy',
+            contractDir: path.join(__dirname, '../../Tonomy-Contracts/contracts/staking.tmy'),
+        },
+        signer
+    );
+}
+
+async function setupVestingAndStaking(newSigner: Signer) {
+    await vestingContract.setSettings(VestingContract.SALE_START_DATE, VestingContract.VESTING_START_DATE, newSigner);
+
+    await stakeContract.setSettings(amountToAsset(StakingContract.yearlyStakePool, 'LEOS'), newSigner);
+    await sleep(1000);
+    await stakeContract.addYield('infra.tmy', amountToAsset(StakingContract.yearlyStakePool / 2, 'LEOS'), newSigner); // 6 months budget in the account
+    console.log('Staking settings', await stakeContract.getSettings());
+}
+
 async function createNativeToken() {
     console.log('Create and deploy native token contract');
     await deployContract(
@@ -209,7 +234,6 @@ export const addCodePermissionTo = allocations.map((allocation) => allocation[0]
 
 async function createTokenDistribution() {
     console.log('Create token distribution');
-    const totalSupply = 50000000000.0;
 
     let totalPercentage = 0;
 
@@ -222,12 +246,12 @@ async function createTokenDistribution() {
             'Allocate',
             ((percentage * 100).toFixed(1) + '% to').padStart(8),
             account.padEnd(13),
-            (percentage * totalSupply).toFixed(0) + `.000000 ${getSettings().currencySymbol}`
+            (percentage * EosioTokenContract.TOTAL_SUPPLY).toFixed(0) + `.000000 ${getSettings().currencySymbol}`
         );
         await tokenContract.transfer(
             'eosio.token',
             account,
-            (percentage * totalSupply).toFixed(0) + `.000000 ${getSettings().currencySymbol}`,
+            (percentage * EosioTokenContract.TOTAL_SUPPLY).toFixed(0) + `.000000 ${getSettings().currencySymbol}`,
             'Initial allocation',
             signer
         );
@@ -236,8 +260,6 @@ async function createTokenDistribution() {
     if (totalPercentage.toFixed(4) !== '1.0000') {
         throw new Error('Total percentage should be 100% but it is ' + totalPercentage.toFixed(4));
     }
-
-    await vestingContract.setSettings('2024-04-30T12:00:00', '2030-01-01T00:00:00', signer);
 }
 
 async function createTonomyContractAndSetResources() {
@@ -288,6 +310,15 @@ async function createTonomyContractAndSetResources() {
         createSubdomainOnOrigin(getSettings().ssoWebsiteOrigin, 'vesting'),
         signer
     );
+    await tonomyContract.adminSetApp(
+        'staking.tmy',
+        'LEOS Staking',
+        'LEOS Staking contract',
+        getAppUsernameHash('staking'),
+        createSubdomainOnOrigin(getSettings().ssoWebsiteOrigin, 'staking') + '/tonomy-logo1024.png',
+        createSubdomainOnOrigin(getSettings().ssoWebsiteOrigin, 'staking'),
+        signer
+    );
 
     console.log('Set Tonomy system contract params and allocate RAM');
     console.log('Set resource params', RAM_PRICE, TOTAL_RAM_AVAILABLE, RAM_FEE);
@@ -303,6 +334,7 @@ async function createTonomyContractAndSetResources() {
         ['eosio.token', 2400000],
         ['tonomy', 4680000],
         ['vesting.tmy', 4680000],
+        ['staking.tmy', 4680000],
     ];
 
     for (const allocation of ramAllocations) {
@@ -316,13 +348,13 @@ async function createTonomyContractAndSetResources() {
     }
 }
 
-function getAppUsernameHash(username: string): Checksum256 {
+export function getAppUsernameHash(username: string): Checksum256 {
     const fullUername = TonomyUsername.fromUsername(username, AccountType.APP, getSettings().accountSuffix);
 
     return Checksum256.from(fullUername.usernameHash);
 }
 
-function createSubdomainOnOrigin(origin: string, subdomain: string): string {
+export function createSubdomainOnOrigin(origin: string, subdomain: string): string {
     const url = new URL(origin);
 
     return url.protocol + '//' + subdomain + '.' + url.host;
@@ -411,13 +443,21 @@ async function updateAccountControllers(govKeys: string[], newPublicKey: PublicK
 
     // accounts controlled by ops.tmy
     for (const account of opsControlledAccounts.filter(
-        (account) => account !== 'vesting.tmy' && account !== 'tonomy'
+        (account) => !['vesting.tmy', 'staking.tmy', 'tonomy'].includes(account)
     )) {
-        await updateControlByAccount(account, 'ops.tmy', signer, updateControlByOptions(account));
+        if (account === 'infra.tmy') {
+            // infra.tmy also have be able to call staking.tmy::addyield() which transfers tokens
+            await updateControlByAccount(account, 'ops.tmy', signer, {
+                addCodePermission: ['vesting.tmy', 'staking.tmy'],
+            });
+        } else {
+            await updateControlByAccount(account, 'ops.tmy', signer, updateControlByOptions(account));
+        }
     }
 
     // (contracts that are called by inline actions need eosio.code permission)
     await updateControlByAccount('vesting.tmy', 'ops.tmy', signer, { addCodePermission: 'vesting.tmy' });
+    await updateControlByAccount('staking.tmy', 'ops.tmy', signer, { addCodePermission: 'staking.tmy' });
     await updateControlByAccount('tonomy', 'ops.tmy', signer, { addCodePermission: 'tonomy' });
 
     // Update the system contract
