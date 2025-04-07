@@ -34,130 +34,154 @@ const MICROSECONDS_PER_DAY = 24 * SECONDS_PER_HOUR * MICROSECONDS_PER_SECOND;
 const MICROSECONDS_PER_MONTH = 30 * MICROSECONDS_PER_DAY;
 const MICROSECONDS_PER_YEAR = 365 * MICROSECONDS_PER_DAY;
 
-export const vestingCategories: Map<
+const vestingCategories: Map<
     number,
-    { startDelay: number; cliffPeriod: number; vestingPeriod: number; tgeUnlock: number; name: string }
+    { startDelay: number; cliffPeriod: number; vestingPeriod: number; tgeUnlock: number }
 > = new Map([
     [
-        999,
+        999, // Testing Category
         {
             startDelay: 10 * MICROSECONDS_PER_SECOND,
             cliffPeriod: 10 * MICROSECONDS_PER_SECOND,
             vestingPeriod: 20 * MICROSECONDS_PER_SECOND,
             tgeUnlock: 0.0,
-            name: 'Testing Category (no unlock)',
         },
     ],
     [
-        998,
+        998, // Testing Category
         {
             startDelay: 10 * MICROSECONDS_PER_SECOND,
             cliffPeriod: 10 * MICROSECONDS_PER_SECOND,
             vestingPeriod: 20 * MICROSECONDS_PER_SECOND,
             tgeUnlock: 0.5,
-            name: 'Testing Category (50% unlock)',
         },
     ],
     [
-        1,
+        1, // Seed Private Sale (DEPRECIATED)
         {
             startDelay: 0 * MICROSECONDS_PER_DAY,
             cliffPeriod: 6 * 30 * MICROSECONDS_PER_DAY,
             vestingPeriod: 2 * 365 * MICROSECONDS_PER_DAY,
             tgeUnlock: 0.0,
-            name: 'Seed Private Sale (DEPRECIATED)',
         },
     ],
     [
-        2,
+        2, // Strategic Partnerships Private Sale (DEPRECIATED)
         {
             startDelay: 6 * 30 * MICROSECONDS_PER_DAY,
             cliffPeriod: 6 * 30 * MICROSECONDS_PER_DAY,
             vestingPeriod: 2 * 365 * MICROSECONDS_PER_DAY,
             tgeUnlock: 0.0,
-            name: 'Strategic Partnerships Private Sale (DEPRECIATED)',
         },
     ],
     // Unchanged:
     [
-        3,
+        3, // Public Sale (DO NOT USED YET)
         {
             startDelay: 0 * MICROSECONDS_PER_DAY,
             cliffPeriod: 0 * MICROSECONDS_PER_DAY,
             vestingPeriod: 0 * MICROSECONDS_PER_DAY,
             tgeUnlock: 0.0,
-            name: 'Public Sale (DEPRECIATED)',
         },
     ],
     [
-        4,
+        4, // Team
         {
             startDelay: 1 * 365 * MICROSECONDS_PER_DAY,
             cliffPeriod: 0 * MICROSECONDS_PER_DAY,
             vestingPeriod: 5 * 365 * MICROSECONDS_PER_DAY,
             tgeUnlock: 0.0,
-            name: 'Team and Advisors, Ecosystem',
         },
     ],
     [
-        5,
+        5, // Legal and Compliance
         {
             startDelay: 0 * MICROSECONDS_PER_DAY,
             cliffPeriod: 0 * MICROSECONDS_PER_DAY,
             vestingPeriod: 1 * 365 * MICROSECONDS_PER_DAY,
             tgeUnlock: 0.0,
-            name: 'Legal and Compliance',
         },
     ],
     [
-        6,
+        6, // Reserves, Partnerships
         {
             startDelay: 0 * MICROSECONDS_PER_DAY,
             cliffPeriod: 0 * MICROSECONDS_PER_DAY,
             vestingPeriod: 2 * 365 * MICROSECONDS_PER_DAY,
             tgeUnlock: 0.0,
-            name: 'Reserves, Partnerships, Liquidly Allocation',
         },
     ],
     [
-        7,
+        7, // Community and Marketing, Platform Dev, Infra Rewards, Ecosystem
         {
             startDelay: 0 * MICROSECONDS_PER_DAY,
             cliffPeriod: 0 * MICROSECONDS_PER_DAY,
             vestingPeriod: 5 * 365 * MICROSECONDS_PER_DAY,
             tgeUnlock: 0.0,
-            name: 'Community and Marketing, Platform Dev, Infra Rewards',
         },
     ],
     // New (replacing depreciated):
     [
-        8,
+        8, // Seed
         {
-            startDelay: 0 * MICROSECONDS_PER_DAY,
+            startDelay: 6 * MICROSECONDS_PER_MONTH,
             cliffPeriod: 0 * MICROSECONDS_PER_DAY,
-            vestingPeriod: 2 * 365 * MICROSECONDS_PER_DAY,
-            tgeUnlock: 0.1,
-            name: 'Seed sale',
-        },
-    ],
-    [
-        9,
-        {
-            startDelay: 0 * MICROSECONDS_PER_DAY,
-            cliffPeriod: 0 * MICROSECONDS_PER_DAY,
-            vestingPeriod: 2 * 365 * MICROSECONDS_PER_DAY,
+            vestingPeriod: 12 * MICROSECONDS_PER_MONTH,
             tgeUnlock: 0.05,
-            name: 'Pre-sale',
         },
     ],
     [
-        10,
+        9, // Pre-Sale
         {
-            startDelay: 14 * MICROSECONDS_PER_DAY,
+            startDelay: 4 * MICROSECONDS_PER_MONTH,
             cliffPeriod: 0 * MICROSECONDS_PER_DAY,
-            vestingPeriod: 0 * MICROSECONDS_PER_DAY,
-            tgeUnlock: 1.0,
-            name: 'Public sale',
+            vestingPeriod: 12 * MICROSECONDS_PER_MONTH,
+            tgeUnlock: 0.075,
+        },
+    ],
+    [
+        10, // Public (TGE)
+        {
+            startDelay: 1 * MICROSECONDS_PER_MONTH,
+            cliffPeriod: 0 * MICROSECONDS_PER_DAY,
+            vestingPeriod: 3 * MICROSECONDS_PER_MONTH,
+            tgeUnlock: 0.25,
+        },
+    ],
+    [
+        11, // Private
+        {
+            startDelay: 3 * MICROSECONDS_PER_MONTH,
+            cliffPeriod: 0 * MICROSECONDS_PER_DAY,
+            vestingPeriod: 9 * MICROSECONDS_PER_MONTH,
+            tgeUnlock: 0.125,
+        },
+    ],
+    [
+        12, // KOL
+        {
+            startDelay: 1 * MICROSECONDS_PER_MONTH,
+            cliffPeriod: 0 * MICROSECONDS_PER_DAY,
+            vestingPeriod: 3 * MICROSECONDS_PER_MONTH,
+            tgeUnlock: 0.25,
+        },
+    ],
+    [
+        13, // Incubator
+        {
+            startDelay: 0 * MICROSECONDS_PER_MONTH,
+            cliffPeriod: 0 * MICROSECONDS_PER_DAY,
+            vestingPeriod: 6 * MICROSECONDS_PER_DAY,
+            tgeUnlock: 0.7,
+        },
+    ],
+    [
+        14, // Liquidity
+        {
+            startDelay: 0 * MICROSECONDS_PER_MONTH,
+            cliffPeriod: 0 * MICROSECONDS_PER_DAY,
+            vestingPeriod: 6 * MICROSECONDS_PER_DAY,
+            tgeUnlock: 0.25,
         },
     ],
 ]);
