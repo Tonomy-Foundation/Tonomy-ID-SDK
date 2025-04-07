@@ -220,10 +220,10 @@ export async function audit() {
     );
     vestedTokensPerCategory.forEach((tokens, category) => {
         const fraction = amountToSupplyPercentage(tokens);
-        const tgeUnlock = vestingCategoriesList.get(category)?.tgeUnlock;
+        const categoryName = vestingCategoriesList.get(category)?.name;
 
         console.log(
-            `> category ${category.toString().padStart(2)}: ${tokens.toFixed(4).padStart(15)} LEOS (${fraction.padStart(12)}) ${tgeUnlock}`
+            `> category ${category.toString().padStart(2)}: ${tokens.toFixed(4).padStart(15)} LEOS (${fraction.padStart(12)}) ${categoryName}`
         );
     });
 
