@@ -127,7 +127,6 @@ export const vestingCategories: Map<
             vestingPeriod: 5 * 365 * MICROSECONDS_PER_DAY,
             tgeUnlock: 0.0,
             name: 'Community and Marketing, Platform Dev, Infra Rewards, Ecosystem',
-
         },
     ],
     // New (replacing depreciated):
@@ -158,7 +157,7 @@ export const vestingCategories: Map<
             cliffPeriod: 0 * MICROSECONDS_PER_DAY,
             vestingPeriod: 3 * MICROSECONDS_PER_MONTH,
             tgeUnlock: 0.25,
-            name: 'Public (TGE)'
+            name: 'Public (TGE)',
         },
     ],
     [
@@ -168,7 +167,7 @@ export const vestingCategories: Map<
             cliffPeriod: 0 * MICROSECONDS_PER_DAY,
             vestingPeriod: 9 * MICROSECONDS_PER_MONTH,
             tgeUnlock: 0.125,
-            name: 'Private'
+            name: 'Private',
         },
     ],
     [
@@ -178,7 +177,7 @@ export const vestingCategories: Map<
             cliffPeriod: 0 * MICROSECONDS_PER_DAY,
             vestingPeriod: 3 * MICROSECONDS_PER_MONTH,
             tgeUnlock: 0.25,
-            name: 'KOL'
+            name: 'KOL',
         },
     ],
     [
@@ -188,7 +187,7 @@ export const vestingCategories: Map<
             cliffPeriod: 0 * MICROSECONDS_PER_DAY,
             vestingPeriod: 6 * MICROSECONDS_PER_DAY,
             tgeUnlock: 0.7,
-            name: 'Incubator'
+            name: 'Incubator',
         },
     ],
     [
@@ -198,7 +197,7 @@ export const vestingCategories: Map<
             cliffPeriod: 0 * MICROSECONDS_PER_DAY,
             vestingPeriod: 6 * MICROSECONDS_PER_DAY,
             tgeUnlock: 0.25,
-            name: 'Liquidity'
+            name: 'Liquidity',
         },
     ],
 ]);
