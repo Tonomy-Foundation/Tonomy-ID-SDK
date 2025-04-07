@@ -34,7 +34,7 @@ const MICROSECONDS_PER_DAY = 24 * SECONDS_PER_HOUR * MICROSECONDS_PER_SECOND;
 const MICROSECONDS_PER_MONTH = 30 * MICROSECONDS_PER_DAY;
 const MICROSECONDS_PER_YEAR = 365 * MICROSECONDS_PER_DAY;
 
-const vestingCategories: Map<
+export const vestingCategories: Map<
     number,
     { startDelay: number; cliffPeriod: number; vestingPeriod: number; tgeUnlock: number }
 > = new Map([
