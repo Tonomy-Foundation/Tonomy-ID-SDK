@@ -6,14 +6,14 @@ const CONTRACT_NAME = 'tonomy';
 
 function getDefaultColors(): { background: string; branding: string } {
     return {
-        background: '#ffffff', // white background
-        branding: '#CBCBCB', // grey color
+        background: '#f9fafb', // white background
+        branding: '#2563EB', // grey color
     };
 }
 
 // Define a mapping for apps with custom colors
-const customColorMapping: { [appName: string]: { background: string; text: string; branding: string } } = {
-    'Tonomy - Development Demo': { background: '#000000', text: '#FFFFFF', branding: '#CBCBCB' },
+const customColorMapping: { [appName: string]: { background: string; branding: string } } = {
+    'Tonomy - Development Demo': { background: '#f9fafb', branding: '#2563EB' },
     // Add other app mappings here
 };
 
