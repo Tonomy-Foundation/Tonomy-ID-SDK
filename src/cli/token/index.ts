@@ -349,14 +349,18 @@ async function getAllApps(): Promise<AppTableRecord[]> {
     });
 
     return data.rows.map((row) => {
+        const appInfo = JSON.parse(row.json_data);
+
         return {
-            app_name: row.app_name,
-            description: row.description,
-            logo_url: row.logo_url,
+            app_name: appInfo.app_name,
+            description: appInfo.description,
+            logo_url: appInfo.logo_url,
             origin: row.origin,
             account_name: Name.from(row.account_name),
             username_hash: Checksum256.from(row.username_hash),
             version: row.version,
+            background_color: appInfo.background_color,
+            accent_color: appInfo.accent_color,
         };
     });
 }
