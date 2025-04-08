@@ -136,8 +136,6 @@ export async function updateInfraTmyPermission(options: StandardProposalOptions)
 
     // Add new eosio.code permission for staking.tmy and vesting.tmy
     ownerAuthorityInfra.addCodePermission('vesting.tmy');
-    ownerAuthorityInfra.addCodePermission('staking.tmy');
-    activeAuthorityInfra.addCodePermission('staking.tmy');
     activeAuthorityInfra.addCodePermission('vesting.tmy');
 
     const updateInfraOwnerPermission = {
