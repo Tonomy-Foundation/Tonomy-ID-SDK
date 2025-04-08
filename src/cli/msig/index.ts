@@ -25,6 +25,7 @@ import {
     reDeployVestingContract,
     stakingContractSetup,
     stakingSettings,
+    updateInfraTmyPermission,
 } from './staking';
 
 const eosioMsigContract = EosioMsigContract.Instance;
@@ -178,6 +179,8 @@ export default async function msig(args: string[]) {
                 await reDeployTonomyContract(options);
             } else if (stakingSubcommand === 'setSettings') {
                 await stakingSettings(options);
+            } else if (stakingSubcommand === 'update-infra-permission') {
+                await updateInfraTmyPermission(options);
             }
         } else {
             throw new Error(`Invalid msig proposal type ${proposalType}`);
