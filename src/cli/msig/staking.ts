@@ -3,8 +3,7 @@ import { amountToAsset, Authority, bytesToTokens, StakingContract } from '../../
 import { StandardProposalOptions, createProposal, executeProposal } from '.';
 import { deployContract } from './deployContract';
 import { createSubdomainOnOrigin, getAppUsernameHash } from '../bootstrap';
-import { getAccountInfo } from '../../sdk';
-import { Name } from '@wharfkit/antelope';
+import { TOTAL_RAM_AVAILABLE, RAM_FEE, RAM_PRICE } from '../../sdk/services/blockchain';
 
 //create staking.tmy account controlled by ops.tmy
 export async function createStakingTmyAccount(options: StandardProposalOptions) {
@@ -39,17 +38,30 @@ export async function createStakingTmyAccount(options: StandardProposalOptions) 
 
     const action = createNewAccountAction('staking.tmy', activeAuthority, ownerAuthority);
 
+    const proposalHash = await createProposal(
+        options.proposer,
+        options.proposalName,
+        [action],
+        options.privateKey,
+        [...options.requested],
+        options.dryRun
+    );
+
+    if (options.dryRun) return;
+    if (options.autoExecute) await executeProposal(options.proposer, options.proposalName, proposalHash);
+}
+
+export async function updateInfraTmyPermission(options: StandardProposalOptions) {
     //add staking permission to infra.tmy
-    const accountInfo = await getAccountInfo(Name.from('infra.tmy'));
+    // const accountInfo = await getAccountInfo(Name.from('infra.tmy'));
 
-    const ownerPermission = accountInfo.getPermission('owner');
-    const activePermission = accountInfo.getPermission('active');
+    const activeAuthorityInfra = Authority.fromAccount({ actor: 'ops.tmy', permission: 'active' });
+    const ownerAuthorityInfra = Authority.fromAccount({ actor: 'ops.tmy', permission: 'owner' });
 
-    const ownerAuthorityInfra = Authority.fromAccountPermission(ownerPermission);
-    const activeAuthorityInfra = Authority.fromAccountPermission(activePermission);
-
+    // Add new eosio.code permission for staking.tmy and vesting.tmy
     ownerAuthorityInfra.addCodePermission('staking.tmy');
     activeAuthorityInfra.addCodePermission('staking.tmy');
+
     const updateInfraOwnerPermission = {
         account: 'tonomy',
         name: 'updateauth',
@@ -71,7 +83,7 @@ export async function createStakingTmyAccount(options: StandardProposalOptions) 
             account: 'infra.tmy',
             permission: 'owner',
             parent: '',
-            auth: ownerAuthority,
+            auth: ownerAuthorityInfra,
 
             auth_parent: false,
         },
@@ -98,7 +110,7 @@ export async function createStakingTmyAccount(options: StandardProposalOptions) 
             account: 'infra.tmy',
             permission: 'active',
             parent: 'owner',
-            auth: activeAuthority,
+            auth: activeAuthorityInfra,
 
             auth_parent: false,
         },
@@ -107,7 +119,7 @@ export async function createStakingTmyAccount(options: StandardProposalOptions) 
     const proposalHash = await createProposal(
         options.proposer,
         options.proposalName,
-        [action, updateInfraOwnerPermission, updateInfraActivePermission],
+        [updateInfraOwnerPermission, updateInfraActivePermission],
         options.privateKey,
         [...options.requested],
         options.dryRun
@@ -150,6 +162,46 @@ export async function stakingContractSetup(options: StandardProposalOptions) {
         },
     };
 
+    const setres = {
+        authorization: [
+            {
+                actor: 'tonomy',
+                permission: 'active',
+            },
+        ],
+        account: 'tonomy',
+        name: 'setresparams',
+        data: {
+            ram_price: RAM_PRICE,
+            total_ram_available: TOTAL_RAM_AVAILABLE,
+            ram_fee: RAM_FEE,
+        },
+    };
+
+    const actions = [adminSetAppAction, setres];
+
+    const proposalHash = await createProposal(
+        options.proposer,
+        options.proposalName,
+        actions,
+        options.privateKey,
+        [...options.requested, contract],
+        options.dryRun
+    );
+
+    if (options.dryRun) return;
+    if (options.autoExecute) await executeProposal(options.proposer, options.proposalName, proposalHash);
+}
+
+export async function buyRam(options: StandardProposalOptions) {
+    const ramKb = 4680000;
+
+    const contract = 'staking.tmy';
+
+    const tokens = bytesToTokens(ramKb * 1000);
+
+    console.log(`Setting up hypha contract "${contract}" with ${tokens} tokens to buy ${ramKb}KB of RAM`);
+
     const buyRamAction = {
         account: 'tonomy',
         name: 'buyram',
@@ -166,7 +218,7 @@ export async function stakingContractSetup(options: StandardProposalOptions) {
         },
     };
 
-    const actions = [adminSetAppAction, buyRamAction];
+    const actions = [buyRamAction];
 
     const proposalHash = await createProposal(
         options.proposer,

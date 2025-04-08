@@ -18,6 +18,7 @@ import { sleep } from '../../sdk/util';
 import { vestingMigrate, vestingMigrate2, vestingMigrate3 } from './vestingMigrateAllocate';
 import { newApp } from './newApp';
 import {
+    buyRam,
     createStakingTmyAccount,
     deployStakingContract,
     reDeployEosioContract,
@@ -25,6 +26,7 @@ import {
     reDeployVestingContract,
     stakingContractSetup,
     stakingSettings,
+    updateInfraTmyPermission,
 } from './staking';
 
 const eosioMsigContract = EosioMsigContract.Instance;
@@ -166,8 +168,12 @@ export default async function msig(args: string[]) {
 
             if (stakingSubcommand === 'account') {
                 await createStakingTmyAccount(options);
+            } else if (stakingSubcommand === 'update-infra-permission') {
+                await updateInfraTmyPermission(options);
             } else if (stakingSubcommand === 'contract') {
                 await stakingContractSetup(options);
+            } else if (stakingSubcommand === 'buy-ram') {
+                await buyRam(options);
             } else if (stakingSubcommand === 'deploy-staking-contract') {
                 await deployStakingContract(options);
             } else if (stakingSubcommand === 'redeploy-vesting-contract') {
