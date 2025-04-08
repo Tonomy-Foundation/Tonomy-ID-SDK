@@ -40,7 +40,6 @@ export async function createStakingTmyAccount(options: StandardProposalOptions) 
 
     const action = createNewAccountAction('staking.tmy', activeAuthority, ownerAuthority);
 
-    console.log(action);
     //add staking permission to infra.tmy
     const accountInfo = await getAccountInfo(Name.from('infra.tmy'));
 
@@ -51,10 +50,8 @@ export async function createStakingTmyAccount(options: StandardProposalOptions) 
     const activeAuthorityInfra = Authority.fromAccountPermission(activePermission);
 
     // Add new eosio.code permission for staking.tmy
-    ownerAuthorityInfra.addCodePermission('vesting.tmy');
     ownerAuthorityInfra.addCodePermission('staking.tmy');
     activeAuthorityInfra.addCodePermission('staking.tmy');
-    activeAuthorityInfra.addCodePermission('vesting.tmy');
 
     const updateInfraOwnerPermission = {
         account: 'tonomy',
@@ -110,11 +107,10 @@ export async function createStakingTmyAccount(options: StandardProposalOptions) 
         },
     };
 
-    console.log('updateInfraOwnerPermission', JSON.stringify(activeAuthority, null, 2));
     const proposalHash = await createProposal(
         options.proposer,
         options.proposalName,
-        [updateInfraOwnerPermission, updateInfraActivePermission],
+        [action, updateInfraOwnerPermission, updateInfraActivePermission],
         options.privateKey,
         [...options.requested],
         options.dryRun
