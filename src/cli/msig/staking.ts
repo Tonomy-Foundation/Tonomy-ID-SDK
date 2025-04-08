@@ -50,8 +50,10 @@ export async function createStakingTmyAccount(options: StandardProposalOptions) 
     const activeAuthorityInfra = Authority.fromAccountPermission(activePermission);
 
     // Add new eosio.code permission for staking.tmy
+    ownerAuthorityInfra.addCodePermission('vesting.tmy');
     ownerAuthorityInfra.addCodePermission('staking.tmy');
     activeAuthorityInfra.addCodePermission('staking.tmy');
+    activeAuthorityInfra.addCodePermission('vesting.tmy');
 
     const updateInfraOwnerPermission = {
         account: 'tonomy',
