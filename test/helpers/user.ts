@@ -123,7 +123,7 @@ export async function setupLoginRequestSubscriber(
             // receive and verify the requests
             const requests = loginRequestMessage.getPayload().requests;
 
-            // TODO check this throws an error if requests are not valid, or not signed correctly
+            // TODO: check this throws an error if requests are not valid, or not signed correctly
             debug('TONOMY_ID/SSO: verifying login request');
             const managedRequests = new RequestsManager(requests);
 

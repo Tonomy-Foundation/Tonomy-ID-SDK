@@ -3,11 +3,36 @@ import { API, Name, NameType } from '@wharfkit/antelope';
 import { Signer, transact } from '../eosio/transaction';
 import { getApi } from '../eosio/eosio';
 import { getSettings } from '../../../util';
+import Decimal from 'decimal.js';
 
 const CONTRACT_NAME = 'eosio.token';
 
+function assetToNumberString(asset: string): string {
+    return asset.split(' ')[0];
+}
+
+// FIXME: Remove use of this function. We should never use a number to represent tokens as they are not precise and cannot handle large numbers.
+/**
+ * @deprecated use assetToDecimal instead
+ */
 export function assetToAmount(asset: string): number {
-    return parseFloat(asset.split(' ')[0]);
+    return parseFloat(assetToNumberString(asset));
+}
+
+export function assetToDecimal(asset: string): Decimal {
+    return new Decimal(assetToNumberString(asset));
+}
+
+/**
+ * @deprecated
+ * see FIXME above
+ */
+export function amountToAsset(amount: number, symbol: string, precision = 6): string {
+    return amount.toFixed(precision) + ' ' + symbol;
+}
+
+export function amountToSupplyPercentage(amount: Decimal): string {
+    return amount.mul(100).div(EosioTokenContract.TOTAL_SUPPLY).toFixed(8) + '%';
 }
 
 class EosioTokenContract {
@@ -16,6 +41,8 @@ class EosioTokenContract {
     public static get Instance() {
         return this.singletonInstande || (this.singletonInstande = new this());
     }
+
+    static TOTAL_SUPPLY = 50000000000.0;
 
     async create(supply: string, signer: Signer): Promise<API.v1.PushTransactionResponse> {
         const actions = [
@@ -97,6 +124,15 @@ class EosioTokenContract {
         if (assets.length === 0) return 0;
 
         return assets[0].value;
+    }
+
+    async getBalanceDecimal(account: NameType): Promise<Decimal> {
+        const assets = await (
+            await getApi()
+        ).v1.chain.get_currency_balance(CONTRACT_NAME, account, getSettings().currencySymbol);
+
+        if (assets.length === 0) return new Decimal(0);
+        return new Decimal(assets[0].quantity);
     }
 }
 

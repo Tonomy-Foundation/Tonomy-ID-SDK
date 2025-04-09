@@ -1,15 +1,17 @@
-import { NameType } from '@wharfkit/antelope';
+import { Name, NameType } from '@wharfkit/antelope';
 import { StandardProposalOptions, createProposal, executeProposal } from '.';
 import {
     ActionData,
     assetToAmount,
+    assetToDecimal,
     LEOS_SEED_LATE_ROUND_PRICE,
     LEOS_SEED_ROUND_PRICE,
     VestingContract,
 } from '../../sdk/services/blockchain';
+import { getAllAllocations, getAllUniqueHolders } from '../vesting';
+import { getAllPeople } from '../token';
 
-// @ts-expect-error args unused
-export async function vestingMigrate(args: any, options: StandardProposalOptions) {
+export async function vestingMigrate(options: StandardProposalOptions) {
     // Testnet list
     const migrateAccounts = [
         'p42pwxofd1vy', // 36 allocations
@@ -30,10 +32,147 @@ export async function vestingMigrate(args: any, options: StandardProposalOptions
         options.proposalName,
         actions,
         options.privateKey,
-        options.requested
+        options.requested,
+        options.dryRun
     );
 
-    if (options.test) await executeProposal(options.proposer, options.proposalName, proposalHash);
+    if (options.dryRun) return;
+    if (options.autoExecute) await executeProposal(options.proposer, options.proposalName, proposalHash);
+}
+
+function toBase6Plus1(num: number): string {
+    const base6 = num.toString(6);
+
+    return base6
+        .split('')
+        .map((digit) => (parseInt(digit, 6) + 1).toString())
+        .join('');
+}
+
+export async function vestingMigrate2(options: StandardProposalOptions) {
+    let count = 0;
+    let proposals = 0;
+    const priceMultiplier = 2.0;
+    const uniqueHolders = await getAllUniqueHolders();
+    const allAllocations = await getAllAllocations(uniqueHolders);
+
+    const batchSize = 100;
+
+    for (let i = 0; i < allAllocations.length; i += batchSize) {
+        const batch = allAllocations.slice(i, i + batchSize);
+
+        const actions: ActionData[] = batch.map((allocation) => {
+            const newAmount = assetToDecimal(allocation.tokens_allocated).mul(priceMultiplier);
+            const newAsset = `${newAmount.toFixed(6)} LEOS`;
+
+            console.log(
+                `Migrating account ${allocation.holder} allocation ${allocation.id} in category ${allocation.vesting_category_type} from ${allocation.tokens_allocated} to ${newAsset}`
+            );
+            count++;
+
+            return createMigrateAction(
+                'coinsale.tmy',
+                allocation.holder,
+                allocation.id,
+                allocation.tokens_allocated,
+                newAsset,
+                allocation.vesting_category_type,
+                allocation.vesting_category_type
+            );
+        });
+
+        const proposalName = Name.from(`${options.proposalName}${toBase6Plus1(Math.floor(i / batchSize))}`);
+
+        console.log(
+            `Creating proposal ${proposalName.toString()} with ${actions.length} actions: ${i} - ${i + batchSize}`
+        );
+        console.log('----------------------------------------');
+        proposals++;
+        const proposalHash = await createProposal(
+            options.proposer,
+            proposalName,
+            actions,
+            options.privateKey,
+            options.requested,
+            options.dryRun
+        );
+
+        if (!options.dryRun && options.autoExecute) await executeProposal(options.proposer, proposalName, proposalHash);
+
+        console.log('----------------------------------------');
+    }
+
+    console.log(`Batch size: ${batchSize}`);
+    console.log(`Proposals created: ${proposals}`);
+    console.log(`Processed ${count} / ${allAllocations.length} allocations`);
+}
+
+export async function vestingMigrate3(options: StandardProposalOptions) {
+    let count = 0;
+    let proposals = 0;
+    const priceMultiplier = 2.0;
+    const people = await getAllPeople();
+    const vestingHolders = await getAllUniqueHolders();
+
+    const peopleNotInVestingHolders: Set<string> = new Set();
+
+    for (const person of people) {
+        if (!vestingHolders.has(person.account_name.toString())) {
+            peopleNotInVestingHolders.add(person.account_name.toString());
+        }
+    }
+
+    const missedAllocations = await getAllAllocations(peopleNotInVestingHolders);
+
+    const batchSize = 100;
+
+    for (let i = 0; i < missedAllocations.length; i += batchSize) {
+        const batch = missedAllocations.slice(i, i + batchSize);
+
+        const actions: ActionData[] = batch.map((allocation) => {
+            const newAmount = assetToDecimal(allocation.tokens_allocated).mul(priceMultiplier);
+            const newAsset = `${newAmount.toFixed(6)} LEOS`;
+
+            console.log(
+                `Migrating account ${allocation.holder} allocation ${allocation.id} in category ${allocation.vesting_category_type} from ${allocation.tokens_allocated} to ${newAsset}`
+            );
+            count++;
+
+            return createMigrateAction(
+                'coinsale.tmy',
+                allocation.holder,
+                allocation.id,
+                allocation.tokens_allocated,
+                newAsset,
+                allocation.vesting_category_type,
+                allocation.vesting_category_type
+            );
+        });
+
+        const proposalName = Name.from(`${options.proposalName}${toBase6Plus1(Math.floor(i / batchSize))}`);
+
+        console.log(
+            `Creating proposal ${proposalName.toString()} with ${actions.length} actions: ${i} - ${i + batchSize}`
+        );
+        console.log('----------------------------------------');
+        proposals++;
+        const proposalHash = await createProposal(
+            options.proposer,
+            proposalName,
+            actions,
+            options.privateKey,
+            options.requested,
+            options.dryRun
+        );
+
+        if (!options.dryRun && options.autoExecute) await executeProposal(options.proposer, proposalName, proposalHash);
+
+        console.log('----------------------------------------');
+    }
+
+    console.log(`Batch size: ${batchSize}`);
+    console.log(`Proposals created: ${proposals}`);
+    console.log(`Processed ${count} / ${missedAllocations.length} allocations`);
 }
 
 async function createAccountActions(account: NameType): Promise<ActionData[]> {

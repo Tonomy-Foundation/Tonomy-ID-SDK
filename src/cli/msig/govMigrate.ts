@@ -1,4 +1,4 @@
-import settings from '../bootstrap/settings';
+import settings from '../settings';
 import { Authority } from '../../sdk/services/blockchain';
 import { StandardProposalOptions, createProposal, executeProposal } from '.';
 
@@ -32,8 +32,10 @@ export async function govMigrate(args: { newGovernanceAccounts: string[] }, opti
         options.proposalName,
         [action],
         options.privateKey,
-        options.requested
+        options.requested,
+        options.dryRun
     );
 
-    if (options.test) await executeProposal(options.proposer, options.proposalName, proposalHash);
+    if (options.dryRun) return;
+    if (options.autoExecute) await executeProposal(options.proposer, options.proposalName, proposalHash);
 }

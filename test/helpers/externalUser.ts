@@ -17,6 +17,8 @@ import {
     LoginRequestsMessagePayload,
     IOnPressLoginOptions,
     ResponsesManager,
+    verifyClientAuthorization,
+    ClientAuthorizationData,
 } from '../../src/sdk';
 import { ExternalUser, LoginWithTonomyMessages } from '../../src/api/externalUser';
 import { objToBase64Url } from '../../src/sdk/util/base64';
@@ -304,7 +306,7 @@ export async function externalWebsiteSignTransaction(externalUser: ExternalUser,
     expect(trx).toBeDefined();
     expect(typeof trx.transaction_id).toBe('string');
     expect(trx.processed.receipt.status).toBe('executed');
-    // TODO check action trace for action and the link auth
+    // TODO: check action trace for action and the link auth
 
     debug('EXTERNAL_WEBSITE/sign-trx: signing transaction transfer() again)');
     trx = await externalUser.signTransaction(externalApp.accountName, 'transfer', {
@@ -317,7 +319,49 @@ export async function externalWebsiteSignTransaction(externalUser: ExternalUser,
     expect(trx).toBeDefined();
     expect(typeof trx.transaction_id).toBe('string');
     expect(trx.processed.receipt.status).toBe('executed');
-    // TODO check action trace for action and the does not contain link auth
+    // TODO: check action trace for action and the does not contain link auth
+}
+
+export async function externalWebsiteClientAuth(
+    externalUser: ExternalUser,
+    externalApp: App,
+    options: ExternalUserLoginTestOptions
+) {
+    debug('EXTERNAL_WEBSITE/client-auth: signing client auth');
+
+    const data: ClientAuthorizationData = {
+        foo: 'bar',
+    };
+
+    if (options.dataRequestUsername) {
+        const username = await externalUser.getUsername();
+
+        if (!username) throw new Error('Username not found');
+        data.username = username.toString();
+    }
+
+    const clientAuth = await externalUser.createClientAuthorization(data);
+
+    const verifiedAuth = await verifyClientAuthorization(clientAuth);
+
+    expect(verifiedAuth).toBeDefined();
+    expect(verifiedAuth.account).toBe((await externalUser.getAccountName()).toString());
+    expect(verifiedAuth.request.jwt).toBe(clientAuth);
+    expect(typeof verifiedAuth.request.id).toBe('string');
+    expect(verifiedAuth.request.id.length).toBe(16);
+
+    expect(verifiedAuth.request.origin).toBe(externalApp.origin);
+    expect(verifiedAuth.did).toBe(await externalUser.getDid());
+    expect(verifiedAuth.data.foo).toBe('bar');
+
+    if (options.dataRequestUsername) {
+        const username = await externalUser.getUsername();
+
+        if (!username) throw new Error('Username not found');
+
+        expect(verifiedAuth.username).toBe(username.toString());
+        expect(verifiedAuth.data.username).toBe(username.toString());
+    }
 }
 
 export async function setupLinkAuthSubscriber(user: IUserPublic): Promise<void> {

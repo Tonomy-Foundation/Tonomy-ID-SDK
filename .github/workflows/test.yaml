@@ -1,7 +1,6 @@
 name: Run Tonomy-ID-SDK Tests
 
-on:
-  push
+on: push
 
 jobs:
   test:
@@ -9,7 +8,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Enable Corepack before setting up Node
         run: corepack enable
 
@@ -22,15 +21,18 @@ jobs:
       - run: yarn run build
       - run: yarn run lint
       - run: yarn run test:unit
-  
+
   compile-contracts:
     name: Compiles contracts needed for bootstrap script
     runs-on: ubuntu-20.04
     container: tonomy/antelope
+    env:
+      BUILD_TEST: true
     steps:
       - uses: actions/checkout@v4
         with:
           repository: Tonomy-Foundation/Tonomy-Contracts
+          # update ref to change contract branch, if needed for temporary CI testing
           ref: development
           path: Tonomy-Contracts
 
@@ -45,7 +47,7 @@ jobs:
 
       - name: Build eosio.token contract
         run: ./Tonomy-Contracts/contracts/eosio.token/build.sh local
-  
+
       - name: Build eosio.tonomy contract
         run: ./Tonomy-Contracts/contracts/eosio.tonomy/build.sh local
 
@@ -54,6 +56,9 @@ jobs:
 
       - name: Build vesting.tmy contract
         run: ./Tonomy-Contracts/contracts/vesting.tmy/build.sh local
+
+      - name: Build staking.tmy contract
+        run: ./Tonomy-Contracts/contracts/staking.tmy/build.sh local
 
       - name: Add Tonomy-Contracts dir to artifacts
         uses: actions/upload-artifact@v4
@@ -67,7 +72,7 @@ jobs:
     env:
       TONOMY_OPS_PRIVATE_KEY: PVT_K1_24kG9VcMk3VkkgY4hh42X262AWV18YcPjBTd2Hox4YWoP8vRTU
       TONOMY_BOARD_PUBLIC_KEYS: '{"keys":["PUB_K1_81aU18Y3RdyFf2WY4Wy7g7fvG9M9d7hmY4rhNFeXouYYPjExua","PUB_K1_5HWprCobEy8LiYUpfVmh8BdGDb8ANPc8rhBhtNqhvXnuxpyCaq","PUB_K1_5VLYVhqfe7oh8TW2i6Nw251wbpoZ4p15DV7udqDjiaKnryx9YU"]}'
-      TONOMY_TEST_ACCOUNTS_PASSPHRASE: 'above day fever lemon piano sport'
+      TONOMY_TEST_ACCOUNTS_PASSPHRASE: "above day fever lemon piano sport"
     services:
       blockchain:
         image: tonomy/blockchain:initialized-development
@@ -91,7 +96,7 @@ jobs:
         with:
           name: Tonomy-Contracts
           path: ./Tonomy-Contracts
-      
+
       - name: Enable Corepack before setting up Node
         run: corepack enable
 
