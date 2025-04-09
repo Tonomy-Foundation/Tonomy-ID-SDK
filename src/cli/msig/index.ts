@@ -27,6 +27,7 @@ import {
     stakingContractSetup,
     stakingSettings,
 } from './staking';
+import { migrateApps } from './migrateApps';
 
 const eosioMsigContract = EosioMsigContract.Instance;
 
@@ -163,6 +164,8 @@ export default async function msig(args: string[]) {
             await setBlockchainConfig({}, options);
         } else if (proposalType === 'new-app') {
             await newApp(options);
+        } else if (proposalType === 'migrate-appsv2') {
+            await migrateApps(options);
         } else if (proposalType === 'staking') {
             const stakingSubcommand = args[2];
 
@@ -359,11 +362,11 @@ function printMsigHelp() {
                 propose remove-prod <proposalName>
                 propose res-config-set <proposalName>
                 propose set-chain-config <proposalName>
-                yarn run cli msig propose staking account stakeacc
-                yarn run cli msig propose staking contract stakeapp
-                yarn run cli msig propose staking buyram rambuy
-                yarn run cli msig propose staking deploy-staking-contract deploystakecontract
-                yarn run cli msig propose staking redeploy-vesting-contract <proposalName>
+                propose staking account <proposalName>
+                propose staking contract <proposalName>
+                propose staking buyram <proposalName>
+                propose staking deploy-staking-contract <proposalName>
+                propose staking redeploy-vesting-contract <proposalName>
                 propose staking redeploy-eosio-contract <proposalName>
                 propose staking redeploy-tonomy-contract <proposalName>
                 propose staking setSettings <proposalName>
@@ -373,6 +376,7 @@ function printMsigHelp() {
                 propose vesting-migrate <proposalName>
                 propose vesting-migrate2 <proposalName>
                 propose vesting-migrate3 <proposalName>
+                propose migrate-appsv2 <proposalName>
                 propose ... --auto-execute
                 propose ... --dry-run
         `);
