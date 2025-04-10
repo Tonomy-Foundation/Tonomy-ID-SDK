@@ -16,6 +16,8 @@ export interface AppData {
     origin: string;
     version: number;
     status: AppStatusEnum;
+    accentColor: string;
+    backgroundColor: string;
 }
 
 type AppConstructor = Omit<AppData, 'usernameHash'> & { username?: TonomyUsername; usernameHash?: Checksum256 };
@@ -42,6 +44,8 @@ export class App implements AppData {
     origin: string;
     version: number;
     status: AppStatusEnum;
+    accentColor: string;
+    backgroundColor: string;
 
     constructor(options: AppConstructor) {
         this.accountName = options.accountName;
@@ -104,6 +108,8 @@ export class App implements AppData {
             origin: contractAppData.origin,
             version: contractAppData.version,
             status: AppStatusEnum.READY,
+            backgroundColor: contractAppData.background_color,
+            accentColor: contractAppData.accent_color,
         });
     }
 }
