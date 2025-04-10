@@ -5,6 +5,7 @@ import { deployContract } from './deployContract';
 import { createSubdomainOnOrigin, getAppUsernameHash } from '../bootstrap';
 import { getAccountInfo } from '../../sdk';
 import { Name } from '@wharfkit/antelope';
+import { TOTAL_RAM_AVAILABLE, RAM_FEE, RAM_PRICE } from '../../sdk/services/blockchain';
 
 //create staking.tmy account controlled by ops.tmy
 export async function createStakingTmyAccount(options: StandardProposalOptions) {
@@ -48,8 +49,14 @@ export async function createStakingTmyAccount(options: StandardProposalOptions) 
     const ownerAuthorityInfra = Authority.fromAccountPermission(ownerPermission);
     const activeAuthorityInfra = Authority.fromAccountPermission(activePermission);
 
+    // Preserve existing eosio.code permission for vesting.tmy
+    ownerAuthorityInfra.addCodePermission('vesting.tmy');
+    activeAuthorityInfra.addCodePermission('vesting.tmy');
+
+    // Add new eosio.code permission for staking.tmy
     ownerAuthorityInfra.addCodePermission('staking.tmy');
     activeAuthorityInfra.addCodePermission('staking.tmy');
+
     const updateInfraOwnerPermission = {
         account: 'tonomy',
         name: 'updateauth',
@@ -150,6 +157,62 @@ export async function stakingContractSetup(options: StandardProposalOptions) {
         },
     };
 
+    // const buyRamAction = {
+    //     account: 'tonomy',
+    //     name: 'buyram',
+    //     authorization: [
+    //         {
+    //             actor: contract,
+    //             permission: 'active',
+    //         },
+    //     ],
+    //     data: {
+    //         dao_owner: 'ops.tmy',
+    //         app: contract,
+    //         quant: tokens,
+    //     },
+    // };
+
+    const setres = {
+        authorization: [
+            {
+                actor: 'tonomy',
+                permission: 'active',
+            },
+        ],
+        account: 'tonomy',
+        name: 'setresparams',
+        data: {
+            ram_price: RAM_PRICE,
+            total_ram_available: TOTAL_RAM_AVAILABLE,
+            ram_fee: RAM_FEE,
+        },
+    };
+
+    const actions = [adminSetAppAction, setres];
+
+    const proposalHash = await createProposal(
+        options.proposer,
+        options.proposalName,
+        actions,
+        options.privateKey,
+        [...options.requested, contract],
+        options.dryRun
+    );
+
+    if (options.dryRun) return;
+    if (options.autoExecute) await executeProposal(options.proposer, options.proposalName, proposalHash);
+}
+
+export async function buyRam(options: StandardProposalOptions) {
+    const ramKb = 4680000;
+
+    const contract = 'staking.tmy';
+
+    const tokens = bytesToTokens(ramKb * 1000);
+
+    console.log(`Setting up hypha contract "${contract}" with ${tokens} tokens to buy ${ramKb}KB of RAM`);
+
     const buyRamAction = {
         account: 'tonomy',
         name: 'buyram',
@@ -166,7 +229,7 @@ export async function stakingContractSetup(options: StandardProposalOptions) {
         },
     };
 
-    const actions = [adminSetAppAction, buyRamAction];
+    const actions = [buyRamAction];
 
     const proposalHash = await createProposal(
         options.proposer,
@@ -184,8 +247,7 @@ export async function stakingContractSetup(options: StandardProposalOptions) {
 // deploy the new staking.tmy contract
 export async function deployStakingContract(options: StandardProposalOptions) {
     const contract = 'staking.tmy';
-    const directory =
-        '/home/sadia/TonomyFoundation/january/Tonomy-ID-Integration/Tonomy-ID-SDK/Tonomy-Contracts/contracts/';
+    const directory = '/home/sadia/Tonomy-ID-Integration/Tonomy-ID-SDK/Tonomy-Contracts/contracts/';
     const contractDir = directory + `staking.tmy`;
 
     const deployActions = await deployContract({ contractName: contract, contractDir, returnActions: true }, options);
@@ -209,8 +271,7 @@ export async function deployStakingContract(options: StandardProposalOptions) {
 
 // re-deploy the vesting contract
 export async function reDeployVestingContract(options: StandardProposalOptions) {
-    const directory =
-        '/home/sadia/TonomyFoundation/january/Tonomy-ID-Integration/Tonomy-ID-SDK/Tonomy-Contracts/contracts/';
+    const directory = '/home/sadia/Tonomy-ID-Integration/Tonomy-ID-SDK/Tonomy-Contracts/contracts/';
 
     const vestingDeployActions = await deployContract(
         { contractName: 'vesting.tmy', contractDir: directory + 'vesting.tmy', returnActions: true },
@@ -234,8 +295,7 @@ export async function reDeployVestingContract(options: StandardProposalOptions) 
 
 // re-deploy the eosio contract
 export async function reDeployEosioContract(options: StandardProposalOptions) {
-    const directory =
-        '/home/sadia/TonomyFoundation/january/Tonomy-ID-Integration/Tonomy-ID-SDK/Tonomy-Contracts/contracts/';
+    const directory = '/home/sadia/Tonomy-ID-Integration/Tonomy-ID-SDK/Tonomy-Contracts/contracts/';
 
     const eosioDeployActions = await deployContract(
         { contractName: 'eosio', contractDir: directory + 'eosio.tonomy', returnActions: true },
@@ -259,8 +319,7 @@ export async function reDeployEosioContract(options: StandardProposalOptions) {
 
 // re-deploy the tonomy contracts
 export async function reDeployTonomyContract(options: StandardProposalOptions) {
-    const directory =
-        '/home/sadia/TonomyFoundation/january/Tonomy-ID-Integration/Tonomy-ID-SDK/Tonomy-Contracts/contracts/';
+    const directory = '/home/sadia/Tonomy-ID-Integration/Tonomy-ID-SDK/Tonomy-Contracts/contracts/';
 
     const tonomyDeployActions = await deployContract(
         { contractName: 'tonomy', contractDir: directory + 'tonomy', returnActions: true },

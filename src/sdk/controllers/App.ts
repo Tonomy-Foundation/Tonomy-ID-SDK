@@ -26,6 +26,8 @@ export type AppCreateOptions = {
     description: string;
     logoUrl: string;
     origin: string;
+    backgroundColor: string;
+    accentColor: string;
     publicKey: PublicKey;
     signer: Signer;
 };
@@ -73,6 +75,8 @@ export class App implements AppData {
             username.usernameHash,
             options.logoUrl,
             options.origin,
+            options.backgroundColor,
+            options.accentColor,
             options.publicKey,
             options.signer
         );
