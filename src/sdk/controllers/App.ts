@@ -56,6 +56,8 @@ export class App implements AppData {
         this.origin = options.origin;
         this.version = options.version;
         this.status = options.status;
+        this.accentColor = options.accentColor;
+        this.backgroundColor = options.backgroundColor;
 
         if (options.usernameHash) {
             this.usernameHash = options.usernameHash;
@@ -108,8 +110,8 @@ export class App implements AppData {
             origin: contractAppData.origin,
             version: contractAppData.version,
             status: AppStatusEnum.READY,
-            backgroundColor: contractAppData.background_color,
             accentColor: contractAppData.accent_color,
+            backgroundColor: contractAppData.background_color,
         });
     }
 }
