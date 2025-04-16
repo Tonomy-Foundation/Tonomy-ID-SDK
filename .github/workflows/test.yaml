@@ -24,7 +24,7 @@ jobs:
 
   compile-contracts:
     name: Compiles contracts needed for bootstrap script
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     container: tonomy/antelope
     env:
       BUILD_TEST: true
@@ -68,7 +68,7 @@ jobs:
 
   integration-test:
     needs: compile-contracts
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     env:
       TONOMY_OPS_PRIVATE_KEY: PVT_K1_24kG9VcMk3VkkgY4hh42X262AWV18YcPjBTd2Hox4YWoP8vRTU
       TONOMY_BOARD_PUBLIC_KEYS: '{"keys":["PUB_K1_81aU18Y3RdyFf2WY4Wy7g7fvG9M9d7hmY4rhNFeXouYYPjExua","PUB_K1_5HWprCobEy8LiYUpfVmh8BdGDb8ANPc8rhBhtNqhvXnuxpyCaq","PUB_K1_5VLYVhqfe7oh8TW2i6Nw251wbpoZ4p15DV7udqDjiaKnryx9YU"]}'
