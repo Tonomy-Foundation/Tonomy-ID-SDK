@@ -8,7 +8,7 @@
 
 ### Installation
 
-The Pangea SDK is a typescript enabled javascript library. Install with npm or yarn.
+The Tonomy SDK is a typescript enabled javascript library. Install with npm or yarn.
 
 ```bash
 npm install @tonomy/tonomy-id-sdk
@@ -17,7 +17,7 @@ yarn add @tonomy/tonomy-id-sdk
 ```
 
 {% hint style="warning" %}
-The Pangea SDK is ESM-only. Set your package.json to "type": "module".
+The Tonomy SDK is ESM-only. Set your package.json to "type": "module".
 
 **Troubleshooting? See** [**ESM Migration Guide**](troubleshooting.md)**.**
 {% endhint %}
@@ -33,5 +33,5 @@ When using yarn v2+ then you will need to also add the following to your `packag
 ```
 
 {% hint style="info" %}
-See [Troubleshooting](../run-pangea-infrastructure/troubleshooting.md) for other issues while compiling or executing the SDK.
+See [Troubleshooting](../run-tonomy-infrastructure/troubleshooting.md) for other issues while compiling or executing the SDK.
 {% endhint %}

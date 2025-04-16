@@ -1,6 +1,6 @@
 # Develop
 
-Pangea smart contracts are written in **C++** using the **CDT** compiler toolkit.
+Tonomy  smart contracts are written in **C++** using the **CDT** compiler toolkit.
 
 Example (Basic Token Transfer):
 

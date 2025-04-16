@@ -1,6 +1,6 @@
 # Wallet Signing
 
-Pangea SDK enables **seamless signing of Web3 transactions** using **Pangea ID**, allowing users to interact with **decentralized applications (dApps)** securely. This ensures **private key-based authorization** without exposing user secrets.
+Tonomy  SDK enables **seamless signing of Web3 transactions** using **Tonomy ID**, allowing users to interact with **decentralized applications (dApps)** securely. This ensures **private key-based authorization** without exposing user secrets.
 
 ## Wallet Transaction Signatures
 

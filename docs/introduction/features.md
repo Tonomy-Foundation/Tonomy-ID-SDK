@@ -2,7 +2,7 @@
 
 ### **Passwordless Single Sign-On (SSO)** 🔑
 
-Users log in via Pangea ID (like Google SSO but without third-party control).
+Users log in via Tonomy ID (like Google SSO but without third-party control).
 
 **Why use it?**
 

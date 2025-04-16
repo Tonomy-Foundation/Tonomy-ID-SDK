@@ -2,7 +2,7 @@
 
 ## Further support
 
-Send us a message in the [Pangea Discord](https://discord.gg/8zDf8AF3ja):
+Send us a message in the [Tonomy Discord](https://discord.gg/8zDf8AF3ja):
 
 * [#builders-discussion](https://discord.gg/Xyx8X5Jm2V) channel
 * [#open-ticket](https://discord.gg/gws7AzEqVq) channel for anything sensitive
@@ -11,7 +11,7 @@ Send us a message in the [Pangea Discord](https://discord.gg/8zDf8AF3ja):
 
 ### ESM-only compile = commonjs compilation is not supported
 
-Pangea SDK uses pure ESM-compiled packages. You will not be able to consume the Pangea SDK in a common project such as a default nodejs or Jest compiler. Please change your compiler to target ESM.
+Tonomy SDK uses pure ESM-compiled packages. You will not be able to consume the Tonomy SDK in a common project such as a default nodejs or Jest compiler. Please change your compiler to target ESM.
 
 * Ensure `"type": "module"` in `package.json`
 * Use Nodejs ≥ 20.00
@@ -22,7 +22,7 @@ You may also need to set the environment variable `NODE_OPTIONS="--experimental-
 
 Our use of the [veramo.io](https://veramo.io/) libraries which use pure ESM components. See here: [https://discord.com/channels/878293684620234752/1200026960307437578/1249723788346785842](https://discord.com/channels/878293684620234752/1200026960307437578/1249723788346785842)
 
-You can see here our journey to understand and upgrade all our repositories to pure ESM compilation: [https://github.com/Tonomy-Foundation/Tonomy-ID-SDK/issues/336](https://github.com/Tonomy-Foundation/Tonomy-ID-SDK/issues/336). You can see the specific changes we made and the typescript/jest compilation settings in our various Pangea infrastucture:
+You can see here our journey to understand and upgrade all our repositories to pure ESM compilation: [https://github.com/Tonomy-Foundation/Tonomy-ID-SDK/issues/336](https://github.com/Tonomy-Foundation/Tonomy-ID-SDK/issues/336). You can see the specific changes we made and the typescript/jest compilation settings in our various Tonomy infrastucture:
 
 * **React native (mobile):** [https://github.com/Tonomy-Foundation/Tonomy-ID/pull/1055](https://github.com/Tonomy-Foundation/Tonomy-ID/pull/1055)
 * **React app with Vite (website):** [https://github.com/Tonomy-Foundation/Tonomy-App-Websites/pull/288](https://github.com/Tonomy-Foundation/Tonomy-App-Websites/pull/288)

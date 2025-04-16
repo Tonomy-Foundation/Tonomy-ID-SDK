@@ -1,18 +1,18 @@
 # Smart Contracts
 
-Pangea enables **seamless signing and execution of smart contract transactions** directly from your app, powered by **Pangea Blockchain**, which is built on the **Antelope protocol** (used by EOS, Telos, WAX, etc.).
+Tonomy enables **seamless signing and execution of smart contract transactions** directly from your app, powered by **Tonomy Blockchain**, which is built on the **Antelope protocol** (used by EOS, Telos, WAX, etc.).
 
-**Developers use C++ to write Pangea smart contracts**. These contracts are deployed to the **Pangea Blockchain**, and users sign transactions via the **Pangea ID wallet** using their **app-scoped keys**.
+**Developers use C++ to write Tonomy smart contracts**. These contracts are deployed to the **Tonomy Blockchain**, and users sign transactions via the **Tonomy ID wallet** using their **app-scoped keys**.
 
-### Why Use Pangea Smart Contracts?
+### Why Use Tonomy Smart Contracts?
 
 * **Frictionless transactions**: Enable **gasless 1-click transactions** for users.
 * **Multi-Factor Authentication (Optional)**: Secure high-value operations.
 * **Trustless Execution**: User signatures are **non-repudiable** and tied to **app permissions**.
 
-### Smart Contracts on Pangea Blockchain (Antelope Protocol)
+### Smart Contracts on Tonomy Blockchain (Antelope Protocol)
 
-Pangea Blockchain is built on the **Antelope protocol**, a high-performance, modular and upgradeable blockchain protocol framework designed for speed, scalability, and low latency.
+Tonomy Blockchain is built on the **Antelope protocol**, a high-performance, modular and upgradeable blockchain protocol framework designed for speed, scalability, and low latency.
 
 Key properties:
 

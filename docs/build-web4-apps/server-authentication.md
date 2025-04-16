@@ -1,6 +1,6 @@
 # Server Authentication
 
-Pangea SDK allows apps to **authenticate users to their backend servers** without relying on **centralized identity providers**. This provides **cryptographic proof-of-identity** for **secure API requests, data access, and user actions**.
+Tonomy SDK allows apps to **authenticate users to their backend servers** without relying on **centralized identity providers**. This provides **cryptographic proof-of-identity** for **secure API requests, data access, and user actions**.
 
 ### Client-side
 

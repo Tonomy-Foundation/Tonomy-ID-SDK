@@ -4,13 +4,13 @@ icon: play
 
 # Introduction
 
-Welcome to the Pangea SDK developer documentation.
+Welcome to the Tonomy SDK developer documentation.
 
-Pangea enables developers to **integrate self-sovereign identity and secure data storage** into their **Web2 and Web3 applications**. Whether you’re building a **SaaS platform requiring high-security logins** or a **Web3 dApp needing user-controlled digital signatures and credentials**, Pangea provides a privacy-first, developer-friendly solution.
+Tonomy enables developers to **integrate self-sovereign identity and secure data storage** into their **Web2 and Web3 applications**. Whether you’re building a **SaaS platform requiring high-security logins** or a **Web3 dApp needing user-controlled digital signatures and credentials**, Tonomy provides a privacy-first, developer-friendly solution.
 
-With **Pangea ID**, users log in without passwords, sign data with private keys stored securely on their devices, and control their personal data—**without relying on third parties**.
+With **Tonomy ID**, users log in without passwords, sign data with private keys stored securely on their devices, and control their personal data—**without relying on third parties**.
 
-### Why Integrate Pangea?
+### Why Integrate Tonomy?
 
 * **Frictionless User Authentication**: Passwordless Single Sign-On (SSO)
 * **Strong User Verification**: W3C Verifiable Credentials
@@ -21,9 +21,9 @@ With **Pangea ID**, users log in without passwords, sign data with private keys 
 
 
 {% hint style="info" %}
-Try it out now: [Demo App](https://demo.pangea.web4.world)
+Try it out now: [Demo App](https://demo.tonomy.io)
 {% endhint %}
 
 {% hint style="info" %}
-Read the [Pangea ID White Paper](https://pangea.web4.world/about/whitepapers)
+Read the [Tonomy ID White Paper](https://tonomy.io/about/whitepapers)
 {% endhint %}

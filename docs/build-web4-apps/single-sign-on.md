@@ -1,10 +1,10 @@
 # Login
 
-Pangea ID allows **users to log in securely without passwords**, eliminating credential phishing risks and reducing login friction. This is ideal for **Web2 apps needing high-security authentication or privacy by default** and **Web3 apps requiring private key-based transaction authorization**.
+Tonomy ID allows **users to log in securely without passwords**, eliminating credential phishing risks and reducing login friction. This is ideal for **Web2 apps needing high-security authentication or privacy by default** and **Web3 apps requiring private key-based transaction authorization**.
 
 ### Before You Start
 
-Ensure your app is registered with the Pangea network (See [Register Your Web4 App](register-app.md))
+Ensure your app is registered with the Tonomynetwork (See [Register Your Web4 App](register-app.md))
 
 {% hint style="info" %}
 For local testing, run your app on [http://localhost:3000](http://localhost:3000) and connect to the testnet
@@ -19,20 +19,20 @@ import { setSettings } from '@tonomy/tonomy-id-sdk';
 
 //Testnet Configuration
 setSettings({
-    ssoWebsiteOrigin: "https://accounts.testnet.pangea.web4.world",
-    blockchainUrl: "https://blockchain-api-testnet.pangea.web4.world"
+    ssoWebsiteOrigin: "https://accounts.testnet.tonomy.io",
+    blockchainUrl: "https://blockchain-api-testnet.tonomy.io"
 });
 
 //Mainnet Configuration
 setSettings({
-    ssoWebsiteOrigin: "https://accounts.pangea.web4.world",
-    blockchainUrl: "https://blockchain-api.pangea.web4.world"
+    ssoWebsiteOrigin: "https://accounts.tonomy.io",
+    blockchainUrl: "https://blockchain-api.tonomy.io"
 });
 ```
 
 ## 2. Open Login Flow
 
-This will open the Pangea ID app (via QR or deep link)
+This will open the Tonomy ID app (via QR or deep link)
 
 <pre class="language-typescript" data-title="/login"><code class="lang-typescript"><strong>import { ExternalUser } from '@tonomy/tonomy-id-sdk';
 </strong><strong>

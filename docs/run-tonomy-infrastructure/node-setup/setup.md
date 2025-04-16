@@ -10,11 +10,11 @@ Before start, make sure you go through these steps:
 
 Add the following values of p2p-peer-address at the end of your config.ini file so that it connects to existing nodes in the network.
 
-### Pangea Mainnet
+### Tonomy Mainnet
 
 #### Infrastructure requirements
 
-Pangea mainnet is currently low-throuput designed to supported a minimum set of Pangea functions for the citizens, digital identity tools and LEOS sales. Hardware requirements are:
+Tonomy mainnet is currently low-throuput designed to supported a minimum set of Tonomy functions for the citizens, digital identity tools and LEOS sales. Hardware requirements are:
 
 * 8+Gb RAM available after operating system loads (suggested 12+ Gb)
 * 4+ CPUs
@@ -65,11 +65,11 @@ p2p-peer-address = pangea.eosusa.io:9886
 }
 ```
 
-### Pangea Testnet
+### Tonomy Testnet
 
 #### Infrastructure requirements
 
-Pangea testnet is currently low-throuput designed to supported testing of features for Pangea mainnet. Hardware requirements are:
+Tonomy testnet is currently low-throuput designed to supported testing of features for Tonomy mainnet. Hardware requirements are:
 
 * 8+Gb RAM available after operating system loads (suggested 12+ Gb)
 * 4+ CPUs

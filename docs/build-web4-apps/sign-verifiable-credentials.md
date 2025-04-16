@@ -1,6 +1,6 @@
 # Sign Verifiable Credentials
 
-Pangea ID enables users to **sign and verify W3C Verifiable Credentials** and **digitally sign documents** (e.g., PDFs) using their **self-sovereign identity**. This ensures **tamper-proof authentication** for **identity verification, attestations, and legally binding agreements**.
+Tonomy ID enables users to **sign and verify W3C Verifiable Credentials** and **digitally sign documents** (e.g., PDFs) using their **self-sovereign identity**. This ensures **tamper-proof authentication** for **identity verification, attestations, and legally binding agreements**.
 
 ### Sign a W3C verifiable credential
 

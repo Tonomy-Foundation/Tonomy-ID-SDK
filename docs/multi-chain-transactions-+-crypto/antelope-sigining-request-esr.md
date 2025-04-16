@@ -2,7 +2,7 @@
 
 Antelope Signing Request (ESR) provides a standardized way for dApps to interact with wallets in the Antelope blockchain ecosystem. It allows developers to create portable, reusable signing requests for both transactions and identity verification.
 
-We support Antelope Signing Requests for **Pangea Mainnet** and **Pangea Testnet**, with plans to add compatibility for EOS, Telos, and WAX in the future.
+We support Antelope Signing Requests for **Tonomy Mainnet** and **Tonomy Testnet**, with plans to add compatibility for EOS, Telos, and WAX in the future.
 
 For detailed information about ESR, refer to the [Wharf Documentation.](https://wharfkit.com/docs/utilities/signing-request-library)
 

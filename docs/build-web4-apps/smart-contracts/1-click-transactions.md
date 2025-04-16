@@ -2,7 +2,7 @@
 
 ## 1-click transactions
 
-Pangea ID allows **users to sign and execute blockchain transactions** directly from your app without needing to open Pangea ID.
+Tonomy ID allows **users to sign and execute blockchain transactions** directly from your app without needing to open Tonomy ID.
 
 These transactions have lower security guarantees than [wallet-signed transactions ](wallet-signing.md)and are good for low-value actions such as creation proposals, updating settings or game actions.
 
@@ -60,10 +60,10 @@ const trx = await user.signTransaction('eosio.token', 'transfer', {
 });
 ```
 
-This will **directly sign the transaction** and send it to the blockchain **in the user's browser,** without them needing to open Pangea ID. You may want to show a confirmation before, or after (such as with a Toast UI component).
+This will **directly sign the transaction** and send it to the blockchain **in the user's browser,** without them needing to open Tonomy ID. You may want to show a confirmation before, or after (such as with a Toast UI component).
 
 {% hint style="info" %}
-If the contract is deployed to the Registered App, then the transaction does not communicate with Pangea ID. Otherwise, it will need to send a message to Pangea ID the first time it does this transaction to the contract.
+If the contract is deployed to the Registered App, then the transaction does not communicate with Tonomy ID. Otherwise, it will need to send a message to Tonomy ID the first time it does this transaction to the contract.
 {% endhint %}
 
-This will **prompt the user** to sign the transaction in their **Pangea ID mobile app**.
+This will **prompt the user** to sign the transaction in their **Tonomy ID mobile app**.

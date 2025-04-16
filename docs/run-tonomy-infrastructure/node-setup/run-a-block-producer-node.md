@@ -10,11 +10,11 @@ read-only-threads = 0
 block-log-retain-blocks = 0
 
 # Common Settings (customise based on your node)
-blocks-dir = "/data/Pangea/blocks"
-agent-name = pangea-bp-node-{yourname}
+blocks-dir = "/data/Tonomy/blocks"
+agent-name = tonomy-bp-node-{yourname}
 http-server-address = 0.0.0.0:8888
 p2p-listen-endpoint = 0.0.0.0:9876
-p2p-server-address = pangea.website.com:9875
+p2p-server-address = tonomy.website.com:9875
 
 plugin = eosio::http_plugin
 plugin = eosio::chain_api_plugin

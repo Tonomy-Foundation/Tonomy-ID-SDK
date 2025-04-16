@@ -1,6 +1,6 @@
 # Send P2P Messages
 
-Pangea ID supports **end-to-end encrypted messaging** using **DIDComm**, enabling **private, secure, and trustless communication** between users across different applications. This is ideal for **identity-based messaging, DAO coordination, and secure data exchanges**.
+Tonomy ID supports **end-to-end encrypted messaging** using **DIDComm**, enabling **private, secure, and trustless communication** between users across different applications. This is ideal for **identity-based messaging, DAO coordination, and secure data exchanges**.
 
 ### Send a DIDComm Message
 

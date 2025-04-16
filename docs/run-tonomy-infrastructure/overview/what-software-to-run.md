@@ -1,6 +1,6 @@
 # What software to run?
 
-Antelope ships with 3 major software components needed to run a Pangea node.
+Antelope ships with 3 major software components needed to run a Tonomy node.
 
 ### Nodeos
 

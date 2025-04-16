@@ -1,6 +1,6 @@
 # Register your Web4 App
 
-Before integrating the Pangea SDK, your app must be registered. This ensures your app is recognized during user logins and transactions.
+Before integrating the Tonomy SDK, your app must be registered. This ensures your app is recognized during user logins and transactions.
 
 ### Step 1. Generate App Key
 
@@ -19,7 +19,7 @@ Contact **Tonomy Foundation** (Discord/Telegram or [Contact Form](https://pangea
 | App Name                  | Fiddl Art                                                                          |
 | App Username              | fiddlart                                                                           |
 | App Description           | Create and Earn with AI Art                                                        |
-| App Origin URL            | ht[tps://fiddl.art](tps://fiddl.art)                                               |
+| App Origin URL            | [https://fiddl.art](https://fiddl.art)                                             |
 | App Logo URL (jpg or png) | [https://fiddl.art/fiddlLogoWithText.png](https://fiddl.art/fiddlLogoWithText.png) |
 | Public key (step 1)       | EOS4xnrCGUT688oCuiu7E3Qpn8Phq76TRKNTb87XFMjzsJu                                    |
 
@@ -35,7 +35,7 @@ Contact **Tonomy Foundation** (Discord/Telegram or [Contact Form](https://pangea
 Only Tonomy Foundation developers can do this currently
 {% endhint %}
 
-With the launch of Pangea Build, developers will be able to create and self-manage their own Web4 Apps in a no-code UI. This is a planned feature we have designed but not started development, without a committed launch date.
+With the launch of Tonomy Build, developers will be able to create and self-manage their own Web4 Apps in a no-code UI. This is a planned feature we have designed but not started development, without a committed launch date.
 
 ### Configure app details
 
