@@ -221,13 +221,58 @@ export async function migrateRebrandAppsV2(options: StandardProposalOptions) {
 
     const apps = await TonomyContract.Instance.getApps();
     const actions = await apps
-        .filter((app) => app.origin.includes('tonomy.io'))
+        .filter((app) => {
+            const name = app.app_name.toLowerCase();
+            const description = app.description.toLowerCase();
+            const origin = app.origin.toLowerCase();
+
+            return (
+                name.includes('pangea') ||
+                name.includes('leos') ||
+                name.includes('sales platform') ||
+                description.includes('pangea') ||
+                description.includes('leos') ||
+                origin.includes('pangea')
+            );
+        })
         .map((app) => {
-            const isSalesPlatform = app.origin === 'https://sales.testnet.tonomy.io';
-            const updatedOrigin = isSalesPlatform ? 'https://launchpad.testnet.tonomy.io' : app.origin;
-            const updatedLogoUrl = isSalesPlatform
-                ? app.logo_url.replace('tonomy.io', 'launchpad.testnet.tonomy.io')
-                : app.logo_url;
+            let newAppName = app.app_name;
+            let newDescription = app.description;
+            let newOrigin = app.origin;
+            let newLogoUrl = app.logo_url;
+
+            const isPangea =
+                app.app_name.toLowerCase().includes('pangea') ||
+                app.description.toLowerCase().includes('pangea') ||
+                app.origin.toLowerCase().includes('pangea');
+            const isLeos =
+                app.app_name.toLowerCase().includes('leos') || app.description.toLowerCase().includes('leos');
+            const isSalesPlatform = app.app_name.toLowerCase().includes('sales platform');
+
+            if (isPangea) {
+                newAppName = newAppName.replace('Pangea', 'Tonomy');
+                newDescription = newDescription.replace('Pangea', 'Tonomy');
+                newOrigin = newOrigin.replace('pangea.web4.world', 'tonomy.io');
+                newLogoUrl = newLogoUrl.replace('pangea.web4.world', 'tonomy.io');
+            }
+
+            if (isLeos) {
+                newAppName = newAppName.replace('LEOS', 'TONO');
+                newDescription = newDescription.replace('LEOS', 'TONO');
+            }
+
+            if (isSalesPlatform) {
+                // Specific rebranding for Sales Platform
+                if (newOrigin.includes('sales.testnet.tonomy.io')) {
+                    // Testnet version
+                    newOrigin = 'https://launchpad.testnet.tonomy.io';
+                    newLogoUrl = newLogoUrl.replace('sales.testnet.tonomy.io', 'launchpad.testnet.tonomy.io');
+                } else if (newOrigin.includes('sales.tonomy.io')) {
+                    // Mainnet version
+                    newOrigin = 'https://launchpad.tonomy.io';
+                    newLogoUrl = newLogoUrl.replace('sales.tonomy.io', 'launchpad.tonomy.io');
+                }
+            }
 
             return {
                 account: 'tonomy',
@@ -240,11 +285,11 @@ export async function migrateRebrandAppsV2(options: StandardProposalOptions) {
                 ],
                 data: {
                     account_name: app.account_name,
-                    app_name: app.app_name.replace('LEOS', 'TONO'),
-                    description: app.description.replace('LEOS', 'TONO'),
+                    app_name: newAppName,
+                    description: newDescription,
                     username_hash: app.username_hash,
-                    logo_url: updatedLogoUrl,
-                    origin: updatedOrigin,
+                    logo_url: newLogoUrl,
+                    origin: newOrigin,
                 },
             };
         });
@@ -260,5 +305,7 @@ export async function migrateRebrandAppsV2(options: StandardProposalOptions) {
         options.dryRun
     );
 
-    if (!options.dryRun && options.autoExecute) await executeProposal(options.proposer, proposalName, proposalHash);
+    if (!options.dryRun && options.autoExecute) {
+        await executeProposal(options.proposer, proposalName, proposalHash);
+    }
 }
