@@ -189,7 +189,7 @@ export async function migrateRebrandApps(options: StandardProposalOptions) {
                 name.includes('pangea') ||
                 name.includes('leos') ||
                 (name.includes('sales') &&
-                    description.includes(`sales ${settings.env === 'production' ? '' : 'testnet'} platform`)) ||
+                    description.includes(`sales${settings.env === 'production' ? '' : ' testnet'} platform`)) ||
                 description.includes('pangea') ||
                 description.includes('leos') ||
                 origin.includes('pangea.web4.world')
@@ -205,10 +205,10 @@ export async function migrateRebrandApps(options: StandardProposalOptions) {
                 newAppName.toLowerCase().includes('sales') &&
                 newDescription
                     .toLowerCase()
-                    .includes(`sales ${settings.env === 'production' ? '' : 'testnet'} platform`)
+                    .includes(`sales${settings.env === 'production' ? '' : ' testnet'} platform`)
             ) {
-                newAppName = `Tonomy ${settings.env === 'production' ? '' : 'Testnet'} Launchpad`;
-                newDescription = `Tonomy ${settings.env === 'production' ? '' : 'Testnet'} Launchpad`;
+                newAppName = `Tonomy${settings.env === 'production' ? '' : ' Testnet'} Launchpad`;
+                newDescription = `Tonomy${settings.env === 'production' ? '' : ' Testnet'} Launchpad`;
                 newOrigin = `https://launchpad${settings.env === 'production' ? '' : '.testnet'}.tonomy.io`;
             }
 
