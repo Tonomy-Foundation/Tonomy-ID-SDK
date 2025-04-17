@@ -199,7 +199,7 @@ export async function migrateRebrandApps(options: StandardProposalOptions) {
             let newAppName = app.app_name.replace('Pangea', 'Tonomy').replace('LEOS', 'TONO');
             let newDescription = app.description.replace('Pangea', 'Tonomy').replace('LEOS', 'TONO');
             let newOrigin = app.origin.replace('pangea.web4.world', 'tonomy.io');
-            const newLogoUrl = app.logo_url.replace('pangea.web4.world', 'tonomy.io');
+            let newLogoUrl = app.logo_url.replace('pangea.web4.world', 'tonomy.io');
 
             if (
                 newAppName.toLowerCase().includes('sales') &&
@@ -210,6 +210,11 @@ export async function migrateRebrandApps(options: StandardProposalOptions) {
                 newAppName = `Tonomy ${settings.env === 'production' ? '' : 'Testnet'} Launchpad`;
                 newDescription = `Tonomy ${settings.env === 'production' ? '' : 'Testnet'} Launchpad`;
                 newOrigin = `https://launchpad${settings.env === 'production' ? '' : '.testnet'}.tonomy.io`;
+            }
+
+            if (newLogoUrl.includes('LEOS%20256x256.png')) {
+                newLogoUrl =
+                    'https://cdn.prod.website-files.com/67ea90b224287f4cbb2dd180/67ef991d349ec01179aec16d_icon1.png';
             }
 
             return {
