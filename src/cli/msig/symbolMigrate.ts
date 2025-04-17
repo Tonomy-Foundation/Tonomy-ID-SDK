@@ -229,7 +229,7 @@ export async function migrateRebrandAppsV2(options: StandardProposalOptions) {
             return (
                 name.includes('pangea') ||
                 name.includes('leos') ||
-                name.includes('sales platform') ||
+                (name.includes('sales') && description.includes('sales platform')) ||
                 description.includes('pangea') ||
                 description.includes('leos') ||
                 origin.includes('pangea')
