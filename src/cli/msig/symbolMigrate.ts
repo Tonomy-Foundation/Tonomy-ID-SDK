@@ -244,7 +244,7 @@ export async function migrateRebrandAppsV2(options: StandardProposalOptions) {
             if (newAppName.includes('Sales') && newDescription.includes('Sales Platform')) {
                 newAppName = `Tonomy ${settings.env === 'production' ? '' : 'Testnet'} Launchpad`;
                 newDescription = `Tonomy ${settings.env === 'production' ? '' : 'Testnet'} Launchpad`;
-                newOrigin = `launchpad.${settings.env === 'production' ? '' : '.testnet'}.tonomy.io`;
+                newOrigin = `launchpad${settings.env === 'production' ? '' : '.testnet'}.tonomy.io`;
             }
 
             return {
