@@ -236,42 +236,15 @@ export async function migrateRebrandAppsV2(options: StandardProposalOptions) {
             );
         })
         .map((app) => {
-            let newAppName = app.app_name;
-            let newDescription = app.description;
-            let newOrigin = app.origin;
-            let newLogoUrl = app.logo_url;
+            let newAppName = app.app_name.replace('Pangea', 'Tonomy').replace('LEOS', 'TONO');
+            let newDescription = app.description.replace('Pangea', 'Tonomy').replace('LEOS', 'TONO');
+            let newOrigin = app.origin.replace('pangea.web4.world', 'tonomy.io');
+            const newLogoUrl = app.logo_url.replace('pangea.web4.world', 'tonomy.io');
 
-            const isPangea =
-                app.app_name.toLowerCase().includes('pangea') ||
-                app.description.toLowerCase().includes('pangea') ||
-                app.origin.toLowerCase().includes('pangea');
-            const isLeos =
-                app.app_name.toLowerCase().includes('leos') || app.description.toLowerCase().includes('leos');
-            const isSalesPlatform = app.app_name.toLowerCase().includes('sales platform');
-
-            if (isPangea) {
-                newAppName = newAppName.replace('Pangea', 'Tonomy');
-                newDescription = newDescription.replace('Pangea', 'Tonomy');
-                newOrigin = newOrigin.replace('pangea.web4.world', 'tonomy.io');
-                newLogoUrl = newLogoUrl.replace('pangea.web4.world', 'tonomy.io');
-            }
-
-            if (isLeos) {
-                newAppName = newAppName.replace('LEOS', 'TONO');
-                newDescription = newDescription.replace('LEOS', 'TONO');
-            }
-
-            if (isSalesPlatform) {
-                // Specific rebranding for Sales Platform
-                if (newOrigin.includes('sales.testnet.tonomy.io')) {
-                    // Testnet version
-                    newOrigin = 'https://launchpad.testnet.tonomy.io';
-                    newLogoUrl = newLogoUrl.replace('sales.testnet.tonomy.io', 'launchpad.testnet.tonomy.io');
-                } else if (newOrigin.includes('sales.tonomy.io')) {
-                    // Mainnet version
-                    newOrigin = 'https://launchpad.tonomy.io';
-                    newLogoUrl = newLogoUrl.replace('sales.tonomy.io', 'launchpad.tonomy.io');
-                }
+            if (newAppName.includes('Sales') && newDescription.includes('Sales Platform')) {
+                newAppName = `Tonomy ${settings.env === 'production' ? '' : 'Testnet'} Launchpad`;
+                newDescription = `Tonomy ${settings.env === 'production' ? '' : 'Testnet'} Launchpad`;
+                newOrigin = `launchpad.${settings.env === 'production' ? '' : '.testnet'}.tonomy.io`;
             }
 
             return {
