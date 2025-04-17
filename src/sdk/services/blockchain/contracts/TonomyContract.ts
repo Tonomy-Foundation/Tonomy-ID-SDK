@@ -499,7 +499,7 @@ export class TonomyContract {
         signer: Signer
     ): Promise<API.v1.PushTransactionResponse> {
         const json_data = JSON.stringify({
-            name: appName,
+            app_name: appName,
             description: description,
             logo_url: logoUrl,
             background_color: backgroundColor,
