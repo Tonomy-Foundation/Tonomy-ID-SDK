@@ -26,7 +26,7 @@ import {
     stakingContractSetup,
     stakingSettings,
 } from './staking';
-import { symbolMigrate } from './symbolMigrate';
+import { symbolMigrate, migrateRebrandApps } from './symbolMigrate';
 
 const eosioMsigContract = EosioMsigContract.Instance;
 
@@ -195,6 +195,8 @@ export default async function msig(args: string[]) {
         } else if (proposalType === 'symbol') {
             if (proposalSubtype === 'migrate') {
                 await symbolMigrate(options);
+            } else if (proposalSubtype === 'migrate-app') {
+                await migrateRebrandApps(options);
             } else printMsigHelp();
         } else {
             throw new Error(`Invalid msig proposal type ${proposalType}`);

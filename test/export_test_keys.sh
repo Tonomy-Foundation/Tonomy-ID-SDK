@@ -2,7 +2,7 @@
 
 # WARNING: These keys are only used for testing and should not be used in production
 
-export NODE_ENV=staging
+export NODE_ENV=development
 
 export TONOMY_OPS_PRIVATE_KEY="PVT_K1_24kG9VcMk3VkkgY4hh42X262AWV18YcPjBTd2Hox4YWoP8vRTU"
 export TONOMY_BOARD_PUBLIC_KEYS='{"keys":["PUB_K1_81aU18Y3RdyFf2WY4Wy7g7fvG9M9d7hmY4rhNFeXouYYPjExua","PUB_K1_5HWprCobEy8LiYUpfVmh8BdGDb8ANPc8rhBhtNqhvXnuxpyCaq","PUB_K1_5VLYVhqfe7oh8TW2i6Nw251wbpoZ4p15DV7udqDjiaKnryx9YU"]}'

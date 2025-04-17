@@ -180,47 +180,6 @@ export async function migrateRebrandApps(options: StandardProposalOptions) {
 
     const apps = await TonomyContract.Instance.getApps();
     const actions = await apps
-        .filter((app) => app.origin.includes('pangea.web4.world'))
-        .map((app) => {
-            return {
-                account: 'tonomy',
-                name: 'adminsetapp',
-                authorization: [
-                    {
-                        actor: 'tonomy',
-                        permission: 'active',
-                    },
-                ],
-                data: {
-                    account_name: app.account_name,
-                    app_name: app.app_name.replace('Pangea', 'Tonomy'),
-                    description: app.description.replace('Pangea', 'Tonomy'),
-                    username_hash: app.username_hash,
-                    logo_url: app.logo_url.replace('pangea.web4.world', 'tonomy.io'),
-                    origin: app.origin.replace('pangea.web4.world', 'tonomy.io'),
-                },
-            };
-        });
-
-    const proposalName = Name.from(options.proposalName.toString() + '5');
-
-    const proposalHash = await createProposal(
-        options.proposer,
-        proposalName,
-        actions,
-        options.privateKey,
-        options.requested,
-        options.dryRun
-    );
-
-    if (!options.dryRun && options.autoExecute) await executeProposal(options.proposer, proposalName, proposalHash);
-}
-
-export async function migrateRebrandAppsV2(options: StandardProposalOptions) {
-    console.log('### Migrating rebranding');
-
-    const apps = await TonomyContract.Instance.getApps();
-    const actions = await apps
         .filter((app) => {
             const name = app.app_name.toLowerCase();
             const description = app.description.toLowerCase();
@@ -229,10 +188,11 @@ export async function migrateRebrandAppsV2(options: StandardProposalOptions) {
             return (
                 name.includes('pangea') ||
                 name.includes('leos') ||
-                (name.includes('sales') && description.includes('sales platform')) ||
+                (name.includes('sales') &&
+                    description.includes(`sales ${settings.env === 'production' ? '' : 'testnet'} platform`)) ||
                 description.includes('pangea') ||
                 description.includes('leos') ||
-                origin.includes('pangea')
+                origin.includes('pangea.web4.world')
             );
         })
         .map((app) => {
@@ -241,10 +201,15 @@ export async function migrateRebrandAppsV2(options: StandardProposalOptions) {
             let newOrigin = app.origin.replace('pangea.web4.world', 'tonomy.io');
             const newLogoUrl = app.logo_url.replace('pangea.web4.world', 'tonomy.io');
 
-            if (newAppName.includes('Sales') && newDescription.includes('Sales Platform')) {
+            if (
+                newAppName.toLowerCase().includes('sales') &&
+                newDescription
+                    .toLowerCase()
+                    .includes(`sales ${settings.env === 'production' ? '' : 'testnet'} platform`)
+            ) {
                 newAppName = `Tonomy ${settings.env === 'production' ? '' : 'Testnet'} Launchpad`;
                 newDescription = `Tonomy ${settings.env === 'production' ? '' : 'Testnet'} Launchpad`;
-                newOrigin = `launchpad${settings.env === 'production' ? '' : '.testnet'}.tonomy.io`;
+                newOrigin = `https://launchpad${settings.env === 'production' ? '' : '.testnet'}.tonomy.io`;
             }
 
             return {
