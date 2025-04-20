@@ -5,7 +5,9 @@ import { SdkErrors, TonomyUsername, getSettings, sha256, throwError } from '../.
 import { getAccount, getApi } from '../eosio/eosio';
 import { LEOS_PUBLIC_SALE_PRICE } from './VestingContract';
 import { Authority } from '../eosio/authority';
+import Debug from 'debug';
 
+const debug = Debug('tonomy-sdk:tonomy-contract');
 const CONTRACT_NAME = 'tonomy';
 
 export const GOVERNANCE_ACCOUNT_NAME = 'tonomy';
@@ -464,6 +466,7 @@ export class TonomyContract {
                 index_position: 'tertiary',
             });
             if (!data || !data.rows) throwError('No data found', SdkErrors.DataQueryNoRowDataFound);
+            debug('getApp table row', origin, JSON.stringify(data.rows, null, 2));
 
             if (data.rows.length === 0 || data.rows[0].origin !== origin) {
                 throwError('Account with origin "' + origin + '" not found', SdkErrors.OriginNotFound);
@@ -471,6 +474,9 @@ export class TonomyContract {
         }
 
         const idData = data.rows[0];
+
+        debug('getApp idData', JSON.stringify(idData, null, 2));
+
         const appInfo = JSON.parse(idData.json_data);
 
         return {
