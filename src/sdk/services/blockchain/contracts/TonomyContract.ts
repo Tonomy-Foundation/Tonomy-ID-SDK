@@ -466,7 +466,7 @@ export class TonomyContract {
                 index_position: 'tertiary',
             });
             if (!data || !data.rows) throwError('No data found', SdkErrors.DataQueryNoRowDataFound);
-            debug('getApp table row', JSON.stringify(data.rows, null, 2));
+            debug('getApp table row', origin, JSON.stringify(data.rows, null, 2));
 
             if (data.rows.length === 0 || data.rows[0].origin !== origin) {
                 throwError('Account with origin "' + origin + '" not found', SdkErrors.OriginNotFound);
