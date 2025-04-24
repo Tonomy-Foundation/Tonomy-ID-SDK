@@ -7,7 +7,7 @@ import { createStorage, PersistentStorageClean, StorageFactory, STORAGE_NAMESPAC
 import { Name, API, NameType } from '@wharfkit/antelope';
 import { TonomyUsername } from '../sdk/util/username';
 import { browserStorageFactory } from '../sdk/storage/browserStorage';
-import { getAccount, getChainInfo } from '../sdk/services/blockchain/eosio/eosio';
+import { getAccount, getChainId } from '../sdk/services/blockchain/eosio/eosio';
 import { JsKeyManager } from '../sdk/storage/jsKeyManager';
 import { LoginRequest, LoginRequestPayload } from '../sdk/util/request';
 import { DataSharingRequest, DataSharingRequestPayload, getAccountNameFromDid, parseDid } from '../sdk/util';
@@ -166,7 +166,7 @@ export class ExternalUser {
 
         if (!did) {
             const accountName = await (await this.getAccountName()).toString();
-            const chainID = (await getChainInfo()).chain_id.toString();
+            const chainID = getChainId().toString();
             const appPermission = await this.getAppPermission();
 
             did = `did:antelope:${chainID}:${accountName}#${appPermission}`;
@@ -640,7 +640,7 @@ export async function verifyClientAuthorization<T extends ClientAuthorizationDat
 
     async function verifyChainId() {
         if (optionsWithDefaults.verifyChainId) {
-            const { chain_id: chainId } = await getChainInfo();
+            const chainId = await getChainId();
 
             const didChainId = id.split(':')[0];
 

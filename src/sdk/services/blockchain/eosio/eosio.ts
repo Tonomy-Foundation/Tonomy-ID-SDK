@@ -1,4 +1,4 @@
-import { APIClient, FetchProvider, NameType, API, PrivateKey, Serializer } from '@wharfkit/antelope';
+import { APIClient, FetchProvider, NameType, API, PrivateKey, Serializer, Checksum256 } from '@wharfkit/antelope';
 import { GetInfoResponse } from '@wharfkit/antelope/src/api/v1/types';
 import fetch from 'cross-fetch';
 import { getFetch, getSettings, isProduction } from '../../../util/settings';
@@ -46,6 +46,19 @@ export async function getChainInfo(): Promise<GetInfoResponse> {
     const api = await getApi();
 
     return (await api.v1.chain.get_info()) as unknown as GetInfoResponse;
+}
+
+let chainId: Checksum256 | undefined;
+
+export async function getChainId(): Promise<Checksum256> {
+    if (chainId) return chainId;
+
+    const chainInfo = await getChainInfo();
+
+    // @ts-expect-error Checksum256 type mismatch
+    chainId = chainInfo.chain_id;
+    // @ts-expect-error Checksum256 type mismatch
+    return chainInfo.chain_id;
 }
 
 export async function getAccount(account: NameType): Promise<API.v1.AccountObject> {

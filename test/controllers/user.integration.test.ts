@@ -255,7 +255,7 @@ describe('User class', () => {
     test('getDid() expect chainId and account name defined', async () => {
         const { user } = await createRandomID();
         const accountName = await user.storage.accountName;
-        const chainId = (await EosioUtil.getChainInfo()).chain_id as unknown as Checksum256;
+        const chainId = await EosioUtil.getChainId();
 
         expect(chainId).toBeDefined();
         expect(accountName).toBeDefined();
