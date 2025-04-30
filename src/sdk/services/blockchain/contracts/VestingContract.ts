@@ -13,10 +13,10 @@ export interface VestingSettings {
     launch_date: string;
 }
 
-export const LEOS_SEED_ROUND_PRICE = 0.0001;
-export const LEOS_SEED_LATE_ROUND_PRICE = 0.0002;
-export const LEOS_PUBLIC_SALE_PRICE = 0.0006;
-export const LEOS_CURRENT_PRICE = LEOS_SEED_ROUND_PRICE;
+export const TONO_SEED_ROUND_PRICE = 0.0001;
+export const TONO_SEED_LATE_ROUND_PRICE = 0.0002;
+export const TONO_PUBLIC_SALE_PRICE = 0.0006;
+export const TONO_CURRENT_PRICE = TONO_SEED_ROUND_PRICE;
 
 export interface VestingAllocation {
     id: number;
