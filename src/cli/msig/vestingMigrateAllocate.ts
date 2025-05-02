@@ -40,7 +40,7 @@ export async function vestingMigrate(options: StandardProposalOptions) {
     if (options.autoExecute) await executeProposal(options.proposer, options.proposalName, proposalHash);
 }
 
-function toBase6Plus1(num: number): string {
+export function toBase6Plus1(num: number): string {
     const base6 = num.toString(6);
 
     return base6
