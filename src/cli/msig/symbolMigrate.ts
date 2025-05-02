@@ -11,8 +11,10 @@ import {
     systemAccount,
 } from '../bootstrap';
 import settings from '../settings';
-import { getAllUniqueHolders } from '../vesting';
+import { getAllAllocations, getAllUniqueHolders } from '../vesting';
 import { deployContract } from './contract';
+import { ActionData, assetToDecimal } from '../../sdk/services/blockchain';
+import { toBase6Plus1 } from './vestingMigrateAllocate';
 
 export async function symbolMigrate(options: StandardProposalOptions) {
     await redoployContracts(options);
@@ -251,4 +253,65 @@ export async function migrateRebrandApps(options: StandardProposalOptions) {
     if (!options.dryRun && options.autoExecute) {
         await executeProposal(options.proposer, proposalName, proposalHash);
     }
+}
+
+function createMigrateAction(holder: string) {
+    return {
+        account: 'vesting.tmy',
+        name: 'migrateacc',
+        authorization: [
+            {
+                actor: 'vesting.tmy',
+                permission: 'active',
+            },
+        ],
+        data: {
+            account: holder,
+        },
+    };
+}
+
+export async function migrateVesting2(options: StandardProposalOptions) {
+    let count = 0;
+    let proposals = 0;
+    const batchSize = 100;
+    const uniqueHolders = await getAllUniqueHolders();
+    const allAllocations = await getAllAllocations(uniqueHolders);
+
+    for (let i = 0; i < allAllocations.length; i += batchSize) {
+        const batch = allAllocations.slice(i, i + batchSize);
+
+        const actions: ActionData[] = batch.map((allocation) => {
+            console.log(
+                `Migrating account ${allocation.holder} allocation ${allocation.id} in category ${allocation.vesting_category_type}  ${allocation.tokens_allocated} `
+            );
+            count++;
+
+            return createMigrateAction(allocation.holder);
+        });
+
+        const proposalName = Name.from(`${options.proposalName}${toBase6Plus1(Math.floor(i / batchSize))}`);
+
+        console.log(
+            `Creating proposal ${proposalName.toString()} with ${actions.length} actions: ${i} - ${i + batchSize}`
+        );
+        console.log('----------------------------------------');
+        proposals++;
+        const proposalHash = await createProposal(
+            options.proposer,
+            proposalName,
+            actions,
+            options.privateKey,
+            options.requested,
+            options.dryRun
+        );
+
+        if (!options.dryRun && options.autoExecute) await executeProposal(options.proposer, proposalName, proposalHash);
+
+        console.log('----------------------------------------');
+    }
+
+    console.log(`Batch size: ${batchSize}`);
+    console.log(`Proposals created: ${proposals}`);
+    console.log(`Processed ${count} / ${allAllocations.length} allocations`);
 }
