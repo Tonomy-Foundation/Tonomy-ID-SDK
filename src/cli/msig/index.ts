@@ -26,12 +26,12 @@ import {
     stakingContractSetup,
     stakingSettings,
 } from './staking';
-import { symbolMigrate, migrateRebrandApps } from './symbolMigrate';
+import { symbolMigrate, migrateRebrandApps, migrateVesting2 } from './symbolMigrate';
 
 const eosioMsigContract = EosioMsigContract.Instance;
 
 const governanceAccounts = ['1.found.tmy', '2.found.tmy', '3.found.tmy'];
-let newGovernanceAccounts = ['14.found.tmy', '5.found.tmy', '11.found.tmy', '12.found.tmy', '13.found.tmy'];
+let newGovernanceAccounts = ['13.found.tmy', '5.found.tmy', '11.found.tmy', '12.found.tmy', '14.found.tmy'];
 
 if (!settings.isProduction()) {
     newGovernanceAccounts = governanceAccounts;
@@ -195,6 +195,8 @@ export default async function msig(args: string[]) {
         } else if (proposalType === 'symbol') {
             if (proposalSubtype === 'migrate') {
                 await symbolMigrate(options);
+            } else if (proposalSubtype === 'vesting-migrate') {
+                await migrateVesting2(options);
             } else if (proposalSubtype === 'migrate-app') {
                 await migrateRebrandApps(options);
             } else printMsigHelp();

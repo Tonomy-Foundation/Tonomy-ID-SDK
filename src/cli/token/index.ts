@@ -224,7 +224,11 @@ export async function audit() {
         new Map<number, Decimal>()
     );
 
+    console.log('vestingAllocations', vestingAllocations.length);
+
     for (const allocation of vestingAllocations) {
+        console.log('vesting holdername', allocation.holder);
+
         const categoryTokens = vestedTokensPerCategory.get(allocation.vesting_category_type);
 
         if (!categoryTokens) throw new Error('categoryTokens undefined');

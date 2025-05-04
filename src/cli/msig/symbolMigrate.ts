@@ -13,8 +13,8 @@ import {
 import settings from '../settings';
 import { getAllAllocations, getAllUniqueHolders } from '../vesting';
 import { deployContract } from './contract';
-import { ActionData, assetToDecimal } from '../../sdk/services/blockchain';
-import { toBase6Plus1 } from './vestingMigrateAllocate';
+import { assetToDecimal } from '../../sdk/services/blockchain';
+import { getAllPeople } from '../token';
 
 export async function symbolMigrate(options: StandardProposalOptions) {
     await redoployContracts(options);
@@ -255,63 +255,52 @@ export async function migrateRebrandApps(options: StandardProposalOptions) {
     }
 }
 
-function createMigrateAction(holder: string) {
-    return {
-        account: 'vesting.tmy',
-        name: 'migrateacc',
-        authorization: [
-            {
-                actor: 'vesting.tmy',
-                permission: 'active',
-            },
-        ],
-        data: {
-            account: holder,
-        },
-    };
-}
-
 export async function migrateVesting2(options: StandardProposalOptions) {
-    let count = 0;
-    let proposals = 0;
-    const batchSize = 100;
-    const uniqueHolders = await getAllUniqueHolders();
-    const allAllocations = await getAllAllocations(uniqueHolders);
+    console.log('### Migrating vesting.tmy');
+    console.log('Fetching vested tokens');
+    const people = await getAllPeople();
 
-    for (let i = 0; i < allAllocations.length; i += batchSize) {
-        const batch = allAllocations.slice(i, i + batchSize);
+    const vestingHolders = people.reduce<Set<string>>((previous, person) => {
+        previous.add(person.account_name.toString());
+        return previous;
+    }, new Set<string>());
+    const vestingAllocations = await getAllAllocations(vestingHolders, false);
 
-        const actions: ActionData[] = batch.map((allocation) => {
-            console.log(
-                `Migrating account ${allocation.holder} allocation ${allocation.id} in category ${allocation.vesting_category_type}  ${allocation.tokens_allocated} `
-            );
-            count++;
+    const actions = [];
 
-            return createMigrateAction(allocation.holder);
-        });
+    for (const allocation of vestingAllocations) {
+        try {
+            assetToDecimal(allocation.tokens_allocated);
+        } catch (error) {
+            console.log(`needs to be migrated: (${allocation.holder} ${allocation.tokens_allocated})`);
 
-        const proposalName = Name.from(`${options.proposalName}${toBase6Plus1(Math.floor(i / batchSize))}`);
-
-        console.log(
-            `Creating proposal ${proposalName.toString()} with ${actions.length} actions: ${i} - ${i + batchSize}`
-        );
-        console.log('----------------------------------------');
-        proposals++;
-        const proposalHash = await createProposal(
-            options.proposer,
-            proposalName,
-            actions,
-            options.privateKey,
-            options.requested,
-            options.dryRun
-        );
-
-        if (!options.dryRun && options.autoExecute) await executeProposal(options.proposer, proposalName, proposalHash);
-
-        console.log('----------------------------------------');
+            actions.push({
+                account: 'vesting.tmy',
+                name: 'migrateacc',
+                authorization: [
+                    {
+                        actor: 'vesting.tmy',
+                        permission: 'active',
+                    },
+                ],
+                data: {
+                    account: allocation.holder,
+                },
+            });
+        }
     }
 
-    console.log(`Batch size: ${batchSize}`);
-    console.log(`Proposals created: ${proposals}`);
-    console.log(`Processed ${count} / ${allAllocations.length} allocations`);
+    console.log(`Total accounts to migrate: ${actions.length}`);
+
+    const proposalName = Name.from(options.proposalName.toString() + '3');
+    const proposalHash = await createProposal(
+        options.proposer,
+        proposalName,
+        actions,
+        options.privateKey,
+        options.requested,
+        options.dryRun
+    );
+
+    if (!options.dryRun && options.autoExecute) await executeProposal(options.proposer, proposalName, proposalHash);
 }
