@@ -190,7 +190,6 @@ export default async function msig(args: string[]) {
             } else if (proposalSubtype === 'buyram') {
                 await buyRam(options);
             } else if (proposalSubtype === 'deploy-staking-contract') {
-            } else if (proposalSubtype === 'deploy-staking-contract') {
                 await deployStakingContract(options);
             } else if (proposalSubtype === 'redeploy-vesting-contract') {
                 await reDeployVestingContract(options);
