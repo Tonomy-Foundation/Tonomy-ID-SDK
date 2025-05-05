@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 /* eslint-disable camelcase */
 import { Checksum256, Name, PrivateKey } from '@wharfkit/antelope';
-import { AccountType, TonomyUsername, EosioTokenContract } from '../../sdk';
+import { AccountType, TonomyUsername, EosioTokenContract, setSettings } from '../../sdk';
 import {
     amountToSupplyPercentage,
     AppTableRecord,
@@ -10,6 +10,7 @@ import {
     createSigner,
     getAccount,
     getAccountNameFromUsername,
+    TonomyContract,
     GetPersonResponse,
     vestingCategories as vestingCategoriesList,
 } from '../../sdk/services/blockchain';
@@ -66,7 +67,22 @@ export async function transfer(args: string[]) {
 
 const ZERO_DECIMAL = new Decimal(0);
 
+type AccountBalance = {
+    account: string;
+    tokens: Decimal;
+    vested: Decimal;
+} & Record<string, any>;
+
+const symbol = 'TONO';
+
 export async function audit() {
+    console.log('Token symbol:', symbol);
+
+    setSettings({
+        ...settings.config,
+        currencySymbol: symbol,
+    });
+
     console.log('');
     console.log('Fetching tokens for bootstrap accounts');
     const bootstrappedAccounts = new Set<string>();
@@ -96,15 +112,24 @@ export async function audit() {
     bootstrappedData.forEach(({ account, tokens }) => {
         const fraction = amountToSupplyPercentage(tokens);
 
-        console.log(`${account.padEnd(14)} ${tokens.toFixed(4).padStart(16)} LEOS (${fraction.padStart(12)})`);
+        console.log(`${account.padEnd(14)} ${tokens.toFixed(4).padStart(16)} ${symbol} (${fraction.padStart(12)})`);
     });
+
+    const totalBoostrappedTokens = bootstrappedData.reduce(
+        (previous, account) => previous.add(account.tokens),
+        ZERO_DECIMAL
+    );
+
+    console.log(
+        `Total bootstrapped tokens:  ${totalBoostrappedTokens.toFixed(4).padStart(14)} ${symbol} (${amountToSupplyPercentage(totalBoostrappedTokens).padStart(10)})`
+    );
 
     console.log('');
     console.log('Fetching apps tokens');
 
-    const apps = await getAllApps();
+    const apps = await TonomyContract.Instance.getApps();
 
-    const appAccounts = (
+    const appAccounts: AccountBalance[] = (
         await Promise.all(
             apps.map(async (app) => {
                 const balance = await tokenContract.getBalanceDecimal(app.account_name);
@@ -126,7 +151,7 @@ export async function audit() {
 
     console.log('Total apps', apps.length);
     console.log(
-        `Total app tokens:  ${totalAllTokens.toFixed(4).padStart(14)} LEOS (${amountToSupplyPercentage(totalAllTokens).padStart(10)})`
+        `Total app tokens:  ${totalAllTokens.toFixed(4).padStart(14)} ${symbol} (${amountToSupplyPercentage(totalAllTokens).padStart(10)})`
     );
 
     for (const app of appAccounts) {
@@ -134,7 +159,7 @@ export async function audit() {
         const fraction = amountToSupplyPercentage(app.tokens);
 
         console.log(
-            `> ${app.account.padEnd(14)} ${app.tokens.toFixed(4).padStart(16)} LEOS (${fraction.padStart(12)}) ${app.description}`
+            `> ${app.account.padEnd(14)} ${app.tokens.toFixed(4).padStart(16)} ${symbol} (${fraction.padStart(12)}) ${app.description}`
         );
     }
 
@@ -142,18 +167,18 @@ export async function audit() {
     console.log('Fetching people tokens');
     const people = await getAllPeople();
 
-    const peopleAccounts = [];
+    const peopleAccounts: AccountBalance[] = [];
     const batchSize = 100;
 
     for (let i = 0; i < people.length; i += batchSize) {
         const batch = people.slice(i, i + batchSize);
 
-        const batchResults = await Promise.all(
+        const batchResults: AccountBalance[] = await Promise.all(
             batch.map(async (person) => {
                 const balance = await tokenContract.getBalanceDecimal(person.account_name);
 
                 return {
-                    account: person.account_name,
+                    account: person.account_name.toString(),
                     description: person.status,
                     tokens: balance,
                     vested: ZERO_DECIMAL,
@@ -170,7 +195,7 @@ export async function audit() {
 
     console.log('Total people', people.length);
     console.log(
-        `Total people tokens:  ${totalPeopleTokens.toFixed(4).padStart(14)} LEOS (${amountToSupplyPercentage(totalPeopleTokens).padStart(10)})`
+        `Total people tokens:  ${totalPeopleTokens.toFixed(4).padStart(14)} ${symbol} (${amountToSupplyPercentage(totalPeopleTokens).padStart(10)})`
     );
 
     for (const person of peopleAccounts) {
@@ -178,7 +203,7 @@ export async function audit() {
         const fraction = amountToSupplyPercentage(person.tokens);
 
         console.log(
-            `> ${person.account.toString().padEnd(14)} ${person.tokens.toFixed(4).padStart(15)} LEOS (${fraction.padStart(12)})`
+            `> ${person.account.toString().padEnd(14)} ${person.tokens.toFixed(4).padStart(15)} ${symbol} (${fraction.padStart(12)})`
         );
     }
 
@@ -216,14 +241,14 @@ export async function audit() {
     console.log('Total unique holders: ', vestingHolders.size);
     console.log('Total vesting allocations: ', vestingAllocations.length);
     console.log(
-        `Total vested:  ${totalVested.toFixed(4).padStart(15)} LEOS (${((100 * totalVested) / EosioTokenContract.TOTAL_SUPPLY).toFixed(8).padStart(11)}%)`
+        `Total vested:  ${totalVested.toFixed(4).padStart(15)} ${symbol} (${((100 * totalVested) / EosioTokenContract.TOTAL_SUPPLY).toFixed(8).padStart(11)}%)`
     );
     vestedTokensPerCategory.forEach((tokens, category) => {
         const fraction = amountToSupplyPercentage(tokens);
         const categoryName = vestingCategoriesList.get(category)?.name;
 
         console.log(
-            `> category ${category.toString().padStart(2)}: ${tokens.toFixed(4).padStart(15)} LEOS (${fraction.padStart(12)}) ${categoryName}`
+            `> category ${category.toString().padStart(2)}: ${tokens.toFixed(4).padStart(15)} ${symbol} (${fraction.padStart(12)}) ${categoryName}`
         );
     });
 
@@ -265,7 +290,7 @@ async function checkMissedVestingAllocations(
     console.log('People not in vesting holders: ', Array.from(peopleNotInVestingHolders).length);
     console.log('Total allocations: ', peopleNotInVestingHoldersAllocations.length);
     console.log(
-        `Total tokens: ${totalPeopleNotInVestingHolders.toFixed(4).padStart(14)} LEOS (${amountToSupplyPercentage(
+        `Total tokens: ${totalPeopleNotInVestingHolders.toFixed(4).padStart(14)} ${symbol} (${amountToSupplyPercentage(
             totalPeopleNotInVestingHolders
         ).padStart(10)})`
     );
@@ -297,7 +322,7 @@ async function checkMissedVestingAllocations(
     console.log('Apps not in vesting holders: ', Array.from(appsNotInVestingHolders).length);
     console.log('Total allocations: ', appsNotInVestingHoldersAllocations.length);
     console.log(
-        `Total tokens: ${totalAppsNotInVestingHolders.toFixed(4).padStart(14)} LEOS (${amountToSupplyPercentage(
+        `Total tokens: ${totalAppsNotInVestingHolders.toFixed(4).padStart(14)} ${symbol} (${amountToSupplyPercentage(
             totalAppsNotInVestingHolders
         ).padStart(10)})`
     );
@@ -332,14 +357,14 @@ async function checkMissedVestingAllocations(
     console.log('Bootstrapped accounts not in vesting holders: ', Array.from(bootstrappedNotInVestingHolders).length);
     console.log('Total allocations: ', bootstrappedNotInVestingHoldersAllocations.length);
     console.log(
-        `Total tokens: ${totalBootstrappedNotInVestingHolders.toFixed(4).padStart(14)} LEOS (${amountToSupplyPercentage(
+        `Total tokens: ${totalBootstrappedNotInVestingHolders.toFixed(4).padStart(14)} ${symbol} (${amountToSupplyPercentage(
             totalBootstrappedNotInVestingHolders
         ).padStart(10)})`
     );
     console.log('Unique bootstrapped accounts not in vesting holders: ', uniqueBootstrappedNotInVestingHolders.length);
 }
 
-async function getAllApps(): Promise<AppTableRecord[]> {
+export async function getAllApps(): Promise<AppTableRecord[]> {
     const api = await getApi();
     const data = await api.v1.chain.get_table_rows({
         code: 'tonomy',

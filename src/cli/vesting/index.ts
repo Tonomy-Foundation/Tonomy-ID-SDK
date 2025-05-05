@@ -14,7 +14,7 @@ import settings from '../settings';
 
 const vestingContract = VestingContract.Instance;
 
-export async function getAllUniqueHolders(print = false) {
+export async function getAllUniqueHolders(print = false): Promise<Set<string>> {
     const action = 'assigntokens';
     const contract = 'vesting.tmy';
     const limit = 100;
@@ -58,7 +58,7 @@ interface VestingAllocationAndAccount extends VestingAllocation {
     account: string;
 }
 
-export async function getAllAllocations(accounts: Set<string>, print = false) {
+export async function getAllAllocations(accounts: Set<string>, print = false): Promise<VestingAllocationAndAccount[]> {
     const allocations: VestingAllocationAndAccount[] = [];
 
     for (const account of accounts) {
@@ -137,7 +137,7 @@ export default async function vesting(args: string[]) {
         console.log('Total unique holders: ', uniqueHolders.size);
         console.log('Total vesting allocations: ', allAllocations.length);
         console.log(
-            `Total vested: ${totalVested} LEOS (${((100 * totalVested) / EosioTokenContract.TOTAL_SUPPLY).toFixed(2)}%)`
+            `Total vested: ${totalVested} TONO (${((100 * totalVested) / EosioTokenContract.TOTAL_SUPPLY).toFixed(2)}%)`
         );
         console.log('');
     } else if (args[0] === 'setsettings') {

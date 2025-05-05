@@ -3,7 +3,7 @@ import { API, Checksum256, Checksum256Type, Name, NameType, PublicKey } from '@w
 import { Signer, transact } from '../eosio/transaction';
 import { SdkErrors, TonomyUsername, getSettings, sha256, throwError } from '../../../util';
 import { getAccount, getApi } from '../eosio/eosio';
-import { LEOS_PUBLIC_SALE_PRICE } from './VestingContract';
+import { TONO_PUBLIC_SALE_PRICE } from './VestingContract';
 import { Authority } from '../eosio/authority';
 import Debug from 'debug';
 
@@ -87,7 +87,7 @@ function calculateRamPrice(): number {
     const totalRamPrice = ramPricePerGb * numberOfNodes * (1 + costOverhead); // $ / Gb
     const totalRamPriceBytes = totalRamPrice / (1024 * 1024 * 1024); // $ / byte
 
-    return LEOS_PUBLIC_SALE_PRICE / totalRamPriceBytes; // bytes / LEOS
+    return TONO_PUBLIC_SALE_PRICE / totalRamPriceBytes; // bytes / TONO
 }
 
 export const RAM_PRICE = calculateRamPrice(); // bytes / token
@@ -491,6 +491,32 @@ export class TonomyContract {
             username_hash: Checksum256.from(idData.username_hash),
             version: idData.version,
         };
+    }
+
+    async getApps(): Promise<AppTableRecord[]> {
+        const api = await getApi();
+        const data = await api.v1.chain.get_table_rows({
+            code: CONTRACT_NAME,
+            scope: CONTRACT_NAME,
+            table: 'apps',
+            limit: 1000,
+        });
+
+        if (!data || !data.rows) throwError('No data found', SdkErrors.DataQueryNoRowDataFound);
+
+        if (data.rows.length === 0) {
+            throwError('No apps found', SdkErrors.DataQueryNoRowDataFound);
+        }
+
+        return data.rows.map((row) => ({
+            app_name: row.app_name,
+            description: row.description,
+            logo_url: row.logo_url,
+            origin: row.origin,
+            account_name: Name.from(row.account_name),
+            username_hash: Checksum256.from(row.username_hash),
+            version: row.version,
+        }));
     }
 
     async adminSetApp(
