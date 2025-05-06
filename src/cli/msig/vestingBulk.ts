@@ -1,7 +1,7 @@
 import settings from '../settings';
 import { StandardProposalOptions, createProposal, executeProposal } from '.';
 import { AccountType, SdkError, SdkErrors, TonomyUsername } from '../../sdk';
-import { getAccount, getAccountNameFromUsername, LEOS_CURRENT_PRICE } from '../../sdk/services/blockchain';
+import { getAccount, getAccountNameFromUsername, TONO_CURRENT_PRICE } from '../../sdk/services/blockchain';
 import { parse } from 'csv-parse/sync';
 import fs from 'fs';
 
@@ -80,12 +80,12 @@ export async function vestingBulk(args: { governanceAccounts: string[] }, option
     }
 
     const actions = results.map((data) => {
-        const leosNumber = data.usdQuantity / LEOS_CURRENT_PRICE;
+        const tonoNumber = data.usdQuantity / TONO_CURRENT_PRICE;
 
-        const leosQuantity = leosNumber.toFixed(0) + '.000000 LEOS';
+        const tonoQuantity = tonoNumber.toFixed(0) + '.000000 TONO';
 
         console.log(
-            `Assigning: ${leosQuantity} ($${data.usdQuantity} USD) vested in category ${categoryId} to ${data.accountName} at rate of $${LEOS_CURRENT_PRICE}/LEOS`
+            `Assigning: ${tonoQuantity} ($${data.usdQuantity} USD) vested in category ${categoryId} to ${data.accountName} at rate of $${TONO_CURRENT_PRICE}/TONO`
         );
         return {
             account: 'vesting.tmy',
@@ -99,7 +99,7 @@ export async function vestingBulk(args: { governanceAccounts: string[] }, option
             data: {
                 sender,
                 holder: data.accountName,
-                amount: leosQuantity,
+                amount: tonoQuantity,
                 category: categoryId,
             },
         };
