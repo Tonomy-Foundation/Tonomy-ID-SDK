@@ -42,20 +42,6 @@ yarn run build:cli
 # check working
 yarn run cli --help
 ```
-
-**Compatibility**
-
-The Tonomy SDK requires `nodejs v20+`
-
-**Notes for yarn v2+**
-
-If using yarn v2+ then you will need to also add the following to your `package.json` file.
-
-```json
-"resolutions": {
-    "jsonld": "link:./node_modules/@digitalcredentials/jsonld"
-  },
-```
 {% endtab %}
 
 {% tab title="Javascript" %}
