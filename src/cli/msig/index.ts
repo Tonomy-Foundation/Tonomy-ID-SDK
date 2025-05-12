@@ -18,6 +18,7 @@ import { sleep } from '../../sdk/util';
 import { vestingMigrate, vestingMigrate2, vestingMigrate3 } from './vestingMigrateAllocate';
 import { newApp } from './newApp';
 import {
+    buyRam,
     createStakingTmyAccount,
     deployStakingContract,
     reDeployEosioContract,
@@ -26,12 +27,13 @@ import {
     stakingContractSetup,
     stakingSettings,
 } from './staking';
+import { migrateApps } from './migrateApps';
 import { symbolMigrate, migrateRebrandApps } from './symbolMigrate';
 
 const eosioMsigContract = EosioMsigContract.Instance;
 
 const governanceAccounts = ['1.found.tmy', '2.found.tmy', '3.found.tmy'];
-let newGovernanceAccounts = ['14.found.tmy', '5.found.tmy', '11.found.tmy', '12.found.tmy', '13.found.tmy'];
+let newGovernanceAccounts = ['13.found.tmy', '5.found.tmy', '11.found.tmy', '12.found.tmy', '14.found.tmy'];
 
 if (!settings.isProduction()) {
     newGovernanceAccounts = governanceAccounts;
@@ -172,6 +174,10 @@ export default async function msig(args: string[]) {
             await setResourceConfig({}, options);
         } else if (proposalType === 'set-chain-config') {
             await setBlockchainConfig({}, options);
+        } else if (proposalType === 'new-app') {
+            await newApp(options);
+        } else if (proposalType === 'migrate-appsv2') {
+            await migrateApps(options);
         } else if (proposalType === 'app') {
             if (proposalSubtype === 'create') {
                 await newApp(options);
@@ -181,6 +187,8 @@ export default async function msig(args: string[]) {
                 await createStakingTmyAccount(options);
             } else if (proposalSubtype === 'contract') {
                 await stakingContractSetup(options);
+            } else if (proposalSubtype === 'buyram') {
+                await buyRam(options);
             } else if (proposalSubtype === 'deploy-staking-contract') {
                 await deployStakingContract(options);
             } else if (proposalSubtype === 'redeploy-vesting-contract') {
@@ -360,7 +368,7 @@ function printMsigHelp() {
             yarn run cli msig [commands]
             
             Commands:
-                approve <proposalName>
+                approve stakeacc
                 cancel <proposalName>
                 exec <proposalName>
                 propose account create <proposalName>
@@ -379,6 +387,7 @@ function printMsigHelp() {
                 propose set-chain-config <proposalName>
                 propose staking account <proposalName>
                 propose staking contract <proposalName>
+                propose staking buyram <proposalName>
                 propose staking deploy-staking-contract <proposalName>
                 propose staking redeploy-vesting-contract <proposalName>
                 propose staking redeploy-eosio-contract <proposalName>
@@ -390,6 +399,7 @@ function printMsigHelp() {
                 propose vesting migrate <proposalName>
                 propose vesting migrate2 <proposalName>
                 propose vesting migrate3 <proposalName>
+                propose migrate-appsv2 <proposalName>
                 propose ... --auto-execute
                 propose ... --dry-run
         `);
