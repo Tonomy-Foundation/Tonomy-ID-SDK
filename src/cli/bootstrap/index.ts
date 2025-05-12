@@ -281,8 +281,8 @@ async function createTonomyContractAndSetResources() {
         getAppUsernameHash('system'),
         createSubdomainOnOrigin(getSettings().ssoWebsiteOrigin, 'eosio') + '/tonomy-logo1024.png',
         createSubdomainOnOrigin(getSettings().ssoWebsiteOrigin, 'eosio'),
-        '#f9fafb',
-        '#2563EB',
+        '#251950',
+        '#BA54D3',
         signer
     );
     await tonomyContract.adminSetApp(
@@ -292,8 +292,8 @@ async function createTonomyContractAndSetResources() {
         getAppUsernameHash('currency'),
         createSubdomainOnOrigin(getSettings().ssoWebsiteOrigin, 'eosio.token') + '/tonomy-logo1024.png',
         createSubdomainOnOrigin(getSettings().ssoWebsiteOrigin, 'eosio.token'),
-        '#f9fafb',
-        '#2563EB',
+        '#251950',
+        '#BA54D3',
         signer
     );
     await tonomyContract.adminSetApp(
@@ -303,8 +303,8 @@ async function createTonomyContractAndSetResources() {
         getAppUsernameHash('tonomy'),
         createSubdomainOnOrigin(getSettings().ssoWebsiteOrigin, 'tonomy') + '/tonomy-logo1024.png',
         createSubdomainOnOrigin(getSettings().ssoWebsiteOrigin, 'tonomy'),
-        '#f9fafb',
-        '#2563EB',
+        '#251950',
+        '#BA54D3',
         signer
     );
     await tonomyContract.adminSetApp(
@@ -314,8 +314,8 @@ async function createTonomyContractAndSetResources() {
         getAppUsernameHash('vesting'),
         createSubdomainOnOrigin(getSettings().ssoWebsiteOrigin, 'vesting') + '/tonomy-logo1024.png',
         createSubdomainOnOrigin(getSettings().ssoWebsiteOrigin, 'vesting'),
-        '#f9fafb',
-        '#2563EB',
+        '#251950',
+        '#BA54D3',
         signer
     );
     await tonomyContract.adminSetApp(
@@ -325,8 +325,8 @@ async function createTonomyContractAndSetResources() {
         getAppUsernameHash('staking'),
         createSubdomainOnOrigin(getSettings().ssoWebsiteOrigin, 'staking') + '/tonomy-logo1024.png',
         createSubdomainOnOrigin(getSettings().ssoWebsiteOrigin, 'staking'),
-        '#f9fafb',
-        '#2563EB',
+        '#251950',
+        '#BA54D3',
         signer
     );
 
@@ -395,8 +395,8 @@ async function createTonomyApps(newPublicKey: PublicKey, newSigner: Signer): Pro
         description: `Demo of ${settings.config.ecosystemName} login and features`,
         origin: settings.config.demoWebsiteOrigin,
         logoUrl: settings.config.demoWebsiteOrigin + '/market.com.png',
-        backgroundColor: '#f9fafb',
-        accentColor: '#2563EB',
+        backgroundColor: '#251950',
+        accentColor: '#BA54D3',
         publicKey: newPublicKey,
         signer,
     });
@@ -416,8 +416,8 @@ async function createTonomyApps(newPublicKey: PublicKey, newSigner: Signer): Pro
         description: `${settings.config.ecosystemName} website to manager your ID and Data`,
         origin: settings.config.ssoWebsiteOrigin,
         logoUrl: settings.config.ssoWebsiteOrigin + '/tonomy-logo1024.png',
-        backgroundColor: '#f9fafb',
-        accentColor: '#2563EB',
+        backgroundColor: '#251950',
+        accentColor: '#BA54D3',
         publicKey: newPublicKey,
         signer,
     });
@@ -428,8 +428,8 @@ async function createTonomyApps(newPublicKey: PublicKey, newSigner: Signer): Pro
         description: `Developer console to manage ${settings.config.ecosystemName} applications and infrastucture`,
         origin: settings.config.consoleWebsiteOrigin,
         logoUrl: settings.config.consoleWebsiteOrigin + '/tonomy-logo1024.png',
-        backgroundColor: '#f9fafb',
-        accentColor: '#2563EB',
+        backgroundColor: '#251950',
+        accentColor: '#BA54D3',
         publicKey: newPublicKey,
         signer,
     });
