@@ -18,7 +18,6 @@ import { sleep } from '../../sdk/util';
 import { vestingMigrate, vestingMigrate2, vestingMigrate3 } from './vestingMigrateAllocate';
 import { newApp } from './newApp';
 import {
-    buyRam,
     createStakingTmyAccount,
     deployStakingContract,
     reDeployEosioContract,
@@ -29,6 +28,8 @@ import {
 } from './staking';
 import { migrateApps } from './migrateApps';
 import { symbolMigrate, migrateRebrandApps } from './symbolMigrate';
+import { buyRam } from './buyram';
+import { buyRamAndAppSetup } from './cxc';
 
 const eosioMsigContract = EosioMsigContract.Instance;
 
@@ -181,8 +182,6 @@ export default async function msig(args: string[]) {
                 await createStakingTmyAccount(options);
             } else if (proposalSubtype === 'contract') {
                 await stakingContractSetup(options);
-            } else if (proposalSubtype === 'buyram') {
-                await buyRam(options);
             } else if (proposalSubtype === 'deploy-staking-contract') {
                 await deployStakingContract(options);
             } else if (proposalSubtype === 'redeploy-vesting-contract') {
@@ -200,6 +199,10 @@ export default async function msig(args: string[]) {
             } else if (proposalSubtype === 'migrate-app') {
                 await migrateRebrandApps(options);
             } else printMsigHelp();
+        } else if (proposalType === 'buyram') {
+            await buyRam({ contract: 'tonomy', options });
+        } else if (proposalType === 'cxc-buyRam-adminApp') {
+            await buyRamAndAppSetup(options);
         } else {
             throw new Error(`Invalid msig proposal type ${proposalType}`);
         }
@@ -382,7 +385,7 @@ function printMsigHelp() {
                 propose set-chain-config <proposalName>
                 propose staking account <proposalName>
                 propose staking contract <proposalName>
-                propose staking buyram <proposalName>
+                propose buyram <proposalName>
                 propose staking deploy-staking-contract <proposalName>
                 propose staking redeploy-vesting-contract <proposalName>
                 propose staking redeploy-eosio-contract <proposalName>
