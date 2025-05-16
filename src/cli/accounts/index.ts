@@ -4,7 +4,7 @@ import settings from '../settings';
 
 const tonomyContract = TonomyContract.Instance;
 
-export default async function apps(args: string[]) {
+export default async function accounts(args: string[]) {
     if (args[0] === 'get') {
         const username = args[1];
 
