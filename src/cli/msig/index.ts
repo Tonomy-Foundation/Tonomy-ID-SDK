@@ -5,7 +5,7 @@ import settings from '../settings';
 import { govMigrate } from './govMigrate';
 import { newAccount } from './newAccount';
 import { transfer } from './token';
-import { addAuth } from './addAuth';
+import { updateAuth } from './addAuth';
 import { deployContract } from './contract';
 import { addEosioCode } from './addEosioCode';
 import { printCliHelp } from '..';
@@ -33,7 +33,7 @@ import { symbolMigrate, migrateRebrandApps } from './symbolMigrate';
 const eosioMsigContract = EosioMsigContract.Instance;
 
 const governanceAccounts = ['1.found.tmy', '2.found.tmy', '3.found.tmy'];
-let newGovernanceAccounts = ['13.found.tmy', '5.found.tmy', '11.found.tmy', '12.found.tmy', '14.found.tmy'];
+let newGovernanceAccounts = ['14.found.tmy', '5.found.tmy', '11.found.tmy', '12.found.tmy', '13.found.tmy'];
 
 if (!settings.isProduction()) {
     newGovernanceAccounts = governanceAccounts;
@@ -116,23 +116,17 @@ export default async function msig(args: string[]) {
             if (proposalSubtype === 'transfer') {
                 await transfer(options);
             } else printMsigHelp();
-        } else if (proposalType === 'deploy-contract') {
-            const contractName = args[3] ?? 'tonomy';
+        } else if (proposalType === 'contract') {
+            if (proposalSubtype === 'deploy') {
+                const contractName = args[4] ?? 'tonomy';
 
-            await deployContract({ contract: contractName, ...options });
+                await deployContract({ contract: contractName, ...options });
+            } else printMsigHelp();
         } else if (proposalType === 'auth') {
             if (proposalSubtype === 'add-eosiocode') {
                 await addEosioCode(options);
-            } else if (proposalSubtype === 'create') {
-                await addAuth(
-                    {
-                        account: 'srvice.hypha',
-                        permission: 'active',
-                        newDelegate: 'gov.tmy',
-                        useParentAuth: true,
-                    },
-                    options
-                );
+            } else if (proposalSubtype === 'update') {
+                await updateAuth(options);
             } else if (proposalSubtype === 'gov-migrate') {
                 await govMigrate(
                     { newGovernanceAccounts },
@@ -374,8 +368,9 @@ function printMsigHelp() {
                 propose account create <proposalName>
                 propose app create <proposalName>
                 propose auth add-eosiocode <proposalName>
-                propose auth create <proposalName>
                 propose auth gov-migrate <proposalName>
+                propose auth update <proposalName>
+                propose contract deploy <proposalName> <contractName>
                 propose hypha accounts-create <proposalName>
                 propose hypha add-permissions <proposalName>
                 propose hypha contract-set <proposalName>
