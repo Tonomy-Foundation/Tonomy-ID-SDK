@@ -18,7 +18,6 @@ export async function buyRamAndAppSetup(options: StandardProposalOptions) {
         options: { ...options, proposalName: Name.from(options.proposalName.toString() + '1c') },
     });
 
-    const contract = `${name}.hypha`;
     const appName = `cXc.world`;
     const username = `cXc`;
     const description = `cXc.world is the tokenized Reddit, on a map. Subreddits become districts and nations where music competes to represent the area. One song can go to the top of the world of music, as charts grow and reset daily. Upvote once per 5 minutes. Buy Music NFTs from artists. Use BLUX to boost songs to #1. `;
@@ -36,7 +35,7 @@ export async function buyRamAndAppSetup(options: StandardProposalOptions) {
         account: 'tonomy',
         name: 'adminsetapp',
         data: {
-            account_name: Name.from(contract),
+            account_name: Name.from('cxc.world'),
             app_name: appName,
             description,
             username_hash: tonomyUsername.usernameHash,
@@ -50,7 +49,7 @@ export async function buyRamAndAppSetup(options: StandardProposalOptions) {
         options.proposalName,
         [adminSetAppAction],
         options.privateKey,
-        [...options.requested, contract],
+        [...options.requested],
         options.dryRun
     );
 
