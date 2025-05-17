@@ -336,6 +336,7 @@ export async function executeProposal(
 
         console.log('Proposal approved succeeded');
 
+        await sleep(1000);
         await eosioMsigContract.exec(proposer, proposalName, signingAccount ?? proposer, tonomyGovSigners[0]);
 
         console.log('Proposal executed succeeded');
