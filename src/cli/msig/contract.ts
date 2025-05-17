@@ -23,6 +23,8 @@ export async function deployContract(
     const contractName = Name.from(options.contract);
     const contractDir = `${options.directory ?? defaultContractDirectory}/${contractName.toString()}`;
 
+    console.log(`Deploying contract ${options.contract} from ${contractDir}`);
+
     const { wasmPath, abiPath } = getDeployableFilesFromDir(contractDir);
 
     const wasmFile = fs.readFileSync(wasmPath);

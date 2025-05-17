@@ -28,8 +28,7 @@ import {
 } from './staking';
 import { migrateApps } from './migrateApps';
 import { symbolMigrate, migrateRebrandApps } from './symbolMigrate';
-import { buyRam } from './buyram';
-import { buyRamAndAppSetup } from './cxc';
+import { launchApps } from './app-launch';
 
 const eosioMsigContract = EosioMsigContract.Instance;
 
@@ -169,13 +168,13 @@ export default async function msig(args: string[]) {
             await setResourceConfig({}, options);
         } else if (proposalType === 'set-chain-config') {
             await setBlockchainConfig({}, options);
-        } else if (proposalType === 'new-app') {
-            await newApp(options);
-        } else if (proposalType === 'migrate-appsv2') {
-            await migrateApps(options);
-        } else if (proposalType === 'app') {
+        } else if (proposalType === 'apps') {
             if (proposalSubtype === 'create') {
                 await newApp(options);
+            } else if (proposalSubtype === 'launch') {
+                await launchApps(options);
+            } else if (proposalSubtype === 'migrate') {
+                await migrateApps(options);
             } else printMsigHelp();
         } else if (proposalType === 'staking') {
             if (proposalSubtype === 'account') {
@@ -199,10 +198,6 @@ export default async function msig(args: string[]) {
             } else if (proposalSubtype === 'migrate-app') {
                 await migrateRebrandApps(options);
             } else printMsigHelp();
-        } else if (proposalType === 'buyram') {
-            await buyRam({ contract: 'tonomy', options });
-        } else if (proposalType === 'cxc-buyRam-adminApp') {
-            await buyRamAndAppSetup(options);
         } else {
             throw new Error(`Invalid msig proposal type ${proposalType}`);
         }
@@ -370,6 +365,8 @@ function printMsigHelp() {
                 exec <proposalName>
                 propose account create <proposalName>
                 propose app create <proposalName>
+                propose app launch <proposalName>
+                propose app migrate <proposalName>
                 propose auth add-eosiocode <proposalName>
                 propose auth gov-migrate <proposalName>
                 propose auth update <proposalName>
@@ -385,7 +382,6 @@ function printMsigHelp() {
                 propose set-chain-config <proposalName>
                 propose staking account <proposalName>
                 propose staking contract <proposalName>
-                propose buyram <proposalName>
                 propose staking deploy-staking-contract <proposalName>
                 propose staking redeploy-vesting-contract <proposalName>
                 propose staking redeploy-eosio-contract <proposalName>
@@ -397,7 +393,6 @@ function printMsigHelp() {
                 propose vesting migrate <proposalName>
                 propose vesting migrate2 <proposalName>
                 propose vesting migrate3 <proposalName>
-                propose migrate-appsv2 <proposalName>
                 propose ... --auto-execute
                 propose ... --dry-run
         `);
