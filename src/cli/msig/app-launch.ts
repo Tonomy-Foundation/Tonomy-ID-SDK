@@ -23,33 +23,33 @@ type AppType = {
 };
 
 const apps: AppType[] = [
-    // {
-    //     accountName: 'invite.cxc',
-    //     appName: 'cXc.world',
-    //     description:
-    //         'cXc.world is the tokenized Reddit, on a map. Subreddits become districts and nations where music competes to represent the area. One song can go to the top of the world of music, as charts grow and reset daily. Upvote once per 5 minutes. Buy Music NFTs from artists. Use BLUX to boost songs to #1.',
-    //     logoUrl: 'https://ipfs.neftyblocks.io/ipfs/QmYzu7Dz7LqZP3jq4zmt84rpmjWm2AfhH1SF4Et5LbxVJy',
-    //     origin: 'https://music.cxc.world',
-    //     username: 'cxc',
-    //     ownerKey: 'EOS5SdLniuD3aBn4pXpKchefT8kdFvkSBoGP91iMPhQEzwKBexobn',
-    //     activeKey: 'EOS5hyK8XTDA3etSzaq6ntrafMPM37HEmveVv1YorkASpnk2jbMmt',
-    //     ramKb: 5000,
-    //     backgroundColor: '#444444',
-    //     accentColor: '#D19836',
-    // },
-    // {
-    //     accountName: 'bridge.cxc',
-    //     appName: 'cXc.world bridge',
-    //     description: 'Bridge app for cXc.world',
-    //     logoUrl: 'https://ipfs.neftyblocks.io/ipfs/QmYzu7Dz7LqZP3jq4zmt84rpmjWm2AfhH1SF4Et5LbxVJy',
-    //     origin: 'https://bridge.cxc.world',
-    //     username: 'bridge.cxc',
-    //     ownerKey: 'EOS5SdLniuD3aBn4pXpKchefT8kdFvkSBoGP91iMPhQEzwKBexobn',
-    //     activeKey: 'EOS5hyK8XTDA3etSzaq6ntrafMPM37HEmveVv1YorkASpnk2jbMmt',
-    //     ramKb: 5000,
-    //     backgroundColor: '#444444',
-    //     accentColor: '#D19836',
-    // },
+    {
+        accountName: 'invite.cxc',
+        appName: 'cXc.world',
+        description:
+            'cXc.world is the tokenized Reddit, on a map. Subreddits become districts and nations where music competes to represent the area. One song can go to the top of the world of music, as charts grow and reset daily. Upvote once per 5 minutes. Buy Music NFTs from artists. Use BLUX to boost songs to #1.',
+        logoUrl: 'https://ipfs.neftyblocks.io/ipfs/QmYzu7Dz7LqZP3jq4zmt84rpmjWm2AfhH1SF4Et5LbxVJy',
+        origin: 'https://music.cxc.world',
+        username: 'cxc',
+        ownerKey: 'EOS5SdLniuD3aBn4pXpKchefT8kdFvkSBoGP91iMPhQEzwKBexobn',
+        activeKey: 'EOS5hyK8XTDA3etSzaq6ntrafMPM37HEmveVv1YorkASpnk2jbMmt',
+        ramKb: 5000,
+        backgroundColor: '#444444',
+        accentColor: '#D19836',
+    },
+    {
+        accountName: 'bridge.cxc',
+        appName: 'cXc.world bridge',
+        description: 'Bridge app for cXc.world',
+        logoUrl: 'https://ipfs.neftyblocks.io/ipfs/QmYzu7Dz7LqZP3jq4zmt84rpmjWm2AfhH1SF4Et5LbxVJy',
+        origin: 'https://bridge.cxc.world',
+        username: 'bridge.cxc',
+        ownerKey: 'EOS5SdLniuD3aBn4pXpKchefT8kdFvkSBoGP91iMPhQEzwKBexobn',
+        activeKey: 'EOS5hyK8XTDA3etSzaq6ntrafMPM37HEmveVv1YorkASpnk2jbMmt',
+        ramKb: 5000,
+        backgroundColor: '#444444',
+        accentColor: '#D19836',
+    },
     {
         accountName: 'tokens.cxc',
         appName: 'cXc.world tokens',
@@ -59,19 +59,18 @@ const apps: AppType[] = [
         username: 'tokens.cxc',
         ownerKey: 'EOS5SdLniuD3aBn4pXpKchefT8kdFvkSBoGP91iMPhQEzwKBexobn',
         activeKey: 'EOS5hyK8XTDA3etSzaq6ntrafMPM37HEmveVv1YorkASpnk2jbMmt',
-        ramKb: 1000,
+        ramKb: 1000, // 100 was too low
         backgroundColor: '#444444',
         accentColor: '#D19836',
     },
 ];
 
 export async function launchApps(options: StandardProposalOptions) {
-    // await createAccounts(options);
-    // await deployContracts(options);
+    await createAccounts(options);
+    await deployContracts(options);
     await setupApps(options);
 }
 
-/*
 async function createAccounts(options: StandardProposalOptions) {
     const tonomyGovActivePermission = {
         actor: 'gov.tmy',
@@ -104,6 +103,7 @@ async function createAccounts(options: StandardProposalOptions) {
             },
         });
     }
+
     const proposalName = Name.from(options.proposalName.toString() + 'acc');
 
     const proposalHash = await createProposal(
@@ -115,8 +115,7 @@ async function createAccounts(options: StandardProposalOptions) {
         options.dryRun
     );
 
-    if (!options.dryRun && options.autoExecute)
-        await executeProposal(options.proposer, proposalName, proposalHash);
+    if (!options.dryRun && options.autoExecute) await executeProposal(options.proposer, proposalName, proposalHash);
 }
 
 async function deployContracts(options: StandardProposalOptions) {
@@ -131,13 +130,13 @@ async function deployContracts(options: StandardProposalOptions) {
         });
     }
 }
-*/
+
 async function setupApps(options: StandardProposalOptions) {
     const actions: ActionData[] = [];
 
     for (const app of apps) {
-        // actions.push(adminSetAppAction(app));
-        // actions.push(transferTokensAction(app));
+        actions.push(adminSetAppAction(app));
+        actions.push(transferTokensAction(app));
         actions.push(buyRamAction(app));
     }
 
@@ -157,7 +156,6 @@ async function setupApps(options: StandardProposalOptions) {
     if (!options.dryRun && options.autoExecute) await executeProposal(options.proposer, proposalName, proposalHash);
 }
 
-/*
 function adminSetAppAction(app: AppType) {
     const tonomyUsername = TonomyUsername.fromUsername(app.username, AccountType.APP, getSettings().accountSuffix);
 
@@ -189,7 +187,6 @@ function adminSetAppAction(app: AppType) {
     };
 }
 
-
 function transferTokensAction(app: AppType) {
     const tokens = bytesToTokens(app.ramKb * 1000);
 
@@ -213,7 +210,7 @@ function transferTokensAction(app: AppType) {
         },
     };
 }
-*/
+
 const transferFrom = 'partners.tmy';
 
 function buyRamAction(app: AppType) {
