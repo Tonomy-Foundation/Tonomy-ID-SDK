@@ -1,7 +1,8 @@
 import apps from './apps';
 import keys from './keys';
-import authority from './authority';
+import auth from './auth';
 import bootstrap from './bootstrap';
+import contracts from './contracts';
 import msig from './msig';
 import accounts from './accounts';
 import vesting from './vesting';
@@ -21,12 +22,14 @@ async function main() {
         await apps(args.slice(1));
     } else if (args[0] === 'accounts') {
         await accounts(args.slice(1));
-    } else if (args[0] === 'authority') {
-        await authority(args.slice(1));
+    } else if (args[0] === 'auth') {
+        await auth(args.slice(1));
     } else if (args[0] === 'bootstrap') {
         await bootstrap();
     } else if (args[0] === 'keys') {
         await keys(args.slice(1));
+    } else if (args[0] === 'contracts') {
+        await contracts(args.slice(1));
     } else if (args[0] === 'msig') {
         await msig(args.slice(1));
     } else if (args[0] === 'vesting') {

@@ -23,16 +23,9 @@ export async function deployContract(
     const contractName = Name.from(options.contract);
     const contractDir = `${options.directory ?? defaultContractDirectory}/${contractName.toString()}`;
 
-    if (!contractName) {
-        throw new Error('Contract name must be provided for deploy-contract proposal');
-    }
+    console.log(`Deploying contract ${options.contract} from ${contractDir}`);
 
-    const contractInfo = {
-        account: contractName,
-        contractDir,
-    };
-
-    const { wasmPath, abiPath } = getDeployableFilesFromDir(contractInfo.contractDir);
+    const { wasmPath, abiPath } = getDeployableFilesFromDir(contractDir);
 
     const wasmFile = fs.readFileSync(wasmPath);
     const abiFile = fs.readFileSync(abiPath, 'utf8');
@@ -43,24 +36,26 @@ export async function deployContract(
     const abiDef = ABI.from(abi);
     const abiSerializedHex = Serializer.encode({ object: abiDef }).hexString;
 
+    const authorization = [
+        {
+            actor: contractName.toString(),
+            permission: 'active',
+        },
+        {
+            actor: 'tonomy',
+            permission: 'active',
+        },
+        // {
+        //     actor: 'tonomy',
+        //     permission: 'owner',
+        // },
+    ];
+
     // Prepare SETCODE action
     const setCodeAction: ActionData = {
         account: 'tonomy',
         name: 'setcode',
-        authorization: [
-            {
-                actor: contractName.toString(),
-                permission: 'active',
-            },
-            {
-                actor: 'tonomy',
-                permission: 'active',
-            },
-            {
-                actor: 'tonomy',
-                permission: 'owner',
-            },
-        ],
+        authorization,
         data: {
             account: contractName.toString(),
             vmtype: 0,
@@ -73,20 +68,7 @@ export async function deployContract(
     const setAbiAction: ActionData = {
         account: 'tonomy',
         name: 'setabi',
-        authorization: [
-            {
-                actor: contractName.toString(),
-                permission: 'active',
-            },
-            {
-                actor: 'tonomy',
-                permission: 'active',
-            },
-            {
-                actor: 'tonomy',
-                permission: 'owner',
-            },
-        ],
+        authorization,
         data: {
             account: contractName.toString(),
             abi: abiSerializedHex,
@@ -102,7 +84,7 @@ export async function deployContract(
         options.proposalName,
         actions,
         options.privateKey,
-        options.requested,
+        [...options.requested, contractName.toString()],
         options.dryRun
     );
 
