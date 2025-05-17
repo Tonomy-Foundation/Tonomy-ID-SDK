@@ -1,8 +1,11 @@
 /* eslint-disable camelcase */
 import { Name } from '@wharfkit/antelope';
-import { createProposal, executeProposal, StandardProposalOptions } from '.';
+// @ts-ignore unused variables (when createAccount/deployContract is commented out)
+import { createProposal, StandardProposalOptions, executeProposal } from '.';
 import { AccountType, getSettings, TonomyUsername } from '../../sdk';
-import { ActionData, Authority, bytesToTokens } from '../../sdk/services/blockchain';
+// @ts-ignore unused variables (when createAccount/deployContract is commented out)
+import { ActionData, bytesToTokens, Authority } from '../../sdk/services/blockchain';
+// @ts-ignore unused variables (when createAccount/deployContract is commented out)
 import { deployContract } from './contract';
 
 type AppType = {
@@ -102,8 +105,8 @@ async function createAccounts(options: StandardProposalOptions) {
         options.dryRun
     );
 
-    if (options.dryRun) return;
-    if (options.autoExecute) await executeProposal(options.proposer, options.proposalName, proposalHash);
+    if (!options.dryRun && options.autoExecute)
+        await executeProposal(options.proposer, options.proposalName, proposalHash);
 }
 
 async function deployContracts(options: StandardProposalOptions) {
@@ -128,7 +131,7 @@ async function setupApps(options: StandardProposalOptions) {
         actions.push(buyRamAction(app));
     }
 
-    await createProposal(
+    const proposalHash = await createProposal(
         options.proposer,
         Name.from(options.proposalName.toString() + 'setup'),
         actions,
@@ -136,6 +139,9 @@ async function setupApps(options: StandardProposalOptions) {
         options.requested,
         options.dryRun
     );
+
+    if (!options.dryRun && options.autoExecute)
+        await executeProposal(options.proposer, options.proposalName, proposalHash);
 }
 
 function adminSetAppAction(app: AppType) {
@@ -143,6 +149,7 @@ function adminSetAppAction(app: AppType) {
 
     console.log(`Calling tonomy::admninsetapp() for ${app.accountName} with username ${tonomyUsername.username}`);
 
+    // TODO: this will need to changed to use the json_data param (with additional colour fields)
     return {
         authorization: [
             {
@@ -163,6 +170,8 @@ function adminSetAppAction(app: AppType) {
     };
 }
 
+const transferFrom = 'partners.tmy';
+
 function transferTokensAction(app: AppType) {
     const tokens = bytesToTokens(app.ramKb * 1000);
 
@@ -171,14 +180,14 @@ function transferTokensAction(app: AppType) {
     return {
         authorization: [
             {
-                actor: 'partners.tmy',
+                actor: transferFrom,
                 permission: 'active',
             },
         ],
         account: 'eosio.token',
         name: 'transfer',
         data: {
-            from: 'partners.tmy',
+            from: transferFrom,
             to: app.accountName,
             quantity: tokens,
             memo: `RAM for ${app.accountName} (${app.ramKb}KB)`,

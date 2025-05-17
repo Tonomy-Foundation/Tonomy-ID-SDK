@@ -364,9 +364,9 @@ function printMsigHelp() {
                 cancel <proposalName>
                 exec <proposalName>
                 propose account create <proposalName>
-                propose app create <proposalName>
-                propose app launch <proposalName>
-                propose app migrate <proposalName>
+                propose apps create <proposalName>
+                propose apps launch <proposalName>
+                propose apps migrate <proposalName>
                 propose auth add-eosiocode <proposalName>
                 propose auth gov-migrate <proposalName>
                 propose auth update <proposalName>
