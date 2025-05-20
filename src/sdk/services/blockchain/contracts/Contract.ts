@@ -2,7 +2,7 @@ import { Name, NameType, PermissionLevel, PermissionLevelType, Action } from '@w
 import { ContractKit, Contract as AntelopeContract } from '@wharfkit/contract';
 import { getApi } from '../eosio/eosio';
 
-export function activeAuthorization(account: NameType): PermissionLevelType {
+export function activePermissionLevel(account: NameType): PermissionLevelType {
     return PermissionLevel.from({ actor: account, permission: 'active' });
 }
 
@@ -17,7 +17,7 @@ export class Contract {
         this.contractName = contract.account;
     }
 
-    static async atContract<Contract>(account: NameType): Promise<Contract> {
+    static async atContract(account: NameType): Promise<Contract> {
         const contract = await (await kitPromise).load(account);
 
         return new this(contract);
@@ -26,7 +26,7 @@ export class Contract {
     protected async action(
         name: NameType,
         data: object,
-        authorization: PermissionLevelType[] = [activeAuthorization(this.contractName as NameType)]
+        authorization = { authorization: [activePermissionLevel(this.contractName)] }
     ): Promise<Action> {
         return this.contract.action(name.toString(), data, authorization);
     }

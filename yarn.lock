@@ -3501,7 +3501,7 @@ __metadata:
     "@veramo/key-manager": "npm:^6.0.0"
     "@veramo/kms-local": "npm:^6.0.0"
     "@wharfkit/antelope": "npm:^1.0.7"
-    "@wharfkit/contract": "npm:^1.1.1"
+    "@wharfkit/contract": "npm:^1.2.1"
     address: "npm:^2.0.3"
     argon2: "npm:^0.40.3"
     babel-jest: "npm:^29.7.0"
@@ -4402,9 +4402,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@wharfkit/antelope@npm:^1.0.2, @wharfkit/antelope@npm:^1.0.4":
-  version: 1.0.13
-  resolution: "@wharfkit/antelope@npm:1.0.13"
+"@wharfkit/antelope@npm:1.0.7":
+  version: 1.0.7
+  resolution: "@wharfkit/antelope@npm:1.0.7"
   dependencies:
     bn.js: "npm:^4.11.9"
     brorand: "npm:^1.1.0"
@@ -4412,25 +4412,11 @@ __metadata:
     hash.js: "npm:^1.0.0"
     pako: "npm:^2.1.0"
     tslib: "npm:^2.0.3"
-  checksum: 10c0/6a9f6aad1ec261158e25261277c33262312588c5a6a2b96ca6111a51623ea1b8896d038e2ab72421c28610fc018039cf1b5713e9e8dfae7c4651dee44576ac3c
+  checksum: 10c0/11b002181760c3efc035613b0c1c680bc939dd5092278b3b737f40181f3dcd7e3e0e15bed581f8933e258dc92db52f75138006c595a549b32ed48c9072cfabf9
   languageName: node
   linkType: hard
 
-"@wharfkit/antelope@npm:^1.0.7":
-  version: 1.0.10
-  resolution: "@wharfkit/antelope@npm:1.0.10"
-  dependencies:
-    bn.js: "npm:^4.11.9"
-    brorand: "npm:^1.1.0"
-    elliptic: "npm:^6.5.4"
-    hash.js: "npm:^1.0.0"
-    pako: "npm:^2.1.0"
-    tslib: "npm:^2.0.3"
-  checksum: 10c0/af71ca1d519e6ba2f8fe840eeee76f654010c0b50aecb2ab81aa2c793cfa43d62b3cd7c3db29934e093e5de476b5592dbf0ea0bb3304e730815b31b16f4c3523
-  languageName: node
-  linkType: hard
-
-"@wharfkit/contract@npm:^1.1.1":
+"@wharfkit/contract@npm:^1.2.1":
   version: 1.2.1
   resolution: "@wharfkit/contract@npm:1.2.1"
   dependencies:
