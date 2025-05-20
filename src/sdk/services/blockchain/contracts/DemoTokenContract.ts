@@ -46,12 +46,12 @@ export class DemoTokenContract extends Contract {
     }
 
     async issue(
-        to: NameType,
+        issuer: NameType,
         quantity: AssetType,
         memo: string,
         signer: Signer
     ): Promise<API.v1.PushTransactionResponse> {
-        const actions = [this.actions.issue({ to, quantity, memo })];
+        const actions = [this.actions.issue({ issuer, quantity, memo })];
 
         return await transact(this.contractName, actions, signer);
     }
