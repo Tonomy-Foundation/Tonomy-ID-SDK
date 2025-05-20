@@ -1,11 +1,12 @@
 /* eslint-disable camelcase */
-import { API, Name, NameType, Action } from '@wharfkit/antelope';
+import { API, Name, NameType, Action, AssetType } from '@wharfkit/antelope';
 import { Signer, transact } from '../eosio/transaction';
 import { getApi } from '../eosio/eosio';
 import { getSettings } from '../../../util';
 import Decimal from 'decimal.js';
 import Debug from 'debug';
-import { Contract } from './Contract';
+import { Contract, loadContract } from './Contract';
+import { ActionOptions, Contract as AntelopeContract } from '@wharfkit/contract';
 
 const debug = Debug('tonomy-id-sdk:services:blockchain:contracts:token');
 
@@ -51,43 +52,40 @@ export function amountToSupplyPercentage(amount: Decimal): string {
 }
 
 export class EosioTokenContract extends Contract {
-    static singletonInstande: EosioTokenContract;
-    contractName: NameType = CONTRACT_NAME;
-
-    public static get Instance() {
-        return this.singletonInstande || (this.singletonInstande = new this());
+    constructor(contract: AntelopeContract) {
+        super(contract);
     }
 
-    constructor(contractName: NameType = CONTRACT_NAME) {
-        super(contractName);
-        this.contractName = contractName;
+    static async atAccount(account: NameType = CONTRACT_NAME): Promise<EosioTokenContract> {
+        return new this(await loadContract(account));
     }
 
     static TOTAL_SUPPLY = 50000000000.0;
 
-    async createAction(supply: string): Promise<Action> {
-        return this.action('create', {
-            issuer: this.contractName,
-            maximum_supply: supply,
-        });
-    }
+    actions = {
+        create: (data: { issuer: NameType; maximumSupply: AssetType }, authorization?: ActionOptions) =>
+            this.action('create', { issuer: data.issuer, maximum_supply: data.maximumSupply }, authorization),
+        issue: (data: { to: NameType; quantity: AssetType; memo: string }, authorization?: ActionOptions) =>
+            this.action('issue', data, authorization),
+        transfer: (
+            data: { from: NameType; to: NameType; quantity: AssetType; memo: string },
+            authorization?: ActionOptions
+        ) => this.action('transfer', data, authorization),
+    };
 
-    async create(supply: string, signer: Signer): Promise<API.v1.PushTransactionResponse> {
-        const actions = [await this.createAction(supply)];
+    async create(issuer: NameType, maximumSupply: AssetType, signer: Signer): Promise<API.v1.PushTransactionResponse> {
+        const actions = [await this.actions.create({ issuer, maximumSupply })];
 
         return await transact(Name.from(this.contractName), actions, signer);
     }
 
-    async issueAction(to: NameType, quantity: string): Promise<Action> {
-        return this.action('issue', {
-            to,
-            quantity,
-            memo: 'issued',
-        });
-    }
-
-    async issue(to: NameType, quantity: string, signer: Signer): Promise<API.v1.PushTransactionResponse> {
-        const actions = [await this.issueAction(to, quantity)];
+    async issue(
+        to: NameType,
+        quantity: AssetType,
+        memo: string,
+        signer: Signer
+    ): Promise<API.v1.PushTransactionResponse> {
+        const actions = [await this.actions.issue({ to, quantity, memo })];
 
         return await transact(Name.from(this.contractName), actions, signer);
     }
@@ -95,25 +93,22 @@ export class EosioTokenContract extends Contract {
     async transfer(
         from: NameType,
         to: NameType,
-        quantity: string,
+        quantity: AssetType,
         memo: string,
         signer: Signer
     ): Promise<API.v1.PushTransactionResponse> {
-        const actions = [await this.transferAction(from, to, quantity, memo)];
+        const actions = [await this.actions.transfer({ from, to, quantity, memo })];
 
         return await transact(Name.from(this.contractName), actions, signer);
     }
 
-    async transferAction(from: NameType, to: NameType, quantity: string, memo: string): Promise<Action> {
-        return this.action('transfer', { from, to, quantity, memo }, [
-            { actor: from.toString(), permission: 'active' },
-        ]);
-    }
-
+    /**
+     * @deprecated use getBalanceDecimal instead
+     */
     async getBalance(account: NameType): Promise<number> {
         const assets = await (
             await getApi()
-        ).v1.chain.get_currency_balance(CONTRACT_NAME, account, getSettings().currencySymbol);
+        ).v1.chain.get_currency_balance(this.contractName, account, getSettings().currencySymbol);
 
         if (assets.length === 0) return 0;
 
@@ -123,18 +118,14 @@ export class EosioTokenContract extends Contract {
     async getBalanceDecimal(account: NameType): Promise<Decimal> {
         const assets = await (
             await getApi()
-        ).v1.chain.get_currency_balance(CONTRACT_NAME, account, getSettings().currencySymbol);
+        ).v1.chain.get_currency_balance(this.contractName, account, getSettings().currencySymbol);
 
         if (assets.length === 0) return new Decimal(0);
-        return new Decimal(assets[0].quantity);
+
+        return assetToDecimal(assets[0].toString());
     }
 }
 
-const eosioTokenContract = new EosioTokenContract();
-
-export function createEosioTokenContract(contract: NameType): EosioTokenContract {
-    return new EosioTokenContract(contract);
+export async function loadEosioTokenContract(): Promise<EosioTokenContract> {
+    return await EosioTokenContract.atAccount();
 }
-
-export { EosioTokenContract, eosioTokenContract };
-export default eosioTokenContract;
