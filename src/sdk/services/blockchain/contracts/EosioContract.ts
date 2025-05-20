@@ -1,19 +1,21 @@
 /* eslint-disable camelcase */
-import { ABI, API, Name, NameType, Serializer } from '@wharfkit/antelope';
+import { ABI, API, Name, NameType, Serializer, Action } from '@wharfkit/antelope';
 import { Authority } from '../eosio/authority';
 import { Signer, transact } from '../eosio/transaction';
+import { Contract, activeAuthorization } from './Contract';
 
 const CONTRACT_NAME = 'eosio';
 
-export class EosioContract {
+export class EosioContract extends Contract {
     static singletonInstance: EosioContract;
-    contractName = CONTRACT_NAME;
+    contractName: NameType = CONTRACT_NAME;
 
     public static get Instance() {
         return this.singletonInstance || (this.singletonInstance = new this());
     }
 
-    constructor(contractName = CONTRACT_NAME) {
+    constructor(contractName: NameType = CONTRACT_NAME) {
+        super(contractName);
         this.contractName = contractName;
     }
 
@@ -26,13 +28,12 @@ export class EosioContract {
      * @param signer - Signer to sign the transaction
      * @param [extraAuthorization] - Extra authorization to be added to the transaction
      */
-    async deployContract(
+    async deployContractActions(
         account: Name,
         wasmFileContent: any,
         abiFileContent: any,
-        signer: Signer | Signer[],
         options: { extraAuthorization?: { actor: string; permission: string } } = {}
-    ): Promise<API.v1.PushTransactionResponse> {
+    ): Promise<Action[]> {
         // 1. Prepare SETCODE
         // read the file and make a hex string out of it
         const wasm = wasmFileContent.toString(`hex`);
@@ -43,43 +44,57 @@ export class EosioContract {
         const abiSerializedHex = Serializer.encode({ object: abiDef }).hexString;
 
         // 3. Send transaction with both setcode and setabi actions
-        const setCodeAction = {
-            account: CONTRACT_NAME,
-            name: 'setcode',
-            authorization: [
-                {
-                    actor: account.toString(),
-                    permission: 'active',
-                },
-            ],
-            data: {
+        const contract = await this.getContract();
+        const authorization = [{ actor: account.toString(), permission: 'active' }];
+
+        if (options.extraAuthorization) authorization.push(options.extraAuthorization);
+        const setCodeAction = contract.action(
+            'setcode',
+            {
                 account: account.toString(),
                 vmtype: 0,
                 vmversion: 0,
                 code: wasm,
             },
-        };
+            authorization
+        );
 
         if (options.extraAuthorization) setCodeAction.authorization.push(options.extraAuthorization);
-        const setAbiAction = {
-            account: CONTRACT_NAME,
-            name: 'setabi',
-            authorization: [
-                {
-                    actor: account.toString(),
-                    permission: 'active',
-                },
-            ],
-            data: {
+        const setAbiAction = contract.action(
+            'setabi',
+            {
                 account,
                 abi: abiSerializedHex,
             },
-        };
+            authorization
+        );
 
-        if (options.extraAuthorization) setAbiAction.authorization.push(options.extraAuthorization);
-        const actions = [setCodeAction, setAbiAction];
+        return [setCodeAction, setAbiAction];
+    }
 
-        return await transact(Name.from(CONTRACT_NAME), actions, signer);
+    async deployContract(
+        account: Name,
+        wasmFileContent: any,
+        abiFileContent: any,
+        signer: Signer | Signer[],
+        options: { extraAuthorization?: { actor: string; permission: string } } = {}
+    ): Promise<API.v1.PushTransactionResponse> {
+        const actions = await this.deployContractActions(account, wasmFileContent, abiFileContent, options);
+
+        return await transact(Name.from(this.contractName), actions, signer);
+    }
+
+    async updateauthAction(account: string, permission: string, parent: string, auth: Authority): Promise<Action> {
+        return this.action(
+            'updateauth',
+            {
+                account,
+                permission,
+                parent: permission === 'owner' ? '' : parent,
+                auth,
+            },
+            [{ actor: account, permission: parent }]
+        );
     }
 
     async updateauth(
@@ -89,24 +104,22 @@ export class EosioContract {
         auth: Authority,
         signer: Signer
     ): Promise<API.v1.PushTransactionResponse> {
-        const action = {
-            authorization: [
-                {
-                    actor: account,
-                    permission: parent, // all higher parents, and permission, work as authorization. though permission is supposed to be the authorization that works
-                },
-            ],
-            account: CONTRACT_NAME,
-            name: 'updateauth',
-            data: {
-                account,
-                permission,
-                parent: permission === 'owner' ? '' : parent,
-                auth,
-            },
-        };
+        const action = await this.updateauthAction(account, permission, parent, auth);
 
-        return await transact(Name.from(CONTRACT_NAME), [action], signer);
+        return await transact(Name.from(this.contractName), [action], signer);
+    }
+
+    async newaccountAction(creator: NameType, name: NameType, owner: Authority, active: Authority): Promise<Action> {
+        return this.action(
+            'newaccount',
+            {
+                creator,
+                name,
+                owner,
+                active,
+            },
+            [{ actor: creator.toString(), permission: 'active' }]
+        );
     }
 
     async newaccount(
@@ -116,24 +129,9 @@ export class EosioContract {
         active: Authority,
         signer: Signer
     ): Promise<API.v1.PushTransactionResponse> {
-        const action = {
-            authorization: [
-                {
-                    actor: creator.toString(),
-                    permission: 'active',
-                },
-            ],
-            account: CONTRACT_NAME,
-            name: 'newaccount',
-            data: {
-                creator,
-                name,
-                owner,
-                active,
-            },
-        };
+        const action = await this.newaccountAction(creator, name, owner, active);
 
-        return await transact(Name.from(CONTRACT_NAME), [action], signer);
+        return await transact(Name.from(this.contractName), [action], signer);
     }
 
     /**
@@ -142,6 +140,12 @@ export class EosioContract {
      * @param type - the action to be linked,
      * @param requirement - the permission to be linked.
      */
+    async linkAuthAction(account: string, code: string, type: string, requirement: string): Promise<Action> {
+        return this.action('linkauth', { account, code, type, requirement }, [
+            { actor: account, permission: 'active' },
+        ]);
+    }
+
     async linkAuth(
         account: string,
         code: string,
@@ -149,62 +153,34 @@ export class EosioContract {
         requirement: string,
         signer: Signer
     ): Promise<API.v1.PushTransactionResponse> {
-        const action = {
-            authorization: [
-                {
-                    actor: account,
-                    permission: 'active',
-                },
-            ],
-            account: CONTRACT_NAME,
-            name: 'linkauth',
-            data: {
-                account,
-                code,
-                type,
-                requirement,
-            },
-        };
+        const action = await this.linkAuthAction(account, code, type, requirement);
 
-        return await transact(Name.from(CONTRACT_NAME), [action], signer);
+        return await transact(Name.from(this.contractName), [action], signer);
+    }
+
+    async setPrivAction(account: string, isPriv: number): Promise<Action> {
+        return this.action('setpriv', { account, is_priv: isPriv }, [
+            { actor: this.contractName, permission: 'active' },
+        ]);
     }
 
     async setPriv(account: string, isPriv: number, signer: Signer): Promise<API.v1.PushTransactionResponse> {
-        const action = {
-            authorization: [
-                {
-                    actor: CONTRACT_NAME,
-                    permission: 'active',
-                },
-            ],
-            account: CONTRACT_NAME,
-            name: 'setpriv',
-            data: {
-                account,
-                is_priv: isPriv,
-            },
-        };
+        const action = await this.setPrivAction(account, isPriv);
 
-        return await transact(Name.from(CONTRACT_NAME), [action], signer);
+        return await transact(Name.from(this.contractName), [action], signer);
+    }
+
+    async setParamsAction(blockchainParameters: BlockchainParams = defaultBlockchainParams): Promise<Action> {
+        return this.action('setparams', { params: blockchainParameters });
     }
 
     async setParams(
         blockchainParameters: BlockchainParams = defaultBlockchainParams,
         signer: Signer
     ): Promise<API.v1.PushTransactionResponse> {
-        const action = {
-            authorization: [
-                {
-                    actor: CONTRACT_NAME,
-                    permission: 'active',
-                },
-            ],
-            account: CONTRACT_NAME,
-            name: 'setparams',
-            data: { params: blockchainParameters },
-        };
+        const action = await this.setParamsAction(blockchainParameters);
 
-        return await transact(Name.from(CONTRACT_NAME), [action], signer);
+        return await transact(Name.from(this.contractName), [action], signer);
     }
 }
 
@@ -253,3 +229,12 @@ export const defaultBlockchainParams: BlockchainParams = {
     max_inline_action_depth: 4,
     max_authority_depth: 6,
 };
+
+const eosioContract = new EosioContract();
+
+export function createEosioContract(contract: NameType): EosioContract {
+    return new EosioContract(contract);
+}
+
+export { EosioContract, eosioContract };
+export default eosioContract;

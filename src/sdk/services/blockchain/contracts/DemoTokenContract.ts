@@ -1,25 +1,31 @@
 /* eslint-disable camelcase */
-import { API, Name, NameType } from '@wharfkit/antelope';
+import { API, Name, NameType, Action } from '@wharfkit/antelope';
 import { Signer, transact } from '../eosio/transaction';
 import { getApi } from '../eosio/eosio';
 import { AccountType, TonomyUsername, getSettings } from '../../../util';
 import { TonomyContract } from './TonomyContract';
+import { Contract } from './Contract';
 
 const tonomyContract = TonomyContract.Instance;
 
-class DemoTokenContract {
+export class DemoTokenContract extends Contract {
     static singletonInstande: DemoTokenContract;
-    contractName: string;
+    contractName?: NameType;
 
     public static get Instance() {
         return this.singletonInstande || (this.singletonInstande = new this());
     }
 
-    static atAccount(account: Name): DemoTokenContract {
-        const instance = new this();
+    constructor(contractName?: NameType) {
+        super(contractName);
 
-        instance.contractName = account.toString();
-        return instance;
+        if (contractName) {
+            this.contractName = contractName;
+        }
+    }
+
+    static atAccount(account: NameType): DemoTokenContract {
+        return new DemoTokenContract(account);
     }
 
     async getContractName(): Promise<string> {
@@ -27,75 +33,51 @@ class DemoTokenContract {
             const username = TonomyUsername.fromUsername('demo', AccountType.APP, getSettings().accountSuffix);
             const app = await tonomyContract.getApp(username);
 
-            this.contractName = app.account_name.toString();
+            this.contractName = app.account_name;
         }
 
-        return this.contractName;
+        return this.contractName.toString();
+    }
+
+    async createAction(supply: string): Promise<Action> {
+        return this.action('create', {
+            issuer: this.contractName,
+            maximum_supply: supply,
+        });
     }
 
     async create(supply: string, signer: Signer): Promise<API.v1.PushTransactionResponse> {
-        const actions = [
-            {
-                account: await this.getContractName(),
-                name: 'create',
-                authorization: [
-                    {
-                        actor: await this.getContractName(),
-                        permission: 'active',
-                    },
-                ],
-                data: {
-                    issuer: await this.getContractName(),
-                    maximum_supply: supply,
-                },
-            },
-        ];
+        const actions = [await this.createAction(supply)];
 
-        return await transact(Name.from(await this.getContractName()), actions, signer);
+        return await transact(Name.from(this.contractName), actions, signer);
+    }
+
+    async issueAction(quantity: string): Promise<Action> {
+        return this.action('issue', {
+            to: this.contractName,
+            quantity,
+            memo: 'issued',
+        });
     }
 
     async issue(quantity: string, signer: Signer): Promise<API.v1.PushTransactionResponse> {
-        const actions = [
-            {
-                account: await this.getContractName(),
-                name: 'issue',
-                authorization: [
-                    {
-                        actor: await this.getContractName(),
-                        permission: 'active',
-                    },
-                ],
-                data: {
-                    to: await this.getContractName(),
-                    quantity,
-                    memo: 'issued',
-                },
-            },
-        ];
+        const actions = [await this.issueAction(quantity)];
 
-        return await transact(Name.from(await this.getContractName()), actions, signer);
+        return await transact(Name.from(this.contractName), actions, signer);
     }
 
-    async selfIssue(to: Name, quantity: string, signer: Signer): Promise<API.v1.PushTransactionResponse> {
-        const actions = [
-            {
-                account: await this.getContractName(),
-                name: 'issue',
-                authorization: [
-                    {
-                        actor: await this.getContractName(),
-                        permission: 'active',
-                    },
-                ],
-                data: {
-                    to,
-                    quantity,
-                    memo: 'self issued',
-                },
-            },
-        ];
+    async selfIssueAction(to: NameType, quantity: string): Promise<Action> {
+        return this.action('selfissue', {
+            to,
+            quantity,
+            memo: 'self issued',
+        });
+    }
 
-        return await transact(Name.from(await this.getContractName()), actions, signer);
+    async selfIssue(to: NameType, quantity: string, signer: Signer): Promise<API.v1.PushTransactionResponse> {
+        const actions = [await this.selfIssueAction(to, quantity)];
+
+        return await transact(Name.from(this.contractName), actions, signer);
     }
 
     async getBalance(account: NameType): Promise<number> {
@@ -109,4 +91,11 @@ class DemoTokenContract {
     }
 }
 
-export { DemoTokenContract };
+const demoTokenContract = new DemoTokenContract();
+
+export function createDemoTokenContract(contract: NameType): DemoTokenContract {
+    return new DemoTokenContract(contract);
+}
+
+export { DemoTokenContract, demoTokenContract };
+export default demoTokenContract;

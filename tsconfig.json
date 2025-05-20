@@ -29,7 +29,10 @@
         "esModuleInterop": true,
         "skipLibCheck": true,
         "forceConsistentCasingInFileNames": true,
-        "strictPropertyInitialization": false
+        "strictPropertyInitialization": false,
+        "paths": {
+            "@wharfkit/contract": ["./src/shims/wharfkit-contract"]
+        }
     },
     "exclude": [
         "node_modules",

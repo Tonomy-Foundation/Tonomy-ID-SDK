@@ -7,21 +7,24 @@ import {
     NameType,
     PermissionLevelType,
     Transaction,
+    Action,
 } from '@wharfkit/antelope';
-import { ActionData, Signer, transact } from '../eosio/transaction';
-import { getApi, serializeActionData } from '../eosio/eosio';
+import { Signer, transact } from '../eosio/transaction';
+import { Contract } from './Contract';
+import { getApi } from '../eosio/eosio';
 
 const CONTRACT_NAME = 'eosio.msig';
 
-export class EosioMsigContract {
+export class EosioMsigContract extends Contract {
     static singletonInstance: EosioMsigContract;
-    contractName = CONTRACT_NAME;
+    contractName: NameType = CONTRACT_NAME;
 
     public static get Instance() {
         return this.singletonInstance || (this.singletonInstance = new this());
     }
 
-    constructor(contractName = CONTRACT_NAME) {
+    constructor(contractName: NameType = CONTRACT_NAME) {
+        super(contractName);
         this.contractName = contractName;
     }
 
@@ -29,21 +32,10 @@ export class EosioMsigContract {
         proposer: NameType,
         proposalName: NameType,
         requested: PermissionLevelType[],
-        actions: ActionData[],
+        actions: Action[],
         signer: Signer
     ): Promise<{ transaction: API.v1.PushTransactionResponse; proposalHash: Checksum256 }> {
-        // Serialize the actions
-        const serializedActions = await Promise.all(
-            actions.map(async (action) => {
-                if (!action.account || !action.name) throw new Error('Invalid action');
-                return {
-                    account: action.account,
-                    name: action.name,
-                    authorization: action.authorization,
-                    data: await serializeActionData(action.account, action.name, action.data),
-                };
-            })
-        );
+        const serializedActions = actions;
 
         // Determine expiration
         const now = new Date();
@@ -174,3 +166,12 @@ export class EosioMsigContract {
         return await transact(Name.from(CONTRACT_NAME), actions, signer);
     }
 }
+
+const eosioMsigContract = new EosioMsigContract();
+
+export function createEosioMsigContract(contract: NameType): EosioMsigContract {
+    return new EosioMsigContract(contract);
+}
+
+export { EosioMsigContract, eosioMsigContract };
+export default eosioMsigContract;
