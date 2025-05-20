@@ -1,89 +1,70 @@
-/* eslint-disable camelcase */
-import { API, Name, NameType, Action } from '@wharfkit/antelope';
+import { API, Name, NameType, AssetType } from '@wharfkit/antelope';
 import { Signer, transact } from '../eosio/transaction';
 import { getApi } from '../eosio/eosio';
 import { AccountType, TonomyUsername, getSettings } from '../../../util';
+import { Contract, loadContract } from './Contract';
+import { ActionOptions, Contract as AntelopeContract } from '@wharfkit/contract';
 import { TonomyContract } from './TonomyContract';
-import { Contract } from './Contract';
-
-const tonomyContract = TonomyContract.Instance;
 
 export class DemoTokenContract extends Contract {
-    static singletonInstande: DemoTokenContract;
-    contractName?: NameType;
-
-    public static get Instance() {
-        return this.singletonInstande || (this.singletonInstande = new this());
+    constructor(contract: AntelopeContract) {
+        super(contract);
     }
 
-    constructor(contractName?: NameType) {
-        super(contractName);
-
-        if (contractName) {
-            this.contractName = contractName;
-        }
+    static async atAccount(account?: NameType): Promise<DemoTokenContract> {
+        return new this(await loadContract(await this.getContractName(account)));
     }
 
-    static atAccount(account: NameType): DemoTokenContract {
-        return new DemoTokenContract(account);
+    static async getContractName(account?: NameType): Promise<NameType> {
+        if (account) return account;
+
+        const username = TonomyUsername.fromUsername('demo', AccountType.APP, getSettings().accountSuffix);
+        const app = await TonomyContract.Instance.getApp(username);
+
+        return Name.from(app.account_name);
     }
 
-    async getContractName(): Promise<string> {
-        if (!this.contractName) {
-            const username = TonomyUsername.fromUsername('demo', AccountType.APP, getSettings().accountSuffix);
-            const app = await tonomyContract.getApp(username);
+    actions = {
+        create: (data: { supply: AssetType }, authorization?: ActionOptions) =>
+            this.action('create', data, authorization),
+        issue: (data: { to: NameType; quantity: AssetType; memo: string }, authorization?: ActionOptions) =>
+            this.action('issue', data, authorization),
+        selfIssue: (data: { to: NameType; quantity: AssetType; memo: string }, authorization?: ActionOptions) =>
+            this.action('selfissue', data, authorization),
+    };
 
-            this.contractName = app.account_name;
-        }
+    async create(supply: AssetType, signer: Signer): Promise<API.v1.PushTransactionResponse> {
+        const actions = [this.actions.create({ supply })];
 
-        return this.contractName.toString();
+        return await transact(this.contractName, actions, signer);
     }
 
-    async createAction(supply: string): Promise<Action> {
-        return this.action('create', {
-            issuer: this.contractName,
-            maximum_supply: supply,
-        });
+    async issue(
+        to: NameType,
+        quantity: AssetType,
+        memo: string,
+        signer: Signer
+    ): Promise<API.v1.PushTransactionResponse> {
+        const actions = [this.actions.issue({ to, quantity, memo })];
+
+        return await transact(this.contractName, actions, signer);
     }
 
-    async create(supply: string, signer: Signer): Promise<API.v1.PushTransactionResponse> {
-        const actions = [await this.createAction(supply)];
+    async selfIssue(
+        to: NameType,
+        quantity: AssetType,
+        memo: string,
+        signer: Signer
+    ): Promise<API.v1.PushTransactionResponse> {
+        const actions = [this.actions.selfIssue({ to, quantity, memo })];
 
-        return await transact(Name.from(this.contractName), actions, signer);
-    }
-
-    async issueAction(quantity: string): Promise<Action> {
-        return this.action('issue', {
-            to: this.contractName,
-            quantity,
-            memo: 'issued',
-        });
-    }
-
-    async issue(quantity: string, signer: Signer): Promise<API.v1.PushTransactionResponse> {
-        const actions = [await this.issueAction(quantity)];
-
-        return await transact(Name.from(this.contractName), actions, signer);
-    }
-
-    async selfIssueAction(to: NameType, quantity: string): Promise<Action> {
-        return this.action('selfissue', {
-            to,
-            quantity,
-            memo: 'self issued',
-        });
-    }
-
-    async selfIssue(to: NameType, quantity: string, signer: Signer): Promise<API.v1.PushTransactionResponse> {
-        const actions = [await this.selfIssueAction(to, quantity)];
-
-        return await transact(Name.from(this.contractName), actions, signer);
+        return await transact(this.contractName, actions, signer);
     }
 
     async getBalance(account: NameType): Promise<number> {
         const assets = await (
             await getApi()
-        ).v1.chain.get_currency_balance(await this.getContractName(), account, getSettings().currencySymbol);
+        ).v1.chain.get_currency_balance(await this.contractName, account, getSettings().currencySymbol);
 
         if (assets.length === 0) return 0;
 
@@ -91,11 +72,6 @@ export class DemoTokenContract extends Contract {
     }
 }
 
-const demoTokenContract = new DemoTokenContract();
-
-export function createDemoTokenContract(contract: NameType): DemoTokenContract {
-    return new DemoTokenContract(contract);
+export default async function loadDemoTokenContract(): Promise<DemoTokenContract> {
+    return await DemoTokenContract.atAccount();
 }
-
-export { DemoTokenContract, demoTokenContract };
-export default demoTokenContract;

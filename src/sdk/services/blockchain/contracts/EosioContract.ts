@@ -2,7 +2,7 @@
 import { ABI, API, Name, NameType, Serializer, Action } from '@wharfkit/antelope';
 import { Authority } from '../eosio/authority';
 import { Signer, transact } from '../eosio/transaction';
-import { Contract, activeAuthorization } from './Contract';
+import { Contract, activePermissionLevel } from './Contract';
 
 const CONTRACT_NAME = 'eosio';
 

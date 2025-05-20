@@ -1,14 +1,23 @@
 import { Name, NameType, PermissionLevel, PermissionLevelType, Action } from '@wharfkit/antelope';
-import { ContractKit, Contract as AntelopeContract } from '@wharfkit/contract';
+import { ContractKit, Contract as AntelopeContract, ActionOptions } from '@wharfkit/contract';
 import { getApi } from '../eosio/eosio';
+import { MapObject } from '../../../util';
 
 export function activePermissionLevel(account: NameType): PermissionLevelType {
     return PermissionLevel.from({ actor: account, permission: 'active' });
 }
 
-const kitPromise = getApi().then((api) => new ContractKit({ client: api }));
+export async function loadContract(account: NameType): Promise<AntelopeContract> {
+    const kit = new ContractKit({ client: await getApi() });
 
-export class Contract {
+    return await kit.load(account);
+}
+
+export type ActionGetters = {
+    [key: string]: (data: any, authorization?: ActionOptions) => Action;
+};
+
+export abstract class Contract {
     contractName: Name;
     contract: AntelopeContract;
 
@@ -17,17 +26,13 @@ export class Contract {
         this.contractName = contract.account;
     }
 
-    static async atContract(account: NameType): Promise<Contract> {
-        const contract = await (await kitPromise).load(account);
-
-        return new this(contract);
-    }
-
-    protected async action(
+    protected action(
         name: NameType,
-        data: object,
-        authorization = { authorization: [activePermissionLevel(this.contractName)] }
-    ): Promise<Action> {
-        return this.contract.action(name.toString(), data, authorization);
+        data: MapObject,
+        authorization: ActionOptions = { authorization: [activePermissionLevel(this.contractName)] }
+    ): Action {
+        return this.contract.action(name, data, authorization);
     }
+
+    actions: ActionGetters;
 }

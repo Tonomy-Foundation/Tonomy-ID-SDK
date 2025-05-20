@@ -12,12 +12,9 @@ import { KeyManager, KeyManagerLevel } from '../../../storage/keymanager';
 import { HttpError } from '../../../util/errors';
 import { getApi } from './eosio';
 import Debug from 'debug';
+import { MapObject } from '../../../util';
 
 const debug = Debug('tonomy-sdk:services:blockchain:eosio:transaction');
-
-interface MapObject {
-    [key: string]: any;
-}
 
 /**
  * Action data for a transaction
@@ -136,7 +133,7 @@ export class AntelopePushTransactionError extends Error {
 
 async function transact(
     contract: Name,
-    actions: ActionData[],
+    actions: Action[],
     signer: Signer | Signer[]
 ): Promise<API.v1.PushTransactionResponse> {
     // Get the ABI
