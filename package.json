@@ -54,6 +54,7 @@
     "@veramo/key-manager": "^6.0.0",
     "@veramo/kms-local": "^6.0.0",
     "@wharfkit/antelope": "^1.0.7",
+    "@wharfkit/contract": "^1.1.1",
     "argon2": "^0.40.3",
     "cross-fetch": "^4.0.0",
     "csv-parse": "^5.5.6",
