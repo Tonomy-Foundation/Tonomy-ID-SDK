@@ -65,12 +65,19 @@ export class EosioTokenContract extends Contract {
     actions = {
         create: (data: { issuer: NameType; maximumSupply: AssetType }, authorization?: ActionOptions) =>
             this.action('create', { issuer: data.issuer, maximum_supply: data.maximumSupply }, authorization),
-        issue: (data: { to: NameType; quantity: AssetType; memo: string }, authorization?: ActionOptions) =>
-            this.action('issue', data, authorization),
+        issue: (data: { to: NameType; quantity: AssetType; memo?: string }, authorization?: ActionOptions) => {
+            if (!authorization) authorization = { authorization: [{ actor: data.to, permission: 'active' }] };
+            if (!data.memo) data.memo = '';
+            return this.action('issue', data, authorization);
+        },
         transfer: (
-            data: { from: NameType; to: NameType; quantity: AssetType; memo: string },
+            data: { from: NameType; to: NameType; quantity: AssetType; memo?: string },
             authorization?: ActionOptions
-        ) => this.action('transfer', data, authorization),
+        ) => {
+            if (!authorization) authorization = { authorization: [{ actor: data.from, permission: 'active' }] };
+            if (!data.memo) data.memo = '';
+            return this.action('transfer', data, authorization);
+        },
     };
 
     async create(issuer: NameType, maximumSupply: AssetType, signer: Signer): Promise<API.v1.PushTransactionResponse> {

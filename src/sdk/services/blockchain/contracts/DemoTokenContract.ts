@@ -27,10 +27,16 @@ export class DemoTokenContract extends Contract {
     actions = {
         create: (data: { supply: AssetType }, authorization?: ActionOptions) =>
             this.action('create', data, authorization),
-        issue: (data: { to: NameType; quantity: AssetType; memo: string }, authorization?: ActionOptions) =>
-            this.action('issue', data, authorization),
-        selfIssue: (data: { to: NameType; quantity: AssetType; memo: string }, authorization?: ActionOptions) =>
-            this.action('selfissue', data, authorization),
+        issue: (data: { issuer: NameType; quantity: AssetType; memo?: string }, authorization?: ActionOptions) => {
+            if (!authorization) authorization = { authorization: [{ actor: data.issuer, permission: 'active' }] };
+            if (!data.memo) data.memo = '';
+            return this.action('issue', data, authorization);
+        },
+        selfIssue: (data: { to: NameType; quantity: AssetType; memo?: string }, authorization?: ActionOptions) => {
+            if (!authorization) authorization = { authorization: [{ actor: data.to, permission: 'active' }] };
+            if (!data.memo) data.memo = '';
+            return this.action('selfissue', data, authorization);
+        },
     };
 
     async create(supply: AssetType, signer: Signer): Promise<API.v1.PushTransactionResponse> {
