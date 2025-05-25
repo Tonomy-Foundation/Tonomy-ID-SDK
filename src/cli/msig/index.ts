@@ -1,6 +1,6 @@
-import { PrivateKey, Name, Checksum256, NameType } from '@wharfkit/antelope';
+import { PrivateKey, Name, Checksum256, NameType, Action } from '@wharfkit/antelope';
 import { EosioMsigContract } from '../../sdk';
-import { ActionData, createSigner } from '../../sdk/services/blockchain';
+import { createSigner } from '../../sdk/services/blockchain';
 import settings from '../settings';
 import { govMigrate } from './govMigrate';
 import { newAccount } from './newAccount';
@@ -253,7 +253,7 @@ type PermissionLevelType = {
 export async function createProposal(
     proposer: string,
     proposalName: Name,
-    actions: ActionData[],
+    actions: Action[],
     privateKey: PrivateKey,
     requested: (string | PermissionLevelType)[],
     dryRun?: boolean

@@ -43,6 +43,7 @@ export abstract class Contract {
      * This should be overridden by subclasses to return the contract instance for a specific account.
      */
     // static async atAccount(account: NameType): Promise<Contract>;
+    // static fromAbi(abi: any, account: NameType): Contract;
 
     protected action(
         name: NameType,

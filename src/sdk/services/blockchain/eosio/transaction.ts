@@ -131,28 +131,16 @@ export class AntelopePushTransactionError extends Error {
     }
 }
 
-async function transact(
-    contract: Name,
-    actions: Action[],
-    signer: Signer | Signer[]
-): Promise<API.v1.PushTransactionResponse> {
+async function transact(actions: Action[], signer: Signer | Signer[]): Promise<API.v1.PushTransactionResponse> {
     // Get the ABI
     const api = await getApi();
-    const abi = await api.v1.chain.get_abi(contract);
-
-    // Create the action data
-    const actionData: Action[] = [];
-
-    actions.forEach((data) => {
-        actionData.push(Action.from({ account: contract, ...data }, abi.abi));
-    });
 
     // Construct the transaction
     const info = await api.v1.chain.get_info();
     const header = info.getTransactionHeader();
     const transaction = Transaction.from({
         ...header,
-        actions: actionData,
+        actions,
     });
 
     // Create signature
@@ -175,7 +163,7 @@ async function transact(
 
         if (e.response?.headers) {
             if (e.response?.json) {
-                throw new AntelopePushTransactionError({ ...e.response.json, contract, actions });
+                throw new AntelopePushTransactionError({ ...e.response.json, actions });
             }
 
             throw new HttpError(e);

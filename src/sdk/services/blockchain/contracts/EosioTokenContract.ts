@@ -56,15 +56,11 @@ export function amountToSupplyPercentage(amount: Decimal): string {
 export class EosioTokenContract extends Contract {
     static TOTAL_SUPPLY = 50000000000.0;
 
-    constructor(contract: AntelopeContract, reload = false) {
-        super(contract, reload);
-    }
-
     static async atAccount(account: NameType = CONTRACT_NAME): Promise<EosioTokenContract> {
-        return new EosioTokenContract(await loadContract(account));
+        return new this(await loadContract(account));
     }
 
-    static fromAbi(abi: string, account: NameType = CONTRACT_NAME): EosioTokenContract {
+    static fromAbi(abi: any, account: NameType = CONTRACT_NAME): EosioTokenContract {
         const contract = new AntelopeContract({ abi, client: getApi(), account });
 
         return new this(contract, false);
@@ -74,19 +70,14 @@ export class EosioTokenContract extends Contract {
     actions = {
         create: (data: { issuer: NameType; maximumSupply: AssetType }, authorization?: ActionOptions) =>
             this.action('create', { issuer: data.issuer, maximum_supply: data.maximumSupply }, authorization),
-        issue: (data: { to: NameType; quantity: AssetType; memo?: string }, authorization?: ActionOptions) => {
-            if (!authorization) authorization = activeAuthority(data.to);
-            if (!data.memo) data.memo = '';
-            return this.action('issue', data, authorization);
-        },
-        transfer: (
-            data: { from: NameType; to: NameType; quantity: AssetType; memo?: string },
+        issue: (
+            { to, quantity, memo = '' }: { to: NameType; quantity: AssetType; memo: string },
             authorization?: ActionOptions
-        ) => {
-            if (!authorization) authorization = activeAuthority(data.from);
-            if (!data.memo) data.memo = '';
-            return this.action('transfer', data, authorization);
-        },
+        ) => this.action('issue', { to, quantity, memo }, authorization),
+        transfer: (
+            { from, to, quantity, memo = '' }: { from: NameType; to: NameType; quantity: AssetType; memo?: string },
+            authorization: ActionOptions = activeAuthority(from)
+        ) => this.action('transfer', { from, to, quantity, memo }, authorization),
     };
 
     async create(issuer: NameType, maximumSupply: AssetType, signer: Signer): Promise<API.v1.PushTransactionResponse> {
@@ -143,3 +134,7 @@ export class EosioTokenContract extends Contract {
 }
 
 export const tokenContract = EosioTokenContract.fromAbi(abi);
+
+export default async function loadTokenContract(): Promise<EosioTokenContract> {
+    return await EosioTokenContract.atAccount();
+}

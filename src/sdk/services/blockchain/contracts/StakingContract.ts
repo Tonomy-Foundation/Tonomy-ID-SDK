@@ -1,16 +1,18 @@
 /* eslint-disable camelcase */
-import { API, Name, NameType } from '@wharfkit/antelope';
+import { API, Name, NameType, AssetType, Action } from '@wharfkit/antelope';
 import { Signer, transact } from '../eosio/transaction';
 import { getAccount, getApi } from '../eosio/eosio';
+import { Contract, loadContract } from './Contract';
+import { Contract as AntelopeContract, ActionOptions } from '@wharfkit/contract';
 import { TonomyContract } from './TonomyContract';
-import { Authority } from '../eosio/authority';
+import { Authority, activeAuthority } from '../eosio/authority';
 import Debug from 'debug';
 import { addSeconds, getSettings, SdkErrors, SECONDS_IN_DAY, throwError } from '../../../util';
+import abi from '../../../../../Tonomy-Contracts/contracts/staking/staking.abi.json';
 import { amountToAsset, assetToAmount, EosioTokenContract } from './EosioTokenContract';
 
 const debug = Debug('tonomy-sdk:services:blockchain:contracts:staking');
-const tonomyContract = TonomyContract.Instance;
-const CONTRACT_NAME = 'staking.tmy';
+const CONTRACT_NAME: NameType = 'staking.tmy';
 
 export interface StakingAllocationData {
     id: number;
@@ -75,71 +77,88 @@ export interface StakingAccountState extends StakingAccount {
     settings: StakingSettings;
 }
 
-export class StakingContract {
-    static singletonInstance: StakingContract;
-    contractName = CONTRACT_NAME;
+export class StakingContract extends Contract {
+    static isTestEnv = () => ['test', 'staging'].includes(getSettings().environment);
 
-    static getLockedDays = () =>
-        getSettings().environment === 'test' || getSettings().environment === 'staging' ? 10 / SECONDS_IN_DAY : 14; // 14 days or 10 seconds
-    static getReleaseDays = () =>
-        getSettings().environment === 'test' || getSettings().environment === 'staging' ? 5 / SECONDS_IN_DAY : 5; // 5 days or 5 seconds
-    static getMinimumTransfer = () =>
-        getSettings().environment === 'test' || getSettings().environment === 'staging' ? 1 : 1000; // 1000 TONO or 1 TONO
-    static getMaxAllocations = () =>
-        getSettings().environment === 'test' || getSettings().environment === 'staging' ? 5 : 20; // 100 allocations or 5 allocations
-    static getStakingCycleHours = () =>
-        getSettings().environment === 'test' || getSettings().environment === 'staging' ? 1 / 60 : 24; // 24 hours or 1 minute
+    static getLockedDays: () => number = () => (this.isTestEnv() ? 10 / SECONDS_IN_DAY : 14); // 14 days or 10 seconds
+    static getReleaseDays: () => number = () => (this.isTestEnv() ? 5 / SECONDS_IN_DAY : 5); // 5 days or 5 seconds
+    static getMinimumTransfer: () => number = () => (this.isTestEnv() ? 1 : 1000); // 1000 TONO or 1 TONO
+    static getMaxAllocations: () => number = () => (this.isTestEnv() ? 5 : 20); // 100 allocations or 5 allocations
+    static getStakingCycleHours: () => number = () => (this.isTestEnv() ? 1 / 60 : 24); // 24 hours or 1 minute
     static MAX_APY = 1.0;
-    static STAKING_APY_TARGET = 50 / 100; // 50%
-    // Use the TGE unlock: https://docs.google.com/spreadsheets/d/1uyvpgXC0th3Z1_bz4m18dJKy2yyVfYFmcaEyS9fveeA/edit?gid=1074294213#gid=1074294213&range=Q34
-    static STAKING_ESTIMATED_STAKED_PERCENT = 15.1 / 100; // 15.1%
+    static STAKING_APY_TARGET = 0.5;
+    static STAKING_ESTIMATED_STAKED_PERCENT = 0.151;
     static yearlyStakePool =
         StakingContract.STAKING_APY_TARGET *
         StakingContract.STAKING_ESTIMATED_STAKED_PERCENT *
         EosioTokenContract.TOTAL_SUPPLY;
 
-    public static get Instance() {
-        return this.singletonInstance || (this.singletonInstance = new this());
+    static async fromAbi(abi: any, account: NameType = CONTRACT_NAME): Promise<StakingContract> {
+        const contract = new AntelopeContract({ abi, client: getApi(), account });
+
+        return new this(contract, true);
     }
 
-    constructor(contractName = CONTRACT_NAME) {
-        this.contractName = contractName;
+    static async atAccount(account: NameType = CONTRACT_NAME): Promise<StakingContract> {
+        return new this(await loadContract(account));
     }
 
-    async stakeTokens(staker: NameType, quantity: string, signer: Signer): Promise<API.v1.PushTransactionResponse> {
-        const account = await getAccount(staker.toString());
-        const activePermission = account.getPermission('active');
+    actions = {
+        stakeTokens: (
+            data: { accountName: NameType; quantity: AssetType },
+            authorization: ActionOptions = activeAuthority(data.accountName)
+        ): Action =>
+            this.action('staketokens', { account_name: data.accountName, quantity: data.quantity }, authorization),
+        requestUnstake: (
+            data: { accountName: NameType; allocationId: number },
+            authorization: ActionOptions = activeAuthority(data.accountName)
+        ): Action =>
+            this.action(
+                'requnstake',
+                { account_name: data.accountName, allocation_id: data.allocationId },
+                authorization
+            ),
+        releaseToken: (
+            data: { accountName: NameType; allocationId: number },
+            authorization: ActionOptions = activeAuthority(data.accountName)
+        ): Action =>
+            this.action(
+                'releasetoken',
+                { account_name: data.accountName, allocation_id: data.allocationId },
+                authorization
+            ),
+        cron: (authorization?: ActionOptions): Action => this.action('cron', {}, authorization),
+        resetAll: (authorization?: ActionOptions): Action => this.action('resetall', {}, authorization),
+        addYield: (
+            data: { sender: NameType; quantity: AssetType },
+            authorization: ActionOptions = activeAuthority(data.sender)
+        ): Action => this.action('addyield', data, authorization),
+        setSettings: (data: { yearlyStakePool: string }, authorization?: ActionOptions): Action =>
+            this.action('setsettings', { yearly_stake_pool: data.yearlyStakePool }, authorization),
+    };
 
+    async stakeTokens(staker: NameType, quantity: AssetType, signer: Signer): Promise<API.v1.PushTransactionResponse> {
+        const acct = await getAccount(staker);
+        const activePerm = acct.getPermission('active');
+
+        // Ensure the staker has the eosio.code permission for the staking contract
         if (
-            !activePermission.required_auth.accounts.some(
+            !activePerm.required_auth.accounts.some(
                 (acc) =>
                     acc.permission.actor.toString() === CONTRACT_NAME &&
                     acc.permission.permission.toString() === 'eosio.code'
             )
         ) {
-            const newPermission = Authority.fromAccountPermission(activePermission);
+            const newPerm = Authority.fromAccountPermission(activePerm);
 
-            newPermission.addCodePermission(CONTRACT_NAME);
-            debug('Adding staking.tmy@eosio.code to active permission', JSON.stringify(newPermission, null, 2));
-            await tonomyContract.updateactive(staker.toString(), newPermission, signer);
+            newPerm.addCodePermission(CONTRACT_NAME.toString());
+            debug('Adding staking.tmy@eosio.code to active permission', JSON.stringify(newPerm, null, 2));
+            await TonomyContract.Instance.updateactive(staker.toString(), newPerm, signer);
         }
 
-        const action = {
-            authorization: [
-                {
-                    actor: staker.toString(),
-                    permission: 'active',
-                },
-            ],
-            account: CONTRACT_NAME,
-            name: 'staketokens',
-            data: {
-                account_name: staker.toString(),
-                quantity,
-            },
-        };
+        const action = this.actions.stakeTokens({ accountName: staker, quantity });
 
-        return await transact(Name.from(CONTRACT_NAME), [action], signer);
+        return await transact([action], signer);
     }
 
     async requestUnstake(
@@ -147,22 +166,9 @@ export class StakingContract {
         allocationId: number,
         signer: Signer
     ): Promise<API.v1.PushTransactionResponse> {
-        const action = {
-            authorization: [
-                {
-                    actor: staker.toString(),
-                    permission: 'active',
-                },
-            ],
-            account: CONTRACT_NAME,
-            name: 'requnstake',
-            data: {
-                account_name: staker.toString(),
-                allocation_id: allocationId,
-            },
-        };
+        const action = this.actions.requestUnstake({ accountName: staker, allocationId });
 
-        return await transact(Name.from(CONTRACT_NAME), [action], signer);
+        return await transact([action], signer);
     }
 
     async releaseToken(
@@ -170,105 +176,39 @@ export class StakingContract {
         allocationId: number,
         signer: Signer
     ): Promise<API.v1.PushTransactionResponse> {
-        const action = {
-            authorization: [
-                {
-                    actor: staker.toString(),
-                    permission: 'active',
-                },
-            ],
-            account: CONTRACT_NAME,
-            name: 'releasetoken',
-            data: {
-                account_name: staker.toString(),
-                allocation_id: allocationId,
-            },
-        };
+        const action = this.actions.releaseToken({ accountName: staker, allocationId });
 
-        return await transact(Name.from(CONTRACT_NAME), [action], signer);
+        return await transact([action], signer);
     }
 
     async cron(signer: Signer): Promise<API.v1.PushTransactionResponse> {
-        const action = {
-            authorization: [
-                {
-                    actor: CONTRACT_NAME,
-                    permission: 'active',
-                },
-            ],
-            account: CONTRACT_NAME,
-            name: 'cron',
-            data: {},
-        };
+        const action = this.actions.cron();
 
-        return await transact(Name.from(CONTRACT_NAME), [action], signer);
+        return await transact([action], signer);
     }
 
     async resetAll(signer: Signer): Promise<API.v1.PushTransactionResponse> {
-        const action = {
-            authorization: [
-                {
-                    actor: CONTRACT_NAME,
-                    permission: 'active',
-                },
-            ],
-            account: CONTRACT_NAME,
-            name: 'resetall',
-            data: {},
-        };
+        const action = this.actions.resetAll();
 
-        return await transact(Name.from(CONTRACT_NAME), [action], signer);
+        return await transact([action], signer);
     }
 
-    async addYield(sender: NameType, quantity: string, signer: Signer): Promise<API.v1.PushTransactionResponse> {
-        const action = {
-            authorization: [
-                {
-                    actor: sender.toString(),
-                    permission: 'active',
-                },
-            ],
-            account: CONTRACT_NAME,
-            name: 'addyield',
-            data: {
-                sender: sender.toString(),
-                quantity,
-            },
-        };
+    async addYield(sender: NameType, quantity: AssetType, signer: Signer): Promise<API.v1.PushTransactionResponse> {
+        const action = this.actions.addYield({ sender, quantity });
 
-        return await transact(Name.from(CONTRACT_NAME), [action], signer);
+        return await transact([action], signer);
     }
 
     async setSettings(yearlyStakePool: string, signer: Signer): Promise<API.v1.PushTransactionResponse> {
-        const action = {
-            authorization: [
-                {
-                    actor: CONTRACT_NAME,
-                    permission: 'active',
-                },
-            ],
-            account: CONTRACT_NAME,
-            name: 'setsettings',
-            data: {
-                yearly_stake_pool: yearlyStakePool,
-            },
-        };
+        const action = this.actions.setSettings({ yearlyStakePool });
 
-        return await transact(Name.from(CONTRACT_NAME), [action], signer);
+        return await transact([action], signer);
     }
 
     private async getAllocationsData(staker: NameType): Promise<StakingAllocationData[]> {
-        const res = await (
-            await getApi()
-        ).v1.chain.get_table_rows({
-            code: CONTRACT_NAME,
-            scope: staker.toString(),
-            table: 'stakingalloc',
-            json: true,
-            limit: StakingContract.getMaxAllocations() + 1,
-        });
+        const stakingAllocationsTable = this.contract.table<StakingAllocationData>('stakingalloc', staker);
 
-        return res.rows;
+        return await stakingAllocationsTable.all();
     }
 
     /**
@@ -313,19 +253,11 @@ export class StakingContract {
     }
 
     private async getSettingsData(): Promise<StakingSettingsData> {
-        const res = await (
-            await getApi()
-        ).v1.chain.get_table_rows({
-            code: CONTRACT_NAME,
-            scope: CONTRACT_NAME,
-            table: 'settings',
-            json: true,
-            limit: 1,
-        });
+        const settingsTable = this.contract.table<StakingSettingsData>('settings', this.contractName);
+        const settings = await settingsTable.get();
 
-        if (res.rows.length === 0) throw new Error('Staking settings have not yet been set');
-
-        return res.rows[0];
+        if (!settings) throw new Error('Staking settings have not yet been set');
+        return settings;
     }
 
     /**
@@ -336,38 +268,25 @@ export class StakingContract {
      */
     async getSettings(): Promise<StakingSettings> {
         const settings = await this.getSettingsData();
-        const yearlyStakePoolAmount = assetToAmount(settings.yearly_stake_pool);
-        const totalStakedAmount = assetToAmount(settings.total_staked);
-        const calculatedApy =
-            totalStakedAmount > 0
-                ? Math.min(yearlyStakePoolAmount / totalStakedAmount, StakingContract.MAX_APY)
-                : StakingContract.MAX_APY;
+        const yearly = assetToAmount(settings.yearly_stake_pool);
+        const total = assetToAmount(settings.total_staked);
+        const apy = total > 0 ? Math.min(yearly / total, StakingContract.MAX_APY) : StakingContract.MAX_APY;
 
         return {
             currentYieldPool: settings.current_yield_pool,
             yearlyStakePool: settings.yearly_stake_pool,
             totalStaked: settings.total_staked,
             totalReleasing: settings.total_releasing,
-            apy: calculatedApy,
+            apy,
         };
     }
 
     private async getAccountData(account: NameType): Promise<StakingAccountData> {
-        const res = await (
-            await getApi()
-        ).v1.chain.get_table_rows({
-            code: CONTRACT_NAME,
-            scope: CONTRACT_NAME,
-            table: 'stakingaccou',
-            json: true,
-            lower_bound: Name.from(account),
-            limit: 1,
-        });
+        const accountTable = this.contract.table<StakingAccountData>('stakingaccou', this.contractName);
+        const res = await accountTable.get(account);
 
-        if (res.rows.length === 0 || res.rows[0].staker !== account.toString())
-            throwError('Account not found in staking contract', SdkErrors.AccountNotFound);
-
-        return res.rows[0];
+        if (!res) throwError('Account not found in staking contract', SdkErrors.AccountNotFound);
+        return res;
     }
 
     async getAccount(account: NameType): Promise<StakingAccount> {
@@ -403,7 +322,6 @@ export class StakingContract {
 
         let totalStaked = 0;
         let estimatedMonthlyYield = 0;
-        const totalUnlockable = 0;
         let totalUnlocking = 0;
 
         for (const alloc of allocations) {
@@ -422,7 +340,7 @@ export class StakingContract {
             ...stakingAccount,
             allocations,
             totalStaked,
-            totalUnlockable,
+            totalUnlockable: 0,
             totalUnlocking,
             estimatedMonthlyYield,
             settings,
@@ -432,4 +350,10 @@ export class StakingContract {
     async calculateMonthlyYield(amount: number, settings: StakingSettings): Promise<number> {
         return amount * (Math.pow(1 + settings.apy, 1 / 12) - 1);
     }
+}
+
+export const stakingContract = StakingContract.fromAbi(abi);
+
+export async function loadStakingContract(account: NameType = CONTRACT_NAME): Promise<StakingContract> {
+    return StakingContract.atAccount(account);
 }
