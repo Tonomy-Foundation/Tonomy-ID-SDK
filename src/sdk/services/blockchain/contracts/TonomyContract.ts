@@ -5,7 +5,6 @@ import {
     Checksum256Type,
     Name,
     NameType,
-    PublicKey,
     Action,
     AuthorityType,
     AssetType,
@@ -18,9 +17,6 @@ import { SdkErrors, TonomyUsername, sha256, throwError } from '../../../util';
 import { getAccount, getApi } from '../eosio/eosio';
 import abi from '../../../../../Tonomy-Contracts/contracts/tonomy/tonomy.abi.json';
 import { activeAuthority } from '../eosio/authority';
-import Debug from 'debug';
-
-const debug = Debug('tonomy-sdk:contracts:tonomy');
 
 const CONTRACT_NAME: NameType = 'tonomy';
 
@@ -80,7 +76,7 @@ type PersonDataRaw = {
     version: number;
 };
 
-type PersonData = {
+export type PersonData = {
     accountName: Name;
     status: number;
     usernameHash: Checksum256;

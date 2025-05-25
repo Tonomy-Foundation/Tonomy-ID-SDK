@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { API, NameType, Action, Asset, AssetType } from '@wharfkit/antelope';
+import { API, NameType, Action, AssetType } from '@wharfkit/antelope';
 import { Contract, loadContract } from './Contract';
 import { Contract as AntelopeContract, ActionOptions } from '@wharfkit/contract';
 import { Signer, transact } from '../eosio/transaction';

@@ -1,6 +1,11 @@
 import { Name, API, Checksum256 } from '@wharfkit/antelope';
 import { KeyManagerLevel } from '../storage/keymanager';
-import { GetPersonResponse, TonomyContract } from '../services/blockchain/contracts/TonomyContract';
+import {
+    GetPersonResponse,
+    PersonData,
+    tonomyContract,
+    TonomyContract,
+} from '../services/blockchain/contracts/TonomyContract';
 import { createKeyManagerSigner } from '../services/blockchain/eosio/transaction';
 import { getChainInfo } from '../services/blockchain/eosio/eosio';
 import { SdkErrors, throwError, SdkError } from '../util/errors';
@@ -14,7 +19,6 @@ import { UserCommunication } from './UserCommunication';
 import Debug from 'debug';
 
 const debug = Debug('tonomy-sdk:controllers:user-onboarding');
-const tonomyContract = TonomyContract.Instance;
 
 export class UserOnboarding extends UserCommunication implements IUserOnboarding {
     private chainID!: Checksum256;
@@ -40,25 +44,25 @@ export class UserOnboarding extends UserCommunication implements IUserOnboarding
         return this.storage.did;
     }
 
-    async login(username: TonomyUsername, password: string, options: ILoginOptions): Promise<GetPersonResponse> {
+    async login(username: TonomyUsername, password: string, options: ILoginOptions): Promise<PersonData> {
         this.validateUsername(username.getBaseUsername());
         const { keyManager } = this;
 
         const idData = await tonomyContract.getPerson(username);
-        const salt = idData.password_salt;
+        const salt = idData.passwordSalt;
 
         await this.savePassword(password, { ...options, salt });
         const passwordKey = await keyManager.getKey({
             level: KeyManagerLevel.PASSWORD,
         });
 
-        const accountData = await getAccountInfo(idData.account_name);
+        const accountData = await getAccountInfo(idData.accountName);
         const onchainKey = accountData.getPermission('owner').required_auth.keys[0].key; // TODO: change to active/other permissions when we make the change
 
         if (passwordKey.toString() !== onchainKey.toString())
             throwError('Password is incorrect', SdkErrors.PasswordInvalid);
 
-        this.storage.accountName = Name.from(idData.account_name);
+        this.storage.accountName = idData.accountName;
         this.storage.username = username;
         this.storage.status = UserStatusEnum.LOGGING_IN;
 
@@ -194,7 +198,7 @@ export class UserOnboarding extends UserCommunication implements IUserOnboarding
         const signer = createKeyManagerSigner(keyManager, KeyManagerLevel.PASSWORD, password);
         const accountName = await this.getAccountName();
 
-        await tonomyContract.updatekeysper(accountName.toString(), keys, signer);
+        await tonomyContract.updateKeysPer(accountName, keys, signer);
 
         this.storage.status = UserStatusEnum.READY;
         await this.storage.status;

@@ -1,5 +1,4 @@
 import {
-    Action,
     API,
     Transaction,
     SignedTransaction,
@@ -7,6 +6,7 @@ import {
     Checksum256,
     Name,
     PrivateKey,
+    ActionType,
 } from '@wharfkit/antelope';
 import { KeyManager, KeyManagerLevel } from '../../../storage/keymanager';
 import { HttpError } from '../../../util/errors';
@@ -131,7 +131,7 @@ export class AntelopePushTransactionError extends Error {
     }
 }
 
-async function transact(actions: Action[], signer: Signer | Signer[]): Promise<API.v1.PushTransactionResponse> {
+async function transact(actions: ActionType[], signer: Signer | Signer[]): Promise<API.v1.PushTransactionResponse> {
     // Get the ABI
     const api = await getApi();
 

@@ -8,10 +8,8 @@ import { App } from '../controllers/App';
 import { getAccount } from '../services/blockchain/eosio/eosio';
 import { StorageFactory } from '../storage/storage';
 import { TonomyUsername } from '../util/username';
-import { TonomyContract } from '../services/blockchain';
 import { User } from '../controllers/User';
-
-const tonomyContract = TonomyContract.Instance;
+import { tonomyContract } from '../services/blockchain';
 
 export async function getAccountInfo(account: TonomyUsername | Name): Promise<API.v1.AccountObject> {
     let accountName: Name;
@@ -19,7 +17,7 @@ export async function getAccountInfo(account: TonomyUsername | Name): Promise<AP
     if (account instanceof TonomyUsername) {
         const idData = await tonomyContract.getPerson(account);
 
-        accountName = idData.account_name;
+        accountName = idData.accountName;
     } else {
         accountName = account;
     }
