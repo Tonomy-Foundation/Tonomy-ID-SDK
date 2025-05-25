@@ -310,7 +310,11 @@ export class TonomyContract extends Contract {
         return transact(actions, signer);
     }
 
-    async updateActive(account: string, active: any, signer: Signer): Promise<API.v1.PushTransactionResponse> {
+    async updateActive(
+        account: NameType,
+        active: AuthorityType,
+        signer: Signer
+    ): Promise<API.v1.PushTransactionResponse> {
         const action = this.actions.updateactive({ account, active });
 
         return transact([action], signer);

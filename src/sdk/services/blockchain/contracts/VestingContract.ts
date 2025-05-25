@@ -1,38 +1,79 @@
 /* eslint-disable camelcase */
-import { API, Name, NameType } from '@wharfkit/antelope';
+import { API, NameType, Action, Asset, AssetType } from '@wharfkit/antelope';
+import { Contract, loadContract } from './Contract';
+import { Contract as AntelopeContract, ActionOptions } from '@wharfkit/contract';
 import { Signer, transact } from '../eosio/transaction';
 import { getApi } from '../eosio/eosio';
 import { addMicroseconds, getSettings } from '../../../util';
 import Decimal from 'decimal.js';
 import { assetToAmount, assetToDecimal } from './EosioTokenContract';
+import abi from '../../../../../Tonomy-Contracts/contracts/vesting.tmy/vesting.tmy.abi.json';
+import { activeAuthority } from '../eosio/authority';
 
-const CONTRACT_NAME = 'vesting.tmy';
-
-export interface VestingSettings {
-    sales_start_date: string;
-    launch_date: string;
-}
+const CONTRACT_NAME: NameType = 'vesting.tmy';
 
 export const TONO_SEED_ROUND_PRICE = 0.0001;
 export const TONO_SEED_LATE_ROUND_PRICE = 0.0002;
 export const TONO_PUBLIC_SALE_PRICE = 0.0006;
 export const TONO_CURRENT_PRICE = TONO_SEED_ROUND_PRICE;
 
-export interface VestingAllocation {
-    id: number;
-    cliff_period_claimed: number;
-    holder: string;
-    time_since_sale_start: { _count: number };
-    tokens_claimed: string;
-    tokens_allocated: string;
-    vesting_category_type: number;
-}
-
-const MICROSECONDS_PER_SECOND = 1000000;
-const SECONDS_PER_HOUR = 3600;
+const MICROSECONDS_PER_SECOND = 1_000_000;
+const SECONDS_PER_HOUR = 3_600;
 const MICROSECONDS_PER_DAY = 24 * SECONDS_PER_HOUR * MICROSECONDS_PER_SECOND;
 const MICROSECONDS_PER_MONTH = 30 * MICROSECONDS_PER_DAY;
 const MICROSECONDS_PER_YEAR = 365 * MICROSECONDS_PER_DAY;
+
+// TODO: update assets to use Asset class instead
+
+export interface VestingAllocationRaw {
+    id: number;
+    holder: NameType;
+    time_since_sale_start: { _count: number };
+    tokens_claimed: string; // Asset
+    tokens_allocated: string; // Asset
+    vesting_category_type: number;
+}
+
+export interface VestingAllocation {
+    id: number;
+    holder: NameType;
+    timeSinceSaleStart: number; // microseconds
+    tokensClaimed: string; // Asset
+    tokensAllocated: string; // Asset
+    vestingCategoryType: number;
+}
+
+export interface VestingAllocationDetails {
+    totalAllocation: string; // Asset
+    unlockable: string; // Asset
+    unlocked: string; // Asset
+    locked: string; // Asset
+    vestingStart: Date;
+    allocationDate: Date;
+    vestingPeriod: number; // in microseconds
+    unlockAtVestingStart: number; // percentage (0.0 to 1.0)
+    categoryId: number;
+}
+
+interface VestingAllocationsParsed {
+    totalAllocation: number;
+    unlockable: number;
+    unlocked: number;
+    locked: number;
+    vestingStart: Date;
+    allocationDate: Date;
+    vestingPeriod: string;
+    unlockAtVestingStart: number;
+    categoryId: number;
+}
+export interface VestingSettingsRaw {
+    sales_start_date: string;
+    launch_date: string;
+}
+export interface VestingSettings {
+    salesStartDate: Date;
+    launchDate: Date;
+}
 
 export const vestingCategories: Map<
     number,
@@ -202,254 +243,222 @@ export const vestingCategories: Map<
     ],
 ]);
 
-export class VestingContract {
-    static singletonInstance: VestingContract;
-    contractName = CONTRACT_NAME;
+export class VestingContract extends Contract {
+    static isTestEnv = () => ['test', 'staging'].includes(getSettings().environment);
 
-    public static get Instance() {
-        return this.singletonInstance || (this.singletonInstance = new this());
+    static async atAccount(account: NameType = CONTRACT_NAME): Promise<VestingContract> {
+        return new this(await loadContract(account));
     }
-    static getMaxAllocations = () =>
-        getSettings().environment === 'test' || getSettings().environment === 'staging' ? 5 : 150;
+
+    static fromAbi(abi: any, account: NameType = CONTRACT_NAME): VestingContract {
+        const contract = new AntelopeContract({ abi, client: getApi(), account });
+
+        return new this(contract, false);
+    }
+
+    static getMaxAllocations(): number {
+        return this.isTestEnv() ? 5 : 150;
+    }
     static SALE_START_DATE = '2024-04-30T12:00:00';
     static VESTING_START_DATE = '2030-01-01T00:00:00';
 
     static calculateVestingPeriod(settings: VestingSettings, allocation: VestingAllocation) {
-        const vestingCategory = vestingCategories.get(allocation.vesting_category_type);
+        const category = vestingCategories.get(allocation.vestingCategoryType);
 
-        if (!vestingCategory) throw new Error('Invalid vesting category');
+        if (!category) throw new Error('Invalid vesting category');
+        const launchDate = settings.launchDate;
+        const vestingStart = addMicroseconds(launchDate, category.startDelay);
+        const cliffEnd = addMicroseconds(vestingStart, category.cliffPeriod);
+        const vestingEnd = addMicroseconds(vestingStart, category.vestingPeriod);
 
-        const launchDate = new Date(settings.launch_date + 'Z');
-        const vestingStart = addMicroseconds(launchDate, vestingCategory.startDelay);
-        const cliffEnd = addMicroseconds(vestingStart, vestingCategory.cliffPeriod);
-        const vestingEnd = addMicroseconds(vestingStart, vestingCategory.vestingPeriod);
-
-        return {
-            launchDate,
-            vestingStart,
-            cliffEnd,
-            vestingEnd,
-        };
+        return { launchDate, vestingStart, cliffEnd, vestingEnd };
     }
 
-    constructor(contractName = CONTRACT_NAME) {
-        this.contractName = contractName;
-    }
+    actions = {
+        setsettings: (data: { salesStartDate: string; launchDate: string }, auth?: ActionOptions): Action =>
+            this.action(
+                'setsettings',
+                {
+                    sales_start_date: data.salesStartDate,
+                    launch_date: data.launchDate,
+                },
+                auth
+            ),
+
+        assigntokens: (
+            data: {
+                sender: NameType;
+                holder: NameType;
+                amount: string;
+                category: number;
+            },
+            auth: ActionOptions = activeAuthority(data.sender)
+        ): Action => this.action('assigntokens', data, auth),
+        withdraw: (data: { holder: NameType }, auth: ActionOptions = activeAuthority(data.holder)): Action =>
+            this.action('withdraw', { holder: data.holder }, auth),
+        migratealloc: (
+            data: {
+                sender: NameType;
+                holder: NameType;
+                allocationId: number;
+                oldAmount: AssetType;
+                newAmount: AssetType;
+                oldCategoryId: number;
+                newCategoryId: number;
+            },
+            auth?: ActionOptions
+        ): Action =>
+            this.action(
+                'migratealloc',
+                {
+                    sender: data.sender,
+                    holder: data.holder,
+                    allocation_id: data.allocationId,
+                    old_amount: data.oldAmount,
+                    new_amount: data.newAmount,
+                    old_category_id: data.oldCategoryId,
+                    new_category_id: data.newCategoryId,
+                },
+                auth
+            ),
+    };
 
     async setSettings(
-        salesDateStr: string,
-        launchDateStr: string,
+        salesStartDate: string,
+        launchDate: string,
         signer: Signer
     ): Promise<API.v1.PushTransactionResponse> {
-        const action = {
-            authorization: [
-                {
-                    actor: CONTRACT_NAME,
-                    permission: 'active',
-                },
-            ],
-            account: CONTRACT_NAME,
-            name: 'setsettings',
-            data: {
-                sales_start_date: salesDateStr,
-                launch_date: launchDateStr,
-            },
-        };
+        const action = this.actions.setsettings({ salesStartDate, launchDate });
 
-        return await transact(Name.from(CONTRACT_NAME), [action], signer);
+        return transact([action], signer);
     }
 
     async assignTokens(
         sender: NameType,
         holder: NameType,
         amount: string,
-        categoryId: number,
+        category: number,
         signer: Signer
     ): Promise<API.v1.PushTransactionResponse> {
-        const action = {
-            authorization: [
-                {
-                    actor: sender.toString(),
-                    permission: 'active',
-                },
-            ],
-            account: CONTRACT_NAME,
-            name: 'assigntokens',
-            data: {
-                sender,
-                holder,
-                amount,
-                category: categoryId,
-            },
-        };
+        const action = this.actions.assigntokens({ sender, holder, amount, category });
 
-        return await transact(Name.from(CONTRACT_NAME), [action], signer);
+        return transact([action], signer);
     }
 
     async withdraw(holder: NameType, signer: Signer): Promise<API.v1.PushTransactionResponse> {
-        const action = {
-            authorization: [
-                {
-                    actor: holder.toString(),
-                    permission: 'active',
-                },
-            ],
-            account: CONTRACT_NAME,
-            name: 'withdraw',
-            data: {
-                holder,
-            },
-        };
+        const action = this.actions.withdraw({ holder });
 
-        return await transact(Name.from(CONTRACT_NAME), [action], signer);
+        return transact([action], signer);
     }
 
     async migrateAllocation(
         sender: NameType,
         holder: NameType,
         allocationId: number,
-        oldAmount: string,
-        newAmount: string,
+        oldAmount: AssetType,
+        newAmount: AssetType,
         oldCategoryId: number,
         newCategoryId: number,
         signer: Signer
     ): Promise<API.v1.PushTransactionResponse> {
-        const action = {
-            authorization: [
-                {
-                    actor: sender.toString(),
-                    permission: 'active',
-                },
-                {
-                    actor: CONTRACT_NAME,
-                    permission: 'active',
-                },
-            ],
-            account: CONTRACT_NAME,
-            name: 'migratealloc',
-            data: {
-                sender,
-                holder,
-                allocation_id: allocationId,
-                old_amount: oldAmount,
-                new_amount: newAmount,
-                old_category_id: oldCategoryId,
-                new_category_id: newCategoryId,
-            },
-        };
+        const action = this.actions.migratealloc({
+            sender,
+            holder,
+            allocationId,
+            oldAmount,
+            newAmount,
+            oldCategoryId,
+            newCategoryId,
+        });
 
-        return await transact(Name.from(CONTRACT_NAME), [action], signer);
+        return transact([action], signer);
+    }
+
+    private async getSettingsData(): Promise<VestingSettingsRaw> {
+        const table = this.contract.table<VestingSettingsRaw>('settings', this.contractName);
+        const res = await table.get();
+
+        if (!res) throw new Error('Vesting settings have not yet been set');
+        return res;
     }
 
     async getSettings(): Promise<VestingSettings> {
-        const res = await (
-            await getApi()
-        ).v1.chain.get_table_rows({
-            code: 'vesting.tmy',
-            scope: 'vesting.tmy',
-            table: 'settings',
-            json: true,
-        });
+        const settings = await this.getSettingsData();
 
-        if (res.rows.length === 0) throw new Error('Vesting settings have not yet been set');
+        return {
+            salesStartDate: new Date(settings.sales_start_date + 'Z'),
+            launchDate: new Date(settings.launch_date + 'Z'),
+        };
+    }
 
-        return res.rows[0];
+    private async getAllocationsData(account: NameType): Promise<VestingAllocationRaw[]> {
+        const res = this.contract.table<VestingAllocationRaw>('allocation', account).all();
+
+        if (!res) throw new Error(`No allocations found for account ${account}`);
+        return res;
     }
 
     async getAllocations(account: NameType): Promise<VestingAllocation[]> {
-        const res = await (
-            await getApi()
-        ).v1.chain.get_table_rows({
-            code: 'vesting.tmy',
-            scope: account.toString(),
-            table: 'allocation',
-            json: true,
-            limit: VestingContract.getMaxAllocations() + 1,
-        });
+        const res = await this.getAllocationsData(account);
 
-        return res.rows;
+        return res.map((a) => ({
+            id: a.id,
+            holder: a.holder,
+            timeSinceSaleStart: a.time_since_sale_start._count,
+            tokensClaimed: a.tokens_claimed,
+            tokensAllocated: a.tokens_allocated,
+            vestingCategoryType: a.vesting_category_type,
+        }));
     }
 
     async getBalance(account: NameType): Promise<number> {
-        const allocations = await this.getAllocations(account);
-        let totalBalance = new Decimal(0);
+        const allocs = await this.getAllocations(account);
+        let total = new Decimal(0);
 
-        for (const allocation of allocations) {
-            const tokens = assetToDecimal(allocation.tokens_allocated);
-
-            totalBalance = totalBalance.add(tokens);
+        for (const a of allocs) {
+            total = total.add(assetToDecimal(a.tokensAllocated.toString()));
         }
 
-        return totalBalance.toNumber();
+        return total.toNumber();
     }
 
-    getVestingCategory(categoryId: number): {
-        startDelay: number;
-        cliffPeriod: number;
-        vestingPeriod: number;
-        tgeUnlock: number;
-    } {
-        const vestingCategory = vestingCategories.get(categoryId);
+    getVestingCategory(categoryId: number) {
+        const cat = vestingCategories.get(categoryId);
 
-        if (!vestingCategory) {
-            throw new Error(`Vesting category ${categoryId} not found`);
-        }
-
-        return vestingCategory;
+        if (!cat) throw new Error(`Vesting category ${categoryId} not found`);
+        return cat;
     }
 
     getVestingPeriodYears(categoryId: number): string {
-        const vestingCategory = vestingCategories.get(categoryId);
-
-        if (!vestingCategory) {
-            throw new Error(`Vesting category ${categoryId} not found`);
-        }
-
-        const vestingPeriod = vestingCategory.vestingPeriod;
+        const cat = this.getVestingCategory(categoryId);
+        const period = cat.vestingPeriod;
 
         // Convert to seconds for categories 999 and 998, otherwise to years
         if (categoryId === 999 || categoryId === 998) {
-            return `${(vestingPeriod / MICROSECONDS_PER_SECOND).toFixed(2)}`;
+            return `${(period / MICROSECONDS_PER_SECOND).toFixed(2)}`;
         } else {
-            return `${(vestingPeriod / MICROSECONDS_PER_DAY).toFixed(2)}`;
+            return `${(period / MICROSECONDS_PER_DAY).toFixed(2)}`;
         }
     }
 
     getVestingPeriod(categoryId: number): string {
-        const vestingCategory = vestingCategories.get(categoryId);
+        const cat = this.getVestingCategory(categoryId);
+        const period = cat.vestingPeriod;
+        const days = period / MICROSECONDS_PER_DAY;
 
-        if (!vestingCategory) {
-            throw new Error(`Vesting category ${categoryId} not found`);
-        }
+        if (days < 1) {
+            const secs = period / MICROSECONDS_PER_SECOND;
 
-        const vestingPeriod = vestingCategory.vestingPeriod;
-
-        const vestingPeriodInDays = vestingPeriod / MICROSECONDS_PER_DAY;
-
-        if (vestingPeriodInDays < 1) {
-            // If less than a day, check if it's less than an hour (in seconds)
-            const vestingPeriodInSeconds = vestingPeriod / MICROSECONDS_PER_SECOND;
-
-            if (vestingPeriodInSeconds < 60) {
-                // Return seconds if it's less than a minute
-                return `${vestingPeriodInSeconds.toFixed(0)} seconds`;
-            } else {
-                // Return hours if it's more than a minute but less than a day
-                return `${(vestingPeriodInSeconds / SECONDS_PER_HOUR).toFixed(1)} hours`;
-            }
-        } else if (vestingPeriodInDays < 30) {
-            // Return days if it's less than 30 days
-            return `${vestingPeriodInDays.toFixed(1)} days`;
+            if (secs < 60) return `${secs.toFixed(0)} seconds`;
+            return `${(secs / SECONDS_PER_HOUR).toFixed(1)} hours`;
+        } else if (days < 30) {
+            return `${days.toFixed(1)} days`;
         } else {
-            // Calculate months or years if it's 30 days or more
-            const vestingPeriodInMonths = vestingPeriod / MICROSECONDS_PER_MONTH;
-            const vestingPeriodInYears = vestingPeriod / MICROSECONDS_PER_YEAR;
+            const months = period / MICROSECONDS_PER_MONTH;
+            const years = period / MICROSECONDS_PER_YEAR;
 
-            if (vestingPeriodInMonths < 12) {
-                return `${vestingPeriodInMonths.toFixed(1)} months`;
-            } else {
-                return `${vestingPeriodInYears.toFixed(1)} years`;
-            }
+            if (months < 12) return `${months.toFixed(1)} months`;
+            return `${years.toFixed(1)} years`;
         }
     }
 
@@ -458,76 +467,58 @@ export class VestingContract {
         unlockable: number;
         unlocked: number;
         locked: number;
-        allocationsDetails: {
-            totalAllocation: number;
-            unlockable: number;
-            unlocked: number;
-            locked: number;
-            vestingStart: Date;
-            allocationDate: Date;
-            vestingPeriod: string;
-            unlockAtVestingStart: number;
-            categoryId: number;
-        }[];
+        allocationsDetails: VestingAllocationsParsed[];
     }> {
         const allocations = await this.getAllocations(account);
-        const currentTime = new Date();
-        const allocationsDetails = [];
+        const now = new Date();
+        const details: VestingAllocationsParsed[] = [];
+
+        const settings = await this.getSettings();
 
         for (const allocation of allocations) {
-            const tokensAllocated = assetToAmount(allocation.tokens_allocated);
-            const unlocked = assetToAmount(allocation.tokens_claimed);
-
-            const settings = await this.getSettings();
-
-            const vestingPeriods = VestingContract.calculateVestingPeriod(settings, allocation);
-
-            const { vestingStart, cliffEnd, vestingEnd } = vestingPeriods;
-
-            const vestingCategory = this.getVestingCategory(allocation.vesting_category_type);
+            const allocated = assetToAmount(allocation.tokensAllocated);
+            const claimed = assetToAmount(allocation.tokensClaimed);
+            const { vestingStart, cliffEnd, vestingEnd } = VestingContract.calculateVestingPeriod(settings, allocation);
+            const cat = this.getVestingCategory(allocation.vestingCategoryType);
 
             let claimable = 0;
 
-            if (currentTime >= cliffEnd) {
-                // Calculate the percentage of the vesting period that has passed
-                const timeSinceVestingStart = (currentTime.getTime() - vestingStart.getTime()) / 1000;
-                const vestingDuration = (vestingEnd.getTime() - vestingStart.getTime()) / 1000;
-                const vestingProgress = Math.min(timeSinceVestingStart / vestingDuration, 1.0); // Ensure it doesn't exceed 100%
+            if (now >= cliffEnd) {
+                const elapsed = (now.getTime() - vestingStart.getTime()) / 1000;
+                const duration = (vestingEnd.getTime() - vestingStart.getTime()) / 1000;
+                const progress = Math.min(elapsed / duration, 1.0);
 
-                // Calculate unlockable amount considering TGE unlock
-                claimable =
-                    tokensAllocated * ((1.0 - vestingCategory.tgeUnlock) * vestingProgress + vestingCategory.tgeUnlock);
+                claimable = allocated * ((1.0 - cat.tgeUnlock) * progress + cat.tgeUnlock);
             }
 
-            const unlockable = claimable - unlocked;
-            const locked = tokensAllocated - unlocked;
-            const unlockAtVestingStart = vestingCategory.tgeUnlock;
-            const saleStart = new Date(settings.sales_start_date);
+            const unlockable = claimable - claimed;
+            const locked = allocated - claimed;
+            const saleStart = settings.salesStartDate;
 
-            allocationsDetails.push({
-                totalAllocation: tokensAllocated,
+            details.push({
+                totalAllocation: allocated,
                 unlockable,
-                unlocked,
+                unlocked: claimed,
                 locked,
                 vestingStart,
-                unlockAtVestingStart,
-                allocationDate: new Date(saleStart.getTime() + allocation.time_since_sale_start._count / 1000),
-                vestingPeriod: this.getVestingPeriod(allocation.vesting_category_type),
-                categoryId: allocation.vesting_category_type,
+                unlockAtVestingStart: cat.tgeUnlock,
+                allocationDate: new Date(saleStart.getTime() + allocation.timeSinceSaleStart / 1000),
+                vestingPeriod: this.getVestingPeriod(allocation.vestingCategoryType),
+                categoryId: allocation.vestingCategoryType,
             });
         }
 
-        const totalAllocation = allocationsDetails.reduce((sum, allocation) => sum + allocation.totalAllocation, 0);
-        const totalUnlockable = allocationsDetails.reduce((sum, allocation) => sum + allocation.unlockable, 0);
-        const totalUnlocked = allocationsDetails.reduce((sum, allocation) => sum + allocation.unlocked, 0);
-        const totalLocked = allocationsDetails.reduce((sum, allocation) => sum + allocation.locked, 0);
+        const totalAllocation = details.reduce((sum, d) => sum + d.totalAllocation, 0);
+        const unlockable = details.reduce((sum, d) => sum + d.unlockable, 0);
+        const unlocked = details.reduce((sum, d) => sum + d.unlocked, 0);
+        const locked = details.reduce((sum, d) => sum + d.locked, 0);
 
-        return {
-            totalAllocation,
-            unlockable: totalUnlockable,
-            unlocked: totalUnlocked,
-            locked: totalLocked,
-            allocationsDetails,
-        };
+        return { totalAllocation, unlockable, unlocked, locked, allocationsDetails: details };
     }
+}
+
+export const vestingContract = VestingContract.fromAbi(abi);
+
+export async function loadVestingContract(account: NameType = CONTRACT_NAME): Promise<VestingContract> {
+    return VestingContract.atAccount(account);
 }

@@ -1,9 +1,8 @@
 /* eslint-disable prettier/prettier */
-import { KeyManagerLevel, VestingContract, VestingSettings } from '../../../../src/sdk/index';
+import { KeyManagerLevel, VestingContract, VestingSettingsRaw } from '../../../../src/sdk/index';
 import { createRandomID } from '../../../helpers/user';
 import {
     Authority,
-    EosioTokenContract,
     Signer,
     assetToAmount,
     createKeyManagerSigner,
@@ -31,7 +30,7 @@ describe('VestingContract class', () => {
     let launchStart: string;
     let accountName: string;
     let accountSigner: Signer;
-    let settings: VestingSettings;
+    let settings: VestingSettingsRaw;
 
     beforeEach(async () => {
         // Create a random user

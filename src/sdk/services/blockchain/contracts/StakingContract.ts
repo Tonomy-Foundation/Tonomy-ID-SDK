@@ -4,7 +4,7 @@ import { Signer, transact } from '../eosio/transaction';
 import { getAccount, getApi } from '../eosio/eosio';
 import { Contract, loadContract } from './Contract';
 import { Contract as AntelopeContract, ActionOptions } from '@wharfkit/contract';
-import { TonomyContract } from './TonomyContract';
+import { tonomyContract } from './TonomyContract';
 import { Authority, activeAuthority } from '../eosio/authority';
 import Debug from 'debug';
 import { addSeconds, getSettings, SdkErrors, SECONDS_IN_DAY, throwError } from '../../../util';
@@ -14,10 +14,12 @@ import { amountToAsset, assetToAmount, EosioTokenContract } from './EosioTokenCo
 const debug = Debug('tonomy-sdk:services:blockchain:contracts:staking');
 const CONTRACT_NAME: NameType = 'staking.tmy';
 
+// TODO: update assets to use Asset class instead
+
 export interface StakingAllocationData {
     id: number;
-    initial_stake: string;
-    tokens_staked: string;
+    initial_stake: string; // Asset
+    tokens_staked: string; // Asset
     stake_time: { _count: number };
     unstake_time: { _count: number };
     unstake_requested: number;
@@ -25,44 +27,44 @@ export interface StakingAllocationData {
 
 export interface StakingAllocation {
     id: number;
-    staker: string;
-    initialStake: string;
-    staked: string;
-    yieldSoFar: string;
+    staker: Name;
+    initialStake: string; // Asset
+    staked: string; // Asset
+    yieldSoFar: string; // Asset
     stakedTime: Date;
     unstakeableTime: Date;
     unstakeTime: Date;
     releaseTime: Date;
     unstakeRequested: boolean;
-    monthlyYield: string;
+    monthlyYield: string; // Asset
 }
 
-export interface StakingSettingsData {
-    current_yield_pool: string;
-    yearly_stake_pool: string;
-    total_staked: string;
-    total_releasing: string;
+export interface StakingSettingsRaw {
+    current_yield_pool: string; // Asset
+    yearly_stake_pool: string; // Asset
+    total_staked: string; // Asset
+    total_releasing: string; // Asset
 }
 
 export interface StakingSettings {
-    currentYieldPool: string;
-    yearlyStakePool: string;
-    totalStaked: string;
-    totalReleasing: string;
+    currentYieldPool: string; // Asset
+    yearlyStakePool: string; // Asset
+    totalStaked: string; // Asset
+    totalReleasing: string; // Asset
     apy: number;
 }
 
-export interface StakingAccountData {
-    staker: string;
-    total_yield: string;
-    last_payout: string;
+export interface StakingAccountRaw {
+    staker: Name;
+    total_yield: string; // Asset
+    last_payout: { _count: number };
     payments: number;
     version: number;
 }
 
 export interface StakingAccount {
-    staker: string;
-    totalYield: string;
+    staker: Name;
+    totalYield: string; // Asset
     lastPayout: Date;
     payments: number;
     version: number;
@@ -86,8 +88,9 @@ export class StakingContract extends Contract {
     static getMaxAllocations: () => number = () => (this.isTestEnv() ? 5 : 20); // 100 allocations or 5 allocations
     static getStakingCycleHours: () => number = () => (this.isTestEnv() ? 1 / 60 : 24); // 24 hours or 1 minute
     static MAX_APY = 1.0;
-    static STAKING_APY_TARGET = 0.5;
-    static STAKING_ESTIMATED_STAKED_PERCENT = 0.151;
+    static STAKING_APY_TARGET = 0.5; // 50% annual yield target
+    // Use the TGE unlock: https://docs.google.com/spreadsheets/d/1uyvpgXC0th3Z1_bz4m18dJKy2yyVfYFmcaEyS9fveeA/edit?gid=1074294213#gid=1074294213&range=Q34
+    static STAKING_ESTIMATED_STAKED_PERCENT = 0.151; // 15.1% of total supply staked
     static yearlyStakePool =
         StakingContract.STAKING_APY_TARGET *
         StakingContract.STAKING_ESTIMATED_STAKED_PERCENT *
@@ -153,7 +156,7 @@ export class StakingContract extends Contract {
 
             newPerm.addCodePermission(CONTRACT_NAME.toString());
             debug('Adding staking.tmy@eosio.code to active permission', JSON.stringify(newPerm, null, 2));
-            await TonomyContract.Instance.updateactive(staker.toString(), newPerm, signer);
+            await tonomyContract.updateActive(staker, newPerm, signer);
         }
 
         const action = this.actions.stakeTokens({ accountName: staker, quantity });
@@ -236,7 +239,7 @@ export class StakingContract extends Contract {
 
             allocationDetails.push({
                 id: allocation.id,
-                staker: staker.toString(),
+                staker: Name.from(staker),
                 initialStake: allocation.initial_stake,
                 staked: allocation.tokens_staked,
                 yieldSoFar,
@@ -252,8 +255,8 @@ export class StakingContract extends Contract {
         return allocationDetails;
     }
 
-    private async getSettingsData(): Promise<StakingSettingsData> {
-        const settingsTable = this.contract.table<StakingSettingsData>('settings', this.contractName);
+    private async getSettingsData(): Promise<StakingSettingsRaw> {
+        const settingsTable = this.contract.table<StakingSettingsRaw>('settings', this.contractName);
         const settings = await settingsTable.get();
 
         if (!settings) throw new Error('Staking settings have not yet been set');
@@ -281,8 +284,8 @@ export class StakingContract extends Contract {
         };
     }
 
-    private async getAccountData(account: NameType): Promise<StakingAccountData> {
-        const accountTable = this.contract.table<StakingAccountData>('stakingaccou', this.contractName);
+    private async getAccountData(account: NameType): Promise<StakingAccountRaw> {
+        const accountTable = this.contract.table<StakingAccountRaw>('stakingaccou', this.contractName);
         const res = await accountTable.get(account);
 
         if (!res) throwError('Account not found in staking contract', SdkErrors.AccountNotFound);
