@@ -3,7 +3,6 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { createAntelopeAccount, createApp } from './create-account';
 import {
-    DemoTokenContract,
     EosioTokenContract,
     EosioContract,
     TonomyContract,
@@ -27,12 +26,12 @@ import {
     RAM_PRICE,
     StakingContract,
     amountToAsset,
+    tokenContract,
 } from '../../sdk/services/blockchain';
 import { createUser, mockCreateAccount, restoreCreateAccountFromMock } from './user';
 import { sleep } from '../../sdk/util';
+import loadDemoTokenContract from '../../sdk/services/blockchain/contracts/DemoTokenContract';
 
-const demoTokenContract = DemoTokenContract.Instance;
-const tokenContract = EosioTokenContract.Instance;
 const tonomyContract = TonomyContract.Instance;
 const eosioContract = EosioContract.Instance;
 const vestingContract = VestingContract.Instance;
@@ -165,8 +164,10 @@ async function deployEosioMsig() {
 }
 
 async function configureDemoToken(newSigner: Signer) {
+    const demoTokenContract = await loadDemoTokenContract();
+
     await demoTokenContract.create(`1000000000 DEMO`, newSigner);
-    await demoTokenContract.issue(`10000 DEMO`, newSigner);
+    await demoTokenContract.issue(demoTokenContract.contractName, `10000 DEMO`, '', newSigner);
 }
 
 async function deployVesting() {
@@ -210,9 +211,9 @@ async function createNativeToken() {
         signer
     );
     console.log('Create and issue native token');
-    await tokenContract.create(`50000000000.000000 ${getSettings().currencySymbol}`, signer);
+    await tokenContract.create('eosio.token', `50000000000.000000 ${getSettings().currencySymbol}`, signer);
     console.log('Issue native token');
-    await tokenContract.issue('eosio.token', `50000000000.000000 ${getSettings().currencySymbol}`, signer);
+    await tokenContract.issue('eosio.token', `50000000000.000000 ${getSettings().currencySymbol}`, '', signer);
 }
 
 const allocations: [string, number][] = [

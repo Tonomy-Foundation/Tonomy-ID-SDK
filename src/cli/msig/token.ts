@@ -1,4 +1,4 @@
-import { amountToSupplyPercentage, assetToDecimal, EosioTokenContract } from '../../sdk/services/blockchain';
+import { amountToSupplyPercentage, assetToDecimal, tokenContract } from '../../sdk/services/blockchain';
 // import { TONO_PUBLIC_SALE_PRICE } from '../../sdk/services/blockchain';
 import { StandardProposalOptions, createProposal, executeProposal } from '.';
 
@@ -11,7 +11,7 @@ export async function transfer(options: StandardProposalOptions) {
     // const quantity = amount.toFixed(0) + '.000000 TONO';
     const quantity = '5000000000.000000 TONO';
     const amount = assetToDecimal(quantity);
-    const balance = await EosioTokenContract.Instance.getBalanceDecimal(from);
+    const balance = await tokenContract.getBalanceDecimal(from);
 
     if (balance.lessThan(amount)) {
         throw new Error(`Insufficient balance. Required: ${amount}, Available: ${balance}`);

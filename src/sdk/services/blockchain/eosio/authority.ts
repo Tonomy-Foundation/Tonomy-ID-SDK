@@ -1,6 +1,17 @@
-import { Name, NameType } from '@wharfkit/antelope';
+import { Name, NameType, PermissionLevel } from '@wharfkit/antelope';
 import BN from 'bn.js';
 import { API } from '@wharfkit/antelope';
+import { ActionOptions } from '@wharfkit/contract';
+
+export function activePermissionLevel(account: NameType): PermissionLevel {
+    return PermissionLevel.from({ actor: account, permission: 'active' });
+}
+
+export function activeAuthority(account: NameType): ActionOptions {
+    return {
+        authorization: [activePermissionLevel(account)],
+    };
+}
 
 type KeyWeight = { key: string; weight: number };
 type PermissionWeight = {

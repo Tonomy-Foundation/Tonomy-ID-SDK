@@ -9,6 +9,7 @@ import {
     createKeyManagerSigner,
     createSigner,
     getTonomyOperationsKey,
+    tokenContract,
     transact,
 } from '../../../../src/sdk/services/blockchain';
 import { addSeconds, sleepUntil, subtractSeconds, sleep } from '../../../../src/sdk/util';
@@ -20,7 +21,6 @@ import Debug from 'debug';
 
 const debug = Debug('tonomy-sdk-tests:services:vesting-contract');
 const vestingContract = VestingContract.Instance;
-const eosioTokenContract = EosioTokenContract.Instance;
 const signer = createSigner(getTonomyOperationsKey());
 
 describe('VestingContract class', () => {
@@ -201,7 +201,7 @@ describe('VestingContract class', () => {
             authority.addCodePermission("vesting.tmy");
             const { name: newAccountName } = await createRandomAccount(authority);
 
-            await eosioTokenContract.transfer('ops.tmy', newAccountName, '1.000000 TONO', '', signer);
+            await tokenContract.transfer('ops.tmy', newAccountName, '1.000000 TONO', '', signer);
             const trx = await vestingContract.assignTokens(newAccountName, 'found.tmy', '1.000000 TONO', 999, newAccountSigner);
 
             expect(trx.processed.receipt.status).toBe('executed');
@@ -215,7 +215,7 @@ describe('VestingContract class', () => {
 
             const { name: newAccountName } = await createRandomAccount(authority);
 
-            await eosioTokenContract.transfer('ops.tmy', newAccountName, '1.000000 TONO', '', signer);
+            await tokenContract.transfer('ops.tmy', newAccountName, '1.000000 TONO', '', signer);
 
             try {
                 await vestingContract.assignTokens(newAccountName, 'found.tmy', '1.000000 TONO', 999, newAccountSigner);
@@ -233,7 +233,7 @@ describe('VestingContract class', () => {
             authority.addCodePermission("vesting.tmy");
             const { name: newAccountName } = await createRandomAccount(authority);
 
-            await eosioTokenContract.transfer('ops.tmy', newAccountName, '1.000000 TONO', '', signer);
+            await tokenContract.transfer('ops.tmy', newAccountName, '1.000000 TONO', '', signer);
 
             try {
                 await vestingContract.assignTokens(newAccountName, 'found.tmy', '1.000000 TONO', 999, wrongSigner);
@@ -333,7 +333,7 @@ describe('VestingContract class', () => {
 
             let vestedBalance = await vestingContract.getBalance(accountName);
             let vestedBalance2 = await vestingContract.getBalance(accountName2);
-            const senderBalance = await eosioTokenContract.getBalance(sender);
+            const senderBalance = await tokenContract.getBalance(sender);
 
             expect(vestedBalance).toBe(0);
             expect(vestedBalance2).toBe(0);
@@ -365,7 +365,7 @@ describe('VestingContract class', () => {
 
             vestedBalance = await vestingContract.getBalance(accountName);
             vestedBalance2 = await vestingContract.getBalance(accountName2);
-            const senderBalanceAfter = await eosioTokenContract.getBalance(sender);
+            const senderBalanceAfter = await tokenContract.getBalance(sender);
 
             expect(vestedBalance).toBe(2);
             expect(vestedBalance2).toBe(2);
@@ -411,7 +411,7 @@ describe('VestingContract class', () => {
 
             let vestedBalance = await vestingContract.getBalance(accountName);
             let vestedBalance2 = await vestingContract.getBalance(accountName2);
-            const senderBalance = await eosioTokenContract.getBalance(sender);
+            const senderBalance = await tokenContract.getBalance(sender);
 
             expect(vestedBalance).toBe(0);
             expect(vestedBalance2).toBe(0);
@@ -448,7 +448,7 @@ describe('VestingContract class', () => {
 
             vestedBalance = await vestingContract.getBalance(accountName);
             vestedBalance2 = await vestingContract.getBalance(accountName2);
-            const senderBalanceAfter = await eosioTokenContract.getBalance(sender);
+            const senderBalanceAfter = await tokenContract.getBalance(sender);
 
             expect(vestedBalance).toBe(2);
             expect(vestedBalance2).toBe(2);

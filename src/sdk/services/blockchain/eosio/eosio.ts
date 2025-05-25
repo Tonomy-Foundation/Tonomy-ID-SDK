@@ -9,16 +9,15 @@ const debug = Debug('tonomy-sdk:services:blockchain:eosio:eosio');
 
 let api: APIClient;
 
-export async function getApi(): Promise<APIClient> {
+export function getApi(): APIClient {
     if (api) return api;
 
-    const settings = getSettings();
+    const blockchainUrl = getSettings().blockchainUrl;
 
     api = new APIClient({
-        url: settings.blockchainUrl,
-        provider: new FetchProvider(settings.blockchainUrl, { fetch: getFetch() || fetch }),
+        url: blockchainUrl,
+        provider: new FetchProvider(blockchainUrl, { fetch: getFetch() || fetch }),
     });
-    if (!api) throwError('Could not create API client', SdkErrors.CouldntCreateApi);
     return api;
 }
 
