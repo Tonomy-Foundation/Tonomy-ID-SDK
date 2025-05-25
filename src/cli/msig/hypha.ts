@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { Authority, bytesToTokens } from '../../sdk/services/blockchain';
+import { Authority, bytesToTokens, tokenContract } from '../../sdk/services/blockchain';
 import { StandardProposalOptions, createProposal, executeProposal } from '.';
 import { deployContract } from './contract';
 import { AccountType, getSettings, TonomyUsername } from '../../sdk';
@@ -297,22 +297,12 @@ export async function hyphaContractSet(args: any, options: StandardProposalOptio
         },
     };
 
-    const transferTokensAction = {
-        authorization: [
-            {
-                actor: 'partners.tmy',
-                permission: 'active',
-            },
-        ],
-        account: 'eosio.token',
-        name: 'transfer',
-        data: {
-            from: 'partners.tmy',
-            to: contract,
-            quantity: tokens,
-            memo: `RAM for ${contract}`,
-        },
-    };
+    const transferTokensAction = tokenContract.actions.transfer({
+        from: 'partners.tmy',
+        to: contract,
+        quantity: tokens,
+        memo: `RAM for ${contract}`,
+    });
 
     const buyRamAction = {
         account: 'tonomy',

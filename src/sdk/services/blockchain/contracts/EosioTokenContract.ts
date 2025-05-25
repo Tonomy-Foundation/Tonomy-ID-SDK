@@ -83,14 +83,14 @@ export class EosioTokenContract extends Contract {
             data: { from: NameType; to: NameType; quantity: AssetType; memo?: string },
             authorization?: ActionOptions
         ) => {
-            if (!authorization) authorization = { authorization: [{ actor: data.from, permission: 'active' }] };
+            if (!authorization) authorization = activeAuthority(data.from);
             if (!data.memo) data.memo = '';
             return this.action('transfer', data, authorization);
         },
     };
 
     async create(issuer: NameType, maximumSupply: AssetType, signer: Signer): Promise<API.v1.PushTransactionResponse> {
-        const actions = [await this.actions.create({ issuer, maximumSupply })];
+        const actions = [this.actions.create({ issuer, maximumSupply })];
 
         return await transact(actions, signer);
     }
@@ -101,7 +101,7 @@ export class EosioTokenContract extends Contract {
         memo: string,
         signer: Signer
     ): Promise<API.v1.PushTransactionResponse> {
-        const actions = [await this.actions.issue({ to, quantity, memo })];
+        const actions = [this.actions.issue({ to, quantity, memo })];
 
         return await transact(actions, signer);
     }
@@ -113,7 +113,7 @@ export class EosioTokenContract extends Contract {
         memo: string,
         signer: Signer
     ): Promise<API.v1.PushTransactionResponse> {
-        const actions = [await this.actions.transfer({ from, to, quantity, memo })];
+        const actions = [this.actions.transfer({ from, to, quantity, memo })];
 
         return await transact(actions, signer);
     }

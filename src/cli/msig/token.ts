@@ -21,22 +21,7 @@ export async function transfer(options: StandardProposalOptions) {
 
     console.log(`Transferring ${quantity} (${fraction}) from ${from} to ${to}`);
 
-    const action = {
-        account: 'eosio.token',
-        name: 'transfer',
-        authorization: [
-            {
-                actor: from,
-                permission: 'active',
-            },
-        ],
-        data: {
-            from,
-            to,
-            quantity,
-            memo: '',
-        },
-    };
+    const action = tokenContract.actions.transfer({ from, to, quantity });
 
     const proposalHash = await createProposal(
         options.proposer,
