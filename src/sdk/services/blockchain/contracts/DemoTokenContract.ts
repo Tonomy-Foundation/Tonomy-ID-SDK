@@ -1,10 +1,10 @@
-import { API, Name, NameType, AssetType } from '@wharfkit/antelope';
+import { API, NameType, AssetType } from '@wharfkit/antelope';
 import { Signer, transact } from '../eosio/transaction';
 import { getApi } from '../eosio/eosio';
 import { AccountType, TonomyUsername, getSettings } from '../../../util';
 import { Contract, loadContract } from './Contract';
 import { ActionOptions } from '@wharfkit/contract';
-import { TonomyContract } from './TonomyContract';
+import { tonomyContract } from './TonomyContract';
 import { activeAuthority } from '../eosio/authority';
 
 export class DemoTokenContract extends Contract {
@@ -16,9 +16,9 @@ export class DemoTokenContract extends Contract {
         if (account) return account;
 
         const username = TonomyUsername.fromUsername('demo', AccountType.APP, getSettings().accountSuffix);
-        const app = await TonomyContract.Instance.getApp(username);
+        const app = await tonomyContract.getApp(username);
 
-        return Name.from(app.account_name);
+        return app.accountName;
     }
 
     // action getters. add default authorization and values, use camelCase for variables and action names

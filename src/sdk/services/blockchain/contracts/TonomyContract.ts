@@ -20,7 +20,7 @@ import abi from '../../../../../Tonomy-Contracts/contracts/tonomy/tonomy.abi.jso
 import { activeAuthority } from '../eosio/authority';
 import Debug from 'debug';
 
-const debug = Debug('tonomy-sdk:tonomy-contract');
+const debug = Debug('tonomy-sdk:contracts:tonomy');
 
 const CONTRACT_NAME: NameType = 'tonomy';
 
@@ -523,5 +523,5 @@ export class TonomyContract extends Contract {
 export const tonomyContract = TonomyContract.fromAbi(abi);
 
 export default async function loadTonomyContract(account: NameType = CONTRACT_NAME): Promise<TonomyContract> {
-    return TonomyContract.atAccount(account);
+    return await TonomyContract.atAccount(account);
 }

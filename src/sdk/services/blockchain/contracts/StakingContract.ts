@@ -8,7 +8,7 @@ import { TonomyContract } from './TonomyContract';
 import { Authority, activeAuthority } from '../eosio/authority';
 import Debug from 'debug';
 import { addSeconds, getSettings, SdkErrors, SECONDS_IN_DAY, throwError } from '../../../util';
-import abi from '../../../../../Tonomy-Contracts/contracts/staking/staking.abi.json';
+import abi from '../../../../../Tonomy-Contracts/contracts/staking.tmy/staking.tmy.abi.json';
 import { amountToAsset, assetToAmount, EosioTokenContract } from './EosioTokenContract';
 
 const debug = Debug('tonomy-sdk:services:blockchain:contracts:staking');
@@ -355,5 +355,5 @@ export class StakingContract extends Contract {
 export const stakingContract = StakingContract.fromAbi(abi);
 
 export async function loadStakingContract(account: NameType = CONTRACT_NAME): Promise<StakingContract> {
-    return StakingContract.atAccount(account);
+    return await StakingContract.atAccount(account);
 }

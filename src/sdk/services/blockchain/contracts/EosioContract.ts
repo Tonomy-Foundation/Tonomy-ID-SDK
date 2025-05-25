@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { ABI, API, NameType, Serializer, Action, AuthorityType } from '@wharfkit/antelope';
+import { ABI, API, NameType, Serializer, Action, AuthorityType, PermissionLevelType } from '@wharfkit/antelope';
 import { Contract, loadContract } from './Contract';
 import { activeAuthority, Authority } from '../eosio/authority';
 import { Signer, transact } from '../eosio/transaction';
@@ -62,7 +62,7 @@ export class EosioContract extends Contract {
         account: NameType,
         wasmFileContent: Buffer,
         abiFileContent: Buffer,
-        extraAuthorization?: { actor: string; permission: string }
+        extraAuthorization?: PermissionLevelType
     ): Promise<Action[]> {
         const wasmHex = wasmFileContent.toString('hex');
         const abiJson = JSON.parse(abiFileContent.toString());
@@ -190,8 +190,8 @@ export const defaultBlockchainParams: BlockchainParams = {
     max_authority_depth: 6,
 };
 
-export default async function loadEosioContract(account: NameType = CONTRACT_NAME): Promise<EosioContract> {
-    return EosioContract.atAccount(account);
+export async function loadEosioContract(account: NameType = CONTRACT_NAME): Promise<EosioContract> {
+    return await EosioContract.atAccount(account);
 }
 
 export const eosioContract = EosioContract.fromAbi(abi);

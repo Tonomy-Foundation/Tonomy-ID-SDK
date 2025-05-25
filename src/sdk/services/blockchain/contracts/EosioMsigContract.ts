@@ -17,6 +17,7 @@ import { activeAuthority } from '../eosio/authority';
 import abi from '../../../../../Tonomy-Contracts/contracts/eosio.msig/eosio.msig.abi.json';
 
 const CONTRACT_NAME: NameType = 'eosio.msig';
+
 export class EosioMsigContract extends Contract {
     static async atAccount(account: NameType = CONTRACT_NAME): Promise<EosioMsigContract> {
         return new this(await loadContract(account));
@@ -162,9 +163,8 @@ export class EosioMsigContract extends Contract {
     }
 }
 
-export eosioMsigContract = EosioMsigContract.fromAbi(abi);
+export const eosioMsigContract = EosioMsigContract.fromAbi(abi);
 
 export async function loadEosioMsigContract(account: NameType = CONTRACT_NAME): Promise<EosioMsigContract> {
-    return EosioMsigContract.atAccount(account);
+    return await EosioMsigContract.atAccount(account);
 }
-
