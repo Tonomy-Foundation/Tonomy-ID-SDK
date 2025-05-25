@@ -1,16 +1,30 @@
 /* eslint-disable camelcase */
-import { API, Checksum256, Checksum256Type, Name, NameType, PublicKey } from '@wharfkit/antelope';
+import {
+    API,
+    Checksum256,
+    Checksum256Type,
+    Name,
+    NameType,
+    PublicKey,
+    Action,
+    AuthorityType,
+    AssetType,
+    PublicKeyType,
+} from '@wharfkit/antelope';
+import { Contract, loadContract } from './Contract';
+import { Contract as AntelopeContract, ActionOptions } from '@wharfkit/contract';
 import { Signer, transact } from '../eosio/transaction';
-import { SdkErrors, TonomyUsername, getSettings, sha256, throwError } from '../../../util';
+import { SdkErrors, TonomyUsername, sha256, throwError } from '../../../util';
 import { getAccount, getApi } from '../eosio/eosio';
-import { TONO_PUBLIC_SALE_PRICE } from './VestingContract';
-import { Authority } from '../eosio/authority';
+import abi from '../../../../../Tonomy-Contracts/contracts/tonomy/tonomy.abi.json';
+import { activeAuthority } from '../eosio/authority';
 import Debug from 'debug';
 
 const debug = Debug('tonomy-sdk:tonomy-contract');
-const CONTRACT_NAME = 'tonomy';
 
-export const GOVERNANCE_ACCOUNT_NAME = 'tonomy';
+const CONTRACT_NAME: NameType = 'tonomy';
+
+export const GOVERNANCE_ACCOUNT_NAME: NameType = 'tonomy';
 
 enum PermissionLevel {
     OWNER = 'OWNER',
@@ -58,7 +72,7 @@ namespace PermissionLevel {
     }
 }
 
-export type GetPersonResponse = {
+type PersonDataRaw = {
     account_name: Name;
     status: number;
     username_hash: Checksum256;
@@ -66,167 +80,200 @@ export type GetPersonResponse = {
     version: number;
 };
 
-export type AppTableRecord = {
-    account_name: Name;
-    app_name: string;
-    username_hash: Checksum256;
-    description: string;
-    logo_url: string;
-    origin: string;
-    background_color: string;
-    accent_color: string;
+type PersonData = {
+    accountName: Name;
+    status: number;
+    usernameHash: Checksum256;
+    passwordSalt: Checksum256;
     version: number;
 };
 
-function calculateRamPrice(): number {
-    // See https://docs.google.com/spreadsheets/d/1_S0S7Gu-PHzt-IzCqNl3CaWnniAt1KwaXDB50roTZUQ/edit?gid=1773951365#gid=1773951365&range=C84
+type AppData2Raw = {
+    account_name: Name;
+    json_data: string;
+    username_hash: Checksum256;
+    origin: string;
+    version: number;
+};
 
-    const ramPricePerGb = 7; // $7.00 per GB of RAM taken from standard AWS EC2 pricing
-    const numberOfNodes = 29;
-    const costOverhead = 1; // 100% overhead
-    const totalRamPrice = ramPricePerGb * numberOfNodes * (1 + costOverhead); // $ / Gb
-    const totalRamPriceBytes = totalRamPrice / (1024 * 1024 * 1024); // $ / byte
+type AppData2 = {
+    accountName: Name;
+    usernameHash: Checksum256;
+    origin: string;
+    version: number;
+    jsonData: string;
+    appName: string;
+    description: string;
+    logoUrl: string;
+    backgroundColor: string;
+    accentColor: string;
+};
 
-    return TONO_PUBLIC_SALE_PRICE / totalRamPriceBytes; // bytes / TONO
-}
-
-export const RAM_PRICE = calculateRamPrice(); // bytes / token
-export const RAM_FEE = 0.25 / 100; // 0.25%
-export const TOTAL_RAM_AVAILABLE = 8 * 1024 * 1024 * 1024; // 8 GB
-
-/**
- * Converts bytes to tokens.
- *
- * @param bytes The number of bytes to convert.
- * @returns The converted value in tokens.
- */
-export function bytesToTokens(bytes: number): string {
-    return ((bytes * (1 + RAM_FEE)) / RAM_PRICE).toFixed(6) + ` ${getSettings().currencySymbol}`;
-}
-
-export class TonomyContract {
-    static singletonInstance: TonomyContract;
-
-    public static get Instance() {
-        return this.singletonInstance || (this.singletonInstance = new this());
+export class TonomyContract extends Contract {
+    static async atAccount(account: NameType = CONTRACT_NAME): Promise<TonomyContract> {
+        return new this(await loadContract(account));
     }
-    /**
-     * Buys RAM for an account
-     *
-     * @param  daoOwner - The owner of the DAO (Name is assumed to be a class that represents an EOSIO account name)
-     * @param account - The name of the app buying RAM (Name is assumed to be a class that represents an EOSIO account name)
-     * @param quant - The quantity of RAM to buy (Asset is assumed to be a class that represents an EOSIO asset)
-     */
-    async buyRam(
-        dao_owner: string,
-        app: string,
-        quant: string,
-        signer: Signer
-    ): Promise<API.v1.PushTransactionResponse> {
-        const actions = [
-            {
-                account: CONTRACT_NAME,
-                name: 'buyram',
+
+    static fromAbi(abi: any, account: NameType = CONTRACT_NAME): TonomyContract {
+        const contract = new AntelopeContract({ abi, client: getApi(), account });
+
+        return new this(contract, false);
+    }
+
+    actions = {
+        buyram: (
+            data: { daoOwner: NameType; app: NameType; quant: AssetType },
+            authorization: ActionOptions = {
                 authorization: [
-                    {
-                        actor: app,
-                        permission: 'active',
-                    },
-                    {
-                        actor: dao_owner,
-                        permission: 'active',
-                    },
+                    { actor: data.daoOwner, permission: 'active' },
+                    // TODO: remove this when the app is not required to buy RAM (change the contract first)
+                    { actor: data.app, permission: 'active' },
                 ],
-                data: {
-                    dao_owner,
-                    app,
-                    quant,
+            }
+        ): Action =>
+            this.action('buyram', { dao_owner: data.daoOwner, app: data.app, quant: data.quant }, authorization),
+        setresparams: (
+            data: { ramPrice: number; totalRamAvailable: number; ramFee: number },
+            authorization: ActionOptions = activeAuthority(GOVERNANCE_ACCOUNT_NAME)
+        ): Action =>
+            this.action(
+                'setresparams',
+                {
+                    ram_price: data.ramPrice,
+                    total_ram_available: data.totalRamAvailable,
+                    ram_fee: data.ramFee,
                 },
+                authorization
+            ),
+        newperson: (
+            data: { usernameHash: Checksum256Type; passwordKey: PublicKeyType; passwordSalt: Checksum256Type },
+            authorization?: ActionOptions
+        ): Action =>
+            this.action(
+                'newperson',
+                {
+                    username_hash: data.usernameHash,
+                    password_key: data.passwordKey,
+                    password_salt: data.passwordSalt,
+                },
+                authorization
+            ),
+        updateactive: (
+            data: { account: NameType; active: AuthorityType },
+            authorization: ActionOptions = activeAuthority(data.account)
+        ): Action => this.action('updateactive', data, authorization),
+        updatekeyper: (
+            data: { account: NameType; permission_level: number; key: PublicKeyType; link_auth?: boolean },
+            authorization: ActionOptions = { authorization: [{ actor: data.account, permission: 'owner' }] }
+        ): Action =>
+            this.action(
+                'updatekeyper',
+                {
+                    account: data.account,
+                    permission: data.permission_level,
+                    key: data.key,
+                    link_auth: data.link_auth ?? true,
+                },
+                authorization
+            ),
+        loginwithapp: (
+            data: { account: NameType; app: NameType; parent: NameType; key: PublicKeyType },
+            authorization: ActionOptions = { authorization: [{ actor: data.account, permission: data.parent }] }
+        ): Action => this.action('loginwithapp', data, authorization),
+        newapp: (
+            data: {
+                jsonData: string;
+                usernameHash: Checksum256Type;
+                origin: string;
+                key: PublicKeyType;
             },
-        ];
+            authorization?: ActionOptions
+        ): Action =>
+            this.action(
+                'newapp',
+                {
+                    json_data: data.jsonData,
+                    username_hash: data.usernameHash,
+                    origin: data.origin,
+                    key: data.key,
+                },
+                authorization
+            ),
+        adminsetapp: (
+            data: {
+                accountName: NameType;
+                jsonData: string;
+                usernameHash: Checksum256Type;
+                origin: string;
+            },
+            authorization?: ActionOptions
+        ): Action =>
+            this.action(
+                'adminsetapp',
+                {
+                    account_name: Name.from(data.accountName),
+                    json_data: data.jsonData,
+                    username_hash: data.usernameHash,
+                    origin: data.origin,
+                },
+                authorization
+            ),
+    };
 
-        return await transact(Name.from(CONTRACT_NAME), actions, signer);
+    async buyRam(
+        daoOwner: NameType,
+        app: NameType,
+        quant: AssetType,
+        signer: Signer
+    ): Promise<API.v1.PushTransactionResponse> {
+        const action = this.actions.buyram({ daoOwner, app, quant });
+
+        return transact([action], signer);
     }
 
-    /**
-     * Sets the resource parameters 
-     *
-     * @param ram_price - The price of RAM (bytes per token)
-     * @param total_ram_available - The total available RAM.
-     * @param ram_fee - The fee for RAM.
-    
-     */
     async setResourceParams(
-        ram_price: number,
-        total_ram_available: number,
-        ram_fee: number,
+        ramPrice: number,
+        totalRamAvailable: number,
+        ramFee: number,
         signer: Signer
     ): Promise<API.v1.PushTransactionResponse> {
-        const action = {
-            authorization: [
-                {
-                    actor: GOVERNANCE_ACCOUNT_NAME,
-                    permission: 'active',
-                },
-            ],
-            account: CONTRACT_NAME,
-            name: 'setresparams',
-            data: {
-                ram_price,
-                total_ram_available,
-                ram_fee,
-            },
-        };
+        const action = this.actions.setresparams({ ramPrice, totalRamAvailable, ramFee });
 
-        return await transact(Name.from(CONTRACT_NAME), [action], signer);
+        return transact([action], signer);
     }
 
-    async newperson(
-        username_hash: string,
-        password_key: string,
-        password_salt: string,
+    async newPerson(
+        usernameHash: Checksum256Type,
+        passwordKey: PublicKeyType,
+        passwordSalt: Checksum256Type,
         signer: Signer
     ): Promise<API.v1.PushTransactionResponse> {
-        const action = {
-            authorization: [
-                {
-                    actor: CONTRACT_NAME,
-                    permission: 'active',
-                },
-            ],
-            account: CONTRACT_NAME,
-            name: 'newperson',
-            data: {
-                username_hash,
-                password_key,
-                password_salt,
-            },
-        };
+        const action = this.actions.newperson({ usernameHash, passwordKey, passwordSalt });
 
-        return await transact(Name.from(CONTRACT_NAME), [action], signer);
+        return transact([action], signer);
     }
 
-    async updatekeysper(
-        account: string,
+    async updateKeysPer(
+        account: NameType,
         keys: {
-            BIOMETRIC?: string;
-            PIN?: string;
-            LOCAL?: string;
+            BIOMETRIC?: PublicKeyType;
+            PIN?: PublicKeyType;
+            LOCAL?: PublicKeyType;
         },
         signer: Signer
     ): Promise<API.v1.PushTransactionResponse> {
         const accountInfo = await getAccount(account);
 
-        const actions = [];
-
         if (Object.keys(keys).length === 0)
             throwError('At least one key must be provided', SdkErrors.UpdateKeysTransactionNoKeys);
+
+        const actions: Action[] = [];
 
         for (const key in keys) {
             const permission = PermissionLevel.from(key);
 
             // "keys as any" fixes typescript issue see https://stackoverflow.com/a/57192972
-            const publicKey = (keys as any)[key];
+            const publicKey = (keys as any)[key] as PublicKeyType;
 
             let link_auth = true;
 
@@ -236,7 +283,7 @@ export class TonomyContract {
                 if (
                     accountPermission &&
                     accountPermission.linked_actions.find(
-                        (a) => a.account.equals(CONTRACT_NAME) && a.action.equals('loginwithapp')
+                        (a) => a.account.equals(this.contractName) && a.action.equals('loginwithapp')
                     )
                 ) {
                     link_auth = false;
@@ -247,278 +294,201 @@ export class TonomyContract {
                 }
             }
 
-            actions.push({
-                authorization: [
+            actions.push(
+                this.actions.updatekeyper(
                     {
-                        actor: account,
-                        permission: 'active',
+                        account,
+                        permission_level: PermissionLevel.indexFor(permission),
+                        key: publicKey,
+                        link_auth,
                     },
-                ],
-                account: CONTRACT_NAME,
-                name: 'updatekeyper',
-                data: {
-                    account,
-                    permission: PermissionLevel.indexFor(permission),
-                    key: publicKey,
-                    link_auth,
-                },
-            });
+                    activeAuthority(account)
+                )
+            );
         }
 
-        return await transact(Name.from(CONTRACT_NAME), actions, signer);
+        return transact(actions, signer);
     }
 
-    async updateactive(account: string, active: Authority, signer: Signer): Promise<API.v1.PushTransactionResponse> {
-        const action = {
-            authorization: [
-                {
-                    actor: account,
-                    permission: 'active',
-                },
-            ],
-            account: CONTRACT_NAME,
-            name: 'updateactive',
-            data: {
-                account,
-                active,
-            },
-        };
+    async updateActive(account: string, active: any, signer: Signer): Promise<API.v1.PushTransactionResponse> {
+        const action = this.actions.updateactive({ account, active });
 
-        return await transact(Name.from(CONTRACT_NAME), [action], signer);
+        return transact([action], signer);
     }
 
-    async newapp(
-        app_name: string,
+    async newApp(
+        appName: string,
         description: string,
-        username_hash: string,
-        logo_url: string,
+        usernameHash: Checksum256Type,
+        logoUrl: string,
         origin: string,
-        background_color: string,
-        accent_color: string,
-        key: PublicKey,
+        backgroundColor: string,
+        accentColor: string,
+        key: PublicKeyType,
         signer: Signer
     ): Promise<API.v1.PushTransactionResponse> {
-        /^(((http:\/\/)|(https:\/\/))?)(([a-zA-Z0-9.])+)((:{1}[0-9]+)?)$/g.test(origin);
-        /^(((http:\/\/)|(https:\/\/))?)(([a-zA-Z0-9.])+)((:{1}[0-9]+)?)([?#/a-zA-Z0-9.]*)$/g.test(logo_url);
-        // Combine the individual fields into a JSON string
-        const json_data = JSON.stringify({
-            app_name: app_name,
-            description: description,
-            logo_url: logo_url,
-            background_color: background_color,
-            accent_color: accent_color,
+        const jsonData = JSON.stringify({
+            app_name: appName,
+            description,
+            logo_url: logoUrl,
+            background_color: backgroundColor,
+            accent_color: accentColor,
+        });
+        const action = this.actions.newapp({
+            jsonData,
+            usernameHash,
+            origin,
+            key,
         });
 
-        const action = {
-            authorization: [
-                {
-                    actor: CONTRACT_NAME,
-                    permission: 'active',
-                },
-            ],
-            account: CONTRACT_NAME,
-            name: 'newapp',
-            data: {
-                json_data,
-                username_hash,
-                origin: origin,
-                key,
-            },
-        };
-
-        return await transact(Name.from(CONTRACT_NAME), [action], signer);
+        return transact([action], signer);
     }
 
-    async loginwithapp(
-        account: string,
-        app: string,
-        parent: string,
-        key: PublicKey,
+    async loginWithApp(
+        account: NameType,
+        app: NameType,
+        parent: NameType,
+        key: PublicKeyType,
         signer: Signer
     ): Promise<API.v1.PushTransactionResponse> {
-        const action = {
-            authorization: [
-                {
-                    actor: account,
-                    permission: parent,
-                },
-            ],
-            account: CONTRACT_NAME,
-            name: 'loginwithapp',
-            data: {
-                account,
-                app,
-                parent,
-                key,
-            },
-        };
+        const action = this.actions.loginwithapp({ account, app, parent, key });
 
-        return await transact(Name.from(CONTRACT_NAME), [action], signer);
+        return transact([action], signer);
     }
 
-    async getPerson(account: TonomyUsername | Name): Promise<GetPersonResponse> {
-        let data;
-        const api = await getApi();
+    async getPersonData(account: NameType): Promise<PersonDataRaw> {
+        const res = this.contract.table<PersonDataRaw>('people', this.contractName).get(account);
 
-        if (account instanceof TonomyUsername) {
-            // this is a username
-            const usernameHash = account.usernameHash;
-
-            data = await api.v1.chain.get_table_rows({
-                code: CONTRACT_NAME,
-                scope: CONTRACT_NAME,
-                table: 'people',
-
-                lower_bound: Checksum256.from(usernameHash),
-                limit: 1,
-
-                index_position: 'secondary',
-            });
-            if (!data || !data.rows) throwError('No data found', SdkErrors.DataQueryNoRowDataFound);
-
-            if (data.rows.length === 0 || data.rows[0].username_hash.toString() !== usernameHash) {
-                throwError('Person with username "' + account.username + '" not found', SdkErrors.UsernameNotFound);
-            }
-        } else {
-            // use the account name directly
-            data = await api.v1.chain.get_table_rows({
-                code: CONTRACT_NAME,
-                scope: CONTRACT_NAME,
-                table: 'people',
-
-                lower_bound: account,
-                limit: 1,
-            });
-            if (!data || !data.rows) throwError('No data found', SdkErrors.DataQueryNoRowDataFound);
-
-            if (data.rows.length === 0 || data.rows[0].account_name !== account.toString()) {
-                throwError(
-                    'Person with account name "' + account.toString() + '" not found',
-                    SdkErrors.AccountDoesntExist
-                );
-            }
+        if (!res) {
+            throwError(`Person "${account.toString()}" not found`, SdkErrors.AccountDoesntExist);
         }
 
-        const idData = data.rows[0];
+        return res;
+    }
+
+    async getPersonDataByUsername(username: TonomyUsername): Promise<PersonDataRaw> {
+        const hash = Checksum256.from(username.usernameHash);
+
+        const res = this.contract
+            .table<PersonDataRaw>('people', this.contractName)
+            .get(hash, { index_position: 'secondary' });
+
+        if (!res) {
+            throwError(`Person with username "${username.toString()}" not found`, SdkErrors.UsernameNotFound);
+        }
+
+        return res;
+    }
+
+    async getAppData2s(): Promise<AppData2Raw[]> {
+        const res = await this.contract.table<AppData2Raw>('appsv2', this.contractName).all();
+
+        if (!res || res.length === 0) {
+            throwError(`Apps not found`, SdkErrors.AccountDoesntExist);
+        }
+
+        return res;
+    }
+
+    async getAppData2(account: NameType): Promise<AppData2Raw> {
+        const res = await this.contract.table<AppData2Raw>('appsv2', this.contractName).get(account);
+
+        if (!res) {
+            throwError(`App "${account.toString()}" not found`, SdkErrors.AccountDoesntExist);
+        }
+
+        return res;
+    }
+    async getAppData2ByUsername(username: TonomyUsername): Promise<AppData2Raw> {
+        const hash = Checksum256.from(username.usernameHash);
+        const res = await this.contract
+            .table<AppData2Raw>('appsv2', this.contractName)
+            .get(hash, { index_position: 'secondary' });
+
+        if (!res) {
+            throwError(`App with username "${username.toString()}" not found`, SdkErrors.UsernameNotFound);
+        }
+
+        return res;
+    }
+
+    async getAppDataByOrigin(origin: string): Promise<AppData2Raw> {
+        const originHash = sha256(origin);
+        const res = await this.contract
+            .table<AppData2Raw>('appsv2', this.contractName)
+            .get(Checksum256.from(originHash), { index_position: 'tertiary' });
+
+        if (!res) {
+            throwError(`Origin "${origin}" not found`, SdkErrors.OriginNotFound);
+        }
+
+        return res;
+    }
+
+    async getPerson(account: TonomyUsername | NameType): Promise<PersonData> {
+        let personData: PersonDataRaw;
+
+        if (account instanceof TonomyUsername) {
+            personData = await this.getPersonDataByUsername(account);
+        } else {
+            personData = await this.getPersonData(account);
+        }
 
         return {
-            account_name: Name.from(idData.account_name),
-            status: idData.status,
-
-            username_hash: Checksum256.from(idData.username_hash),
-
-            password_salt: Checksum256.from(idData.password_salt),
-            version: idData.version,
+            accountName: personData.account_name,
+            status: personData.status,
+            usernameHash: personData.username_hash,
+            passwordSalt: personData.password_salt,
+            version: personData.version,
         };
     }
 
-    async getApp(account: TonomyUsername | Name | string): Promise<AppTableRecord> {
-        let data;
-        const api = await getApi();
+    async getApp(account: TonomyUsername | Name | string): Promise<AppData2> {
+        let appData: AppData2Raw;
 
         if (account instanceof TonomyUsername) {
-            // this is a username
-            const usernameHash = account.usernameHash;
-
-            data = await api.v1.chain.get_table_rows({
-                code: CONTRACT_NAME,
-                scope: CONTRACT_NAME,
-                table: 'appsv2',
-
-                lower_bound: Checksum256.from(usernameHash),
-                limit: 1,
-
-                index_position: 'secondary',
-            });
-            if (!data || !data.rows) throwError('No data found', SdkErrors.DataQueryNoRowDataFound);
-
-            if (data.rows.length === 0 || data.rows[0].username_hash.toString() !== usernameHash) {
-                throwError('Account with username "' + account.username + '" not found', SdkErrors.UsernameNotFound);
-            }
+            appData = await this.getAppData2ByUsername(account);
         } else if (account instanceof Name) {
-            // use the account name directly
-            data = await api.v1.chain.get_table_rows({
-                code: CONTRACT_NAME,
-                scope: CONTRACT_NAME,
-                table: 'appsv2',
-
-                lower_bound: account,
-                limit: 1,
-            });
-            if (!data || !data.rows) throwError('No data found', SdkErrors.DataQueryNoRowDataFound);
-
-            if (data.rows.length === 0 || data.rows[0].account_name !== account.toString()) {
-                throwError('Account "' + account.toString() + '" not found', SdkErrors.AccountDoesntExist);
-            }
+            appData = await this.getAppData2(account);
         } else {
-            // account is the origin
-            const origin = account;
-            const originHash = sha256(origin);
-
-            data = await api.v1.chain.get_table_rows({
-                code: CONTRACT_NAME,
-                scope: CONTRACT_NAME,
-                table: 'appsv2',
-
-                lower_bound: Checksum256.from(originHash),
-                limit: 1,
-
-                index_position: 'tertiary',
-            });
-            if (!data || !data.rows) throwError('No data found', SdkErrors.DataQueryNoRowDataFound);
-            debug('getApp table row', origin, JSON.stringify(data.rows, null, 2));
-
-            if (data.rows.length === 0 || data.rows[0].origin !== origin) {
-                throwError('Account with origin "' + origin + '" not found', SdkErrors.OriginNotFound);
-            }
+            appData = await this.getAppDataByOrigin(account);
         }
 
-        const idData = data.rows[0];
-
-        debug('getApp idData', JSON.stringify(idData, null, 2));
-
-        const appInfo = JSON.parse(idData.json_data);
+        const json = JSON.parse(appData.json_data);
 
         return {
-            app_name: appInfo.app_name,
-            description: appInfo.description,
-
-            logo_url: appInfo.logo_url,
-            origin: idData.origin,
-            account_name: Name.from(idData.account_name),
-            background_color: appInfo.background_color,
-            accent_color: appInfo.accent_color,
-            username_hash: Checksum256.from(idData.username_hash),
-            version: idData.version,
+            accountName: appData.account_name,
+            appName: json.app_name,
+            description: json.description,
+            logoUrl: json.logo_url,
+            origin: appData.origin,
+            backgroundColor: json.background_color,
+            accentColor: json.accent_color,
+            usernameHash: appData.username_hash,
+            version: appData.version,
+            jsonData: appData.json_data,
         };
     }
 
-    async getApps(): Promise<AppTableRecord[]> {
-        const api = await getApi();
-        const data = await api.v1.chain.get_table_rows({
-            code: CONTRACT_NAME,
-            scope: CONTRACT_NAME,
-            table: 'apps',
-            limit: 1000,
+    async getApps(): Promise<AppData2[]> {
+        const apps = await this.getAppData2s();
+
+        return apps.map((app) => {
+            const json = JSON.parse(app.json_data);
+
+            return {
+                accountName: app.account_name,
+                appName: json.app_name,
+                description: json.description,
+                logoUrl: json.logo_url,
+                origin: app.origin,
+                backgroundColor: json.background_color,
+                accentColor: json.accent_color,
+                usernameHash: app.username_hash,
+                version: app.version,
+                jsonData: app.json_data,
+            };
         });
-
-        if (!data || !data.rows) throwError('No data found', SdkErrors.DataQueryNoRowDataFound);
-
-        if (data.rows.length === 0) {
-            throwError('No apps found', SdkErrors.DataQueryNoRowDataFound);
-        }
-
-        return data.rows.map((row) => ({
-            app_name: row.app_name,
-            description: row.description,
-            logo_url: row.logo_url,
-            origin: row.origin,
-            account_name: Name.from(row.account_name),
-            username_hash: Checksum256.from(row.username_hash),
-            background_color: row.background_color,
-            accent_color: row.accent_color,
-            version: row.version,
-        }));
     }
 
     async adminSetApp(
@@ -532,34 +502,26 @@ export class TonomyContract {
         accentColor: string,
         signer: Signer
     ): Promise<API.v1.PushTransactionResponse> {
-        const json_data = JSON.stringify({
+        const jsonData = JSON.stringify({
             app_name: appName,
-            description: description,
+            description,
             logo_url: logoUrl,
             background_color: backgroundColor,
             accent_color: accentColor,
         });
-        const action = {
-            authorization: [
-                {
-                    actor: CONTRACT_NAME,
-                    permission: 'active',
-                },
-            ],
-            account: CONTRACT_NAME,
-            name: 'adminsetapp',
-            data: {
-                account_name: Name.from(accountName),
-                json_data,
-                username_hash: usernameHash,
-                origin,
-            },
-        };
+        const action = this.actions.adminsetapp({
+            accountName,
+            jsonData,
+            usernameHash,
+            origin,
+        });
 
-        return await transact(Name.from(CONTRACT_NAME), [action], signer);
+        return transact([action], signer);
     }
 }
 
-export async function getAccountNameFromUsername(username: TonomyUsername): Promise<Name> {
-    return (await TonomyContract.Instance.getPerson(username)).account_name;
+export const tonomyContract = TonomyContract.fromAbi(abi);
+
+export default async function loadTonomyContract(account: NameType = CONTRACT_NAME): Promise<TonomyContract> {
+    return TonomyContract.atAccount(account);
 }
