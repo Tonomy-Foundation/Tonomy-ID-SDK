@@ -19,9 +19,7 @@
         // "isolatedModules": true, // TODO: Enable this and fix errors
         "allowSyntheticDefaultImports": true,
         "moduleResolution": "bundler",
-        "types": [
-            "jest"
-        ],
+        "types": ["jest"],
         "noFallthroughCasesInSwitch": true,
         "noUnusedLocals": true,
         "noUnusedParameters": true,
