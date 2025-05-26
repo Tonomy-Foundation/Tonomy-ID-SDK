@@ -1,4 +1,4 @@
-import { Authority } from '../../sdk/services/blockchain';
+import { Authority, tonomyEosioProxyContract } from '../../sdk/services/blockchain';
 import { StandardProposalOptions, createProposal, executeProposal } from '.';
 import { Name } from '@wharfkit/antelope';
 import { getAccountInfo } from '../../sdk';
@@ -23,59 +23,25 @@ export async function addEosioCode(options: StandardProposalOptions) {
         ownerAuthority.addCodePermission('vesting.tmy');
         ownerAuthority.addCodePermission('staking.tmy');
 
-        actions.push({
-            account: 'tonomy',
-            name: 'updateauth',
-            authorization: [
-                {
-                    actor: account,
-                    permission: 'owner',
-                },
-                {
-                    actor: 'tonomy',
-                    permission: 'active',
-                },
-                {
-                    actor: 'tonomy',
-                    permission: 'owner',
-                },
-            ],
-            data: {
+        actions.push(
+            tonomyEosioProxyContract.actions.updateauth({
                 account: account,
                 permission: 'owner',
                 parent: '',
                 auth: ownerAuthority,
-                // eslint-disable-next-line camelcase
-                auth_parent: false,
-            },
-        });
+                authParent: false,
+            })
+        );
 
-        actions.push({
-            account: 'tonomy',
-            name: 'updateauth',
-            authorization: [
-                {
-                    actor: account,
-                    permission: 'active',
-                },
-                {
-                    actor: 'tonomy',
-                    permission: 'active',
-                },
-                {
-                    actor: 'tonomy',
-                    permission: 'owner',
-                },
-            ],
-            data: {
+        actions.push(
+            tonomyEosioProxyContract.actions.updateauth({
                 account: account,
                 permission: 'active',
                 parent: 'owner',
                 auth: activeAuthority,
-                // eslint-disable-next-line camelcase
-                auth_parent: false,
-            },
-        });
+                authParent: false,
+            })
+        );
     }
 
     const proposalHash = await createProposal(

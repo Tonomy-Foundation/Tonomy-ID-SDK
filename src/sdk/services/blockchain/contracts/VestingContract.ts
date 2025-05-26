@@ -321,6 +321,10 @@ export class VestingContract extends Contract {
                 },
                 auth
             ),
+        migrateacc: (data: { holder: NameType }, auth: ActionOptions = activeAuthority(data.holder)): Action =>
+            this.action('migrateacc', data, auth),
+        resetall: (data = {}, auth: ActionOptions = activeAuthority(CONTRACT_NAME)): Action =>
+            this.action('resetall', data, auth),
     };
 
     async setSettings(

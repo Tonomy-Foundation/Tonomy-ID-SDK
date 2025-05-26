@@ -7,11 +7,12 @@ import {
     PermissionLevelType,
     Transaction,
     Action,
+    UInt16Type,
 } from '@wharfkit/antelope';
 import { Contract, loadContract } from './Contract';
 import { Signer, transact } from '../eosio/transaction';
 import { Contract as AntelopeContract } from '@wharfkit/contract';
-import { getApi, getChainInfo } from '../eosio/eosio';
+import { getApi, getChainInfo, serializeActionData } from '../eosio/eosio';
 import { ActionOptions } from '@wharfkit/contract';
 import { activeAuthority } from '../eosio/authority';
 import abi from '../../../../../Tonomy-Contracts/contracts/eosio.msig/eosio.msig.abi.json';
@@ -98,9 +99,22 @@ export class EosioMsigContract extends Contract {
         proposer: NameType,
         proposalName: NameType,
         requested: PermissionLevelType[],
-        actionsList: Action[],
+        actions: Action[],
         signer: Signer
     ): Promise<{ transaction: API.v1.PushTransactionResponse; proposalHash: Checksum256 }> {
+        // Serialize the actions
+        const serializedActions = await Promise.all(
+            actions.map(async (action) => {
+                if (!action.account || !action.name) throw new Error('Invalid action');
+                return {
+                    account: action.account,
+                    name: action.name,
+                    authorization: action.authorization,
+                    data: await serializeActionData(action.account, action.name.toString(), action.data),
+                };
+            })
+        );
+
         // compute expiration (7 days)
         const now = new Date();
         const expireInSeconds = 60 * 60 * 24 * 7; // 7 days
@@ -110,13 +124,13 @@ export class EosioMsigContract extends Contract {
         const info = await getChainInfo();
         const trx = {
             expiration: expirationString,
-            ref_block_num: info.getTransactionHeader().ref_block_num,
-            ref_block_prefix: info.getTransactionHeader().ref_block_prefix,
+            ref_block_num: info.getTransactionHeader().ref_block_num as unknown as UInt16Type,
+            ref_block_prefix: info.getTransactionHeader().ref_block_prefix as unknown as UInt16Type,
             max_net_usage_words: 0,
             max_cpu_usage_ms: 0,
             delay_sec: 0,
             context_free_actions: [],
-            actions: actionsList,
+            actions: serializedActions,
             transaction_extensions: [],
         };
         const proposalTrx = Transaction.from(trx);
@@ -132,7 +146,7 @@ export class EosioMsigContract extends Contract {
         proposer: NameType,
         proposalName: NameType,
         level: PermissionLevelType,
-        proposalHash: Checksum256Type,
+        proposalHash: Checksum256Type | undefined,
         signer: Signer
     ): Promise<API.v1.PushTransactionResponse> {
         const action = this.actions.approve({ proposer, proposalName, level, proposalHash });

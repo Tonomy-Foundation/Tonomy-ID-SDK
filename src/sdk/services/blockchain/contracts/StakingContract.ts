@@ -96,7 +96,7 @@ export class StakingContract extends Contract {
         StakingContract.STAKING_ESTIMATED_STAKED_PERCENT *
         EosioTokenContract.TOTAL_SUPPLY;
 
-    static async fromAbi(abi: any, account: NameType = CONTRACT_NAME): Promise<StakingContract> {
+    static fromAbi(abi: any, account: NameType = CONTRACT_NAME): StakingContract {
         const contract = new AntelopeContract({ abi, client: getApi(), account });
 
         return new this(contract, true);

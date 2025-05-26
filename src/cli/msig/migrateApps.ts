@@ -1,6 +1,7 @@
 /* eslint-disable camelcase */
 import { getApi } from '../../sdk/services/blockchain/eosio/eosio';
 import { StandardProposalOptions, createProposal, executeProposal } from '.';
+import { tonomyContract } from '../../sdk';
 
 const CONTRACT_NAME = 'tonomy';
 
@@ -48,36 +49,18 @@ export async function migrateApps(options: StandardProposalOptions) {
             accent_color: branding,
         });
 
-        actions.push({
-            authorization: [
-                {
-                    actor: CONTRACT_NAME,
-                    permission: 'active',
-                },
-            ],
-            account: CONTRACT_NAME,
-            name: 'adminsetapp',
-            data: {
-                account_name: row.account_name,
-                json_data,
-                username_hash: row.username_hash,
+        actions.push(
+            tonomyContract.actions.adminSetApp({
+                accountName: row.account_name,
+                jsonData: json_data,
+                usernameHash: row.username_hash,
                 origin: row.origin,
-            },
-        });
+            })
+        );
     }
 
     // Step 3: Optionally, clear the old table entries
-    const eraseAppAction = {
-        account: CONTRACT_NAME,
-        name: 'eraseoldapps',
-        authorization: [
-            {
-                actor: CONTRACT_NAME,
-                permission: 'owner',
-            },
-        ],
-        data: {},
-    };
+    const eraseAppAction = tonomyContract.actions.eraseOldApps();
 
     const proposalHash = await createProposal(
         options.proposer,

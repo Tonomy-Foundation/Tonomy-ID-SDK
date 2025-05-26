@@ -1,5 +1,13 @@
 /* eslint-disable camelcase */
-import { amountToAsset, Authority, bytesToTokens, StakingContract } from '../../sdk/services/blockchain';
+import {
+    amountToAsset,
+    Authority,
+    bytesToTokens,
+    stakingContract,
+    StakingContract,
+    tonomyContract,
+    tonomyEosioProxyContract,
+} from '../../sdk/services/blockchain';
 import { StandardProposalOptions, createProposal, executeProposal } from '.';
 import { createSubdomainOnOrigin, getAppUsernameHash } from '../bootstrap';
 import { getAccountInfo } from '../../sdk';
@@ -10,26 +18,12 @@ import { deployContract } from './contract';
 //create staking.tmy account controlled by ops.tmy
 export async function createStakingTmyAccount(options: StandardProposalOptions) {
     function createNewAccountAction(name: string, active: Authority, owner: Authority) {
-        return {
-            account: 'tonomy',
-            name: 'newaccount',
-            authorization: [
-                {
-                    actor: 'tonomy',
-                    permission: 'owner',
-                },
-                {
-                    actor: 'tonomy',
-                    permission: 'active',
-                },
-            ],
-            data: {
-                creator: 'tonomy',
-                name,
-                owner,
-                active,
-            },
-        };
+        return tonomyEosioProxyContract.actions.newaccount({
+            creator: 'tonomy',
+            name,
+            active,
+            owner,
+        });
     }
 
     const activeAuthority = Authority.fromAccount({ actor: 'ops.tmy', permission: 'active' });
@@ -57,59 +51,23 @@ export async function createStakingTmyAccount(options: StandardProposalOptions) 
     ownerAuthorityInfra.addCodePermission('staking.tmy');
     activeAuthorityInfra.addCodePermission('staking.tmy');
 
-    const updateInfraOwnerPermission = {
-        account: 'tonomy',
-        name: 'updateauth',
-        authorization: [
-            {
-                actor: 'infra.tmy',
-                permission: 'owner',
-            },
-            {
-                actor: 'tonomy',
-                permission: 'active',
-            },
-            {
-                actor: 'tonomy',
-                permission: 'owner',
-            },
-        ],
-        data: {
-            account: 'infra.tmy',
-            permission: 'owner',
-            parent: '',
-            auth: ownerAuthority,
+    const updateInfraOwnerPermission = tonomyEosioProxyContract.actions.updateauth({
+        account: 'infra.tmy',
+        permission: 'owner',
+        parent: '',
+        auth: ownerAuthority,
 
-            auth_parent: false,
-        },
-    };
+        authParent: false,
+    });
 
-    const updateInfraActivePermission = {
-        account: 'tonomy',
-        name: 'updateauth',
-        authorization: [
-            {
-                actor: 'infra.tmy',
-                permission: 'active',
-            },
-            {
-                actor: 'tonomy',
-                permission: 'active',
-            },
-            {
-                actor: 'tonomy',
-                permission: 'owner',
-            },
-        ],
-        data: {
-            account: 'infra.tmy',
-            permission: 'active',
-            parent: 'owner',
-            auth: activeAuthority,
+    const updateInfraActivePermission = tonomyEosioProxyContract.actions.updateauth({
+        account: 'infra.tmy',
+        permission: 'active',
+        parent: 'owner',
+        auth: activeAuthority,
 
-            auth_parent: false,
-        },
-    };
+        authParent: false,
+    });
 
     const proposalHash = await createProposal(
         options.proposer,
@@ -136,24 +94,20 @@ export async function stakingContractSetup(options: StandardProposalOptions) {
 
     console.log(`Setting up hypha contract "${contract}" with ${tokens} tokens to buy ${ramKb}KB of RAM`);
 
-    const adminSetAppAction = {
-        authorization: [
-            {
-                actor: 'tonomy',
-                permission: 'active',
-            },
-        ],
-        account: 'tonomy',
-        name: 'adminsetapp',
-        data: {
-            account_name: 'staking.tmy',
-            app_name: 'TONO Staking',
-            description: 'TONO Staking contract',
-            username_hash: tonomyUsername,
-            logo_url: createSubdomainOnOrigin('https://accounts.testnet.tonomy.io', 'staking') + '/tonomy-logo1024.png',
-            origin: createSubdomainOnOrigin('https://accounts.testnet.tonomy.io', 'staking'),
-        },
-    };
+    const jsonData = JSON.stringify({
+        app_name: 'TONO Staking',
+        description: 'TONO Staking contract',
+        logo_url: createSubdomainOnOrigin('https://accounts.testnet.tonomy.io', 'staking') + '/tonomy-logo1024.png',
+        background_color: '#000000',
+        accent_color: '#FFFFFF',
+    });
+
+    const adminSetAppAction = tonomyContract.actions.adminSetApp({
+        accountName: 'staking.tmy',
+        usernameHash: tonomyUsername,
+        origin: createSubdomainOnOrigin('https://accounts.testnet.tonomy.io', 'staking'),
+        jsonData,
+    });
 
     // const buyRamAction = {
     //     account: 'tonomy',
@@ -171,21 +125,11 @@ export async function stakingContractSetup(options: StandardProposalOptions) {
     //     },
     // };
 
-    const setres = {
-        authorization: [
-            {
-                actor: 'tonomy',
-                permission: 'active',
-            },
-        ],
-        account: 'tonomy',
-        name: 'setresparams',
-        data: {
-            ram_price: RAM_PRICE,
-            total_ram_available: TOTAL_RAM_AVAILABLE,
-            ram_fee: RAM_FEE,
-        },
-    };
+    const setres = tonomyContract.actions.setResParams({
+        ramFee: RAM_FEE,
+        ramPrice: RAM_PRICE,
+        totalRamAvailable: TOTAL_RAM_AVAILABLE,
+    });
 
     const actions = [adminSetAppAction, setres];
 
@@ -211,21 +155,11 @@ export async function buyRam(options: StandardProposalOptions) {
 
     console.log(`Setting up hypha contract "${contract}" with ${tokens} tokens to buy ${ramKb}KB of RAM`);
 
-    const buyRamAction = {
-        account: 'tonomy',
-        name: 'buyram',
-        authorization: [
-            {
-                actor: contract,
-                permission: 'active',
-            },
-        ],
-        data: {
-            dao_owner: 'ops.tmy',
-            app: contract,
-            quant: tokens,
-        },
-    };
+    const buyRamAction = tonomyContract.actions.buyRam({
+        daoOwner: 'ops.tmy',
+        app: contract,
+        quant: tokens,
+    });
 
     const actions = [buyRamAction];
 
@@ -276,34 +210,14 @@ export async function reDeployTonomyContract(options: StandardProposalOptions) {
 
 //setup staking by calling setSettings() and addYield()
 export async function stakingSettings(options: StandardProposalOptions) {
-    const setSettings = {
-        authorization: [
-            {
-                actor: 'staking.tmy',
-                permission: 'active',
-            },
-        ],
-        account: 'staking.tmy',
-        name: 'setsettings',
-        data: {
-            yearly_stake_pool: amountToAsset(StakingContract.yearlyStakePool, 'TONO'),
-        },
-    };
+    const setSettings = stakingContract.actions.setSettings({
+        yearlyStakePool: amountToAsset(StakingContract.yearlyStakePool, 'TONO'),
+    });
 
-    const setYearlyYield = {
-        authorization: [
-            {
-                actor: 'infra.tmy',
-                permission: 'active',
-            },
-        ],
-        account: 'staking.tmy',
-        name: 'addyield',
-        data: {
-            sender: 'infra.tmy',
-            quantity: amountToAsset(StakingContract.yearlyStakePool / 2, 'TONO'),
-        },
-    };
+    const setYearlyYield = stakingContract.actions.addYield({
+        sender: 'infra.tmy',
+        quantity: amountToAsset(StakingContract.yearlyStakePool / 2, 'TONO'),
+    });
 
     const proposalHash = await createProposal(
         options.proposer,

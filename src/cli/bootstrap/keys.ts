@@ -1,12 +1,9 @@
 import { NameType, Bytes, KeyType, PrivateKey, PublicKeyType, Checksum256 } from '@wharfkit/antelope';
 import argon2 from 'argon2';
 import { randomBytes } from '../../sdk/util/crypto';
-import { EosioUtil, EosioContract, TonomyEosioProxyContract } from '../../sdk';
+import { EosioUtil } from '../../sdk';
 import { Authority } from '../../sdk/services/blockchain/eosio/authority';
-import { Signer } from '../../sdk/services/blockchain';
-
-const eosioContract = EosioContract.Instance;
-const tonomyEosioProxyContract = TonomyEosioProxyContract.Instance;
+import { eosioContract, Signer, tonomyEosioProxyContract } from '../../sdk/services/blockchain';
 
 /**
  * creates a key based on secure (hashing) key generation algorithm Argon2
@@ -55,8 +52,8 @@ export async function updateAccountKey(account: NameType, newPublicKey: PublicKe
 
     if (addCodePermission) authority.addCodePermission(account.toString());
 
-    await eosioContract.updateauth(account.toString(), 'active', 'owner', authority, getSigner());
-    await eosioContract.updateauth(account.toString(), 'owner', 'owner', authority, getSigner());
+    await eosioContract.updateAuth(account.toString(), 'active', 'owner', authority, getSigner());
+    await eosioContract.updateAuth(account.toString(), 'owner', 'owner', authority, getSigner());
 }
 
 /**
@@ -112,8 +109,8 @@ export async function updateControlByAccount(
     }
 
     if (options.replaceActive ?? true) {
-        await contract.updateauth(account.toString(), 'active', 'owner', activeAuthority, signer);
+        await contract.updateAuth(account.toString(), 'active', 'owner', activeAuthority, signer);
     }
 
-    await contract.updateauth(account.toString(), 'owner', 'owner', ownerAuthority, signer);
+    await contract.updateAuth(account.toString(), 'owner', 'owner', ownerAuthority, signer);
 }

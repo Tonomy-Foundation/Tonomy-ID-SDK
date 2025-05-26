@@ -13,10 +13,11 @@ import {
 import { Contract, loadContract } from './Contract';
 import { Contract as AntelopeContract, ActionOptions } from '@wharfkit/contract';
 import { Signer, transact } from '../eosio/transaction';
-import { SdkErrors, TonomyUsername, sha256, throwError } from '../../../util';
+import { SdkErrors, TonomyUsername, getSettings, sha256, throwError } from '../../../util';
 import { getAccount, getApi } from '../eosio/eosio';
 import abi from '../../../../../Tonomy-Contracts/contracts/tonomy/tonomy.abi.json';
-import { activeAuthority } from '../eosio/authority';
+import { activeAuthority, ownerAuthority } from '../eosio/authority';
+import { TONO_PUBLIC_SALE_PRICE } from './VestingContract';
 
 const CONTRACT_NAME: NameType = 'tonomy';
 
@@ -105,6 +106,32 @@ type AppData2 = {
     accentColor: string;
 };
 
+function calculateRamPrice(): number {
+    // See https://docs.google.com/spreadsheets/d/1_S0S7Gu-PHzt-IzCqNl3CaWnniAt1KwaXDB50roTZUQ/edit?gid=1773951365#gid=1773951365&range=C84
+
+    const ramPricePerGb = 7; // $7.00 per GB of RAM taken from standard AWS EC2 pricing
+    const numberOfNodes = 29;
+    const costOverhead = 1; // 100% overhead
+    const totalRamPrice = ramPricePerGb * numberOfNodes * (1 + costOverhead); // $ / Gb
+    const totalRamPriceBytes = totalRamPrice / (1024 * 1024 * 1024); // $ / byte
+
+    return TONO_PUBLIC_SALE_PRICE / totalRamPriceBytes; // bytes / TONO
+}
+
+export const RAM_PRICE = calculateRamPrice(); // bytes / token
+export const RAM_FEE = 0.25 / 100; // 0.25%
+export const TOTAL_RAM_AVAILABLE = 8 * 1024 * 1024 * 1024; // 8 GB
+
+/**
+ * Converts bytes to tokens.
+ *
+ * @param bytes The number of bytes to convert.
+ * @returns The converted value in tokens.
+ */
+export function bytesToTokens(bytes: number): string {
+    return ((bytes * (1 + RAM_FEE)) / RAM_PRICE).toFixed(6) + ` ${getSettings().currencySymbol}`;
+}
+
 export class TonomyContract extends Contract {
     static async atAccount(account: NameType = CONTRACT_NAME): Promise<TonomyContract> {
         return new this(await loadContract(account));
@@ -117,7 +144,7 @@ export class TonomyContract extends Contract {
     }
 
     actions = {
-        buyram: (
+        buyRam: (
             data: { daoOwner: NameType; app: NameType; quant: AssetType },
             authorization: ActionOptions = {
                 authorization: [
@@ -128,7 +155,7 @@ export class TonomyContract extends Contract {
             }
         ): Action =>
             this.action('buyram', { dao_owner: data.daoOwner, app: data.app, quant: data.quant }, authorization),
-        setresparams: (
+        setResParams: (
             data: { ramPrice: number; totalRamAvailable: number; ramFee: number },
             authorization: ActionOptions = activeAuthority(GOVERNANCE_ACCOUNT_NAME)
         ): Action =>
@@ -141,7 +168,7 @@ export class TonomyContract extends Contract {
                 },
                 authorization
             ),
-        newperson: (
+        newPerson: (
             data: { usernameHash: Checksum256Type; passwordKey: PublicKeyType; passwordSalt: Checksum256Type },
             authorization?: ActionOptions
         ): Action =>
@@ -154,11 +181,11 @@ export class TonomyContract extends Contract {
                 },
                 authorization
             ),
-        updateactive: (
+        updateActive: (
             data: { account: NameType; active: AuthorityType },
             authorization: ActionOptions = activeAuthority(data.account)
         ): Action => this.action('updateactive', data, authorization),
-        updatekeyper: (
+        updateKeyPer: (
             data: { account: NameType; permission_level: number; key: PublicKeyType; link_auth?: boolean },
             authorization: ActionOptions = { authorization: [{ actor: data.account, permission: 'owner' }] }
         ): Action =>
@@ -172,11 +199,11 @@ export class TonomyContract extends Contract {
                 },
                 authorization
             ),
-        loginwithapp: (
+        loginWithApp: (
             data: { account: NameType; app: NameType; parent: NameType; key: PublicKeyType },
             authorization: ActionOptions = { authorization: [{ actor: data.account, permission: data.parent }] }
         ): Action => this.action('loginwithapp', data, authorization),
-        newapp: (
+        newApp: (
             data: {
                 jsonData: string;
                 usernameHash: Checksum256Type;
@@ -195,7 +222,7 @@ export class TonomyContract extends Contract {
                 },
                 authorization
             ),
-        adminsetapp: (
+        adminSetApp: (
             data: {
                 accountName: NameType;
                 jsonData: string;
@@ -214,6 +241,8 @@ export class TonomyContract extends Contract {
                 },
                 authorization
             ),
+        eraseOldApps: (data = {}, authorization: ActionOptions = ownerAuthority(this.contractName)): Action =>
+            this.action('eraseoldapps', data, authorization),
     };
 
     async buyRam(
@@ -222,7 +251,7 @@ export class TonomyContract extends Contract {
         quant: AssetType,
         signer: Signer
     ): Promise<API.v1.PushTransactionResponse> {
-        const action = this.actions.buyram({ daoOwner, app, quant });
+        const action = this.actions.buyRam({ daoOwner, app, quant });
 
         return transact([action], signer);
     }
@@ -233,7 +262,7 @@ export class TonomyContract extends Contract {
         ramFee: number,
         signer: Signer
     ): Promise<API.v1.PushTransactionResponse> {
-        const action = this.actions.setresparams({ ramPrice, totalRamAvailable, ramFee });
+        const action = this.actions.setResParams({ ramPrice, totalRamAvailable, ramFee });
 
         return transact([action], signer);
     }
@@ -244,12 +273,12 @@ export class TonomyContract extends Contract {
         passwordSalt: Checksum256Type,
         signer: Signer
     ): Promise<API.v1.PushTransactionResponse> {
-        const action = this.actions.newperson({ usernameHash, passwordKey, passwordSalt });
+        const action = this.actions.newPerson({ usernameHash, passwordKey, passwordSalt });
 
         return transact([action], signer);
     }
 
-    async updateKeysPer(
+    async updateKeysPerson(
         account: NameType,
         keys: {
             BIOMETRIC?: PublicKeyType;
@@ -291,7 +320,7 @@ export class TonomyContract extends Contract {
             }
 
             actions.push(
-                this.actions.updatekeyper(
+                this.actions.updateKeyPer(
                     {
                         account,
                         permission_level: PermissionLevel.indexFor(permission),
@@ -311,7 +340,7 @@ export class TonomyContract extends Contract {
         active: AuthorityType,
         signer: Signer
     ): Promise<API.v1.PushTransactionResponse> {
-        const action = this.actions.updateactive({ account, active });
+        const action = this.actions.updateActive({ account, active });
 
         return transact([action], signer);
     }
@@ -334,7 +363,7 @@ export class TonomyContract extends Contract {
             background_color: backgroundColor,
             accent_color: accentColor,
         });
-        const action = this.actions.newapp({
+        const action = this.actions.newApp({
             jsonData,
             usernameHash,
             origin,
@@ -351,7 +380,7 @@ export class TonomyContract extends Contract {
         key: PublicKeyType,
         signer: Signer
     ): Promise<API.v1.PushTransactionResponse> {
-        const action = this.actions.loginwithapp({ account, app, parent, key });
+        const action = this.actions.loginWithApp({ account, app, parent, key });
 
         return transact([action], signer);
     }
@@ -509,7 +538,7 @@ export class TonomyContract extends Contract {
             background_color: backgroundColor,
             accent_color: accentColor,
         });
-        const action = this.actions.adminsetapp({
+        const action = this.actions.adminSetApp({
             accountName,
             jsonData,
             usernameHash,

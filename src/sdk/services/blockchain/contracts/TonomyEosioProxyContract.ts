@@ -7,6 +7,8 @@ import { Signer, transact } from '../eosio/transaction';
 import { GOVERNANCE_ACCOUNT_NAME } from './TonomyContract';
 import { getApi } from '../eosio/eosio';
 import abi from '../../../../../Tonomy-Contracts/contracts/tonomy/tonomy.abi.json';
+import { getSettings } from '../../../util';
+import { BlockchainParams } from './EosioContract';
 
 const CONTRACT_NAME: NameType = 'tonomy';
 
@@ -53,6 +55,15 @@ export class TonomyEosioProxyContract extends Contract {
     }
 
     actions = {
+        newaccount: (
+            data: {
+                creator: NameType;
+                name: NameType;
+                owner: AuthorityType;
+                active: AuthorityType;
+            },
+            auth: ActionOptions = addSpecialGovernancePermission(activeAuthority(data.creator), data.creator)
+        ): Action => this.action('newaccount', data, auth),
         setcode: (
             data: { account: NameType; vmtype: number; vmversion: number; code: string },
             auth: ActionOptions = addSpecialGovernancePermission(activeAuthority(data.account), data.account)
@@ -107,13 +118,22 @@ export class TonomyEosioProxyContract extends Contract {
             data: { account: NameType; isPriv: number },
             auth: ActionOptions = addSpecialGovernancePermission(activeAuthority(data.account), data.account)
         ): Action => this.action('setpriv', { account: data.account, is_priv: data.isPriv }, auth),
+        setprods: (
+            // TODO: use ProducerSchedule type
+            data: { schedule: any[] },
+            auth: ActionOptions = addSpecialGovernancePermission(activeAuthority(this.contractName), this.contractName)
+        ): Action => this.action('setprods', data, auth),
+        setparams: (
+            data: { params: BlockchainParams },
+            auth: ActionOptions = addSpecialGovernancePermission(activeAuthority(this.contractName), this.contractName)
+        ): Action => this.action('setparams', data, auth),
     };
 
     /** prepare setcode & setabi actions */
     async deployContractActions(
         account: NameType,
-        wasmFileContent: Buffer,
-        abiFileContent: Buffer,
+        wasmFileContent: string | Buffer,
+        abiFileContent: string | Buffer,
         extraAuthorization?: PermissionLevelType
     ): Promise<Action[]> {
         const wasmHex = wasmFileContent.toString('hex');
@@ -134,22 +154,17 @@ export class TonomyEosioProxyContract extends Contract {
     /** deploy via transact */
     async deployContract(
         account: NameType,
-        wasmFileContent: Buffer,
-        abiFileContent: Buffer,
+        wasmFileContent: string | Buffer,
+        abiFileContent: string | Buffer,
         signer: Signer | Signer[],
-        options: { extraAuthorization?: PermissionLevelType } = {}
+        extraAuthorization?: PermissionLevelType
     ): Promise<API.v1.PushTransactionResponse> {
-        const actions = await this.deployContractActions(
-            account,
-            wasmFileContent,
-            abiFileContent,
-            options?.extraAuthorization
-        );
+        const actions = await this.deployContractActions(account, wasmFileContent, abiFileContent, extraAuthorization);
 
         return transact(actions, signer);
     }
 
-    async updateauth(
+    async updateAuth(
         account: NameType,
         permission: NameType,
         parent: NameType,
@@ -180,7 +195,7 @@ export class TonomyEosioProxyContract extends Contract {
         return transact([action], signer);
     }
 
-    async setpriv(account: NameType, isPriv: number, signer: Signer): Promise<API.v1.PushTransactionResponse> {
+    async setPriv(account: NameType, isPriv: number, signer: Signer): Promise<API.v1.PushTransactionResponse> {
         const action = this.actions.setpriv({ account, isPriv });
 
         return transact([action], signer);

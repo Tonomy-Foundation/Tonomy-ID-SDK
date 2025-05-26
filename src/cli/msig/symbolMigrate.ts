@@ -1,7 +1,7 @@
 /* eslint-disable camelcase */
 import { Name } from '@wharfkit/antelope';
 import { createProposal, executeProposal, StandardProposalOptions } from '.';
-import { TonomyContract } from '../../sdk';
+import { stakingContract, tonomyContract, TonomyContract, vestingContract } from '../../sdk';
 import { getSettings } from '../../sdk';
 import {
     foundAccount,
@@ -118,19 +118,9 @@ async function migrateVesting(options: StandardProposalOptions) {
 
     const actions = Array.from(vestingHolders).map((holder) => {
         console.log(`vesting.tmy::migrateacc(${holder})`);
-        return {
-            account: 'vesting.tmy',
-            name: 'migrateacc',
-            authorization: [
-                {
-                    actor: 'vesting.tmy',
-                    permission: 'active',
-                },
-            ],
-            data: {
-                account: holder,
-            },
-        };
+        return vestingContract.actions.migrateacc({
+            holder,
+        });
     });
 
     console.log(`Total accounts to migrate: ${actions.length}`);
@@ -150,17 +140,7 @@ async function migrateVesting(options: StandardProposalOptions) {
 
 async function migrateStaking(options: StandardProposalOptions) {
     console.log('### Migrating staking.tmy');
-    const action = {
-        account: 'staking.tmy',
-        name: 'resetall',
-        authorization: [
-            {
-                actor: 'staking.tmy',
-                permission: 'active',
-            },
-        ],
-        data: {},
-    };
+    const action = stakingContract.actions.resetAll({});
     const proposalName = Name.from(options.proposalName.toString() + '4');
 
     const proposalHash = await createProposal(
@@ -178,10 +158,10 @@ async function migrateStaking(options: StandardProposalOptions) {
 export async function migrateRebrandApps(options: StandardProposalOptions) {
     console.log('### Migrating rebranding');
 
-    const apps = await TonomyContract.Instance.getApps();
+    const apps = await tonomyContract.getApps();
     const actions = await apps
         .filter((app) => {
-            const name = app.app_name.toLowerCase();
+            const name = app.appName.toLowerCase();
             const description = app.description.toLowerCase();
             const origin = app.origin.toLowerCase();
 
@@ -196,10 +176,10 @@ export async function migrateRebrandApps(options: StandardProposalOptions) {
             );
         })
         .map((app) => {
-            let newAppName = app.app_name.replace('Pangea', 'Tonomy').replace('LEOS', 'TONO');
+            let newAppName = app.appName.replace('Pangea', 'Tonomy').replace('LEOS', 'TONO');
             let newDescription = app.description.replace('Pangea', 'Tonomy').replace('LEOS', 'TONO');
             let newOrigin = app.origin.replace('pangea.web4.world', 'tonomy.io');
-            let newLogoUrl = app.logo_url.replace('pangea.web4.world', 'tonomy.io');
+            let newLogoUrl = app.logoUrl.replace('pangea.web4.world', 'tonomy.io');
 
             if (
                 newAppName.toLowerCase().includes('sales') &&
@@ -217,24 +197,18 @@ export async function migrateRebrandApps(options: StandardProposalOptions) {
                     'https://cdn.prod.website-files.com/67ea90b224287f4cbb2dd180/67ef991d349ec01179aec16d_icon1.png';
             }
 
-            return {
-                account: 'tonomy',
-                name: 'adminsetapp',
-                authorization: [
-                    {
-                        actor: 'tonomy',
-                        permission: 'active',
-                    },
-                ],
-                data: {
-                    account_name: app.account_name,
+            return tonomyContract.actions.adminSetApp({
+                accountName: app.accountName,
+                usernameHash: app.usernameHash,
+                origin: newOrigin,
+                jsonData: JSON.stringify({
                     app_name: newAppName,
                     description: newDescription,
-                    username_hash: app.username_hash,
                     logo_url: newLogoUrl,
-                    origin: newOrigin,
-                },
-            };
+                    background_color: '#000000',
+                    accent_color: '#FFFFFF',
+                }),
+            });
         });
 
     const proposalName = Name.from(options.proposalName.toString() + '5');

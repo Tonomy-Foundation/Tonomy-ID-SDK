@@ -1,6 +1,5 @@
 import { PrivateKey, Name, Checksum256, NameType, Action } from '@wharfkit/antelope';
-import { EosioMsigContract } from '../../sdk';
-import { createSigner } from '../../sdk/services/blockchain';
+import { activePermissionLevel, createSigner, eosioMsigContract } from '../../sdk/services/blockchain';
 import settings from '../settings';
 import { govMigrate } from './govMigrate';
 import { newAccount } from './newAccount';
@@ -29,8 +28,6 @@ import {
 } from './staking';
 import { migrateApps } from './migrateApps';
 import { symbolMigrate, migrateRebrandApps } from './symbolMigrate';
-
-const eosioMsigContract = EosioMsigContract.Instance;
 
 const governanceAccounts = ['1.found.tmy', '2.found.tmy', '3.found.tmy'];
 let newGovernanceAccounts = ['13.found.tmy', '5.found.tmy', '11.found.tmy', '12.found.tmy', '14.found.tmy'];
@@ -216,7 +213,7 @@ export default async function msig(args: string[]) {
             const transaction = await eosioMsigContract.approve(
                 proposer,
                 proposalName,
-                signingAccount,
+                activePermissionLevel(signingAccount),
                 undefined,
                 signer
             );
@@ -336,7 +333,7 @@ export async function executeProposal(
             await eosioMsigContract.approve(
                 proposer,
                 proposalName,
-                governanceAccounts[i],
+                activePermissionLevel(governanceAccounts[i]),
                 proposalHash,
                 tonomyGovSigners[i]
             );

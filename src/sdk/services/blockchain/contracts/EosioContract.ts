@@ -21,15 +21,15 @@ export class EosioContract extends Contract {
     }
 
     actions = {
-        setcode: (
+        setCode: (
             data: { account: NameType; vmtype: number; vmversion: number; code: string },
             authorization: ActionOptions = activeAuthority(data.account)
         ) => this.action('setcode', data, authorization),
-        setabi: (
+        setAbi: (
             data: { account: NameType; abi: string },
             authorization: ActionOptions = activeAuthority(data.account)
         ) => this.action('setabi', data, authorization),
-        updateauth: (
+        updateAuth: (
             data: { account: NameType; permission: NameType; parent: NameType; auth: AuthorityType },
             authorization: ActionOptions = activeAuthority(data.account)
         ) =>
@@ -43,25 +43,25 @@ export class EosioContract extends Contract {
                 },
                 authorization
             ),
-        newaccount: (
+        newAccount: (
             data: { creator: NameType; name: NameType; owner: AuthorityType; active: AuthorityType },
             authorization: ActionOptions = activeAuthority(data.creator)
         ) => this.action('newaccount', data, authorization),
-        linkauth: (
+        linkAuth: (
             data: { account: NameType; code: NameType; type: NameType; requirement: NameType },
             authorization: ActionOptions = activeAuthority(data.account)
         ) => this.action('linkauth', data, authorization),
-        setpriv: (data: { account: NameType; isPriv: number }, authorization?: ActionOptions) =>
+        setPriv: (data: { account: NameType; isPriv: number }, authorization?: ActionOptions) =>
             this.action('setpriv', { account: data.account, is_priv: data.isPriv }, authorization),
-        setparams: (data: { params: BlockchainParams }, authorization?: ActionOptions) =>
+        setParams: (data: { params: BlockchainParams }, authorization?: ActionOptions) =>
             this.action('setparams', data, authorization),
     };
 
     /** prepare setcode & setabi actions */
     async deployContractActions(
         account: NameType,
-        wasmFileContent: Buffer,
-        abiFileContent: Buffer,
+        wasmFileContent: string | Buffer,
+        abiFileContent: string | Buffer,
         extraAuthorization?: PermissionLevelType
     ): Promise<Action[]> {
         const wasmHex = wasmFileContent.toString('hex');
@@ -73,8 +73,8 @@ export class EosioContract extends Contract {
 
         if (extraAuthorization) auth.authorization.push(extraAuthorization);
 
-        const setCode = this.actions.setcode({ account, vmtype: 0, vmversion: 0, code: wasmHex }, auth);
-        const setAbi = this.actions.setabi({ account, abi: abiHex }, auth);
+        const setCode = this.actions.setCode({ account, vmtype: 0, vmversion: 0, code: wasmHex }, auth);
+        const setAbi = this.actions.setAbi({ account, abi: abiHex }, auth);
 
         return [setCode, setAbi];
     }
@@ -82,63 +82,63 @@ export class EosioContract extends Contract {
     /** deploy contract via transact */
     async deployContract(
         account: NameType,
-        wasmFileContent: Buffer,
-        abiFileContent: Buffer,
+        wasmFileContent: string | Buffer,
+        abiFileContent: string | Buffer,
         signer: Signer | Signer[],
-        extraAuthorization?: { actor: string; permission: string }
+        extraAuthorization?: PermissionLevelType
     ): Promise<API.v1.PushTransactionResponse> {
         const actions = await this.deployContractActions(account, wasmFileContent, abiFileContent, extraAuthorization);
 
         return transact(actions, signer);
     }
 
-    async updateauth(
+    async updateAuth(
         account: NameType,
         permission: NameType,
         parent: NameType,
         auth: AuthorityType,
         signer: Signer
     ): Promise<API.v1.PushTransactionResponse> {
-        const action = this.actions.updateauth({ account, permission, parent, auth });
+        const action = this.actions.updateAuth({ account, permission, parent, auth });
 
         return transact([action], signer);
     }
 
-    async newaccount(
+    async newAccount(
         creator: NameType,
         name: NameType,
         owner: Authority,
         active: Authority,
         signer: Signer
     ): Promise<API.v1.PushTransactionResponse> {
-        const action = this.actions.newaccount({ creator, name, owner, active });
+        const action = this.actions.newAccount({ creator, name, owner, active });
 
         return transact([action], signer);
     }
 
-    async linkauth(
+    async linkAuth(
         account: NameType,
         code: NameType,
         type: NameType,
         requirement: NameType,
         signer: Signer
     ): Promise<API.v1.PushTransactionResponse> {
-        const action = this.actions.linkauth({ account, code, type, requirement });
+        const action = this.actions.linkAuth({ account, code, type, requirement });
 
         return transact([action], signer);
     }
 
-    async setpriv(account: NameType, isPriv: number, signer: Signer): Promise<API.v1.PushTransactionResponse> {
-        const action = this.actions.setpriv({ account, isPriv });
+    async setPriv(account: NameType, isPriv: number, signer: Signer): Promise<API.v1.PushTransactionResponse> {
+        const action = this.actions.setPriv({ account, isPriv });
 
         return transact([action], signer);
     }
 
-    async setparams(
+    async setParams(
         blockchainParameters: BlockchainParams = defaultBlockchainParams,
         signer: Signer
     ): Promise<API.v1.PushTransactionResponse> {
-        const action = this.actions.setparams({ params: blockchainParameters });
+        const action = this.actions.setParams({ params: blockchainParameters });
 
         return transact([action], signer);
     }

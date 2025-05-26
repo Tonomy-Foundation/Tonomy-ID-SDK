@@ -24,12 +24,12 @@ export function getApi(): APIClient {
 /**
  * This function serializes one action into hex string
  *
- * @param {string} account - name of the contract account to pull the ABI from
- * @param {string } type - name of the action that will be executed
+ * @param {NameType} account - name of the contract account to pull the ABI from
+ * @param {NameType } type - name of the action that will be executed
  * @param {object} data - data of the action that will be executed
  * @returns {string} - hex string of the serialized action
  */
-export async function serializeActionData(account: string, type: string, data: object): Promise<string> {
+export async function serializeActionData(account: NameType, type: string, data: object): Promise<string> {
     const { abi } = await (await getApi()).v1.chain.get_abi(account);
 
     if (!abi) {
