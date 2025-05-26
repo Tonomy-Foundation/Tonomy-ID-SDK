@@ -3,10 +3,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { createAntelopeAccount, createApp } from './create-account';
 import {
-    DemoTokenContract,
     EosioTokenContract,
-    EosioContract,
-    TonomyContract,
     EosioUtil,
     TonomyUsername,
     AccountType,
@@ -27,16 +24,16 @@ import {
     RAM_PRICE,
     StakingContract,
     amountToAsset,
+    tokenContract,
+    eosioContract,
+    vestingContract,
+    stakingContract,
+    tonomyContract,
+    tonomyEosioProxyContract,
 } from '../../sdk/services/blockchain';
 import { createUser, mockCreateAccount, restoreCreateAccountFromMock } from './user';
 import { sleep } from '../../sdk/util';
-
-const demoTokenContract = DemoTokenContract.Instance;
-const tokenContract = EosioTokenContract.Instance;
-const tonomyContract = TonomyContract.Instance;
-const eosioContract = EosioContract.Instance;
-const vestingContract = VestingContract.Instance;
-const stakeContract = StakingContract.Instance;
+import loadDemoTokenContract from '../../sdk/services/blockchain/contracts/DemoTokenContract';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -165,8 +162,10 @@ async function deployEosioMsig() {
 }
 
 async function configureDemoToken(newSigner: Signer) {
+    const demoTokenContract = await loadDemoTokenContract();
+
     await demoTokenContract.create(`1000000000 DEMO`, newSigner);
-    await demoTokenContract.issue(`10000 DEMO`, newSigner);
+    await demoTokenContract.issue(demoTokenContract.contractName, `10000 DEMO`, '', newSigner);
 }
 
 async function deployVesting() {
@@ -194,10 +193,10 @@ async function deployStaking() {
 async function setupVestingAndStaking(newSigner: Signer) {
     await vestingContract.setSettings(VestingContract.SALE_START_DATE, VestingContract.VESTING_START_DATE, newSigner);
 
-    await stakeContract.setSettings(amountToAsset(StakingContract.yearlyStakePool, 'TONO'), newSigner);
+    await stakingContract.setSettings(amountToAsset(StakingContract.yearlyStakePool, 'TONO'), newSigner);
     await sleep(1000);
-    await stakeContract.addYield('infra.tmy', amountToAsset(StakingContract.yearlyStakePool / 2, 'TONO'), newSigner); // 6 months budget in the account
-    console.log('Staking settings', await stakeContract.getSettings());
+    await stakingContract.addYield('infra.tmy', amountToAsset(StakingContract.yearlyStakePool / 2, 'TONO'), newSigner); // 6 months budget in the account
+    console.log('Staking settings', await stakingContract.getSettings());
 }
 
 async function createNativeToken() {
@@ -210,9 +209,9 @@ async function createNativeToken() {
         signer
     );
     console.log('Create and issue native token');
-    await tokenContract.create(`50000000000.000000 ${getSettings().currencySymbol}`, signer);
+    await tokenContract.create('eosio.token', `50000000000.000000 ${getSettings().currencySymbol}`, signer);
     console.log('Issue native token');
-    await tokenContract.issue('eosio.token', `50000000000.000000 ${getSettings().currencySymbol}`, signer);
+    await tokenContract.issue('eosio.token', `50000000000.000000 ${getSettings().currencySymbol}`, '', signer);
 }
 
 const allocations: [string, number][] = [
@@ -454,8 +453,8 @@ async function updateAccountControllers(govKeys: string[], newPublicKey: PublicK
 
     activeAuthority.addKey(newPublicKey.toString(), 1);
     activeAuthority.addCodePermission('vesting.tmy');
-    await eosioContract.updateauth(operationsAccount, 'active', 'owner', activeAuthority, signer);
-    await eosioContract.updateauth(operationsAccount, 'owner', 'owner', ownerAuthority, signer);
+    await eosioContract.updateAuth(operationsAccount, 'active', 'owner', activeAuthority, signer);
+    await eosioContract.updateAuth(operationsAccount, 'owner', 'owner', ownerAuthority, signer);
 
     // accounts controlled by ops.tmy
     for (const account of opsControlledAccounts.filter(
@@ -501,8 +500,6 @@ async function deployEosioTonomy(signer: Signer) {
     );
 }
 
-const tonomyEosioProxyContract = TonomyEosioProxyContract.Instance;
-
 async function updateMsigControl(govKeys: string[], signer: Signer) {
     console.log('Update found.tmy msig control');
 
@@ -512,7 +509,7 @@ async function updateMsigControl(govKeys: string[], signer: Signer) {
     const threshold = Math.ceil((govAccounts.length * 2) / 3);
     const ownerAuthority = Authority.fromAccountArray(govAccounts, 'active', threshold);
 
-    await tonomyEosioProxyContract.updateauth('found.tmy', 'active', 'owner', activeAuthority, signer);
+    await tonomyEosioProxyContract.updateAuth('found.tmy', 'active', 'owner', activeAuthority, signer);
 
-    await tonomyEosioProxyContract.updateauth('found.tmy', 'owner', 'owner', ownerAuthority, signer);
+    await tonomyEosioProxyContract.updateAuth('found.tmy', 'owner', 'owner', ownerAuthority, signer);
 }

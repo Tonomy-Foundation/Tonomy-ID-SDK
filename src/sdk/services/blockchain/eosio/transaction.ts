@@ -1,5 +1,4 @@
 import {
-    Action,
     API,
     Transaction,
     SignedTransaction,
@@ -7,17 +6,15 @@ import {
     Checksum256,
     Name,
     PrivateKey,
+    ActionType,
 } from '@wharfkit/antelope';
 import { KeyManager, KeyManagerLevel } from '../../../storage/keymanager';
 import { HttpError } from '../../../util/errors';
 import { getApi } from './eosio';
 import Debug from 'debug';
+import { MapObject } from '../../../util';
 
 const debug = Debug('tonomy-sdk:services:blockchain:eosio:transaction');
-
-interface MapObject {
-    [key: string]: any;
-}
 
 /**
  * Action data for a transaction
@@ -134,28 +131,16 @@ export class AntelopePushTransactionError extends Error {
     }
 }
 
-async function transact(
-    contract: Name,
-    actions: ActionData[],
-    signer: Signer | Signer[]
-): Promise<API.v1.PushTransactionResponse> {
+async function transact(actions: ActionType[], signer: Signer | Signer[]): Promise<API.v1.PushTransactionResponse> {
     // Get the ABI
     const api = await getApi();
-    const abi = await api.v1.chain.get_abi(contract);
-
-    // Create the action data
-    const actionData: Action[] = [];
-
-    actions.forEach((data) => {
-        actionData.push(Action.from({ account: contract, ...data }, abi.abi));
-    });
 
     // Construct the transaction
     const info = await api.v1.chain.get_info();
     const header = info.getTransactionHeader();
     const transaction = Transaction.from({
         ...header,
-        actions: actionData,
+        actions,
     });
 
     // Create signature
@@ -178,7 +163,7 @@ async function transact(
 
         if (e.response?.headers) {
             if (e.response?.json) {
-                throw new AntelopePushTransactionError({ ...e.response.json, contract, actions });
+                throw new AntelopePushTransactionError({ ...e.response.json, actions });
             }
 
             throw new HttpError(e);

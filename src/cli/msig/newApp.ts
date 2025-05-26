@@ -1,5 +1,5 @@
 import { StandardProposalOptions, createProposal, executeProposal } from '.';
-import { AccountType, getSettings, TonomyUsername } from '../../sdk';
+import { AccountType, getSettings, tonomyContract, TonomyUsername } from '../../sdk';
 
 export async function newApp(options: StandardProposalOptions) {
     const appName = 'Fiddl.Art';
@@ -10,31 +10,19 @@ export async function newApp(options: StandardProposalOptions) {
     const username = TonomyUsername.fromUsername(usernameShort, AccountType.APP, getSettings().accountSuffix);
     const key = 'EOS4xnrCGUT688wFvinQoCuiu7E3Qpn8Phq76TRKNTb87XFMjzsJu';
 
-    const action = {
-        account: 'tonomy',
-        name: 'newapp',
-        authorization: [
-            {
-                actor: 'tonomy',
-                permission: 'owner',
-            },
-            {
-                actor: 'tonomy',
-                permission: 'active',
-            },
-        ],
-        data: {
-            // eslint-disable-next-line camelcase
-            app_name: appName,
-            description,
-            // eslint-disable-next-line camelcase
-            logo_url: logoUrl,
-            origin: origin,
-            // eslint-disable-next-line camelcase
-            username_hash: username.usernameHash,
-            key,
-        },
-    };
+    const jsonData = JSON.stringify({
+        app_name: appName,
+        description,
+        logo_url: logoUrl,
+        background_color: '#000000',
+        accent_color: '#FFFFFF',
+    });
+    const action = tonomyContract.actions.newApp({
+        usernameHash: username.usernameHash,
+        origin,
+        key,
+        jsonData,
+    });
 
     const proposalHash = await createProposal(
         options.proposer,

@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 /* eslint-disable camelcase */
 import { Name, PrivateKey } from '@wharfkit/antelope';
-import { AccountType, TonomyUsername, EosioTokenContract, setSettings } from '../../sdk';
+import { AccountType, TonomyUsername, setSettings } from '../../sdk';
 import {
     amountToSupplyPercentage,
     AppTableRecord,
@@ -13,6 +13,7 @@ import {
     TonomyContract,
     GetPersonResponse,
     vestingCategories as vestingCategoriesList,
+    tokenContract,
 } from '../../sdk/services/blockchain';
 import { getApi } from '../../sdk/services/blockchain/eosio/eosio';
 import settings from '../settings';
@@ -25,8 +26,6 @@ import {
 } from '../bootstrap';
 import Decimal from 'decimal.js';
 import { getAllAllocations } from '../vesting';
-
-const tokenContract = EosioTokenContract.Instance;
 
 export async function transfer(args: string[]) {
     const privateKey = PrivateKey.from(process.env.SIGNING_KEY || '');

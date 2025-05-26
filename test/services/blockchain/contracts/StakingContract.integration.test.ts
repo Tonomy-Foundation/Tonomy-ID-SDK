@@ -4,12 +4,12 @@ import {
     assetToAmount,
     createKeyManagerSigner,
     createSigner,
-    EosioTokenContract,
     getTonomyOperationsKey,
     Signer,
     StakingAllocation,
     StakingContract,
     StakingSettings,
+    tokenContract,
 } from '../../../../src/sdk/services/blockchain';
 import { KeyManagerLevel } from '../../../../src/sdk/index';
 import { jest } from '@jest/globals';
@@ -20,7 +20,6 @@ import Debug from 'debug';
 
 const debug = Debug('tonomy-sdk-tests:services:staking-contract');
 const stakeContract = StakingContract.Instance;
-const eosioTokenContract = EosioTokenContract.Instance;
 const signer = createSigner(getTonomyOperationsKey());
 
 const yieldPool = amountToAsset(StakingContract.yearlyStakePool / 2, 'TONO');
@@ -48,7 +47,7 @@ describe('TonomyContract Staking Tests', () => {
         accountSigner = createKeyManagerSigner(user.keyManager, KeyManagerLevel.ACTIVE);
 
         // Issue tokens to the test account
-        await eosioTokenContract.transfer("coinsale.tmy", accountName, '10.000000 TONO', "testing TONO", signer);
+        await tokenContract.transfer("coinsale.tmy", accountName, '10.000000 TONO', "testing TONO", signer);
         stakeSettings = await stakeContract.getSettings();
     });
 
@@ -316,7 +315,7 @@ describe('TonomyContract Staking Tests', () => {
             expect(settingsStart.yearlyStakePool).toBe(yearlyStakePool);
 
             // Staker1 stakes 1000 TONO.
-            await eosioTokenContract.transfer("coinsale.tmy", accountName, stakeAmount, "testing TONO", signer);
+            await tokenContract.transfer("coinsale.tmy", accountName, stakeAmount, "testing TONO", signer);
             await stakeContract.stakeTokens(accountName, stakeAmount, accountSigner);
             const settings1 = await stakeContract.getSettings();
             
@@ -331,7 +330,7 @@ describe('TonomyContract Staking Tests', () => {
             const accountName2 = (await user2.getAccountName()).toString();
             const accountSigner2 = createKeyManagerSigner(user2.keyManager, KeyManagerLevel.ACTIVE);
 
-            await eosioTokenContract.transfer("coinsale.tmy", accountName2, stakeAmount, "testing", signer);
+            await tokenContract.transfer("coinsale.tmy", accountName2, stakeAmount, "testing", signer);
             await stakeContract.stakeTokens(accountName2, stakeAmount, accountSigner2);
             const settings2 = await stakeContract.getSettings();
 
@@ -622,7 +621,7 @@ describe('TonomyContract Staking Tests', () => {
             const yearlyStakePool = largeStake; // To make APY 1.0
 
             await stakeContract.setSettings(yearlyStakePool, signer); // APY 1.0
-            await eosioTokenContract.transfer("coinsale.tmy", accountName, largeStake, "testing TONO", signer);
+            await tokenContract.transfer("coinsale.tmy", accountName, largeStake, "testing TONO", signer);
             await stakeContract.stakeTokens(accountName, largeStake, accountSigner);
             
             const startTime = new Date();
@@ -708,7 +707,7 @@ describe('TonomyContract Staking Tests', () => {
 
             await stakeContract.setSettings(yearlyStakePool, signer); // APY 1.0
 
-            await eosioTokenContract.transfer("coinsale.tmy", accountName, largeStake, "testing TONO", signer);
+            await tokenContract.transfer("coinsale.tmy", accountName, largeStake, "testing TONO", signer);
             await stakeContract.stakeTokens(accountName, largeStake, accountSigner);
       
             const initial = await getStakingState();

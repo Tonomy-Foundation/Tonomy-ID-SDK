@@ -1,5 +1,7 @@
-function copyObject(object: object): object {
+export function copyObject(object: object): object {
     return JSON.parse(JSON.stringify(object));
 }
 
-export { copyObject };
+export interface MapObject {
+    [key: string]: any;
+}

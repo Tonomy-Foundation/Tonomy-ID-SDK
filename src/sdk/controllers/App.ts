@@ -1,11 +1,9 @@
 import { Checksum256, Name, PublicKey } from '@wharfkit/antelope';
-import { TonomyContract } from '../services/blockchain/contracts/TonomyContract';
 import { Signer } from '../services/blockchain/eosio/transaction';
 import { getSettings } from '../util/settings';
 import { AccountType, TonomyUsername } from '../util/username';
 import { AppStatusEnum } from '../types/AppStatusEnum';
-
-const tonomyContract = TonomyContract.Instance;
+import { tonomyContract } from '../services/blockchain';
 
 export interface AppData {
     accountName: Name;
@@ -75,7 +73,7 @@ export class App implements AppData {
             getSettings().accountSuffix
         );
 
-        const res = await tonomyContract.newapp(
+        const res = await tonomyContract.newApp(
             options.appName,
             options.description,
             username.usernameHash,
@@ -102,16 +100,16 @@ export class App implements AppData {
         const contractAppData = await tonomyContract.getApp(origin);
 
         return new App({
-            accountName: contractAppData.account_name,
-            appName: contractAppData.app_name,
-            usernameHash: contractAppData.username_hash,
+            accountName: contractAppData.accountName,
+            appName: contractAppData.appName,
+            usernameHash: contractAppData.usernameHash,
             description: contractAppData.description,
-            logoUrl: contractAppData.logo_url,
+            logoUrl: contractAppData.logoUrl,
             origin: contractAppData.origin,
             version: contractAppData.version,
             status: AppStatusEnum.READY,
-            accentColor: contractAppData.accent_color,
-            backgroundColor: contractAppData.background_color,
+            accentColor: contractAppData.accentColor,
+            backgroundColor: contractAppData.backgroundColor,
         });
     }
 }

@@ -4,7 +4,7 @@ import { Issuer } from 'did-jwt-vc';
 import { getSettings } from '../sdk/util/settings';
 import { SdkError, SdkErrors, createSdkError, throwError } from '../sdk/util/errors';
 import { createStorage, PersistentStorageClean, StorageFactory, STORAGE_NAMESPACE } from '../sdk/storage/storage';
-import { Name, API, NameType } from '@wharfkit/antelope';
+import { Name, API, NameType, Action } from '@wharfkit/antelope';
 import { TonomyUsername } from '../sdk/util/username';
 import { browserStorageFactory } from '../sdk/storage/browserStorage';
 import { getAccount, getChainInfo } from '../sdk/services/blockchain/eosio/eosio';
@@ -14,12 +14,12 @@ import { DataSharingRequest, DataSharingRequestPayload, getAccountNameFromDid, p
 import {
     AuthenticationMessage,
     Communication,
-    TonomyContract,
     LinkAuthRequestMessage,
     LinkAuthRequestResponseMessage,
     LoginRequestsMessagePayload,
     Message,
     ResponsesManager,
+    tonomyContract,
 } from '../sdk';
 import { objToBase64Url } from '../sdk/util/base64';
 import { VerifiableCredential } from '../sdk/util/ssi/vc';
@@ -60,8 +60,6 @@ export type LoginWithTonomyMessages = {
     dataSharingRequest?: DataSharingRequest;
     loginToCommunication: AuthenticationMessage;
 };
-
-const tonomyContract = TonomyContract.Instance;
 
 /**
  * The data of a client authorization request
@@ -143,7 +141,7 @@ export class ExternalUser {
             if (username) {
                 const personData = await tonomyContract.getPerson(username);
 
-                if (accountName.toString() !== personData.account_name.toString())
+                if (!accountName.equals(personData.accountName))
                     throwError('Username has changed', SdkErrors.InvalidData);
             }
 
@@ -464,7 +462,7 @@ export class ExternalUser {
         if (contract instanceof TonomyUsername) {
             const app = await tonomyContract.getApp(contract);
 
-            contractAccount = app.account_name;
+            contractAccount = app.accountName;
         } else {
             contractAccount = Name.from(contract);
         }
@@ -475,16 +473,17 @@ export class ExternalUser {
         await this.checkLinkAuthRequirements(account, permission, contractAccount, action);
 
         // Setup the action to sign
-        const newAction = {
-            name: action.toString(),
+        const newAction = await Action.from({
+            account: contractAccount,
+            name: action,
             authorization: [
                 {
                     actor: account.toString(),
                     permission: permission.toString(),
                 },
             ],
-            data: data,
-        };
+            data,
+        });
         const signer = this.getTransactionSigner();
 
         debug(
@@ -492,7 +491,7 @@ export class ExternalUser {
             JSON.stringify(newAction, null, 2)
         );
 
-        return await transact(Name.from(contractAccount), [newAction], signer);
+        return await transact([newAction], signer);
     }
 
     private async checkLinkAuthRequirements(

@@ -7,7 +7,7 @@ import {
     EosioTokenContract,
     getAccount,
     getAccountNameFromUsername,
-    VestingAllocation,
+    VestingAllocationRaw,
 } from '../../sdk/services/blockchain';
 import { getSettings } from '../../sdk/util/settings';
 import settings from '../settings';
@@ -54,7 +54,7 @@ export async function getAllUniqueHolders(print = false): Promise<Set<string>> {
     return uniqueHolders;
 }
 
-interface VestingAllocationAndAccount extends VestingAllocation {
+interface VestingAllocationAndAccount extends VestingAllocationRaw {
     account: string;
 }
 

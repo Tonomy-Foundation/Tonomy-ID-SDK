@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { Authority, bytesToTokens } from '../../sdk/services/blockchain';
+import { Authority, bytesToTokens, tokenContract, tonomyEosioProxyContract } from '../../sdk/services/blockchain';
 import { StandardProposalOptions, createProposal, executeProposal } from '.';
 import { deployContract } from './contract';
 import { AccountType, getSettings, TonomyUsername } from '../../sdk';
@@ -8,26 +8,12 @@ import { Name } from '@wharfkit/antelope';
 // @ts-expect-error args not used
 export async function hyphaAccountsCreate(args: any, options: StandardProposalOptions) {
     function createNewAccountAction(name: string, active: Authority, owner: Authority) {
-        return {
-            account: 'tonomy',
-            name: 'newaccount',
-            authorization: [
-                {
-                    actor: 'tonomy',
-                    permission: 'owner',
-                },
-                {
-                    actor: 'tonomy',
-                    permission: 'active',
-                },
-            ],
-            data: {
-                creator: 'tonomy',
-                name,
-                owner,
-                active,
-            },
-        };
+        return tonomyEosioProxyContract.actions.newaccount({
+            creator: 'tonomy',
+            name,
+            owner: owner,
+            active: active,
+        });
     }
 
     const tonomyGovActivePermission = {
@@ -297,22 +283,12 @@ export async function hyphaContractSet(args: any, options: StandardProposalOptio
         },
     };
 
-    const transferTokensAction = {
-        authorization: [
-            {
-                actor: 'partners.tmy',
-                permission: 'active',
-            },
-        ],
-        account: 'eosio.token',
-        name: 'transfer',
-        data: {
-            from: 'partners.tmy',
-            to: contract,
-            quantity: tokens,
-            memo: `RAM for ${contract}`,
-        },
-    };
+    const transferTokensAction = tokenContract.actions.transfer({
+        from: 'partners.tmy',
+        to: contract,
+        quantity: tokens,
+        memo: `RAM for ${contract}`,
+    });
 
     const buyRamAction = {
         account: 'tonomy',

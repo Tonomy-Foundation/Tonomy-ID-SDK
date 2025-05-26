@@ -1,5 +1,5 @@
 import { Name, PrivateKey, Checksum256 } from '@wharfkit/antelope';
-import { GetPersonResponse } from '../services/blockchain/contracts/TonomyContract';
+import { PersonData } from '../services/blockchain/contracts/TonomyContract';
 import { TonomyUsername } from '../util/username';
 import { Issuer } from 'did-jwt-vc';
 import { AuthenticationMessage, Message } from '../services/communication/message';
@@ -105,7 +105,7 @@ export interface IUserCommunication extends IUserAuthentication {
 }
 
 export interface IUserOnboarding extends IUserCommunication {
-    login(username: TonomyUsername, password: string, options: ILoginOptions): Promise<GetPersonResponse>;
+    login(username: TonomyUsername, password: string, options: ILoginOptions): Promise<PersonData>;
     isLoggedIn(): Promise<boolean>;
     createPerson(): Promise<void>;
     saveUsername(username: string): Promise<void>;

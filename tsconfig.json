@@ -19,9 +19,7 @@
         // "isolatedModules": true, // TODO: Enable this and fix errors
         "allowSyntheticDefaultImports": true,
         "moduleResolution": "bundler",
-        "types": [
-            "jest"
-        ],
+        "types": ["jest"],
         "noFallthroughCasesInSwitch": true,
         "noUnusedLocals": true,
         "noUnusedParameters": true,
@@ -29,8 +27,10 @@
         "esModuleInterop": true,
         "skipLibCheck": true,
         "forceConsistentCasingInFileNames": true,
-        "strictPropertyInitialization": false
+        "strictPropertyInitialization": false,
+        "resolveJsonModule": true,
     },
+    "include": ["src", "test"],
     "exclude": [
         "node_modules",
         "build"

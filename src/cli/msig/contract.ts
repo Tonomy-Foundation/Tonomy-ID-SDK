@@ -1,4 +1,4 @@
-import { ActionData } from '../../sdk/services/blockchain';
+import { tonomyEosioProxyContract } from '../../sdk/services/blockchain';
 import { StandardProposalOptions, createProposal, executeProposal } from '.';
 import { Name, ABI, Serializer } from '@wharfkit/antelope';
 import fs from 'fs';
@@ -43,57 +43,10 @@ export async function deployContract(
     const abiDef = ABI.from(abi);
     const abiSerializedHex = Serializer.encode({ object: abiDef }).hexString;
 
-    // Prepare SETCODE action
-    const setCodeAction: ActionData = {
-        account: 'tonomy',
-        name: 'setcode',
-        authorization: [
-            {
-                actor: contractName.toString(),
-                permission: 'active',
-            },
-            {
-                actor: 'tonomy',
-                permission: 'active',
-            },
-            {
-                actor: 'tonomy',
-                permission: 'owner',
-            },
-        ],
-        data: {
-            account: contractName.toString(),
-            vmtype: 0,
-            vmversion: 0,
-            code: wasm,
-        },
-    };
-
-    // Prepare SETABI action
-    const setAbiAction: ActionData = {
-        account: 'tonomy',
-        name: 'setabi',
-        authorization: [
-            {
-                actor: contractName.toString(),
-                permission: 'active',
-            },
-            {
-                actor: 'tonomy',
-                permission: 'active',
-            },
-            {
-                actor: 'tonomy',
-                permission: 'owner',
-            },
-        ],
-        data: {
-            account: contractName.toString(),
-            abi: abiSerializedHex,
-        },
-    };
-
-    const actions = [setCodeAction, setAbiAction];
+    const actions = await tonomyEosioProxyContract.deployContractActions(contractName, wasm, abiSerializedHex, {
+        actor: 'tonomy',
+        permission: 'active',
+    });
 
     if (options.returnActions ?? false) return actions;
 
