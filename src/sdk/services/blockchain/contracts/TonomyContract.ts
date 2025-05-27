@@ -5,7 +5,9 @@ import { SdkErrors, TonomyUsername, getSettings, sha256, throwError } from '../.
 import { getAccount, getApi } from '../eosio/eosio';
 import { TONO_PUBLIC_SALE_PRICE } from './VestingContract';
 import { Authority } from '../eosio/authority';
+import Debug from 'debug';
 
+const debug = Debug('tonomy-sdk:tonomy-contract');
 const CONTRACT_NAME = 'tonomy';
 
 export const GOVERNANCE_ACCOUNT_NAME = 'tonomy';
@@ -71,6 +73,8 @@ export type AppTableRecord = {
     description: string;
     logo_url: string;
     origin: string;
+    background_color: string;
+    accent_color: string;
     version: number;
 };
 
@@ -289,11 +293,21 @@ export class TonomyContract {
         username_hash: string,
         logo_url: string,
         origin: string,
+        background_color: string,
+        accent_color: string,
         key: PublicKey,
         signer: Signer
     ): Promise<API.v1.PushTransactionResponse> {
         /^(((http:\/\/)|(https:\/\/))?)(([a-zA-Z0-9.])+)((:{1}[0-9]+)?)$/g.test(origin);
         /^(((http:\/\/)|(https:\/\/))?)(([a-zA-Z0-9.])+)((:{1}[0-9]+)?)([?#/a-zA-Z0-9.]*)$/g.test(logo_url);
+        // Combine the individual fields into a JSON string
+        const json_data = JSON.stringify({
+            app_name: app_name,
+            description: description,
+            logo_url: logo_url,
+            background_color: background_color,
+            accent_color: accent_color,
+        });
 
         const action = {
             authorization: [
@@ -305,11 +319,9 @@ export class TonomyContract {
             account: CONTRACT_NAME,
             name: 'newapp',
             data: {
-                app_name,
-                description,
-                logo_url,
-                origin: origin,
+                json_data,
                 username_hash,
+                origin: origin,
                 key,
             },
         };
@@ -411,7 +423,7 @@ export class TonomyContract {
             data = await api.v1.chain.get_table_rows({
                 code: CONTRACT_NAME,
                 scope: CONTRACT_NAME,
-                table: 'apps',
+                table: 'appsv2',
 
                 lower_bound: Checksum256.from(usernameHash),
                 limit: 1,
@@ -428,7 +440,7 @@ export class TonomyContract {
             data = await api.v1.chain.get_table_rows({
                 code: CONTRACT_NAME,
                 scope: CONTRACT_NAME,
-                table: 'apps',
+                table: 'appsv2',
 
                 lower_bound: account,
                 limit: 1,
@@ -446,7 +458,7 @@ export class TonomyContract {
             data = await api.v1.chain.get_table_rows({
                 code: CONTRACT_NAME,
                 scope: CONTRACT_NAME,
-                table: 'apps',
+                table: 'appsv2',
 
                 lower_bound: Checksum256.from(originHash),
                 limit: 1,
@@ -454,6 +466,7 @@ export class TonomyContract {
                 index_position: 'tertiary',
             });
             if (!data || !data.rows) throwError('No data found', SdkErrors.DataQueryNoRowDataFound);
+            debug('getApp table row', origin, JSON.stringify(data.rows, null, 2));
 
             if (data.rows.length === 0 || data.rows[0].origin !== origin) {
                 throwError('Account with origin "' + origin + '" not found', SdkErrors.OriginNotFound);
@@ -462,15 +475,19 @@ export class TonomyContract {
 
         const idData = data.rows[0];
 
+        debug('getApp idData', JSON.stringify(idData, null, 2));
+
+        const appInfo = JSON.parse(idData.json_data);
+
         return {
-            app_name: idData.app_name,
-            description: idData.description,
+            app_name: appInfo.app_name,
+            description: appInfo.description,
 
-            logo_url: idData.logo_url,
+            logo_url: appInfo.logo_url,
             origin: idData.origin,
-
             account_name: Name.from(idData.account_name),
-
+            background_color: appInfo.background_color,
+            accent_color: appInfo.accent_color,
             username_hash: Checksum256.from(idData.username_hash),
             version: idData.version,
         };
@@ -498,6 +515,8 @@ export class TonomyContract {
             origin: row.origin,
             account_name: Name.from(row.account_name),
             username_hash: Checksum256.from(row.username_hash),
+            background_color: row.background_color,
+            accent_color: row.accent_color,
             version: row.version,
         }));
     }
@@ -509,8 +528,17 @@ export class TonomyContract {
         usernameHash: Checksum256Type,
         logoUrl: string,
         origin: string,
+        backgroundColor: string,
+        accentColor: string,
         signer: Signer
     ): Promise<API.v1.PushTransactionResponse> {
+        const json_data = JSON.stringify({
+            app_name: appName,
+            description: description,
+            logo_url: logoUrl,
+            background_color: backgroundColor,
+            accent_color: accentColor,
+        });
         const action = {
             authorization: [
                 {
@@ -522,10 +550,8 @@ export class TonomyContract {
             name: 'adminsetapp',
             data: {
                 account_name: Name.from(accountName),
-                app_name: appName,
-                description,
+                json_data,
                 username_hash: usernameHash,
-                logo_url: logoUrl,
                 origin,
             },
         };
