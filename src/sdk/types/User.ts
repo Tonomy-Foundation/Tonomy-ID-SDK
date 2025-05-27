@@ -1,4 +1,4 @@
-import { Name, PrivateKey, Checksum256 } from '@wharfkit/antelope';
+import { Name, PrivateKey, Checksum256, NameType } from '@wharfkit/antelope';
 import { GetPersonResponse } from '../services/blockchain/contracts/TonomyContract';
 import { TonomyUsername } from '../util/username';
 import { Issuer } from 'did-jwt-vc';
@@ -6,9 +6,8 @@ import { AuthenticationMessage, Message } from '../services/communication/messag
 import { UserStatusEnum } from './UserStatusEnum';
 import { Subscriber } from '../services/communication/communication';
 import { App } from '../controllers/App';
-import { DID, LoginRequest, WalletRequest, URL as URLtype } from '../util';
+import { DID, URL as URLtype, DataRequest, DualWalletRequests } from '../util';
 import { PublicKey } from '@wharfkit/antelope';
-import { ResponsesManager } from '../helpers/responsesManager';
 import { AppStatusEnum } from './AppStatusEnum';
 import { Signer } from '../services/blockchain';
 import { KeyManagerLevel } from '../storage/keymanager';
@@ -48,24 +47,14 @@ export interface IUserAppRecord {
 export type IOnPressLoginOptions = {
     callbackPath: string;
     redirect?: boolean;
-    dataRequest?: {
-        username?: boolean;
-    };
+    dataRequest?: DataRequest;
 };
-
-export interface ICheckedRequest {
-    request: WalletRequest;
-    app: App;
-    requiresLogin: boolean;
-    ssoApp: boolean;
-    requestDid?: string;
-}
 
 export interface IUserBase {
     getStatus(): Promise<UserStatusEnum>;
     getAccountName(): Promise<Name>;
     getUsername(): Promise<TonomyUsername>;
-    getDid(): Promise<string>;
+    getDid(app?: NameType): Promise<string>;
     getIssuer(): Promise<Issuer>;
     getSigner(level: KeyManagerLevel): Promise<Signer>;
 }
@@ -129,13 +118,13 @@ export interface IUserRequestsManager extends IUserCommunication {
     /** Accepts a login request by authorizing keys on the blockchain (if the are not already authorized)
      * And sends a response to the requesting app
      *
-     * @param {{request: WalletRequest, app?: App, requiresLogin?: boolean}[]} requestsWithMetadata - Array of requests to fulfill (login or data sharing requests)
+     * @param {DualWalletRequests} requests - Requests to accept
      * @param {'mobile' | 'browser'} platform - Platform of the request, either 'mobile' or 'browser'
      * @param {{callbackPath?: URLtype, messageRecipient?: DID}} options - Options for the response
      * @returns {Promise<void | URLtype>} the callback url if the platform is mobile, or undefined if it is browser (a message is sent to the user)
      */
     acceptLoginRequest(
-        responsesManager: ResponsesManager,
+        requests: DualWalletRequests,
         platform: 'mobile' | 'browser',
         options: {
             callbackOrigin?: URLtype;
@@ -143,16 +132,6 @@ export interface IUserRequestsManager extends IUserCommunication {
             messageRecipient?: DID;
         }
     ): Promise<void | URLtype>;
-
-    /** Verifies the login requests, and checks if the apps have already been authorized with those keys
-     * This function is currently only used in the unfinished feature https://github.com/Tonomy-Foundation/Tonomy-ID/issues/705
-     * See unmerged PR https://github.com/Tonomy-Foundation/Tonomy-ID/pull/744
-     * @depreciated This function is now incorporated in ResponsesManager.fetchMeta()
-     *
-     * @param {LoginRequest[]} requests - Array of LoginRequest to check
-     * @returns {Promise<CheckedRequest[]>} - Array of requests that have been verified and had authorization checked
-     */
-    checkLoginRequests(requests: LoginRequest[]): Promise<ICheckedRequest[]>;
 }
 
 export interface IUser extends IUserCaptcha, IUserOnboarding, IUserRequestsManager {

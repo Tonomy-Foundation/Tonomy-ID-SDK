@@ -9,24 +9,26 @@ import { TonomyUsername } from '../sdk/util/username';
 import { browserStorageFactory } from '../sdk/storage/browserStorage';
 import { getAccount, getChainInfo } from '../sdk/services/blockchain/eosio/eosio';
 import { JsKeyManager } from '../sdk/storage/jsKeyManager';
-import { LoginRequest, LoginRequestPayload } from '../sdk/util/request';
-import { DataSharingRequest, DataSharingRequestPayload, getAccountNameFromDid, parseDid } from '../sdk/util';
+import {
+    LoginRequestPayload,
+    WalletRequestPayloadType,
+    WalletRequestVerifiableCredential,
+    WalletRequest,
+    DualWalletResponse,
+} from '../sdk/util/request';
+import { getAccountNameFromDid, parseDid } from '../sdk/util';
 import {
     AuthenticationMessage,
     Communication,
     TonomyContract,
     LinkAuthRequestMessage,
     LinkAuthRequestResponseMessage,
-    LoginRequestsMessagePayload,
     Message,
-    ResponsesManager,
 } from '../sdk';
-import { objToBase64Url } from '../sdk/util/base64';
 import { VerifiableCredential } from '../sdk/util/ssi/vc';
 import { DIDurl, JWT } from '../sdk/util/ssi/types';
 import { Signer, createKeyManagerSigner, transact } from '../sdk/services/blockchain/eosio/transaction';
 import { createDidKeyIssuerAndStore } from '../sdk/helpers/didKeyStorage';
-import { getLoginRequestResponseFromUrl } from '../sdk/helpers/urls';
 import { verifyKeyExistsForApp } from '../sdk/helpers/user';
 import { IOnPressLoginOptions } from '../sdk/types/User';
 import { App } from '../sdk/controllers/App';
@@ -50,14 +52,14 @@ export type ExternalUserStorage = {
 };
 
 export type VerifyLoginOptions = {
+    external?: boolean; // if true, the login is for an external user, otherwise it is for the Tonomy SSO website
     checkKeys?: boolean;
     keyManager?: KeyManager;
     storageFactory?: StorageFactory;
 };
 
 export type LoginWithTonomyMessages = {
-    loginRequest: LoginRequest;
-    dataSharingRequest?: DataSharingRequest;
+    request: WalletRequest;
     loginToCommunication: AuthenticationMessage;
 };
 
@@ -272,43 +274,36 @@ export class ExternalUser {
     ): Promise<LoginWithTonomyMessages | void> {
         const issuer = await createDidKeyIssuerAndStore(keyManager);
         const publicKey = await keyManager.getKey({ level: KeyManagerLevel.BROWSER_LOCAL_STORAGE });
-        let dataSharingRequest;
+
+        const loginRequestPayload: LoginRequestPayload = {
+            login: {
+                randomString: randomString(32),
+                origin: window.location.origin,
+                publicKey: publicKey,
+                callbackPath,
+            },
+        };
+        const requestPayloads: WalletRequestPayloadType[] = [loginRequestPayload];
 
         if (dataRequest) {
-            const dataSharingPayload: DataSharingRequestPayload = {
-                username: dataRequest?.username || false,
-                origin: window.location.origin,
-            };
-
-            dataSharingRequest = await DataSharingRequest.signRequest(dataSharingPayload, issuer);
+            requestPayloads.push({
+                data: dataRequest,
+            });
         }
 
-        const payload: LoginRequestPayload = {
-            randomString: randomString(32),
-            origin: window.location.origin,
-            publicKey: publicKey,
-            callbackPath,
-        };
-
-        const loginRequest = await LoginRequest.signRequest(payload, issuer);
+        const request = new WalletRequest(
+            await WalletRequestVerifiableCredential.signRequest({ requests: requestPayloads }, issuer)
+        );
 
         if (redirect) {
-            const payload: LoginRequestsMessagePayload = {
-                requests: [loginRequest],
-            };
-
-            if (dataSharingRequest) {
-                payload.requests.push(dataSharingRequest);
-            }
-
-            const base64UrlPayload = objToBase64Url(payload);
+            const base64UrlPayload = request.toString();
 
             window.location.href = `${getSettings().ssoWebsiteOrigin}/login?payload=${base64UrlPayload}`;
             return;
         } else {
             const loginToCommunication = await AuthenticationMessage.signMessageWithoutRecipient({}, issuer);
 
-            return { loginRequest, dataSharingRequest, loginToCommunication };
+            return { request, loginToCommunication };
         }
     }
 
@@ -340,33 +335,26 @@ export class ExternalUser {
      *
      * @returns {Promise<ExternalUser>} an external user object ready to use
      */
-    static async verifyLoginRequest(options?: VerifyLoginOptions): Promise<ExternalUser> {
-        if (!options) options = {};
-        if (!options.checkKeys) options.checkKeys = true;
-        const keyManager = options.keyManager || new JsKeyManager();
+    static async verifyLoginRequest({
+        external = true,
+        checkKeys = true,
+        keyManager = new JsKeyManager(),
+        storageFactory = browserStorageFactory,
+    }: VerifyLoginOptions): Promise<ExternalUser> {
+        const responses = DualWalletResponse.fromUrl();
 
-        const { success, error, response } = getLoginRequestResponseFromUrl();
+        await responses.verify();
 
-        if (success === true) {
-            if (!response) throwError('No response found in url', SdkErrors.MissingParams);
-            const managedResponses = new ResponsesManager(response);
+        if (responses.isSuccess()) {
+            const response = external ? responses.external : responses.sso;
 
-            await managedResponses.verify();
-            await managedResponses.fetchMeta();
+            if (!response)
+                throw Error(`No request found in dual wallet responses for ${external ? 'external' : 'sso'} app`);
+            const externalUser = new ExternalUser(keyManager, storageFactory);
+            const accountName = response.getAccountName();
+            // TODO: also check the chain ID and app permission from the did
 
-            const loginResponse = managedResponses.getLoginResponsesWithSameOriginOrThrow();
-            const keyFromStorage = await keyManager.getKey({ level: KeyManagerLevel.BROWSER_LOCAL_STORAGE });
-            const payload = loginResponse.getRequest().getPayload();
-
-            if (payload.publicKey.toString() !== keyFromStorage.toString()) {
-                throwError('Key in request does not match', SdkErrors.KeyNotFound);
-            }
-
-            const myStorageFactory = options.storageFactory || browserStorageFactory;
-            const externalUser = new ExternalUser(keyManager, myStorageFactory);
-            const accountName = loginResponse.getResponse().getPayload().accountName;
-
-            if (options.checkKeys) {
+            if (checkKeys) {
                 const permission = await verifyKeyExistsForApp(accountName, { keyManager });
 
                 await externalUser.setAppPermission(permission);
@@ -374,16 +362,17 @@ export class ExternalUser {
 
             await externalUser.setAccountName(accountName);
 
-            const dataSharingResponse = managedResponses.getDataSharingResponseWithSameOrigin();
+            const username = response.getDataSharingResponse()?.data.username;
 
-            if (dataSharingResponse && dataSharingResponse.getResponse().getPayload().data.username) {
-                await externalUser.setUsername(dataSharingResponse.getResponse().getPayload().data.username);
+            if (username) {
+                await externalUser.setUsername(username);
             }
 
             return externalUser;
         } else {
-            if (!error) throwError('No error found in url', SdkErrors.MissingParams);
-            throwError(error.reason, error.code);
+            if (!responses.error) throw Error('No error found in dual wallet responses');
+
+            throwError(responses.error.reason, responses.error.code);
         }
     }
 

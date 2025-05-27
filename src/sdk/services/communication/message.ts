@@ -1,12 +1,8 @@
 import { Issuer } from 'did-jwt-vc';
 import { DIDurl, URL } from '../../util/ssi/types';
 import { VerifiableCredentialWithType, VCWithTypeType } from '../../util/ssi/vc';
-import { WalletRequest } from '../../util';
-import { TonomyUsername } from '../../util/username';
+import { DualWalletRequests, DualWalletResponse, WalletRequest, WalletResponse } from '../../util';
 import { Name } from '@wharfkit/antelope';
-import { SdkErrors } from '../../util/errors';
-import { WalletRequestAndResponse, WalletRequestAndResponseObject } from '../../helpers/responsesManager';
-import { RequestsManager } from '../../helpers/requestsManager';
 
 /**
  * A message that can be sent between two Tonomy identities
@@ -117,134 +113,82 @@ export class IdentifyMessage extends Message<IdentifyMessagePayload> {
     }
 }
 
-export type LoginRequestsMessagePayload = {
-    requests: WalletRequest[];
-};
-
-export class LoginRequestsMessage extends Message<LoginRequestsMessagePayload> {
+export class LoginRequestsMessage extends Message<DualWalletRequests> {
     protected static type = 'LoginRequestsMessage';
 
     /**
-     * @override the Message constructor to decode the payload of type LoginRequestsMessagePayload
+     * @override the Message constructor to decode the payload of type DualWalletRequests
      */
-    constructor(
-        vc: LoginRequestsMessage | Message<LoginRequestsMessagePayload> | VCWithTypeType<LoginRequestsMessagePayload>
-    ) {
+    constructor(vc: Message<DualWalletRequests> | VCWithTypeType<DualWalletRequests>) {
         super(vc);
-        const payload = this.getVc().getPayload().vc.credentialSubject.payload;
+        const payload = this.getPayload();
 
-        if (!payload.requests) {
-            throw new Error('LoginRequestsMessage must have a requests property');
-        }
-
-        const requests = payload.requests.map((request: string) => new WalletRequest(request));
-        const requestsManager = new RequestsManager(requests);
-
-        this.decodedPayload = {
-            requests: requestsManager.getRequests(),
-        };
+        if (!payload.external) throw new Error('LoginRequestsMessage must have an external property');
+        this.decodedPayload = new DualWalletRequests(
+            new WalletRequest(payload.external as unknown as string),
+            payload.sso ? new WalletRequest(payload.sso as unknown as string) : undefined
+        );
     }
 
     /**
      * Alternative constructor that returns type LoginRequestsMessage
      */
     static async signMessage(
-        message: LoginRequestsMessagePayload,
+        message: DualWalletRequests,
         issuer: Issuer,
         recipient: DIDurl,
         options: { subject?: URL } = {}
     ) {
-        const vc = await super.signMessageWithRecipient<LoginRequestsMessagePayload>(
-            message,
-            issuer,
-            recipient,
-            options
-        );
+        const vc = await super.signMessageWithRecipient<DualWalletRequests>(message, issuer, recipient, options);
 
         return new LoginRequestsMessage(vc);
     }
 }
 
-export type LoginResponse = {
-    accountName: Name;
-    data?: {
-        username?: TonomyUsername;
-    };
-};
-
-export type LoginRequestResponseMessagePayload = {
-    success: boolean;
-    error?: {
-        code: SdkErrors;
-        reason: string;
-        requests: WalletRequest[];
-    };
-    response?: WalletRequestAndResponse[];
-};
-
-export class LoginRequestResponseMessage extends Message<LoginRequestResponseMessagePayload> {
+export class LoginRequestResponseMessage extends Message<DualWalletResponse> {
     protected static type = 'LoginRequestResponseMessage';
 
     /**
      * @override the Message constructor to decode the payload of type LoginRequestResponseMessagePayload
      */
-    constructor(
-        vc:
-            | LoginRequestResponseMessage
-            | Message<LoginRequestResponseMessagePayload>
-            | VCWithTypeType<LoginRequestResponseMessagePayload>
-    ) {
+    constructor(vc: LoginRequestResponseMessage | Message<DualWalletResponse> | VCWithTypeType<DualWalletResponse>) {
         super(vc);
-        const payload = this.getVc().getPayload().vc.credentialSubject.payload;
+        let payload = this.getPayload();
 
         if (payload.success) {
-            if (!payload.response) {
-                throw new Error('LoginRequestsResponseMessage must have a response property');
+            if (!payload.external) {
+                throw new Error('LoginRequestsResponseMessage must have an external property');
             }
 
-            const responses: WalletRequestAndResponse[] = payload.response.map(
-                (response: { request: string; response: string }) =>
-                    new WalletRequestAndResponseObject(response).getRequestAndResponse()
+            payload = DualWalletResponse.fromResponses(
+                new WalletResponse(payload.external as unknown as string),
+                payload.sso ? new WalletResponse(payload.sso as unknown as string) : undefined
+            );
+        } else {
+            if (!payload.error) throw new Error('LoginRequestsResponseMessage must have an error property');
+            if (!payload.requests) throw new Error('LoginRequestsResponseMessage must have a requests property');
+
+            const requests = new DualWalletRequests(
+                new WalletRequest(payload.requests.external as unknown as string),
+                payload.requests.sso ? new WalletRequest(payload.requests.sso as unknown as string) : undefined
             );
 
-            this.decodedPayload = {
-                ...payload,
-                response: responses,
-            };
-        } else {
-            if (!payload.error) {
-                throw new Error('LoginRequestsResponseMessage must have an error property');
-            }
-
-            const error = payload.error;
-            const requests = error.requests.map((request: string) => new WalletRequest(request));
-            const requestsManager = new RequestsManager(requests);
-
-            this.decodedPayload = {
-                ...payload,
-                error: {
-                    ...error,
-                    requests: requestsManager.getRequests(),
-                },
-            };
+            payload = DualWalletResponse.fromError(payload.error, requests);
         }
+
+        this.decodedPayload = payload;
     }
 
     /**
      * Alternative constructor that returns type LoginRequestResponseMessage
      */
     static async signMessage(
-        message: LoginRequestResponseMessagePayload,
+        message: DualWalletResponse,
         issuer: Issuer,
         recipient: DIDurl,
         options: { subject?: URL } = {}
     ) {
-        const vc = await super.signMessageWithRecipient<LoginRequestResponseMessagePayload>(
-            message,
-            issuer,
-            recipient,
-            options
-        );
+        const vc = await super.signMessageWithRecipient<DualWalletResponse>(message, issuer, recipient, options);
 
         return new LoginRequestResponseMessage(vc);
     }

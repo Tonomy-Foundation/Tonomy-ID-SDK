@@ -15,8 +15,7 @@ import {
     ExternalUser,
     DemoTokenContract,
     getSettings,
-    LoginRequestResponseMessagePayload,
-    ResponsesManager,
+    DualWalletResponse,
     setSettings,
 } from '../src/sdk/index';
 import { JsKeyManager } from '../src/sdk/storage/jsKeyManager';
@@ -159,7 +158,7 @@ describe('Login to external website', () => {
     });
 
     async function runExternalUserLoginTest(testOptions: ExternalUserLoginTestOptions) {
-        let expectedTests = 55;
+        let expectedTests = 57;
 
         if (testOptions.dataRequest) {
             expectedTests += 1;
@@ -266,62 +265,48 @@ describe('Login to external website', () => {
         TONOMY_LOGIN_WEBSITE_communication.unsubscribeMessage(TONOMY_LOGIN_WEBSITE_subscription2);
         expect(TONOMY_LOGIN_WEBSITE_communication.socketServer.listeners('message').length).toBe(0);
 
-        const payload = requestConfirmedMessageFromTonomyId.getPayload();
+        const walletResponse = requestConfirmedMessageFromTonomyId.getPayload();
 
-        expect(payload).toBeDefined();
-        expect(payload.success).toBe(true);
-        expect(payload.response).toBeDefined();
+        expect(walletResponse).toBeDefined();
+        expect(walletResponse.success).toBe(true);
+        expect(walletResponse.external).toBeDefined();
+        expect(walletResponse.sso).toBeDefined();
 
-        expect(payload.response?.length).toBe(testOptions.dataRequest ? 4 : 3);
+        expect(walletResponse.external?.getResponses()?.length).toBe(testOptions.dataRequest ? 2 : 1);
+        expect(walletResponse.sso?.getResponses()?.length).toBe(testOptions.dataRequest ? 2 : 1);
 
-        if (!payload.response) throw new Error('payload.response is undefined');
-
-        const managedResponses = new ResponsesManager(payload.response);
-
-        await managedResponses.fetchMeta({ accountName: await TONOMY_ID_user.getAccountName() });
-        const loginResponse = managedResponses.getLoginResponsesWithSameOriginOrThrow();
-
-        expect(loginResponse.getResponse().getPayload().accountName?.toString()).toBe(
+        expect(walletResponse.sso?.getAccountName().toString()).toBe(
             (await TONOMY_ID_user.getAccountName()).toString()
         );
 
-        const dataRequestResponse = managedResponses.getDataSharingResponseWithSameOrigin();
+        const dataRequestResponse = walletResponse.sso?.getDataSharingResponse();
 
         if (testOptions.dataRequest) {
             expect(dataRequestResponse).toBeDefined();
 
             if (testOptions.dataRequestUsername) {
-                expect(dataRequestResponse?.getResponse().getPayload().data?.username?.toString()).toBe(
+                expect(dataRequestResponse?.data.username?.toString()).toBe(
                     (await TONOMY_ID_user.getUsername()).username.toString()
                 );
             }
         }
 
         debug('TONOMY_LOGIN_WEBSITE/login: sending to callback page');
-        const TONOMY_LOGIN_WEBSITE_base64UrlPayload = objToBase64Url(payload);
+        setUrl(tonomyLoginApp.origin + `/callback?payload=${walletResponse.toString()}`);
 
-        setUrl(tonomyLoginApp.origin + `/callback?payload=${TONOMY_LOGIN_WEBSITE_base64UrlPayload}`);
-
-        const { externalLoginRequest, managedResponses: TONOMY_LOGIN_WEBSITE_managedResponses } =
+        const { responses: TONOMY_LOGIN_WEBSITE_responses } =
             await loginWebsiteOnCallback(TONOMY_LOGIN_WEBSITE_jsKeyManager, TONOMY_LOGIN_WEBSITE_storage_factory);
 
-        const EXTERNAL_WEBSITE_loginRequestResponseMessagePayload: LoginRequestResponseMessagePayload = {
-            success: true,
-            response: TONOMY_LOGIN_WEBSITE_managedResponses.getResponsesWithDifferentOriginOrThrow().map((response) =>
-                response.getRequestAndResponse()
-            ),
-        };
-
-        const EXTERNAL_WEBSITE_base64UrlPayload = objToBase64Url(EXTERNAL_WEBSITE_loginRequestResponseMessagePayload);
+        if (!TONOMY_LOGIN_WEBSITE_responses.external) throw new Error('TONOMY_LOGIN_WEBSITE_responses.external is undefined');
+        const EXTERNAL_WEBSITE_response = DualWalletResponse.fromResponses(TONOMY_LOGIN_WEBSITE_responses.external)
+        const loginResponse = TONOMY_LOGIN_WEBSITE_responses.external.getLoginResponse().login;
+        const EXTERNAL_WWEBSITE_redirectUrl = loginResponse.origin + loginResponse.callbackPath +
+            `?payload=${EXTERNAL_WEBSITE_response.toString()}`
 
         // #####External website user (callback page) #####
         // ################################
 
-        setUrl(
-            externalLoginRequest.getPayload().origin +
-            externalLoginRequest.getPayload().callbackPath +
-            `?payload=${EXTERNAL_WEBSITE_base64UrlPayload}`
-        );
+        setUrl(EXTERNAL_WWEBSITE_redirectUrl);
 
         EXTERNAL_WEBSITE_user = await externalWebsiteOnCallback(
             EXTERNAL_WEBSITE_jsKeyManager,
