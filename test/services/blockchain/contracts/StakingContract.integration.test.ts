@@ -14,7 +14,7 @@ import {
 import { KeyManagerLevel } from '../../../../src/sdk/index';
 import { jest } from '@jest/globals';
 import { createRandomID } from '../../../helpers/user';
-import { addSeconds, MILLISECONDS_IN_SECOND, SECONDS_IN_DAY, sleepUntil, sleep, SECONDS_IN_YEAR, SECONDS_IN_HOUR} from '../../../../src/sdk/util';
+import { addSeconds, MICROSECONDS_IN_SECOND, SECONDS_IN_DAY, sleepUntil, sleep, SECONDS_IN_YEAR, SECONDS_IN_HOUR} from '../../../../src/sdk/util/time';
 import { PrivateKey } from '@wharfkit/antelope';
 import Debug from 'debug';
 
@@ -180,10 +180,10 @@ describe('TonomyContract Staking Tests', () => {
             expect(allocation.staked).toBe(stakeAmount);
             expect(allocation.yieldSoFar).toBe(amountToAsset(0, "TONO"));
             expect(allocation.stakedTime.getTime()).toBeGreaterThan(now.getTime());
-            expect(allocation.stakedTime.getTime()).toBeLessThanOrEqual(now.getTime() + MILLISECONDS_IN_SECOND);
+            expect(allocation.stakedTime.getTime()).toBeLessThanOrEqual(now.getTime() + MICROSECONDS_IN_SECOND);
             expect(allocation.unstakeableTime.getTime()).toBe(
                 allocation.stakedTime.getTime() +
-                (StakingContract.getLockedDays() * MILLISECONDS_IN_SECOND * SECONDS_IN_DAY)
+                (StakingContract.getLockedDays() * MICROSECONDS_IN_SECOND * SECONDS_IN_DAY)
             );
             expect(allocation.unstakeRequested).toBe(false);
             expect(allocation.monthlyYield).toBe(
@@ -280,7 +280,7 @@ describe('TonomyContract Staking Tests', () => {
             expect(fullData.estimatedMonthlyYield).toBeCloseTo(expectedYield1 + expectedYield2);
             expect(fullData.allocations.length).toBe(2);
             expect(fullData.lastPayout.getTime()).toBeGreaterThanOrEqual(fullData.allocations[0].stakedTime.getTime());
-            expect(fullData.lastPayout.getTime()).toBeLessThanOrEqual(fullData.allocations[0].stakedTime.getTime() + MILLISECONDS_IN_SECOND);
+            expect(fullData.lastPayout.getTime()).toBeLessThanOrEqual(fullData.allocations[0].stakedTime.getTime() + MICROSECONDS_IN_SECOND);
             expect(fullData.staker).toBe(accountName);
             expect(fullData.totalYield).toBe(amountToAsset(0, "TONO"));
             expect(fullData.version).toBe(1);
@@ -392,8 +392,8 @@ describe('TonomyContract Staking Tests', () => {
                 if(!allocationAlterUnstake) throw new Error("Allocation not found");
                 expect(allocationAlterUnstake.unstakeRequested).toBe(true);
                 expect(allocationAlterUnstake.unstakeTime.getTime()).toBeGreaterThan(now.getTime());
-                expect(allocationAlterUnstake.unstakeTime.getTime()).toBeLessThanOrEqual(now.getTime() + MILLISECONDS_IN_SECOND);
-                expect(allocationAlterUnstake.releaseTime.getTime()).toBe(allocationAlterUnstake.unstakeTime.getTime() + StakingContract.getReleaseDays() * MILLISECONDS_IN_SECOND * SECONDS_IN_DAY);
+                expect(allocationAlterUnstake.unstakeTime.getTime()).toBeLessThanOrEqual(now.getTime() + MICROSECONDS_IN_SECOND);
+                expect(allocationAlterUnstake.releaseTime.getTime()).toBe(allocationAlterUnstake.unstakeTime.getTime() + StakingContract.getReleaseDays() * MICROSECONDS_IN_SECOND * SECONDS_IN_DAY);
                 
                 // Verify settings update: total_staked decreases and total_releasing increases by the staked amount
                 const updatedSettings = await stakeContract.getSettings();
@@ -740,7 +740,7 @@ describe('TonomyContract Staking Tests', () => {
             expect(afterOneCycle.allocation.monthlyYield).toBeCloseTo(afterOneCycle.allocation.staked * (Math.pow(1 + afterOneCycle.settings.apy, 1 / 12) - 1), 4);
             expect(afterOneCycle.account.totalYield).toBe(afterOneCycle.allocation.yieldSoFar);
             expect(afterOneCycle.account.lastPayoutTime.getTime()).toBeGreaterThan(initial.account.lastPayoutTime.getTime());
-            expect(afterOneCycle.account.lastPayoutTime.getTime()).toBeLessThanOrEqual(initial.account.lastPayoutTime.getTime() + cycleSeconds * MILLISECONDS_IN_SECOND);
+            expect(afterOneCycle.account.lastPayoutTime.getTime()).toBeLessThanOrEqual(initial.account.lastPayoutTime.getTime() + cycleSeconds * MICROSECONDS_IN_SECOND);
             expect(afterOneCycle.settings.totalReleasing).toBe(initial.settings.totalReleasing);
             expect(afterOneCycle.settings.totalStaked).toBe(initial.settings.totalStaked + afterOneCycle.allocation.yieldSoFar);
             expect(afterOneCycle.settings.yieldPool).toBe(initial.settings.yieldPool - afterOneCycle.allocation.yieldSoFar);
@@ -760,7 +760,7 @@ describe('TonomyContract Staking Tests', () => {
             expect(afterTwoCycles.allocation.monthlyYield).toBeCloseTo(afterTwoCycles.allocation.staked * (Math.pow(1 + afterTwoCycles.settings.apy, 1 / 12) - 1), 4);
             expect(afterTwoCycles.account.totalYield).toBe(afterTwoCycles.allocation.yieldSoFar);
             expect(afterTwoCycles.account.lastPayoutTime.getTime()).toBeGreaterThan(afterOneCycle.account.lastPayoutTime.getTime());
-            expect(afterTwoCycles.account.lastPayoutTime.getTime()).toBeLessThanOrEqual(afterOneCycle.account.lastPayoutTime.getTime() + cycleSeconds * MILLISECONDS_IN_SECOND);
+            expect(afterTwoCycles.account.lastPayoutTime.getTime()).toBeLessThanOrEqual(afterOneCycle.account.lastPayoutTime.getTime() + cycleSeconds * MICROSECONDS_IN_SECOND);
             expect(afterTwoCycles.settings.totalReleasing).toBe(initial.settings.totalReleasing);
             expect(afterTwoCycles.settings.totalStaked).toBe(initial.settings.totalStaked + afterTwoCycles.allocation.yieldSoFar);
             expect(afterTwoCycles.settings.yieldPool).toBe(initial.settings.yieldPool - afterTwoCycles.allocation.yieldSoFar);

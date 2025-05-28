@@ -1,7 +1,7 @@
 import { Issuer } from 'did-jwt-vc';
 import { DIDurl, URL } from '../../util/ssi/types';
 import { VerifiableCredentialWithType, VCWithTypeType } from '../../util/ssi/vc';
-import { DualWalletRequests, DualWalletResponse, WalletRequest, WalletResponse } from '../../util';
+import { DualWalletRequests, DualWalletResponse } from '../../util';
 import { Name } from '@wharfkit/antelope';
 import Debug from 'debug';
 

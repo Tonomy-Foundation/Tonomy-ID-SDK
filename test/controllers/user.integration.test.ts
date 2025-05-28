@@ -11,14 +11,13 @@ import { generatePrivateKeyFromPassword } from '../../src/cli/bootstrap/keys';
 import { getAccount } from '../../src/sdk/services/blockchain/eosio/eosio';
 import { getAccountInfo } from '../../src/sdk/helpers/user';
 import { jest } from '@jest/globals';
+import { MICROSECONDS_IN_SECOND } from '../../src/sdk/util/time';
 
 let auth: KeyManager;
 let user: IUserPublic;
 
-const SECONDS = 1000;
-
 describe('User class', () => {
-    jest.setTimeout(60 * SECONDS);
+    jest.setTimeout(60 * MICROSECONDS_IN_SECOND);
 
     beforeEach((): void => {
         auth = new JsKeyManager();
