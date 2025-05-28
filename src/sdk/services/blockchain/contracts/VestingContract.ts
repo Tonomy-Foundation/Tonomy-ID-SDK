@@ -4,10 +4,12 @@ import { Signer, transact } from '../eosio/transaction';
 import { getApi } from '../eosio/eosio';
 import { getSettings } from '../../../util';
 import {
-    addMicroseconds
+    addMicroseconds,
     MICROSECONDS_IN_DAY,
     MICROSECONDS_IN_MONTH,
     MICROSECONDS_IN_SECOND,
+    MICROSECONDS_IN_YEAR,
+    SECONDS_IN_HOUR,
 } from '../../../util/time';
 import Decimal from 'decimal.js';
 import { assetToAmount, assetToDecimal } from './EosioTokenContract';
@@ -435,7 +437,7 @@ export class VestingContract {
                 return `${vestingPeriodInSeconds.toFixed(0)} seconds`;
             } else {
                 // Return hours if it's more than a minute but less than a day
-                return `${(vestingPeriodInSeconds / SECONDS_PER_HOUR).toFixed(1)} hours`;
+                return `${(vestingPeriodInSeconds / SECONDS_IN_HOUR).toFixed(1)} hours`;
             }
         } else if (vestingPeriodInDays < 30) {
             // Return days if it's less than 30 days
@@ -443,7 +445,7 @@ export class VestingContract {
         } else {
             // Calculate months or years if it's 30 days or more
             const vestingPeriodInMonths = vestingPeriod / MICROSECONDS_IN_MONTH;
-            const vestingPeriodInYears = vestingPeriod / MICROSECONDS_PER_YEAR;
+            const vestingPeriodInYears = vestingPeriod / MICROSECONDS_IN_YEAR;
 
             if (vestingPeriodInMonths < 12) {
                 return `${vestingPeriodInMonths.toFixed(1)} months`;
