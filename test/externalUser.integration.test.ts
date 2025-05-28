@@ -45,7 +45,6 @@ import {
     externalWebsiteClientAuth,
 } from './helpers/externalUser';
 import { createStorageFactory } from './helpers/storageFactory';
-import { objToBase64Url } from '../src/sdk/util/base64';
 import { createSigner, getTonomyOperationsKey } from '../src/sdk/services/blockchain';
 import { setTestSettings, settings } from './helpers/settings';
 import deployContract from '../src/cli/bootstrap/deploy-contract';

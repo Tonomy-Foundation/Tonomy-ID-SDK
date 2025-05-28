@@ -1,7 +1,12 @@
 import { VerifiableCredential, VerifiableCredentialWithType } from '../../../src/sdk/util/ssi/vc';
 import { generateRandomKeyPair, randomString } from '../../../src/sdk';
 import { Issuer } from 'did-jwt-vc';
-import { LoginRequest, LoginRequestPayload } from '../../../src/sdk/util/request';
+import {
+    LoginRequestPayload,
+    WalletRequest,
+    WalletRequestPayload,
+    WalletRequestVerifiableCredential,
+} from '../../../src/sdk/util/request';
 import { toDidKeyIssuer } from '../../../src/sdk/util/ssi/did-key';
 
 type TestObject = {
@@ -67,6 +72,7 @@ describe('VerifiableCredential class', () => {
 describe('VerifiableCredentialWithType class', () => {
     let issuer: Issuer;
     let request: LoginRequestPayload;
+    let walletRequestPayload: WalletRequestPayload;
 
     beforeEach(async () => {
         const { privateKey, publicKey } = generateRandomKeyPair();
@@ -74,10 +80,15 @@ describe('VerifiableCredentialWithType class', () => {
         issuer = await toDidKeyIssuer(privateKey);
 
         request = {
-            randomString: randomString(32),
-            origin: 'https://tonomy.foundation',
-            publicKey: publicKey,
-            callbackPath: '/callback',
+            login: {
+                randomString: randomString(32),
+                origin: 'https://tonomy.foundation',
+                publicKey: publicKey,
+                callbackPath: '/callback',
+            },
+        };
+        walletRequestPayload = {
+            requests: [request],
         };
     });
 
@@ -89,17 +100,16 @@ describe('VerifiableCredentialWithType class', () => {
     });
 
     it('Can be created using the different constructors', async () => {
-        const loginRequest = await LoginRequest.signRequest(request, issuer);
-        const newRequest = new VerifiableCredentialWithType(loginRequest);
+        const vc = await WalletRequestVerifiableCredential.signRequest(walletRequestPayload, issuer);
+        const walletRequest = new WalletRequest(vc);
+
+        const newRequest = new VerifiableCredentialWithType(vc);
 
         expect(newRequest.getType()).toBe('LoginRequest');
+        expect(vc.getType()).toBe('WalletRequest');
 
-        const newLoginRequest = new LoginRequest(newRequest);
+        const newLoginRequestFromVc = new WalletRequest(newRequest.getVc());
 
-        expect(newLoginRequest.getType()).toBe('LoginRequest');
-
-        const newLoginRequestFromVc = new LoginRequest(loginRequest.getVc());
-
-        expect(newLoginRequestFromVc.getType()).toBe('LoginRequest');
+        expect(walletRequest.toString()).toBe(newLoginRequestFromVc.toString());
     });
 });

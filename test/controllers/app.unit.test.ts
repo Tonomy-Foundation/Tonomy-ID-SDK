@@ -4,8 +4,6 @@
 import { PrivateKey, PublicKey } from '@wharfkit/antelope';
 import { generateRandomKeyPair } from '../../src/sdk/util/crypto';
 import { ExternalUser, LoginWithTonomyMessages } from '../../src/api/externalUser';
-import { LoginRequestPayload } from '../../src/sdk/util/request';
-import { objToBase64Url } from '../../src/sdk/util/base64';
 import { onRedirectLogin } from '../../src/sdk/helpers/urls';
 import { setReferrer, setUrl } from '../helpers/browser';
 
@@ -18,12 +16,12 @@ describe('logging in', () => {
     });
 
     it('on press button', async () => {
-        const { loginRequest } = (await ExternalUser.loginWithTonomy({
+        const { request } = (await ExternalUser.loginWithTonomy({
             callbackPath: '/login',
             redirect: false,
         })) as LoginWithTonomyMessages;
 
-        expect(typeof loginRequest.toString()).toBe('string');
+        expect(typeof request.toString()).toBe('string');
     });
 
     it('checks login url', async () => {
@@ -31,15 +29,11 @@ describe('logging in', () => {
         const ssoOrigin = 'http://sso.com';
 
         setUrl(appOrigin);
-        const { loginRequest, dataSharingRequest } = (await ExternalUser.loginWithTonomy({
+        const { request } = (await ExternalUser.loginWithTonomy({
             callbackPath: '/login',
             redirect: false,
         })) as LoginWithTonomyMessages;
-        const payload = {
-            requests: [loginRequest, dataSharingRequest],
-        };
-        const base64UrlPayload = objToBase64Url(payload);
-        const url = ssoOrigin + '/login?payload=' + base64UrlPayload;
+        const url = ssoOrigin + '/login?payload=' + request.toString();
 
         setReferrer(appOrigin);
         setUrl(url);
@@ -48,11 +42,11 @@ describe('logging in', () => {
 
         expect(requests).toBeDefined();
 
-        const receivedLoginRequest = requests.getRequests()[0].getPayload() as LoginRequestPayload;
+        const receivedLoginRequest = requests.external.getLoginRequest();
 
-        expect(typeof receivedLoginRequest.randomString).toBe('string');
-        expect(receivedLoginRequest.publicKey).toBeInstanceOf(PublicKey);
-        expect(receivedLoginRequest.origin).toBe(appOrigin);
-        expect(receivedLoginRequest.callbackPath).toBe('/login');
+        expect(typeof receivedLoginRequest.login.randomString).toBe('string');
+        expect(receivedLoginRequest.login.publicKey).toBeInstanceOf(PublicKey);
+        expect(receivedLoginRequest.login.origin).toBe(appOrigin);
+        expect(receivedLoginRequest.login.callbackPath).toBe('/login');
     });
 });

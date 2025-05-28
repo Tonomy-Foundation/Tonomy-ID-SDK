@@ -150,12 +150,12 @@ export class WalletRequest implements Serializable {
         return 'data' in request;
     }
 
-    getRequest(): WalletRequestPayloadType[] {
+    getRequests(): WalletRequestPayloadType[] {
         return this.vc.getPayload().requests;
     }
 
     getLoginRequest(): LoginRequestPayload {
-        const res = this.getRequest().find((request) => this.isLoginRequest(request)) as LoginRequestPayload;
+        const res = this.getRequests().find((request) => this.isLoginRequest(request)) as LoginRequestPayload;
 
         if (!res) {
             throw new Error('No login request found');
@@ -165,7 +165,7 @@ export class WalletRequest implements Serializable {
     }
 
     getDataSharingRequest(): DataSharingRequestPayload | undefined {
-        return this.getRequest().find((request) => this.isDataSharingRequest(request)) as DataSharingRequestPayload;
+        return this.getRequests().find((request) => this.isDataSharingRequest(request)) as DataSharingRequestPayload;
     }
 
     getOrigin(): string {
@@ -205,7 +205,7 @@ export class WalletRequest implements Serializable {
 
         const responses: WalletResponsePayloadType[] = [];
 
-        for (const request of this.getRequest()) {
+        for (const request of this.getRequests()) {
             if (this.isLoginRequest(request)) {
                 const req = request as LoginRequestPayload;
 

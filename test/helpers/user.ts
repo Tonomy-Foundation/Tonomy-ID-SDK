@@ -7,7 +7,6 @@ import {
     IdentifyMessage,
     AuthenticationMessage,
     LoginRequestsMessage,
-    ResponsesManager,
     StorageFactory,
     IUserStorage,
     Communication,
@@ -18,7 +17,6 @@ import { generatePrivateKeyFromPassword } from '../../src/cli/bootstrap/keys';
 import { createUser } from '../../src/cli/bootstrap/user';
 import { DIDurl } from '../../src/sdk/util/ssi/types';
 import { generateRandomKeywords } from '../../src/sdk/util';
-import { RequestsManager } from '../../src/sdk/helpers/requestsManager';
 import { ExternalUserLoginTestOptions } from '../externalUser.integration.test';
 import { getTonomyOperationsKey } from '../../src/sdk/services/blockchain/eosio/eosio';
 import { createSigner } from '../../src/sdk/services/blockchain';
@@ -123,26 +121,21 @@ export async function setupLoginRequestSubscriber(
             debug('TONOMY_ID/SSO: receive login requests from Tonomy Login Website');
 
             // receive and verify the requests
-            const requests = loginRequestMessage.getPayload().requests;
+            const requests = loginRequestMessage.getPayload();
 
             // TODO: check this throws an error if requests are not valid, or not signed correctly
             debug('TONOMY_ID/SSO: verifying login request');
-            const managedRequests = new RequestsManager(requests);
+            await requests.verify();
 
-            await managedRequests.verify();
+            expect(requests.external.getRequests().length).toBe(testOptions.dataRequest ? 2 : 1);
 
-            expect(managedRequests.getRequests().length).toBe(testOptions.dataRequest ? 4 : 3);
-
-            const managedResponses = new ResponsesManager(managedRequests);
-            const receiverDid = managedResponses.getAccountsLoginRequestsIssuerOrThrow();
+            const receiverDid = requests.external.getDid();
 
             expect(receiverDid).toBe(tonomyLoginDid);
             expect(receiverDid).toBe(loginRequestMessage.getSender());
 
-            await managedResponses.fetchMeta({ accountName: await user.getAccountName() });
-
             debug('TONOMY_ID/SSO: accepting login requests and sending confirmation to Tonomy Login Website');
-            await user.acceptLoginRequest(managedResponses, 'browser', { messageRecipient: receiverDid });
+            await user.acceptLoginRequest(requests, 'browser', { messageRecipient: receiverDid });
 
             resolve(true);
         }, LoginRequestsMessage.getType());
