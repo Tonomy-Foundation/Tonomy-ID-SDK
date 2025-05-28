@@ -129,7 +129,8 @@ export async function setupLoginRequestSubscriber(
 
             expect(requests.external.getRequests().length).toBe(testOptions.dataRequest ? 2 : 1);
 
-            const receiverDid = requests.external.getDid();
+            if (!requests.sso) throw new Error('SSO requests are missing in the login request message');
+            const receiverDid = requests.sso.getDid();
 
             expect(receiverDid).toBe(tonomyLoginDid);
             expect(receiverDid).toBe(loginRequestMessage.getSender());

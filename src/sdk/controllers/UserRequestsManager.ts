@@ -106,7 +106,7 @@ export class UserRequestsManager extends UserCommunication implements IUserReque
             }
         }
 
-        debug('loginWithApp key', key);
+        debug('loginWithApp key', key.toString(), linkAuth);
 
         await getTonomyContract().loginwithapp(
             myAccount.toString(),

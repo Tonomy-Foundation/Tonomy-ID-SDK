@@ -272,7 +272,7 @@ describe('Login to external website', () => {
         expect(walletResponse.sso).toBeDefined();
 
         expect(walletResponse.external?.getResponses()?.length).toBe(testOptions.dataRequest ? 2 : 1);
-        expect(walletResponse.sso?.getResponses()?.length).toBe(testOptions.dataRequest ? 2 : 1);
+        expect(walletResponse.sso?.getResponses()?.length).toBe(2);
 
         expect(walletResponse.sso?.getAccountName().toString()).toBe(
             (await TONOMY_ID_user.getAccountName()).toString()

@@ -9,6 +9,9 @@ import { base64UrlToObj, objToBase64Url } from './base64';
 import { TonomyUsername } from './username';
 import { verifyKeyExistsForApp } from '../helpers/user';
 import { getAccountNameFromDid } from './ssi/did';
+import Debug from 'debug';
+
+const debug = Debug('tonomy-sdk:util:WalletRequest');
 
 export type WalletResponseError = { code: SdkErrors; reason: string };
 
@@ -114,8 +117,12 @@ export class WalletResponseVerifiableCredential extends VerifiableCredentialWith
         super(vc);
 
         this.decodedPayload.responses = this.decodedPayload.responses?.map((response) => {
-            if ('data' in response && response.data.username) {
-                response.data.username = TonomyUsername.fromFullUsername(response.data.username as unknown as string);
+            if (WalletResponse.isDataSharingResponse(response)) {
+                const data = (response as DataSharingResponsePayload).data;
+
+                if (data.username && !(data.username instanceof TonomyUsername)) {
+                    data.username = TonomyUsername.fromFullUsername(data.username as unknown as string);
+                }
             }
 
             return response;
@@ -207,11 +214,15 @@ export class WalletRequest implements Serializable {
     async accept(user: IUserRequestsManager): Promise<WalletResponse> {
         const external = await this.getApp();
 
+        debug(`WalletRequest/accept: Accepting request from app ${external.origin}`);
+
         const responses: WalletResponsePayloadType[] = [];
 
         for (const request of this.getRequests()) {
             if (WalletRequest.isLoginRequest(request)) {
                 const req = request as LoginRequestPayload;
+
+                debug(`WalletRequest/accept: Accepting request from app ${external.origin}: login request`);
 
                 try {
                     const appPermission = await verifyKeyExistsForApp(await user.getAccountName(), {
@@ -226,9 +237,19 @@ export class WalletRequest implements Serializable {
                     }
                 } catch (e) {
                     if (e instanceof SdkError && e.code === SdkErrors.UserNotLoggedInWithThisApp) {
+                        debug(
+                            `WalletRequest/accept: Accepting request from app ${external.origin}: calling loginWithApp()`
+                        );
                         await user.loginWithApp(external, req.login.publicKey);
                     } else throw e;
                 }
+
+                responses.push({
+                    login: {
+                        origin: req.login.origin,
+                        callbackPath: req.login.callbackPath,
+                    },
+                });
             } else if (WalletRequest.isDataSharingRequest(request)) {
                 const req = request as DataSharingRequestPayload;
 
@@ -237,6 +258,10 @@ export class WalletRequest implements Serializable {
                 if (req.data.username) {
                     res.data.username = await user.getUsername();
                 }
+
+                debug(
+                    `WalletRequest/accept: Accepting request from app ${external.origin}: data sharing request ${JSON.stringify(res.data, null, 2)}`
+                );
 
                 responses.push(res);
             } else {
@@ -270,6 +295,8 @@ export class DualWalletRequests implements Serializable {
 
     static fromString(str: string): DualWalletRequests {
         const decoded = base64UrlToObj(str);
+
+        debug('DualWalletRequests/fromString: Decoded requests', decoded);
         let sso: WalletRequest | undefined;
         const external = new WalletRequest(decoded.external);
 
@@ -297,6 +324,7 @@ export class DualWalletRequests implements Serializable {
     }
 
     async accept(user: IUserRequestsManager): Promise<DualWalletResponse> {
+        debug('DualWalletRequests/accept: Accepting requests', typeof this.external, typeof this.sso);
         const externalResponse = await this.external.accept(user);
         let ssoResponse: WalletResponse | undefined;
 
@@ -307,6 +335,7 @@ export class DualWalletRequests implements Serializable {
         return DualWalletResponse.fromResponses(externalResponse, ssoResponse);
     }
     async reject(error: WalletResponseError): Promise<DualWalletResponse> {
+        debug('DualWalletRequests/reject: Rejecting requests with error', error, typeof this.external, typeof this.sso);
         return DualWalletResponse.fromError(error, this);
     }
 
@@ -332,15 +361,22 @@ export class WalletResponse implements Serializable {
         return this.vc.getPayload().responses;
     }
 
+    static isLoginResponse(response: WalletResponsePayloadType): boolean {
+        return 'login' in response;
+    }
+    static isDataSharingResponse(response: WalletResponsePayloadType): boolean {
+        return 'data' in response;
+    }
+
     getLoginResponse(): LoginRequestResponsePayload {
-        const res = this.getResponses()?.find((response) => 'login' in response) as LoginRequestResponsePayload;
+        const res = this.getResponses()?.find((r) => WalletResponse.isLoginResponse(r)) as LoginRequestResponsePayload;
 
         if (!res) throw new Error('No login response found');
         return res;
     }
 
     getDataSharingResponse(): DataSharingResponsePayload | undefined {
-        return this.getResponses()?.find((response) => 'data' in response) as DataSharingResponsePayload;
+        return this.getResponses()?.find((r) => WalletResponse.isDataSharingResponse(r)) as DataSharingResponsePayload;
     }
 
     getAccountName(): Name {
@@ -400,16 +436,15 @@ export class DualWalletResponse implements Serializable {
     static fromString(str: string): DualWalletResponse {
         const decoded = base64UrlToObj(str);
 
+        debug('DualWalletResponse/fromString: Decoded response', decoded);
+
         if (decoded.success) {
             return this.fromResponses(
                 new WalletResponse(decoded.external),
                 decoded.sso ? new WalletResponse(decoded.sso) : undefined
             );
         } else {
-            const error: WalletResponseError = {
-                code: decoded.error.code,
-                reason: decoded.error.reason,
-            };
+            const error: WalletResponseError = decoded.error;
             const requests = DualWalletRequests.fromString(decoded.requests);
 
             return this.fromError(error, requests);
@@ -442,42 +477,14 @@ export class DualWalletResponse implements Serializable {
     }
 
     toString(): string {
-        const obj = this.sso ? { external: this.external, sso: this.sso } : { external: this.external };
+        const obj = {
+            success: this.success,
+            external: this.external,
+            sso: this.sso,
+            error: this.error,
+            requests: this.requests,
+        };
 
         return objToBase64Url(obj);
     }
 }
-
-// export class DualWalletResponseError implements Serializable {
-//     success: boolean;
-//     error: WalletResponseError;
-//     requests: DualWalletRequests;
-
-//     constructor(error: WalletResponseError, requests: DualWalletRequests) {
-//         this.success = false;
-//         this.error = error;
-//         this.requests = requests;
-//     }
-//     fromString(str: string): DualWalletResponseError {
-//         const decoded = base64UrlToObj(str);
-//         const requests = DualWalletRequests.fromString(decoded.requests);
-//         const error: WalletResponseError = {
-//             code: decoded.error.code,
-//             reason: decoded.error.reason,
-//         };
-
-//         return new DualWalletResponseError(error, requests);
-//     }
-//     toJSON(): string {
-//         return this.toString();
-//     }
-//     toString(): string {
-//         return objToBase64Url(this);
-//     }
-// }
-
-// export function isWalletResponseSuccess(str: string): boolean {
-//     const response = base64UrlToObj(str);
-
-//     return response.success;
-// }

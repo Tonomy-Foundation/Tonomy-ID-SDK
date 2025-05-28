@@ -3,6 +3,9 @@ import { DIDurl, URL } from '../../util/ssi/types';
 import { VerifiableCredentialWithType, VCWithTypeType } from '../../util/ssi/vc';
 import { DualWalletRequests, DualWalletResponse, WalletRequest, WalletResponse } from '../../util';
 import { Name } from '@wharfkit/antelope';
+import Debug from 'debug';
+
+const debug = Debug('tonomy-sdk:LoginRequestResponseMessage');
 
 /**
  * A message that can be sent between two Tonomy identities
@@ -147,30 +150,9 @@ export class LoginRequestResponseMessage extends Message<DualWalletResponse> {
      */
     constructor(vc: LoginRequestResponseMessage | Message<DualWalletResponse> | VCWithTypeType<DualWalletResponse>) {
         super(vc);
-        let payload = this.getPayload();
+        this.decodedPayload = DualWalletResponse.fromString(this.decodedPayload as unknown as string);
 
-        if (payload.success) {
-            if (!payload.external) {
-                throw new Error('LoginRequestsResponseMessage must have an external property');
-            }
-
-            payload = DualWalletResponse.fromResponses(
-                new WalletResponse(payload.external as unknown as string),
-                payload.sso ? new WalletResponse(payload.sso as unknown as string) : undefined
-            );
-        } else {
-            if (!payload.error) throw new Error('LoginRequestsResponseMessage must have an error property');
-            if (!payload.requests) throw new Error('LoginRequestsResponseMessage must have a requests property');
-
-            const requests = new DualWalletRequests(
-                new WalletRequest(payload.requests.external as unknown as string),
-                payload.requests.sso ? new WalletRequest(payload.requests.sso as unknown as string) : undefined
-            );
-
-            payload = DualWalletResponse.fromError(payload.error, requests);
-        }
-
-        this.decodedPayload = payload;
+        debug('LoginRequestResponseMessage payload', this.decodedPayload);
     }
 
     /**

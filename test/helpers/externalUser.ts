@@ -58,7 +58,8 @@ export async function externalWebsiteUserPressLoginToTonomyButton(
 
     expect(did).toContain('did:key:');
     debug('EXTERNAL_WEBSITE/login: redirect to Tonomy Login Website');
-    const redirectUrl = loginAppOrigin + '/login?payload=' + request.toString();
+    const requests = new DualWalletRequests(request);
+    const redirectUrl = loginAppOrigin + '/login?payload=' + requests.toString();
 
     return { did, redirectUrl };
 }
