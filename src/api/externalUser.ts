@@ -20,7 +20,7 @@ import { getAccountNameFromDid, parseDid } from '../sdk/util';
 import {
     AuthenticationMessage,
     Communication,
-    TonomyContract,
+    getTonomyContract,
     LinkAuthRequestMessage,
     LinkAuthRequestResponseMessage,
     Message,
@@ -62,8 +62,6 @@ export type LoginWithTonomyMessages = {
     request: WalletRequest;
     loginToCommunication: AuthenticationMessage;
 };
-
-const tonomyContract = TonomyContract.Instance;
 
 /**
  * The data of a client authorization request
@@ -143,7 +141,7 @@ export class ExternalUser {
             const username = await user.getUsername();
 
             if (username) {
-                const personData = await tonomyContract.getPerson(username);
+                const personData = await getTonomyContract().getPerson(username);
 
                 if (accountName.toString() !== personData.account_name.toString())
                     throwError('Username has changed', SdkErrors.InvalidData);
@@ -451,7 +449,7 @@ export class ExternalUser {
         let contractAccount: Name;
 
         if (contract instanceof TonomyUsername) {
-            const app = await tonomyContract.getApp(contract);
+            const app = await getTonomyContract().getApp(contract);
 
             contractAccount = app.account_name;
         } else {
@@ -650,7 +648,7 @@ export async function verifyClientAuthorization<T extends ClientAuthorizationDat
                 const tonomyUsername = TonomyUsername.fromFullUsername(username);
 
                 // this will throw if the username is not valid
-                await tonomyContract.getPerson(tonomyUsername);
+                await getTonomyContract().getPerson(tonomyUsername);
             }
         }
     }
