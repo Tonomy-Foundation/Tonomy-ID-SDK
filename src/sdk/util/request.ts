@@ -80,8 +80,10 @@ export class WalletRequestVerifiableCredential extends VerifiableCredentialWithT
     constructor(vc: WalletRequestVerifiableCredential | VCWithTypeType<WalletRequestPayload>) {
         super(vc);
         this.decodedPayload.requests = this.decodedPayload.requests.map((request) => {
-            if ('login' in request) {
-                request.login.publicKey = PublicKey.from(request.login.publicKey);
+            if (WalletRequest.isLoginRequest(request)) {
+                (request as LoginRequestPayload).login.publicKey = PublicKey.from(
+                    (request as LoginRequestPayload).login.publicKey
+                );
             }
 
             return request;
@@ -142,11 +144,11 @@ export class WalletRequest implements Serializable {
         this.vc = new WalletRequestVerifiableCredential(vc);
     }
 
-    isLoginRequest(request: WalletRequestPayloadType): boolean {
+    static isLoginRequest(request: WalletRequestPayloadType): boolean {
         return 'login' in request;
     }
 
-    isDataSharingRequest(request: WalletRequestPayloadType): boolean {
+    static isDataSharingRequest(request: WalletRequestPayloadType): boolean {
         return 'data' in request;
     }
 
@@ -155,7 +157,7 @@ export class WalletRequest implements Serializable {
     }
 
     getLoginRequest(): LoginRequestPayload {
-        const res = this.getRequests().find((request) => this.isLoginRequest(request)) as LoginRequestPayload;
+        const res = this.getRequests().find((request) => WalletRequest.isLoginRequest(request)) as LoginRequestPayload;
 
         if (!res) {
             throw new Error('No login request found');
@@ -165,7 +167,9 @@ export class WalletRequest implements Serializable {
     }
 
     getDataSharingRequest(): DataSharingRequestPayload | undefined {
-        return this.getRequests().find((request) => this.isDataSharingRequest(request)) as DataSharingRequestPayload;
+        return this.getRequests().find((request) =>
+            WalletRequest.isDataSharingRequest(request)
+        ) as DataSharingRequestPayload;
     }
 
     getOrigin(): string {
@@ -206,7 +210,7 @@ export class WalletRequest implements Serializable {
         const responses: WalletResponsePayloadType[] = [];
 
         for (const request of this.getRequests()) {
-            if (this.isLoginRequest(request)) {
+            if (WalletRequest.isLoginRequest(request)) {
                 const req = request as LoginRequestPayload;
 
                 try {
@@ -225,7 +229,7 @@ export class WalletRequest implements Serializable {
                         await user.loginWithApp(external, req.login.publicKey);
                     } else throw e;
                 }
-            } else if (this.isDataSharingRequest(request)) {
+            } else if (WalletRequest.isDataSharingRequest(request)) {
                 const req = request as DataSharingRequestPayload;
 
                 const res: DataSharingResponsePayload = { data: {} };
@@ -266,7 +270,6 @@ export class DualWalletRequests implements Serializable {
 
     static fromString(str: string): DualWalletRequests {
         const decoded = base64UrlToObj(str);
-
         let sso: WalletRequest | undefined;
         const external = new WalletRequest(decoded.external);
 

@@ -6,6 +6,7 @@ import { generateRandomKeyPair } from '../../src/sdk/util/crypto';
 import { ExternalUser, LoginWithTonomyMessages } from '../../src/api/externalUser';
 import { onRedirectLogin } from '../../src/sdk/helpers/urls';
 import { setReferrer, setUrl } from '../helpers/browser';
+import { DualWalletRequests } from '../../src/sdk';
 
 describe('logging in', () => {
     it('generates random key pair', () => {
@@ -33,7 +34,8 @@ describe('logging in', () => {
             callbackPath: '/login',
             redirect: false,
         })) as LoginWithTonomyMessages;
-        const url = ssoOrigin + '/login?payload=' + request.toString();
+        const walletRequests = new DualWalletRequests(request);
+        const url = ssoOrigin + '/login?payload=' + walletRequests.toString();
 
         setReferrer(appOrigin);
         setUrl(url);

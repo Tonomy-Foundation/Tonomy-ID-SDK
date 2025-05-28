@@ -138,7 +138,7 @@ describe('LoginRequestMessage class', () => {
 
         expect(requests).toBeInstanceOf(Object);
         expect(requests.external.getRequests()).toBeInstanceOf(Array);
-        expect(requests.external.getRequests()).toBe(1);
+        expect(requests.external.getRequests().length).toBe(1);
         const request = requests.external.getLoginRequest();
 
         expect(request).toBeInstanceOf(Object);

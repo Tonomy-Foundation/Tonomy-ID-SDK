@@ -121,13 +121,7 @@ export class LoginRequestsMessage extends Message<DualWalletRequests> {
      */
     constructor(vc: Message<DualWalletRequests> | VCWithTypeType<DualWalletRequests>) {
         super(vc);
-        const payload = this.getPayload();
-
-        if (!payload.external) throw new Error('LoginRequestsMessage must have an external property');
-        this.decodedPayload = new DualWalletRequests(
-            new WalletRequest(payload.external as unknown as string),
-            payload.sso ? new WalletRequest(payload.sso as unknown as string) : undefined
-        );
+        this.decodedPayload = DualWalletRequests.fromString(this.decodedPayload as unknown as string);
     }
 
     /**

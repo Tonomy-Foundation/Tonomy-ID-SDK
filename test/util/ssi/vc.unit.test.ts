@@ -105,7 +105,7 @@ describe('VerifiableCredentialWithType class', () => {
 
         const newRequest = new VerifiableCredentialWithType(vc);
 
-        expect(newRequest.getType()).toBe('LoginRequest');
+        expect(newRequest.getType()).toBe('WalletRequest');
         expect(vc.getType()).toBe('WalletRequest');
 
         const newLoginRequestFromVc = new WalletRequest(newRequest.getVc());
