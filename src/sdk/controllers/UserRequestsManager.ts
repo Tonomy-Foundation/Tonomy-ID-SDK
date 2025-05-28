@@ -1,6 +1,6 @@
 import { Name } from '@wharfkit/antelope';
 import { KeyManagerLevel } from '../storage/keymanager';
-import { TonomyEosioProxyContract } from '../services/blockchain/contracts/TonomyEosioProxyContract';
+import { getTonomyEosioProxyContract } from '../services/blockchain/contracts/TonomyEosioProxyContract';
 import { getTonomyContract } from '../services/blockchain';
 import { createKeyManagerSigner } from '../services/blockchain/eosio/transaction';
 import { SdkErrors, throwError, SdkError } from '../util/errors';
@@ -18,8 +18,6 @@ import { DualWalletRequests, sleep } from '../util';
 import Debug from 'debug';
 
 const debug = Debug('tonomy-sdk:UserRequestsManager');
-
-const tonomyEosioProxyContract = TonomyEosioProxyContract.Instance;
 
 export class UserRequestsManager extends UserCommunication implements IUserRequestsManager {
     async handleLinkAuthRequestMessage(message: Message): Promise<void> {
@@ -47,7 +45,7 @@ export class UserRequestsManager extends UserCommunication implements IUserReque
 
             const signer = createKeyManagerSigner(this.keyManager, KeyManagerLevel.ACTIVE);
 
-            await tonomyEosioProxyContract.linkAuth(
+            await getTonomyEosioProxyContract().linkAuth(
                 (await this.getAccountName()).toString(),
                 contract.toString(),
                 action.toString(),
@@ -124,7 +122,7 @@ export class UserRequestsManager extends UserCommunication implements IUserReque
             await sleep(1000); // wait for the blockchain to catch up
             const activeSigner = createKeyManagerSigner(this.keyManager, KeyManagerLevel.ACTIVE);
 
-            await tonomyEosioProxyContract.linkAuth(
+            await getTonomyEosioProxyContract().linkAuth(
                 myAccount.toString(),
                 app.accountName.toString(),
                 '',
