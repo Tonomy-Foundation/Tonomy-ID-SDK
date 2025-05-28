@@ -7,16 +7,14 @@ import { App } from '../controllers/App';
 import { getAccount } from '../services/blockchain/eosio/eosio';
 import { StorageFactory } from '../storage/storage';
 import { TonomyUsername } from '../util/username';
-import { TonomyContract } from '../services/blockchain';
+import { getTonomyContract } from '../services/blockchain';
 import { User } from '../controllers/User';
-
-const tonomyContract = TonomyContract.Instance;
 
 export async function getAccountInfo(account: TonomyUsername | Name): Promise<API.v1.AccountObject> {
     let accountName: Name;
 
     if (account instanceof TonomyUsername) {
-        const idData = await tonomyContract.getPerson(account);
+        const idData = await getTonomyContract().getPerson(account);
 
         accountName = idData.account_name;
     } else {

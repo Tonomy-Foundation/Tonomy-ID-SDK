@@ -1,13 +1,11 @@
 import { PrivateKey, Checksum256 } from '@wharfkit/antelope';
 import { KeyManagerLevel } from '../storage/keymanager';
-import { TonomyContract } from '../services/blockchain/contracts/TonomyContract';
+import { getTonomyContract } from '../services/blockchain/contracts/TonomyContract';
 import { SdkErrors, throwError } from '../util/errors';
 import { generateRandomKeyPair } from '../util/crypto';
 import { ICreateAccountOptions, ILoginOptions, IUserAuthentication } from '../types/User';
 import { getAccountInfo } from '../helpers/user';
 import { UserBase } from './UserBase';
-
-const tonomyContract = TonomyContract.Instance;
 
 export class UserAuthorization extends UserBase implements IUserAuthentication {
     async savePassword(masterPassword: string, options: ICreateAccountOptions): Promise<void> {
@@ -46,7 +44,7 @@ export class UserAuthorization extends UserBase implements IUserAuthentication {
     async checkPassword(password: string, options: ILoginOptions): Promise<boolean> {
         const username = await this.getAccountName();
 
-        const idData = await tonomyContract.getPerson(username);
+        const idData = await getTonomyContract().getPerson(username);
         const salt = idData.password_salt;
 
         await this.savePassword(password, { ...options, salt });

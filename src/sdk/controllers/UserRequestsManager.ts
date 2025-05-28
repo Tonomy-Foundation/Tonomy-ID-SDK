@@ -1,7 +1,7 @@
 import { Name } from '@wharfkit/antelope';
 import { KeyManagerLevel } from '../storage/keymanager';
 import { TonomyEosioProxyContract } from '../services/blockchain/contracts/TonomyEosioProxyContract';
-import { TonomyContract } from '../services/blockchain';
+import { getTonomyContract } from '../services/blockchain';
 import { createKeyManagerSigner } from '../services/blockchain/eosio/transaction';
 import { SdkErrors, throwError, SdkError } from '../util/errors';
 import { Message, LinkAuthRequestMessage, LinkAuthRequestResponseMessage } from '../services/communication/message';
@@ -20,7 +20,6 @@ import Debug from 'debug';
 const debug = Debug('tonomy-sdk:UserRequestsManager');
 
 const tonomyEosioProxyContract = TonomyEosioProxyContract.Instance;
-const tonomyContract = TonomyContract.Instance;
 
 export class UserRequestsManager extends UserCommunication implements IUserRequestsManager {
     async handleLinkAuthRequestMessage(message: Message): Promise<void> {
@@ -39,7 +38,7 @@ export class UserRequestsManager extends UserCommunication implements IUserReque
 
             if (!permission) throwError('DID does not contain App permission', SdkErrors.MissingParams);
 
-            await tonomyContract.getApp(Name.from(permission));
+            await getTonomyContract().getApp(Name.from(permission));
             // Throws SdkErrors.DataQueryNoRowDataFound error if app does not exist
             // which cannot happen in theory, as the user is already logged in
 
@@ -109,7 +108,7 @@ export class UserRequestsManager extends UserCommunication implements IUserReque
 
         debug('loginWithApp key', key);
 
-        await tonomyContract.loginwithapp(myAccount.toString(), app.accountName.toString(), 'local', key, localSigner);
+        await getTonomyContract().loginwithapp(myAccount.toString(), app.accountName.toString(), 'local', key, localSigner);
 
         // If the permission was only just created, we link it to the app (using its account name)
         // so that this permission can be used to sign transactions in the app immediately

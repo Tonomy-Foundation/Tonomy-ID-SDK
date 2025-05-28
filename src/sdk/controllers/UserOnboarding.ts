@@ -1,6 +1,6 @@
 import { Name, API, Checksum256 } from '@wharfkit/antelope';
 import { KeyManagerLevel } from '../storage/keymanager';
-import { GetPersonResponse, TonomyContract } from '../services/blockchain/contracts/TonomyContract';
+import { GetPersonResponse, getTonomyContract } from '../services/blockchain/contracts/TonomyContract';
 import { createKeyManagerSigner } from '../services/blockchain/eosio/transaction';
 import { getChainInfo } from '../services/blockchain/eosio/eosio';
 import { SdkErrors, throwError, SdkError } from '../util/errors';
@@ -14,7 +14,6 @@ import { UserCommunication } from './UserCommunication';
 import Debug from 'debug';
 
 const debug = Debug('tonomy-sdk:controllers:user-onboarding');
-const tonomyContract = TonomyContract.Instance;
 
 export class UserOnboarding extends UserCommunication implements IUserOnboarding {
     private chainID!: Checksum256;
@@ -44,7 +43,7 @@ export class UserOnboarding extends UserCommunication implements IUserOnboarding
         this.validateUsername(username.getBaseUsername());
         const { keyManager } = this;
 
-        const idData = await tonomyContract.getPerson(username);
+        const idData = await getTonomyContract().getPerson(username);
         const salt = idData.password_salt;
 
         await this.savePassword(password, { ...options, salt });
@@ -194,7 +193,7 @@ export class UserOnboarding extends UserCommunication implements IUserOnboarding
         const signer = createKeyManagerSigner(keyManager, KeyManagerLevel.PASSWORD, password);
         const accountName = await this.getAccountName();
 
-        await tonomyContract.updatekeysper(accountName.toString(), keys, signer);
+        await getTonomyContract().updatekeysper(accountName.toString(), keys, signer);
 
         this.storage.status = UserStatusEnum.READY;
         await this.storage.status;
