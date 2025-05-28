@@ -108,7 +108,13 @@ export class UserRequestsManager extends UserCommunication implements IUserReque
 
         debug('loginWithApp key', key);
 
-        await getTonomyContract().loginwithapp(myAccount.toString(), app.accountName.toString(), 'local', key, localSigner);
+        await getTonomyContract().loginwithapp(
+            myAccount.toString(),
+            app.accountName.toString(),
+            'local',
+            key,
+            localSigner
+        );
 
         // If the permission was only just created, we link it to the app (using its account name)
         // so that this permission can be used to sign transactions in the app immediately
