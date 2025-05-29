@@ -3,9 +3,7 @@ import { API, Name, NameType } from '@wharfkit/antelope';
 import { Signer, transact } from '../eosio/transaction';
 import { getApi } from '../eosio/eosio';
 import { AccountType, TonomyUsername, getSettings } from '../../../util';
-import { TonomyContract } from './TonomyContract';
-
-const tonomyContract = TonomyContract.Instance;
+import { getTonomyContract } from './TonomyContract';
 
 class DemoTokenContract {
     static singletonInstande: DemoTokenContract;
@@ -25,7 +23,7 @@ class DemoTokenContract {
     async getContractName(): Promise<string> {
         if (!this.contractName) {
             const username = TonomyUsername.fromUsername('demo', AccountType.APP, getSettings().accountSuffix);
-            const app = await tonomyContract.getApp(username);
+            const app = await getTonomyContract().getApp(username);
 
             this.contractName = app.account_name.toString();
         }

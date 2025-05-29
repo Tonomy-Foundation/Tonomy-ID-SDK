@@ -167,3 +167,7 @@ export class TonomyEosioProxyContract {
         return await transact(Name.from(CONTRACT_NAME), [action], signer);
     }
 }
+
+export function getTonomyEosioProxyContract(): TonomyEosioProxyContract {
+    return TonomyEosioProxyContract.Instance;
+}

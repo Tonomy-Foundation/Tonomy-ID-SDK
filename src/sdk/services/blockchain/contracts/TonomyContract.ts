@@ -560,6 +560,10 @@ export class TonomyContract {
     }
 }
 
+export function getTonomyContract(): TonomyContract {
+    return TonomyContract.Instance;
+}
+
 export async function getAccountNameFromUsername(username: TonomyUsername): Promise<Name> {
     return (await TonomyContract.Instance.getPerson(username)).account_name;
 }

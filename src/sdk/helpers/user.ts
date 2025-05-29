@@ -1,23 +1,20 @@
 import { Name, API, PublicKey } from '@wharfkit/antelope';
-import { LoginRequestResponseMessage, LoginRequestResponseMessagePayload } from '../services/communication/message';
+import { LoginRequestResponseMessage } from '../services/communication/message';
 import { IUser } from '../types/User';
-import { DID, SdkErrors, objToBase64Url, throwError, URL as URLtype } from '../util';
-import { ResponsesManager } from './responsesManager';
+import { DID, SdkErrors, throwError, URL as URLtype, DualWalletRequests, WalletResponseError } from '../util';
 import { KeyManager, KeyManagerLevel } from '../storage/keymanager';
 import { App } from '../controllers/App';
 import { getAccount } from '../services/blockchain/eosio/eosio';
 import { StorageFactory } from '../storage/storage';
 import { TonomyUsername } from '../util/username';
-import { TonomyContract } from '../services/blockchain';
+import { getTonomyContract } from '../services/blockchain';
 import { User } from '../controllers/User';
-
-const tonomyContract = TonomyContract.Instance;
 
 export async function getAccountInfo(account: TonomyUsername | Name): Promise<API.v1.AccountObject> {
     let accountName: Name;
 
     if (account instanceof TonomyUsername) {
-        const idData = await tonomyContract.getPerson(account);
+        const idData = await getTonomyContract().getPerson(account);
 
         accountName = idData.account_name;
     } else {
@@ -42,42 +39,28 @@ export function createUserObject(keyManager: KeyManager, storageFactory: Storage
  *
  * @static function so that it can be used to cancel requests in flows where users are not logged in
  *
- * @param {WalletRequest[]} requests - Array of requests to reject
+ * @param {DualWalletRequests} requests - Array of requests to reject
  * @param {'mobile' | 'browser'} platform - Platform of the request, either 'mobile' or 'browser'
- * @param {{ code: SdkErrors, reason: string }} error - Error to send back to the requesting app
+ * @param {WalletResponseError} error - Error to send back to the requesting app
  * @param {{callbackPath?: URLtype, messageRecipient?: DID}} options - Options for the response
  * @returns {Promise<void | URLtype>} the callback url if the platform is mobile, or undefined if it is browser (a message is sent to the user)
  */
-export async function terminateLoginRequest(
-    responsesManager: ResponsesManager,
+export async function rejectLoginRequest(
+    requests: DualWalletRequests,
     returnType: 'mobile' | 'browser',
-    error: {
-        code: SdkErrors;
-        reason: string;
-    },
+    error: WalletResponseError,
     options: {
-        callbackOrigin?: URLtype;
-        callbackPath?: URLtype;
+        redirectToExternalApp?: boolean;
         messageRecipient?: DID;
         user?: IUser;
     }
 ): Promise<void | URLtype> {
-    const responsePayload: LoginRequestResponseMessagePayload = {
-        success: false,
-        error: {
-            ...error,
-            requests: responsesManager.getRequests(),
-        },
-    };
+    const responsePayload = await requests.reject(error);
 
     if (returnType === 'mobile') {
-        if (!options.callbackPath || !options.callbackOrigin)
-            throwError('Missing callback path', SdkErrors.MissingParams);
-        let callbackUrl = options.callbackOrigin + options.callbackPath + '?';
-
-        callbackUrl += 'payload=' + objToBase64Url(responsePayload);
-
-        return callbackUrl;
+        // on mobile, we should be redirecting directly back to the external app
+        if (!options.redirectToExternalApp) throw new Error('redirectToExternalApp must be true for mobile platform');
+        return responsePayload.getRedirectUrl(options.redirectToExternalApp);
     } else {
         if (!options.messageRecipient || !options.user)
             throwError('Missing message recipient', SdkErrors.MissingParams);

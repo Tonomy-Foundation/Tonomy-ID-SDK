@@ -1,11 +1,9 @@
 import { Checksum256, Name, PublicKey } from '@wharfkit/antelope';
-import { TonomyContract } from '../services/blockchain/contracts/TonomyContract';
+import { getTonomyContract } from '../services/blockchain/contracts/TonomyContract';
 import { Signer } from '../services/blockchain/eosio/transaction';
 import { getSettings } from '../util/settings';
 import { AccountType, TonomyUsername } from '../util/username';
 import { AppStatusEnum } from '../types/AppStatusEnum';
-
-const tonomyContract = TonomyContract.Instance;
 
 export interface AppData {
     accountName: Name;
@@ -75,7 +73,7 @@ export class App implements AppData {
             getSettings().accountSuffix
         );
 
-        const res = await tonomyContract.newapp(
+        const res = await getTonomyContract().newapp(
             options.appName,
             options.description,
             username.usernameHash,
@@ -99,7 +97,7 @@ export class App implements AppData {
     }
 
     static async getApp(origin: string): Promise<App> {
-        const contractAppData = await tonomyContract.getApp(origin);
+        const contractAppData = await getTonomyContract().getApp(origin);
 
         return new App({
             accountName: contractAppData.account_name,
