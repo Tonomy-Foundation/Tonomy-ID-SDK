@@ -324,7 +324,9 @@ export async function externalWebsiteClientAuth(
 
     const clientAuth = await externalUser.createClientAuthorization(data);
 
-    const verifiedAuth = await verifyClientAuthorization(clientAuth);
+    const verifiedAuth = await verifyClientAuthorization(clientAuth, {
+        verifyUsername: options.dataRequestUsername,
+    });
 
     expect(verifiedAuth).toBeDefined();
     expect(verifiedAuth.account).toBe((await externalUser.getAccountName()).toString());
