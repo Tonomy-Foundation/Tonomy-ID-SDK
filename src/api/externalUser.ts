@@ -15,6 +15,7 @@ import {
     WalletRequestVerifiableCredential,
     WalletRequest,
     DualWalletResponse,
+    DualWalletRequests,
 } from '../sdk/util/request';
 import { getAccountNameFromDid, parseDid } from '../sdk/util';
 import {
@@ -59,7 +60,7 @@ export type VerifyLoginOptions = {
 };
 
 export type LoginWithTonomyMessages = {
-    request: WalletRequest;
+    requests: DualWalletRequests;
     loginToCommunication: AuthenticationMessage;
 };
 
@@ -292,16 +293,15 @@ export class ExternalUser {
         const request = new WalletRequest(
             await WalletRequestVerifiableCredential.signRequest({ requests: requestPayloads }, issuer)
         );
+        const requests = new DualWalletRequests(request);
 
         if (redirect) {
-            const base64UrlPayload = request.toString();
-
-            window.location.href = `${getSettings().ssoWebsiteOrigin}/login?payload=${base64UrlPayload}`;
+            window.location.href = `${getSettings().ssoWebsiteOrigin}/login?payload=${requests.toString()}`;
             return;
         } else {
             const loginToCommunication = await AuthenticationMessage.signMessageWithoutRecipient({}, issuer);
 
-            return { request, loginToCommunication };
+            return { requests, loginToCommunication };
         }
     }
 

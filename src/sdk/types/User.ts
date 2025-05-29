@@ -127,8 +127,6 @@ export interface IUserRequestsManager extends IUserCommunication {
         requests: DualWalletRequests,
         platform: 'mobile' | 'browser',
         options: {
-            callbackOrigin?: URLtype;
-            callbackPath?: URLtype;
             messageRecipient?: DID;
         }
     ): Promise<void | URLtype>;

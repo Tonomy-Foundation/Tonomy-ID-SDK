@@ -6,7 +6,6 @@ import { generateRandomKeyPair } from '../../src/sdk/util/crypto';
 import { ExternalUser, LoginWithTonomyMessages } from '../../src/api/externalUser';
 import { onRedirectLogin } from '../../src/sdk/helpers/urls';
 import { setReferrer, setUrl } from '../helpers/browser';
-import { DualWalletRequests } from '../../src/sdk';
 
 describe('logging in', () => {
     it('generates random key pair', () => {
@@ -17,12 +16,12 @@ describe('logging in', () => {
     });
 
     it('on press button', async () => {
-        const { request } = (await ExternalUser.loginWithTonomy({
+        const { requests } = (await ExternalUser.loginWithTonomy({
             callbackPath: '/login',
             redirect: false,
         })) as LoginWithTonomyMessages;
 
-        expect(typeof request.toString()).toBe('string');
+        expect(typeof requests.toString()).toBe('string');
     });
 
     it('checks login url', async () => {
@@ -30,11 +29,10 @@ describe('logging in', () => {
         const ssoOrigin = 'http://sso.com';
 
         setUrl(appOrigin);
-        const { request } = (await ExternalUser.loginWithTonomy({
+        const { requests: walletRequests } = (await ExternalUser.loginWithTonomy({
             callbackPath: '/login',
             redirect: false,
         })) as LoginWithTonomyMessages;
-        const walletRequests = new DualWalletRequests(request);
         const url = ssoOrigin + '/login?payload=' + walletRequests.toString();
 
         setReferrer(appOrigin);

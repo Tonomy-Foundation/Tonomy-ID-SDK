@@ -157,7 +157,7 @@ describe('Login to external website', () => {
     });
 
     async function runExternalUserLoginTest(testOptions: ExternalUserLoginTestOptions) {
-        let expectedTests = 57;
+        let expectedTests = 56;
 
         if (testOptions.dataRequest) {
             expectedTests += 1;
@@ -291,21 +291,19 @@ describe('Login to external website', () => {
         }
 
         debug('TONOMY_LOGIN_WEBSITE/login: sending to callback page');
-        setUrl(tonomyLoginApp.origin + `/callback?payload=${walletResponse.toString()}`);
+        setUrl(walletResponse.getRedirectUrl(false));
 
         const { responses: TONOMY_LOGIN_WEBSITE_responses } =
             await loginWebsiteOnCallback(TONOMY_LOGIN_WEBSITE_jsKeyManager, TONOMY_LOGIN_WEBSITE_storage_factory);
 
         if (!TONOMY_LOGIN_WEBSITE_responses.external) throw new Error('TONOMY_LOGIN_WEBSITE_responses.external is undefined');
         const EXTERNAL_WEBSITE_response = DualWalletResponse.fromResponses(TONOMY_LOGIN_WEBSITE_responses.external)
-        const loginResponse = TONOMY_LOGIN_WEBSITE_responses.external.getLoginResponse().login;
-        const EXTERNAL_WWEBSITE_redirectUrl = loginResponse.origin + loginResponse.callbackPath +
-            `?payload=${EXTERNAL_WEBSITE_response.toString()}`
+        const EXTERNAL_WEBSITE_redirectBackUrl = EXTERNAL_WEBSITE_response.getRedirectUrl();
 
         // #####External website user (callback page) #####
         // ################################
 
-        setUrl(EXTERNAL_WWEBSITE_redirectUrl);
+        setUrl(EXTERNAL_WEBSITE_redirectBackUrl);
 
         EXTERNAL_WEBSITE_user = await externalWebsiteOnCallback(
             EXTERNAL_WEBSITE_jsKeyManager,

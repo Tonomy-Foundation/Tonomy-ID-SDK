@@ -231,8 +231,10 @@ export class WalletRequest implements Serializable {
                 debug(`WalletRequest/accept: Accepting request from app ${external.origin}: login request`);
 
                 if (checkSsoDomain) {
-                    if (!isSameOrigin(req.login.origin, getSettings().accountsServiceUrl))
-                        throw new Error('Invalid origin for SSO login request');
+                    if (!isSameOrigin(req.login.origin, getSettings().ssoWebsiteOrigin))
+                        throw new Error(
+                            `Invalid origin for SSO login request. Received ${req.login.origin}, expected ${getSettings().accountsServiceUrl}`
+                        );
                 }
 
                 const app = await App.getApp(req.login.origin);
@@ -297,14 +299,6 @@ export class WalletRequest implements Serializable {
 }
 
 export class DualWalletRequests implements Serializable {
-    /**
-     * @description Indicates how the requests were received.
-     * This is used to determine the flow of the requests and how they should be handled.
-     * 'redirect' - Requests were received via a redirect from the external app.
-     * 'deepLink' - Requests were received via a deep link in the browser into Tonomy ID.
-     * 'qrCode' - Requests were received via message subscriber to Tonomy-Communication after scanning a QR code.
-     */
-    // receivedVia: 'redirect' | 'deepLink' | 'qrCode';
     external: WalletRequest;
     sso?: WalletRequest;
 
@@ -506,5 +500,18 @@ export class DualWalletResponse implements Serializable {
         };
 
         return objToBase64Url(obj);
+    }
+
+    getRedirectUrl(external = true): string {
+        const request = external ? this.external : this.sso;
+
+        if (!request) throw new Error('request not found in getRedirectUrl');
+
+        return (
+            request.getLoginResponse().login.origin +
+            request.getLoginResponse().login.callbackPath +
+            '?payload=' +
+            this.toString()
+        );
     }
 }

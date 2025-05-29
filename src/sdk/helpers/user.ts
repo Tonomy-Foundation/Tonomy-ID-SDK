@@ -45,13 +45,12 @@ export function createUserObject(keyManager: KeyManager, storageFactory: Storage
  * @param {{callbackPath?: URLtype, messageRecipient?: DID}} options - Options for the response
  * @returns {Promise<void | URLtype>} the callback url if the platform is mobile, or undefined if it is browser (a message is sent to the user)
  */
-export async function terminateLoginRequest(
+export async function rejectLoginRequest(
     requests: DualWalletRequests,
     returnType: 'mobile' | 'browser',
     error: WalletResponseError,
     options: {
-        callbackOrigin?: URLtype;
-        callbackPath?: URLtype;
+        redirectToExternalApp?: boolean;
         messageRecipient?: DID;
         user?: IUser;
     }
@@ -60,9 +59,8 @@ export async function terminateLoginRequest(
 
     if (returnType === 'mobile') {
         // on mobile, we should be redirecting directly back to the external app
-        if (!options.callbackPath || !options.callbackOrigin)
-            throwError('Missing callback path', SdkErrors.MissingParams);
-        return options.callbackOrigin + options.callbackPath + '?payload=' + responsePayload.toString();
+        if (!options.redirectToExternalApp) throw new Error('redirectToExternalApp must be true for mobile platform');
+        return responsePayload.getRedirectUrl(options.redirectToExternalApp);
     } else {
         if (!options.messageRecipient || !options.user)
             throwError('Missing message recipient', SdkErrors.MissingParams);

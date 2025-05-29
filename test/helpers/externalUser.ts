@@ -48,17 +48,15 @@ export async function externalWebsiteUserPressLoginToTonomyButton(
             : {};
     }
 
-    const { request } = (await ExternalUser.loginWithTonomy(
+    const { requests } = (await ExternalUser.loginWithTonomy(
         onPressLoginOptions,
         keyManager
     )) as LoginWithTonomyMessages;
 
-    expect(typeof request.toString()).toBe('string');
-    const did = request.getDid();
+    const did = requests.external.getDid();
 
     expect(did).toContain('did:key:');
     debug('EXTERNAL_WEBSITE/login: redirect to Tonomy Login Website');
-    const requests = new DualWalletRequests(request);
     const redirectUrl = loginAppOrigin + '/login?payload=' + requests.toString();
 
     return { did, redirectUrl };
@@ -78,7 +76,7 @@ export async function loginWebsiteOnRedirect(
 
     debug('TONOMY_LOGIN_WEBSITE/login: create did:key and login request');
 
-    const { request: ssoRequest, loginToCommunication } = (await ExternalUser.loginWithTonomy(
+    const { requests: tonomyLoginRequests, loginToCommunication } = (await ExternalUser.loginWithTonomy(
         {
             callbackPath: '/callback',
             redirect: false,
@@ -88,6 +86,9 @@ export async function loginWebsiteOnRedirect(
         },
         keyManager
     )) as LoginWithTonomyMessages;
+    const ssoRequest = tonomyLoginRequests.external;
+
+    if (!ssoRequest) throw new Error('SSO request not found in login requests');
     const did = ssoRequest.getDid();
 
     expect(did).toContain('did:key:');

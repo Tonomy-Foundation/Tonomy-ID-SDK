@@ -140,8 +140,6 @@ export class UserRequestsManager extends UserCommunication implements IUserReque
         requests: DualWalletRequests,
         platform: 'mobile' | 'browser',
         options: {
-            callbackOrigin?: URLtype;
-            callbackPath?: URLtype;
             messageRecipient?: DID;
         }
     ): Promise<void | URLtype> {
@@ -150,9 +148,8 @@ export class UserRequestsManager extends UserCommunication implements IUserReque
         const responses = await requests.accept(this);
 
         if (platform === 'mobile') {
-            if (!options.callbackPath || !options.callbackOrigin)
-                throwError('Missing callback origin or path', SdkErrors.MissingParams);
-            return options.callbackOrigin + options.callbackPath + '?payload=' + responses.toString();
+            // Redirect the user back to the SSO website
+            return responses.getRedirectUrl(false);
         } else {
             if (!options.messageRecipient) throwError('Missing message recipient', SdkErrors.MissingParams);
             const issuer = await this.getIssuer();
