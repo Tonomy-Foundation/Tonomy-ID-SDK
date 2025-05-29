@@ -12,7 +12,7 @@ export async function onRedirectLogin(): Promise<DualWalletRequests> {
     const requests = DualWalletRequests.fromUrl();
 
     await requests.verify();
-    if (requests.external) requests.external.checkReferrerOrigin();
+    requests.external.checkReferrerOrigin();
 
     return requests;
 }

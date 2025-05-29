@@ -162,7 +162,8 @@ export async function sendLoginRequestsMessage(
 
 export async function loginWebsiteOnCallback(keyManager: KeyManager, storageFactory: StorageFactory) {
     debug('TONOMY_LOGIN_WEBSITE/callback: fetching response from URL and verifying login');
-    await ExternalUser.verifyLoginRequest({
+    await ExternalUser.verifyLoginResponse({
+        external: false,
         keyManager,
         storageFactory,
     });
@@ -183,7 +184,7 @@ export async function externalWebsiteOnCallback(
     accountName: Name
 ) {
     debug('EXTERNAL_WEBSITE/callback: fetching response from URL');
-    const externalUser = await ExternalUser.verifyLoginRequest({
+    const externalUser = await ExternalUser.verifyLoginResponse({
         keyManager,
         storageFactory,
     });

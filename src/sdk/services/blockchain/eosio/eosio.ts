@@ -47,6 +47,17 @@ export async function getChainInfo(): Promise<API.v1.GetInfoResponse> {
     return await api.v1.chain.get_info();
 }
 
+let chainId: string | undefined;
+
+export async function getChainId(): Promise<string> {
+    if (chainId) return chainId;
+    const api = await getApi();
+    const info = await api.v1.chain.get_info();
+
+    if (!info || !info.chain_id) throw new Error('Chain ID not found in chain info');
+    return (chainId = info.chain_id.toString());
+}
+
 export async function getAccount(account: NameType): Promise<API.v1.AccountObject> {
     try {
         const api = await getApi();

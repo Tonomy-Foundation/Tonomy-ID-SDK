@@ -7,7 +7,7 @@ import { createStorage, PersistentStorageClean, StorageFactory, STORAGE_NAMESPAC
 import { Name, API, NameType } from '@wharfkit/antelope';
 import { TonomyUsername } from '../sdk/util/username';
 import { browserStorageFactory } from '../sdk/storage/browserStorage';
-import { getAccount, getChainInfo } from '../sdk/services/blockchain/eosio/eosio';
+import { getAccount, getChainId } from '../sdk/services/blockchain/eosio/eosio';
 import { JsKeyManager } from '../sdk/storage/jsKeyManager';
 import {
     LoginRequestPayload,
@@ -166,7 +166,7 @@ export class ExternalUser {
 
         if (!did) {
             const accountName = await (await this.getAccountName()).toString();
-            const chainID = (await getChainInfo()).chain_id.toString();
+            const chainID = await getChainId();
             const appPermission = await this.getAppPermission();
 
             did = `did:antelope:${chainID}:${accountName}#${appPermission}`;
@@ -322,18 +322,19 @@ export class ExternalUser {
     }
 
     /**
-     * Receives the login request from Tonomy ID and verifies the login was successful
+     * Receives the login response from Tonomy ID and verifies the login was successful
      *
      * @description should be called in the callback page
      *
      * @param {VerifyLoginOptions} [options] - options for the login
+     * @property {boolean} [options.external = true] - if true, verifies the login for an external user, otherwise for the Tonomy SSO website
      * @property {boolean} [options.checkKeys = true] - if true, checks the keys in the keyManager against the blockchain
      * @property {KeyManager} [options.keyManager] - the key manager to use to storage and manage keys
      * @property {StorageFactory} [options.storageFactory] - the storage factory to use to store data
      *
      * @returns {Promise<ExternalUser>} an external user object ready to use
      */
-    static async verifyLoginRequest({
+    static async verifyLoginResponse({
         external = true,
         checkKeys = true,
         keyManager = new JsKeyManager(),
@@ -341,9 +342,8 @@ export class ExternalUser {
     }: VerifyLoginOptions): Promise<ExternalUser> {
         const responses = DualWalletResponse.fromUrl();
 
-        await responses.verify();
-
         if (responses.isSuccess()) {
+            await responses.verify();
             const response = external ? responses.external : responses.sso;
 
             if (!response)
@@ -627,7 +627,7 @@ export async function verifyClientAuthorization<T extends ClientAuthorizationDat
 
     async function verifyChainId() {
         if (optionsWithDefaults.verifyChainId) {
-            const { chain_id: chainId } = await getChainInfo();
+            const chainId = await getChainId();
 
             const didChainId = id.split(':')[0];
 

@@ -1,8 +1,8 @@
-import { Name, API, Checksum256 } from '@wharfkit/antelope';
+import { Name, API } from '@wharfkit/antelope';
 import { KeyManagerLevel } from '../storage/keymanager';
 import { GetPersonResponse, getTonomyContract } from '../services/blockchain/contracts/TonomyContract';
 import { createKeyManagerSigner } from '../services/blockchain/eosio/transaction';
-import { getChainInfo } from '../services/blockchain/eosio/eosio';
+import { getChainId } from '../services/blockchain/eosio/eosio';
 import { SdkErrors, throwError, SdkError } from '../util/errors';
 import { AccountType, TonomyUsername } from '../util/username';
 import { getSettings } from '../util/settings';
@@ -16,7 +16,7 @@ import Debug from 'debug';
 const debug = Debug('tonomy-sdk:controllers:user-onboarding');
 
 export class UserOnboarding extends UserCommunication implements IUserOnboarding {
-    private chainID!: Checksum256;
+    private chainID!: string;
 
     private validateUsername(username: string): void {
         if (typeof username !== 'string' || username.length === 0)
@@ -29,7 +29,7 @@ export class UserOnboarding extends UserCommunication implements IUserOnboarding
 
     private async createDid(): Promise<string> {
         if (!this.chainID) {
-            this.chainID = (await getChainInfo()).chain_id as unknown as Checksum256;
+            this.chainID = await getChainId();
         }
 
         const accountName = await this.getAccountName();

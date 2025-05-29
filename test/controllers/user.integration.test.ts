@@ -2,13 +2,12 @@
  * @jest-environment jsdom
  */
 import { IUserPublic, createRandomID, createUserObject } from '../helpers/user';
-import { KeyManager, KeyManagerLevel, TonomyUsername, EosioUtil } from '../../src/sdk/index';
+import { KeyManager, KeyManagerLevel, TonomyUsername } from '../../src/sdk/index';
 import { SdkErrors } from '../../src/sdk/index';
 import { JsKeyManager } from '../../src/sdk/storage/jsKeyManager';
 import { jsStorageFactory } from '../../src/cli/bootstrap/jsstorage';
-import { Checksum256 } from '@wharfkit/antelope';
 import { generatePrivateKeyFromPassword } from '../../src/cli/bootstrap/keys';
-import { getAccount } from '../../src/sdk/services/blockchain/eosio/eosio';
+import { getAccount, getChainId } from '../../src/sdk/services/blockchain/eosio/eosio';
 import { getAccountInfo } from '../../src/sdk/helpers/user';
 import { jest } from '@jest/globals';
 import { MILLISECONDS_IN_SECOND } from '../../src/sdk/util/time';
@@ -254,7 +253,7 @@ describe('User class', () => {
     test('getDid() expect chainId and account name defined', async () => {
         const { user } = await createRandomID();
         const accountName = await user.storage.accountName;
-        const chainId = (await EosioUtil.getChainInfo()).chain_id as unknown as Checksum256;
+        const chainId = await getChainId();
 
         expect(chainId).toBeDefined();
         expect(accountName).toBeDefined();
