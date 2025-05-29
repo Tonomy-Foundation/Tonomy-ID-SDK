@@ -16,3 +16,10 @@ export async function onRedirectLogin(): Promise<DualWalletRequests> {
 
     return requests;
 }
+
+export function isSameOrigin(a: string | URL, b: string | URL): boolean {
+    const urlA = new URL(a);
+    const urlB = new URL(b);
+
+    return urlA.origin === urlB.origin;
+}

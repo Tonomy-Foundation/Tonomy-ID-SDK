@@ -10,6 +10,8 @@ import { TonomyUsername } from './username';
 import { verifyKeyExistsForApp } from '../helpers/user';
 import { getAccountNameFromDid } from './ssi/did';
 import Debug from 'debug';
+import { getSettings } from './settings';
+import { isSameOrigin } from '../helpers/urls';
 
 const debug = Debug('tonomy-sdk:util:WalletRequest');
 
@@ -145,7 +147,7 @@ export class WalletResponseVerifiableCredential extends VerifiableCredentialWith
 
 export class WalletRequest implements Serializable {
     vc: WalletRequestVerifiableCredential;
-    external?: App;
+    app?: App;
 
     constructor(vc: WalletRequestVerifiableCredential | VCWithTypeType<WalletRequestPayload>) {
         this.vc = new WalletRequestVerifiableCredential(vc);
@@ -196,22 +198,26 @@ export class WalletRequest implements Serializable {
 
         if (!referrer) throw new Error('No referrer found');
 
-        const referrerOrigin = new URL(referrer).origin;
-        const origin = new URL(this.getOrigin()).origin;
-
-        if (origin !== referrerOrigin) {
-            throw new Error(`Referrer origin ${referrerOrigin} does not match login request origin ${origin}`);
+        if (!isSameOrigin(referrer, this.getOrigin())) {
+            throw new Error(`Referrer origin ${referrer} does not match login request origin ${this.getOrigin()}`);
         }
     }
 
     async getApp(): Promise<App> {
-        if (this.external) return this.external;
+        if (this.app) return this.app;
 
-        this.external = await App.getApp(this.getOrigin());
-        return this.external;
+        this.app = await App.getApp(this.getOrigin());
+        return this.app;
     }
 
-    async accept(user: IUserRequestsManager): Promise<WalletResponse> {
+    /**
+     * Accepts the wallet request and returns a WalletResponse.
+     *
+     * @param {IUserRequestsManager} user - The user manager to handle the request.
+     * @param {boolean} [checkSsoDomain=false] - Whether to check the SSO domain for login requests.
+     * @returns {Promise<WalletResponse>} - The wallet response containing the accepted requests.
+     */
+    async accept(user: IUserRequestsManager, checkSsoDomain = false): Promise<WalletResponse> {
         const external = await this.getApp();
 
         debug(`WalletRequest/accept: Accepting request from app ${external.origin}`);
@@ -224,11 +230,17 @@ export class WalletRequest implements Serializable {
 
                 debug(`WalletRequest/accept: Accepting request from app ${external.origin}: login request`);
 
+                if (checkSsoDomain) {
+                    if (!isSameOrigin(req.login.origin, getSettings().accountsServiceUrl))
+                        throw new Error('Invalid origin for SSO login request');
+                }
+
+                const app = await App.getApp(req.login.origin);
+
                 try {
                     const appPermission = await verifyKeyExistsForApp(await user.getAccountName(), {
                         publicKey: req.login.publicKey,
                     });
-                    const app = await App.getApp(req.login.origin);
 
                     if (app.accountName.toString() !== appPermission.toString()) {
                         throw new Error(
@@ -285,6 +297,14 @@ export class WalletRequest implements Serializable {
 }
 
 export class DualWalletRequests implements Serializable {
+    /**
+     * @description Indicates how the requests were received.
+     * This is used to determine the flow of the requests and how they should be handled.
+     * 'redirect' - Requests were received via a redirect from the external app.
+     * 'deepLink' - Requests were received via a deep link in the browser into Tonomy ID.
+     * 'qrCode' - Requests were received via message subscriber to Tonomy-Communication after scanning a QR code.
+     */
+    // receivedVia: 'redirect' | 'deepLink' | 'qrCode';
     external: WalletRequest;
     sso?: WalletRequest;
 
@@ -329,7 +349,7 @@ export class DualWalletRequests implements Serializable {
         let ssoResponse: WalletResponse | undefined;
 
         if (this.sso) {
-            ssoResponse = await this.sso.accept(user);
+            ssoResponse = await this.sso.accept(user, true);
         }
 
         return DualWalletResponse.fromResponses(externalResponse, ssoResponse);

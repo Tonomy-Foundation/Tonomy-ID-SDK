@@ -59,6 +59,7 @@ export async function terminateLoginRequest(
     const responsePayload = await requests.reject(error);
 
     if (returnType === 'mobile') {
+        // on mobile, we should be redirecting directly back to the external app
         if (!options.callbackPath || !options.callbackOrigin)
             throwError('Missing callback path', SdkErrors.MissingParams);
         return options.callbackOrigin + options.callbackPath + '?payload=' + responsePayload.toString();
