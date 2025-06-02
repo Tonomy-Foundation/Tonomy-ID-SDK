@@ -1,5 +1,5 @@
 {
-  "version": "0.31.0-development.2",
+  "version": "0.31.0-test.3",
   "license": "Apache-2.0",
   "type": "module",
   "source": "src/sdk/index.ts",
@@ -103,7 +103,7 @@
   },
   "publishConfig": {
     "access": "public",
-    "tag": "development"
+    "tag": "test"
   },
   "repository": {
     "type": "git",

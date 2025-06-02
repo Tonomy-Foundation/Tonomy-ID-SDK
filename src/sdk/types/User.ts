@@ -120,16 +120,9 @@ export interface IUserRequestsManager extends IUserCommunication {
      *
      * @param {DualWalletRequests} requests - Requests to accept
      * @param {'mobile' | 'browser'} platform - Platform of the request, either 'mobile' or 'browser'
-     * @param {{callbackPath?: URLtype, messageRecipient?: DID}} options - Options for the response
      * @returns {Promise<void | URLtype>} the callback url if the platform is mobile, or undefined if it is browser (a message is sent to the user)
      */
-    acceptLoginRequest(
-        requests: DualWalletRequests,
-        platform: 'mobile' | 'browser',
-        options: {
-            messageRecipient?: DID;
-        }
-    ): Promise<void | URLtype>;
+    acceptLoginRequest(requests: DualWalletRequests, platform: 'mobile' | 'browser'): Promise<void | URLtype>;
 }
 
 export interface IUser extends IUserCaptcha, IUserOnboarding, IUserRequestsManager {

@@ -136,24 +136,23 @@ export class UserRequestsManager extends UserCommunication implements IUserReque
         await this.storage.appRecords;
     }
 
-    async acceptLoginRequest(
-        requests: DualWalletRequests,
-        platform: 'mobile' | 'browser',
-        options: {
-            messageRecipient?: DID;
-        }
-    ): Promise<void | URLtype> {
-        debug('acceptLoginRequest() options', options);
-
+    /**
+     *
+     * @param {DualWalletRequests} requests - the login requests
+     * @param {'mobile' | 'browser'} platform - the platform where the login request is being accepted
+     * @returns {Promise<void | URLtype>} - if the platform is mobile, returns the callback URL to redirect the user back to the external app; if the platform is browser, sends a message with the response
+     */
+    async acceptLoginRequest(requests: DualWalletRequests, platform: 'mobile' | 'browser'): Promise<void | URLtype> {
         const responses = await requests.accept(this);
 
         if (platform === 'mobile') {
-            // Redirect the user back to the SSO website
-            return responses.getRedirectUrl(false);
+            // Redirect the user back to the external
+            return responses.getRedirectUrl();
         } else {
-            if (!options.messageRecipient) throwError('Missing message recipient', SdkErrors.MissingParams);
+            if (!requests.sso) throw new Error('SSO requests are missing in the login request message');
+            const messageRecipient = requests.sso.getDid();
             const issuer = await this.getIssuer();
-            const message = await LoginRequestResponseMessage.signMessage(responses, issuer, options.messageRecipient);
+            const message = await LoginRequestResponseMessage.signMessage(responses, issuer, messageRecipient);
 
             await this.sendMessage(message);
         }
