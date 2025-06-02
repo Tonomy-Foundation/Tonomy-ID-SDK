@@ -1,7 +1,7 @@
 import { Name, API, PublicKey } from '@wharfkit/antelope';
 import { LoginRequestResponseMessage } from '../services/communication/message';
 import { IUser } from '../types/User';
-import { DID, SdkErrors, throwError, URL as URLtype, DualWalletRequests, WalletResponseError } from '../util';
+import { SdkErrors, throwError, URL as URLtype, DualWalletRequests, WalletResponseError } from '../util';
 import { KeyManager, KeyManagerLevel } from '../storage/keymanager';
 import { App } from '../controllers/App';
 import { getAccount } from '../services/blockchain/eosio/eosio';
@@ -40,10 +40,9 @@ export function createUserObject(keyManager: KeyManager, storageFactory: Storage
  * @static function so that it can be used to cancel requests in flows where users are not logged in
  *
  * @param {DualWalletRequests} requests - Array of requests to reject
- * @param {'mobile' | 'browser'} platform - Platform of the request, either 'mobile' or 'browser'
+ * @param {'redirect' | 'message'} respondWith - How to respond to the request
  * @param {WalletResponseError} error - Error to send back to the requesting app
- * @param {{callbackPath?: URLtype, messageRecipient?: DID}} options - Options for the response
- * @returns {Promise<void | URLtype>} the callback url if the platform is mobile, or undefined if it is browser (a message is sent to the user)
+ * @returns {Promise<void | URLtype>} - If respondWith is 'redirect', returns a URL to redirect to; if 'message', sends a message to the requesting app
  */
 export async function rejectLoginRequest(
     requests: DualWalletRequests,
