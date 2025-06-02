@@ -228,6 +228,4 @@ export class Communication {
         await this.connect();
         this.socketServer.emit('veriffSession', { userDid });
     }
-
-    async sendVeriffVerificationToDid(credentials): Promise<boolean> {}
 }
