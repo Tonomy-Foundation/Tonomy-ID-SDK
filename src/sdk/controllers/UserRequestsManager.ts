@@ -9,7 +9,7 @@ import { getAccountNameFromDid, parseDid } from '../util/ssi/did';
 import { IUserAppRecord, IUserRequestsManager } from '../types/User';
 import { PublicKey } from '@wharfkit/antelope';
 import { LoginRequestResponseMessage } from '../services/communication/message';
-import { DID, URL as URLtype } from '../util/ssi/types';
+import { URL as URLtype } from '../util/ssi/types';
 import { App } from './App';
 import { AppStatusEnum } from '../types/AppStatusEnum';
 import { getAccountInfo } from '../helpers/user';
