@@ -136,16 +136,13 @@ export class UserRequestsManager extends UserCommunication implements IUserReque
         await this.storage.appRecords;
     }
 
-    /**
-     *
-     * @param {DualWalletRequests} requests - the login requests
-     * @param {'mobile' | 'browser'} platform - the platform where the login request is being accepted
-     * @returns {Promise<void | URLtype>} - if the platform is mobile, returns the callback URL to redirect the user back to the external app; if the platform is browser, sends a message with the response
-     */
-    async acceptLoginRequest(requests: DualWalletRequests, platform: 'mobile' | 'browser'): Promise<void | URLtype> {
+    async acceptLoginRequest(
+        requests: DualWalletRequests,
+        respondWith: 'redirect' | 'message'
+    ): Promise<void | URLtype> {
         const responses = await requests.accept(this);
 
-        if (platform === 'mobile') {
+        if (respondWith === 'redirect') {
             // Redirect the user back to the external
             return responses.getRedirectUrl();
         } else {

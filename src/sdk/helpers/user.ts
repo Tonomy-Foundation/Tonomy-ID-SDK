@@ -47,29 +47,23 @@ export function createUserObject(keyManager: KeyManager, storageFactory: Storage
  */
 export async function rejectLoginRequest(
     requests: DualWalletRequests,
-    returnType: 'mobile' | 'browser',
+    respondWith: 'redirect' | 'message',
     error: WalletResponseError,
     options: {
-        redirectToExternalApp?: boolean;
-        messageRecipient?: DID;
         user?: IUser;
     }
 ): Promise<void | URLtype> {
     const responsePayload = await requests.reject(error);
 
-    if (returnType === 'mobile') {
+    if (respondWith === 'redirect') {
         // on mobile, we should be redirecting directly back to the external app
-        if (!options.redirectToExternalApp) throw new Error('redirectToExternalApp must be true for mobile platform');
-        return responsePayload.getRedirectUrl(options.redirectToExternalApp);
+        return responsePayload.getRedirectUrl();
     } else {
-        if (!options.messageRecipient || !options.user)
-            throwError('Missing message recipient', SdkErrors.MissingParams);
+        if (!options.user) throwError('Missing user', SdkErrors.MissingParams);
+        if (!requests.sso) throwError('SSO request not found', SdkErrors.MissingParams);
         const issuer = await options.user.getIssuer();
-        const message = await LoginRequestResponseMessage.signMessage(
-            responsePayload,
-            issuer,
-            options.messageRecipient
-        );
+        const messageRecipient = requests.sso?.getDid();
+        const message = await LoginRequestResponseMessage.signMessage(responsePayload, issuer, messageRecipient);
 
         await options.user.sendMessage(message);
     }

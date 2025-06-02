@@ -136,7 +136,7 @@ export async function setupLoginRequestSubscriber(
             expect(receiverDid).toBe(loginRequestMessage.getSender());
 
             debug('TONOMY_ID/SSO: accepting login requests and sending confirmation to Tonomy Login Website');
-            await user.acceptLoginRequest(requests, 'browser');
+            await user.acceptLoginRequest(requests, 'message');
 
             resolve(true);
         }, LoginRequestsMessage.getType());
