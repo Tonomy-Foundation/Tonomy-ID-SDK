@@ -223,4 +223,11 @@ export class Communication {
             this.socketServer.disconnect();
         }
     }
+
+    async createSession(userDid: string): Promise<void> {
+        await this.connect();
+        this.socketServer.emit('veriffSession', { userDid });
+    }
+
+    async sendVeriffVerificationToDid(credentials): Promise<boolean> {}
 }
