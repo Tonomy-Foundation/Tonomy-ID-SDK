@@ -503,15 +503,29 @@ export class DualWalletResponse implements Serializable {
     }
 
     getRedirectUrl(external = true): string {
-        const request = external ? this.external : this.sso;
+        if (this.isSuccess()) {
+            const response = external ? this.external : this.sso;
 
-        if (!request) throw new Error('request not found in getRedirectUrl');
+            if (!response) throw new Error('response not found in getRedirectUrl');
 
-        return (
-            request.getLoginResponse().login.origin +
-            request.getLoginResponse().login.callbackPath +
-            '?payload=' +
-            this.toString()
-        );
+            return (
+                response.getLoginResponse().login.origin +
+                response.getLoginResponse().login.callbackPath +
+                '?payload=' +
+                this.toString()
+            );
+        } else {
+            if (!this.requests) throw new Error('requests not found in getRedirectUrl');
+            const request = external ? this.requests.external : this.requests.sso;
+
+            if (!request) throw new Error('request not found in getRedirectUrl');
+
+            return (
+                request.getLoginRequest().login.origin +
+                request.getLoginRequest().login.callbackPath +
+                '?payload=' +
+                this.toString()
+            );
+        }
     }
 }

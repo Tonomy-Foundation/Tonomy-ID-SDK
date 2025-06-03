@@ -340,6 +340,7 @@ export class ExternalUser {
         keyManager = new JsKeyManager(),
         storageFactory = browserStorageFactory,
     }: VerifyLoginOptions): Promise<ExternalUser> {
+        debug('verifyLoginResponse()', { external, checkKeys });
         const responses = DualWalletResponse.fromUrl();
 
         if (responses.isSuccess()) {
