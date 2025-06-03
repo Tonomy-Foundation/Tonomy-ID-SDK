@@ -173,3 +173,22 @@ namespace SdkErrors {
 }
 
 export { SdkErrors };
+
+/**
+ * Checks if the error is an instance of SdkError or has a message that starts with the given code.
+ * If the code is an array, it checks if the error matches any of the codes in the array.
+ *
+ * @param error The error to check.
+ * @param {SdkErrors | SdkErrors[]} code The error code or an array of error codes to check against.
+ * @returns {boolean} True if the error matches the code (or any of the codes), false otherwise.
+ */
+export function isErrorCode(error: any, code: SdkErrors | SdkErrors[]): boolean {
+    if (Array.isArray(code)) {
+        return code.some((c) => isErrorCode(error, c));
+    }
+
+    return (
+        error instanceof Error &&
+        ((error instanceof SdkError && error.code === code) || error.message.startsWith(code + ': '))
+    );
+}

@@ -3,7 +3,7 @@ import { KeyManagerLevel } from '../storage/keymanager';
 import { GetPersonResponse, getTonomyContract } from '../services/blockchain/contracts/TonomyContract';
 import { createKeyManagerSigner } from '../services/blockchain/eosio/transaction';
 import { getChainId } from '../services/blockchain/eosio/eosio';
-import { SdkErrors, throwError, SdkError } from '../util/errors';
+import { SdkErrors, throwError, SdkError, isErrorCode } from '../util/errors';
 import { AccountType, TonomyUsername } from '../util/username';
 import { getSettings } from '../util/settings';
 import { createAccount } from '../services/communication/accounts';
@@ -171,7 +171,7 @@ export class UserOnboarding extends UserCommunication implements IUserOnboarding
 
             keys.PIN = pinKey.toString();
         } catch (e) {
-            if (!(e instanceof SdkError) || e.code !== SdkErrors.KeyNotFound) throw e;
+            if (!isErrorCode(e, SdkErrors.KeyNotFound)) throw e;
         }
 
         try {
@@ -179,7 +179,7 @@ export class UserOnboarding extends UserCommunication implements IUserOnboarding
 
             keys.BIOMETRIC = biometricKey.toString();
         } catch (e) {
-            if (!(e instanceof SdkError) || e.code !== SdkErrors.KeyNotFound) throw e;
+            if (!isErrorCode(e, SdkErrors.KeyNotFound)) throw e;
         }
 
         try {
@@ -187,7 +187,7 @@ export class UserOnboarding extends UserCommunication implements IUserOnboarding
 
             keys.LOCAL = localKey.toString();
         } catch (e) {
-            if (!(e instanceof SdkError) || e.code !== SdkErrors.KeyNotFound) throw e;
+            if (!isErrorCode(e, SdkErrors.KeyNotFound)) throw e;
         }
 
         const signer = createKeyManagerSigner(keyManager, KeyManagerLevel.PASSWORD, password);
@@ -282,11 +282,7 @@ export class UserOnboarding extends UserCommunication implements IUserOnboarding
                 await this.keyManager.getKey({ level: KeyManagerLevel.from(level) });
                 this.keyManager.removeKey({ level: KeyManagerLevel.from(level) });
             } catch (e) {
-                if (
-                    !(e instanceof SdkError) ||
-                    (e.code !== SdkErrors.KeyNotFound && e.code !== SdkErrors.InvalidKeyLevel)
-                )
-                    throw e;
+                if (!isErrorCode(e, [SdkErrors.KeyNotFound, SdkErrors.InvalidKeyLevel])) throw e;
             }
         }
 

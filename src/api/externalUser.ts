@@ -2,7 +2,7 @@ import { KeyManager, KeyManagerLevel } from '../sdk/storage/keymanager';
 import { createVCSigner, randomString } from '../sdk/util/crypto';
 import { Issuer } from 'did-jwt-vc';
 import { getSettings } from '../sdk/util/settings';
-import { SdkError, SdkErrors, createSdkError, throwError } from '../sdk/util/errors';
+import { isErrorCode, SdkErrors, createSdkError, throwError } from '../sdk/util/errors';
 import { createStorage, PersistentStorageClean, StorageFactory, STORAGE_NAMESPACE } from '../sdk/storage/storage';
 import { Name, API, NameType } from '@wharfkit/antelope';
 import { TonomyUsername } from '../sdk/util/username';
@@ -151,7 +151,7 @@ export class ExternalUser {
             return user;
         } catch (e) {
             if (autoLogout) await user.logout();
-            if (e instanceof SdkError && (e.code === SdkErrors.KeyNotFound || e.code === SdkErrors.InvalidData))
+            if (isErrorCode(e, [SdkErrors.KeyNotFound, SdkErrors.InvalidData]))
                 throwError('User Not loggedIn', SdkErrors.UserNotLoggedIn);
             throw e;
         }
