@@ -3,7 +3,7 @@ import { KeyManagerLevel } from '../storage/keymanager';
 import { getTonomyEosioProxyContract } from '../services/blockchain/contracts/TonomyEosioProxyContract';
 import { getTonomyContract } from '../services/blockchain';
 import { createKeyManagerSigner } from '../services/blockchain/eosio/transaction';
-import { SdkErrors, throwError, SdkError, isErrorCode } from '../util/errors';
+import { SdkErrors, throwError, isErrorCode } from '../util/errors';
 import { Message, LinkAuthRequestMessage, LinkAuthRequestResponseMessage } from '../services/communication/message';
 import { getAccountNameFromDid, parseDid } from '../util/ssi/did';
 import { IUserAppRecord, IUserRequestsManager } from '../types/User';

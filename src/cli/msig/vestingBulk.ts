@@ -1,6 +1,6 @@
 import settings from '../settings';
 import { StandardProposalOptions, createProposal, executeProposal } from '.';
-import { AccountType, isErrorCode, SdkError, SdkErrors, TonomyUsername } from '../../sdk';
+import { AccountType, isErrorCode, SdkErrors, TonomyUsername } from '../../sdk';
 import { getAccount, getAccountNameFromUsername, TONO_CURRENT_PRICE } from '../../sdk/services/blockchain';
 import { parse } from 'csv-parse/sync';
 import fs from 'fs';

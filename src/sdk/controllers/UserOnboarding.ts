@@ -3,7 +3,7 @@ import { KeyManagerLevel } from '../storage/keymanager';
 import { GetPersonResponse, getTonomyContract } from '../services/blockchain/contracts/TonomyContract';
 import { createKeyManagerSigner } from '../services/blockchain/eosio/transaction';
 import { getChainId } from '../services/blockchain/eosio/eosio';
-import { SdkErrors, throwError, SdkError, isErrorCode } from '../util/errors';
+import { SdkErrors, throwError, isErrorCode } from '../util/errors';
 import { AccountType, TonomyUsername } from '../util/username';
 import { getSettings } from '../util/settings';
 import { createAccount } from '../services/communication/accounts';
