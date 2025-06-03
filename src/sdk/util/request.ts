@@ -3,7 +3,7 @@ import { VCWithTypeType, VerifiableCredentialOptions, VerifiableCredentialWithTy
 import { Issuer } from 'did-jwt-vc';
 import { App } from '../controllers/App';
 import { IUserRequestsManager } from '../types/User';
-import { SdkError, SdkErrors } from './errors';
+import { isErrorCode, SdkError, SdkErrors } from './errors';
 import { Serializable } from './serializable';
 import { base64UrlToObj, objToBase64Url } from './base64';
 import { TonomyUsername } from './username';
@@ -250,7 +250,7 @@ export class WalletRequest implements Serializable {
                         );
                     }
                 } catch (e) {
-                    if (e instanceof SdkError && e.code === SdkErrors.UserNotLoggedInWithThisApp) {
+                    if (isErrorCode(e, SdkErrors.UserNotLoggedInWithThisApp)) {
                         debug(
                             `WalletRequest/accept: Accepting request from app ${external.origin}: calling loginWithApp()`
                         );

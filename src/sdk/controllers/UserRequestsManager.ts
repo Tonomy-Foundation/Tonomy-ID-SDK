@@ -3,7 +3,7 @@ import { KeyManagerLevel } from '../storage/keymanager';
 import { getTonomyEosioProxyContract } from '../services/blockchain/contracts/TonomyEosioProxyContract';
 import { getTonomyContract } from '../services/blockchain';
 import { createKeyManagerSigner } from '../services/blockchain/eosio/transaction';
-import { SdkErrors, throwError, SdkError } from '../util/errors';
+import { SdkErrors, throwError, SdkError, isErrorCode } from '../util/errors';
 import { Message, LinkAuthRequestMessage, LinkAuthRequestResponseMessage } from '../services/communication/message';
 import { getAccountNameFromDid, parseDid } from '../util/ssi/did';
 import { IUserAppRecord, IUserRequestsManager } from '../types/User';
@@ -64,7 +64,7 @@ export class UserRequestsManager extends UserCommunication implements IUserReque
 
             await this.sendMessage(linkAuthRequestResponseMessage);
         } catch (e) {
-            if (e instanceof SdkError && e.code === SdkErrors.SenderNotAuthorized) {
+            if (isErrorCode(e, SdkErrors.SenderNotAuthorized)) {
                 // somebody may be trying to DoS the user, drop
                 return;
             } else {

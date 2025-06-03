@@ -125,7 +125,7 @@ export class UserOnboarding extends UserCommunication implements IUserOnboarding
             user = await getAccountInfo(fullUsername);
             if (user) throwError('Username is taken', SdkErrors.UsernameTaken);
         } catch (e) {
-            if (!(e instanceof SdkError && e.code === SdkErrors.UsernameNotFound)) {
+            if (!isErrorCode(e, SdkErrors.UsernameNotFound)) {
                 throw e;
             }
         }
@@ -141,7 +141,7 @@ export class UserOnboarding extends UserCommunication implements IUserOnboarding
             await getAccountInfo(fullUsername);
             return true;
         } catch (e) {
-            if (e instanceof SdkError && e.code === SdkErrors.UsernameNotFound) {
+            if (isErrorCode(e, SdkErrors.UsernameNotFound)) {
                 return false;
             }
 
