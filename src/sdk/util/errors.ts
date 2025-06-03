@@ -187,8 +187,24 @@ export function isErrorCode(error: any, code: SdkErrors | SdkErrors[]): boolean 
         return code.some((c) => isErrorCode(error, c));
     }
 
-    return (
-        error instanceof Error &&
-        ((error instanceof SdkError && error.code === code) || error.message.startsWith(code + ': '))
-    );
+    return error instanceof Error && code === getErrorCode(error);
+}
+
+export function getErrorCode(error: any): SdkErrors | undefined {
+    if (error instanceof SdkError) {
+        return error.code;
+    } else if (error?.code) {
+        // If the error has a code property, check if it matches any SdkErrors
+        if (Object.values(SdkErrors).includes(error.code as SdkErrors)) {
+            return SdkErrors.from(error.code);
+        }
+    } else if (error instanceof Error) {
+        const code = error.message.split(':')[0];
+
+        if (code && code.length > 0 && Object.values(SdkErrors).includes(code as SdkErrors)) {
+            return SdkErrors.from(code);
+        }
+    }
+
+    return;
 }
