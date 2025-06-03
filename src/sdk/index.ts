@@ -37,7 +37,6 @@ export * from './util/errors';
 export * from './util/crypto';
 export * from './util/username';
 export * from './util/request';
-export * from './util/base64';
 export * from './util/ssi/did';
 export * from './util/ssi/veramo';
 export * from './util/qr-code';
