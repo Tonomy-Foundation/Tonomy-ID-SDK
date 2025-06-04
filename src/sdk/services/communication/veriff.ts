@@ -1,6 +1,9 @@
-import { getSettings } from '../../util/settings';
 import fetch from 'cross-fetch';
+import { getSettings } from '../../util/settings';
 import { throwError } from '../../util';
+import { IdentityVerificationStorageRepository } from '../../storage/identityVerificationStorageRepository';
+import { dbConnection, setupDatabase } from '../../util/ssi/veramo';
+import { IdentityVerificationStorageManager } from '../../storage/identityVerificationStorageManager';
 
 export type DocumentField = {
     confidenceCategory?: 'high' | 'medium' | 'low' | null;
@@ -54,36 +57,46 @@ export type VeriffWebhookPayload = {
     };
 };
 
-export async function receivingVerification(
-    credentials: VeriffWebhookPayload
-): Promise<{ verification: boolean; id: string }> {
+const identityStorage = new IdentityVerificationStorageRepository(dbConnection);
+// Create the key repository instances
+
+class VerificationStorageManager extends IdentityVerificationStorageManager {
+    constructor(repository: IdentityVerificationStorageRepository) {
+        super(repository);
+    }
+}
+
+const identityVerification = new VerificationStorageManager(identityStorage);
+
+export async function receivingVerification(credentials: VeriffWebhookPayload): Promise<{ verification: boolean }> {
+    await setupDatabase();
     const url = getSettings().accountsServiceUrl;
-    const decision = credentials.data.verification.decision;
 
-    if (decision === 'approved') {
-        const response = await fetch(`${url}/veriff`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(credentials),
-        });
+    const response = await fetch(`${url}/veriff`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(credentials),
+    });
 
-        const resData = await response.json();
+    const resData = await response.json();
 
-        if (response.status !== 201) {
-            if (response.status === 400) {
-                return throwError('Veriff Service error: ' + resData.message + ', errors: ' + resData.errors);
-            }
-
-            throwError('Veriff Service error: ' + resData.message + ', status: ' + response.status);
+    if (response.status !== 201) {
+        if (response.status === 400) {
+            return throwError('Veriff Service error: ' + resData.message + ', errors: ' + resData.errors);
         }
+
+        throwError('Veriff Service error: ' + resData.message + ', status: ' + response.status);
+    }
+
+    try {
+        await identityVerification.createVc(credentials.sessionId, resData.vc, resData.status);
 
         return {
             verification: true,
-            id: resData.id,
         };
-    } else {
-        throwError('Document verification failed: ' + decision);
+    } catch (error) {
+        throwError('Error saving verification data: ' + error.message);
     }
 }

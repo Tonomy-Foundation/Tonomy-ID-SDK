@@ -224,8 +224,23 @@ export class Communication {
         }
     }
 
-    async createSession(userDid: string): Promise<void> {
+    async waitForSessionData(): Promise<any> {
         await this.connect();
-        this.socketServer.emit('veriffSession', { userDid });
+
+        return new Promise((resolve, reject) => {
+            const handler = (data: any) => {
+                this.socketServer.off('/v1/verification/veriff/receive', handler);
+                resolve(data);
+            };
+
+            this.socketServer.on('/v1/verification/veriff/receive', handler);
+
+            setTimeout(() => {
+                this.socketServer.off('/v1/verification/veriff/receive', handler);
+                reject(
+                    createSdkError('Timed out waiting for session data from server', SdkErrors.CommunicationTimeout)
+                );
+            }, SOCKET_TIMEOUT);
+        });
     }
 }
