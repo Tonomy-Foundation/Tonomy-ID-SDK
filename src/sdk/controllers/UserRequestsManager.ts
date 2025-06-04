@@ -146,6 +146,7 @@ export class UserRequestsManager extends UserCommunication implements IUserReque
             // Redirect the user back to the external
             return responses.getRedirectUrl();
         } else {
+            // send the response to the SSO
             if (!requests.sso) throw new Error('SSO requests are missing in the login request message');
             const messageRecipient = requests.sso.getDid();
             const issuer = await this.getIssuer();
