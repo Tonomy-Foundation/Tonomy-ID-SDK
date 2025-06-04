@@ -1,6 +1,6 @@
 import settings from '../settings';
 import { StandardProposalOptions, createProposal, executeProposal } from '.';
-import { AccountType, SdkError, SdkErrors, TonomyUsername } from '../../sdk';
+import { AccountType, isErrorCode, SdkErrors, TonomyUsername } from '../../sdk';
 import { getAccount, getAccountNameFromUsername, TONO_CURRENT_PRICE } from '../../sdk/services/blockchain';
 import { parse } from 'csv-parse/sync';
 import fs from 'fs';
@@ -59,10 +59,7 @@ export async function vestingBulk(args: { governanceAccounts: string[] }, option
 
                 results.push(data);
             } catch (e) {
-                if (
-                    e instanceof SdkError &&
-                    (e.code === SdkErrors.AccountDoesntExist || e.code === SdkErrors.UsernameNotFound)
-                ) {
+                if (isErrorCode(e, [SdkErrors.AccountDoesntExist, SdkErrors.UsernameNotFound])) {
                     unfoundAccounts.push(data.accountName);
                 } else {
                     throw e;

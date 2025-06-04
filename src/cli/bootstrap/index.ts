@@ -6,7 +6,7 @@ import {
     DemoTokenContract,
     EosioTokenContract,
     EosioContract,
-    TonomyContract,
+    getTonomyContract,
     EosioUtil,
     TonomyUsername,
     AccountType,
@@ -33,7 +33,6 @@ import { sleep } from '../../sdk/util';
 
 const demoTokenContract = DemoTokenContract.Instance;
 const tokenContract = EosioTokenContract.Instance;
-const tonomyContract = TonomyContract.Instance;
 const eosioContract = EosioContract.Instance;
 const vestingContract = VestingContract.Instance;
 const stakeContract = StakingContract.Instance;
@@ -274,7 +273,7 @@ async function createTonomyContractAndSetResources() {
 
     console.log('Set App account type');
 
-    await tonomyContract.adminSetApp(
+    await getTonomyContract().adminSetApp(
         systemAccount,
         'System Contract',
         'Antelope blockchain system governance contract',
@@ -285,7 +284,7 @@ async function createTonomyContractAndSetResources() {
         '#BA54D3',
         signer
     );
-    await tonomyContract.adminSetApp(
+    await getTonomyContract().adminSetApp(
         'eosio.token',
         'Native Currency',
         'Ecosystem native currency',
@@ -296,7 +295,7 @@ async function createTonomyContractAndSetResources() {
         '#BA54D3',
         signer
     );
-    await tonomyContract.adminSetApp(
+    await getTonomyContract().adminSetApp(
         'tonomy',
         'Tonomy System',
         'Tonomy system contract',
@@ -307,7 +306,7 @@ async function createTonomyContractAndSetResources() {
         '#BA54D3',
         signer
     );
-    await tonomyContract.adminSetApp(
+    await getTonomyContract().adminSetApp(
         'vesting.tmy',
         'TONO Vesting',
         'TONO Vesting contract',
@@ -318,7 +317,7 @@ async function createTonomyContractAndSetResources() {
         '#BA54D3',
         signer
     );
-    await tonomyContract.adminSetApp(
+    await getTonomyContract().adminSetApp(
         'staking.tmy',
         'TONO Staking',
         'TONO Staking contract',
@@ -332,7 +331,7 @@ async function createTonomyContractAndSetResources() {
 
     console.log('Set Tonomy system contract params and allocate RAM');
     console.log('Set resource params', RAM_PRICE, TOTAL_RAM_AVAILABLE, RAM_FEE);
-    await tonomyContract.setResourceParams(RAM_PRICE, TOTAL_RAM_AVAILABLE, RAM_FEE, signer);
+    await getTonomyContract().setResourceParams(RAM_PRICE, TOTAL_RAM_AVAILABLE, RAM_FEE, signer);
 
     console.log('Allocate operational tokens to accounts');
     await tokenContract.transfer('ops.tmy', 'tonomy', bytesToTokens(3750000), 'Initial allocation', signer);
@@ -354,7 +353,7 @@ async function createTonomyContractAndSetResources() {
         console.log(`Buying ${allocation[1] / 1000}KB of RAM for ${account} for ${tokens}`);
 
         await tokenContract.transfer('ops.tmy', account, tokens, 'Initial allocation', signer);
-        await tonomyContract.buyRam('ops.tmy', account, tokens, signer);
+        await getTonomyContract().buyRam('ops.tmy', account, tokens, signer);
     }
 }
 

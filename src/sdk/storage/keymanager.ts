@@ -41,7 +41,7 @@ namespace KeyManagerLevel {
 
     export function validate(value: KeyManagerLevel): void {
         if (KeyManagerLevel.indexFor(value) === -1) {
-            throwError('Invalid level', SdkErrors.InvalidKeyLevel);
+            throw new Error(`${SdkErrors.InvalidKeyLevel}: Invalid level`);
         }
     }
 }

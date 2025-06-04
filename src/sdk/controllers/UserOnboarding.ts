@@ -1,9 +1,9 @@
-import { Name, API, Checksum256 } from '@wharfkit/antelope';
+import { Name, API } from '@wharfkit/antelope';
 import { KeyManagerLevel } from '../storage/keymanager';
-import { GetPersonResponse, TonomyContract } from '../services/blockchain/contracts/TonomyContract';
+import { GetPersonResponse, getTonomyContract } from '../services/blockchain/contracts/TonomyContract';
 import { createKeyManagerSigner } from '../services/blockchain/eosio/transaction';
-import { getChainInfo } from '../services/blockchain/eosio/eosio';
-import { SdkErrors, throwError, SdkError } from '../util/errors';
+import { getChainId } from '../services/blockchain/eosio/eosio';
+import { SdkErrors, throwError, isErrorCode } from '../util/errors';
 import { AccountType, TonomyUsername } from '../util/username';
 import { getSettings } from '../util/settings';
 import { createAccount } from '../services/communication/accounts';
@@ -14,10 +14,9 @@ import { UserCommunication } from './UserCommunication';
 import Debug from 'debug';
 
 const debug = Debug('tonomy-sdk:controllers:user-onboarding');
-const tonomyContract = TonomyContract.Instance;
 
 export class UserOnboarding extends UserCommunication implements IUserOnboarding {
-    private chainID!: Checksum256;
+    private chainID!: string;
 
     private validateUsername(username: string): void {
         if (typeof username !== 'string' || username.length === 0)
@@ -30,7 +29,7 @@ export class UserOnboarding extends UserCommunication implements IUserOnboarding
 
     private async createDid(): Promise<string> {
         if (!this.chainID) {
-            this.chainID = (await getChainInfo()).chain_id as unknown as Checksum256;
+            this.chainID = await getChainId();
         }
 
         const accountName = await this.getAccountName();
@@ -44,7 +43,7 @@ export class UserOnboarding extends UserCommunication implements IUserOnboarding
         this.validateUsername(username.getBaseUsername());
         const { keyManager } = this;
 
-        const idData = await tonomyContract.getPerson(username);
+        const idData = await getTonomyContract().getPerson(username);
         const salt = idData.password_salt;
 
         await this.savePassword(password, { ...options, salt });
@@ -126,7 +125,7 @@ export class UserOnboarding extends UserCommunication implements IUserOnboarding
             user = await getAccountInfo(fullUsername);
             if (user) throwError('Username is taken', SdkErrors.UsernameTaken);
         } catch (e) {
-            if (!(e instanceof SdkError && e.code === SdkErrors.UsernameNotFound)) {
+            if (!isErrorCode(e, SdkErrors.UsernameNotFound)) {
                 throw e;
             }
         }
@@ -142,7 +141,7 @@ export class UserOnboarding extends UserCommunication implements IUserOnboarding
             await getAccountInfo(fullUsername);
             return true;
         } catch (e) {
-            if (e instanceof SdkError && e.code === SdkErrors.UsernameNotFound) {
+            if (isErrorCode(e, SdkErrors.UsernameNotFound)) {
                 return false;
             }
 
@@ -172,7 +171,7 @@ export class UserOnboarding extends UserCommunication implements IUserOnboarding
 
             keys.PIN = pinKey.toString();
         } catch (e) {
-            if (!(e instanceof SdkError) || e.code !== SdkErrors.KeyNotFound) throw e;
+            if (!isErrorCode(e, SdkErrors.KeyNotFound)) throw e;
         }
 
         try {
@@ -180,7 +179,7 @@ export class UserOnboarding extends UserCommunication implements IUserOnboarding
 
             keys.BIOMETRIC = biometricKey.toString();
         } catch (e) {
-            if (!(e instanceof SdkError) || e.code !== SdkErrors.KeyNotFound) throw e;
+            if (!isErrorCode(e, SdkErrors.KeyNotFound)) throw e;
         }
 
         try {
@@ -188,13 +187,13 @@ export class UserOnboarding extends UserCommunication implements IUserOnboarding
 
             keys.LOCAL = localKey.toString();
         } catch (e) {
-            if (!(e instanceof SdkError) || e.code !== SdkErrors.KeyNotFound) throw e;
+            if (!isErrorCode(e, SdkErrors.KeyNotFound)) throw e;
         }
 
         const signer = createKeyManagerSigner(keyManager, KeyManagerLevel.PASSWORD, password);
         const accountName = await this.getAccountName();
 
-        await tonomyContract.updatekeysper(accountName.toString(), keys, signer);
+        await getTonomyContract().updatekeysper(accountName.toString(), keys, signer);
 
         this.storage.status = UserStatusEnum.READY;
         await this.storage.status;
@@ -283,11 +282,7 @@ export class UserOnboarding extends UserCommunication implements IUserOnboarding
                 await this.keyManager.getKey({ level: KeyManagerLevel.from(level) });
                 this.keyManager.removeKey({ level: KeyManagerLevel.from(level) });
             } catch (e) {
-                if (
-                    !(e instanceof SdkError) ||
-                    (e.code !== SdkErrors.KeyNotFound && e.code !== SdkErrors.InvalidKeyLevel)
-                )
-                    throw e;
+                if (!isErrorCode(e, [SdkErrors.KeyNotFound, SdkErrors.InvalidKeyLevel])) throw e;
             }
         }
 
