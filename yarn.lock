@@ -3502,7 +3502,7 @@ __metadata:
     "@veramo/kms-local": "npm:^6.0.0"
     "@wharfkit/antelope": "npm:^1.0.7"
     address: "npm:^2.0.3"
-    argon2: "npm:^0.40.3"
+    argon2: "npm:^0.41.1"
     babel-jest: "npm:^29.7.0"
     cross-env: "npm:^7.0.3"
     cross-fetch: "npm:^4.0.0"
@@ -4699,15 +4699,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"argon2@npm:^0.40.3":
-  version: 0.40.3
-  resolution: "argon2@npm:0.40.3"
+"argon2@npm:^0.41.1":
+  version: 0.41.1
+  resolution: "argon2@npm:0.41.1"
   dependencies:
     "@phc/format": "npm:^1.0.0"
-    node-addon-api: "npm:^8.0.0"
+    node-addon-api: "npm:^8.1.0"
     node-gyp: "npm:latest"
-    node-gyp-build: "npm:^4.8.0"
-  checksum: 10c0/994cf1ae5625aeb5ec2d0e0de67f2cf64b8723e0cc8f3cca844b99b00f57e8ad5cc6eb43b2287c9bd0fb9bd15d147e9341327115a447a6208c47ca7cc78705f5
+    node-gyp-build: "npm:^4.8.1"
+  checksum: 10c0/69f8f7e00f3d487a2cd7b3151fee6f5feb13e627e8f0551bac18f5d2dba50b1a521245d9c55140b80d7bfde1416bace520277627eb2d57c9e71403af4a4977d7
   languageName: node
   linkType: hard
 
@@ -10902,12 +10902,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"node-addon-api@npm:^8.0.0":
-  version: 8.1.0
-  resolution: "node-addon-api@npm:8.1.0"
+"node-addon-api@npm:^8.1.0":
+  version: 8.3.1
+  resolution: "node-addon-api@npm:8.3.1"
   dependencies:
     node-gyp: "npm:latest"
-  checksum: 10c0/b4009408ea4d0cdda9b59765e949422d464cdbb3e42b9330bddceda7829e0c3cdae7ae9dd1e4203ef731cd51f5a52b339afef581efb72c539f1f1a5464bb291b
+  checksum: 10c0/e28f1c5094130ecc3a0bf882e0385e74cac9c5112d35287dbce369959551ab7ca4d1f1a69af737107c894c14b4063dd5002e2b3c16a27035d025bb06eefee058
   languageName: node
   linkType: hard
 
@@ -10957,7 +10957,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"node-gyp-build@npm:^4.2.0, node-gyp-build@npm:^4.8.0":
+"node-gyp-build@npm:^4.2.0":
   version: 4.8.1
   resolution: "node-gyp-build@npm:4.8.1"
   bin:
@@ -10965,6 +10965,17 @@ __metadata:
     node-gyp-build-optional: optional.js
     node-gyp-build-test: build-test.js
   checksum: 10c0/e36ca3d2adf2b9cca316695d7687207c19ac6ed326d6d7c68d7112cebe0de4f82d6733dff139132539fcc01cf5761f6c9082a21864ab9172edf84282bc849ce7
+  languageName: node
+  linkType: hard
+
+"node-gyp-build@npm:^4.8.1":
+  version: 4.8.4
+  resolution: "node-gyp-build@npm:4.8.4"
+  bin:
+    node-gyp-build: bin.js
+    node-gyp-build-optional: optional.js
+    node-gyp-build-test: build-test.js
+  checksum: 10c0/444e189907ece2081fe60e75368784f7782cfddb554b60123743dfb89509df89f1f29c03bbfa16b3a3e0be3f48799a4783f487da6203245fa5bed239ba7407e1
   languageName: node
   linkType: hard
 

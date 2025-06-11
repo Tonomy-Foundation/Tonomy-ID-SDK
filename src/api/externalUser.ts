@@ -2,31 +2,34 @@ import { KeyManager, KeyManagerLevel } from '../sdk/storage/keymanager';
 import { createVCSigner, randomString } from '../sdk/util/crypto';
 import { Issuer } from 'did-jwt-vc';
 import { getSettings } from '../sdk/util/settings';
-import { SdkError, SdkErrors, createSdkError, throwError } from '../sdk/util/errors';
+import { isErrorCode, SdkErrors, createSdkError, throwError } from '../sdk/util/errors';
 import { createStorage, PersistentStorageClean, StorageFactory, STORAGE_NAMESPACE } from '../sdk/storage/storage';
 import { Name, API, NameType } from '@wharfkit/antelope';
 import { TonomyUsername } from '../sdk/util/username';
 import { browserStorageFactory } from '../sdk/storage/browserStorage';
-import { getAccount, getChainInfo } from '../sdk/services/blockchain/eosio/eosio';
+import { getAccount, getChainId } from '../sdk/services/blockchain/eosio/eosio';
 import { JsKeyManager } from '../sdk/storage/jsKeyManager';
-import { LoginRequest, LoginRequestPayload } from '../sdk/util/request';
-import { DataSharingRequest, DataSharingRequestPayload, getAccountNameFromDid, parseDid } from '../sdk/util';
+import {
+    LoginRequestPayload,
+    WalletRequestPayloadType,
+    WalletRequestVerifiableCredential,
+    WalletRequest,
+    DualWalletResponse,
+    DualWalletRequests,
+} from '../sdk/util/request';
+import { getAccountNameFromDid, parseDid } from '../sdk/util';
 import {
     AuthenticationMessage,
     Communication,
-    TonomyContract,
+    getTonomyContract,
     LinkAuthRequestMessage,
     LinkAuthRequestResponseMessage,
-    LoginRequestsMessagePayload,
     Message,
-    ResponsesManager,
 } from '../sdk';
-import { objToBase64Url } from '../sdk/util/base64';
-import { VerifiableCredential } from '../sdk/util/ssi/vc';
+import { VCWithTypeType, VerifiableCredential, VerifiableCredentialWithType } from '../sdk/util/ssi/vc';
 import { DIDurl, JWT } from '../sdk/util/ssi/types';
 import { Signer, createKeyManagerSigner, transact } from '../sdk/services/blockchain/eosio/transaction';
 import { createDidKeyIssuerAndStore } from '../sdk/helpers/didKeyStorage';
-import { getLoginRequestResponseFromUrl } from '../sdk/helpers/urls';
 import { verifyKeyExistsForApp } from '../sdk/helpers/user';
 import { IOnPressLoginOptions } from '../sdk/types/User';
 import { App } from '../sdk/controllers/App';
@@ -50,18 +53,16 @@ export type ExternalUserStorage = {
 };
 
 export type VerifyLoginOptions = {
+    external?: boolean; // if true, the login is for an external user, otherwise it is for the Tonomy SSO website
     checkKeys?: boolean;
     keyManager?: KeyManager;
     storageFactory?: StorageFactory;
 };
 
 export type LoginWithTonomyMessages = {
-    loginRequest: LoginRequest;
-    dataSharingRequest?: DataSharingRequest;
+    requests: DualWalletRequests;
     loginToCommunication: AuthenticationMessage;
 };
-
-const tonomyContract = TonomyContract.Instance;
 
 /**
  * The data of a client authorization request
@@ -114,14 +115,14 @@ export class ExternalUser {
      * @property {KeyManager} [options.keyManager=new JsKeyManager()] - the key manager to use for signing
      * @returns {Promise<ExternalUser>} - the user
      */
-    static async getUser(options?: {
-        autoLogout?: boolean;
-        storageFactory?: StorageFactory;
-        keyManager?: KeyManager;
-    }): Promise<ExternalUser> {
-        const keyManager = options?.keyManager ?? new JsKeyManager();
-        const storageFactory = options?.storageFactory ?? browserStorageFactory;
-        const autoLogout = options?.autoLogout ?? true;
+    static async getUser(
+        options: {
+            keyManager?: KeyManager;
+            storageFactory?: StorageFactory;
+            autoLogout?: boolean;
+        } = {}
+    ): Promise<ExternalUser> {
+        const { keyManager = new JsKeyManager(), storageFactory = browserStorageFactory, autoLogout = true } = options;
 
         const user = new ExternalUser(keyManager, storageFactory);
 
@@ -141,7 +142,7 @@ export class ExternalUser {
             const username = await user.getUsername();
 
             if (username) {
-                const personData = await tonomyContract.getPerson(username);
+                const personData = await getTonomyContract().getPerson(username);
 
                 if (accountName.toString() !== personData.account_name.toString())
                     throwError('Username has changed', SdkErrors.InvalidData);
@@ -150,7 +151,7 @@ export class ExternalUser {
             return user;
         } catch (e) {
             if (autoLogout) await user.logout();
-            if (e instanceof SdkError && (e.code === SdkErrors.KeyNotFound || e.code === SdkErrors.InvalidData))
+            if (isErrorCode(e, [SdkErrors.KeyNotFound, SdkErrors.InvalidData]))
                 throwError('User Not loggedIn', SdkErrors.UserNotLoggedIn);
             throw e;
         }
@@ -166,7 +167,7 @@ export class ExternalUser {
 
         if (!did) {
             const accountName = await (await this.getAccountName()).toString();
-            const chainID = (await getChainInfo()).chain_id.toString();
+            const chainID = await getChainId();
             const appPermission = await this.getAppPermission();
 
             did = `did:antelope:${chainID}:${accountName}#${appPermission}`;
@@ -267,48 +268,41 @@ export class ExternalUser {
      * @returns {Promise<LoginWithTonomyMessages | void>} - if redirect is true, returns void, if redirect is false, returns the login request in the form of a JWT token
      */
     static async loginWithTonomy(
-        { redirect = true, callbackPath, dataRequest }: IOnPressLoginOptions,
+        options: IOnPressLoginOptions,
         keyManager: KeyManager = new JsKeyManager()
     ): Promise<LoginWithTonomyMessages | void> {
+        const { redirect = true, callbackPath, dataRequest } = options;
         const issuer = await createDidKeyIssuerAndStore(keyManager);
         const publicKey = await keyManager.getKey({ level: KeyManagerLevel.BROWSER_LOCAL_STORAGE });
-        let dataSharingRequest;
+
+        const loginRequestPayload: LoginRequestPayload = {
+            login: {
+                randomString: randomString(32),
+                origin: window.location.origin,
+                publicKey: publicKey,
+                callbackPath,
+            },
+        };
+        const requestPayloads: WalletRequestPayloadType[] = [loginRequestPayload];
 
         if (dataRequest) {
-            const dataSharingPayload: DataSharingRequestPayload = {
-                username: dataRequest?.username || false,
-                origin: window.location.origin,
-            };
-
-            dataSharingRequest = await DataSharingRequest.signRequest(dataSharingPayload, issuer);
+            requestPayloads.push({
+                data: dataRequest,
+            });
         }
 
-        const payload: LoginRequestPayload = {
-            randomString: randomString(32),
-            origin: window.location.origin,
-            publicKey: publicKey,
-            callbackPath,
-        };
-
-        const loginRequest = await LoginRequest.signRequest(payload, issuer);
+        const request = new WalletRequest(
+            await WalletRequestVerifiableCredential.signRequest({ requests: requestPayloads }, issuer)
+        );
+        const requests = new DualWalletRequests(request);
 
         if (redirect) {
-            const payload: LoginRequestsMessagePayload = {
-                requests: [loginRequest],
-            };
-
-            if (dataSharingRequest) {
-                payload.requests.push(dataSharingRequest);
-            }
-
-            const base64UrlPayload = objToBase64Url(payload);
-
-            window.location.href = `${getSettings().ssoWebsiteOrigin}/login?payload=${base64UrlPayload}`;
+            window.location.href = `${getSettings().ssoWebsiteOrigin}/login?payload=${requests.toString()}`;
             return;
         } else {
             const loginToCommunication = await AuthenticationMessage.signMessageWithoutRecipient({}, issuer);
 
-            return { loginRequest, dataSharingRequest, loginToCommunication };
+            return { requests, loginToCommunication };
         }
     }
 
@@ -329,44 +323,44 @@ export class ExternalUser {
     }
 
     /**
-     * Receives the login request from Tonomy ID and verifies the login was successful
+     * Receives the login response from Tonomy ID and verifies the login was successful
      *
      * @description should be called in the callback page
      *
      * @param {VerifyLoginOptions} [options] - options for the login
+     * @property {boolean} [options.external = true] - if true, verifies the login for an external user, otherwise for the Tonomy SSO website
      * @property {boolean} [options.checkKeys = true] - if true, checks the keys in the keyManager against the blockchain
-     * @property {KeyManager} [options.keyManager] - the key manager to use to storage and manage keys
-     * @property {StorageFactory} [options.storageFactory] - the storage factory to use to store data
+     * @property {KeyManager} [options.keyManager = new JsKeyManager()] - the key manager to use to storage and manage keys
+     * @property {StorageFactory} [options.storageFactory = browserStorageFactory] - the storage factory to use to store data
      *
      * @returns {Promise<ExternalUser>} an external user object ready to use
      */
-    static async verifyLoginRequest(options?: VerifyLoginOptions): Promise<ExternalUser> {
-        if (!options) options = {};
-        if (!options.checkKeys) options.checkKeys = true;
-        const keyManager = options.keyManager || new JsKeyManager();
+    static async verifyLoginResponse(options: VerifyLoginOptions = {}): Promise<ExternalUser> {
+        const {
+            external = true,
+            checkKeys = true,
+            keyManager = new JsKeyManager(),
+            storageFactory = browserStorageFactory,
+        } = options;
 
-        const { success, error, response } = getLoginRequestResponseFromUrl();
+        debug('verifyLoginResponse()', { external, checkKeys });
+        const responses = DualWalletResponse.fromUrl();
 
-        if (success === true) {
-            if (!response) throwError('No response found in url', SdkErrors.MissingParams);
-            const managedResponses = new ResponsesManager(response);
+        if (responses.isSuccess()) {
+            await responses.verify();
+            const response = external ? responses.external : responses.sso;
 
-            await managedResponses.verify();
-            await managedResponses.fetchMeta();
+            if (!response)
+                throw Error(`No request found in dual wallet responses for ${external ? 'external' : 'sso'} app`);
+            const externalUser = new ExternalUser(keyManager, storageFactory);
+            const accountName = response.getAccountName();
 
-            const loginResponse = managedResponses.getLoginResponsesWithSameOriginOrThrow();
-            const keyFromStorage = await keyManager.getKey({ level: KeyManagerLevel.BROWSER_LOCAL_STORAGE });
-            const payload = loginResponse.getRequest().getPayload();
+            await verifyTonomyVc(response.vc, {
+                verifyOrigin: false,
+                verifyUsername: response.getDataSharingResponse()?.data.username ? true : false,
+            });
 
-            if (payload.publicKey.toString() !== keyFromStorage.toString()) {
-                throwError('Key in request does not match', SdkErrors.KeyNotFound);
-            }
-
-            const myStorageFactory = options.storageFactory || browserStorageFactory;
-            const externalUser = new ExternalUser(keyManager, myStorageFactory);
-            const accountName = loginResponse.getResponse().getPayload().accountName;
-
-            if (options.checkKeys) {
+            if (checkKeys) {
                 const permission = await verifyKeyExistsForApp(accountName, { keyManager });
 
                 await externalUser.setAppPermission(permission);
@@ -374,16 +368,17 @@ export class ExternalUser {
 
             await externalUser.setAccountName(accountName);
 
-            const dataSharingResponse = managedResponses.getDataSharingResponseWithSameOrigin();
+            const username = response.getDataSharingResponse()?.data.username;
 
-            if (dataSharingResponse && dataSharingResponse.getResponse().getPayload().data.username) {
-                await externalUser.setUsername(dataSharingResponse.getResponse().getPayload().data.username);
+            if (username) {
+                await externalUser.setUsername(username);
             }
 
             return externalUser;
         } else {
-            if (!error) throwError('No error found in url', SdkErrors.MissingParams);
-            throwError(error.reason, error.code);
+            if (!responses.error) throw Error('No error found in dual wallet responses');
+
+            throwError(responses.error.reason, responses.error.code);
         }
     }
 
@@ -462,7 +457,7 @@ export class ExternalUser {
         let contractAccount: Name;
 
         if (contract instanceof TonomyUsername) {
-            const app = await tonomyContract.getApp(contract);
+            const app = await getTonomyContract().getApp(contract);
 
             contractAccount = app.account_name;
         } else {
@@ -600,18 +595,6 @@ interface VerifiedClientAuthorization<T extends ClientAuthorizationData = object
     data: T;
 }
 
-interface VerifyClientOptions {
-    verifyChainId?: boolean;
-    verifyUsername?: boolean;
-    verifyOrigin?: boolean;
-}
-
-const defaultVerifyClientOptions: VerifyClientOptions = {
-    verifyChainId: true,
-    verifyUsername: true,
-    verifyOrigin: true,
-};
-
 /**
  * Verifies a client authorization request
  *
@@ -621,77 +604,163 @@ const defaultVerifyClientOptions: VerifyClientOptions = {
  */
 export async function verifyClientAuthorization<T extends ClientAuthorizationData = ClientAuthorizationData>(
     clientAuthorization: JWT,
-    options?: VerifyClientOptions
+    {
+        verifyChainId = true,
+        verifyUsername = true,
+        verifyOrigin = true,
+    }: VerifyTonomyVcOptions = defaultVerifyTonomyVcOptions
 ): Promise<VerifiedClientAuthorization<T>> {
-    const optionsWithDefaults = { ...defaultVerifyClientOptions, ...options };
-
     const vc = new VerifiableCredential(clientAuthorization);
 
     const vcId = vc.getId();
-    const issuer = vc.getIssuer();
-    const data: T = vc.getCredentialSubject() as T;
-    const account = await getAccountNameFromDid(issuer).toString();
+    const did = vc.getIssuer();
 
-    const { method, id, fragment } = parseDid(issuer);
-
-    if (method !== 'antelope') {
-        throwError(`Invalid DID method: ${method}`, SdkErrors.InvalidData);
-    }
-
-    async function verifyChainId() {
-        if (optionsWithDefaults.verifyChainId) {
-            const { chain_id: chainId } = await getChainInfo();
-
-            const didChainId = id.split(':')[0];
-
-            if (didChainId !== chainId.toString()) {
-                throwError(
-                    `Invalid chain ID expected ${chainId.toString()} found ${didChainId}`,
-                    SdkErrors.InvalidData
-                );
-            }
-        }
-    }
-
-    const { username } = data;
-
-    async function verifyUsername() {
-        if (optionsWithDefaults.verifyUsername) {
-            if (username) {
-                const tonomyUsername = TonomyUsername.fromFullUsername(username);
-
-                // this will throw if the username is not valid
-                await tonomyContract.getPerson(tonomyUsername);
-            }
-        }
-    }
-
-    // get the request origin and id
-    const origin = vcId?.split('/vc/auth/')[0];
+    // get the request id
     const requestId = vcId?.split('/vc/auth/')[1];
 
-    async function verifyOrigin() {
-        if (optionsWithDefaults.verifyOrigin) {
-            if (!origin) throwError('Invalid origin', SdkErrors.InvalidData);
-            const app = await App.getApp(origin);
-
-            if (fragment !== app.accountName.toString()) throwError('Invalid app', SdkErrors.InvalidData);
-        }
-    }
-
-    await Promise.all([vc.verify(), verifyChainId(), verifyUsername(), verifyOrigin()]);
+    const verifiedVc = await verifyTonomyVc<T>(clientAuthorization, {
+        verifyChainId,
+        verifyUsername,
+        verifyOrigin,
+    });
 
     const request = {
         jwt: clientAuthorization,
-        origin: origin && origin !== 'undefined' ? origin : undefined,
+        origin: verifiedVc.origin,
         id: requestId ? requestId : '',
     };
 
     return {
         request,
-        did: issuer,
+        did,
+        account: verifiedVc.account.toString(),
+        data: vc.getCredentialSubject() as T,
+        username: verifiedVc.username ? verifiedVc.username.toString() : undefined,
+    };
+}
+
+async function checkChainId(did: string, verifyChainId: boolean): Promise<string | undefined> {
+    if (verifyChainId) {
+        const chainId = await getChainId();
+        const didChainId = did.split(':')[0];
+
+        if (didChainId !== chainId.toString()) {
+            throwError(`Invalid chain ID expected ${chainId.toString()} found ${didChainId}`, SdkErrors.InvalidData);
+        }
+
+        return didChainId;
+    }
+
+    return;
+}
+
+async function checkUsername(
+    account: Name,
+    data: object,
+    verifyUsername: boolean
+): Promise<TonomyUsername | undefined> {
+    if (verifyUsername) {
+        const username = (data as any).username;
+
+        if (username) {
+            const tonomyUsername = TonomyUsername.fromFullUsername(username);
+
+            // this will throw if the username is not valid
+            // eslint-disable-next-line camelcase
+            const { account_name } = await getTonomyContract().getPerson(tonomyUsername);
+
+            // eslint-disable-next-line camelcase
+            if (!account_name.equals(account)) {
+                throwError('Username does not match account', SdkErrors.InvalidData);
+            }
+
+            return tonomyUsername;
+        }
+
+        return;
+    }
+
+    return;
+}
+
+async function checkOrigin(
+    vcId: string,
+    did: string,
+    verifyOrigin: boolean
+): Promise<{ origin: string; app: App } | undefined> {
+    if (verifyOrigin) {
+        const origin = vcId?.split('/vc/auth/')[0];
+
+        if (!origin) throwError('Invalid origin', SdkErrors.InvalidData);
+        const app = await App.getApp(origin);
+        const { fragment } = parseDid(did);
+
+        if (fragment !== app.accountName.toString()) throwError('Invalid app', SdkErrors.InvalidData);
+
+        return { origin, app };
+    }
+
+    return;
+}
+
+type VerifyTonomyVcOptions = {
+    verifyChainId?: boolean;
+    verifyUsername?: boolean;
+    verifyOrigin?: boolean;
+};
+
+const defaultVerifyTonomyVcOptions: VerifyTonomyVcOptions = {
+    verifyChainId: true,
+    verifyUsername: true,
+    verifyOrigin: true,
+};
+
+async function verifyTonomyVc<T extends object>(
+    vcJwt: VCWithTypeType<T>,
+    {
+        verifyChainId = true,
+        verifyUsername = true,
+        verifyOrigin = true,
+    }: VerifyTonomyVcOptions = defaultVerifyTonomyVcOptions
+): Promise<{
+    account: Name;
+    chainId?: string;
+    did: string;
+    username?: TonomyUsername;
+    origin?: string;
+    app?: App;
+}> {
+    let vc: VerifiableCredential;
+
+    if (typeof vcJwt === 'string') vc = new VerifiableCredential(vcJwt);
+    else if (vcJwt instanceof VerifiableCredential) vc = vcJwt;
+    else if (vcJwt instanceof VerifiableCredentialWithType) vc = vcJwt.getVc();
+    else throw Error('Invalid VC type, expected string or VerifiableCredential');
+
+    const vcId = vc.getId();
+    const did = vc.getIssuer();
+    const data: T = vc.getCredentialSubject() as T;
+    const account = await getAccountNameFromDid(did);
+
+    const { method, id } = parseDid(did);
+
+    if (method !== 'antelope') {
+        throwError(`Invalid DID method: ${method}`, SdkErrors.InvalidData);
+    }
+
+    const [, chainId, username, originAndApp] = await Promise.all([
+        vc.verify(),
+        checkChainId(id, verifyChainId),
+        checkUsername(account, data, verifyUsername),
+        checkOrigin(vcId ? vcId : '', did, verifyOrigin),
+    ]);
+
+    return {
         account,
-        data,
-        username: username,
+        chainId,
+        did,
+        username,
+        origin: originAndApp?.origin,
+        app: originAndApp?.app,
     };
 }
