@@ -36,7 +36,7 @@ export type ActionData = {
     data: MapObject;
 };
 
-interface Signer {
+export interface Signer {
     sign(digest: Checksum256 | string): Promise<Signature>;
 }
 
@@ -60,7 +60,7 @@ interface AntelopePushTransactionErrorConstructor {
     contract?: Name;
 }
 
-function createSigner(privateKey: PrivateKey): Signer {
+export function createSigner(privateKey: PrivateKey): Signer {
     return {
         async sign(digest: Checksum256): Promise<Signature> {
             return privateKey.signDigest(digest);
@@ -68,7 +68,7 @@ function createSigner(privateKey: PrivateKey): Signer {
     };
 }
 
-function createKeyManagerSigner(keyManager: KeyManager, level: KeyManagerLevel, challenge?: string): Signer {
+export function createKeyManagerSigner(keyManager: KeyManager, level: KeyManagerLevel, challenge?: string): Signer {
     return {
         async sign(digest: string | Checksum256): Promise<Signature> {
             return (await keyManager.signData({
@@ -134,7 +134,7 @@ export class AntelopePushTransactionError extends Error {
     }
 }
 
-async function transact(
+export async function transact(
     contract: Name,
     actions: ActionData[],
     signer: Signer | Signer[]
@@ -189,5 +189,3 @@ async function transact(
 
     return res;
 }
-
-export { transact, Signer, createSigner, createKeyManagerSigner };

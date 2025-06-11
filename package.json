@@ -1,16 +1,16 @@
 {
-  "version": "0.31.0-test.9",
+  "version": "0.31.0-test.12",
   "license": "Apache-2.0",
   "type": "module",
   "source": "src/sdk/index.ts",
   "main": "./build/sdk/index.cjs",
   "module": "./build/sdk/index.module.js",
   "unpkg": "./build/sdk/index.umd.js",
-  "types": "./build/sdk/types/sdk/index.d.ts",
+  "types": "./build/sdk/types/src/sdk/index.d.ts",
   "umd:main": "./build/sdk/index.umd.js",
   "exports": {
     ".": {
-      "types": "./build/sdk/types/sdk/index.d.ts",
+      "types": "./build/sdk/types/src/sdk/index.d.ts",
       "require": "./build/sdk/index.cjs",
       "import": "./build/sdk/index.module.js"
     }
