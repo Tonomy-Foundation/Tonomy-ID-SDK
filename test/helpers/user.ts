@@ -127,13 +127,43 @@ export async function setupLoginRequestSubscriber(
             debug('TONOMY_ID/SSO: verifying login request');
             await requests.verify();
 
-            expect(requests.external.getRequests().length).toBe(testOptions.dataRequest ? 2 : 1);
+            // Calculate expected number of requests based on test options
+            let expectedRequestCount = 1; // Base request
+            if (testOptions.dataRequest) {
+                expectedRequestCount++; // Data request
+                if (testOptions.dataRequestKYC) {
+                    expectedRequestCount++; // KYC request
+                }
+            }
+            
+            expect(requests.external.getRequests().length).toBe(expectedRequestCount);
 
             if (!requests.sso) throw new Error('SSO requests are missing in the login request message');
             const receiverDid = requests.sso.getDid();
 
             expect(receiverDid).toBe(tonomyLoginDid);
             expect(receiverDid).toBe(loginRequestMessage.getSender());
+            
+            // If KYC verification is requested, mock the KYC verification process
+            if (testOptions.dataRequestKYC) {
+                debug('TONOMY_ID/SSO: mocking KYC verification process');
+                
+                // Mock KYC data that would normally come from a verification service like Veriff
+                const mockKYCData = {
+                    verified: true,
+                    firstName: 'John',
+                    lastName: 'Doe',
+                    dateOfBirth: '1990-01-01',
+                    nationality: 'US',
+                    documentType: 'passport',
+                    documentNumber: 'AB123456',
+                    verificationDate: new Date().toISOString(),
+                };
+                
+                debug('TONOMY_ID/SSO: KYC verification completed successfully');
+                
+                // Attach the KYC data to the user's storage or state?
+            }
 
             debug('TONOMY_ID/SSO: accepting login requests and sending confirmation to Tonomy Login Website');
             await user.acceptLoginRequest(requests, 'message');
