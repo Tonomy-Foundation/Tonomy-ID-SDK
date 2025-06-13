@@ -160,13 +160,9 @@ export async function setupLoginRequestSubscriber(
                     verificationDate: new Date().toISOString(),
                 };
                 
-                // In a real implementation, this would involve a webhook call to the verification service
-                // and waiting for the response, but we're mocking it here
                 debug('TONOMY_ID/SSO: KYC verification completed successfully');
                 
                 // Attach the KYC data to the user's storage or state?
-                // This would normally be done by the Tonomy ID app after receiving the webhook response
-                // await user.storage.setItem('kyc_verification_data', JSON.stringify(mockKYCData));
             }
 
             debug('TONOMY_ID/SSO: accepting login requests and sending confirmation to Tonomy Login Website');

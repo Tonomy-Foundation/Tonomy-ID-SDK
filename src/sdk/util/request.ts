@@ -285,17 +285,6 @@ export class WalletRequest implements Serializable {
                 
                 if (req.data.kyc) {
                     // Retrieve KYC data from user's storage if available
-                    // try {
-                    //     const kycDataStr = await user.storage.getItem('kyc_verification_data');
-                    //     if (kycDataStr) {
-                    //         res.data.kyc = JSON.parse(kycDataStr);
-                    //         debug(`WalletRequest/accept: Including KYC data in response`);
-                    //     } else {
-                    //         debug(`WalletRequest/accept: KYC data requested but not found in storage`);
-                    //     }
-                    // } catch (error) {
-                    //     debug(`WalletRequest/accept: Error retrieving KYC data: ${error}`);
-                    // }
                 }
 
                 debug(
