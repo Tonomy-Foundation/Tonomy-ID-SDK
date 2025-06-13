@@ -56,6 +56,7 @@ const debug = Debug('tonomy-sdk-tests:externalUser.integration.test');
 export type ExternalUserLoginTestOptions = {
     dataRequest: boolean;
     dataRequestUsername?: boolean;
+    dataRequestKYC?: boolean;
 };
 
 setTestSettings();
@@ -154,6 +155,10 @@ describe('Login to external website', () => {
         test('Successful login to external website with data request for username', async () => {
             await runExternalUserLoginTest({ dataRequest: true, dataRequestUsername: true });
         });
+
+        test('Successful login to external website with data request for KYC verification', async () => {
+            await runExternalUserLoginTest({ dataRequest: true, dataRequestKYC: true });
+        });
     });
 
     async function runExternalUserLoginTest(testOptions: ExternalUserLoginTestOptions) {
@@ -162,6 +167,7 @@ describe('Login to external website', () => {
         if (testOptions.dataRequest) {
             expectedTests += 1;
             if (testOptions.dataRequestUsername) expectedTests += 3;
+            if (testOptions.dataRequestKYC) expectedTests += 9; // 9 additional assertions for KYC verification
         }
 
         expect.assertions(expectedTests);

@@ -28,8 +28,8 @@ export type LoginRequestPayload = {
 
 export type DataRequest = {
     username?: boolean;
+    kyc?: boolean;
     // verified: {
-    //     kyc: boolean;
     //     firstName: boolean;
     //     lastName: boolean;
     //     address: boolean;
@@ -58,12 +58,22 @@ export type LoginRequestResponsePayload = {
 export type DataSharingResponsePayload = {
     data: {
         username?: TonomyUsername;
+        kyc?: {
+            verified: boolean;
+            firstName: string;
+            lastName: string;
+            dateOfBirth: string;
+            nationality: string;
+            documentType: string;
+            documentNumber: string;
+            verificationDate: string;
+        };
         // verified?: {
-        //     kyc?: ...;
-        //     firstName?: ...;
-        //     lastName?: ...;
-        //     address?: ...;
-        //     birthDate?: ...;
+        //     firstName?: string;
+        //     lastName?: string;
+        //     address?: string;
+        //     birthDate?: string;
+        // };
     };
 };
 
@@ -271,6 +281,10 @@ export class WalletRequest implements Serializable {
 
                 if (req.data.username) {
                     res.data.username = await user.getUsername();
+                }
+                
+                if (req.data.kyc) {
+                    // Retrieve KYC data from user's storage if available
                 }
 
                 debug(

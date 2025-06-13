@@ -43,9 +43,15 @@ export async function externalWebsiteUserPressLoginToTonomyButton(
     };
 
     if (testOptions.dataRequest) {
-        onPressLoginOptions.dataRequest = testOptions.dataRequestUsername
-            ? { username: testOptions.dataRequestUsername }
-            : {};
+        onPressLoginOptions.dataRequest = {};
+        
+        if (testOptions.dataRequestUsername) {
+            onPressLoginOptions.dataRequest.username = testOptions.dataRequestUsername;
+        }
+        
+        if (testOptions.dataRequestKYC) {
+            onPressLoginOptions.dataRequest.kyc = testOptions.dataRequestKYC;
+        }
     }
 
     const { requests } = (await ExternalUser.loginWithTonomy(
@@ -322,6 +328,21 @@ export async function externalWebsiteClientAuth(
         if (!username) throw new Error('Username not found');
         data.username = username.toString();
     }
+    
+    if (options.dataRequestKYC) {
+        // In a real implementation, this would come from the user's verified KYC data
+        // Here we're just mocking it with the same data we used in the verification process
+        data.kyc = {
+            verified: true,
+            firstName: 'John',
+            lastName: 'Doe',
+            dateOfBirth: '1990-01-01',
+            nationality: 'US',
+            documentType: 'passport',
+            documentNumber: 'AB123456',
+            verificationDate: expect.any(String), // We don't know the exact timestamp
+        };
+    }
 
     const clientAuth = await externalUser.createClientAuthorization(data);
 
@@ -346,6 +367,18 @@ export async function externalWebsiteClientAuth(
 
         expect(verifiedAuth.username).toBe(username.toString());
         expect(verifiedAuth.data.username).toBe(username.toString());
+    }
+    
+    if (options.dataRequestKYC) {
+        expect(verifiedAuth.data.kyc).toBeDefined();
+        expect(verifiedAuth.data.kyc.verified).toBe(true);
+        expect(verifiedAuth.data.kyc.firstName).toBe('John');
+        expect(verifiedAuth.data.kyc.lastName).toBe('Doe');
+        expect(verifiedAuth.data.kyc.dateOfBirth).toBe('1990-01-01');
+        expect(verifiedAuth.data.kyc.nationality).toBe('US');
+        expect(verifiedAuth.data.kyc.documentType).toBe('passport');
+        expect(verifiedAuth.data.kyc.documentNumber).toBe('AB123456');
+        expect(typeof verifiedAuth.data.kyc.verificationDate).toBe('string');
     }
 }
 
