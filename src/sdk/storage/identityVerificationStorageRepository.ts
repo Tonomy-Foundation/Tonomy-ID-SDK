@@ -1,5 +1,5 @@
 import { Repository, DataSource } from 'typeorm';
-import { IdentityVerificationStorage, VcStatus } from './entities/identityVerificationStorage';
+import { IdentityVerificationStorage, VcStatus, VerificationType } from './entities/identityVerificationStorage';
 
 export class IdentityVerificationStorageRepository {
     private ormRepository: Repository<IdentityVerificationStorage>;
@@ -28,9 +28,9 @@ export class IdentityVerificationStorageRepository {
         return doc;
     }
 
-    public async findLatestApproved(): Promise<IdentityVerificationStorage | null> {
+    public async findLatestApproved(type: VerificationType): Promise<IdentityVerificationStorage | null> {
         const doc = await this.ormRepository.findOne({
-            where: { status: 'APPROVED' },
+            where: { status: 'APPROVED', type },
             order: { createdAt: 'DESC' },
         });
 
