@@ -156,9 +156,10 @@ export abstract class IdentityVerificationStorageManager {
     async createVc(
         veriffId: string,
         vc: VerifiableCredential<VeriffIdentityVerification>,
-        status: VcStatus
+        status: VcStatus,
+        type: VerificationType
     ): Promise<void> {
-        await this.repository.create(veriffId, vc.toString(), status);
+        await this.repository.create(veriffId, vc.toString(), status, type);
     }
 
     async findLatestApproved(type: VerificationType): Promise<VerifiableCredential<VeriffIdentityVerification> | null> {

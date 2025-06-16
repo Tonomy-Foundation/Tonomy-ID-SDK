@@ -16,7 +16,6 @@ export class UserBase implements IUserBase {
     protected keyManager: KeyManager;
     protected storage: IUserStorage & PersistentStorageClean;
     protected userDataVault?: UserDataVault;
-    protected userDataVaultPromise?: Promise<UserDataVault>;
 
     constructor(_keyManager: KeyManager, storageFactory: StorageFactory) {
         this.keyManager = _keyManager;
@@ -29,34 +28,28 @@ export class UserBase implements IUserBase {
      * @param communication Communication instance for verification messages
      */
     async initializeDataVault(dataSource: DataSource, communication: Communication): Promise<void> {
-        if (!this.userDataVaultPromise) {
-            this.userDataVaultPromise = Promise.all([
-                this.getDid(),
-                this.storage.status
-            ]).then(async ([did, status]) => {
-                if (status !== UserStatusEnum.READY) {
-                    throw new Error('User is not ready');
-                }
-                
-                const userDataVault = new UserDataVault(dataSource, communication, did);
-                this.userDataVault = userDataVault;
-                return userDataVault;
-            });
+        const [did, status] = await Promise.all([
+            this.getDid(),
+            this.storage.status
+        ]);
+
+        if (status !== UserStatusEnum.READY) {
+            throw new Error('User is not ready');
         }
         
-        await this.userDataVaultPromise;
+        this.userDataVault = new UserDataVault(dataSource, communication, did);
     }
 
     /**
      * Get the UserDataVault instance
-     * @returns Promise that resolves to the UserDataVault instance
+     * @returns the UserDataVault instance
      * @throws Error if UserDataVault is not initialized
      */
-    getUserDataVault(): Promise<UserDataVault> {
-        if (!this.userDataVaultPromise) {
+    getUserDataVault(): UserDataVault {
+        if (!this.userDataVault) {
             throw new Error('UserDataVault is not initialized. Call initializeDataVault first.');
         }
-        return this.userDataVaultPromise;
+        return this.userDataVault;
     }
 
     async getStatus(): Promise<UserStatusEnum> {

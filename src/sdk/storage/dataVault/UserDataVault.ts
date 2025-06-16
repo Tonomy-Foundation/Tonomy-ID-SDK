@@ -29,7 +29,7 @@ export class UserDataVault {
         const veriffId = this.did; // Using DID as veriffId for now
         const vc = await this.createVerificationVC(type);
         
-        const verification = await this.repository.create(veriffId, vc, VcStatus.PENDING);
+        const verification = await this.repository.create(veriffId, vc, VcStatus.PENDING, type);
         
         // Send verification request through communication
         await this.sendVerificationRequest(verification);
