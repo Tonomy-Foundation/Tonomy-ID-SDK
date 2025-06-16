@@ -11,8 +11,8 @@ import { Communication } from '../services/communication/communication';
 
 export class User
     extends Mixin(UserBase, UserAuthorization, UserCaptcha, UserOnboarding, UserCommunication, UserRequestsManager)
-    implements IUser {
-
+    implements IUser
+{
     private _isInitialized = false;
 
     // Initialize the user data vault
@@ -25,5 +25,4 @@ export class User
     public isInitialized(): boolean {
         return this._isInitialized;
     }
-
 }

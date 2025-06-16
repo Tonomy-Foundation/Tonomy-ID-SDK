@@ -1,3 +1,4 @@
+/* eslint-disable indent */
 import { DataSource } from 'typeorm';
 import { IdentityVerificationStorage } from '../entities/identityVerificationStorage';
 import { VerificationType } from '../entities/identityVerificationStorage';
@@ -28,12 +29,12 @@ export class UserDataVault {
         // Create a new verification record
         const veriffId = this.did; // Using DID as veriffId for now
         const vc = await this.createVerificationVC(type);
-        
+
         const verification = await this.repository.create(veriffId, vc, VcStatus.PENDING, type);
-        
+
         // Send verification request through communication
         await this.sendVerificationRequest(verification);
-        
+
         return verification;
     }
 
@@ -47,10 +48,10 @@ export class UserDataVault {
             if (message.getType() === 'verification') {
                 try {
                     const update = await this.parseVerificationUpdate(message as VerificationMessage);
-                    
+
                     // Update the verification status in the database
                     await this.updateVerificationStatus(update);
-                    
+
                     // Call the callback with the updated verification
                     callback(update);
                 } catch (error) {
@@ -58,6 +59,7 @@ export class UserDataVault {
                 }
             }
         };
+
         return this.communication.subscribeMessage(handler);
     }
 
@@ -71,7 +73,7 @@ export class UserDataVault {
             type,
             did: this.did,
             status: 'pending',
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
         });
     }
 
@@ -83,17 +85,20 @@ export class UserDataVault {
         if (!this.communication.isLoggedIn()) {
             throw new Error('Not authenticated with communication service');
         }
-        
+
         const payload: VerificationMessagePayload = {
             veriffId: verification.veriffId,
             vc: verification.vc,
-            type: verification.type
+            type: verification.type,
         };
         const issuer = this.communication.getIssuer();
+
         if (!issuer) {
             throw new Error('No issuer information available');
         }
+
         const message = await VerificationMessage.signMessage(payload, issuer, this.did);
+
         await this.communication.sendMessage(message);
     }
 
@@ -104,29 +109,32 @@ export class UserDataVault {
      */
     private async parseVerificationUpdate(message: VerificationMessage): Promise<IdentityVerificationStorage> {
         const payload = message.getVc().getPayload();
+
         if (!payload?.vc) {
             throw new Error('Invalid verification update message');
         }
 
         // Find the existing verification record
         const existing = await this.repository.findByVeriffId(this.did);
+
         if (!existing) {
             throw new Error('Verification record not found');
         }
 
         // Update the status based on the VC
         const vc = JSON.parse(message.payload.vc);
-        const status = vc.status === 'APPROVED' 
-            ? VcStatus.APPROVED 
-            : vc.status === 'REJECTED' 
-                ? VcStatus.REJECTED 
-                : VcStatus.PENDING;
+        const status =
+            vc.status === 'APPROVED'
+                ? VcStatus.APPROVED
+                : vc.status === 'REJECTED'
+                  ? VcStatus.REJECTED
+                  : VcStatus.PENDING;
 
         return {
             ...existing,
             status,
             updatedAt: new Date(),
-            vc: message.payload.vc
+            vc: message.payload.vc,
         };
     }
 

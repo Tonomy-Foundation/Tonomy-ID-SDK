@@ -10,7 +10,7 @@ const debug = Debug('tonomy-sdk:services:communication:communication');
 export type Subscriber = (message: Message) => void;
 
 export const SOCKET_TIMEOUT = 5000;
-export const SESSION_TIMEOUT = 30000; 
+export const SESSION_TIMEOUT = 30000;
 
 export type WebsocketReturnType = {
     status: number;
@@ -37,8 +37,9 @@ export class Communication {
         const payload = this.authMessage.getVc().getPayload();
         const issuer = {
             did: this.authMessage.getIssuer(),
-            signer: payload.signer
+            signer: payload.signer,
         };
+
         return issuer;
     }
 

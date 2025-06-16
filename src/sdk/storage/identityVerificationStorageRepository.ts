@@ -8,7 +8,12 @@ export class IdentityVerificationStorageRepository {
         this.ormRepository = dataSource.getRepository(IdentityVerificationStorage);
     }
 
-    public async create(veriffId: string, vc: string, status: VcStatus, type: VerificationType): Promise<IdentityVerificationStorage> {
+    public async create(
+        veriffId: string,
+        vc: string,
+        status: VcStatus,
+        type: VerificationType
+    ): Promise<IdentityVerificationStorage> {
         const now = new Date();
         const appStorageEntity = this.ormRepository.create({
             veriffId,

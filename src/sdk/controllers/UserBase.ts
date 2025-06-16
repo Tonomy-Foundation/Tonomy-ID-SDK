@@ -28,15 +28,12 @@ export class UserBase implements IUserBase {
      * @param communication Communication instance for verification messages
      */
     async initializeDataVault(dataSource: DataSource, communication: Communication): Promise<void> {
-        const [did, status] = await Promise.all([
-            this.getDid(),
-            this.storage.status
-        ]);
+        const [did, status] = await Promise.all([this.getDid(), this.storage.status]);
 
         if (status !== UserStatusEnum.READY) {
             throw new Error('User is not ready');
         }
-        
+
         this.userDataVault = new UserDataVault(dataSource, communication, did);
     }
 
@@ -49,6 +46,7 @@ export class UserBase implements IUserBase {
         if (!this.userDataVault) {
             throw new Error('UserDataVault is not initialized. Call initializeDataVault first.');
         }
+
         return this.userDataVault;
     }
 

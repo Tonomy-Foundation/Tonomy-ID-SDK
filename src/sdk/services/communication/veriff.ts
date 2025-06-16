@@ -95,7 +95,7 @@ export async function receivingVerification(credentials: VeriffWebhookPayload): 
         // Create individual VCs for each verification type
         const verificationData = credentials.data.verification;
         const personData = verificationData.person;
-        
+
         // Map of verification types to their corresponding data
         const verificationTypes = {
             [VerificationType.KYC]: verificationData.decision,
@@ -119,8 +119,13 @@ export async function receivingVerification(credentials: VeriffWebhookPayload): 
                         },
                     },
                 };
-                
-                await identityVerification.createVc(credentials.sessionId, vcData, resData.status);
+
+                await identityVerification.createVc(
+                    credentials.sessionId,
+                    vcData,
+                    resData.status,
+                    type as VerificationType
+                );
             }
         }
 

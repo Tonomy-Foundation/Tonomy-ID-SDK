@@ -34,6 +34,7 @@ export class VerificationMessage extends Message<VerificationMessagePayload> {
     ): Promise<VerificationMessage> {
         const vc = await Message.signMessageWithRecipient(message, issuer, recipient, options);
         const verificationMessage = new VerificationMessage(vc);
+
         return verificationMessage;
     }
 }
