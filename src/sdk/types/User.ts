@@ -6,7 +6,7 @@ import { AuthenticationMessage, Message } from '../services/communication/messag
 import { UserStatusEnum } from './UserStatusEnum';
 import { Subscriber } from '../services/communication/communication';
 import { App } from '../controllers/App';
-import { DID, URL as URLtype, DataRequest, DualWalletRequests } from '../util';
+import { URL as URLtype, DataRequest, DualWalletRequests } from '../util';
 import { PublicKey } from '@wharfkit/antelope';
 import { AppStatusEnum } from './AppStatusEnum';
 import { Signer } from '../services/blockchain';
@@ -119,18 +119,14 @@ export interface IUserRequestsManager extends IUserCommunication {
     /** Accepts a login request by authorizing keys on the blockchain (if the are not already authorized)
      * And sends a response to the requesting app
      *
-     * @param {DualWalletRequests} requests - Requests to accept
-     * @param {'mobile' | 'browser'} platform - Platform of the request, either 'mobile' or 'browser'
-     * @param {{callbackPath?: URLtype, messageRecipient?: DID}} options - Options for the response
-     * @returns {Promise<void | URLtype>} the callback url if the platform is mobile, or undefined if it is browser (a message is sent to the user)
+     * @param {DualWalletRequests} requests - the login requests
+     * @param {'redirect' | 'message'} respondWith - the way to respond to the login request
+     *   - 'redirect' where the user is redirected back to the external app (when the app deep links into Tonomy ID)
+     *   - 'message' where a message is sent back to the external app (the user logs in via QR code via the SSO website)
+     * @returns {Promise<void | URLtype>} - returns a URL to redirect to if respondWith is 'redirect',
+     *   or void if respondWith is 'message'
      */
-    acceptLoginRequest(
-        requests: DualWalletRequests,
-        platform: 'mobile' | 'browser',
-        options: {
-            messageRecipient?: DID;
-        }
-    ): Promise<void | URLtype>;
+    acceptLoginRequest(requests: DualWalletRequests, respondWith: 'redirect' | 'message'): Promise<void | URLtype>;
 }
 
 export interface IUser extends IUserCaptcha, IUserOnboarding, IUserRequestsManager {

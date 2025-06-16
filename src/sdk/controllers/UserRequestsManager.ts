@@ -3,13 +3,13 @@ import { KeyManagerLevel } from '../storage/keymanager';
 import { getTonomyEosioProxyContract } from '../services/blockchain/contracts/TonomyEosioProxyContract';
 import { getTonomyContract } from '../services/blockchain';
 import { createKeyManagerSigner } from '../services/blockchain/eosio/transaction';
-import { SdkErrors, throwError, SdkError } from '../util/errors';
+import { SdkErrors, throwError, isErrorCode } from '../util/errors';
 import { Message, LinkAuthRequestMessage, LinkAuthRequestResponseMessage } from '../services/communication/message';
 import { getAccountNameFromDid, parseDid } from '../util/ssi/did';
 import { IUserAppRecord, IUserRequestsManager } from '../types/User';
 import { PublicKey } from '@wharfkit/antelope';
 import { LoginRequestResponseMessage } from '../services/communication/message';
-import { DID, URL as URLtype } from '../util/ssi/types';
+import { URL as URLtype } from '../util/ssi/types';
 import { App } from './App';
 import { AppStatusEnum } from '../types/AppStatusEnum';
 import { getAccountInfo } from '../helpers/user';
@@ -64,7 +64,7 @@ export class UserRequestsManager extends UserCommunication implements IUserReque
 
             await this.sendMessage(linkAuthRequestResponseMessage);
         } catch (e) {
-            if (e instanceof SdkError && e.code === SdkErrors.SenderNotAuthorized) {
+            if (isErrorCode(e, SdkErrors.SenderNotAuthorized)) {
                 // somebody may be trying to DoS the user, drop
                 return;
             } else {
@@ -138,22 +138,19 @@ export class UserRequestsManager extends UserCommunication implements IUserReque
 
     async acceptLoginRequest(
         requests: DualWalletRequests,
-        platform: 'mobile' | 'browser',
-        options: {
-            messageRecipient?: DID;
-        }
+        respondWith: 'redirect' | 'message'
     ): Promise<void | URLtype> {
-        debug('acceptLoginRequest() options', options);
-
         const responses = await requests.accept(this);
 
-        if (platform === 'mobile') {
-            // Redirect the user back to the SSO website
-            return responses.getRedirectUrl(false);
+        if (respondWith === 'redirect') {
+            // Redirect the user back to the external
+            return responses.getRedirectUrl();
         } else {
-            if (!options.messageRecipient) throwError('Missing message recipient', SdkErrors.MissingParams);
+            // send the response to the SSO
+            if (!requests.sso) throw new Error('SSO requests are missing in the login request message');
+            const messageRecipient = requests.sso.getDid();
             const issuer = await this.getIssuer();
-            const message = await LoginRequestResponseMessage.signMessage(responses, issuer, options.messageRecipient);
+            const message = await LoginRequestResponseMessage.signMessage(responses, issuer, messageRecipient);
 
             await this.sendMessage(message);
         }

@@ -17,7 +17,7 @@ export * from './types/User';
 // Services
 export * as EosioUtil from './services/blockchain';
 
-export { AntelopePushTransactionError } from './services/blockchain/eosio/transaction';
+export { Signer, AntelopePushTransactionError } from './services/blockchain/eosio/transaction';
 
 export * from './services/blockchain/eosio/authority';
 export * from './services/blockchain/contracts/DemoTokenContract';
@@ -37,7 +37,6 @@ export * from './util/errors';
 export * from './util/crypto';
 export * from './util/username';
 export * from './util/request';
-export * from './util/base64';
 export * from './util/ssi/did';
 export * from './util/ssi/veramo';
 export * from './util/qr-code';

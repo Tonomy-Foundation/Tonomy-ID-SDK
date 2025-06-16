@@ -140,6 +140,18 @@ export class LoginRequestsMessage extends Message<DualWalletRequests> {
 
         return new LoginRequestsMessage(vc);
     }
+
+    async verify(): Promise<boolean> {
+        const ssoRequest = this.getPayload().sso;
+
+        if (ssoRequest) {
+            await ssoRequest.verify();
+            if (ssoRequest.getDid() !== this.getIssuer())
+                throw new Error('SSO request issuer does not match message issuer');
+        }
+
+        return super.verify();
+    }
 }
 
 export class LoginRequestResponseMessage extends Message<DualWalletResponse> {

@@ -2,7 +2,7 @@ import { KeyManager, KeyManagerLevel } from '../sdk/storage/keymanager';
 import { createVCSigner, randomString } from '../sdk/util/crypto';
 import { Issuer } from 'did-jwt-vc';
 import { getSettings } from '../sdk/util/settings';
-import { SdkError, SdkErrors, createSdkError, throwError } from '../sdk/util/errors';
+import { isErrorCode, SdkErrors, createSdkError, throwError } from '../sdk/util/errors';
 import { createStorage, PersistentStorageClean, StorageFactory, STORAGE_NAMESPACE } from '../sdk/storage/storage';
 import { Name, API, NameType } from '@wharfkit/antelope';
 import { TonomyUsername } from '../sdk/util/username';
@@ -115,14 +115,14 @@ export class ExternalUser {
      * @property {KeyManager} [options.keyManager=new JsKeyManager()] - the key manager to use for signing
      * @returns {Promise<ExternalUser>} - the user
      */
-    static async getUser(options?: {
-        autoLogout?: boolean;
-        storageFactory?: StorageFactory;
-        keyManager?: KeyManager;
-    }): Promise<ExternalUser> {
-        const keyManager = options?.keyManager ?? new JsKeyManager();
-        const storageFactory = options?.storageFactory ?? browserStorageFactory;
-        const autoLogout = options?.autoLogout ?? true;
+    static async getUser(
+        options: {
+            keyManager?: KeyManager;
+            storageFactory?: StorageFactory;
+            autoLogout?: boolean;
+        } = {}
+    ): Promise<ExternalUser> {
+        const { keyManager = new JsKeyManager(), storageFactory = browserStorageFactory, autoLogout = true } = options;
 
         const user = new ExternalUser(keyManager, storageFactory);
 
@@ -151,7 +151,7 @@ export class ExternalUser {
             return user;
         } catch (e) {
             if (autoLogout) await user.logout();
-            if (e instanceof SdkError && (e.code === SdkErrors.KeyNotFound || e.code === SdkErrors.InvalidData))
+            if (isErrorCode(e, [SdkErrors.KeyNotFound, SdkErrors.InvalidData]))
                 throwError('User Not loggedIn', SdkErrors.UserNotLoggedIn);
             throw e;
         }
@@ -268,9 +268,10 @@ export class ExternalUser {
      * @returns {Promise<LoginWithTonomyMessages | void>} - if redirect is true, returns void, if redirect is false, returns the login request in the form of a JWT token
      */
     static async loginWithTonomy(
-        { redirect = true, callbackPath, dataRequest }: IOnPressLoginOptions,
+        options: IOnPressLoginOptions,
         keyManager: KeyManager = new JsKeyManager()
     ): Promise<LoginWithTonomyMessages | void> {
+        const { redirect = true, callbackPath, dataRequest } = options;
         const issuer = await createDidKeyIssuerAndStore(keyManager);
         const publicKey = await keyManager.getKey({ level: KeyManagerLevel.BROWSER_LOCAL_STORAGE });
 
@@ -329,17 +330,20 @@ export class ExternalUser {
      * @param {VerifyLoginOptions} [options] - options for the login
      * @property {boolean} [options.external = true] - if true, verifies the login for an external user, otherwise for the Tonomy SSO website
      * @property {boolean} [options.checkKeys = true] - if true, checks the keys in the keyManager against the blockchain
-     * @property {KeyManager} [options.keyManager] - the key manager to use to storage and manage keys
-     * @property {StorageFactory} [options.storageFactory] - the storage factory to use to store data
+     * @property {KeyManager} [options.keyManager = new JsKeyManager()] - the key manager to use to storage and manage keys
+     * @property {StorageFactory} [options.storageFactory = browserStorageFactory] - the storage factory to use to store data
      *
      * @returns {Promise<ExternalUser>} an external user object ready to use
      */
-    static async verifyLoginResponse({
-        external = true,
-        checkKeys = true,
-        keyManager = new JsKeyManager(),
-        storageFactory = browserStorageFactory,
-    }: VerifyLoginOptions): Promise<ExternalUser> {
+    static async verifyLoginResponse(options: VerifyLoginOptions = {}): Promise<ExternalUser> {
+        const {
+            external = true,
+            checkKeys = true,
+            keyManager = new JsKeyManager(),
+            storageFactory = browserStorageFactory,
+        } = options;
+
+        debug('verifyLoginResponse()', { external, checkKeys });
         const responses = DualWalletResponse.fromUrl();
 
         if (responses.isSuccess()) {
