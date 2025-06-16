@@ -12,6 +12,9 @@ import { getAccountNameFromDid } from './ssi/did';
 import Debug from 'debug';
 import { getSettings } from './settings';
 import { isSameOrigin } from '../helpers/urls';
+import { IdentityVerificationStorageRepository } from '../storage/identityVerificationStorageRepository';
+import { IdentityVerificationStorageManager } from '../storage/identityVerificationStorageManager';
+import { dbConnection } from './ssi/veramo';
 
 const debug = Debug('tonomy-sdk:util:WalletRequest');
 
@@ -285,7 +288,26 @@ export class WalletRequest implements Serializable {
                 
                 if (req.data.kyc) {
                     // Retrieve KYC data from user's storage if available
-                }
+                    const repository = new IdentityVerificationStorageRepository(dbConnection);
+                    
+                    // Use a concrete implementation of the abstract class
+                    class ConcreteVerificationStorageManager extends IdentityVerificationStorageManager {
+                        constructor(repository: IdentityVerificationStorageRepository) {
+                            super(repository);
+                        }
+                    }
+                    
+                    const storageManager = new ConcreteVerificationStorageManager(repository);
+                    
+                    // Get the latest approved verification
+                    const latestVerification = await storageManager.findLatestApproved();
+                    
+                    if (!latestVerification) {
+                        throw new Error('KYC verification data requested but not available in storage');
+                    }
+                   
+                    res.data.kyc = latestVerification;
+                } 
 
                 debug(
                     `WalletRequest/accept: Accepting request from app ${external.origin}: data sharing request ${JSON.stringify(res.data, null, 2)}`
