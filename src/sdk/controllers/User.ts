@@ -17,8 +17,13 @@ export class User
 
     // Initialize the user data vault
     public async initialize(dataSource: DataSource, communication: Communication): Promise<void> {
-        await this.initializeDataVault(dataSource, communication);
-        this._isInitialized = true;
+        try {
+            await this.initializeDataVault(dataSource, communication);
+            this._isInitialized = true;
+        } catch (error) {
+            this._isInitialized = false;
+            throw new Error(`Failed to initialize user data vault: ${error}`);
+        }
     }
 
     // Check if the user is properly initialized
