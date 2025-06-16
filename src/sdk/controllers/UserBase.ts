@@ -15,7 +15,7 @@ import { Communication } from '../services/communication/communication';
 export class UserBase implements IUserBase {
     protected keyManager: KeyManager;
     protected storage: IUserStorage & PersistentStorageClean;
-    protected userDataVault?: UserDataVault;
+    public userDataVault: UserDataVault;
 
     constructor(_keyManager: KeyManager, storageFactory: StorageFactory) {
         this.keyManager = _keyManager;
