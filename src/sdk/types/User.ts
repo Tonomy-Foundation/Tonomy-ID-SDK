@@ -11,6 +11,7 @@ import { PublicKey } from '@wharfkit/antelope';
 import { AppStatusEnum } from './AppStatusEnum';
 import { Signer } from '../services/blockchain';
 import { KeyManagerLevel } from '../storage/keymanager';
+import { UserDataVault } from '../storage/dataVault/UserDataVault';
 
 type KeyFromPasswordFn = (
     password: string,
@@ -129,5 +130,5 @@ export interface IUserRequestsManager extends IUserCommunication {
 }
 
 export interface IUser extends IUserCaptcha, IUserOnboarding, IUserRequestsManager {
-    // No implementation needed. Stop prettier error
+    userDataVault: UserDataVault;
 }

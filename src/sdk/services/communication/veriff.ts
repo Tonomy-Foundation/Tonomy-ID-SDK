@@ -2,6 +2,7 @@ import fetch from 'cross-fetch';
 import { getSettings } from '../../util/settings';
 import { throwError } from '../../util';
 import { IdentityVerificationStorageRepository } from '../../storage/identityVerificationStorageRepository';
+import { VerificationType } from '../../storage/entities/identityVerificationStorage';
 import { dbConnection, setupDatabase } from '../../util/ssi/veramo';
 import { IdentityVerificationStorageManager } from '../../storage/identityVerificationStorageManager';
 
@@ -91,7 +92,42 @@ export async function receivingVerification(credentials: VeriffWebhookPayload): 
     }
 
     try {
-        await identityVerification.createVc(credentials.sessionId, resData.vc, resData.status);
+        // Create individual VCs for each verification type
+        const verificationData = credentials.data.verification;
+        const personData = verificationData.person;
+
+        // Map of verification types to their corresponding data
+        const verificationTypes = {
+            [VerificationType.KYC]: verificationData.decision,
+            [VerificationType.FIRST_NAME]: personData.firstName?.value,
+            [VerificationType.LAST_NAME]: personData.lastName?.value,
+            [VerificationType.DOB]: personData.birthDate?.value,
+        };
+
+        // Create VCs for each verification type that has data
+        for (const [type, value] of Object.entries(verificationTypes)) {
+            if (value) {
+                const vcData = {
+                    ...resData.vc,
+                    credentialSubject: {
+                        ...resData.vc.credentialSubject,
+                        payload: {
+                            type: type as VerificationType,
+                            value: value,
+                            status: resData.status,
+                            sessionId: credentials.sessionId,
+                        },
+                    },
+                };
+
+                await identityVerification.createVc(
+                    credentials.sessionId,
+                    vcData,
+                    resData.status,
+                    type as VerificationType
+                );
+            }
+        }
 
         return {
             verification: true,

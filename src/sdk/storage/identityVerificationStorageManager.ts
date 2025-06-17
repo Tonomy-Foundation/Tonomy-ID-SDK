@@ -1,4 +1,5 @@
 import { IdentityVerificationStorageRepository } from './identityVerificationStorageRepository';
+import { VerificationType } from './entities/identityVerificationStorage';
 import { VcStatus } from './entities/identityVerificationStorage';
 import { VerifiableCredential } from '../util/ssi/vc';
 
@@ -155,13 +156,14 @@ export abstract class IdentityVerificationStorageManager {
     async createVc(
         veriffId: string,
         vc: VerifiableCredential<VeriffIdentityVerification>,
-        status: VcStatus
+        status: VcStatus,
+        type: VerificationType
     ): Promise<void> {
-        await this.repository.create(veriffId, vc.toString(), status);
+        await this.repository.create(veriffId, vc.toString(), status, type);
     }
 
-    async findLatestApproved(): Promise<VerifiableCredential<VeriffIdentityVerification> | null> {
-        const doc = await this.repository.findLatestApproved();
+    async findLatestApproved(type: VerificationType): Promise<VerifiableCredential<VeriffIdentityVerification> | null> {
+        const doc = await this.repository.findLatestApproved(type);
 
         if (doc) {
             return new VerifiableCredential<VeriffIdentityVerification>(doc.vc);

@@ -20,7 +20,6 @@ import { Resolver } from 'did-resolver';
 import { getResolver as ethrDidResolver } from 'ethr-did-resolver';
 import { getResolver as webDidResolver } from 'web-did-resolver';
 import { Entities, KeyStore, DIDStore, PrivateKeyStore, migrations } from '@veramo/data-store';
-import { IdentityVerificationStorage } from '../../storage/entities/identityVerificationStorage';
 import { DataSource } from 'typeorm';
 import { Wallet } from 'ethers';
 import Debug from 'debug';
@@ -47,11 +46,11 @@ export async function setupDatabase(datasource?: DataSource) {
     dbConnection = await new DataSource({
         type: 'sqlite',
         database: DATABASE_FILE,
-        synchronize: true,
+        synchronize: false,
         migrations,
         migrationsRun: true,
         logging: ['error', 'info', 'warn'],
-        entities: [...Entities, IdentityVerificationStorage],
+        entities: Entities,
     }).initialize();
 }
 

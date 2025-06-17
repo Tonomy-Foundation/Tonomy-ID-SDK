@@ -1,5 +1,5 @@
 import { Repository, DataSource } from 'typeorm';
-import { IdentityVerificationStorage, VcStatus } from './entities/identityVerificationStorage';
+import { IdentityVerificationStorage, VcStatus, VerificationType } from './entities/identityVerificationStorage';
 
 export class IdentityVerificationStorageRepository {
     private ormRepository: Repository<IdentityVerificationStorage>;
@@ -8,12 +8,18 @@ export class IdentityVerificationStorageRepository {
         this.ormRepository = dataSource.getRepository(IdentityVerificationStorage);
     }
 
-    public async create(veriffId: string, vc: string, status: VcStatus): Promise<IdentityVerificationStorage> {
+    public async create(
+        veriffId: string,
+        vc: string,
+        status: VcStatus,
+        type: VerificationType
+    ): Promise<IdentityVerificationStorage> {
         const now = new Date();
         const appStorageEntity = this.ormRepository.create({
             veriffId,
             vc,
             status,
+            type,
             version: 1,
             createdAt: now,
             updatedAt: now,
@@ -28,9 +34,9 @@ export class IdentityVerificationStorageRepository {
         return doc;
     }
 
-    public async findLatestApproved(): Promise<IdentityVerificationStorage | null> {
+    public async findLatestApproved(type: VerificationType): Promise<IdentityVerificationStorage | null> {
         const doc = await this.ormRepository.findOne({
-            where: { status: 'APPROVED' },
+            where: { status: 'APPROVED', type },
             order: { createdAt: 'DESC' },
         });
 

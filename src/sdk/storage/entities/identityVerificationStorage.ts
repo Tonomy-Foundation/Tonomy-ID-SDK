@@ -7,6 +7,16 @@ export enum VcStatus {
     REJECTED = 'REJECTED',
 }
 
+export enum VerificationType {
+    KYC = 'kyc',
+    FIRST_NAME = 'firstname',
+    LAST_NAME = 'lastname',
+    EMAIL = 'email',
+    PHONE = 'phone',
+    ADDRESS = 'address',
+    DOB = 'dob',
+}
+
 @Entity('IdentityVerificationStorage')
 @Unique(['veriffId'])
 export class IdentityVerificationStorage {
@@ -35,4 +45,11 @@ export class IdentityVerificationStorage {
 
     @Column({ type: 'datetime' })
     updatedAt!: Date;
+
+    @Column({
+        type: 'enum',
+        enum: VerificationType,
+        default: VerificationType.KYC,
+    })
+    type!: VerificationType;
 }

@@ -2,6 +2,7 @@ import { io, Socket } from 'socket.io-client';
 import { CommunicationError, createSdkError, SdkErrors, throwError } from '../../util/errors';
 import { getSettings } from '../../util/settings';
 import { AuthenticationMessage, Message } from '../../services/communication/message';
+import { Issuer } from 'did-jwt-vc';
 import Debug from 'debug';
 
 const debug = Debug('tonomy-sdk:services:communication:communication');
@@ -9,6 +10,7 @@ const debug = Debug('tonomy-sdk:services:communication:communication');
 export type Subscriber = (message: Message) => void;
 
 export const SOCKET_TIMEOUT = 5000;
+export const SESSION_TIMEOUT = 30000;
 
 export type WebsocketReturnType = {
     status: number;
@@ -25,6 +27,21 @@ export class Communication {
     private authMessage?: AuthenticationMessage;
     private loggedIn = false;
     private url: string;
+
+    /**
+     * Returns the issuer information for the current authentication
+     * @returns {Issuer} the issuer information
+     */
+    public getIssuer(): Issuer | undefined {
+        if (!this.authMessage) return undefined;
+        const payload = this.authMessage.getVc().getPayload();
+        const issuer = {
+            did: this.authMessage.getIssuer(),
+            signer: payload.signer,
+        };
+
+        return issuer;
+    }
 
     constructor(singleton = true) {
         if (Communication.singleton && singleton) return Communication.singleton;
@@ -224,7 +241,7 @@ export class Communication {
         }
     }
 
-    async waitForSessionData(): Promise<any> {
+    async waitForSessionData(): Promise<Message> {
         await this.connect();
 
         return new Promise((resolve, reject) => {
@@ -240,7 +257,7 @@ export class Communication {
                 reject(
                     createSdkError('Timed out waiting for session data from server', SdkErrors.CommunicationTimeout)
                 );
-            }, SOCKET_TIMEOUT);
+            }, SESSION_TIMEOUT);
         });
     }
 }

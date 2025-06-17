@@ -8,14 +8,46 @@ import { createVCSigner } from '../util/crypto';
 import { UserStatusEnum } from '../types/UserStatusEnum';
 import { IUserBase, IUserStorage } from '../types/User';
 import { createKeyManagerSigner, Signer } from '../services/blockchain';
+import { UserDataVault } from '../storage/dataVault/UserDataVault';
+import { DataSource } from 'typeorm';
+import { Communication } from '../services/communication/communication';
 
 export class UserBase implements IUserBase {
     protected keyManager: KeyManager;
     protected storage: IUserStorage & PersistentStorageClean;
+    public userDataVault: UserDataVault;
 
     constructor(_keyManager: KeyManager, storageFactory: StorageFactory) {
         this.keyManager = _keyManager;
         this.storage = createStorage<IUserStorage>(STORAGE_NAMESPACE + 'user.', storageFactory);
+    }
+
+    /**
+     * Initialize the UserDataVault with the provided DataSource and Communication
+     * @param dataSource TypeORM DataSource for database access
+     * @param communication Communication instance for verification messages
+     */
+    async initializeDataVault(dataSource: DataSource, communication: Communication): Promise<void> {
+        const [did, status] = await Promise.all([this.getDid(), this.storage.status]);
+
+        if (status !== UserStatusEnum.READY) {
+            throw new Error('User is not ready');
+        }
+
+        this.userDataVault = new UserDataVault(dataSource, communication, did);
+    }
+
+    /**
+     * Get the UserDataVault instance
+     * @returns the UserDataVault instance
+     * @throws Error if UserDataVault is not initialized
+     */
+    getUserDataVault(): UserDataVault {
+        if (!this.userDataVault) {
+            throw new Error('UserDataVault is not initialized. Call initializeDataVault first.');
+        }
+
+        return this.userDataVault;
     }
 
     async getStatus(): Promise<UserStatusEnum> {
