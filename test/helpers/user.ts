@@ -11,7 +11,10 @@ import {
     IUserStorage,
     Communication,
     IUser,
+    VerifiableCredential,
+    VerificationType,
 } from '../../src/sdk/index';
+import { expect } from '@jest/globals';
 import { jsStorageFactory } from '../../src/cli/bootstrap/jsstorage';
 import { generatePrivateKeyFromPassword } from '../../src/cli/bootstrap/keys';
 import { createUser } from '../../src/cli/bootstrap/user';
@@ -147,13 +150,10 @@ export function setupVeriffVerificationSubscriber(user: IUserPublic) {
                 debug('TONOMY_ID/setupVeriffVerificationSubscriber: Received Veriff verification data', data);
                 
                 try {
+                    const { sessionId, vcs, status } = data;
                     
-                    const verificationData = typeof data === 'string' ? JSON.parse(data) : data;
-                    
-                    const { sessionId, vc, status } = verificationData;
-                    
-                    if (!sessionId || !vc) {
-                        throw new Error('Invalid Veriff verification data: missing sessionId or vc');
+                    if (!sessionId || !vcs || !Array.isArray(vcs)) {
+                        throw new Error('Invalid Veriff verification data: missing sessionId or vcs array');
                     }
                     
                     let vcStatus: VcStatus;
@@ -165,12 +165,24 @@ export function setupVeriffVerificationSubscriber(user: IUserPublic) {
                         vcStatus = VcStatus.PENDING;
                     }
                     
-                    // Store the verification data
-                    await storageManager.createVc(sessionId, vc, vcStatus);
+                    // Store each VC with its appropriate type
+                    for (const vcString of vcs) {
+                        const vc = new VerifiableCredential(vcString);
+                        const vcType = vc.getVc().type.find((t: string) => t.endsWith('Credential'))?.replace('Credential', '').toLowerCase();
+                        
+                        if (vcType) {
+                            await storageManager.createVc(
+                                sessionId,
+                                vc,
+                                vcStatus,
+                                vcType as VerificationType
+                            );
+                            
+                            debug(`TONOMY_ID/setupVeriffVerificationSubscriber: Stored ${vcType} verification with status ${vcStatus}`);
+                        }
+                    }
                     
-                    debug(`TONOMY_ID/setupVeriffVerificationSubscriber: Stored Veriff verification with status ${vcStatus}`);
-                    
-                    resolve(verificationData);
+                    resolve(data);
                 } catch (error) {
                     console.error('Error processing Veriff verification:', error);
                     throw error;
@@ -195,34 +207,94 @@ export function setupVeriffVerificationSubscriber(user: IUserPublic) {
 export async function mockVeriffWebhook(did: string, sessionId: string, status: string = 'approved') {
     debug(`TONOMY_ID/mockVeriffWebhook: Mocking Veriff webhook for session ${sessionId} with status ${status}`);
     
-    // Create mock verification data
-    const mockVc = {
+    const mockData = {
+        status: status,
+        verification: {
+            id: sessionId,
+            attemptId: 'mock-attempt-id',
+            status: status,
+            code: status === 'approved' ? 9001 : 9002,
+            person: {
+                firstName: 'John',
+                lastName: 'Doe',
+                dateOfBirth: '1990-01-01',
+                nationality: 'US',
+                addresses: [{
+                    fullAddress: '123 Main St, City, Country',
+                    parsedAddress: {
+                        street: '123 Main St',
+                        city: 'City',
+                        country: 'Country',
+                        postcode: '12345',
+                        state: 'State',
+                        unit: null,
+                        houseNumber: null
+                    }
+                }]
+            },
+            document: {
+                number: 'AB123456',
+                type: 'passport',
+                country: 'US'
+            }
+        },
+        highRisk: false,
+        technicalData: {
+            ip: null
+        }
+    };
+
+    // Create separate VCs for each field
+    const vcs = [
+        createFieldVC(did, 'firstName', mockData.verification.person.firstName),
+        createFieldVC(did, 'lastName', mockData.verification.person.lastName),
+        createFieldVC(did, 'dateOfBirth', mockData.verification.person.dateOfBirth),
+        createFieldVC(did, 'nationality', mockData.verification.person.nationality),
+        createFieldVC(did, 'documentType', mockData.verification.document.type),
+        createFieldVC(did, 'documentNumber', mockData.verification.document.number),
+        createFieldVC(did, 'address', mockData.verification.person.addresses[0].fullAddress),
+        createFieldVC(did, 'phone', '+1234567890'),
+        createFieldVC(did, 'email', 'john.doe@example.com')
+    ];
+
+    // Create the full KYC VC
+    const kycVc = {
         '@context': ['https://www.w3.org/2018/credentials/v1'],
         type: ['VerifiableCredential', 'KYCCredential'],
         issuer: 'did:key:veriff',
         issuanceDate: new Date().toISOString(),
         credentialSubject: {
             id: did,
-            firstName: 'John',
-            lastName: 'Doe',
-            dateOfBirth: '1990-01-01',
-            nationality: 'US',
-            documentType: 'passport',
-            documentNumber: 'AB123456'
+            ...mockData
         }
     };
+
+    // Add KYC VC to the list
+    vcs.push(kycVc);
     
     const mockPayload = {
         sessionId,
-        vc: JSON.stringify(mockVc),
+        vcs: vcs.map(vc => JSON.stringify(vc)),
         status
     };
-    
-    // TODO: In a real test, Make an HTTP request to the Veriff webhook endpoint
     
     debug('TONOMY_ID/mockVeriffWebhook: Mock webhook processed successfully');
     
     return mockPayload;
+}
+
+// Helper function to create individual field VCs
+function createFieldVC(did: string, field: string, value: string): any {
+    return {
+        '@context': ['https://www.w3.org/2018/credentials/v1'],
+        type: ['VerifiableCredential', `${field}Credential`],
+        issuer: 'did:key:veriff',
+        issuanceDate: new Date().toISOString(),
+        credentialSubject: {
+            id: did,
+            [field]: value
+        }
+    };
 }
 
 export async function setupLoginRequestSubscriber(

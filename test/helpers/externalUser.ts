@@ -18,6 +18,7 @@ import {
     ClientAuthorizationData,
     DualWalletRequests,
     DualWalletResponse,
+    randomString,
 } from '../../src/sdk';
 import { ExternalUser, LoginWithTonomyMessages } from '../../src/api/externalUser';
 import { VerifiableCredential } from '../../src/sdk/util/ssi/vc';
@@ -25,7 +26,7 @@ import { getAccount } from '../../src/sdk/services/blockchain';
 import { getDidKeyIssuerFromStorage } from '../../src/sdk/helpers/didKeyStorage';
 import { onRedirectLogin } from '../../src/sdk/helpers/urls';
 import { ExternalUserLoginTestOptions } from '../externalUser.integration.test';
-import { IUserPublic } from './user';
+import { IUserPublic, mockVeriffWebhook } from './user';
 import Debug from 'debug';
 
 const debug = Debug('tonomy-sdk-tests:helpers:externalUser');
@@ -51,6 +52,12 @@ export async function externalWebsiteUserPressLoginToTonomyButton(
         
         if (testOptions.dataRequestKYC) {
             onPressLoginOptions.dataRequest.kyc = testOptions.dataRequestKYC;
+            
+            // After KYC request is received, simulate Veriff webhook call
+            const mockWebhookData = await mockVeriffWebhook(await user.getDid(), randomString(32));
+            
+            // Simulate webhook API call to Tonomy Communication server
+            await communication.socketServer.emit('/v1/verification/veriff/receive', mockWebhookData);
         }
     }
 
