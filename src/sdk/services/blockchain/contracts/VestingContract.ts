@@ -200,6 +200,16 @@ export const vestingCategories: Map<
             name: 'Liquidity',
         },
     ],
+    [
+        15, // Special Token Round
+        {
+            startDelay: 0 * MICROSECONDS_PER_MONTH,
+            cliffPeriod: 1 * MICROSECONDS_PER_MONTH,
+            vestingPeriod: 1 * MICROSECONDS_PER_MONTH,
+            tgeUnlock: 1.0,
+            name: 'Special Token Round',
+        },
+    ],
 ]);
 
 export class VestingContract {
