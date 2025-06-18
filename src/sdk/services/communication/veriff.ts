@@ -67,7 +67,7 @@ class VerificationStorageManager extends IdentityVerificationStorageManager {
     }
 }
 
-const identityVerification = new VerificationStorageManager(identityStorage);
+export const identityVerification = new VerificationStorageManager(identityStorage);
 
 export async function receivingVerification(credentials: VeriffWebhookPayload): Promise<{ verification: boolean }> {
     await setupDatabase();

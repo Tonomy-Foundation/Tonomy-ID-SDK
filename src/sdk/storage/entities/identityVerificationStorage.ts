@@ -5,6 +5,7 @@ export enum VcStatus {
     APPROVED = 'APPROVED',
     PENDING = 'PENDING',
     REJECTED = 'REJECTED',
+    DECLINED = 'DECLINED'
 }
 
 export enum VerificationType {
