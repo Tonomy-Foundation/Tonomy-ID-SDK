@@ -4,7 +4,7 @@ import { VcStatus } from './entities/identityVerificationStorage';
 import { VerifiableCredential } from '../util/ssi/vc';
 
 // from https://devdocs.veriff.com/docs/decision-webhook#sample-request
-type VeriffIdentityVerification = {
+export type VeriffIdentityVerification = {
     status: string;
     verification: {
         id: string;

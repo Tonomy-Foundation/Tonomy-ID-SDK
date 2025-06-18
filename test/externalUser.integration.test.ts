@@ -224,8 +224,10 @@ describe('Login to external website', () => {
            
 
             expect(kycVerification).toBeDefined();
+
             if(kycVerification) {
                 const verification = kycVerification.getCredentialSubject();
+
                 expect(verification.status).toBe(VcStatus.APPROVED);
                 expect(verification?.verification?.id).toBe(sessionId);    
             }
@@ -274,6 +276,7 @@ describe('Login to external website', () => {
                 documentNumber: 'AB123456',
                 verificationDate: new Date().toISOString()
             });
+
             expect(clientAuth).toBeDefined();
             
             // Verify client auth
@@ -343,6 +346,7 @@ describe('Login to external website', () => {
             
             // Check for KYC verification using the verification manager
             const kycVerification = await identityVerification.findLatestApproved(VerificationType.KYC);
+
             expect(kycVerification).toBeDefined();
             expect(kycVerification?.getCredentialSubject()?.verification?.status).toBe('declined')
             // Step 4: Attempt client auth should fail

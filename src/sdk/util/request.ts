@@ -64,7 +64,7 @@ export type LoginRequestResponsePayload = {
 export type DataSharingResponsePayload = {
     data: {
         username?: TonomyUsername;
-        kyc?: VerifiableCredentialWithType<VeriffWebhookPayload["data"]>;
+        kyc?: VerifiableCredentialWithType<VeriffWebhookPayload['data']>;
         lastName?: VerifiableCredentialWithType<{ lastName: string }>;
         firstName?: VerifiableCredentialWithType<{ firstName: string }>;
         dateOfBirth?: VerifiableCredentialWithType<{ dateOfBirth: string }>;
@@ -282,51 +282,57 @@ export class WalletRequest implements Serializable {
                 if (req.data.username) {
                     res.data.username = await user.getUsername();
                 }
-                
+
                 if (req.data.kyc) {
                     // Retrieve KYC data from user's storage if available
                     const repository = new IdentityVerificationStorageRepository(dbConnection);
-                    
+
                     // Use a concrete implementation of the abstract class
                     class ConcreteVerificationStorageManager extends IdentityVerificationStorageManager {
                         constructor(repository: IdentityVerificationStorageRepository) {
                             super(repository);
                         }
                     }
-                    
+
                     const storageManager = new ConcreteVerificationStorageManager(repository);
-                    
+
                     // Get the latest approved verification
                     const latestVerification = await storageManager.findLatestApproved(VerificationType.KYC);
-                    
+
                     if (!latestVerification) {
                         throw new Error('KYC verification data requested but not available in storage');
                     }
-                   
+
                     // Convert VeriffIdentityVerification to match VeriffWebhookPayload.data structure
                     const verificationData = latestVerification.getPayload();
                     const webhookData = {
                         verification: {
                             decisionScore: null,
-                            decision: verificationData.verification?.status as 'approved' | 'declined' | 'resubmission_requested' | 'expired' | 'abandoned',
+                            decision: verificationData.verification?.status as
+                                | 'approved'
+                                | 'declined'
+                                | 'resubmission_requested'
+                                | 'expired'
+                                | 'abandoned',
                             person: {
                                 firstName: { value: verificationData.verification?.person.firstName },
                                 lastName: { value: verificationData.verification?.person.lastName },
                                 dateOfBirth: { value: verificationData.verification?.person.dateOfBirth },
-                                nationality: { value: verificationData.verification?.person.nationality }
+                                nationality: { value: verificationData.verification?.person.nationality },
                             },
                             document: {
                                 type: { value: verificationData.verification?.document.type },
                                 number: { value: verificationData.verification?.document.number },
-                                country: { value: verificationData.verification?.document.country }
+                                country: { value: verificationData.verification?.document.country },
                             },
-                            insights: null
-                        }
+                            insights: null,
+                        },
                     };
                     const issuer = await user.getIssuer();
                     const kycCredential = await KYCVerifiableCredential.signCredential(webhookData, issuer);
+
                     res.data.kyc = kycCredential;
-                } 
+                }
 
                 debug(
                     `WalletRequest/accept: Accepting request from app ${external.origin}: data sharing request ${JSON.stringify(res.data, null, 2)}`
