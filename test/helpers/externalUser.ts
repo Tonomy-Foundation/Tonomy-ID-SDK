@@ -52,12 +52,6 @@ export async function externalWebsiteUserPressLoginToTonomyButton(
         
         if (testOptions.dataRequestKYC) {
             onPressLoginOptions.dataRequest.kyc = testOptions.dataRequestKYC;
-            
-            // After KYC request is received, simulate Veriff webhook call
-            const mockWebhookData = await mockVeriffWebhook(await user.getDid(), randomString(32));
-            
-            // Simulate webhook API call to Tonomy Communication server
-            await communication.socketServer.emit('/v1/verification/veriff/receive', mockWebhookData);
         }
     }
 

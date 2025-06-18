@@ -11,10 +11,11 @@ import {
     IUserStorage,
     Communication,
     IUser,
-    VerifiableCredential,
-    VerificationType,
 } from '../../src/sdk/index';
-import { expect } from '@jest/globals';
+import { VerifiableCredential } from '../../src/sdk/util/ssi/vc';
+import { VerificationType } from '../../src/sdk/storage/entities/identityVerificationStorage';
+// Using require for modules that might not have TypeScript definitions
+const { expect } = require('@jest/globals');
 import { jsStorageFactory } from '../../src/cli/bootstrap/jsstorage';
 import { generatePrivateKeyFromPassword } from '../../src/cli/bootstrap/keys';
 import { createUser } from '../../src/cli/bootstrap/user';
@@ -23,7 +24,8 @@ import { generateRandomKeywords } from '../../src/sdk/util';
 import { ExternalUserLoginTestOptions } from '../externalUser.integration.test';
 import { getTonomyOperationsKey } from '../../src/sdk/services/blockchain/eosio/eosio';
 import { createSigner } from '../../src/sdk/services/blockchain';
-import Debug from 'debug';
+// Using require for modules that might not have TypeScript definitions
+const Debug = require('debug');
 import { IdentityVerificationStorageManager } from '../../src/sdk/storage/identityVerificationStorageManager';
 import { IdentityVerificationStorageRepository } from '../../src/sdk/storage/identityVerificationStorageRepository';
 import { VcStatus } from '../../src/sdk/storage/entities/identityVerificationStorage';
@@ -128,10 +130,10 @@ export async function scanQrAndAck(user: IUserPublic, qrCodeData: string) {
  * @returns A promise that resolves when the verification is received and processed
  */
 export function setupVeriffVerificationSubscriber(user: IUserPublic) {
-    // Create identity verification storage manager
+    
     const repository = new IdentityVerificationStorageRepository(dbConnection);
     
-    // Use the concrete implementation instead of the abstract class
+    
     class ConcreteVerificationStorageManager extends IdentityVerificationStorageManager {
         constructor(repository: IdentityVerificationStorageRepository) {
             super(repository);
@@ -147,39 +149,82 @@ export function setupVeriffVerificationSubscriber(user: IUserPublic) {
         // Use the Communication class's waitForSessionData method to listen for the event
         user.communication.waitForSessionData()
             .then(async (data) => {
-                debug('TONOMY_ID/setupVeriffVerificationSubscriber: Received Veriff verification data', data);
+                debug('TONOMY_ID/setupVeriffVerificationSubscriber: Received Veriff verification data');
                 
                 try {
-                    const { sessionId, vcs, status } = data;
+                    // Parse the stringified JSON data containing JWT strings
+                    const parsedData = JSON.parse(data);
                     
-                    if (!sessionId || !vcs || !Array.isArray(vcs)) {
-                        throw new Error('Invalid Veriff verification data: missing sessionId or vcs array');
-                    }
+                    // Extract the decision status from the decision credential
+                    const decisionJwt = parsedData.decision;
+                    const decisionVc = new VerifiableCredential(decisionJwt);
+                    const decision = decisionVc.getVc().credentialSubject.decision;
                     
+                    // Determine the VC status based on the decision
                     let vcStatus: VcStatus;
-                    if (status === 'approved') {
+                    if (decision === 'approved') {
                         vcStatus = VcStatus.APPROVED;
-                    } else if (status === 'declined' || status === 'resubmission_requested') {
+                    } else if (decision === 'declined' || decision === 'resubmission_requested') {
                         vcStatus = VcStatus.REJECTED;
                     } else {
                         vcStatus = VcStatus.PENDING;
                     }
                     
-                    // Store each VC with its appropriate type
-                    for (const vcString of vcs) {
-                        const vc = new VerifiableCredential(vcString);
-                        const vcType = vc.getVc().type.find((t: string) => t.endsWith('Credential'))?.replace('Credential', '').toLowerCase();
+                    // Generate a session ID (in a real scenario, this would come from Veriff)
+                    const sessionId = `mock-session-${Date.now()}`;
+                    
+                    // Process each credential JWT and store it
+                    for (const [credType, jwtString] of Object.entries(parsedData)) {
+                        if (credType === 'kyc') continue; // Skip the main KYC credential for now
                         
-                        if (vcType) {
+                        const vc = new VerifiableCredential(jwtString as string);
+                        let vcType: string;
+                        
+                        // Map credential types to verification types
+                        switch (credType) {
+                            case 'firstName':
+                                vcType = VerificationType.FIRST_NAME;
+                                break;
+                            case 'lastName':
+                                vcType = VerificationType.LAST_NAME;
+                                break;
+                            case 'birthDate':
+                                vcType = VerificationType.DOB;
+                                break;
+                            case 'nationality':
+                                vcType = 'nationality';
+                                break;
+                            case 'decision':
+                                vcType = 'decision';
+                                break;
+                            default:
+                                vcType = credType.toLowerCase();
+                        }
+                        
+                        // Only store credentials that match our VerificationType enum
+                        if (Object.values(VerificationType).includes(vcType as VerificationType)) {
                             await storageManager.createVc(
                                 sessionId,
                                 vc,
                                 vcStatus,
                                 vcType as VerificationType
                             );
-                            
                             debug(`TONOMY_ID/setupVeriffVerificationSubscriber: Stored ${vcType} verification with status ${vcStatus}`);
+                        } else {
+                            debug(`TONOMY_ID/setupVeriffVerificationSubscriber: Skipping unsupported verification type: ${vcType}`);
                         }
+                    }
+                    
+                    // Process the main KYC credential if it exists
+                    if (parsedData.kyc) {
+                        const kycVc = new VerifiableCredential(parsedData.kyc);
+                        await storageManager.createVc(
+                            sessionId,
+                            kycVc,
+                            vcStatus,
+                            VerificationType.KYC
+                        );
+                        debug(`TONOMY_ID/setupVeriffVerificationSubscriber: Stored kyc verification with status ${vcStatus}`);
                     }
                     
                     resolve(data);
@@ -202,99 +247,142 @@ export function setupVeriffVerificationSubscriber(user: IUserPublic) {
  * @param did The DID of the user to send the verification to
  * @param sessionId The Veriff session ID
  * @param status The verification status (approved, declined, etc.)
- * @returns A promise that resolves when the mock webhook is processed
+ * @returns A promise that resolves with the stringified payload that matches what the Communication Gateway would send
  */
 export async function mockVeriffWebhook(did: string, sessionId: string, status: string = 'approved') {
     debug(`TONOMY_ID/mockVeriffWebhook: Mocking Veriff webhook for session ${sessionId} with status ${status}`);
     
+    // Create mock verification data that matches the VeriffWebhookPayload structure
     const mockData = {
-        status: status,
         verification: {
-            id: sessionId,
-            attemptId: 'mock-attempt-id',
-            status: status,
-            code: status === 'approved' ? 9001 : 9002,
+            decision: status,
+            decisionScore: 100,
             person: {
-                firstName: 'John',
-                lastName: 'Doe',
-                dateOfBirth: '1990-01-01',
-                nationality: 'US',
-                addresses: [{
-                    fullAddress: '123 Main St, City, Country',
-                    parsedAddress: {
-                        street: '123 Main St',
-                        city: 'City',
-                        country: 'Country',
-                        postcode: '12345',
-                        state: 'State',
-                        unit: null,
-                        houseNumber: null
-                    }
-                }]
+                firstName: {
+                    value: 'John',
+                    confidenceCategory: 'high'
+                },
+                lastName: {
+                    value: 'Doe',
+                    confidenceCategory: 'high'
+                },
+                dateOfBirth: {
+                    value: '1990-01-01',
+                    confidenceCategory: 'high'
+                },
+                nationality: {
+                    value: 'US',
+                    confidenceCategory: 'high'
+                }
             },
             document: {
-                number: 'AB123456',
-                type: 'passport',
-                country: 'US'
-            }
-        },
-        highRisk: false,
-        technicalData: {
-            ip: null
+                type: {
+                    value: 'passport',
+                    confidenceCategory: 'high'
+                },
+                country: {
+                    value: 'US',
+                    confidenceCategory: 'high'
+                },
+                number: {
+                    value: 'AB123456',
+                    confidenceCategory: 'high'
+                }
+            },
+            insights: null
         }
     };
-
-    // Create separate VCs for each field
-    const vcs = [
-        createFieldVC(did, 'firstName', mockData.verification.person.firstName),
-        createFieldVC(did, 'lastName', mockData.verification.person.lastName),
-        createFieldVC(did, 'dateOfBirth', mockData.verification.person.dateOfBirth),
-        createFieldVC(did, 'nationality', mockData.verification.person.nationality),
-        createFieldVC(did, 'documentType', mockData.verification.document.type),
-        createFieldVC(did, 'documentNumber', mockData.verification.document.number),
-        createFieldVC(did, 'address', mockData.verification.person.addresses[0].fullAddress),
-        createFieldVC(did, 'phone', '+1234567890'),
-        createFieldVC(did, 'email', 'john.doe@example.com')
-    ];
-
-    // Create the full KYC VC
-    const kycVc = {
-        '@context': ['https://www.w3.org/2018/credentials/v1'],
-        type: ['VerifiableCredential', 'KYCCredential'],
-        issuer: 'did:key:veriff',
-        issuanceDate: new Date().toISOString(),
-        credentialSubject: {
-            id: did,
-            ...mockData
-        }
-    };
-
-    // Add KYC VC to the list
-    vcs.push(kycVc);
     
-    const mockPayload = {
-        sessionId,
-        vcs: vcs.map(vc => JSON.stringify(vc)),
-        status
-    };
+    // Create mock signed JWTs for each credential
+    // In a real scenario, these would be signed by the Tonomy issuer
+    // For testing, we'll create mock JWT strings that follow the same format
+    
+    // Mock JWT for the main KYC credential
+    const mockKycJwt = `eyJhbGciOiJFUzI1NksiLCJ0eXAiOiJKV1QifQ.${btoa(JSON.stringify({
+        vc: {
+            '@context': ['https://www.w3.org/2018/credentials/v1'],
+            type: ['VerifiableCredential', 'VeriffCredential'],
+            credentialSubject: {
+                id: did,
+                data: mockData
+            }
+        }
+    }))}.mockSignature`;
+    
+    // Mock JWT for the decision credential
+    const mockDecisionJwt = `eyJhbGciOiJFUzI1NksiLCJ0eXAiOiJKV1QifQ.${btoa(JSON.stringify({
+        vc: {
+            '@context': ['https://www.w3.org/2018/credentials/v1'],
+            type: ['VerifiableCredential', 'DecisionCredential'],
+            credentialSubject: {
+                id: did,
+                decision: status
+            }
+        }
+    }))}.mockSignature`;
+    
+    // Mock JWT for firstName credential
+    const mockFirstNameJwt = `eyJhbGciOiJFUzI1NksiLCJ0eXAiOiJKV1QifQ.${btoa(JSON.stringify({
+        vc: {
+            '@context': ['https://www.w3.org/2018/credentials/v1'],
+            type: ['VerifiableCredential', 'FirstNameCredential'],
+            credentialSubject: {
+                id: did,
+                firstName: mockData.verification.person.firstName.value
+            }
+        }
+    }))}.mockSignature`;
+    
+    // Mock JWT for lastName credential
+    const mockLastNameJwt = `eyJhbGciOiJFUzI1NksiLCJ0eXAiOiJKV1QifQ.${btoa(JSON.stringify({
+        vc: {
+            '@context': ['https://www.w3.org/2018/credentials/v1'],
+            type: ['VerifiableCredential', 'LastNameCredential'],
+            credentialSubject: {
+                id: did,
+                lastName: mockData.verification.person.lastName.value
+            }
+        }
+    }))}.mockSignature`;
+    
+    // Mock JWT for birthDate credential
+    const mockBirthDateJwt = `eyJhbGciOiJFUzI1NksiLCJ0eXAiOiJKV1QifQ.${btoa(JSON.stringify({
+        vc: {
+            '@context': ['https://www.w3.org/2018/credentials/v1'],
+            type: ['VerifiableCredential', 'BirthDateCredential'],
+            credentialSubject: {
+                id: did,
+                birthDate: mockData.verification.person.dateOfBirth.value
+            }
+        }
+    }))}.mockSignature`;
+    
+    // Mock JWT for nationality credential
+    const mockNationalityJwt = `eyJhbGciOiJFUzI1NksiLCJ0eXAiOiJKV1QifQ.${btoa(JSON.stringify({
+        vc: {
+            '@context': ['https://www.w3.org/2018/credentials/v1'],
+            type: ['VerifiableCredential', 'NationalityCredential'],
+            credentialSubject: {
+                id: did,
+                nationality: mockData.verification.person.nationality.value
+            }
+        }
+    }))}.mockSignature`;
+    
+    // Create the payload that matches what the Communication Gateway would send
+    
+    const payload = JSON.stringify({
+        kyc: mockKycJwt,
+        decision: mockDecisionJwt,
+        firstName: mockFirstNameJwt,
+        lastName: mockLastNameJwt,
+        birthDate: mockBirthDateJwt,
+        nationality: mockNationalityJwt
+    });
     
     debug('TONOMY_ID/mockVeriffWebhook: Mock webhook processed successfully');
     
-    return mockPayload;
-}
-
-// Helper function to create individual field VCs
-function createFieldVC(did: string, field: string, value: string): any {
-    return {
-        '@context': ['https://www.w3.org/2018/credentials/v1'],
-        type: ['VerifiableCredential', `${field}Credential`],
-        issuer: 'did:key:veriff',
-        issuanceDate: new Date().toISOString(),
-        credentialSubject: {
-            id: did,
-            [field]: value
-        }
-    };
+    return payload;
 }
 
 export async function setupLoginRequestSubscriber(
@@ -338,21 +426,20 @@ export async function setupLoginRequestSubscriber(
             if (testOptions.dataRequestKYC) {
                 debug('TONOMY_ID/SSO: mocking KYC verification process');
                 
-                // Mock KYC data that would normally come from a verification service like Veriff
-                const mockKYCData = {
-                    verified: true,
-                    firstName: 'John',
-                    lastName: 'Doe',
-                    dateOfBirth: '1990-01-01',
-                    nationality: 'US',
-                    documentType: 'passport',
-                    documentNumber: 'AB123456',
-                    verificationDate: new Date().toISOString(),
-                };
+                // Simulate Veriff webhook call
+                const userDid = await user.getDid();
+                const sessionId = randomString(32);
+                const mockWebhookData = await mockVeriffWebhook(userDid, sessionId);
+                
+                // Simulate the Communication server sending the verification data to the user
+                // In a real scenario, this would happen via the webhook endpoint
+                // For testing, we directly emit the event to the user's socket
+                debug('TONOMY_ID/SSO: Emitting verification data via socket event');
+                
+                // Manually trigger the event with the mock data
+                user.communication.socketServer.emit('/v1/verification/veriff/receive', mockWebhookData);
                 
                 debug('TONOMY_ID/SSO: KYC verification completed successfully');
-                
-                // Attach the KYC data to the user's storage or state?
             }
 
             debug('TONOMY_ID/SSO: accepting login requests and sending confirmation to Tonomy Login Website');
