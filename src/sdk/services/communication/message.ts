@@ -255,3 +255,30 @@ export class LinkAuthRequestResponseMessage extends Message<LinkAuthRequestRespo
         return new LinkAuthRequestResponseMessage(vc);
     }
 }
+
+export interface VerificationMessagePayload {
+    veriffId: string;
+    vc: string;
+    type: string;
+}
+
+export class VerificationMessage extends Message<VerificationMessagePayload> {
+    protected static type = 'VeriffVerificationMessage';
+    public type: string;
+    public payload: VerificationMessagePayload;
+
+    /**
+     * Alternative constructor that returns type VerificationMessage
+     */
+    static async signMessage(
+        message: VerificationMessagePayload,
+        issuer: Issuer,
+        recipient: DIDurl,
+        options: { subject?: URL } = {}
+    ): Promise<VerificationMessage> {
+        const vc = await Message.signMessageWithRecipient(message, issuer, recipient, options);
+        const verificationMessage = new VerificationMessage(vc);
+
+        return verificationMessage;
+    }
+}

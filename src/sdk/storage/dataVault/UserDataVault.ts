@@ -7,7 +7,7 @@ import { Communication, Subscriber } from '../../services/communication/communic
 import { DID } from '../../util/ssi/types';
 import { IdentityVerificationStorageRepository } from '../identityVerificationStorageRepository';
 import { Message } from '../../services/communication/message';
-import { VerificationMessage, VerificationMessagePayload } from '../../services/communication/verificationMessage';
+import { VerificationMessage, VerificationMessagePayload } from '../../services/communication/message';
 
 export class UserDataVault {
     private readonly repository: IdentityVerificationStorageRepository;
@@ -45,7 +45,7 @@ export class UserDataVault {
      */
     subscribeToVerificationUpdates(callback: (verification: IdentityVerificationStorage) => void): number {
         const handler: Subscriber = async (message: Message): Promise<void> => {
-            if (message.getType() === 'verification') {
+            if (message.getType() === 'VeriffVerificationMessage') {
                 try {
                     const update = await this.parseVerificationUpdate(message as VerificationMessage);
 

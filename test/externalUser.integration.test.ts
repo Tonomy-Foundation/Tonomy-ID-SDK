@@ -75,7 +75,18 @@ setTestSettings();
 
 const signer = createSigner(getTonomyOperationsKey());
 
+import { setupTestDatabase, teardownTestDatabase } from './setup';
+
 describe('Login to external website', () => {
+
+    beforeAll(async () => {
+        await setupTestDatabase();
+    });
+
+    afterAll(async () => {
+        await teardownTestDatabase();
+    });
+
     jest.setTimeout(30000);
 
     // OBJECTS HERE denote the different devices/apps the user is using
