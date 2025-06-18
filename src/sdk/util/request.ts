@@ -1,5 +1,6 @@
 import { Name, PublicKey } from '@wharfkit/antelope';
 import { VCWithTypeType, VerifiableCredentialOptions, VerifiableCredentialWithType } from './ssi/vc';
+import { KYCVerifiableCredential } from './ssi/kyc';
 import { VerificationType } from '../storage/entities/identityVerificationStorage';
 import { Issuer } from 'did-jwt-vc';
 import { App } from '../controllers/App';
@@ -322,7 +323,9 @@ export class WalletRequest implements Serializable {
                             insights: null
                         }
                     };
-                    res.data.kyc = new VerifiableCredentialWithType<VeriffWebhookPayload["data"]>({ ...latestVerification, payload: webhookData });
+                    const issuer = await user.getIssuer();
+                    const kycCredential = await KYCVerifiableCredential.signCredential(webhookData, issuer);
+                    res.data.kyc = kycCredential;
                 } 
 
                 debug(
