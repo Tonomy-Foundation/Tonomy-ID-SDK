@@ -30,7 +30,10 @@ import { createSigner } from '../../src/sdk/services/blockchain';
 // Using require for modules that might not have TypeScript definitions
 import Debug from 'debug';
 
-import { IdentityVerificationStorageManager, VeriffIdentityVerification } from '../../src/sdk/storage/identityVerificationStorageManager';
+import {
+    IdentityVerificationStorageManager,
+    VeriffIdentityVerification,
+} from '../../src/sdk/storage/identityVerificationStorageManager';
 import { IdentityVerificationStorageRepository } from '../../src/sdk/storage/identityVerificationStorageRepository';
 import { VcStatus } from '../../src/sdk/storage/entities/identityVerificationStorage';
 import { dbConnection } from '../../src/sdk/util/ssi/veramo';
@@ -220,7 +223,7 @@ export function setupVeriffVerificationSubscriber(user: IUserPublic) {
 
                     // Process the main KYC credential if it exists
                     if (parsedData.kyc) {
-                        const kycVc =new VerifiableCredential<VeriffIdentityVerification>(parsedData.kyc);
+                        const kycVc = new VerifiableCredential<VeriffIdentityVerification>(parsedData.kyc);
 
                         await storageManager.createVc(sessionId, kycVc, vcStatus, VerificationType.KYC);
                         debug(
