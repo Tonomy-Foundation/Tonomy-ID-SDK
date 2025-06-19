@@ -75,7 +75,7 @@ setTestSettings();
 
 const signer = createSigner(getTonomyOperationsKey());
 
-import { setupTestDatabase, teardownTestDatabase } from './setup';
+import { setupTestDatabase, teardownTestDatabase, dataSource } from './setup';
 
 describe('Login to external website', () => {
 
@@ -85,6 +85,13 @@ describe('Login to external website', () => {
 
     afterAll(async () => {
         await teardownTestDatabase();
+    });
+
+    // Reset database between tests
+    afterEach(async () => {
+        if (dataSource) {
+            await dataSource.synchronize(true);
+        }
     });
 
     jest.setTimeout(30000);
