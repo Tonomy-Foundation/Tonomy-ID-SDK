@@ -18,6 +18,7 @@ import {
     DualWalletResponse,
     setSettings,
     ClientAuthorizationData,
+    dbConnection,
     randomString,
 } from '../src/sdk/index';
 import { VerificationType, VcStatus } from '../src/sdk/storage/entities/identityVerificationStorage';
@@ -60,6 +61,9 @@ const debug = Debug('tonomy-sdk-tests:externalUser.integration.test');
 
 import { receivingVerification, identityVerification } from '../src/sdk/services/communication/veriff';
 import {  setupDatabase } from '../src/sdk/util/ssi/veramo';
+import { UserDataVault } from '../src/sdk/storage/dataVault/UserDataVault';
+
+// Setup database before using verification storage
 
 
 // Setup database before using verification storage
@@ -172,6 +176,7 @@ describe('Login to external website', () => {
         // setup KeyManagers for the external website and tonomy login website
         TONOMY_LOGIN_WEBSITE_jsKeyManager = new JsKeyManager();
         EXTERNAL_WEBSITE_jsKeyManager = new JsKeyManager();
+        await EXTERNAL_WEBSITE_user.initializeDataVault(dbConnection, TONOMY_ID_user.communication);
 
         // setup storage factories for the external website and tonomy login website
         TONOMY_LOGIN_WEBSITE_storage_factory = createStorageFactory(STORAGE_NAMESPACE + 'login-website.');
@@ -489,7 +494,6 @@ describe('Login to external website', () => {
         expect(walletResponse.sso?.getAccountName().toString()).toBe(
             (await TONOMY_ID_user.getAccountName()).toString()
         );
-
         const dataRequestResponse = walletResponse.sso?.getDataSharingResponse();
 
         if (testOptions.dataRequest) {

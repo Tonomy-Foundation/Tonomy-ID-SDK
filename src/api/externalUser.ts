@@ -1,6 +1,8 @@
 import { KeyManager, KeyManagerLevel } from '../sdk/storage/keymanager';
 import { createVCSigner, randomString } from '../sdk/util/crypto';
 import { Issuer } from 'did-jwt-vc';
+import { DataSource } from 'typeorm';
+import { UserDataVault } from '../sdk/storage/dataVault/UserDataVault';
 import { getSettings } from '../sdk/util/settings';
 import { isErrorCode, SdkErrors, createSdkError, throwError } from '../sdk/util/errors';
 import { createStorage, PersistentStorageClean, StorageFactory, STORAGE_NAMESPACE } from '../sdk/storage/storage';
@@ -84,6 +86,7 @@ export class ExternalUser {
     storage: ExternalUserStorage & PersistentStorageClean;
     did: string;
     communication: Communication;
+    userDataVault?: UserDataVault;
 
     /**
      * Creates a new external user
@@ -102,9 +105,17 @@ export class ExternalUser {
      *
      */
     async logout() {
-        this.storage.clear();
-        this.keyManager.removeKey({ level: KeyManagerLevel.BROWSER_LOCAL_STORAGE });
-        this.keyManager.removeKey({ level: KeyManagerLevel.BROWSER_SESSION_STORAGE });
+        await this.keyManager.removeKey({ level: KeyManagerLevel.ACTIVE });
+        await this.storage.clear();
+    }
+
+    /**
+     * Initialize the user data vault
+     * @param dataSource - The TypeORM data source
+     * @param communication - The communication instance
+     */
+    async initializeDataVault(dataSource: DataSource, communication: Communication): Promise<void> {
+        this.userDataVault = new UserDataVault(dataSource, communication, this.did);
     }
 
     /**
