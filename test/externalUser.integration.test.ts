@@ -61,10 +61,6 @@ const debug = Debug('tonomy-sdk-tests:externalUser.integration.test');
 
 import { receivingVerification, identityVerification } from '../src/sdk/services/communication/veriff';
 import {  setupDatabase } from '../src/sdk/util/ssi/veramo';
-import { UserDataVault } from '../src/sdk/storage/dataVault/UserDataVault';
-
-// Setup database before using verification storage
-
 
 // Setup database before using verification storage
 await setupDatabase();
