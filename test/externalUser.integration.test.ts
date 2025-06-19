@@ -25,7 +25,7 @@ import { JsKeyManager } from '../src/sdk/storage/jsKeyManager';
 import { receivingVerification, VeriffWebhookPayload } from '../src/sdk/services/communication/veriff';
 import { DataSource } from 'typeorm';
 import { IdentityVerificationStorageRepository } from '../src/sdk/storage/identityVerificationStorageRepository';
-
+import { jest } from '@jest/globals';
 // helpers
 import {
     setupTestDatabase,
@@ -222,6 +222,7 @@ describe('Login to external website', () => {
     });
 
     async function runExternalUserLoginVeriffTest({ decision }: { decision: 'approved' | 'declined' }) {
+        expect.assertions(decision === 'approved' ? 9 : 4);
         const testOptions = {
             dataRequest: true,
             dataRequestKYC: true,
