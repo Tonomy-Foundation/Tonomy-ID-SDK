@@ -21,7 +21,7 @@ import {
     dbConnection,
     randomString,
 } from '../src/sdk/index';
-import { VerificationType, VcStatus } from '../src/sdk/storage/entities/identityVerificationStorage';
+import { VerificationType } from '../src/sdk/storage/entities/identityVerificationStorage';
 import { JsKeyManager } from '../src/sdk/storage/jsKeyManager';
 import { jest } from '@jest/globals';
 // helpers
@@ -111,7 +111,6 @@ describe('Login to external website', () => {
     let TONOMY_LOGIN_WEBSITE_storage_factory: StorageFactory;
     let EXTERNAL_WEBSITE_storage_factory: StorageFactory;
     let EXTERNAL_WEBSITE_user: ExternalUser;
-    let EXTERNAL_WEBSITE_did: string;
 
     beforeEach(async () => {
         // Initialize EXTERNAL_WEBSITE_user
@@ -120,9 +119,6 @@ describe('Login to external website', () => {
             EXTERNAL_WEBSITE_jsKeyManager,
             EXTERNAL_WEBSITE_storage_factory
         );
-
-        // Initialize EXTERNAL_WEBSITE_did
-        EXTERNAL_WEBSITE_did = await EXTERNAL_WEBSITE_user.getDid();
 
         // ##### Tonomy ID user #####
         // ##########################
