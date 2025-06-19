@@ -87,14 +87,16 @@ describe('Login to external website', () => {
 
     });
 
-    afterAll(async () => {
-        await teardownTestDatabase();
-    });
-
     // Reset database between tests
     afterEach(async () => {
         if (dataSource) {
             await dataSource.synchronize(true);
+        }
+    });
+
+    afterAll(async () => {
+        if (dataSource) {
+            await dataSource.destroy();
         }
     });
 

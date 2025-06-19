@@ -47,7 +47,7 @@ export class IdentityVerificationStorage {
     updatedAt!: Date;
 
     @Column({
-        type: 'enum',
+        type: 'varchar',
         enum: VerificationType,
         default: VerificationType.KYC,
     })
