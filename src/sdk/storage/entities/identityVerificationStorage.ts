@@ -32,11 +32,10 @@ export class IdentityVerificationStorage {
     vc!: string;
 
     @Column({
-        type: 'enum',
-        enum: VcStatus,
+        type: 'varchar',
         default: VcStatus.PENDING,
     })
-    status!: string;
+    status!: VcStatus;
 
     @Column({ type: 'int' })
     version!: number;

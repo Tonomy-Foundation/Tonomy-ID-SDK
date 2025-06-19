@@ -187,7 +187,9 @@ describe('Login to external website', () => {
     });
 
     afterEach(async () => {
-        await TONOMY_ID_user.logout();
+        if (TONOMY_ID_user) {
+            await TONOMY_ID_user.logout();
+        }
         debug('finished test');
 
         // for some reason this is needed to ensure all the code lines execute. Not sure why needed
