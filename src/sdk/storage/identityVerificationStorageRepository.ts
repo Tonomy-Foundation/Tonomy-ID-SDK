@@ -36,7 +36,7 @@ export class IdentityVerificationStorageRepository {
 
     public async findLatestApproved(type: VerificationType): Promise<IdentityVerificationStorage | null> {
         const doc = await this.ormRepository.findOne({
-            where: { status: 'APPROVED', type },
+            where: { status: VcStatus.APPROVED, type },
             order: { createdAt: 'DESC' },
         });
 
