@@ -29,7 +29,7 @@ import { jest } from '@jest/globals';
 // helpers
 import {
     setupTestDatabase,
-    teardownTestDatabase,
+
 } from './setup';
 // helpers
 import {
