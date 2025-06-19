@@ -1,5 +1,7 @@
 import { Name, PublicKey } from '@wharfkit/antelope';
 import { VCWithTypeType, VerifiableCredentialOptions, VerifiableCredentialWithType } from './ssi/vc';
+import { KYCVerifiableCredential } from './ssi/kyc';
+import { VerificationType } from '../storage/entities/identityVerificationStorage';
 import { Issuer } from 'did-jwt-vc';
 import { App } from '../controllers/App';
 import { IUserRequestsManager } from '../types/User';
@@ -12,6 +14,10 @@ import { getAccountNameFromDid } from './ssi/did';
 import Debug from 'debug';
 import { getSettings } from './settings';
 import { isSameOrigin } from '../helpers/urls';
+import { IdentityVerificationStorageRepository } from '../storage/identityVerificationStorageRepository';
+import { IdentityVerificationStorageManager } from '../storage/identityVerificationStorageManager';
+import { dbConnection } from './ssi/veramo';
+import { VeriffWebhookPayload } from '../services/communication/veriff';
 
 const debug = Debug('tonomy-sdk:util:WalletRequest');
 
@@ -28,8 +34,8 @@ export type LoginRequestPayload = {
 
 export type DataRequest = {
     username?: boolean;
+    kyc?: boolean;
     // verified: {
-    //     kyc: boolean;
     //     firstName: boolean;
     //     lastName: boolean;
     //     address: boolean;
@@ -58,12 +64,16 @@ export type LoginRequestResponsePayload = {
 export type DataSharingResponsePayload = {
     data: {
         username?: TonomyUsername;
-        // verified?: {
-        //     kyc?: ...;
-        //     firstName?: ...;
-        //     lastName?: ...;
-        //     address?: ...;
-        //     birthDate?: ...;
+        kyc?: VerifiableCredentialWithType<VeriffWebhookPayload['data']>;
+        lastName?: VerifiableCredentialWithType<{ lastName: string }>;
+        firstName?: VerifiableCredentialWithType<{ firstName: string }>;
+        dateOfBirth?: VerifiableCredentialWithType<{ dateOfBirth: string }>;
+        nationality?: VerifiableCredentialWithType<{ nationality: string }>;
+        documentType?: VerifiableCredentialWithType<{ documentType: string }>;
+        documentNumber?: VerifiableCredentialWithType<{ documentNumber: string }>;
+        address?: VerifiableCredentialWithType<{ address: string }>;
+        phone?: VerifiableCredentialWithType<{ phone: string }>;
+        email?: VerifiableCredentialWithType<{ email: string }>;
     };
 };
 
@@ -271,6 +281,57 @@ export class WalletRequest implements Serializable {
 
                 if (req.data.username) {
                     res.data.username = await user.getUsername();
+                }
+
+                if (req.data.kyc) {
+                    // Retrieve KYC data from user's storage if available
+                    const repository = new IdentityVerificationStorageRepository(dbConnection);
+
+                    // Use a concrete implementation of the abstract class
+                    class ConcreteVerificationStorageManager extends IdentityVerificationStorageManager {
+                        constructor(repository: IdentityVerificationStorageRepository) {
+                            super(repository);
+                        }
+                    }
+
+                    const storageManager = new ConcreteVerificationStorageManager(repository);
+
+                    // Get the latest approved verification
+                    const latestVerification = await storageManager.findLatestApproved(VerificationType.KYC);
+
+                    if (!latestVerification) {
+                        throw new Error('KYC verification data requested but not available in storage');
+                    }
+
+                    // Convert VeriffIdentityVerification to match VeriffWebhookPayload.data structure
+                    const verificationData = latestVerification.getPayload();
+                    const webhookData = {
+                        verification: {
+                            decisionScore: null,
+                            decision: verificationData.verification?.status as
+                                | 'approved'
+                                | 'declined'
+                                | 'resubmission_requested'
+                                | 'expired'
+                                | 'abandoned',
+                            person: {
+                                firstName: { value: verificationData.verification?.person.firstName },
+                                lastName: { value: verificationData.verification?.person.lastName },
+                                dateOfBirth: { value: verificationData.verification?.person.dateOfBirth },
+                                nationality: { value: verificationData.verification?.person.nationality },
+                            },
+                            document: {
+                                type: { value: verificationData.verification?.document.type },
+                                number: { value: verificationData.verification?.document.number },
+                                country: { value: verificationData.verification?.document.country },
+                            },
+                            insights: null,
+                        },
+                    };
+                    const issuer = await user.getIssuer();
+                    const kycCredential = await KYCVerifiableCredential.signCredential(webhookData, issuer);
+
+                    res.data.kyc = kycCredential;
                 }
 
                 debug(

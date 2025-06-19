@@ -43,9 +43,15 @@ export async function externalWebsiteUserPressLoginToTonomyButton(
     };
 
     if (testOptions.dataRequest) {
-        onPressLoginOptions.dataRequest = testOptions.dataRequestUsername
-            ? { username: testOptions.dataRequestUsername }
-            : {};
+        onPressLoginOptions.dataRequest = {};
+
+        if (testOptions.dataRequestUsername) {
+            onPressLoginOptions.dataRequest.username = testOptions.dataRequestUsername;
+        }
+
+        if (testOptions.dataRequestKYC) {
+            onPressLoginOptions.dataRequest.kyc = testOptions.dataRequestKYC;
+        }
     }
 
     const { requests } = (await ExternalUser.loginWithTonomy(
