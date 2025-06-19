@@ -212,45 +212,73 @@ describe('Login to external website', () => {
             await runExternalUserLoginTest({ dataRequest: true, dataRequestKYC: true });
         });
 
-        test('Successful login with Veriff KYC verification and verify storage', async () => {
-            const testOptions = {
-                dataRequest: true,
-                dataRequestKYC: true,
-            };
+        test('Successful login with Veriff KYC verification', async () => {
+            await runExternalUserLoginVeriffTest({ decision: 'approved' });
+        });
 
-            // Generate a random session ID for Veriff
-            const sessionId = `veriff-session-${Math.random().toString(36).substring(2)}`;
+        test('Failed Veriff KYC verification', async () => {
+            await runExternalUserLoginVeriffTest({ decision: 'declined' });
+        });
+    });
 
-            // Create external user
-            const externalUser = new ExternalUser(EXTERNAL_WEBSITE_jsKeyManager, EXTERNAL_WEBSITE_storage_factory);
+    async function runExternalUserLoginVeriffTest({ decision }: { decision: 'approved' | 'declined' }) {
+        const testOptions = {
+            dataRequest: true,
+            dataRequestKYC: true,
+        };
 
-            // Step 1: User presses login button with Veriff data request
-            const { did: externalWebsiteDid } = await externalWebsiteUserPressLoginToTonomyButton(
-                EXTERNAL_WEBSITE_jsKeyManager,
-                tonomyLoginApp.origin,
-                testOptions
-            );
+        // Generate a random session ID for Veriff
+        const sessionId = `veriff-session-${Math.random().toString(36).substring(2)}`;
 
-            // Step 2: Mock Veriff webhook callback with approved status
-            await mockVeriffWebhook(
-                externalWebsiteDid,
-                sessionId,
-                'approved'
-            );
+        // Create external user
+        const externalUser = new ExternalUser(EXTERNAL_WEBSITE_jsKeyManager, EXTERNAL_WEBSITE_storage_factory);
 
-            // Step 3: Verify that identity verification data is stored correctly
-            const kycVerification = await identityVerification.findLatestApproved(VerificationType.KYC);
-           
+        // Step 1: User presses login button with Veriff data request
+        const { did: externalWebsiteDid } = await externalWebsiteUserPressLoginToTonomyButton(
+            EXTERNAL_WEBSITE_jsKeyManager,
+            tonomyLoginApp.origin,
+            testOptions
+        );
 
-            expect(kycVerification).toBeDefined();
+        // Step 2: Mock Veriff webhook callback
+        await mockVeriffWebhook(
+            externalWebsiteDid,
+            sessionId,
+            decision
+        );
 
-            if(kycVerification) {
-                const verification = kycVerification.getCredentialSubject();
-
-                expect(verification.status).toBe(VcStatus.APPROVED);
-                expect(verification?.verification?.id).toBe(sessionId);    
+        // Step 3: Process the Veriff webhook response
+        await receivingVerification({
+            status: 'success',
+            eventType: 'fullauto',
+            sessionId,
+            attemptId: randomString(16),
+            vendorData: null,
+            endUserId: null,
+            version: '1.0',
+            acceptanceTime: new Date().toISOString(),
+            time: new Date().toISOString(),
+            data: {
+                verification: {
+                    decision,
+                    decisionScore: decision === 'approved' ? 100 : null,
+                    person: {},
+                    document: {},
+                    insights: null
+                }
             }
-          
+        });
+        
+        // Wait for async operations to complete
+        await sleep(1000);
+        
+        // Check for KYC verification using the verification manager
+        const kycVerification = await identityVerification.findLatestApproved(VerificationType.KYC);
+
+        expect(kycVerification).toBeDefined();
+        expect(kycVerification?.getCredentialSubject()?.verification?.status).toBe(decision);
+
+        if (decision === 'approved') {
             // Step 4: Create VCs for KYC data
             await externalUser.signVc(
                 `${sessionId}-kyc`,
@@ -284,7 +312,7 @@ describe('Login to external website', () => {
                 }
             );
 
-            // Step 4: Complete client auth with KYC data
+            // Step 5: Complete client auth with KYC data
             const clientAuth = await externalUser.createClientAuthorization({
                 verified: true,
                 firstName: 'John',
@@ -309,71 +337,13 @@ describe('Login to external website', () => {
             expect(verifiedAuth.data.verified).toBe(true);
             expect(verifiedAuth.data).toHaveProperty('kyc'); 
             expect(verifiedAuth.data.kyc?.verified).toBe(true);
-        });
-
-        test('Failed Veriff KYC verification', async () => {
-            const testOptions = {
-                dataRequest: true,
-                dataRequestKYC: true,
-            };
-
-            // Generate a random session ID for Veriff
-            const sessionId = `veriff-session-${Math.random().toString(36).substring(2)}`;
-
-            // Create external user
-            const externalUser = new ExternalUser(EXTERNAL_WEBSITE_jsKeyManager, EXTERNAL_WEBSITE_storage_factory);
-
-            // Step 1: User presses login button with Veriff data request
-            await externalWebsiteUserPressLoginToTonomyButton(
-                EXTERNAL_WEBSITE_jsKeyManager,
-                tonomyLoginApp.origin,
-                testOptions
-            );
-
-            // Step 2: Mock Veriff webhook callback with declined status
-            await mockVeriffWebhook(
-                EXTERNAL_WEBSITE_did,
-                sessionId,
-                'declined'
-            );
-
-            // Step 3: Verify VCs are created with declined status
-            // Process the Veriff webhook response
-            await receivingVerification({
-                status: 'success',
-                eventType: 'fullauto',
-                sessionId,
-                attemptId: randomString(16),
-                vendorData: null,
-                endUserId: null,
-                version: '1.0',
-                acceptanceTime: new Date().toISOString(),
-                time: new Date().toISOString(),
-                data: {
-                    verification: {
-                        decision: 'declined',
-                        decisionScore: null,
-                        person: {},
-                        document: {},
-                        insights: null
-                    }
-                }
-            });
-            
-            // Wait for async operations to complete
-            await sleep(1000);
-            
-            // Check for KYC verification using the verification manager
-            const kycVerification = await identityVerification.findLatestApproved(VerificationType.KYC);
-
-            expect(kycVerification).toBeDefined();
-            expect(kycVerification?.getCredentialSubject()?.verification?.status).toBe('declined')
+        } else {
             // Step 4: Attempt client auth should fail
             await expect(
                 externalWebsiteClientAuth(externalUser, externalApp, testOptions)
             ).rejects.toThrow();
-        });
-    });
+        }
+    }
 
     async function runExternalUserLoginTest(testOptions: ExternalUserLoginTestOptions) {
         let expectedTests = 56;
