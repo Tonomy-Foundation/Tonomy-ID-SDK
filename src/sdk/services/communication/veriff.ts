@@ -1,10 +1,8 @@
 import fetch from 'cross-fetch';
 import { getSettings } from '../../util/settings';
-import { throwError } from '../../util';
+import { DataSource } from 'typeorm';
 import { IdentityVerificationStorageRepository } from '../../storage/identityVerificationStorageRepository';
-import { VerificationType } from '../../storage/entities/identityVerificationStorage';
-import { dbConnection, setupDatabase } from '../../util/ssi/veramo';
-import { IdentityVerificationStorageManager } from '../../storage/identityVerificationStorageManager';
+import { VerificationType, VcStatus } from '../../storage/entities/identityVerificationStorage';
 
 export type DocumentField = {
     confidenceCategory?: 'high' | 'medium' | 'low' | null;
@@ -58,21 +56,12 @@ export type VeriffWebhookPayload = {
     };
 };
 
-const identityStorage = new IdentityVerificationStorageRepository(dbConnection);
-// Create the key repository instances
-
-class VerificationStorageManager extends IdentityVerificationStorageManager {
-    constructor(repository: IdentityVerificationStorageRepository) {
-        super(repository);
-    }
-}
-
-export const identityVerification = new VerificationStorageManager(identityStorage);
-
-export async function receivingVerification(credentials: VeriffWebhookPayload): Promise<{ verification: boolean }> {
-    await setupDatabase();
+export async function receivingVerification(
+    credentials: VeriffWebhookPayload,
+    dataSource: DataSource
+): Promise<{ verification: boolean }> {
+    const repository = new IdentityVerificationStorageRepository(dataSource);
     const url = getSettings().accountsServiceUrl;
-
     const response = await fetch(`${url}/veriff`, {
         method: 'POST',
         headers: {
@@ -83,56 +72,54 @@ export async function receivingVerification(credentials: VeriffWebhookPayload): 
 
     const resData = await response.json();
 
-    if (response.status !== 201) {
-        if (response.status === 400) {
-            return throwError('Veriff Service error: ' + resData.message + ', errors: ' + resData.errors);
-        }
-
-        throwError('Veriff Service error: ' + resData.message + ', status: ' + response.status);
+    if (!response.ok) {
+        throw new Error(`Failed to verify KYC: ${resData.message}`);
     }
 
-    try {
-        // Create individual VCs for each verification type
-        const verificationData = credentials.data.verification;
-        const personData = verificationData.person;
+    if (credentials.data.verification.decision === 'approved') {
+        await repository.create(
+            credentials.sessionId,
+            JSON.stringify(credentials),
+            VcStatus.APPROVED,
+            VerificationType.KYC
+        );
 
-        // Map of verification types to their corresponding data
+        // Create Verifiable Credentials for each verification type
         const verificationTypes = {
-            [VerificationType.KYC]: verificationData.decision,
-            [VerificationType.FIRST_NAME]: personData.firstName?.value,
-            [VerificationType.LAST_NAME]: personData.lastName?.value,
-            [VerificationType.DOB]: personData.birthDate?.value,
+            [VerificationType.KYC]: credentials.data.verification.decision === 'approved',
+            [VerificationType.DOB]: credentials.data.verification.person?.dateOfBirth?.value,
+            [VerificationType.FIRST_NAME]: credentials.data.verification.person?.firstName?.value,
+            [VerificationType.LAST_NAME]: credentials.data.verification.person?.lastName?.value,
+            [VerificationType.EMAIL]: credentials.data.verification.person?.email?.value,
+            [VerificationType.PHONE]: credentials.data.verification.person?.phone?.value,
+            [VerificationType.ADDRESS]: credentials.data.verification.person?.address?.value,
         };
 
-        // Create VCs for each verification type that has data
         for (const [type, value] of Object.entries(verificationTypes)) {
             if (value) {
                 const vcData = {
-                    ...resData.vc,
+                    id: `${credentials.sessionId}-${type}`,
+                    type: [type as string],
                     credentialSubject: {
-                        ...resData.vc.credentialSubject,
-                        payload: {
-                            type: type as VerificationType,
-                            value: value,
-                            status: resData.status,
-                            sessionId: credentials.sessionId,
-                        },
+                        type: type as string,
+                        value: value,
+                        sessionId: credentials.sessionId,
+                        status: credentials.data.verification.decision,
+                        timestamp: new Date().toISOString(),
                     },
                 };
 
-                await identityVerification.createVc(
-                    credentials.sessionId,
-                    vcData,
-                    resData.status,
+                await repository.create(
+                    `${credentials.sessionId}-${type}`,
+                    JSON.stringify(vcData),
+                    VcStatus.APPROVED,
                     type as VerificationType
                 );
             }
         }
 
-        return {
-            verification: true,
-        };
-    } catch (error) {
-        throwError('Error saving verification data: ' + error.message);
+        return { verification: true };
+    } else {
+        return { verification: false };
     }
 }

@@ -18,12 +18,19 @@ import {
     DualWalletResponse,
     setSettings,
     ClientAuthorizationData,
-    dbConnection,
     randomString,
 } from '../src/sdk/index';
 import { VerificationType } from '../src/sdk/storage/entities/identityVerificationStorage';
 import { JsKeyManager } from '../src/sdk/storage/jsKeyManager';
-import { jest } from '@jest/globals';
+import { receivingVerification, VeriffWebhookPayload } from '../src/sdk/services/communication/veriff';
+import { DataSource } from 'typeorm';
+import { IdentityVerificationStorageRepository } from '../src/sdk/storage/identityVerificationStorageRepository';
+
+// helpers
+import {
+    setupTestDatabase,
+    teardownTestDatabase,
+} from './setup';
 // helpers
 import {
     IUserPublic,
@@ -59,11 +66,7 @@ import Debug from 'debug';
 
 const debug = Debug('tonomy-sdk-tests:externalUser.integration.test');
 
-import { receivingVerification, identityVerification } from '../src/sdk/services/communication/veriff';
-import {  setupDatabase } from '../src/sdk/util/ssi/veramo';
-
-// Setup database before using verification storage
-await setupDatabase();
+// Remove duplicate imports since we already imported these from veriff service above
 
 export type ExternalUserLoginTestOptions = {
     dataRequest: boolean;
@@ -75,12 +78,13 @@ setTestSettings();
 
 const signer = createSigner(getTonomyOperationsKey());
 
-import { setupTestDatabase, teardownTestDatabase, dataSource } from './setup';
-
 describe('Login to external website', () => {
+    let dataSource: DataSource;
 
     beforeAll(async () => {
-        await setupTestDatabase();
+        dataSource = await setupTestDatabase();
+        // Initialize veriff service with database connection
+
     });
 
     afterAll(async () => {
@@ -175,7 +179,7 @@ describe('Login to external website', () => {
         // setup KeyManagers for the external website and tonomy login website
         TONOMY_LOGIN_WEBSITE_jsKeyManager = new JsKeyManager();
         EXTERNAL_WEBSITE_jsKeyManager = new JsKeyManager();
-        await EXTERNAL_WEBSITE_user.initializeDataVault(dbConnection, TONOMY_ID_user.communication);
+        await EXTERNAL_WEBSITE_user.initializeDataVault(dataSource, TONOMY_ID_user.communication);
 
         // setup storage factories for the external website and tonomy login website
         TONOMY_LOGIN_WEBSITE_storage_factory = createStorageFactory(STORAGE_NAMESPACE + 'login-website.');
@@ -244,7 +248,7 @@ describe('Login to external website', () => {
         );
 
         // Step 3: Process the Veriff webhook response
-        await receivingVerification({
+        const credentials: VeriffWebhookPayload = {
             status: 'success',
             eventType: 'fullauto',
             sessionId,
@@ -263,18 +267,29 @@ describe('Login to external website', () => {
                     insights: null
                 }
             }
-        });
+        };
+        // Use the standalone receivingVerification function
+        const repository = new IdentityVerificationStorageRepository(dataSource);
+
+        await receivingVerification(credentials, dataSource);
         
         // Wait for async operations to complete
         await sleep(1000);
         
-        // Check for KYC verification using the verification manager
-        const kycVerification = await identityVerification.findLatestApproved(VerificationType.KYC);
+        // Check for KYC verification using the repository
+        const kycVerification = await repository.findLatestApproved(VerificationType.KYC);
 
         expect(kycVerification).toBeDefined();
-        expect(kycVerification?.getCredentialSubject()?.verification?.status).toBe(decision);
+        expect(kycVerification?.vc).toBeDefined();
+
+        if (!kycVerification) {
+            throw new Error('KYC verification should not be null at this point');
+        }
 
         if (decision === 'approved') {
+            const verificationData = JSON.parse(kycVerification.vc!);
+
+            expect(verificationData.data.verification.decision).toBe(decision);
             // Step 4: Create VCs for KYC data
             await externalUser.signVc(
                 `${sessionId}-kyc`,
@@ -335,6 +350,8 @@ describe('Login to external website', () => {
             expect(verifiedAuth.data.kyc?.verified).toBe(true);
         } else {
             // Step 4: Attempt client auth should fail
+            expect(kycVerification?.vc).toBeNull();
+
             await expect(
                 externalWebsiteClientAuth(externalUser, externalApp, testOptions)
             ).rejects.toThrow();
