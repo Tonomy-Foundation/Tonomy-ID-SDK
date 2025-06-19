@@ -36,7 +36,7 @@ import {
 } from '../../src/sdk/storage/identityVerificationStorageManager';
 import { IdentityVerificationStorageRepository } from '../../src/sdk/storage/identityVerificationStorageRepository';
 import { VcStatus } from '../../src/sdk/storage/entities/identityVerificationStorage';
-import { dbConnection } from '../../src/sdk/util/ssi/veramo';
+import { DataSource } from 'typeorm';
 
 const debug = Debug('tonomy-sdk-tests:helpers:user');
 
@@ -95,7 +95,7 @@ export async function createRandomApp(logoUrl?: string, origin?: string): Promis
     });
 }
 
-export async function loginToTonomyCommunication(user: IUserPublic) {
+export async function loginToTonomyCommunication(user: IUserPublic, dataSource: DataSource) {
     const issuer = await user.getIssuer();
     // Login to Tonomy Communication as the user
     const authMessage = await AuthenticationMessage.signMessageWithoutRecipient({}, issuer);
@@ -105,7 +105,7 @@ export async function loginToTonomyCommunication(user: IUserPublic) {
     const loginResponse = await user.loginCommunication(authMessage);
 
     // Set up subscriber for Veriff verification events
-    const veriffSubscriber = setupVeriffVerificationSubscriber(user);
+    const veriffSubscriber = setupVeriffVerificationSubscriber(user, dataSource);
 
     expect(loginResponse).toBe(true);
 
@@ -136,8 +136,8 @@ export async function scanQrAndAck(user: IUserPublic, qrCodeData: string) {
  * @param user The user object
  * @returns A promise that resolves when the verification is received and processed
  */
-export function setupVeriffVerificationSubscriber(user: IUserPublic) {
-    const repository = new IdentityVerificationStorageRepository(dbConnection);
+export function setupVeriffVerificationSubscriber(user: IUserPublic, dataSource: DataSource) {
+    const repository = new IdentityVerificationStorageRepository(dataSource);
 
     class ConcreteVerificationStorageManager extends IdentityVerificationStorageManager {
         constructor(repository: IdentityVerificationStorageRepository) {

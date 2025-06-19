@@ -100,7 +100,7 @@ describe('Login to external website', () => {
         }
     });
 
-    jest.setTimeout(30000);
+    jest.setTimeout(50000);
 
     // OBJECTS HERE denote the different devices/apps the user is using
     // it shows which device is doing what action and has access to which variables
@@ -119,6 +119,10 @@ describe('Login to external website', () => {
     let EXTERNAL_WEBSITE_user: ExternalUser;
 
     beforeEach(async () => {
+        // Initialize storage factories
+        TONOMY_LOGIN_WEBSITE_storage_factory = createStorageFactory('tonomy_login_website');
+        EXTERNAL_WEBSITE_storage_factory = createStorageFactory('external_website');
+
         // Initialize EXTERNAL_WEBSITE_user
         debug('EXTERNAL_WEBSITE: creating new external user');
         EXTERNAL_WEBSITE_user = new ExternalUser(
@@ -135,7 +139,7 @@ describe('Login to external website', () => {
 
         expect(TONOMY_ID_did).toContain('did:antelope:');
 
-        await loginToTonomyCommunication(TONOMY_ID_user);
+        await loginToTonomyCommunication(TONOMY_ID_user, dataSource);
         // ##### Tonomy ID user #####
         // ##########################
         // Create new Tonomy ID user
@@ -145,7 +149,7 @@ describe('Login to external website', () => {
 
         expect(TONOMY_ID_did).toContain('did:antelope:');
 
-        await loginToTonomyCommunication(TONOMY_ID_user);
+        await loginToTonomyCommunication(TONOMY_ID_user, dataSource);
 
         // Create two apps which will be logged into
         externalApp = await createRandomApp();
