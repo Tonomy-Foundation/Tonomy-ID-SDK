@@ -9,7 +9,7 @@ import { StorageFactory } from '../storage/storage';
 import { TonomyUsername } from '../util/username';
 import { getTonomyContract } from '../services/blockchain';
 import { User } from '../controllers/User';
-import { setupTestDatabase } from '../../../test/setup';
+import { setupDatabase } from '../../setup';
 
 export async function getAccountInfo(account: TonomyUsername | Name): Promise<API.v1.AccountObject> {
     let accountName: Name;
@@ -32,7 +32,7 @@ export async function getAccountInfo(account: TonomyUsername | Name): Promise<AP
  * @returns the user object
  */
 export async function createUserObject(keyManager: KeyManager, storageFactory: StorageFactory): Promise<IUser> {
-    const dataSource = await setupTestDatabase();
+    const dataSource = await setupDatabase();
 
     return new User(keyManager, storageFactory, dataSource);
 }

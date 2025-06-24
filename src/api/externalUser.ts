@@ -1,8 +1,6 @@
 import { KeyManager, KeyManagerLevel } from '../sdk/storage/keymanager';
 import { createVCSigner, randomString } from '../sdk/util/crypto';
 import { Issuer } from 'did-jwt-vc';
-import { DataSource } from 'typeorm';
-import { UserDataVault } from '../sdk/storage/dataVault/UserDataVault';
 import { getSettings } from '../sdk/util/settings';
 import { isErrorCode, SdkErrors, createSdkError, throwError } from '../sdk/util/errors';
 import { createStorage, PersistentStorageClean, StorageFactory, STORAGE_NAMESPACE } from '../sdk/storage/storage';
@@ -36,7 +34,6 @@ import { verifyKeyExistsForApp } from '../sdk/helpers/user';
 import { IOnPressLoginOptions } from '../sdk/types/User';
 import { App } from '../sdk/controllers/App';
 import Debug from 'debug';
-import { createStorageFactory } from '../../test/helpers/storageFactory';
 
 const debug = Debug('tonomy-sdk:externalUser');
 
@@ -87,7 +84,6 @@ export class ExternalUser {
     storage: ExternalUserStorage & PersistentStorageClean;
     did: string;
     communication: Communication;
-    userDataVault?: UserDataVault;
 
     /**
      * Creates a new external user
@@ -110,16 +106,6 @@ export class ExternalUser {
         this.storage.clear();
         this.keyManager.removeKey({ level: KeyManagerLevel.BROWSER_LOCAL_STORAGE });
         this.keyManager.removeKey({ level: KeyManagerLevel.BROWSER_SESSION_STORAGE });
-    }
-
-    /**
-     * Initialize the user data vault
-     * @param dataSource - The TypeORM data source
-     */
-    async initializeDataVault(dataSource: DataSource): Promise<void> {
-        const storageFactory = createStorageFactory(STORAGE_NAMESPACE + 'veriff.user');
-
-        this.userDataVault = new UserDataVault(this.keyManager, storageFactory, dataSource);
     }
 
     /**

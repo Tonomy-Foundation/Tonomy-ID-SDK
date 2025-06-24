@@ -52,6 +52,7 @@ export class IdentityVerificationStorageRepository {
             where: { veriffId: identityVerification.veriffId },
         });
 
+        identityVerification.updatedAt = new Date();
         if (doc) return await this.ormRepository.save(identityVerification);
         else throw new Error('veriffId not exists ');
     }

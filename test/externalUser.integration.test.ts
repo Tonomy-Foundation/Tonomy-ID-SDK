@@ -18,21 +18,18 @@ import {
     DualWalletResponse,
     setSettings,
     ClientAuthorizationData,
-    randomString,
 } from '../src/sdk/index';
 import { VerificationType } from '../src/sdk/storage/entities/identityVerificationStorage';
 import { JsKeyManager } from '../src/sdk/storage/jsKeyManager';
-import { VeriffWebhookPayload } from '../src/sdk/services/communication/veriff';
 import { DataSource } from 'typeorm';
 import { jest } from '@jest/globals';
-import { UserDataVault } from '../src/sdk/storage/dataVault/UserDataVault';
+import { UserDataVault } from '../src/sdk/controllers/UserDataVault';
 import { IdentityVerificationStorageRepository } from '../src/sdk/storage/identityVerificationStorageRepository';
-import { VerificationMessage } from '../src/sdk/services/communication/message';
 // helpers
 import {
-    setupTestDatabase,
+    setupDatabase,
 
-} from './setup';
+} from '../src/setup';
 // helpers
 import {
     IUserPublic,
@@ -84,7 +81,7 @@ describe('Login to external website', () => {
     let dataSource: DataSource;
 
     beforeAll(async () => {
-        dataSource = await setupTestDatabase();
+        dataSource = await setupDatabase();
         // Initialize veriff service with database connection
 
     });
@@ -187,7 +184,6 @@ describe('Login to external website', () => {
         // setup KeyManagers for the external website and tonomy login website
         TONOMY_LOGIN_WEBSITE_jsKeyManager = new JsKeyManager();
         EXTERNAL_WEBSITE_jsKeyManager = new JsKeyManager();
-        await EXTERNAL_WEBSITE_user.initializeDataVault(dataSource);
 
         // setup storage factories for the external website and tonomy login website
         TONOMY_LOGIN_WEBSITE_storage_factory = createStorageFactory(STORAGE_NAMESPACE + 'login-website.');
@@ -260,26 +256,7 @@ describe('Login to external website', () => {
         );
 
         // Step 3: Process the Veriff webhook response
-        const credentials: VeriffWebhookPayload = {
-            status: 'success',
-            eventType: 'fullauto',
-            sessionId,
-            attemptId: randomString(16),
-            vendorData: null,
-            endUserId: null,
-            version: '1.0',
-            acceptanceTime: new Date().toISOString(),
-            time: new Date().toISOString(),
-            data: {
-                verification: {
-                    decision,
-                    decisionScore: decision === 'approved' ? 100 : null,
-                    person: {},
-                    document: {},
-                    insights: null
-                }
-            }
-        };
+      
         // Create UserDataVault instance and subscribe to verification updates
         const storageFactory = createStorageFactory(STORAGE_NAMESPACE + 'veriff.user');
         const userDataVault = new UserDataVault(
@@ -288,23 +265,6 @@ describe('Login to external website', () => {
             dataSource
         );
         const subscriptionId = userDataVault.subscribeToVerificationUpdates();
-
-        // Get the user's DID and create an Issuer
-        const did = await userDataVault.getDid();
-        const issuer = await userDataVault.getIssuer();
-
-        // Create and send the verification message
-        const message = await VerificationMessage.signMessage(
-            {
-                veriffId: credentials.sessionId,
-                vc: JSON.stringify(credentials),
-                type: 'VeriffVerificationMessage'
-            },
-            issuer,
-            did 
-        );
-
-        await userDataVault.sendMessage(message);
 
         // Wait for async operations to complete
         await sleep(2000); // Increased timeout to ensure processing

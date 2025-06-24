@@ -37,7 +37,7 @@ import {
 import { IdentityVerificationStorageRepository } from '../../src/sdk/storage/identityVerificationStorageRepository';
 import { VcStatus } from '../../src/sdk/storage/entities/identityVerificationStorage';
 import { DataSource } from 'typeorm';
-import { setupTestDatabase } from '../setup';
+import { setupDatabase } from '../../src/setup';
 
 const debug = Debug('tonomy-sdk-tests:helpers:user');
 
@@ -48,7 +48,7 @@ export interface IUserPublic extends IUser {
 }
 
 export async function createUserObject(keyManager: KeyManager, storageFactory: StorageFactory): Promise<IUserPublic> {
-    const dataSource = await setupTestDatabase();
+    const dataSource = await setupDatabase();
 
     return new User(keyManager, storageFactory, dataSource) as unknown as IUserPublic;
 }
@@ -193,10 +193,10 @@ export function setupVeriffVerificationSubscriber(user: IUserPublic, dataSource:
                         // Map credential types to verification types
                         switch (credType) {
                             case 'firstName':
-                                vcType = VerificationType.FIRST_NAME;
+                                vcType = VerificationType.FIRSTNAME;
                                 break;
                             case 'lastName':
-                                vcType = VerificationType.LAST_NAME;
+                                vcType = VerificationType.LASTNAME;
                                 break;
                             case 'birthDate':
                                 vcType = VerificationType.DOB;

@@ -258,7 +258,7 @@ export class LinkAuthRequestResponseMessage extends Message<LinkAuthRequestRespo
 
 export interface VerificationMessagePayload {
     veriffId: string;
-    vc: string;
+    vc: VerifiableCredentialWithType;
     type: string;
 }
 

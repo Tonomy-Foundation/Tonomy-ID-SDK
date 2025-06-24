@@ -5,7 +5,7 @@ import { UserAuthorization } from './UserAuthorization';
 import { UserCaptcha } from './UserCaptcha';
 import { UserOnboarding } from './UserOnboarding';
 import { UserRequestsManager } from './UserRequestsManager';
-import { UserDataVault } from '../storage/dataVault/UserDataVault';
+import { UserDataVault } from './UserDataVault';
 
 export class User
     extends Mixin(UserBase, UserAuthorization, UserCaptcha, UserOnboarding, UserRequestsManager, UserDataVault)
