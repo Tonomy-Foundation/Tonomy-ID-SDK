@@ -8,7 +8,7 @@ import { UserRequestsManager } from './UserRequestsManager';
 import { UserDataVault } from '../storage/dataVault/UserDataVault';
 
 export class User
-    extends Mixin(UserBase, UserDataVault, UserAuthorization, UserCaptcha, UserOnboarding, UserRequestsManager)
+    extends Mixin(UserBase, UserAuthorization, UserCaptcha, UserOnboarding, UserRequestsManager, UserDataVault)
     implements IUser {
     // No implementation needed. Stop prettier error
 }

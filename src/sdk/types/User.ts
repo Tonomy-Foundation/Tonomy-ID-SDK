@@ -128,4 +128,6 @@ export interface IUserRequestsManager extends IUserCommunication {
     acceptLoginRequest(requests: DualWalletRequests, respondWith: 'redirect' | 'message'): Promise<void | URLtype>;
 }
 
-export interface IUser extends IUserCaptcha, IUserOnboarding, IUserRequestsManager {}
+export interface IUser extends IUserCaptcha, IUserOnboarding, IUserRequestsManager {
+    // No implementation needed. Stop prettier error
+}
