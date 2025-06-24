@@ -14,7 +14,7 @@ import { createUserObject } from '../helpers/user';
 
 const keyManager = new JsKeyManager();
 
-const user = createUserObject(keyManager, jsStorageFactory);
+const user = await createUserObject(keyManager, jsStorageFactory);
 
 describe('Keymanager class', () => {
     test('KeyManagerLevel enum helpers', () => {

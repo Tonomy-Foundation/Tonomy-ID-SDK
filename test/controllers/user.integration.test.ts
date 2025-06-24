@@ -18,12 +18,12 @@ let user: IUserPublic;
 describe('User class', () => {
     jest.setTimeout(60 * MILLISECONDS_IN_SECOND);
 
-    beforeEach((): void => {
+    beforeEach(async (): Promise<void> => {
         auth = new JsKeyManager();
-        user = createUserObject(auth, jsStorageFactory);
+        user = await createUserObject(auth, jsStorageFactory);
     });
 
-    afterEach(async () => {
+    afterEach(async (): Promise<void> => {
         await user.logout();
     });
 
@@ -101,7 +101,7 @@ describe('User class', () => {
         const username = await user.getUsername();
 
         const newKeyManager = new JsKeyManager();
-        const userLogin = createUserObject(newKeyManager, jsStorageFactory);
+        const userLogin = await createUserObject(newKeyManager, jsStorageFactory);
 
         expect(userLogin.isLoggedIn()).resolves.toBeFalsy();
         const idInfo = await userLogin.login(username, password, {
@@ -125,7 +125,7 @@ describe('User class', () => {
         const username = await user.getUsername();
 
         const newKeyManager = new JsKeyManager();
-        const userLogin = createUserObject(newKeyManager, jsStorageFactory);
+        const userLogin = await createUserObject(newKeyManager, jsStorageFactory);
 
         await expect(() =>
             userLogin.login(username, 'differentpassword', { keyFromPasswordFn: generatePrivateKeyFromPassword })
@@ -236,7 +236,7 @@ describe('User class', () => {
         const { user, password } = await createRandomID();
 
         const newKeyManager = new JsKeyManager();
-        const userLogin = createUserObject(newKeyManager, jsStorageFactory);
+        const userLogin = await createUserObject(newKeyManager, jsStorageFactory);
 
         expect(userLogin.isLoggedIn()).resolves.toBeFalsy();
 

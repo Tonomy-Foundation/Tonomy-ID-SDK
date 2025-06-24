@@ -44,7 +44,7 @@ export function restoreCreateAccountFromMock() {
 
 export async function createUser(username: string, password: string) {
     const auth: KeyManager = new JsKeyManager();
-    const user = createUserObject(auth, jsStorageFactory);
+    const user = await createUserObject(auth, jsStorageFactory);
 
     await user.saveUsername(username);
     await user.savePassword(password, { keyFromPasswordFn: generatePrivateKeyFromPassword });

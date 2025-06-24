@@ -1,12 +1,16 @@
 import { jsStorageFactory } from '../../src/cli/bootstrap/jsstorage';
 import { JsKeyManager } from '../../src/sdk/storage/jsKeyManager';
 import { User } from '../../src/sdk/controllers/User';
+import { DataSource } from 'typeorm';
+import { setupTestDatabase } from '../setup';
 
 describe('User class', () => {
     let user: User;
+    let dataSource: DataSource;
 
-    beforeEach(() => {
-        user = new User(new JsKeyManager(), jsStorageFactory);
+    beforeEach(async () => {
+        dataSource = await setupTestDatabase();
+        user = new User(new JsKeyManager(), jsStorageFactory, dataSource);
     });
     describe('validateUsername()', () => {
         it('validates a correct username', async () => {

@@ -37,6 +37,7 @@ import {
 import { IdentityVerificationStorageRepository } from '../../src/sdk/storage/identityVerificationStorageRepository';
 import { VcStatus } from '../../src/sdk/storage/entities/identityVerificationStorage';
 import { DataSource } from 'typeorm';
+import { setupTestDatabase } from '../setup';
 
 const debug = Debug('tonomy-sdk-tests:helpers:user');
 
@@ -46,8 +47,10 @@ export interface IUserPublic extends IUser {
     communication: Communication;
 }
 
-export function createUserObject(keyManager: KeyManager, storageFactory: StorageFactory): IUserPublic {
-    return new User(keyManager, storageFactory) as unknown as IUserPublic;
+export async function createUserObject(keyManager: KeyManager, storageFactory: StorageFactory): Promise<IUserPublic> {
+    const dataSource = await setupTestDatabase();
+
+    return new User(keyManager, storageFactory, dataSource) as unknown as IUserPublic;
 }
 
 export const HCAPCHA_CI_RESPONSE_TOKEN = '10000000-aaaa-bbbb-cccc-000000000001';
@@ -56,7 +59,7 @@ export { createUser };
 
 export async function createRandomID(checkKeys = true) {
     const auth: KeyManager = new JsKeyManager();
-    const user = createUserObject(auth, jsStorageFactory);
+    const user = await createUserObject(auth, jsStorageFactory);
 
     const username = randomString(8);
     const password = generateRandomKeywords().join(' ');
