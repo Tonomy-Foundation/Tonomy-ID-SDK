@@ -6,7 +6,7 @@ import { IUserCommunication } from '../types/User';
 import { UserAuthorization } from './UserAuthorization';
 
 export abstract class UserCommunication extends UserAuthorization implements IUserCommunication {
-    private communication: Communication;
+    protected communication: Communication;
 
     constructor(_keyManager: KeyManager, storageFactory: StorageFactory) {
         super(_keyManager, storageFactory);

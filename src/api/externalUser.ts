@@ -36,6 +36,7 @@ import { verifyKeyExistsForApp } from '../sdk/helpers/user';
 import { IOnPressLoginOptions } from '../sdk/types/User';
 import { App } from '../sdk/controllers/App';
 import Debug from 'debug';
+import { createStorageFactory } from '../../test/helpers/storageFactory';
 
 const debug = Debug('tonomy-sdk:externalUser');
 
@@ -94,6 +95,7 @@ export class ExternalUser {
      * @param {KeyManager} _keyManager - the key manager to use for signing
      * @param {StorageFactory} _storageFactory - the storage factory to use for persistent storage
      */
+
     constructor(_keyManager: KeyManager, _storageFactory: StorageFactory) {
         this.keyManager = _keyManager;
         this.storage = createStorage<ExternalUserStorage>(STORAGE_NAMESPACE + 'external.user.', _storageFactory);
@@ -105,17 +107,19 @@ export class ExternalUser {
      *
      */
     async logout() {
-        await this.keyManager.removeKey({ level: KeyManagerLevel.ACTIVE });
-        await this.storage.clear();
+        this.storage.clear();
+        this.keyManager.removeKey({ level: KeyManagerLevel.BROWSER_LOCAL_STORAGE });
+        this.keyManager.removeKey({ level: KeyManagerLevel.BROWSER_SESSION_STORAGE });
     }
 
     /**
      * Initialize the user data vault
      * @param dataSource - The TypeORM data source
-     * @param communication - The communication instance
      */
-    async initializeDataVault(dataSource: DataSource, communication: Communication): Promise<void> {
-        this.userDataVault = new UserDataVault(dataSource, communication, this.did);
+    async initializeDataVault(dataSource: DataSource): Promise<void> {
+        const storageFactory = createStorageFactory(STORAGE_NAMESPACE + 'veriff.user');
+
+        this.userDataVault = new UserDataVault(this.keyManager, storageFactory, dataSource);
     }
 
     /**

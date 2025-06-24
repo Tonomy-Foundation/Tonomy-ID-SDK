@@ -16,6 +16,7 @@ export enum VerificationType {
     PHONE = 'phone',
     ADDRESS = 'address',
     DOB = 'dob',
+    NATIONALITY = 'nationality',
 }
 
 @Entity('IdentityVerificationStorage')

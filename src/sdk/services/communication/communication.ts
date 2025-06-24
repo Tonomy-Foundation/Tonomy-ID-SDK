@@ -2,14 +2,13 @@ import { io, Socket } from 'socket.io-client';
 import { CommunicationError, createSdkError, SdkErrors, throwError } from '../../util/errors';
 import { getSettings } from '../../util/settings';
 import { AuthenticationMessage, Message } from '../../services/communication/message';
-import { Issuer } from 'did-jwt-vc';
 import Debug from 'debug';
 
 const debug = Debug('tonomy-sdk:services:communication:communication');
 
 export type Subscriber = (message: Message) => void;
 
-export const SOCKET_TIMEOUT = 5000;
+export const SOCKET_TIMEOUT = 20000;
 export const SESSION_TIMEOUT = 40000;
 
 export type WebsocketReturnType = {
@@ -27,21 +26,6 @@ export class Communication {
     private authMessage?: AuthenticationMessage;
     private loggedIn = false;
     private url: string;
-
-    /**
-     * Returns the issuer information for the current authentication
-     * @returns {Issuer} the issuer information
-     */
-    public getIssuer(): Issuer | undefined {
-        if (!this.authMessage) return undefined;
-        const payload = this.authMessage.getVc().getPayload();
-        const issuer = {
-            did: this.authMessage.getIssuer(),
-            signer: payload.signer,
-        };
-
-        return issuer;
-    }
 
     constructor(singleton = true) {
         if (Communication.singleton && singleton) return Communication.singleton;
@@ -167,7 +151,7 @@ export class Communication {
     async login(authorization: AuthenticationMessage): Promise<boolean> {
         await this.connect();
 
-        const result = await this.emitMessage('login', authorization);
+        const result = await this.emitMessage('v1/login', authorization);
 
         if (result) {
             this.loggedIn = true;
@@ -186,7 +170,7 @@ export class Communication {
             throwError('You need to login before sending a messages', SdkErrors.CommunicationNotLoggedIn);
         }
 
-        return await this.emitMessage('message', message);
+        return await this.emitMessage('v1/message/relay', message);
     }
 
     /**
@@ -212,9 +196,23 @@ export class Communication {
             return this;
         };
 
-        this.socketServer.on('message', messageHandler);
+        this.socketServer.on('v1/message/relay', messageHandler);
         this.subscribers.set(Communication.identifier, messageHandler);
         return Communication.identifier;
+    }
+
+    /**
+     * Subscribes specifically to Veriff verification update messages.
+     *
+     * @param {Subscriber} subscriber - The callback that handles the VeriffVerificationMessage.
+     * @returns {number} - The subscription ID (used for unsubscribing later).
+     */
+    subscribeToVeriffVerification(handler: Subscriber): number {
+        const id = Communication.identifier++;
+
+        this.subscribers.set(id, handler);
+        this.socketServer.on('v1/verification/veriff/receive', handler);
+        return id;
     }
 
     /**
@@ -227,7 +225,7 @@ export class Communication {
         const subscriber = this.subscribers.get(id);
 
         if (subscriber) {
-            this.socketServer.off('message', subscriber);
+            this.socketServer.off('v1/message/relay', subscriber);
             this.subscribers.delete(id);
         }
     }

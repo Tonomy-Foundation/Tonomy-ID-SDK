@@ -10,7 +10,7 @@ import { IUserBase, IUserStorage } from '../types/User';
 import { createKeyManagerSigner, Signer } from '../services/blockchain';
 import { UserDataVault } from '../storage/dataVault/UserDataVault';
 import { DataSource } from 'typeorm';
-import { Communication } from '../services/communication/communication';
+import { createStorageFactory } from '../../../test/helpers/storageFactory';
 
 export class UserBase implements IUserBase {
     protected keyManager: KeyManager;
@@ -27,14 +27,10 @@ export class UserBase implements IUserBase {
      * @param dataSource TypeORM DataSource for database access
      * @param communication Communication instance for verification messages
      */
-    async initializeDataVault(dataSource: DataSource, communication: Communication): Promise<void> {
-        const [did, status] = await Promise.all([this.getDid(), this.storage.status]);
+    async initializeDataVault(dataSource: DataSource): Promise<void> {
+        const storageFactory = createStorageFactory(STORAGE_NAMESPACE + 'veriff.user');
 
-        if (status !== UserStatusEnum.READY) {
-            throw new Error('User is not ready');
-        }
-
-        this.userDataVault = new UserDataVault(dataSource, communication, did);
+        this.userDataVault = new UserDataVault(this.keyManager, storageFactory, dataSource);
     }
 
     /**

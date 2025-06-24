@@ -22,10 +22,12 @@ import {
 } from '../src/sdk/index';
 import { VerificationType } from '../src/sdk/storage/entities/identityVerificationStorage';
 import { JsKeyManager } from '../src/sdk/storage/jsKeyManager';
-import { receivingVerification, VeriffWebhookPayload } from '../src/sdk/services/communication/veriff';
+import { VeriffWebhookPayload } from '../src/sdk/services/communication/veriff';
 import { DataSource } from 'typeorm';
-import { IdentityVerificationStorageRepository } from '../src/sdk/storage/identityVerificationStorageRepository';
 import { jest } from '@jest/globals';
+import { UserDataVault } from '../src/sdk/storage/dataVault/UserDataVault';
+import { IdentityVerificationStorageRepository } from '../src/sdk/storage/identityVerificationStorageRepository';
+import { VerificationMessage } from '../src/sdk/services/communication/message';
 // helpers
 import {
     setupTestDatabase,
@@ -185,7 +187,7 @@ describe('Login to external website', () => {
         // setup KeyManagers for the external website and tonomy login website
         TONOMY_LOGIN_WEBSITE_jsKeyManager = new JsKeyManager();
         EXTERNAL_WEBSITE_jsKeyManager = new JsKeyManager();
-        await EXTERNAL_WEBSITE_user.initializeDataVault(dataSource, TONOMY_ID_user.communication);
+        await EXTERNAL_WEBSITE_user.initializeDataVault(dataSource);
 
         // setup storage factories for the external website and tonomy login website
         TONOMY_LOGIN_WEBSITE_storage_factory = createStorageFactory(STORAGE_NAMESPACE + 'login-website.');
@@ -278,15 +280,37 @@ describe('Login to external website', () => {
                 }
             }
         };
-        // Use the standalone receivingVerification function
-        const repository = new IdentityVerificationStorageRepository(dataSource);
+        // Create UserDataVault instance and subscribe to verification updates
+        const storageFactory = createStorageFactory(STORAGE_NAMESPACE + 'veriff.user');
+        const userDataVault = new UserDataVault(
+            new JsKeyManager(),
+            storageFactory,
+            dataSource
+        );
+        const subscriptionId = userDataVault.subscribeToVerificationUpdates();
 
-        await receivingVerification(credentials, dataSource);
-        
+        // Get the user's DID and create an Issuer
+        const did = await userDataVault.getDid();
+        const issuer = await userDataVault.getIssuer();
+
+        // Create and send the verification message
+        const message = await VerificationMessage.signMessage(
+            {
+                veriffId: credentials.sessionId,
+                vc: JSON.stringify(credentials),
+                type: 'VeriffVerificationMessage'
+            },
+            issuer,
+            did 
+        );
+
+        await userDataVault.sendMessage(message);
+
         // Wait for async operations to complete
-        await sleep(1000);
-        
+        await sleep(2000); // Increased timeout to ensure processing
+
         // Check for KYC verification using the repository
+        const repository = new IdentityVerificationStorageRepository(dataSource);
         const kycVerification = await repository.findLatestApproved(VerificationType.KYC);
 
         expect(kycVerification).toBeDefined();
@@ -295,6 +319,9 @@ describe('Login to external website', () => {
         if (!kycVerification) {
             throw new Error('KYC verification should not be null at this point');
         }
+
+        // Clean up subscription
+        userDataVault.unsubscribeFromVerificationUpdates(subscriptionId);
 
         if (decision === 'approved') {
             const verificationData = JSON.parse(kycVerification.vc!);

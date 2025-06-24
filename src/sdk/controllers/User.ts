@@ -5,29 +5,10 @@ import { UserAuthorization } from './UserAuthorization';
 import { UserCaptcha } from './UserCaptcha';
 import { UserOnboarding } from './UserOnboarding';
 import { UserRequestsManager } from './UserRequestsManager';
-import { UserCommunication } from './UserCommunication';
-import { DataSource } from 'typeorm';
-import { Communication } from '../services/communication/communication';
+import { UserDataVault } from '../storage/dataVault/UserDataVault';
 
 export class User
-    extends Mixin(UserBase, UserAuthorization, UserCaptcha, UserOnboarding, UserCommunication, UserRequestsManager)
-    implements IUser
-{
-    private _isInitialized = false;
-
-    // Initialize the user data vault
-    public async initialize(dataSource: DataSource, communication: Communication): Promise<void> {
-        try {
-            await this.initializeDataVault(dataSource, communication);
-            this._isInitialized = true;
-        } catch (error) {
-            this._isInitialized = false;
-            throw new Error(`Failed to initialize user data vault: ${error}`);
-        }
-    }
-
-    // Check if the user is properly initialized
-    public isInitialized(): boolean {
-        return this._isInitialized;
-    }
+    extends Mixin(UserBase, UserDataVault, UserAuthorization, UserCaptcha, UserOnboarding, UserRequestsManager)
+    implements IUser {
+    // No implementation needed. Stop prettier error
 }

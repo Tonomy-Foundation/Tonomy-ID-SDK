@@ -1,6 +1,5 @@
 import { Name, PublicKey } from '@wharfkit/antelope';
 import { VCWithTypeType, VerifiableCredentialOptions, VerifiableCredentialWithType } from './ssi/vc';
-import { KYCVerifiableCredential } from './ssi/kyc';
 import { VerificationType } from '../storage/entities/identityVerificationStorage';
 import { Issuer } from 'did-jwt-vc';
 import { App } from '../controllers/App';
@@ -303,35 +302,7 @@ export class WalletRequest implements Serializable {
                         throw new Error('KYC verification data requested but not available in storage');
                     }
 
-                    // Convert VeriffIdentityVerification to match VeriffWebhookPayload.data structure
-                    const verificationData = latestVerification.getPayload();
-                    const webhookData = {
-                        verification: {
-                            decisionScore: null,
-                            decision: verificationData.verification?.status as
-                                | 'approved'
-                                | 'declined'
-                                | 'resubmission_requested'
-                                | 'expired'
-                                | 'abandoned',
-                            person: {
-                                firstName: { value: verificationData.verification?.person.firstName },
-                                lastName: { value: verificationData.verification?.person.lastName },
-                                dateOfBirth: { value: verificationData.verification?.person.dateOfBirth },
-                                nationality: { value: verificationData.verification?.person.nationality },
-                            },
-                            document: {
-                                type: { value: verificationData.verification?.document.type },
-                                number: { value: verificationData.verification?.document.number },
-                                country: { value: verificationData.verification?.document.country },
-                            },
-                            insights: null,
-                        },
-                    };
-                    const issuer = await user.getIssuer();
-                    const kycCredential = await KYCVerifiableCredential.signCredential(webhookData, issuer);
-
-                    res.data.kyc = kycCredential;
+                    res.data.kyc = new VerifiableCredentialWithType(latestVerification.vc);
                 }
 
                 debug(
