@@ -115,7 +115,6 @@ export async function scanQrAndAck(user: IUserPublic, qrCodeData: string) {
     expect(sendMessageResponse).toBe(true);
 }
 
-
 /**
  * Mocks a Veriff webhook API call for testing purposes
  * This function simulates the server receiving a webhook from Veriff and sending the verification data to the user

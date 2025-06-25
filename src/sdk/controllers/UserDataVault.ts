@@ -49,23 +49,15 @@ export class UserDataVault extends UserCommunication {
         }
 
         // Parse the new verification status
-        const vc = JSON.parse(payload.vc.toString());
-        const newStatus = VeriffStatusEnum.from(vc.status);
-
-        let vcEntries: Record<string, string>;
-
-        try {
-            vcEntries = JSON.parse(payload.vc.toString());
-        } catch {
-            throw new Error('Failed to parse VC payload JSON');
-        }
+        const vc = payload.vc;
+        const newStatus = VeriffStatusEnum.from(payload.type);
 
         const mapKeyToVerificcationType = (key: string): VerificationTypeEnum | null => {
             return VerificationTypeEnum.from(key);
         };
         let updatedVerification: IdentityVerificationStorage | null = null;
 
-        for (const [key, signedVc] of Object.entries(vcEntries)) {
+        for (const [key, signedVc] of Object.entries(vc)) {
             const type = mapKeyToVerificcationType(key);
             const verification = await this.repository.findByVeriffIdAndType(
                 payload.veriffId,
@@ -75,12 +67,17 @@ export class UserDataVault extends UserCommunication {
             updatedVerification = verification;
 
             if (updatedVerification) {
-                updatedVerification.vc = signedVc;
+                updatedVerification.vc = JSON.stringify(signedVc);
                 updatedVerification.status = newStatus;
                 updatedVerification.updatedAt = new Date();
                 await this.repository.update(updatedVerification);
             } else {
-                await this.repository.create(payload.veriffId, signedVc, newStatus, type as VerificationTypeEnum);
+                await this.repository.create(
+                    payload.veriffId,
+                    JSON.stringify(signedVc),
+                    newStatus,
+                    type as VerificationTypeEnum
+                );
                 updatedVerification = await this.repository.findByVeriffIdAndType(
                     payload.veriffId,
                     type as VerificationTypeEnum

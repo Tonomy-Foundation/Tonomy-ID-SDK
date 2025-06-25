@@ -258,7 +258,13 @@ export class LinkAuthRequestResponseMessage extends Message<LinkAuthRequestRespo
 
 export interface VerificationMessagePayload {
     veriffId: string;
-    vc: VerifiableCredentialWithType;
+    vc: {
+        kyc: VerifiableCredentialWithType<{ kyc: string }>;
+        firstName: VerifiableCredentialWithType<{ firstName: string }>;
+        lastName: VerifiableCredentialWithType<{ lastName: string }>;
+        birthDate: VerifiableCredentialWithType<{ dateOfBirth: string }>;
+        nationality: VerifiableCredentialWithType<{ nationality: string }>;
+    };
     type: string;
 }
 
@@ -266,6 +272,29 @@ export class VerificationMessage extends Message<VerificationMessagePayload> {
     protected static type = 'VeriffVerificationMessage';
     public type: string;
     public payload: VerificationMessagePayload;
+
+    constructor(vc: Message<VerificationMessagePayload> | VCWithTypeType<VerificationMessagePayload>) {
+        super(vc);
+
+        this.decodedPayload = {
+            ...this.decodedPayload, // preserve existing properties like veriffId, type
+            vc: {
+                kyc: new VerifiableCredentialWithType<{ kyc: string }>(this.decodedPayload.vc.kyc as unknown as any),
+                firstName: new VerifiableCredentialWithType<{ firstName: string }>(
+                    this.decodedPayload.vc.firstName as unknown as any
+                ),
+                lastName: new VerifiableCredentialWithType<{ lastName: string }>(
+                    this.decodedPayload.vc.lastName as unknown as any
+                ),
+                birthDate: new VerifiableCredentialWithType<{ dateOfBirth: string }>(
+                    this.decodedPayload.vc.birthDate as unknown as any
+                ),
+                nationality: new VerifiableCredentialWithType<{ nationality: string }>(
+                    this.decodedPayload.vc.nationality as unknown as any
+                ),
+            },
+        };
+    }
 
     /**
      * Alternative constructor that returns type VerificationMessage
