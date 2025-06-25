@@ -19,12 +19,10 @@ import {
     setSettings,
     ClientAuthorizationData,
 } from '../src/sdk/index';
-import { VerificationType } from '../src/sdk/storage/entities/identityVerificationStorage';
 import { JsKeyManager } from '../src/sdk/storage/jsKeyManager';
 import { DataSource } from 'typeorm';
 import { jest } from '@jest/globals';
 import { UserDataVault } from '../src/sdk/controllers/UserDataVault';
-import { IdentityVerificationStorageRepository } from '../src/sdk/storage/identityVerificationStorageRepository';
 // helpers
 import {
     setupDatabase,
@@ -138,7 +136,7 @@ describe('Login to external website', () => {
 
         expect(TONOMY_ID_did).toContain('did:antelope:');
 
-        await loginToTonomyCommunication(TONOMY_ID_user, dataSource);
+        await loginToTonomyCommunication(TONOMY_ID_user);
         // ##### Tonomy ID user #####
         // ##########################
         // Create new Tonomy ID user
@@ -148,7 +146,7 @@ describe('Login to external website', () => {
 
         expect(TONOMY_ID_did).toContain('did:antelope:');
 
-        await loginToTonomyCommunication(TONOMY_ID_user, dataSource);
+        await loginToTonomyCommunication(TONOMY_ID_user);
 
         // Create two apps which will be logged into
         externalApp = await createRandomApp();
@@ -264,27 +262,22 @@ describe('Login to external website', () => {
             storageFactory,
             dataSource
         );
-        const subscriptionId = userDataVault.subscribeToVerificationUpdates();
+        const data = await userDataVault.subscribeToVerificationUpdates();
 
         // Wait for async operations to complete
         await sleep(2000); // Increased timeout to ensure processing
 
-        // Check for KYC verification using the repository
-        const repository = new IdentityVerificationStorageRepository(dataSource);
-        const kycVerification = await repository.findLatestApproved(VerificationType.KYC);
 
-        expect(kycVerification).toBeDefined();
-        expect(kycVerification?.vc).toBeDefined();
+        expect(data).toBeDefined();
+        expect(data?.vc).toBeDefined();
 
-        if (!kycVerification) {
+        if (!data) {
             throw new Error('KYC verification should not be null at this point');
         }
 
-        // Clean up subscription
-        userDataVault.unsubscribeFromVerificationUpdates(subscriptionId);
 
         if (decision === 'approved') {
-            const verificationData = JSON.parse(kycVerification.vc!);
+            const verificationData = JSON.parse(data.vc!);
 
             expect(verificationData.data.verification.decision).toBe(decision);
             // Step 4: Create VCs for KYC data
@@ -347,7 +340,7 @@ describe('Login to external website', () => {
             expect(verifiedAuth.data.kyc?.verified).toBe(true);
         } else {
             // Step 4: Attempt client auth should fail
-            expect(kycVerification?.vc).toBeNull();
+            expect(data?.vc).toBeNull();
 
             await expect(
                 externalWebsiteClientAuth(externalUser, externalApp, testOptions)

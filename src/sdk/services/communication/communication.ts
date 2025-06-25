@@ -1,12 +1,14 @@
 import { io, Socket } from 'socket.io-client';
 import { CommunicationError, createSdkError, SdkErrors, throwError } from '../../util/errors';
 import { getSettings } from '../../util/settings';
-import { AuthenticationMessage, Message } from '../../services/communication/message';
+import { AuthenticationMessage, Message, VerificationMessage } from '../../services/communication/message';
 import Debug from 'debug';
+import { IdentityVerificationStorage } from '../../storage/entities/identityVerificationStorage';
 
 const debug = Debug('tonomy-sdk:services:communication:communication');
 
 export type Subscriber = (message: Message) => void;
+export type VeriffSubscriber = (message: VerificationMessage) => Promise<IdentityVerificationStorage | null>;
 
 export const SOCKET_TIMEOUT = 5000;
 export const SESSION_TIMEOUT = 40000;
@@ -202,20 +204,6 @@ export class Communication {
     }
 
     /**
-     * Subscribes specifically to Veriff verification update messages.
-     *
-     * @param {Subscriber} subscriber - The callback that handles the VeriffVerificationMessage.
-     * @returns {number} - The subscription ID (used for unsubscribing later).
-     */
-    subscribeToVeriffVerification(handler: Subscriber): number {
-        const id = Communication.identifier++;
-
-        this.subscribers.set(id, handler);
-        this.socketServer.on('v1/verification/veriff/receive', handler);
-        return id;
-    }
-
-    /**
      * unsubscribes a function from the receiving a message
      *
      * @param {number} id - identifier which will be used for unsubscribe
@@ -239,19 +227,41 @@ export class Communication {
         }
     }
 
-    async waitForSessionData(): Promise<Message> {
-        await this.connect();
-
+    /**
+     * Subscribes to the first Veriff verification message.
+     * Resolves with the message, or rejects on timeout.
+     *
+     * @param {VeriffSubscriber} handler - Callback invoked with the message.
+     * @returns {Promise<IdentityVerificationStorage>}
+     */
+    subscribeToVeriffVerification(handler: VeriffSubscriber): Promise<IdentityVerificationStorage> {
         return new Promise((resolve, reject) => {
-            const handler = (data: any) => {
-                this.socketServer.off('/v1/verification/veriff/receive', handler);
-                resolve(data);
+            const id = Communication.identifier++;
+
+            const wrapper = async (message: Message) => {
+                try {
+                    this.subscribers.delete(id);
+                    this.socketServer.off('/v1/verification/veriff/receive', wrapper);
+                    clearTimeout(timeout);
+
+                    const result = await handler(message as VerificationMessage);
+
+                    if (result) {
+                        resolve(result);
+                    } else {
+                        reject(createSdkError('Verification message was handled but returned no data'));
+                    }
+                } catch (error) {
+                    reject(error);
+                }
             };
 
-            this.socketServer.on('/v1/verification/veriff/receive', handler);
+            this.subscribers.set(id, wrapper);
+            this.socketServer.on('/v1/verification/veriff/receive', wrapper);
 
-            setTimeout(() => {
-                this.socketServer.off('/v1/verification/veriff/receive', handler);
+            const timeout = setTimeout(() => {
+                this.subscribers.delete(id);
+                this.socketServer.off('/v1/verification/veriff/receive', wrapper);
                 reject(
                     createSdkError('Timed out waiting for session data from server', SdkErrors.CommunicationTimeout)
                 );

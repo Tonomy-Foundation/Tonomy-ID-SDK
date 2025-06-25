@@ -1,6 +1,5 @@
 import { Name, PublicKey } from '@wharfkit/antelope';
 import { VCWithTypeType, VerifiableCredentialOptions, VerifiableCredentialWithType } from './ssi/vc';
-import { VerificationType } from '../storage/entities/identityVerificationStorage';
 import { Issuer } from 'did-jwt-vc';
 import { App } from '../controllers/App';
 import { IUserRequestsManager } from '../types/User';
@@ -17,6 +16,7 @@ import { IdentityVerificationStorageRepository } from '../storage/identityVerifi
 import { IdentityVerificationStorageManager } from '../storage/identityVerificationStorageManager';
 import { dbConnection } from './ssi/veramo';
 import { VeriffWebhookPayload } from '../services/communication/veriff';
+import { VerificationTypeEnum } from '../types/VerificationTypeEnum';
 
 const debug = Debug('tonomy-sdk:util:WalletRequest');
 
@@ -296,7 +296,7 @@ export class WalletRequest implements Serializable {
                     const storageManager = new ConcreteVerificationStorageManager(repository);
 
                     // Get the latest approved verification
-                    const latestVerification = await storageManager.findLatestApproved(VerificationType.KYC);
+                    const latestVerification = await storageManager.findLatestApproved(VerificationTypeEnum.KYC);
 
                     if (!latestVerification) {
                         throw new Error('KYC verification data requested but not available in storage');

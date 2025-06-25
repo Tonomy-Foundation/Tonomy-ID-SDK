@@ -1,16 +1,14 @@
 import { DataSource } from 'typeorm';
-import {
-    getStatusFromValue,
-    getVerificationKeyFromValue,
-    VerificationType,
-} from '../storage/entities/identityVerificationStorage';
+import { IdentityVerificationStorage } from '../storage/entities/identityVerificationStorage';
 import { IdentityVerificationStorageRepository } from '../storage/identityVerificationStorageRepository';
 import { Message } from '../services/communication/message';
 import { VerificationMessage } from '../services/communication/message';
 import { UserCommunication } from './UserCommunication';
 import { KeyManager } from '../storage/keymanager';
 import { StorageFactory } from '../storage/storage';
-import { Subscriber } from '../services/communication/communication';
+import { VeriffSubscriber } from '../services/communication/communication';
+import { VeriffStatusEnum } from '../types/VeriffStatusEnum';
+import { VerificationTypeEnum } from '../types/VerificationTypeEnum';
 
 export class UserDataVault extends UserCommunication {
     private readonly repository: IdentityVerificationStorageRepository;
@@ -24,12 +22,13 @@ export class UserDataVault extends UserCommunication {
      * Subscribes to verification updates
      * @returns Subscription ID that can be used to unsubscribe
      */
-    subscribeToVerificationUpdates(): number {
-        const handler: Subscriber = async (message: Message): Promise<void> => {
+    subscribeToVerificationUpdates(): Promise<IdentityVerificationStorage> {
+        const handler: VeriffSubscriber = async (message: Message): Promise<IdentityVerificationStorage | null> => {
             try {
-                await this.handleVerificationUpdate(message);
+                return await this.handleVerificationUpdate(message);
             } catch (error) {
                 console.error('Error processing verification message:', error);
+                return null;
             }
         };
 
@@ -42,7 +41,7 @@ export class UserDataVault extends UserCommunication {
      * @returns The updated verification record
      * @throws {Error} If message type is incorrect or verification update fails
      */
-    private async handleVerificationUpdate(message: Message): Promise<void> {
+    private async handleVerificationUpdate(message: Message): Promise<IdentityVerificationStorage | null> {
         const payload = (message as VerificationMessage).payload;
 
         if (!payload?.vc) {
@@ -51,7 +50,7 @@ export class UserDataVault extends UserCommunication {
 
         // Parse the new verification status
         const vc = JSON.parse(payload.vc.toString());
-        const newStatus = getStatusFromValue(vc.status);
+        const newStatus = VeriffStatusEnum.from(vc.status);
 
         let vcEntries: Record<string, string>;
 
@@ -61,23 +60,35 @@ export class UserDataVault extends UserCommunication {
             throw new Error('Failed to parse VC payload JSON');
         }
 
-        const mapKeyToVerificcationType = (key: string): VerificationType | null => {
-            return getVerificationKeyFromValue(key);
+        const mapKeyToVerificcationType = (key: string): VerificationTypeEnum | null => {
+            return VerificationTypeEnum.from(key);
         };
+        let updatedVerification: IdentityVerificationStorage | null = null;
 
         for (const [key, signedVc] of Object.entries(vcEntries)) {
             const type = mapKeyToVerificcationType(key);
-            const existing = await this.repository.findByVeriffIdAndType(payload.veriffId, type as VerificationType);
+            const verification = await this.repository.findByVeriffIdAndType(
+                payload.veriffId,
+                type as VerificationTypeEnum
+            );
 
-            if (existing) {
-                existing.vc = signedVc;
-                existing.status = newStatus;
-                existing.updatedAt = new Date();
-                await this.repository.update(existing);
+            updatedVerification = verification;
+
+            if (updatedVerification) {
+                updatedVerification.vc = signedVc;
+                updatedVerification.status = newStatus;
+                updatedVerification.updatedAt = new Date();
+                await this.repository.update(updatedVerification);
             } else {
-                await this.repository.create(payload.veriffId, signedVc, newStatus, type as VerificationType);
+                await this.repository.create(payload.veriffId, signedVc, newStatus, type as VerificationTypeEnum);
+                updatedVerification = await this.repository.findByVeriffIdAndType(
+                    payload.veriffId,
+                    type as VerificationTypeEnum
+                );
             }
         }
+
+        return updatedVerification;
     }
 
     /**

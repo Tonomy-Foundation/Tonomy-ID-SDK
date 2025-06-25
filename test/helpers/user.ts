@@ -12,9 +12,6 @@ import {
     Communication,
     IUser,
 } from '../../src/sdk/index';
-import { VerifiableCredential } from '../../src/sdk/util/ssi/vc';
-import { VerificationType } from '../../src/sdk/storage/entities/identityVerificationStorage';
-
 // Using require for modules that might not have TypeScript definitions
 import { expect } from '@jest/globals';
 
@@ -29,14 +26,6 @@ import { createSigner } from '../../src/sdk/services/blockchain';
 
 // Using require for modules that might not have TypeScript definitions
 import Debug from 'debug';
-
-import {
-    IdentityVerificationStorageManager,
-    VeriffIdentityVerification,
-} from '../../src/sdk/storage/identityVerificationStorageManager';
-import { IdentityVerificationStorageRepository } from '../../src/sdk/storage/identityVerificationStorageRepository';
-import { VcStatus } from '../../src/sdk/storage/entities/identityVerificationStorage';
-import { DataSource } from 'typeorm';
 import { setupDatabase } from '../../src/setup';
 
 const debug = Debug('tonomy-sdk-tests:helpers:user');
@@ -98,7 +87,7 @@ export async function createRandomApp(logoUrl?: string, origin?: string): Promis
     });
 }
 
-export async function loginToTonomyCommunication(user: IUserPublic, dataSource: DataSource) {
+export async function loginToTonomyCommunication(user: IUserPublic) {
     const issuer = await user.getIssuer();
     // Login to Tonomy Communication as the user
     const authMessage = await AuthenticationMessage.signMessageWithoutRecipient({}, issuer);
@@ -107,12 +96,7 @@ export async function loginToTonomyCommunication(user: IUserPublic, dataSource: 
 
     const loginResponse = await user.loginCommunication(authMessage);
 
-    // Set up subscriber for Veriff verification events
-    const veriffSubscriber = setupVeriffVerificationSubscriber(user, dataSource);
-
     expect(loginResponse).toBe(true);
-
-    return veriffSubscriber;
 }
 
 export async function scanQrAndAck(user: IUserPublic, qrCodeData: string) {
@@ -131,121 +115,6 @@ export async function scanQrAndAck(user: IUserPublic, qrCodeData: string) {
     expect(sendMessageResponse).toBe(true);
 }
 
-/**
- * Sets up a subscriber for Veriff verification events
- * This function listens for the v1/verification/veriff/receive event from the server
- * When received, it validates the data and stores it in the identity verification storage
- *
- * @param user The user object
- * @returns A promise that resolves when the verification is received and processed
- */
-export function setupVeriffVerificationSubscriber(user: IUserPublic, dataSource: DataSource) {
-    const repository = new IdentityVerificationStorageRepository(dataSource);
-
-    class ConcreteVerificationStorageManager extends IdentityVerificationStorageManager {
-        constructor(repository: IdentityVerificationStorageRepository) {
-            super(repository);
-        }
-    }
-
-    const storageManager = new ConcreteVerificationStorageManager(repository);
-
-    debug('TONOMY_ID/setupVeriffVerificationSubscriber: Setting up subscriber for Veriff verification events');
-
-    // Return a promise that resolves when the verification is received and processed
-    return new Promise((resolve) => {
-        // Use the Communication class's waitForSessionData method to listen for the event
-        user.communication
-            .waitForSessionData()
-            .then(async (data) => {
-                debug('TONOMY_ID/setupVeriffVerificationSubscriber: Received Veriff verification data');
-
-                try {
-                    // Parse the stringified JSON data containing JWT strings
-                    const parsedData = JSON.parse(data.toString());
-
-                    // Extract the decision status from the decision credential
-                    const decisionJwt = parsedData.decision;
-                    const decisionVc = new VerifiableCredential(decisionJwt);
-                    const decision = decisionVc.getVc().credentialSubject.decision;
-
-                    // Determine the VC status based on the decision
-                    let vcStatus: VcStatus;
-
-                    if (decision === 'approved') {
-                        vcStatus = VcStatus.APPROVED;
-                    } else if (decision === 'declined' || decision === 'resubmission_requested') {
-                        vcStatus = VcStatus.REJECTED;
-                    } else {
-                        vcStatus = VcStatus.PENDING;
-                    }
-
-                    // Generate a session ID (in a real scenario, this would come from Veriff)
-                    const sessionId = `mock-session-${Date.now()}`;
-
-                    // Process each credential JWT and store it
-                    for (const [credType, jwtString] of Object.entries(parsedData)) {
-                        if (credType === 'kyc') continue; // Skip the main KYC credential for now
-
-                        const vc = new VerifiableCredential<VeriffIdentityVerification>(jwtString as string);
-                        let vcType: string;
-
-                        // Map credential types to verification types
-                        switch (credType) {
-                            case 'firstName':
-                                vcType = VerificationType.FIRSTNAME;
-                                break;
-                            case 'lastName':
-                                vcType = VerificationType.LASTNAME;
-                                break;
-                            case 'birthDate':
-                                vcType = VerificationType.DOB;
-                                break;
-                            case 'nationality':
-                                vcType = 'nationality';
-                                break;
-                            case 'decision':
-                                vcType = 'decision';
-                                break;
-                            default:
-                                vcType = credType.toLowerCase();
-                        }
-
-                        // Only store credentials that match our VerificationType enum
-                        if (Object.values(VerificationType).includes(vcType as VerificationType)) {
-                            await storageManager.createVc(sessionId, vc, vcStatus, vcType as VerificationType);
-                            debug(
-                                `TONOMY_ID/setupVeriffVerificationSubscriber: Stored ${vcType} verification with status ${vcStatus}`
-                            );
-                        } else {
-                            debug(
-                                `TONOMY_ID/setupVeriffVerificationSubscriber: Skipping unsupported verification type: ${vcType}`
-                            );
-                        }
-                    }
-
-                    // Process the main KYC credential if it exists
-                    if (parsedData.kyc) {
-                        const kycVc = new VerifiableCredential<VeriffIdentityVerification>(parsedData.kyc);
-
-                        await storageManager.createVc(sessionId, kycVc, vcStatus, VerificationType.KYC);
-                        debug(
-                            `TONOMY_ID/setupVeriffVerificationSubscriber: Stored kyc verification with status ${vcStatus}`
-                        );
-                    }
-
-                    resolve(data);
-                } catch (error) {
-                    console.error('Error processing Veriff verification:', error);
-                    throw error;
-                }
-            })
-            .catch((error) => {
-                console.error('Error waiting for Veriff verification:', error);
-                throw error;
-            });
-    });
-}
 
 /**
  * Mocks a Veriff webhook API call for testing purposes

@@ -1,7 +1,8 @@
 import { IdentityVerificationStorageRepository } from './identityVerificationStorageRepository';
-import { IdentityVerificationStorage, VerificationType } from './entities/identityVerificationStorage';
-import { VcStatus } from './entities/identityVerificationStorage';
+import { IdentityVerificationStorage } from './entities/identityVerificationStorage';
 import { VerifiableCredential } from '../util/ssi/vc';
+import { VeriffStatusEnum } from '../types/VeriffStatusEnum';
+import { VerificationTypeEnum } from '../types/VerificationTypeEnum';
 
 // from https://devdocs.veriff.com/docs/decision-webhook#sample-request
 export type VeriffIdentityVerification = {
@@ -156,13 +157,13 @@ export abstract class IdentityVerificationStorageManager {
     async createVc(
         veriffId: string,
         vc: VerifiableCredential<VeriffIdentityVerification>,
-        status: VcStatus,
-        type: VerificationType
+        status: VeriffStatusEnum,
+        type: VerificationTypeEnum
     ): Promise<void> {
         await this.repository.create(veriffId, vc.toString(), status, type);
     }
 
-    async findLatestApproved(type: VerificationType): Promise<IdentityVerificationStorage | null> {
+    async findLatestApproved(type: VerificationTypeEnum): Promise<IdentityVerificationStorage | null> {
         const doc = await this.repository.findLatestApproved(type);
 
         if (doc) {
