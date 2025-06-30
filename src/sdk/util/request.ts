@@ -134,6 +134,10 @@ export class WalletResponseVerifiableCredential extends VerifiableCredentialWith
                 if (data.username && !(data.username instanceof TonomyUsername)) {
                     data.username = TonomyUsername.fromFullUsername(data.username as unknown as string);
                 }
+
+                if (data.kyc) {
+                    data.kyc = new VerifiableCredentialWithType(data.kyc);
+                }
             }
 
             return response;
@@ -407,6 +411,12 @@ export class WalletResponse implements Serializable {
 
     getDataSharingResponse(): DataSharingResponsePayload | undefined {
         return this.getResponses()?.find((r) => WalletResponse.isDataSharingResponse(r)) as DataSharingResponsePayload;
+    }
+
+    getKycData(): VerifiableCredentialWithType<VeriffWebhookPayload['data']> | undefined {
+        const dataSharingResponse = this.getDataSharingResponse();
+
+        return dataSharingResponse?.data.kyc;
     }
 
     getAccountName(): Name {

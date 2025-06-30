@@ -34,6 +34,7 @@ import { verifyKeyExistsForApp } from '../sdk/helpers/user';
 import { IOnPressLoginOptions } from '../sdk/types/User';
 import { App } from '../sdk/controllers/App';
 import Debug from 'debug';
+import { VeriffWebhookPayload } from '../sdk/services/communication/veriff';
 
 const debug = Debug('tonomy-sdk:externalUser');
 
@@ -84,6 +85,7 @@ export class ExternalUser {
     storage: ExternalUserStorage & PersistentStorageClean;
     did: string;
     communication: Communication;
+    kycData?: VerifiableCredentialWithType<VeriffWebhookPayload['data']>;
 
     /**
      * Creates a new external user
@@ -368,8 +370,13 @@ export class ExternalUser {
             }
 
             await externalUser.setAccountName(accountName);
+            const dataSharingResponse = response.getDataSharingResponse();
 
-            const username = response.getDataSharingResponse()?.data.username;
+            if (dataSharingResponse?.data.kyc) {
+                externalUser.kycData = dataSharingResponse.data.kyc;
+            }
+
+            const username = dataSharingResponse?.data.username;
 
             if (username) {
                 await externalUser.setUsername(username);
