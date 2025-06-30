@@ -29,6 +29,7 @@ export class IdentityVerificationStorage {
     createdAt!: Date;
 
     @Column({ type: 'datetime' })
+    @Index()
     updatedAt!: Date;
 
     @Column({
@@ -36,5 +37,6 @@ export class IdentityVerificationStorage {
         enum: VerificationTypeEnum,
         default: VerificationTypeEnum.KYC,
     })
+    @Index()
     type!: VerificationTypeEnum;
 }

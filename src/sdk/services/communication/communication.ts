@@ -228,13 +228,32 @@ export class Communication {
     }
 
     /**
-     * Subscribes to the first Veriff verification message.
-     * Resolves with the message, or rejects on timeout.
+     * Subscribes to Veriff verification messages.
+     * Calls the handler every time a verification message is received.
+     *
+     * @param {VeriffSubscriber} handler - Callback invoked with the message.
+     * @returns {number} - Identifier for unsubscribing.
+     */
+    subscribeVeriffVerification(handler: VeriffSubscriber): number {
+        Communication.identifier++;
+
+        const messageHandler = async (message: Message) => {
+            await handler(message as VerificationMessage);
+        };
+
+        this.socketServer.on('/v1/verification/veriff/receive', messageHandler);
+        this.subscribers.set(Communication.identifier, messageHandler);
+        return Communication.identifier;
+    }
+
+    /**
+     * Waits for the next Veriff verification message, calls the handler, and resolves when handled.
+     * Used for one-time waiting scenarios (e.g., frontend waiting screen).
      *
      * @param {VeriffSubscriber} handler - Callback invoked with the message.
      * @returns {Promise<IdentityVerificationStorage>}
      */
-    subscribeToVeriffVerification(handler: VeriffSubscriber): Promise<IdentityVerificationStorage> {
+    waitForVeriffVerification(handler: VeriffSubscriber): Promise<IdentityVerificationStorage> {
         return new Promise((resolve, reject) => {
             const id = Communication.identifier++;
 

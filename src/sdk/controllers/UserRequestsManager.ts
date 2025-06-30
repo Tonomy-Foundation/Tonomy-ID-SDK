@@ -13,13 +13,14 @@ import { URL as URLtype } from '../util/ssi/types';
 import { App } from './App';
 import { AppStatusEnum } from '../types/AppStatusEnum';
 import { getAccountInfo } from '../helpers/user';
-import { UserCommunication } from './UserCommunication';
 import { DualWalletRequests, sleep } from '../util';
 import Debug from 'debug';
+import { UserDataVault } from './UserDataVault';
+import { VerificationTypeEnum } from '../types/VerificationTypeEnum';
 
 const debug = Debug('tonomy-sdk:UserRequestsManager');
 
-export class UserRequestsManager extends UserCommunication implements IUserRequestsManager {
+export class UserRequestsManager extends UserDataVault implements IUserRequestsManager {
     async handleLinkAuthRequestMessage(message: Message): Promise<void> {
         const linkAuthRequestMessage = new LinkAuthRequestMessage(message);
 
@@ -154,5 +155,15 @@ export class UserRequestsManager extends UserCommunication implements IUserReque
 
             await this.sendMessage(message);
         }
+    }
+
+    async handleKycRequestMessage(): Promise<string> {
+        const latestVerification = await this.identityVerification.findLatestApproved(VerificationTypeEnum.KYC);
+
+        if (!latestVerification) {
+            throw new Error('KYC verification data requested but not available in storage');
+        }
+
+        return latestVerification.vc;
     }
 }

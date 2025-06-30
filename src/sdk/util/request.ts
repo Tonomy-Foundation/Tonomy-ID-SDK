@@ -284,25 +284,9 @@ export class WalletRequest implements Serializable {
 
                 if (req.data.kyc) {
                     // Retrieve KYC data from user's storage if available
-                    const repository = new IdentityVerificationStorageRepository(dbConnection);
+                    const vc = await user.handleKycRequestMessage();
 
-                    // Use a concrete implementation of the abstract class
-                    class ConcreteVerificationStorageManager extends IdentityVerificationStorageManager {
-                        constructor(repository: IdentityVerificationStorageRepository) {
-                            super(repository);
-                        }
-                    }
-
-                    const storageManager = new ConcreteVerificationStorageManager(repository);
-
-                    // Get the latest approved verification
-                    const latestVerification = await storageManager.findLatestApproved(VerificationTypeEnum.KYC);
-
-                    if (!latestVerification) {
-                        throw new Error('KYC verification data requested but not available in storage');
-                    }
-
-                    res.data.kyc = new VerifiableCredentialWithType(latestVerification.vc);
+                    res.data.kyc = new VerifiableCredentialWithType(vc);
                 }
 
                 debug(

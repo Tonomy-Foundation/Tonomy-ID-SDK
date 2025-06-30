@@ -26,8 +26,7 @@ import { UserDataVault } from '../src/sdk/controllers/UserDataVault';
 // helpers
 import {
     setupDatabase,
-
-} from '../src/setup';
+} from '../test/setup';
 // helpers
 import {
     IUserPublic,
@@ -80,14 +79,12 @@ describe('Login to external website', () => {
 
     beforeAll(async () => {
         dataSource = await setupDatabase();
-        // Initialize veriff service with database connection
-
     });
 
-    // Reset database between tests
     afterEach(async () => {
         if (dataSource) {
-            await dataSource.synchronize(true);
+            await dataSource.destroy();
+            dataSource = await setupDatabase();
         }
     });
 

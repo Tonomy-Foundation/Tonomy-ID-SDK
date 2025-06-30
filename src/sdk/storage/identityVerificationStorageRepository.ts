@@ -50,16 +50,10 @@ export class IdentityVerificationStorageRepository {
     }
 
     public async update(identityVerification: IdentityVerificationStorage): Promise<IdentityVerificationStorage> {
-        const doc = await this.ormRepository.findOne({
-            where: { veriffId: identityVerification.veriffId },
-        });
-
-        identityVerification.updatedAt = new Date();
-        if (doc) return await this.ormRepository.save(identityVerification);
-        else throw new Error('veriffId not exists ');
+        return await this.ormRepository.save(identityVerification);
     }
 
-    public async findByVeriffIdAndType(
+    public async findByIdAndType(
         veriffId: string,
         type: VerificationTypeEnum
     ): Promise<IdentityVerificationStorage | null> {

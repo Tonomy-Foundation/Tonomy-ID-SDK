@@ -9,13 +9,23 @@ import { StorageFactory } from '../storage/storage';
 import { VeriffSubscriber } from '../services/communication/communication';
 import { VeriffStatusEnum } from '../types/VeriffStatusEnum';
 import { VerificationTypeEnum } from '../types/VerificationTypeEnum';
+import { IdentityVerificationStorageManager } from '../storage/identityVerificationStorageManager';
+import { verifyOpsTmyDid } from '../util/ssi/did';
+
+class ConcreteKeyManager extends IdentityVerificationStorageManager {
+    constructor(repository: IdentityVerificationStorageRepository) {
+        super(repository);
+    }
+}
 
 export class UserDataVault extends UserCommunication {
     private readonly repository: IdentityVerificationStorageRepository;
+    protected identityVerification: ConcreteKeyManager;
 
     constructor(keyManager: KeyManager, storageFactory: StorageFactory, dataSource: DataSource) {
         super(keyManager, storageFactory);
         this.repository = new IdentityVerificationStorageRepository(dataSource);
+        this.identityVerification = new ConcreteKeyManager(this.repository);
     }
 
     /**
@@ -32,7 +42,7 @@ export class UserDataVault extends UserCommunication {
             }
         };
 
-        return this.communication.subscribeToVeriffVerification(handler);
+        return this.communication.waitForVeriffVerification(handler);
     }
 
     /**
@@ -41,7 +51,13 @@ export class UserDataVault extends UserCommunication {
      * @returns The updated verification record
      * @throws {Error} If message type is incorrect or verification update fails
      */
-    private async handleVerificationUpdate(message: Message): Promise<IdentityVerificationStorage | null> {
+    private async handleVerificationUpdate(message: Message): Promise<IdentityVerificationStorage[] | null> {
+        await message.verify();
+
+        const did = message.getIssuer();
+
+        await verifyOpsTmyDid(did);
+
         const payload = (message as VerificationMessage).payload;
 
         if (!payload?.vc) {
@@ -50,42 +66,44 @@ export class UserDataVault extends UserCommunication {
 
         // Parse the new verification status
         const vc = payload.vc;
+
         const newStatus = VeriffStatusEnum.from(payload.type);
 
         const mapKeyToVerificcationType = (key: string): VerificationTypeEnum | null => {
             return VerificationTypeEnum.from(key);
         };
-        let updatedVerification: IdentityVerificationStorage | null = null;
+        const updatedVerifications: IdentityVerificationStorage[] = [];
 
         for (const [key, signedVc] of Object.entries(vc)) {
             const type = mapKeyToVerificcationType(key);
-            const verification = await this.repository.findByVeriffIdAndType(
+            let verification = await this.identityVerification.findByVeriffIdAndType(
                 payload.veriffId,
                 type as VerificationTypeEnum
             );
 
-            updatedVerification = verification;
-
-            if (updatedVerification) {
-                updatedVerification.vc = JSON.stringify(signedVc);
-                updatedVerification.status = newStatus;
-                updatedVerification.updatedAt = new Date();
-                await this.repository.update(updatedVerification);
+            if (verification) {
+                verification.vc = signedVc.toString();
+                verification.status = newStatus;
+                await this.identityVerification.updateRecord(verification);
             } else {
-                await this.repository.create(
+                await this.identityVerification.createVc(
                     payload.veriffId,
-                    JSON.stringify(signedVc),
+                    signedVc.toString(),
                     newStatus,
                     type as VerificationTypeEnum
                 );
-                updatedVerification = await this.repository.findByVeriffIdAndType(
+                verification = await this.identityVerification.findByVeriffIdAndType(
                     payload.veriffId,
                     type as VerificationTypeEnum
                 );
             }
+
+            if (verification) {
+                updatedVerifications.push(verification);
+            }
         }
 
-        return updatedVerification;
+        return updatedVerifications;
     }
 
     /**

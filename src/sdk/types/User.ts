@@ -114,6 +114,7 @@ export interface IUserOnboarding extends IUserCommunication {
 export interface IUserRequestsManager extends IUserCommunication {
     handleLinkAuthRequestMessage(message: Message): Promise<void>;
     loginWithApp(app: App, key: PublicKey): Promise<void>;
+    handleKycRequestMessage(): Promise<string>;
 
     /** Accepts a login request by authorizing keys on the blockchain (if the are not already authorized)
      * And sends a response to the requesting app
