@@ -32,8 +32,8 @@ export class UserDataVault extends UserCommunication {
      * Subscribes to verification updates
      * @returns Subscription ID that can be used to unsubscribe
      */
-    subscribeToVerificationUpdates(): Promise<IdentityVerificationStorage> {
-        const handler: VeriffSubscriber = async (message: Message): Promise<IdentityVerificationStorage | null> => {
+    subscribeToVerificationUpdates(): Promise<IdentityVerificationStorage[]> {
+        const handler: VeriffSubscriber = async (message: Message): Promise<IdentityVerificationStorage[] | null> => {
             try {
                 return await this.handleVerificationUpdate(message);
             } catch (error) {

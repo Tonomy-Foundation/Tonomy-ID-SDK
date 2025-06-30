@@ -284,7 +284,9 @@ export class VerificationMessage extends Message<VerificationMessagePayload> {
         this.decodedPayload = {
             ...this.decodedPayload, // preserve existing properties like veriffId, type
             vc: {
-                kyc: new VerifiableCredentialWithType<{ kyc: string }>(this.decodedPayload.vc.kyc as unknown as any),
+                kyc: new VerifiableCredentialWithType<VeriffWebhookPayload>(
+                    this.decodedPayload.vc.kyc as unknown as any
+                ),
                 firstName: new VerifiableCredentialWithType<{ firstName: string }>(
                     this.decodedPayload.vc.firstName as unknown as any
                 ),

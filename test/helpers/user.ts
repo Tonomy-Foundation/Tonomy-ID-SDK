@@ -26,7 +26,7 @@ import { createSigner } from '../../src/sdk/services/blockchain';
 
 // Using require for modules that might not have TypeScript definitions
 import Debug from 'debug';
-import { setupDatabase } from '../../src/setup';
+import { setupDatabase } from '../../test/setup';
 
 const debug = Debug('tonomy-sdk-tests:helpers:user');
 

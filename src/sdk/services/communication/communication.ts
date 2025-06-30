@@ -8,7 +8,7 @@ import { IdentityVerificationStorage } from '../../storage/entities/identityVeri
 const debug = Debug('tonomy-sdk:services:communication:communication');
 
 export type Subscriber = (message: Message) => void;
-export type VeriffSubscriber = (message: VerificationMessage) => Promise<IdentityVerificationStorage | null>;
+export type VeriffSubscriber = (message: VerificationMessage) => Promise<IdentityVerificationStorage[] | null>;
 
 export const SOCKET_TIMEOUT = 5000;
 export const SESSION_TIMEOUT = 40000;
@@ -253,7 +253,7 @@ export class Communication {
      * @param {VeriffSubscriber} handler - Callback invoked with the message.
      * @returns {Promise<IdentityVerificationStorage>}
      */
-    waitForVeriffVerification(handler: VeriffSubscriber): Promise<IdentityVerificationStorage> {
+    waitForVeriffVerification(handler: VeriffSubscriber): Promise<IdentityVerificationStorage[]> {
         return new Promise((resolve, reject) => {
             const id = Communication.identifier++;
 

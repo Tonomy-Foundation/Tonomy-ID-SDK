@@ -266,7 +266,7 @@ describe('Login to external website', () => {
 
 
         expect(data).toBeDefined();
-        expect(data?.vc).toBeDefined();
+        expect(data[0]?.vc).toBeDefined();
 
         if (!data) {
             throw new Error('KYC verification should not be null at this point');
@@ -274,7 +274,7 @@ describe('Login to external website', () => {
 
 
         if (decision === 'approved') {
-            const verificationData = JSON.parse(data.vc!);
+            const verificationData = JSON.parse(data[0].vc!);
 
             expect(verificationData.data.verification.decision).toBe(decision);
             // Step 4: Create VCs for KYC data
@@ -337,7 +337,7 @@ describe('Login to external website', () => {
             expect(verifiedAuth.data.kyc?.verified).toBe(true);
         } else {
             // Step 4: Attempt client auth should fail
-            expect(data?.vc).toBeNull();
+            expect(data[0]?.vc).toBeNull();
 
             await expect(
                 externalWebsiteClientAuth(externalUser, externalApp, testOptions)

@@ -12,11 +12,7 @@ import { getAccountNameFromDid } from './ssi/did';
 import Debug from 'debug';
 import { getSettings } from './settings';
 import { isSameOrigin } from '../helpers/urls';
-import { IdentityVerificationStorageRepository } from '../storage/identityVerificationStorageRepository';
-import { IdentityVerificationStorageManager } from '../storage/identityVerificationStorageManager';
-import { dbConnection } from './ssi/veramo';
 import { VeriffWebhookPayload } from '../services/communication/veriff';
-import { VerificationTypeEnum } from '../types/VerificationTypeEnum';
 
 const debug = Debug('tonomy-sdk:util:WalletRequest');
 

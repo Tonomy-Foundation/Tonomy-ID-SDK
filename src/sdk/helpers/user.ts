@@ -9,7 +9,7 @@ import { StorageFactory } from '../storage/storage';
 import { TonomyUsername } from '../util/username';
 import { getTonomyContract } from '../services/blockchain';
 import { User } from '../controllers/User';
-import { setupDatabase } from '../../setup';
+import { setupDatabase } from '../../../test/setup';
 
 export async function getAccountInfo(account: TonomyUsername | Name): Promise<API.v1.AccountObject> {
     let accountName: Name;
