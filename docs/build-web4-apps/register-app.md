@@ -12,18 +12,20 @@ yarn run cli keys create
 
 ### Step 2. Submit App Details
 
-Contact **Tonomy Foundation** (Discord/Telegram or [Contact Form](https://pangea.web4.world/contact-us)) with the following details for both testnet and mainnet apps:
+To register your app on both **testnet** and **mainnet**, please fill out the following form with the required details:&#x20;
 
-| Property                  | Example                                                                            |
-| ------------------------- | ---------------------------------------------------------------------------------- |
-| App Name                  | Fiddl Art                                                                          |
-| App Username              | fiddlart                                                                           |
-| App Description           | Create and Earn with AI Art                                                        |
-| App Origin URL            | [https://fiddl.art](https://fiddl.art)                                             |
-| App Logo URL (jpg or png) | [https://fiddl.art/fiddlLogoWithText.png](https://fiddl.art/fiddlLogoWithText.png) |
-| Public key (step 1)       | EOS4xnrCGUT688oCuiu7E3Qpn8Phq76TRKNTb87XFMjzsJu                                    |
+📋 **Submit here:** [Tonomy App Registration Form](https://docs.google.com/forms/d/1NpMydhrzrI4K4cvXPHb9UNB-Cp8IgtLy-DJsLegaxBw/edit)
 
-
+| Property               | Example                                                                            |
+| ---------------------- | ---------------------------------------------------------------------------------- |
+| Name                   | Fiddl Art                                                                          |
+| Username               | fiddlart                                                                           |
+| Description            | Create and Earn with AI Art                                                        |
+| Origin URL             | [https://fiddl.art](https://fiddl.art)                                             |
+| Logo URL (jpg or png)  | [https://fiddl.art/fiddlLogoWithText.png](https://fiddl.art/fiddlLogoWithText.png) |
+| Public key (step 1)    | EOS4xnrCGUT688oCuiu7E3Qpn8Phq76TRKNTb87XFMjzsJu                                    |
+| Background Color (hex) | #251950                                                                            |
+| Accent Color (hex)     | #BA54D3                                                                            |
 
 
 
