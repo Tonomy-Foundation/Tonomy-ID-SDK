@@ -4,7 +4,7 @@ import { VerifiableCredentialWithType, VCWithTypeType } from '../../util/ssi/vc'
 import { DualWalletRequests, DualWalletResponse } from '../../util';
 import { Name } from '@wharfkit/antelope';
 import Debug from 'debug';
-import { VeriffWebhookPayload } from './veriff';
+import { VCType, VeriffWebhookPayload } from './veriff';
 
 const debug = Debug('tonomy-sdk:LoginRequestResponseMessage');
 
@@ -256,20 +256,11 @@ export class LinkAuthRequestResponseMessage extends Message<LinkAuthRequestRespo
         return new LinkAuthRequestResponseMessage(vc);
     }
 }
-export type FirstNameVC = VerifiableCredentialWithType<{ firstName: string }>;
-export type LastNameVC = VerifiableCredentialWithType<{ lastName: string }>;
-export type BirthDateVC = VerifiableCredentialWithType<{ dateOfBirth: string }>;
-export type NationalityVC = VerifiableCredentialWithType<{ nationality: string }>;
+
 
 export interface VerificationMessagePayload {
     veriffId: string;
-    vc: {
-        kyc: VerifiableCredentialWithType<VeriffWebhookPayload>;
-        firstName: FirstNameVC;
-        lastName?: LastNameVC;
-        birthDate: BirthDateVC;
-        nationality: NationalityVC;
-    };
+    vc: VCType;
     type: string;
 }
 
