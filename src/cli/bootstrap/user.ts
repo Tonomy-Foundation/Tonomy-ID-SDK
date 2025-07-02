@@ -4,6 +4,7 @@ import { getTonomyContract, JsKeyManager, KeyManager, createUserObject } from '.
 import { CreateAccountRequest, CreateAccountResponse } from '../../sdk/services/communication/accounts';
 import * as accounts from '../../sdk/services/communication/accounts';
 import { Name } from '@wharfkit/antelope';
+import { setupDatabase } from '../../../test/setup';
 
 const defaultCreateAccount = accounts.createAccount;
 
@@ -44,7 +45,8 @@ export function restoreCreateAccountFromMock() {
 
 export async function createUser(username: string, password: string) {
     const auth: KeyManager = new JsKeyManager();
-    const user = await createUserObject(auth, jsStorageFactory);
+    const dataSource = await setupDatabase();
+    const user = await createUserObject(auth, jsStorageFactory, dataSource);
 
     await user.saveUsername(username);
     await user.savePassword(password, { keyFromPasswordFn: generatePrivateKeyFromPassword });

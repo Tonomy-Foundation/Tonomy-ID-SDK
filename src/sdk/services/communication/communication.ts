@@ -3,13 +3,11 @@ import { CommunicationError, createSdkError, SdkErrors, throwError } from '../..
 import { getSettings } from '../../util/settings';
 import { AuthenticationMessage, Message, VerificationMessage } from '../../services/communication/message';
 import Debug from 'debug';
-import { KYCPayload } from '../../util';
 
 const debug = Debug('tonomy-sdk:services:communication:communication');
 
 export type Subscriber = (message: Message) => void;
 export type VeriffSubscriber = (message: VerificationMessage) => Promise<void>;
-// export type NextVeriffEventSubscriber = (message: VerificationMessage) => Promise<KYCPayload>;
 
 export const SOCKET_TIMEOUT = 5000;
 export const SESSION_TIMEOUT = 40000;

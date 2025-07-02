@@ -112,7 +112,7 @@ export interface IUserOnboarding extends IUserCommunication {
     initializeFromStorage(): Promise<boolean>;
 }
 
-export interface IUserRequestsManager extends IUserCommunication {
+export interface IUserRequestsManager extends IUserCommunication, IUserDataVault {
     handleLinkAuthRequestMessage(message: Message): Promise<void>;
     loginWithApp(app: App, key: PublicKey): Promise<void>;
 
@@ -134,6 +134,6 @@ export interface IUserDataVault extends IUserCommunication {
     fetchVerificationData(type: VerificationTypeEnum): Promise<PersonCredentialType>;
 }
 
-export interface IUser extends IUserCaptcha, IUserOnboarding, IUserRequestsManager, IUserDataVault {
+export interface IUser extends IUserCaptcha, IUserOnboarding, IUserRequestsManager {
     // No implementation needed. Stop prettier error
 }

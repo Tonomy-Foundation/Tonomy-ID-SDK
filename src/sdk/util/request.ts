@@ -12,7 +12,7 @@ import { getAccountNameFromDid } from './ssi/did';
 import Debug from 'debug';
 import { getSettings } from './settings';
 import { isSameOrigin } from '../helpers/urls';
-import { AddressVC, BirthDateVC, FirstNameVC, KYCVC, LastNameVC, NationalityVC } from './veriff';
+import { KYCVC } from './veriff';
 import { VerificationTypeEnum } from '../types/VerificationTypeEnum';
 
 const debug = Debug('tonomy-sdk:util:WalletRequest');
@@ -224,7 +224,7 @@ export class WalletRequest implements Serializable {
      * @param {boolean} [checkSsoDomain=false] - Whether to check the SSO domain for login requests.
      * @returns {Promise<WalletResponse>} - The wallet response containing the accepted requests.
      */
-    async accept(user: IUserRequestsManager & IUserDataVault, checkSsoDomain = false): Promise<WalletResponse> {
+    async accept(user: IUserRequestsManager, checkSsoDomain = false): Promise<WalletResponse> {
         const external = await this.getApp();
 
         debug(`WalletRequest/accept: Accepting request from app ${external.origin}`);
