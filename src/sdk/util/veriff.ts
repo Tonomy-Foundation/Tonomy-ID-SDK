@@ -1,4 +1,4 @@
-import { VerifiableCredentialWithType } from "../../util";
+import { VerifiableCredentialWithType } from '.';
 
 export type DocumentField = {
     confidenceCategory?: 'high' | 'medium' | 'low' | null;
@@ -12,13 +12,14 @@ export type LastNameVC = VerifiableCredentialWithType<{ lastName: string }>;
 export type BirthDateVC = VerifiableCredentialWithType<{ dateOfBirth: string }>;
 export type NationalityVC = VerifiableCredentialWithType<{ nationality: string }>;
 
-export type VCType = {
-        kyc: KYCVC;
-        firstName: FirstNameVC;
-        lastName?: LastNameVC;
-        birthDate: BirthDateVC;
-        nationality: NationalityVC;
-    }
+// TODO: rename to VerificationMessagePayload
+export type FullKycObject = {
+    kyc: KYCVC;
+    firstName?: FirstNameVC;
+    lastName?: LastNameVC;
+    birthDate?: BirthDateVC;
+    nationality?: NationalityVC;
+};
 
 export type VeriffWebhookPayload = {
     status: 'success' | 'fail';

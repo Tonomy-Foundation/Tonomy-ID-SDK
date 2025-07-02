@@ -34,7 +34,7 @@ import { verifyKeyExistsForApp } from '../sdk/helpers/user';
 import { IOnPressLoginOptions } from '../sdk/types/User';
 import { App } from '../sdk/controllers/App';
 import Debug from 'debug';
-import { VeriffWebhookPayload } from '../sdk/services/communication/veriff';
+import { VeriffWebhookPayload } from '../sdk/util/veriff';
 
 const debug = Debug('tonomy-sdk:externalUser');
 

@@ -1,5 +1,5 @@
 import { VerifiableCredentialWithType, VerifiableCredentialOptions } from './vc';
-import { VeriffWebhookPayload } from '../../services/communication/veriff';
+import { VeriffWebhookPayload } from '../veriff';
 import { Issuer } from 'did-jwt-vc';
 
 export class KYCVerifiableCredential extends VerifiableCredentialWithType<VeriffWebhookPayload['data']> {

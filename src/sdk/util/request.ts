@@ -12,7 +12,7 @@ import { getAccountNameFromDid } from './ssi/did';
 import Debug from 'debug';
 import { getSettings } from './settings';
 import { isSameOrigin } from '../helpers/urls';
-import { VeriffWebhookPayload } from '../services/communication/veriff';
+import { VeriffWebhookPayload } from './veriff';
 
 const debug = Debug('tonomy-sdk:util:WalletRequest');
 

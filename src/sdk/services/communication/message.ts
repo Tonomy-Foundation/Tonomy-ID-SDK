@@ -4,7 +4,7 @@ import { VerifiableCredentialWithType, VCWithTypeType } from '../../util/ssi/vc'
 import { DualWalletRequests, DualWalletResponse } from '../../util';
 import { Name } from '@wharfkit/antelope';
 import Debug from 'debug';
-import { VCType, VeriffWebhookPayload } from './veriff';
+import { FullKycObject, VeriffWebhookPayload } from '../../util/veriff';
 
 const debug = Debug('tonomy-sdk:LoginRequestResponseMessage');
 
@@ -260,7 +260,7 @@ export class LinkAuthRequestResponseMessage extends Message<LinkAuthRequestRespo
 
 export interface VerificationMessagePayload {
     veriffId: string;
-    vc: VCType;
+    vc: FullKycObject;
     type: string;
 }
 
