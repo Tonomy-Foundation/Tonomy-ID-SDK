@@ -1,7 +1,6 @@
 enum VeriffStatusEnum {
     PENDING = 'PENDING',
     APPROVED = 'APPROVED',
-    REJECTED = 'REJECTED',
     DECLINED = 'DECLINED',
 }
 

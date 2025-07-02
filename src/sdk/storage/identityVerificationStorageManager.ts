@@ -2,23 +2,34 @@ import { IdentityVerificationStorageRepository } from './identityVerificationSto
 import { IdentityVerificationStorage } from './entities/identityVerificationStorage';
 import { VeriffStatusEnum } from '../types/VeriffStatusEnum';
 import { VerificationTypeEnum } from '../types/VerificationTypeEnum';
+import { DataSource } from 'typeorm';
+import { castStringToCredential, PersonCredentialType } from '../util';
 
-export abstract class IdentityVerificationStorageManager {
+export class IdentityVerificationStorageManager {
     protected repository: IdentityVerificationStorageRepository;
 
-    constructor(repository: IdentityVerificationStorageRepository) {
-        this.repository = repository;
+    constructor(repository: IdentityVerificationStorageRepository | DataSource) {
+        if (repository instanceof DataSource) {
+            this.repository = new IdentityVerificationStorageRepository(repository);
+        } else {
+            this.repository = repository;
+        }
     }
 
-    async createVc(veriffId: string, vc: string, status: VeriffStatusEnum, type: VerificationTypeEnum): Promise<void> {
-        await this.repository.create(veriffId, vc, status, type);
+    async createVc(
+        veriffId: string,
+        vc: PersonCredentialType,
+        status: VeriffStatusEnum,
+        type: VerificationTypeEnum
+    ): Promise<void> {
+        await this.repository.create(veriffId, vc.toString(), status, type);
     }
 
-    async findLatestApproved(type: VerificationTypeEnum): Promise<IdentityVerificationStorage | null> {
+    async findLatestApproved(type: VerificationTypeEnum): Promise<PersonCredentialType | null> {
         const doc = await this.repository.findLatestApproved(type);
 
         if (doc) {
-            return doc;
+            return castStringToCredential(doc.vc, type);
         } else return null;
     }
 
@@ -37,14 +48,11 @@ export abstract class IdentityVerificationStorageManager {
         await this.repository.deleteAll();
     }
 
-    async findByVeriffIdAndType(
-        veriffId: string,
-        type: VerificationTypeEnum
-    ): Promise<IdentityVerificationStorage | null> {
+    async findByVeriffIdAndType(veriffId: string, type: VerificationTypeEnum): Promise<PersonCredentialType | null> {
         const doc = await this.repository.findByIdAndType(veriffId, type);
 
         if (doc) {
-            return doc;
+            return castStringToCredential(doc.vc, type);
         } else return null;
     }
 }

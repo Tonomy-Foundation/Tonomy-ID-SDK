@@ -1,5 +1,5 @@
-function copyObject(object: object): object {
+export function copyObject(object: object): object {
     return JSON.parse(JSON.stringify(object));
 }
 
-export { copyObject };
+export type KeyValueObject = Record<string, string>;

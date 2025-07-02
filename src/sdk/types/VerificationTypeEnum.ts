@@ -5,7 +5,7 @@ enum VerificationTypeEnum {
     EMAIL = 'EMAIL',
     PHONE = 'PHONE',
     ADDRESS = 'ADDRESS',
-    DOB = 'DOB',
+    BIRTHDATE = 'BIRTHDATE',
     NATIONALITY = 'NATIONALITY',
 }
 

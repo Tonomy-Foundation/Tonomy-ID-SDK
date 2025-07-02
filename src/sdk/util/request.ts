@@ -409,12 +409,6 @@ export class WalletResponse implements Serializable {
         return this.getResponses()?.find((r) => WalletResponse.isDataSharingResponse(r)) as DataSharingResponsePayload;
     }
 
-    getKycData(): VerifiableCredentialWithType<VeriffWebhookPayload['data']> | undefined {
-        const dataSharingResponse = this.getDataSharingResponse();
-
-        return dataSharingResponse?.data.kyc;
-    }
-
     getAccountName(): Name {
         return getAccountNameFromDid(this.vc.getIssuer());
     }
