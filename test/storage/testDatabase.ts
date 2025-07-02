@@ -1,6 +1,6 @@
 import { DataSource } from 'typeorm';
-import { IdentityVerificationStorage } from '../src/sdk/storage/entities/identityVerificationStorage';
-import { IdentityVerificationStorageManager } from '../src/sdk/storage/identityVerificationStorageManager';
+import { IdentityVerificationStorage } from '../../src/sdk/storage/entities/identityVerificationStorage';
+import { IdentityVerificationStorageManager } from '../../src/sdk/storage/identityVerificationStorageManager';
 
 let dataSource: DataSource;
 

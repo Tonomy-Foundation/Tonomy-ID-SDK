@@ -34,7 +34,7 @@ import { createSigner } from '../../src/sdk/services/blockchain';
 
 // Using require for modules that might not have TypeScript definitions
 import Debug from 'debug';
-import { dataSource } from '../../test/setup';
+import { dataSource } from '../storage/testDatabase';
 import {
     mockVeriffWebhook,
     mockVeriffWebhookPayloadApproved,

@@ -20,8 +20,9 @@ export function parseAntelopeDid(did: DIDurl): ParsedDID & {
         throwError(`Invalid DID method: ${parsed.method}`, SdkErrors.InvalidData);
     }
 
-    const chain = parsed.id.split(':')[0];
-    const account = parsed.id.split(':')[1];
+    const idSplit = parsed.id.split(':');
+    const chain = idSplit.slice(0, idSplit.length - 1).join(':');
+    const account = idSplit[idSplit.length - 1];
 
     return {
         ...parsed,

@@ -1,4 +1,4 @@
-import { VerifiableCredentialWithType } from '.';
+import { VerifiableCredentialWithType } from './ssi/vc';
 import { VeriffStatusEnum } from '../types/VeriffStatusEnum';
 import { VerificationTypeEnum } from '../types/VerificationTypeEnum';
 import { KeyValueObject } from './objects';

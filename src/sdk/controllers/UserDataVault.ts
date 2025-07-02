@@ -34,13 +34,11 @@ export class UserDataVault extends UserCommunication implements IUserDataVault {
         await verifyOpsTmyDid(did);
 
         const vcPayload = message.getPayload();
-
         const kycPayload = vcPayload.kyc.getPayload();
         const decision = kycPayload.data.verification.decision;
+        const status = castDecisionToStatus(decision);
 
         debug('kycPayload', did, kycPayload);
-
-        const status = castDecisionToStatus(decision);
 
         for (const [key, signedVc] of Object.entries(vcPayload)) {
             const type = VerificationTypeEnum.from(key);

@@ -369,10 +369,11 @@ export class ExternalUser {
             const externalUser = new ExternalUser(keyManager, storageFactory);
             const accountName = response.getAccountName();
             const callbackResponse: CallbackResponse = { user: externalUser };
+            const dataSharingResponse = response.getDataSharingResponse();
 
             await verifyTonomyVc(response.vc, {
                 verifyOrigin: false,
-                verifyUsername: response.getDataSharingResponse()?.data.username ? true : false,
+                verifyUsername: dataSharingResponse?.data.username ? true : false,
             });
 
             if (checkKeys) {
@@ -382,7 +383,6 @@ export class ExternalUser {
             }
 
             await externalUser.setAccountName(accountName);
-            const dataSharingResponse = response.getDataSharingResponse();
 
             if (dataSharingResponse?.data.kyc) {
                 const did = dataSharingResponse.data.kyc.getIssuer();

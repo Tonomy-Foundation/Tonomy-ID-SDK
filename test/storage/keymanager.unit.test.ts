@@ -1,3 +1,7 @@
+/**
+ * @jest-environment jsdom
+ */
+
 import { PrivateKey } from '@wharfkit/antelope';
 import { JsKeyManager } from '../../src/sdk/storage/jsKeyManager';
 import { jsStorageFactory } from '../../src/cli/bootstrap/jsstorage';
@@ -11,7 +15,7 @@ import {
 import { generateRandomKeyPair, createVCSigner, createSigner } from '../../src/sdk/util/crypto';
 import { generatePrivateKeyFromPassword } from '../../src/cli/bootstrap/keys';
 import { createTestUserObject, IUserPublic } from '../helpers/user';
-import { resetTestDatabase, setupTestDatabase } from '../setup';
+import { setupTestDatabase, teardownTestDatabase } from './testDatabase';
 
 describe('Keymanager class', () => {
     let user: IUserPublic;
@@ -23,7 +27,7 @@ describe('Keymanager class', () => {
     });
     afterEach(async () => {
         await user.logout();
-        await resetTestDatabase();
+        await teardownTestDatabase();
     });
 
     test('KeyManagerLevel enum helpers', () => {

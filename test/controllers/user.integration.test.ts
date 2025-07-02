@@ -11,7 +11,7 @@ import { getAccount, getChainId } from '../../src/sdk/services/blockchain/eosio/
 import { getAccountInfo } from '../../src/sdk/helpers/user';
 import { jest } from '@jest/globals';
 import { MILLISECONDS_IN_SECOND } from '../../src/sdk/util/time';
-import { resetTestDatabase, setupTestDatabase } from '../setup';
+import { setupTestDatabase, teardownTestDatabase } from '../storage/testDatabase';
 import { DataSource } from 'typeorm';
 
 describe('User class', () => {
@@ -26,7 +26,7 @@ describe('User class', () => {
 
     afterEach(async (): Promise<void> => {
         await user.logout();
-        await resetTestDatabase();
+        await teardownTestDatabase();
     });
 
     test('savePassword() generates and saves new private key', async () => {

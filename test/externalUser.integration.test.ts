@@ -21,7 +21,7 @@ import {
 import { JsKeyManager } from '../src/sdk/storage/jsKeyManager';
 import { DataSource } from 'typeorm';
 import { jest } from '@jest/globals';
-import { setupTestDatabase } from '../test/setup';
+import { setupTestDatabase } from './storage/testDatabase';
 import {
     IUserPublic,
     createRandomApp,

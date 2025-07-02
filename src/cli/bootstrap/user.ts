@@ -4,7 +4,7 @@ import { getTonomyContract, JsKeyManager, KeyManager, createUserObject } from '.
 import { CreateAccountRequest, CreateAccountResponse } from '../../sdk/services/communication/accounts';
 import * as accounts from '../../sdk/services/communication/accounts';
 import { Name } from '@wharfkit/antelope';
-import { setupTestDatabase } from '../../../test/setup';
+import { setupTestDatabase } from '../../../test/storage/testDatabase';
 
 const defaultCreateAccount = accounts.createAccount;
 
