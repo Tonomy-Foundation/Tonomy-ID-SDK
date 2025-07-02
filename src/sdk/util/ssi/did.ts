@@ -5,12 +5,29 @@ import { getChainId } from '../../services/blockchain';
 import { SdkErrors, throwError } from '../errors';
 
 export function getAccountNameFromDid(did: DIDurl): Name {
+    const parsed = parseAntelopeDid(did);
+
+    return Name.from(parsed.account);
+}
+
+export function parseAntelopeDid(did: DIDurl): ParsedDID & {
+    chain: string;
+    account: string;
+} {
     const parsed = parseDid(did);
 
-    const id = parsed.id.split(':');
-    const accountName = id[id.length - 1];
+    if (parsed.method !== 'antelope') {
+        throwError(`Invalid DID method: ${parsed.method}`, SdkErrors.InvalidData);
+    }
 
-    return Name.from(accountName);
+    const chain = parsed.id.split(':')[0];
+    const account = parsed.id.split(':')[1];
+
+    return {
+        ...parsed,
+        chain,
+        account,
+    };
 }
 
 export function parseDid(did: DIDurl): ParsedDID {
@@ -36,14 +53,10 @@ export async function verifyOpsTmyDid(
     did: string,
     { verifyChainId = true }: { verifyChainId?: boolean } = {}
 ): Promise<void> {
-    const { method, id, fragment } = parseDid(did);
+    const { account, fragment } = parseAntelopeDid(did);
 
-    if (method !== 'antelope') {
-        throwError(`Invalid DID method: ${method}`, SdkErrors.InvalidData);
-    }
-
-    if (id !== 'ops.tmy') {
-        throwError(`DID must be from ops.tmy account, got: ${id}`, SdkErrors.InvalidData);
+    if (account !== 'ops.tmy') {
+        throwError(`DID must be from ops.tmy account, got: ${account}`, SdkErrors.InvalidData);
     }
 
     if (fragment !== 'active') {
@@ -56,7 +69,7 @@ export async function verifyOpsTmyDid(
 export async function checkChainId(did: string, verifyChainId: boolean = true): Promise<string | undefined> {
     if (verifyChainId) {
         const chainId = await getChainId();
-        const didChainId = did.split(':')[0];
+        const didChainId = parseAntelopeDid(did).chain;
 
         if (didChainId !== chainId.toString()) {
             throwError(`Invalid chain ID expected ${chainId.toString()} found ${didChainId}`, SdkErrors.InvalidData);

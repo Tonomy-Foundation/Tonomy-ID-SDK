@@ -59,18 +59,18 @@ export type VeriffWebhookPayload = {
             decisionScore: number | null;
             decision: 'approved' | 'declined' | 'resubmission_requested' | 'expired' | 'abandoned';
             person: {
-                firstName: PersonField;
-                lastName: PersonField;
-                dateOfBirth: PersonField;
-                gender: PersonField;
-                idNumber: PersonField;
-                nationality: PersonField;
-                address: AddressField;
-                placeOfBirth: PersonField;
-                foreignerStatus: PersonField;
-                occupation: PersonField;
-                employer: PersonField;
-                extraNames: PersonField;
+                firstName?: PersonField;
+                lastName?: PersonField;
+                dateOfBirth?: PersonField;
+                gender?: PersonField;
+                idNumber?: PersonField;
+                nationality?: PersonField;
+                address?: AddressField;
+                placeOfBirth?: PersonField;
+                foreignerStatus?: PersonField;
+                occupation?: PersonField;
+                employer?: PersonField;
+                extraNames?: PersonField;
             };
             document: {
                 type?:

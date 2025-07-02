@@ -10,13 +10,22 @@ import {
 } from '../../src/sdk/storage/keymanager';
 import { generateRandomKeyPair, createVCSigner, createSigner } from '../../src/sdk/util/crypto';
 import { generatePrivateKeyFromPassword } from '../../src/cli/bootstrap/keys';
-import { createUserObject } from '../helpers/user';
-
-const keyManager = new JsKeyManager();
-
-const user = await createUserObject(keyManager, jsStorageFactory);
+import { createTestUserObject, IUserPublic } from '../helpers/user';
+import { resetTestDatabase, setupTestDatabase } from '../setup';
 
 describe('Keymanager class', () => {
+    let user: IUserPublic;
+
+    beforeEach(async () => {
+        const dataSource = await setupTestDatabase();
+
+        user = createTestUserObject(new JsKeyManager(), jsStorageFactory, dataSource);
+    });
+    afterEach(async () => {
+        await user.logout();
+        await resetTestDatabase();
+    });
+
     test('KeyManagerLevel enum helpers', () => {
         const passwordLevel = KeyManagerLevel.PASSWORD;
 

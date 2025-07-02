@@ -2,7 +2,7 @@ import { Name, PublicKey } from '@wharfkit/antelope';
 import { VCWithTypeType, VerifiableCredentialOptions, VerifiableCredentialWithType } from './ssi/vc';
 import { Issuer } from 'did-jwt-vc';
 import { App } from '../controllers/App';
-import { IUserDataVault, IUserRequestsManager } from '../types/User';
+import { IUserRequestsManager } from '../types/User';
 import { isErrorCode, SdkErrors } from './errors';
 import { Serializable } from './serializable';
 import { base64UrlToObj, objToBase64Url } from './base64';

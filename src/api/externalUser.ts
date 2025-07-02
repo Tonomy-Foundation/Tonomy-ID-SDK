@@ -17,7 +17,7 @@ import {
     DualWalletResponse,
     DualWalletRequests,
 } from '../sdk/util/request';
-import { KYCPayload, KYCVC } from '../sdk/util';
+import { KYCPayload, KYCVC, verifyOpsTmyDid } from '../sdk/util';
 import {
     AuthenticationMessage,
     Communication,
@@ -385,6 +385,9 @@ export class ExternalUser {
             const dataSharingResponse = response.getDataSharingResponse();
 
             if (dataSharingResponse?.data.kyc) {
+                const did = dataSharingResponse.data.kyc.getIssuer();
+
+                await verifyOpsTmyDid(did);
                 callbackResponse.data = {
                     kyc: {
                         value: dataSharingResponse.data.kyc.getPayload(),

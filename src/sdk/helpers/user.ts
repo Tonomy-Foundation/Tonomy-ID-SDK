@@ -30,13 +30,13 @@ export async function getAccountInfo(account: TonomyUsername | Name): Promise<AP
  * @param {KeyManager} keyManager - the key manager
  * @param {StorageFactory} storageFactory - the storage factory
  * @param {DataSource} dataSource - the data source
- * @returns {Promise<IUser>} the user object
+ * @returns {IUser} the user object
  */
-export async function createUserObject(
+export function createUserObject(
     keyManager: KeyManager,
     storageFactory: StorageFactory,
     dataSource: DataSource
-): Promise<IUser> {
+): IUser {
     return new User(keyManager, storageFactory, dataSource);
 }
 
