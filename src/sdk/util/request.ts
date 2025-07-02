@@ -127,11 +127,11 @@ export class WalletResponseVerifiableCredential extends VerifiableCredentialWith
                 }
 
                 if (data.kyc) data.kyc = new KYCVC(data.kyc);
-                if (data.firstName) data.firstName = new FirstNameVC(data.firstName);
-                if (data.lastName) data.lastName = new LastNameVC(data.lastName);
-                if (data.birthDate) data.birthDate = new BirthDateVC(data.birthDate);
-                if (data.address) data.address = new AddressVC(data.address);
-                if (data.nationality) data.nationality = new NationalityVC(data.nationality);
+                // if (data.firstName) data.firstName = new FirstNameVC(data.firstName);
+                // if (data.lastName) data.lastName = new LastNameVC(data.lastName);
+                // if (data.birthDate) data.birthDate = new BirthDateVC(data.birthDate);
+                // if (data.address) data.address = new AddressVC(data.address);
+                // if (data.nationality) data.nationality = new NationalityVC(data.nationality);
             }
 
             return response;

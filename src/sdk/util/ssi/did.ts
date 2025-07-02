@@ -50,12 +50,20 @@ export async function verifyOpsTmyDid(
         throwError(`DID must use #active fragment, got: #${fragment}`, SdkErrors.InvalidData);
     }
 
+    await checkChainId(did, verifyChainId);
+}
+
+export async function checkChainId(did: string, verifyChainId: boolean = true): Promise<string | undefined> {
     if (verifyChainId) {
         const chainId = await getChainId();
-        const didChainId = did.split(':')[2];
+        const didChainId = did.split(':')[0];
 
         if (didChainId !== chainId.toString()) {
-            throwError(`Invalid chain ID: expected ${chainId.toString()}, got ${didChainId}`, SdkErrors.InvalidData);
+            throwError(`Invalid chain ID expected ${chainId.toString()} found ${didChainId}`, SdkErrors.InvalidData);
         }
+
+        return didChainId;
     }
+
+    return;
 }

@@ -5,7 +5,7 @@ import { getSettings } from '../sdk/util/settings';
 import { isErrorCode, SdkErrors, createSdkError, throwError } from '../sdk/util/errors';
 import { createStorage, PersistentStorageClean, StorageFactory, STORAGE_NAMESPACE } from '../sdk/storage/storage';
 import { Name, API, NameType } from '@wharfkit/antelope';
-import { TonomyUsername } from '../sdk/util/username';
+import { checkUsername, TonomyUsername } from '../sdk/util/username';
 import { browserStorageFactory } from '../sdk/storage/browserStorage';
 import { getAccount, getChainId } from '../sdk/services/blockchain/eosio/eosio';
 import { JsKeyManager } from '../sdk/storage/jsKeyManager';
@@ -17,7 +17,7 @@ import {
     DualWalletResponse,
     DualWalletRequests,
 } from '../sdk/util/request';
-import { getAccountNameFromDid, KYCPayload, KYCVC, parseDid } from '../sdk/util';
+import { KYCPayload, KYCVC } from '../sdk/util';
 import {
     AuthenticationMessage,
     Communication,
@@ -26,13 +26,17 @@ import {
     LinkAuthRequestResponseMessage,
     Message,
 } from '../sdk';
-import { VCWithTypeType, VerifiableCredential, VerifiableCredentialWithType } from '../sdk/util/ssi/vc';
+import {
+    defaultVerifyTonomyVcOptions,
+    VerifiableCredential,
+    verifyTonomyVc,
+    VerifyTonomyVcOptions,
+} from '../sdk/util/ssi/vc';
 import { DIDurl, JWT } from '../sdk/util/ssi/types';
 import { Signer, createKeyManagerSigner, transact } from '../sdk/services/blockchain/eosio/transaction';
 import { createDidKeyIssuerAndStore } from '../sdk/helpers/didKeyStorage';
 import { verifyKeyExistsForApp } from '../sdk/helpers/user';
 import { IOnPressLoginOptions } from '../sdk/types/User';
-import { App } from '../sdk/controllers/App';
 import Debug from 'debug';
 
 const debug = Debug('tonomy-sdk:externalUser');
@@ -657,131 +661,5 @@ export async function verifyClientAuthorization<T extends ClientAuthorizationDat
         account: verifiedVc.account.toString(),
         data: vc.getCredentialSubject() as T,
         username: verifiedVc.username ? verifiedVc.username.toString() : undefined,
-    };
-}
-
-async function checkChainId(did: string, verifyChainId: boolean): Promise<string | undefined> {
-    if (verifyChainId) {
-        const chainId = await getChainId();
-        const didChainId = did.split(':')[0];
-
-        if (didChainId !== chainId.toString()) {
-            throwError(`Invalid chain ID expected ${chainId.toString()} found ${didChainId}`, SdkErrors.InvalidData);
-        }
-
-        return didChainId;
-    }
-
-    return;
-}
-
-async function checkUsername(
-    account: Name,
-    data: object,
-    verifyUsername: boolean
-): Promise<TonomyUsername | undefined> {
-    if (verifyUsername) {
-        const username = (data as any).username;
-
-        if (username) {
-            const tonomyUsername = TonomyUsername.fromFullUsername(username);
-
-            // this will throw if the username is not valid
-            // eslint-disable-next-line camelcase
-            const { account_name } = await getTonomyContract().getPerson(tonomyUsername);
-
-            // eslint-disable-next-line camelcase
-            if (!account_name.equals(account)) {
-                throwError('Username does not match account', SdkErrors.InvalidData);
-            }
-
-            return tonomyUsername;
-        }
-
-        return;
-    }
-
-    return;
-}
-
-async function checkOrigin(
-    vcId: string,
-    did: string,
-    verifyOrigin: boolean
-): Promise<{ origin: string; app: App } | undefined> {
-    if (verifyOrigin) {
-        const origin = vcId?.split('/vc/auth/')[0];
-
-        if (!origin) throwError('Invalid origin', SdkErrors.InvalidData);
-        const app = await App.getApp(origin);
-        const { fragment } = parseDid(did);
-
-        if (fragment !== app.accountName.toString()) throwError('Invalid app', SdkErrors.InvalidData);
-
-        return { origin, app };
-    }
-
-    return;
-}
-
-type VerifyTonomyVcOptions = {
-    verifyChainId?: boolean;
-    verifyUsername?: boolean;
-    verifyOrigin?: boolean;
-};
-
-const defaultVerifyTonomyVcOptions: VerifyTonomyVcOptions = {
-    verifyChainId: true,
-    verifyUsername: true,
-    verifyOrigin: true,
-};
-
-async function verifyTonomyVc<T extends object>(
-    vcJwt: VCWithTypeType<T>,
-    {
-        verifyChainId = true,
-        verifyUsername = true,
-        verifyOrigin = true,
-    }: VerifyTonomyVcOptions = defaultVerifyTonomyVcOptions
-): Promise<{
-    account: Name;
-    chainId?: string;
-    did: string;
-    username?: TonomyUsername;
-    origin?: string;
-    app?: App;
-}> {
-    let vc: VerifiableCredential;
-
-    if (typeof vcJwt === 'string') vc = new VerifiableCredential(vcJwt);
-    else if (vcJwt instanceof VerifiableCredential) vc = vcJwt;
-    else if (vcJwt instanceof VerifiableCredentialWithType) vc = vcJwt.getVc();
-    else throw Error('Invalid VC type, expected string or VerifiableCredential');
-
-    const vcId = vc.getId();
-    const did = vc.getIssuer();
-    const data: T = vc.getCredentialSubject() as T;
-    const account = await getAccountNameFromDid(did);
-
-    const { method, id } = parseDid(did);
-
-    if (method !== 'antelope') {
-        throwError(`Invalid DID method: ${method}`, SdkErrors.InvalidData);
-    }
-
-    const [, chainId, username, originAndApp] = await Promise.all([
-        vc.verify(),
-        checkChainId(id, verifyChainId),
-        checkUsername(account, data, verifyUsername),
-        checkOrigin(vcId ? vcId : '', did, verifyOrigin),
-    ]);
-
-    return {
-        account,
-        chainId,
-        did,
-        username,
-        origin: originAndApp?.origin,
-        app: originAndApp?.app,
     };
 }

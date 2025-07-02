@@ -9,6 +9,9 @@ import { IdentityVerificationStorageManager } from '../storage/identityVerificat
 import { verifyOpsTmyDid } from '../util/ssi/did';
 import { castDecisionToStatus, KYCPayload, KYCVC, PersonCredentialType } from '../util';
 import { IUserDataVault } from '../types/User';
+import Debug from 'debug';
+
+const debug = Debug('tonomy-sdk:UserDataVault');
 
 export class UserDataVault extends UserCommunication implements IUserDataVault {
     private readonly idVerificationManager: IdentityVerificationStorageManager;
@@ -21,7 +24,6 @@ export class UserDataVault extends UserCommunication implements IUserDataVault {
     /**
      * Handle a verification update message by parsing it and updating the verification record
      * @param message The verification message
-     * @returns The updated verification record
      * @throws {Error} If message type is incorrect or verification update fails
      */
     private handleVerificationUpdate: VeriffSubscriber = async (message: VerificationMessage): Promise<void> => {
@@ -35,6 +37,8 @@ export class UserDataVault extends UserCommunication implements IUserDataVault {
 
         const kycPayload = vcPayload.kyc.getPayload();
         const decision = kycPayload.data.verification.decision;
+
+        debug('kycPayload', did, kycPayload);
 
         const status = castDecisionToStatus(decision);
 
@@ -57,6 +61,7 @@ export class UserDataVault extends UserCommunication implements IUserDataVault {
         await new Promise<void>((resolve, reject) => {
             const newHandler: VeriffSubscriber = async (message: VerificationMessage): Promise<void> => {
                 try {
+                    // resolves after the verification update is handled first time
                     resolve(await this.handleVerificationUpdate(message));
                 } catch (error) {
                     reject(error);
@@ -72,15 +77,7 @@ export class UserDataVault extends UserCommunication implements IUserDataVault {
 
         this.unsubscribeVeriffVerification(id);
 
-        const kyc: KYCVC | null = (await this.idVerificationManager.findLatestApproved(
-            VerificationTypeEnum.KYC
-        )) as KYCVC | null;
-
-        if (!kyc) {
-            throw new Error('KYC verification data requested but not available in storage');
-        }
-
-        return kyc.getPayload();
+        return ((await this.fetchVerificationData(VerificationTypeEnum.KYC)) as KYCVC).getPayload();
     }
 
     async fetchVerificationData(type: VerificationTypeEnum): Promise<PersonCredentialType> {

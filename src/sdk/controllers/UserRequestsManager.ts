@@ -16,7 +16,6 @@ import { getAccountInfo } from '../helpers/user';
 import { DualWalletRequests, sleep } from '../util';
 import Debug from 'debug';
 import { UserDataVault } from './UserDataVault';
-import { VerificationTypeEnum } from '../types/VerificationTypeEnum';
 
 const debug = Debug('tonomy-sdk:UserRequestsManager');
 
@@ -155,15 +154,5 @@ export class UserRequestsManager extends UserDataVault implements IUserRequestsM
 
             await this.sendMessage(message);
         }
-    }
-
-    async handleKycRequestMessage(): Promise<string> {
-        const latestVerification = await this.identityVerification.findLatestApproved(VerificationTypeEnum.KYC);
-
-        if (!latestVerification) {
-            throw new Error('KYC verification data requested but not available in storage');
-        }
-
-        return latestVerification.vc;
     }
 }

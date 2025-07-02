@@ -10,6 +10,11 @@ import { toDateTime } from '../time';
 import { randomString } from '../crypto';
 import { Serializable } from '../serializable';
 import { getDidKeyResolver } from '@veramo/did-provider-key';
+import { checkChainId, getAccountNameFromDid, parseDid } from './did';
+import { SdkErrors, throwError } from '../errors';
+import { checkUsername, TonomyUsername } from '../username';
+import { App, checkOriginMatchesApp } from '../../controllers/App';
+import { Name } from '@wharfkit/antelope';
 
 /**
  * A W3C Verifiable Credential
@@ -372,4 +377,66 @@ export class VerifiableCredentialWithType<T extends object = object> implements 
     toJSON(): string {
         return this.toString();
     }
+}
+
+export type VerifyTonomyVcOptions = {
+    verifyChainId?: boolean;
+    verifyUsername?: boolean;
+    verifyOrigin?: boolean;
+};
+
+export const defaultVerifyTonomyVcOptions: VerifyTonomyVcOptions = {
+    verifyChainId: true,
+    verifyUsername: true,
+    verifyOrigin: true,
+};
+
+export async function verifyTonomyVc<T extends object>(
+    vcJwt: VCWithTypeType<T>,
+    {
+        verifyChainId = true,
+        verifyUsername = true,
+        verifyOrigin = true,
+    }: VerifyTonomyVcOptions = defaultVerifyTonomyVcOptions
+): Promise<{
+    account: Name;
+    chainId?: string;
+    did: string;
+    username?: TonomyUsername;
+    origin?: string;
+    app?: App;
+}> {
+    let vc: VerifiableCredentialWithType<T>;
+
+    if (typeof vcJwt === 'string') vc = new VerifiableCredentialWithType<T>(vcJwt);
+    else if (vcJwt instanceof VerifiableCredential) vc = new VerifiableCredentialWithType<T>(vcJwt);
+    else if (vcJwt instanceof VerifiableCredentialWithType) vc = vcJwt;
+    else throw Error('Invalid VC type, expected string or VerifiableCredential');
+
+    const vcId = vc.getVc().getId();
+    const did = vc.getIssuer();
+    const data: T = vc.getPayload();
+    const account = await getAccountNameFromDid(did);
+
+    const { method, id } = parseDid(did);
+
+    if (method !== 'antelope') {
+        throwError(`Invalid DID method: ${method}`, SdkErrors.InvalidData);
+    }
+
+    const [, chainId, username, originAndApp] = await Promise.all([
+        vc.verify(),
+        checkChainId(id, verifyChainId),
+        checkUsername(account, (data as any)?.username, verifyUsername),
+        checkOriginMatchesApp(vcId ? vcId : '', did, verifyOrigin),
+    ]);
+
+    return {
+        account,
+        chainId,
+        did,
+        username,
+        origin: originAndApp?.origin,
+        app: originAndApp?.app,
+    };
 }
