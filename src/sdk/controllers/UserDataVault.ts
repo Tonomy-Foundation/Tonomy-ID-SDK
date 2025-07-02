@@ -1,6 +1,4 @@
 import { DataSource } from 'typeorm';
-import { IdentityVerificationStorage } from '../storage/entities/identityVerificationStorage';
-import { IdentityVerificationStorageRepository } from '../storage/identityVerificationStorageRepository';
 import { VerificationMessage } from '../services/communication/message';
 import { UserCommunication } from './UserCommunication';
 import { KeyManager } from '../storage/keymanager';
@@ -9,9 +7,10 @@ import { VeriffSubscriber } from '../services/communication/communication';
 import { VerificationTypeEnum } from '../types/VerificationTypeEnum';
 import { IdentityVerificationStorageManager } from '../storage/identityVerificationStorageManager';
 import { verifyOpsTmyDid } from '../util/ssi/did';
-import { castDecisionToStatus } from '../util';
+import { castDecisionToStatus, KYCPayload, KYCVC, PersonCredentialType } from '../util';
+import { IUserDataVault } from '../types/User';
 
-export class UserDataVault extends UserCommunication {
+export class UserDataVault extends UserCommunication implements IUserDataVault {
     private readonly idVerificationManager: IdentityVerificationStorageManager;
 
     constructor(keyManager: KeyManager, storageFactory: StorageFactory, dataSource: DataSource) {
@@ -20,33 +19,12 @@ export class UserDataVault extends UserCommunication {
     }
 
     /**
-     * Subscribes to verification updates
-     * @returns Subscription ID that can be used to unsubscribe
-     */
-    subscribeToVerificationUpdates(): Promise<IdentityVerificationStorage[] | null> {
-        const handler: VeriffSubscriber = async (
-            message: VerificationMessage
-        ): Promise<IdentityVerificationStorage[] | null> => {
-            try {
-                return await this.handleVerificationUpdate(message);
-            } catch (error) {
-                console.error('Error processing verification message:', error);
-                return null;
-            }
-        };
-
-        return this.communication.waitForVeriffVerification(handler);
-    }
-
-    /**
      * Handle a verification update message by parsing it and updating the verification record
      * @param message The verification message
      * @returns The updated verification record
      * @throws {Error} If message type is incorrect or verification update fails
      */
-    private async handleVerificationUpdate(
-        message: VerificationMessage
-    ): Promise<IdentityVerificationStorage[] | null> {
+    private handleVerificationUpdate: VeriffSubscriber = async (message: VerificationMessage): Promise<void> => {
         await message.verify();
 
         const did = message.getIssuer();
@@ -60,34 +38,58 @@ export class UserDataVault extends UserCommunication {
 
         const status = castDecisionToStatus(decision);
 
-        const updatedVerifications: IdentityVerificationStorage[] = [];
-
         for (const [key, signedVc] of Object.entries(vcPayload)) {
             const type = VerificationTypeEnum.from(key);
-            let verification = await this.idVerificationManager.findByVeriffIdAndType(kycPayload.sessionId, type);
 
-            if (verification) {
-                verification.vc = signedVc.toString();
-                verification.status = status;
-                await this.idVerificationManager.updateRecord(verification);
-            } else {
-                await this.idVerificationManager.createVc(kycPayload.sessionId, signedVc.toString(), status, type);
-                verification = await this.idVerificationManager.findByVeriffIdAndType(kycPayload.sessionId, type);
-            }
-
-            if (verification) {
-                updatedVerifications.push(verification);
-            }
+            await this.idVerificationManager.emplaceByVeriffIdAndType(kycPayload.sessionId, type, status, signedVc);
         }
-
-        return updatedVerifications;
-    }
+    };
 
     /**
-     * Unsubscribes from verification updates
-     * @param subscriptionId The ID returned from subscribeToVerificationUpdates
+     * Waits for the next Veriff verification message, calls the handler, and returns the KYCPayload of the message.
+     * Used for one-time waiting scenarios (e.g., frontend waiting screen).
+     *
+     * @returns {Promise<KYCPayload>}
      */
-    unsubscribeFromVerificationUpdates(subscriptionId: number): void {
-        this.communication.unsubscribeMessage(subscriptionId);
+    async waitForNextVeriffVerification(): Promise<KYCPayload> {
+        let id: number | undefined;
+
+        await new Promise<void>((resolve, reject) => {
+            const newHandler: VeriffSubscriber = async (message: VerificationMessage): Promise<void> => {
+                try {
+                    resolve(await this.handleVerificationUpdate(message));
+                } catch (error) {
+                    reject(error);
+                }
+            };
+
+            id = this.subscribeVeriffVerification(newHandler);
+        });
+
+        if (!id) {
+            throw new Error('Failed to subscribe to Veriff verification messages');
+        }
+
+        this.unsubscribeVeriffVerification(id);
+
+        const kyc: KYCVC | null = (await this.idVerificationManager.findLatestApproved(
+            VerificationTypeEnum.KYC
+        )) as KYCVC | null;
+
+        if (!kyc) {
+            throw new Error('KYC verification data requested but not available in storage');
+        }
+
+        return kyc.getPayload();
+    }
+
+    async fetchVerificationData(type: VerificationTypeEnum): Promise<PersonCredentialType> {
+        const vc = await this.idVerificationManager.findLatestApproved(type);
+
+        if (!vc) {
+            throw new Error(`${type} verification data requested but not available in storage`);
+        }
+
+        return vc;
     }
 }

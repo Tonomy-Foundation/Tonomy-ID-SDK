@@ -16,13 +16,14 @@ export class IdentityVerificationStorageManager {
         }
     }
 
-    async createVc(
+    async create(
         veriffId: string,
-        vc: PersonCredentialType,
+        type: VerificationTypeEnum,
         status: VeriffStatusEnum,
-        type: VerificationTypeEnum
-    ): Promise<void> {
-        await this.repository.create(veriffId, vc.toString(), status, type);
+        vc: PersonCredentialType
+    ): Promise<PersonCredentialType> {
+        await this.repository.create(veriffId, type, status, vc.toString());
+        return vc;
     }
 
     async findLatestApproved(type: VerificationTypeEnum): Promise<PersonCredentialType | null> {
@@ -33,12 +34,19 @@ export class IdentityVerificationStorageManager {
         } else return null;
     }
 
-    async updateRecord(identityVerification: IdentityVerificationStorage): Promise<void> {
-        const doc = await this.repository.findByVeriffId(identityVerification.veriffId);
+    async updateRecord(
+        veriffId: string,
+        type: VerificationTypeEnum,
+        status: VeriffStatusEnum,
+        vc: PersonCredentialType
+    ): Promise<PersonCredentialType> {
+        const doc = await this.repository.findByIdAndType(veriffId, type);
 
         if (doc) {
-            doc.updatedAt = new Date();
-            await this.repository.update(identityVerification);
+            doc.vc = vc.toString();
+            doc.status = status;
+            await this.repository.update(doc);
+            return castStringToCredential(doc.vc, doc.type);
         } else {
             throw new Error('Record not found for update');
         }
@@ -54,5 +62,20 @@ export class IdentityVerificationStorageManager {
         if (doc) {
             return castStringToCredential(doc.vc, type);
         } else return null;
+    }
+
+    async emplaceByVeriffIdAndType(
+        veriffId: string,
+        type: VerificationTypeEnum,
+        status: VeriffStatusEnum,
+        vc: PersonCredentialType
+    ): Promise<PersonCredentialType> {
+        const doc = await this.repository.findByIdAndType(veriffId, type);
+
+        if (doc) {
+            doc.vc = vc.toString();
+            doc.status = status;
+            return this.updateRecord(veriffId, type, status, vc);
+        } else return this.create(veriffId, type, status, vc);
     }
 }

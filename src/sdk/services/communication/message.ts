@@ -4,7 +4,15 @@ import { VerifiableCredentialWithType, VCWithTypeType } from '../../util/ssi/vc'
 import { DualWalletRequests, DualWalletResponse } from '../../util';
 import { Name } from '@wharfkit/antelope';
 import Debug from 'debug';
-import { VerificationMessagePayload, VeriffWebhookPayload } from '../../util/veriff';
+import {
+    VerificationMessagePayload,
+    KYCVC,
+    FirstNameVC,
+    LastNameVC,
+    BirthDateVC,
+    AddressVC,
+    NationalityVC,
+} from '../../util/veriff';
 
 const debug = Debug('tonomy-sdk:LoginRequestResponseMessage');
 
@@ -266,25 +274,18 @@ export class VerificationMessage extends Message<VerificationMessagePayload> {
         super(vc);
 
         this.decodedPayload = {
-            ...this.decodedPayload, // preserve existing properties like veriffId, type
-            vc: {
-                kyc: new VerifiableCredentialWithType<VeriffWebhookPayload>(
-                    this.decodedPayload.vc.kyc as unknown as any
-                ),
-                firstName: new VerifiableCredentialWithType<{ firstName: string }>(
-                    this.decodedPayload.vc.firstName as unknown as any
-                ),
-                lastName: new VerifiableCredentialWithType<{ lastName: string }>(
-                    this.decodedPayload.vc.lastName as unknown as any
-                ),
-                birthDate: new VerifiableCredentialWithType<{ dateOfBirth: string }>(
-                    this.decodedPayload.vc.birthDate as unknown as any
-                ),
-                nationality: new VerifiableCredentialWithType<{ nationality: string }>(
-                    this.decodedPayload.vc.nationality as unknown as any
-                ),
-            },
+            ...this.decodedPayload,
+            kyc: new KYCVC(this.decodedPayload.kyc),
         };
+
+        if (this.decodedPayload.firstName)
+            this.decodedPayload.firstName = new FirstNameVC(this.decodedPayload.firstName);
+        if (this.decodedPayload.lastName) this.decodedPayload.lastName = new LastNameVC(this.decodedPayload.lastName);
+        if (this.decodedPayload.birthDate)
+            this.decodedPayload.birthDate = new BirthDateVC(this.decodedPayload.birthDate);
+        if (this.decodedPayload.address) this.decodedPayload.address = new AddressVC(this.decodedPayload.address);
+        if (this.decodedPayload.nationality)
+            this.decodedPayload.nationality = new NationalityVC(this.decodedPayload.nationality);
     }
 
     /**

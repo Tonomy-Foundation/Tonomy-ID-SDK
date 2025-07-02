@@ -1,4 +1,4 @@
-import { Communication, Subscriber } from '../services/communication/communication';
+import { Communication, Subscriber, VeriffSubscriber } from '../services/communication/communication';
 import { AuthenticationMessage, Message } from '../services/communication/message';
 import { KeyManager } from '../storage/keymanager';
 import { StorageFactory } from '../storage/storage';
@@ -23,6 +23,14 @@ export abstract class UserCommunication extends UserAuthorization implements IUs
 
     subscribeMessage(subscriber: Subscriber, type?: string): number {
         return this.communication.subscribeMessage(subscriber, type);
+    }
+
+    subscribeVeriffVerification(subscriber: VeriffSubscriber): number {
+        return this.communication.subscribeVeriffVerification(subscriber);
+    }
+
+    unsubscribeVeriffVerification(id: number): void {
+        this.communication.unsubscribeVeriffVerification(id);
     }
 
     async sendMessage(message: Message): Promise<boolean> {

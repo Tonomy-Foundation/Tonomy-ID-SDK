@@ -12,28 +12,22 @@ export class IdentityVerificationStorageRepository {
 
     public async create(
         veriffId: string,
-        vc: string,
+        type: VerificationTypeEnum,
         status: VeriffStatusEnum,
-        type: VerificationTypeEnum
+        vc: string
     ): Promise<IdentityVerificationStorage> {
         const now = new Date();
         const appStorageEntity = this.ormRepository.create({
             veriffId,
-            vc,
-            status,
             type,
+            status,
+            vc,
             version: 1,
             createdAt: now,
             updatedAt: now,
         });
 
         return this.ormRepository.save(appStorageEntity);
-    }
-
-    public async findByVeriffId(veriffId: string): Promise<IdentityVerificationStorage | null> {
-        const doc = this.ormRepository.findOne({ where: { veriffId } });
-
-        return doc;
     }
 
     public async findLatestApproved(type: VerificationTypeEnum): Promise<IdentityVerificationStorage | null> {
@@ -50,6 +44,9 @@ export class IdentityVerificationStorageRepository {
     }
 
     public async update(identityVerification: IdentityVerificationStorage): Promise<IdentityVerificationStorage> {
+        const now = new Date();
+
+        identityVerification.updatedAt = now;
         return await this.ormRepository.save(identityVerification);
     }
 

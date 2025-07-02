@@ -2,7 +2,7 @@ import { Name, PublicKey } from '@wharfkit/antelope';
 import { VCWithTypeType, VerifiableCredentialOptions, VerifiableCredentialWithType } from './ssi/vc';
 import { Issuer } from 'did-jwt-vc';
 import { App } from '../controllers/App';
-import { IUserRequestsManager } from '../types/User';
+import { IUserDataVault, IUserRequestsManager } from '../types/User';
 import { isErrorCode, SdkErrors } from './errors';
 import { Serializable } from './serializable';
 import { base64UrlToObj, objToBase64Url } from './base64';
@@ -12,7 +12,8 @@ import { getAccountNameFromDid } from './ssi/did';
 import Debug from 'debug';
 import { getSettings } from './settings';
 import { isSameOrigin } from '../helpers/urls';
-import { VeriffWebhookPayload } from './veriff';
+import { AddressVC, BirthDateVC, FirstNameVC, KYCVC, LastNameVC, NationalityVC } from './veriff';
+import { VerificationTypeEnum } from '../types/VerificationTypeEnum';
 
 const debug = Debug('tonomy-sdk:util:WalletRequest');
 
@@ -30,13 +31,11 @@ export type LoginRequestPayload = {
 export type DataRequest = {
     username?: boolean;
     kyc?: boolean;
-    // verified: {
-    //     firstName: boolean;
-    //     lastName: boolean;
-    //     address: boolean;
-    //     birthdate: boolean;
-    //     nationality: boolean;
-    // };
+    // firstName: boolean;
+    // lastName: boolean;
+    // address: boolean;
+    // birthdate: boolean;
+    // nationality: boolean;
 };
 
 export type DataSharingRequestPayload = {
@@ -59,16 +58,12 @@ export type LoginRequestResponsePayload = {
 export type DataSharingResponsePayload = {
     data: {
         username?: TonomyUsername;
-        kyc?: VerifiableCredentialWithType<VeriffWebhookPayload['data']>;
-        lastName?: VerifiableCredentialWithType<{ lastName: string }>;
-        firstName?: VerifiableCredentialWithType<{ firstName: string }>;
-        dateOfBirth?: VerifiableCredentialWithType<{ dateOfBirth: string }>;
-        nationality?: VerifiableCredentialWithType<{ nationality: string }>;
-        documentType?: VerifiableCredentialWithType<{ documentType: string }>;
-        documentNumber?: VerifiableCredentialWithType<{ documentNumber: string }>;
-        address?: VerifiableCredentialWithType<{ address: string }>;
-        phone?: VerifiableCredentialWithType<{ phone: string }>;
-        email?: VerifiableCredentialWithType<{ email: string }>;
+        kyc?: KYCVC;
+        // firstName?: FirstNameVC;
+        // lastName?: LastNameVC;
+        // birthDate?: BirthDateVC;
+        // address?: AddressVC;
+        // nationality?: NationalityVC;
     };
 };
 
@@ -131,9 +126,12 @@ export class WalletResponseVerifiableCredential extends VerifiableCredentialWith
                     data.username = TonomyUsername.fromFullUsername(data.username as unknown as string);
                 }
 
-                if (data.kyc) {
-                    data.kyc = new VerifiableCredentialWithType(data.kyc);
-                }
+                if (data.kyc) data.kyc = new KYCVC(data.kyc);
+                if (data.firstName) data.firstName = new FirstNameVC(data.firstName);
+                if (data.lastName) data.lastName = new LastNameVC(data.lastName);
+                if (data.birthDate) data.birthDate = new BirthDateVC(data.birthDate);
+                if (data.address) data.address = new AddressVC(data.address);
+                if (data.nationality) data.nationality = new NationalityVC(data.nationality);
             }
 
             return response;
@@ -226,7 +224,7 @@ export class WalletRequest implements Serializable {
      * @param {boolean} [checkSsoDomain=false] - Whether to check the SSO domain for login requests.
      * @returns {Promise<WalletResponse>} - The wallet response containing the accepted requests.
      */
-    async accept(user: IUserRequestsManager, checkSsoDomain = false): Promise<WalletResponse> {
+    async accept(user: IUserRequestsManager & IUserDataVault, checkSsoDomain = false): Promise<WalletResponse> {
         const external = await this.getApp();
 
         debug(`WalletRequest/accept: Accepting request from app ${external.origin}`);
@@ -283,10 +281,7 @@ export class WalletRequest implements Serializable {
                 }
 
                 if (req.data.kyc) {
-                    // Retrieve KYC data from user's storage if available
-                    const vc = await user.handleKycRequestMessage();
-
-                    res.data.kyc = new VerifiableCredentialWithType(vc);
+                    res.data.kyc = (await user.fetchVerificationData(VerificationTypeEnum.KYC)) as KYCVC;
                 }
 
                 debug(

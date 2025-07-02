@@ -6,11 +6,12 @@ import { AuthenticationMessage, Message } from '../services/communication/messag
 import { UserStatusEnum } from './UserStatusEnum';
 import { Subscriber } from '../services/communication/communication';
 import { App } from '../controllers/App';
-import { URL as URLtype, DataRequest, DualWalletRequests } from '../util';
+import { URL as URLtype, DataRequest, DualWalletRequests, KYCPayload, PersonCredentialType } from '../util';
 import { PublicKey } from '@wharfkit/antelope';
 import { AppStatusEnum } from './AppStatusEnum';
 import { Signer } from '../services/blockchain';
 import { KeyManagerLevel } from '../storage/keymanager';
+import { VerificationTypeEnum } from './VerificationTypeEnum';
 
 type KeyFromPasswordFn = (
     password: string,
@@ -114,7 +115,6 @@ export interface IUserOnboarding extends IUserCommunication {
 export interface IUserRequestsManager extends IUserCommunication {
     handleLinkAuthRequestMessage(message: Message): Promise<void>;
     loginWithApp(app: App, key: PublicKey): Promise<void>;
-    handleKycRequestMessage(): Promise<string>;
 
     /** Accepts a login request by authorizing keys on the blockchain (if the are not already authorized)
      * And sends a response to the requesting app
@@ -129,6 +129,11 @@ export interface IUserRequestsManager extends IUserCommunication {
     acceptLoginRequest(requests: DualWalletRequests, respondWith: 'redirect' | 'message'): Promise<void | URLtype>;
 }
 
-export interface IUser extends IUserCaptcha, IUserOnboarding, IUserRequestsManager {
+export interface IUserDataVault extends IUserCommunication {
+    waitForNextVeriffVerification(): Promise<KYCPayload>;
+    fetchVerificationData(type: VerificationTypeEnum): Promise<PersonCredentialType>;
+}
+
+export interface IUser extends IUserCaptcha, IUserOnboarding, IUserRequestsManager, IUserDataVault {
     // No implementation needed. Stop prettier error
 }

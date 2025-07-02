@@ -3,22 +3,28 @@ import { VeriffStatusEnum } from '../types/VeriffStatusEnum';
 import { VerificationTypeEnum } from '../types/VerificationTypeEnum';
 import { KeyValueObject } from './objects';
 
-export type DocumentField = {
-    confidenceCategory?: 'high' | 'medium' | 'low' | null;
-    value: string | null;
-    sources?: ('VIZ' | 'MRZ' | 'NFC' | 'BARCODE')[];
-};
-
 export type KYCPayload = VeriffWebhookPayload;
 
-export type KYCVC = VerifiableCredentialWithType<KYCPayload>;
-export type FirstNameVC = VerifiableCredentialWithType<{ firstName: string }>;
-export type LastNameVC = VerifiableCredentialWithType<{ lastName: string }>;
-export type BirthDateVC = VerifiableCredentialWithType<{ dateOfBirth: string }>;
-export type AddressVC = VerifiableCredentialWithType<{ address: KeyValueObject }>;
-export type NationalityVC = VerifiableCredentialWithType<{ nationality: string }>;
+export class KYCVC extends VerifiableCredentialWithType<KYCPayload> {
+    protected static type = 'KYCVC';
+}
+export class FirstNameVC extends VerifiableCredentialWithType<{ firstName: string }> {
+    protected static type = 'FirstNameVC';
+}
+export class LastNameVC extends VerifiableCredentialWithType<{ lastName: string }> {
+    protected static type = 'LastNameVC';
+}
+export class BirthDateVC extends VerifiableCredentialWithType<{ dateOfBirth: string }> {
+    protected static type = 'BirthDateVC';
+}
+export class AddressVC extends VerifiableCredentialWithType<{ address: string; components: KeyValueObject }> {
+    protected static type = 'AddressVC';
+}
+export class NationalityVC extends VerifiableCredentialWithType<{ nationality: string }> {
+    protected static type = 'NationalityVC';
+}
 
-export type PersonCredentialType = KYCVC | FirstNameVC | LastNameVC | BirthDateVC | NationalityVC;
+export type PersonCredentialType = KYCVC | FirstNameVC | LastNameVC | BirthDateVC | AddressVC | NationalityVC;
 
 export type VerificationMessagePayload = {
     kyc: KYCVC;
@@ -27,6 +33,12 @@ export type VerificationMessagePayload = {
     birthDate?: BirthDateVC;
     address?: AddressVC;
     nationality?: NationalityVC;
+};
+
+export type DocumentField = {
+    confidenceCategory?: 'high' | 'medium' | 'low' | null;
+    value: string | null;
+    sources?: ('VIZ' | 'MRZ' | 'NFC' | 'BARCODE')[];
 };
 
 export type PersonField = DocumentField | null;
@@ -112,14 +124,12 @@ export function castStringToCredential(vc: string, type: VerificationTypeEnum): 
             return new KYCVC(vc);
         case VerificationTypeEnum.FIRSTNAME:
             return new FirstNameVC(vc);
-        case VerificationTypeEnum.FIRSTNAME:
-            return new FirstNameVC(vc);
         case VerificationTypeEnum.LASTNAME:
             return new LastNameVC(vc);
         case VerificationTypeEnum.BIRTHDATE:
             return new BirthDateVC(vc);
         case VerificationTypeEnum.ADDRESS:
-            return new AddressVc(vc);
+            return new AddressVC(vc);
         case VerificationTypeEnum.NATIONALITY:
             return new NationalityVC(vc);
         default:
