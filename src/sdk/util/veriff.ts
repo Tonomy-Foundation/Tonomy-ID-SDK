@@ -1,27 +1,108 @@
-import { VerifiableCredentialWithType } from './ssi/vc';
+import { VerifiableCredentialOptions, VerifiableCredentialWithType } from './ssi/vc';
 import { VeriffStatusEnum } from '../types/VeriffStatusEnum';
 import { VerificationTypeEnum } from '../types/VerificationTypeEnum';
 import { KeyValueObject } from './objects';
+import { Issuer } from 'did-jwt-vc';
 
 export type KYCPayload = VeriffWebhookPayload;
 
 export class KYCVC extends VerifiableCredentialWithType<KYCPayload> {
     protected static type = 'KYCVC';
+
+    /**
+     * Alternative constructor that returns type KYCVC
+     */
+    static async signData(
+        payload: KYCPayload,
+        issuer: Issuer,
+        options: VerifiableCredentialOptions = {}
+    ): Promise<KYCVC> {
+        const vc = await super.sign<KYCPayload>(payload, issuer, options);
+
+        return new this(vc);
+    }
 }
 export class FirstNameVC extends VerifiableCredentialWithType<{ firstName: string }> {
     protected static type = 'FirstNameVC';
+
+    /**
+     * Alternative constructor that returns type FirstNameVC
+     */
+    static async signData(
+        payload: { firstName: string },
+        issuer: Issuer,
+        options: VerifiableCredentialOptions = {}
+    ): Promise<FirstNameVC> {
+        const vc = await super.sign<{ firstName: string }>(payload, issuer, options);
+
+        return new this(vc);
+    }
 }
 export class LastNameVC extends VerifiableCredentialWithType<{ lastName: string }> {
     protected static type = 'LastNameVC';
+
+    /**
+     * Alternative constructor that returns type LastNameVC
+     */
+    static async signData(
+        payload: { lastName: string },
+        issuer: Issuer,
+        options: VerifiableCredentialOptions = {}
+    ): Promise<LastNameVC> {
+        const vc = await super.sign<{ lastName: string }>(payload, issuer, options);
+
+        return new this(vc);
+    }
 }
-export class BirthDateVC extends VerifiableCredentialWithType<{ dateOfBirth: string }> {
+export class BirthDateVC extends VerifiableCredentialWithType<{ birthDate: string }> {
     protected static type = 'BirthDateVC';
+
+    /**
+     * Alternative constructor that returns type BirthDateVC
+     */
+    static async signData(
+        payload: { birthDate: string },
+        issuer: Issuer,
+        options: VerifiableCredentialOptions = {}
+    ): Promise<BirthDateVC> {
+        const vc = await super.sign<{ birthDate: string }>(payload, issuer, options);
+
+        return new this(vc);
+    }
 }
-export class AddressVC extends VerifiableCredentialWithType<{ address: string; components: KeyValueObject }> {
+
+export type AddressVCType = { address: string; components?: KeyValueObject };
+export class AddressVC extends VerifiableCredentialWithType<AddressVCType> {
     protected static type = 'AddressVC';
+
+    /**
+     * Alternative constructor that returns type AddressVC
+     */
+    static async signData(
+        payload: AddressVCType,
+        issuer: Issuer,
+        options: VerifiableCredentialOptions = {}
+    ): Promise<AddressVC> {
+        const vc = await super.sign<AddressVCType>(payload, issuer, options);
+
+        return new this(vc);
+    }
 }
 export class NationalityVC extends VerifiableCredentialWithType<{ nationality: string }> {
     protected static type = 'NationalityVC';
+
+    /**
+     * Alternative constructor that returns type NationalityVC
+     */
+    static async signData(
+        payload: { nationality: string },
+        issuer: Issuer,
+        options: VerifiableCredentialOptions = {}
+    ): Promise<NationalityVC> {
+        const vc = await super.sign<{ nationality: string }>(payload, issuer, options);
+
+        return new this(vc);
+    }
 }
 
 export type PersonCredentialType = KYCVC | FirstNameVC | LastNameVC | BirthDateVC | AddressVC | NationalityVC;

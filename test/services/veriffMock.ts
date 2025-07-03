@@ -1,4 +1,4 @@
-import { getSettings, VeriffWebhookPayload } from '../../src/sdk/util';
+import { copyObject, getSettings, VeriffWebhookPayload } from '../../src/sdk/util';
 import * as crypto from 'crypto';
 
 export const mockVeriffWebhookPayloadApproved: VeriffWebhookPayload = {
@@ -105,7 +105,9 @@ export const mockVeriffWebhookPayloadApproved: VeriffWebhookPayload = {
     },
 };
 
-const mockVeriffWebhookPayloadDeclined: VeriffWebhookPayload = mockVeriffWebhookPayloadApproved;
+const mockVeriffWebhookPayloadDeclined: VeriffWebhookPayload = copyObject<VeriffWebhookPayload>(
+    mockVeriffWebhookPayloadApproved
+);
 
 mockVeriffWebhookPayloadDeclined.data.verification.decision = 'declined';
 export { mockVeriffWebhookPayloadDeclined };

@@ -1,4 +1,4 @@
-export function copyObject(object: object): object {
+export function copyObject<T>(object: T): T {
     return JSON.parse(JSON.stringify(object));
 }
 
