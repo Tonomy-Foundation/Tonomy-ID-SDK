@@ -14,7 +14,7 @@ import {
     NationalityVC,
 } from '../../util/veriff';
 
-const debug = Debug('tonomy-sdk:LoginRequestResponseMessage');
+const debug = Debug('tonomy-sdk:services:communication:message');
 
 /**
  * A message that can be sent between two Tonomy identities
@@ -173,7 +173,20 @@ export class LoginRequestResponseMessage extends Message<DualWalletResponse> {
         super(vc);
         this.decodedPayload = DualWalletResponse.fromString(this.decodedPayload as unknown as string);
 
-        debug('LoginRequestResponseMessage payload', this.decodedPayload);
+        debug(
+            'LoginRequestResponseMessage payload',
+            JSON.stringify(
+                {
+                    success: this.decodedPayload.success,
+                    external: this.decodedPayload.external?.vc.getPayload(),
+                    sso: this.decodedPayload.sso?.vc.getPayload(),
+                    error: this.decodedPayload.error,
+                    requests: this.decodedPayload.requests,
+                },
+                null,
+                2
+            )
+        );
     }
 
     /**

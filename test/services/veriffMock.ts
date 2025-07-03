@@ -120,7 +120,7 @@ export async function mockVeriffWebhook(payload: VeriffWebhookPayload) {
         'Content-Type': 'application/json',
         'x-hmac-signature': signature,
     };
-    const url = getSettings().accountsServiceUrl + '/v1/veriff/webhook';
+    const url = getSettings().accountsServiceUrl + '/v1/verification/veriff/webhook';
 
     await fetch(url, {
         method: 'POST',

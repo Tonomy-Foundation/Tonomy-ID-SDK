@@ -191,7 +191,7 @@ describe('Login to external website', () => {
         if (testOptions.dataRequest) {
             expectedTests += 1;
             if (testOptions.dataRequestUsername) expectedTests += 3;
-            if (testOptions.dataRequestKYC) expectedTests += 24;
+            if (testOptions.dataRequestKYC) expectedTests += 27;
         }
 
         expect.assertions(expectedTests);
@@ -230,13 +230,14 @@ describe('Login to external website', () => {
         const { subscriber: TONOMY_LOGIN_WEBSITE_messageSubscriber, promise: TONOMY_LOGIN_WEBSITE_ackMessagePromise } =
             await setupTonomyIdIdentifySubscriber(TONOMY_ID_did);
 
-        expect(TONOMY_LOGIN_WEBSITE_communication.socketServer.listeners('message').length).toBe(0);
+        expect(TONOMY_LOGIN_WEBSITE_communication.socketServer.listeners('v1/message/relay/receive').length).toBe(0);
         const TONOMY_LOGIN_WEBSITE_subscription = TONOMY_LOGIN_WEBSITE_communication.subscribeMessage(
             TONOMY_LOGIN_WEBSITE_messageSubscriber,
             IdentifyMessage.getType()
         );
 
-        expect(TONOMY_LOGIN_WEBSITE_communication.socketServer.listeners('message').length).toBe(1);
+        debug('TONOMY_LOGIN_WEBSITE_communication.socketServer', TONOMY_LOGIN_WEBSITE_communication.socketServer.listenersAny())
+        expect(TONOMY_LOGIN_WEBSITE_communication.socketServer.listeners('v1/message/relay/receive').length).toBe(1);
 
         // ##### Tonomy ID user (QR code scanner screen) #####
         // ##########################
@@ -275,7 +276,7 @@ describe('Login to external website', () => {
             LoginRequestResponseMessage.getType()
         );
 
-        expect(TONOMY_LOGIN_WEBSITE_communication.socketServer.listeners('message').length).toBe(1);
+        expect(TONOMY_LOGIN_WEBSITE_communication.socketServer.listeners('v1/message/relay/receive').length).toBe(1);
 
         // ##### Tonomy ID user (SSO screen) #####
         // ##########################
@@ -290,9 +291,9 @@ describe('Login to external website', () => {
         // Receive the message back, and redirect to the callback
         const requestConfirmedMessageFromTonomyId = await TONOMY_LOGIN_WEBSITE_requestsConfirmedMessagePromise;
 
-        expect(TONOMY_LOGIN_WEBSITE_communication.socketServer.listeners('message').length).toBe(1);
+        expect(TONOMY_LOGIN_WEBSITE_communication.socketServer.listeners('v1/message/relay/receive').length).toBe(1);
         TONOMY_LOGIN_WEBSITE_communication.unsubscribeMessage(TONOMY_LOGIN_WEBSITE_subscription2);
-        expect(TONOMY_LOGIN_WEBSITE_communication.socketServer.listeners('message').length).toBe(0);
+        expect(TONOMY_LOGIN_WEBSITE_communication.socketServer.listeners('v1/message/relay/receive').length).toBe(0);
 
         const walletResponse = requestConfirmedMessageFromTonomyId.getPayload();
 

@@ -171,7 +171,7 @@ export class Communication {
             throwError('You need to login before sending a messages', SdkErrors.CommunicationNotLoggedIn);
         }
 
-        return await this.emitMessage('v1/message/relay', message);
+        return await this.emitMessage('v1/message/relay/send', message);
     }
 
     /**
@@ -186,9 +186,8 @@ export class Communication {
 
         const messageHandler = (message: any) => {
             const msg = new Message(message);
-            const payload = msg.getPayload();
 
-            debug('receiveMessage', msg.getType(), msg.getSender(), msg.getRecipient(), payload.requests?.length);
+            debug('receiveMessage', msg.getType(), msg.getSender(), msg.getRecipient());
 
             if (!type || msg.getType() === type) {
                 subscriber(msg);
@@ -197,7 +196,7 @@ export class Communication {
             return this;
         };
 
-        this.socketServer.on('v1/message/relay', messageHandler);
+        this.socketServer.on('v1/message/relay/receive', messageHandler);
         this.subscribers.set(Communication.identifier, messageHandler);
         return Communication.identifier;
     }
@@ -212,7 +211,7 @@ export class Communication {
         const subscriber = this.subscribers.get(id);
 
         if (subscriber) {
-            this.socketServer.off('v1/message/relay', subscriber);
+            this.socketServer.off('v1/message/relay/receive', subscriber);
             this.subscribers.delete(id);
         }
     }
@@ -248,7 +247,7 @@ export class Communication {
             return this;
         };
 
-        this.socketServer.on('/v1/verification/veriff/receive', messageHandler);
+        this.socketServer.on('v1/verification/veriff/receive', messageHandler);
         this.subscribers.set(Communication.identifier, messageHandler);
         return Communication.identifier;
     }
@@ -257,7 +256,7 @@ export class Communication {
         const subscriber = this.subscribers.get(id);
 
         if (subscriber) {
-            this.socketServer.off('/v1/verification/veriff/receive', subscriber);
+            this.socketServer.off('v1/verification/veriff/receive', subscriber);
             this.subscribers.delete(id);
         }
     }

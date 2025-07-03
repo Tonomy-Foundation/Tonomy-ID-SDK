@@ -176,6 +176,7 @@ export async function setupLoginRequestSubscriber(
                     throw new Error('dataRequestKYCDecision is required when dataRequestKYC is true');
                 }
 
+                expect(user.communication.socketServer.listeners('v1/verification/veriff/receive').length).toBe(0);
                 verificationEventPromise = user.waitForNextVeriffVerification();
                 const mockData =
                     testOptions.dataRequestKYCDecision === 'approved'
@@ -184,8 +185,10 @@ export async function setupLoginRequestSubscriber(
 
                 debug('TONOMY_ID/SSO: mocking calling the webhook (user completed KYC flow)');
                 await mockVeriffWebhook(mockData);
+                expect(user.communication.socketServer.listeners('v1/verification/veriff/receive').length).toBe(1);
                 const verificationEvent = await verificationEventPromise;
 
+                expect(user.communication.socketServer.listeners('v1/verification/veriff/receive').length).toBe(0);
                 expect(verificationEvent.status).toBe('success');
                 expect(verificationEvent.data.verification.decision).toBe(testOptions.dataRequestKYCDecision);
                 expect(verificationEvent.data.verification.person.firstName).toBeDefined();

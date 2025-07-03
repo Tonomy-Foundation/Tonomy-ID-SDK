@@ -10,8 +10,7 @@ import { toDateTime } from '../time';
 import { randomString } from '../crypto';
 import { Serializable } from '../serializable';
 import { getDidKeyResolver } from '@veramo/did-provider-key';
-import { checkChainId, getAccountNameFromDid, parseDid } from './did';
-import { SdkErrors, throwError } from '../errors';
+import { checkChainId, getAccountNameFromDid } from './did';
 import { checkUsername, TonomyUsername } from '../username';
 import { App, checkOriginMatchesApp } from '../../controllers/App';
 import { Name } from '@wharfkit/antelope';
@@ -418,15 +417,9 @@ export async function verifyTonomyVc<T extends object>(
     const data: T = vc.getPayload();
     const account = await getAccountNameFromDid(did);
 
-    const { method, id } = parseDid(did);
-
-    if (method !== 'antelope') {
-        throwError(`Invalid DID method: ${method}`, SdkErrors.InvalidData);
-    }
-
     const [, chainId, username, originAndApp] = await Promise.all([
         vc.verify(),
-        checkChainId(id, verifyChainId),
+        checkChainId(did, verifyChainId),
         checkUsername(account, (data as any)?.username, verifyUsername),
         checkOriginMatchesApp(vcId ? vcId : '', did, verifyOrigin),
     ]);

@@ -225,49 +225,44 @@ export class WalletRequest implements Serializable {
      * @returns {Promise<WalletResponse>} - The wallet response containing the accepted requests.
      */
     async accept(user: IUserRequestsManager, checkSsoDomain = false): Promise<WalletResponse> {
-        const external = await this.getApp();
+        const app = await this.getApp();
 
-        debug(`WalletRequest/accept: Accepting request from app ${external.origin}`);
+        debug(`WalletRequest/accept: Accepting request from app ${app.origin}`);
 
         const responses: WalletResponsePayloadType[] = [];
 
         for (const request of this.getRequests()) {
             if (WalletRequest.isLoginRequest(request)) {
                 const req = request as LoginRequestPayload;
+                const publicKey = req.login.publicKey;
 
-                debug(`WalletRequest/accept: Accepting request from app ${external.origin}: login request`);
+                debug(`WalletRequest/accept: Accepting request from app ${app.origin}: login request`);
 
                 if (checkSsoDomain) {
-                    if (!isSameOrigin(req.login.origin, getSettings().ssoWebsiteOrigin))
+                    if (!isSameOrigin(app.origin, getSettings().ssoWebsiteOrigin))
                         throw new Error(
-                            `Invalid origin for SSO login request. Received ${req.login.origin}, expected ${getSettings().accountsServiceUrl}`
+                            `Invalid origin for SSO login request. Received ${app.origin}, expected ${getSettings().accountsServiceUrl}`
                         );
                 }
 
-                const app = await App.getApp(req.login.origin);
-
                 try {
                     const appPermission = await verifyKeyExistsForApp(await user.getAccountName(), {
-                        publicKey: req.login.publicKey,
+                        publicKey,
                     });
 
                     if (app.accountName.toString() !== appPermission.toString()) {
-                        throw new Error(
-                            `App ${app.accountName} is not authorized for the key ${req.login.publicKey.toString()}`
-                        );
+                        throw new Error(`App ${app.accountName} is not authorized for the key ${publicKey.toString()}`);
                     }
                 } catch (e) {
                     if (isErrorCode(e, SdkErrors.UserNotLoggedInWithThisApp)) {
-                        debug(
-                            `WalletRequest/accept: Accepting request from app ${external.origin}: calling loginWithApp()`
-                        );
-                        await user.loginWithApp(external, req.login.publicKey);
+                        debug(`WalletRequest/accept: Accepting request from app ${app.origin}: calling loginWithApp()`);
+                        await user.loginWithApp(app, publicKey);
                     } else throw e;
                 }
 
                 responses.push({
                     login: {
-                        origin: req.login.origin,
+                        origin: app.origin,
                         callbackPath: req.login.callbackPath,
                     },
                 });
@@ -285,7 +280,7 @@ export class WalletRequest implements Serializable {
                 }
 
                 debug(
-                    `WalletRequest/accept: Accepting request from app ${external.origin}: data sharing request ${JSON.stringify(res.data, null, 2)}`
+                    `WalletRequest/accept: Accepting request from app ${app.origin}: data sharing request ${JSON.stringify(res.data, null, 2)}`
                 );
 
                 responses.push(res);
