@@ -178,10 +178,10 @@ export class Communication {
      * function that adds a new subscriber, which is called every time a message is received
      *
      * @param {Subscriber} subscriber - the message object
-     * @param {string} [type] - the type of message to subscribe to
+     * @param {string} type - the type of message to subscribe to
      * @returns {number} - identifier which will be used for unsubscribe
      */
-    subscribeMessage(subscriber: Subscriber, type?: string): number {
+    subscribeMessage(subscriber: Subscriber, type: string): number {
         Communication.identifier++;
 
         const messageHandler = (message: any) => {
@@ -189,7 +189,7 @@ export class Communication {
 
             debug('receiveMessage', msg.getType(), msg.getSender(), msg.getRecipient());
 
-            if (!type || msg.getType() === type) {
+            if (msg.getType() === type) {
                 subscriber(msg);
             }
 

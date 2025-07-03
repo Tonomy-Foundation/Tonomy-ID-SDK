@@ -12,7 +12,6 @@ import {
     Communication,
     IUser,
 } from '../../src/sdk/index';
-// Using require for modules that might not have TypeScript definitions
 import { expect } from '@jest/globals';
 import { jsStorageFactory } from '../../src/cli/bootstrap/jsstorage';
 import { generatePrivateKeyFromPassword } from '../../src/cli/bootstrap/keys';
@@ -31,17 +30,15 @@ import {
 import { ExternalUserLoginTestOptions } from '../externalUser.integration.test';
 import { getChainId, getTonomyOperationsKey } from '../../src/sdk/services/blockchain/eosio/eosio';
 import { createSigner } from '../../src/sdk/services/blockchain';
-
-// Using require for modules that might not have TypeScript definitions
-import Debug from 'debug';
 import { dataSource } from '../storage/testDatabase';
+import { DataSource } from 'typeorm';
+import Debug from 'debug';
 import {
     mockVeriffWebhook,
     mockVeriffWebhookPayloadApproved,
     mockVeriffWebhookPayloadDeclined,
 } from '../services/veriffMock';
 import { VerificationTypeEnum } from '../../src/sdk/types/VerificationTypeEnum';
-import { DataSource } from 'typeorm';
 
 const debug = Debug('tonomy-sdk-tests:helpers:user');
 
@@ -131,23 +128,33 @@ export async function scanQrAndAck(user: IUserPublic, qrCodeData: string) {
     expect(sendMessageResponse).toBe(true);
 }
 
-export async function setupLoginRequestSubscriber(
+export function setupLoginRequestSubscriber(
     user: IUserPublic,
     tonomyLoginDid: DIDurl,
     testOptions: ExternalUserLoginTestOptions
-) {
+): Promise<void> {
+    debug('TONOMY_ID/SSO: setupLoginRequestSubscriber()');
+
+    let subscriberId: number | undefined;
+
     // Setup a promise that resolves when the subscriber executes
     // This emulates the Tonomy ID app, which waits for the user requests
-    return new Promise((resolve) => {
-        user.subscribeMessage(async (message) => {
+    return new Promise<void>((resolve) => {
+        debug('TONOMY_ID/SSO: subscribe to login requests');
+
+        subscriberId = user.subscribeMessage(async (message) => {
+            // unsubscribe after handling the message
+            user.communication.unsubscribeMessage(subscriberId as number);
+
             const loginRequestMessage = new LoginRequestsMessage(message);
 
-            debug('TONOMY_ID/SSO: receive login requests from Tonomy Login Website');
+            debug(
+                `TONOMY_ID/SSO: receive login requests from Tonomy Login Website from ${loginRequestMessage.getSender()}`
+            );
 
             // receive and verify the requests
             const requests = loginRequestMessage.getPayload();
 
-            // TODO: check this throws an error if requests are not valid, or not signed correctly
             debug('TONOMY_ID/SSO: verifying login request');
             await requests.verify();
 
@@ -233,7 +240,8 @@ export async function setupLoginRequestSubscriber(
             debug('TONOMY_ID/SSO: accepting login requests and sending confirmation to Tonomy Login Website');
             await user.acceptLoginRequest(requests, 'message');
 
-            resolve(true);
+            resolve();
         }, LoginRequestsMessage.getType());
+        debug('TONOMY_ID/SSO: subscribed to login requests', subscriberId);
     });
 }

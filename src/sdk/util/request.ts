@@ -227,7 +227,7 @@ export class WalletRequest implements Serializable {
     async accept(user: IUserRequestsManager, checkSsoDomain = false): Promise<WalletResponse> {
         const app = await this.getApp();
 
-        debug(`WalletRequest/accept: Accepting request from app ${app.origin}`);
+        debug(`WalletRequest/accept: ${app.origin}`);
 
         const responses: WalletResponsePayloadType[] = [];
 
@@ -236,7 +236,7 @@ export class WalletRequest implements Serializable {
                 const req = request as LoginRequestPayload;
                 const publicKey = req.login.publicKey;
 
-                debug(`WalletRequest/accept: Accepting request from app ${app.origin}: login request`);
+                debug(`WalletRequest/accept: ${app.origin}: login request`, JSON.stringify(req, null, 2));
 
                 if (checkSsoDomain) {
                     if (!isSameOrigin(app.origin, getSettings().ssoWebsiteOrigin))
@@ -255,7 +255,7 @@ export class WalletRequest implements Serializable {
                     }
                 } catch (e) {
                     if (isErrorCode(e, SdkErrors.UserNotLoggedInWithThisApp)) {
-                        debug(`WalletRequest/accept: Accepting request from app ${app.origin}: calling loginWithApp()`);
+                        debug(`WalletRequest/accept: ${app.origin}: calling loginWithApp()`);
                         await user.loginWithApp(app, publicKey);
                     } else throw e;
                 }
@@ -269,6 +269,8 @@ export class WalletRequest implements Serializable {
             } else if (WalletRequest.isDataSharingRequest(request)) {
                 const req = request as DataSharingRequestPayload;
 
+                debug(`WalletRequest/accept: ${app.origin}: data sharing request`, req);
+
                 const res: DataSharingResponsePayload = { data: {} };
 
                 if (req.data.username) {
@@ -279,9 +281,7 @@ export class WalletRequest implements Serializable {
                     res.data.kyc = (await user.fetchVerificationData(VerificationTypeEnum.KYC)) as KYCVC;
                 }
 
-                debug(
-                    `WalletRequest/accept: Accepting request from app ${app.origin}: data sharing request ${JSON.stringify(res.data, null, 2)}`
-                );
+                debug(`WalletRequest/accept: ${app.origin}: data sharing response`, JSON.stringify(res, null, 2));
 
                 responses.push(res);
             } else {

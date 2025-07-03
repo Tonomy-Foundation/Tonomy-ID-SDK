@@ -21,7 +21,7 @@ export abstract class UserCommunication extends UserAuthorization implements IUs
         this.communication.unsubscribeMessage(id);
     }
 
-    subscribeMessage(subscriber: Subscriber, type?: string): number {
+    subscribeMessage(subscriber: Subscriber, type: string): number {
         return this.communication.subscribeMessage(subscriber, type);
     }
 

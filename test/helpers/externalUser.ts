@@ -163,7 +163,6 @@ export async function sendLoginRequestsMessage(
 
     const loginRequestMessage = await LoginRequestsMessage.signMessage(requests, didKeyIssuer, recipientDid);
 
-    debug('TONOMY_LOGIN_WEBSITE/login: sending login request to Tonomy ID app');
     const sendMessageResponse = await communication.sendMessage(loginRequestMessage);
 
     expect(sendMessageResponse).toBe(true);

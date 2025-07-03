@@ -164,7 +164,7 @@ describe('Login to external website', () => {
     });
 
     describe('SSO login full end-to-end flow with external desktop browser (using communication service)', () => {
-        test('Successful login to external website', async () => {
+        test('Successful login to external website - no data request', async () => {
             await runExternalUserLoginTest({ dataRequest: false });
         });
 
@@ -186,7 +186,7 @@ describe('Login to external website', () => {
     });
 
     async function runExternalUserLoginTest(testOptions: ExternalUserLoginTestOptions) {
-        let expectedTests = 56;
+        let expectedTests = 57;
 
         if (testOptions.dataRequest) {
             expectedTests += 1;

@@ -82,7 +82,7 @@ export interface IUserCommunication extends IUserAuthentication {
      * @returns {boolean} - true if successful
      */
     loginCommunication(authorization: AuthenticationMessage): Promise<boolean>;
-    subscribeMessage(subscriber: Subscriber, type?: string): number;
+    subscribeMessage(subscriber: Subscriber, type: string): number;
     /**
      * unsubscribes a function from the receiving a message
      *
