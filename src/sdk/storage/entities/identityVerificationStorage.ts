@@ -1,15 +1,15 @@
 /* eslint-disable indent */
-import { Entity, Unique, Column, Index, PrimaryColumn } from 'typeorm';
+import { Entity, Unique, Column, Index, PrimaryColumn, PrimaryGeneratedColumn } from 'typeorm';
 import { VeriffStatusEnum } from '../../types/VeriffStatusEnum';
 import { VerificationTypeEnum } from '../../types/VerificationTypeEnum';
 
 @Entity('IdentityVerificationStorage')
-@Unique(['veriffId'])
+@Unique(['veriffId', 'type'])
 export class IdentityVerificationStorage {
-    @PrimaryColumn({
-        unique: true,
-        type: 'varchar',
-    })
+    @PrimaryGeneratedColumn('uuid')
+    id!: string;
+
+    @PrimaryColumn({ type: 'varchar' })
     @Index()
     veriffId!: string;
 
@@ -18,6 +18,7 @@ export class IdentityVerificationStorage {
 
     @Column({
         type: 'varchar',
+        enum: VeriffStatusEnum,
         default: VeriffStatusEnum.PENDING,
     })
     status!: VeriffStatusEnum;

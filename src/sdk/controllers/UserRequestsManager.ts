@@ -17,7 +17,7 @@ import { DualWalletRequests, sleep } from '../util';
 import Debug from 'debug';
 import { UserDataVault } from './UserDataVault';
 
-const debug = Debug('tonomy-sdk:UserRequestsManager');
+const debug = Debug('tonomy-sdk:controllers:UserRequestsManager');
 
 export class UserRequestsManager extends UserDataVault implements IUserRequestsManager {
     async handleLinkAuthRequestMessage(message: Message): Promise<void> {

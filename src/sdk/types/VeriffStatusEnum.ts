@@ -24,12 +24,15 @@ namespace VeriffStatusEnum {
         let index: number;
 
         if (typeof value !== 'number') {
-            index = VeriffStatusEnum.indexFor(value as VeriffStatusEnum);
+            index = VeriffStatusEnum.indexFor(value.toUpperCase() as VeriffStatusEnum);
         } else {
             index = value;
         }
 
-        return Object.values(VeriffStatusEnum)[index] as VeriffStatusEnum;
+        const val = Object.values(VeriffStatusEnum)[index] as VeriffStatusEnum;
+
+        if (val === undefined) throw new Error('Invalid VeriffStatusEnum');
+        return val;
     }
 }
 

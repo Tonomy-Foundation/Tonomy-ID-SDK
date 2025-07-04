@@ -27,7 +27,7 @@ export class UserDataVault extends UserCommunication implements IUserDataVault {
      * @throws {Error} If message type is incorrect or verification update fails
      */
     private handleVerificationUpdate: VeriffSubscriber = async (message: VerificationMessage): Promise<void> => {
-        debug('handleVerificationUpdate', message.getIssuer(), message.getPayload());
+        debug('handleVerificationUpdate()', message.getIssuer(), message.getPayload());
         await message.verify();
 
         const did = message.getIssuer();
@@ -39,12 +39,13 @@ export class UserDataVault extends UserCommunication implements IUserDataVault {
         const decision = kycPayload.data.verification.decision;
         const status = castDecisionToStatus(decision);
 
-        debug('kycPayload', did, kycPayload);
+        debug('handleVerificationUpdate() kycPayload', did, kycPayload);
 
         for (const [key, signedVc] of Object.entries(vcPayload)) {
             const type = VerificationTypeEnum.from(key);
 
             await this.idVerificationManager.emplaceByVeriffIdAndType(kycPayload.sessionId, type, status, signedVc);
+            debug(`handleVerificationUpdate() successfully stored ${key} VC in storage`);
         }
     };
 
@@ -57,11 +58,21 @@ export class UserDataVault extends UserCommunication implements IUserDataVault {
     async waitForNextVeriffVerification(): Promise<KYCPayload> {
         let id: number | undefined;
 
-        await new Promise<void>((resolve, reject) => {
+        return await new Promise<KYCPayload>((resolve, reject) => {
             const newHandler: VeriffSubscriber = async (message: VerificationMessage): Promise<void> => {
                 try {
+                    debug('waitForNextVeriffVerification() this.handleVerificationUpdate(message)');
                     // resolves after the verification update is handled first time
-                    resolve(await this.handleVerificationUpdate(message));
+                    await this.handleVerificationUpdate(message);
+
+                    debug('waitForNextVeriffVerification() this.handleVerificationUpdate(message) resolved');
+
+                    if (!id) throw new Error('Failed to subscribe to Veriff verification messages');
+                    this.unsubscribeVeriffVerification(id);
+                    const res = ((await this.fetchVerificationData(VerificationTypeEnum.KYC)) as KYCVC).getPayload();
+
+                    debug('waitForNextVeriffVerification() resolved with KYCPayload', res);
+                    resolve(res);
                 } catch (error) {
                     reject(error);
                 }
@@ -69,14 +80,6 @@ export class UserDataVault extends UserCommunication implements IUserDataVault {
 
             id = this.subscribeVeriffVerification(newHandler);
         });
-
-        if (!id) {
-            throw new Error('Failed to subscribe to Veriff verification messages');
-        }
-
-        this.unsubscribeVeriffVerification(id);
-
-        return ((await this.fetchVerificationData(VerificationTypeEnum.KYC)) as KYCVC).getPayload();
     }
 
     async fetchVerificationData(type: VerificationTypeEnum): Promise<PersonCredentialType> {

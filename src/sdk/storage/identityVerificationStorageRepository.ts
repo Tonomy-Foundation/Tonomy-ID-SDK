@@ -27,16 +27,14 @@ export class IdentityVerificationStorageRepository {
             updatedAt: now,
         });
 
-        return this.ormRepository.save(appStorageEntity);
+        return await this.ormRepository.save(appStorageEntity);
     }
 
     public async findLatestApproved(type: VerificationTypeEnum): Promise<IdentityVerificationStorage | null> {
-        const doc = await this.ormRepository.findOne({
+        return await this.ormRepository.findOne({
             where: { status: VeriffStatusEnum.APPROVED, type },
             order: { createdAt: 'DESC' },
         });
-
-        return doc;
     }
 
     public async deleteAll(): Promise<void> {

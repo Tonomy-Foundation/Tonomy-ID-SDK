@@ -75,6 +75,8 @@ export class IdentityVerificationStorageManager {
             doc.vc = vc.toString();
             doc.status = status;
             return this.updateRecord(veriffId, type, status, vc);
-        } else return this.create(veriffId, type, status, vc);
+        } else {
+            return this.create(veriffId, type, status, vc);
+        }
     }
 }

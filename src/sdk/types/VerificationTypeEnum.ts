@@ -29,12 +29,15 @@ namespace VerificationTypeEnum {
         let index: number;
 
         if (typeof value !== 'number') {
-            index = VerificationTypeEnum.indexFor(value as VerificationTypeEnum);
+            index = VerificationTypeEnum.indexFor(value.toUpperCase() as VerificationTypeEnum);
         } else {
             index = value;
         }
 
-        return Object.values(VerificationTypeEnum)[index] as VerificationTypeEnum;
+        const val = Object.values(VerificationTypeEnum)[index] as VerificationTypeEnum;
+
+        if (val === undefined) throw new Error('Invalid VerificationTypeEnum');
+        return val;
     }
 }
 

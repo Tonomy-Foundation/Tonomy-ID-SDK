@@ -186,6 +186,7 @@ export function setupLoginRequestSubscriber(
                 expect(user.communication.socketServer.listeners('v1/verification/veriff/receive').length).toBe(1);
                 const verificationEvent = await verificationEventPromise;
 
+                debug('TONOMY_ID/SSO: received KYC verification event', verificationEvent);
                 expect(user.communication.socketServer.listeners('v1/verification/veriff/receive').length).toBe(0);
                 expect(verificationEvent.status).toBe('success');
                 expect(verificationEvent.data.verification.decision).toBe(testOptions.dataRequestKYCDecision);
