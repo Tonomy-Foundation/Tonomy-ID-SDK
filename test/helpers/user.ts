@@ -143,9 +143,6 @@ export function setupLoginRequestSubscriber(
         debug('TONOMY_ID/SSO: subscribe to login requests');
 
         subscriberId = user.subscribeMessage(async (message) => {
-            // unsubscribe after handling the message
-            user.communication.unsubscribeMessage(subscriberId as number);
-
             const loginRequestMessage = new LoginRequestsMessage(message);
 
             debug(

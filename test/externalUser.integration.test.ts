@@ -186,7 +186,7 @@ describe('Login to external website', () => {
     });
 
     async function runExternalUserLoginTest(testOptions: ExternalUserLoginTestOptions) {
-        let expectedTests = 57;
+        let expectedTests = 56;
 
         if (testOptions.dataRequest) {
             expectedTests += 1;

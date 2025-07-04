@@ -365,11 +365,14 @@ export async function externalWebsiteClientAuth(
         data.username = username.toString();
     }
 
+    debug('EXTERNAL_WEBSITE/client-auth: creating client auth', options, data);
     const clientAuth = await externalUser.createClientAuthorization(data);
 
     const verifiedAuth = await verifyClientAuthorization(clientAuth, {
         verifyUsername: options.dataRequestUsername,
     });
+
+    debug('EXTERNAL_WEBSITE/client-auth: verified client auth', verifiedAuth);
 
     expect(verifiedAuth).toBeDefined();
     expect(verifiedAuth.account).toBe((await externalUser.getAccountName()).toString());

@@ -14,6 +14,9 @@ import { checkChainId, getAccountNameFromDid } from './did';
 import { checkUsername, TonomyUsername } from '../username';
 import { App, checkOriginMatchesApp } from '../../controllers/App';
 import { Name } from '@wharfkit/antelope';
+import Debug from 'debug';
+
+const debug = Debug('tonomy-sdk:vc');
 
 /**
  * A W3C Verifiable Credential
@@ -405,18 +408,19 @@ export async function verifyTonomyVc<T extends object>(
     origin?: string;
     app?: App;
 }> {
-    let vc: VerifiableCredentialWithType<T>;
+    let vc: VerifiableCredential;
 
-    if (typeof vcJwt === 'string') vc = new VerifiableCredentialWithType<T>(vcJwt);
-    else if (vcJwt instanceof VerifiableCredential) vc = new VerifiableCredentialWithType<T>(vcJwt);
-    else if (vcJwt instanceof VerifiableCredentialWithType) vc = vcJwt;
+    if (typeof vcJwt === 'string') vc = new VerifiableCredential(vcJwt);
+    else if (vcJwt instanceof VerifiableCredential) vc = vcJwt;
+    else if (vcJwt instanceof VerifiableCredentialWithType) vc = vcJwt.getVc();
     else throw Error('Invalid VC type, expected string or VerifiableCredential');
 
-    const vcId = vc.getVc().getId();
+    const vcId = vc.getId();
     const did = vc.getIssuer();
-    const data: T = vc.getPayload();
+    const data: T = vc.getCredentialSubject() as T;
     const account = await getAccountNameFromDid(did);
 
+    debug('verifyTonomyVc()', vcId, did, data, account, verifyChainId, verifyUsername, verifyOrigin);
     const [, chainId, username, originAndApp] = await Promise.all([
         vc.verify(),
         checkChainId(did, verifyChainId),

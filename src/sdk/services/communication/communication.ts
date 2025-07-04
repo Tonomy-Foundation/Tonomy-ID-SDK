@@ -3,6 +3,7 @@ import { CommunicationError, createSdkError, SdkErrors, throwError } from '../..
 import { getSettings } from '../../util/settings';
 import { AuthenticationMessage, Message, VerificationMessage } from '../../services/communication/message';
 import Debug from 'debug';
+import { sha256 } from '../../util';
 
 const debug = Debug('tonomy-sdk:services:communication:communication');
 
@@ -27,6 +28,29 @@ export class Communication {
     private authMessage?: AuthenticationMessage;
     private loggedIn = false;
     private url: string;
+    private seenMessages: Map<string, Date> = new Map(); // Map<hash, Date>
+    private readonly seemMessageTTL = 60 * 60; // 1 hour
+
+    // Fixes an issue where subscriber were triggered twice
+    // https://chatgpt.com/share/e/6866b6e9-96a4-8013-b25d-381a3518567e
+    // TODO: figure out the root cause and solve
+    private checkSeenMessage(message: string): boolean {
+        const res = this.seenMessages.has(sha256(message));
+
+        this.addSeenMessage(message);
+        this.trimSeenMessages();
+        return res;
+    }
+    private trimSeenMessages(): void {
+        this.seenMessages.forEach((date, hash) => {
+            if (date.getTime() + this.seemMessageTTL < Date.now()) {
+                this.seenMessages.delete(hash);
+            }
+        });
+    }
+    private addSeenMessage(message: string): void {
+        this.seenMessages.set(sha256(message), new Date());
+    }
 
     constructor(singleton = true) {
         if (Communication.singleton && singleton) return Communication.singleton;
@@ -187,6 +211,11 @@ export class Communication {
         const messageHandler = (message: any) => {
             const msg = new Message(message);
 
+            if (this.checkSeenMessage(msg.toString())) {
+                debug('receiveMessage duplicate', msg.getType(), msg.getSender(), msg.getRecipient());
+                return;
+            }
+
             debug('receiveMessage', msg.getType(), msg.getSender(), msg.getRecipient());
 
             if (msg.getType() === type) {
@@ -237,6 +266,11 @@ export class Communication {
 
         const messageHandler = (message: any) => {
             const msg = new VerificationMessage(message);
+
+            if (this.checkSeenMessage(msg.toString())) {
+                debug('receiveVeriffVerification duplicate', msg.getType(), msg.getSender(), msg.getRecipient());
+                return;
+            }
 
             debug('receiveVeriffVerification', msg.getType(), msg.getSender(), msg.getRecipient());
 

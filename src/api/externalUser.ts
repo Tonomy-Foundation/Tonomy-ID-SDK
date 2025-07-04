@@ -446,7 +446,7 @@ export class ExternalUser {
         const id = origin + '/vc/auth/' + random;
         const type = 'ClientAuthorization';
 
-        return (await this.signVc(id, type, data)).toString();
+        return (await this.signVc<T>(id, type, data)).toString();
     }
 
     /**
