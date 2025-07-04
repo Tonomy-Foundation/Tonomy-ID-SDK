@@ -129,6 +129,8 @@ export function setupLoginRequestSubscriber(
     tonomyLoginDid: DIDurl,
     testOptions: ExternalUserLoginTestOptions
 ): Promise<void> {
+    const isKycApproved = testOptions.dataRequestKYCDecision === 'approved';
+
     debug('TONOMY_ID/SSO: setupLoginRequestSubscriber()');
 
     let subscriberId: number | undefined;
@@ -166,8 +168,6 @@ export function setupLoginRequestSubscriber(
             expect(receiverDid).toBe(tonomyLoginDid);
             expect(receiverDid).toBe(loginRequestMessage.getSender());
 
-            let verificationEventPromise: Promise<KYCPayload>;
-
             // If KYC verification is requested, mock the KYC verification process
             if (testOptions.dataRequestKYC) {
                 debug('TONOMY_ID/SSO: mocking user KYC verification process');
@@ -177,9 +177,9 @@ export function setupLoginRequestSubscriber(
                 }
 
                 expect(user.communication.socketServer.listeners('v1/verification/veriff/receive').length).toBe(0);
-                verificationEventPromise = user.waitForNextVeriffVerification();
-                const mockData =
-                    testOptions.dataRequestKYCDecision === 'approved' ? mockVeriffApproved : mockVeriffDeclined;
+                const verificationEventPromise: Promise<KYCPayload> = user.waitForNextVeriffVerification();
+
+                const mockData = isKycApproved ? mockVeriffApproved : mockVeriffDeclined;
 
                 debug('TONOMY_ID/SSO: mocking calling the webhook (user completed KYC flow)');
                 await mockVeriffWebhook(mockData, user);
@@ -202,30 +202,45 @@ export function setupLoginRequestSubscriber(
                 expect(kycVc instanceof KYCVC).toBe(true);
                 expect(account).toBe('ops.tmy');
                 expect(fragment).toBe('active');
-                expect(chain).toBe(getChainId().toString());
+                expect(chain).toBe(await getChainId());
                 expect(kycVc.getType()).toBe(KYCVC.getType());
 
                 const kycPayload = kycVc.getPayload();
 
                 expect(kycPayload.data.verification.decision).toBe(testOptions.dataRequestKYCDecision);
-                expect(kycPayload.data.verification.person.firstName).toBeDefined();
-                expect(kycPayload.data.verification.person.firstName?.value).toBe(
-                    mockData.data.verification.person.firstName?.value
-                );
 
-                const firstNameVc = (await user.fetchVerificationData(VerificationTypeEnum.FIRSTNAME)) as FirstNameVC;
-                const lastNameVc = (await user.fetchVerificationData(VerificationTypeEnum.LASTNAME)) as LastNameVC;
-                const birthDateVc = (await user.fetchVerificationData(VerificationTypeEnum.BIRTHDATE)) as BirthDateVC;
-                const nationalityVc = (await user.fetchVerificationData(
-                    VerificationTypeEnum.NATIONALITY
-                )) as NationalityVC;
-                const addressVc = (await user.fetchVerificationData(VerificationTypeEnum.ADDRESS)) as AddressVC;
+                if (isKycApproved) {
+                    expect(kycPayload.data.verification.person.firstName).toBeDefined();
+                    expect(kycPayload.data.verification.person.firstName?.value).toBe(
+                        mockData.data.verification.person.firstName?.value
+                    );
 
-                expect(firstNameVc).toBeDefined();
-                expect(lastNameVc).toBeDefined();
-                expect(birthDateVc).toBeDefined();
-                expect(nationalityVc).toBeDefined();
-                expect(addressVc).toBeDefined();
+                    const firstNameVc = (await user.fetchVerificationData(
+                        VerificationTypeEnum.FIRSTNAME
+                    )) as FirstNameVC;
+                    const lastNameVc = (await user.fetchVerificationData(VerificationTypeEnum.LASTNAME)) as LastNameVC;
+                    const birthDateVc = (await user.fetchVerificationData(
+                        VerificationTypeEnum.BIRTHDATE
+                    )) as BirthDateVC;
+                    const nationalityVc = (await user.fetchVerificationData(
+                        VerificationTypeEnum.NATIONALITY
+                    )) as NationalityVC;
+                    const addressVc = (await user.fetchVerificationData(VerificationTypeEnum.ADDRESS)) as AddressVC;
+
+                    expect(firstNameVc).toBeDefined();
+                    expect(firstNameVc.getPayload().firstName).toBe(mockData.data.verification.person.firstName?.value);
+                    expect(lastNameVc).toBeDefined();
+                    expect(birthDateVc).toBeDefined();
+                    expect(nationalityVc).toBeDefined();
+                    expect(addressVc).toBeDefined();
+                } else {
+                    await expect(user.fetchVerificationData(VerificationTypeEnum.FIRSTNAME)).rejects.toThrow();
+                    await expect(user.fetchVerificationData(VerificationTypeEnum.LASTNAME)).rejects.toThrow();
+                    await expect(user.fetchVerificationData(VerificationTypeEnum.BIRTHDATE)).rejects.toThrow();
+                    await expect(user.fetchVerificationData(VerificationTypeEnum.NATIONALITY)).rejects.toThrow();
+                    await expect(user.fetchVerificationData(VerificationTypeEnum.ADDRESS)).rejects.toThrow();
+                }
+
                 debug('TONOMY_ID/SSO: KYC verification completed');
             }
 

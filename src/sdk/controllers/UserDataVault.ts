@@ -11,7 +11,7 @@ import { castDecisionToStatus, KYCPayload, KYCVC, PersonCredentialType } from '.
 import { IUserDataVault } from '../types/User';
 import Debug from 'debug';
 
-const debug = Debug('tonomy-sdk:UserDataVault');
+const debug = Debug('tonomy-sdk:controllers:UserDataVault');
 
 export class UserDataVault extends UserCommunication implements IUserDataVault {
     private readonly idVerificationManager: IdentityVerificationStorageManager;
@@ -71,7 +71,7 @@ export class UserDataVault extends UserCommunication implements IUserDataVault {
                     this.unsubscribeVeriffVerification(id);
                     const res = ((await this.fetchVerificationData(VerificationTypeEnum.KYC)) as KYCVC).getPayload();
 
-                    debug('waitForNextVeriffVerification() resolved with KYCPayload', res);
+                    debug('waitForNextVeriffVerification() resolved with', res);
                     resolve(res);
                 } catch (error) {
                     reject(error);
@@ -83,6 +83,7 @@ export class UserDataVault extends UserCommunication implements IUserDataVault {
     }
 
     async fetchVerificationData(type: VerificationTypeEnum): Promise<PersonCredentialType> {
+        debug('fetchVerificationData()', type);
         const vc = await this.idVerificationManager.findLatestApproved(type);
 
         if (!vc) {

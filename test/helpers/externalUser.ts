@@ -215,7 +215,7 @@ export async function externalWebsiteOnCallback(
         expect(kycVc instanceof KYCVC).toBe(true);
         expect(account).toBe('ops.tmy');
         expect(fragment).toBe('active');
-        expect(chain).toBe(getChainId().toString());
+        expect(chain).toBe(await getChainId());
         expect(kycVc.getType()).toBe(KYCVC.getType());
 
         const kycPayload = kycVc.getPayload();
@@ -231,7 +231,10 @@ export async function externalWebsiteOnCallback(
 
         if (!kycValue) throw new Error('kycValue is undefined');
 
-        expect(kycValue).toBe(mockData.data.verification.person.firstName?.value);
+        expect(kycValue.data.verification.person.firstName?.value).toBeDefined();
+        expect(kycValue.data.verification.person.firstName?.value).toBe(
+            mockData.data.verification.person.firstName?.value
+        );
     }
 
     return user;

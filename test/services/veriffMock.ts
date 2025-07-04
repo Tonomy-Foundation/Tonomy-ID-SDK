@@ -116,7 +116,7 @@ mockVeriffDeclined.data.verification.decision = 'declined';
 export { mockVeriffDeclined };
 
 // Call the Veriff webhook, using authenticated data so it is verified and processed
-export async function mockVeriffWebhook(payload: VeriffWebhookPayload, user: IUserAuthentication) {
+export async function mockVeriffWebhook(payload: VeriffWebhookPayload, user: IUserAuthentication): Promise<void> {
     debug('mockVeriffWebhook', payload, (await user.getAccountName()).toString());
     payload.vendorData = await user.createClientAuthorization({ foo: 'bar' });
     const body = JSON.stringify(payload);
@@ -133,7 +133,7 @@ export async function mockVeriffWebhook(payload: VeriffWebhookPayload, user: IUs
         body,
     });
 
-    debug('Veriff webhook sent', res);
+    debug('Veriff webhook sent', res.status);
 }
 
 function createHmacSignature(payload: VeriffWebhookPayload): string {

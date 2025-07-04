@@ -191,7 +191,8 @@ describe('Login to external website', () => {
         if (testOptions.dataRequest) {
             expectedTests += 1;
             if (testOptions.dataRequestUsername) expectedTests += 3;
-            if (testOptions.dataRequestKYC) expectedTests += 27;
+            if (testOptions.dataRequestKYC) expectedTests += 29;
+            if (testOptions.dataRequestKYCDecision === 'declined') expectedTests -= 3;
         }
 
         expect.assertions(expectedTests);
