@@ -33,11 +33,7 @@ import { createSigner } from '../../src/sdk/services/blockchain';
 import { dataSource } from '../storage/testDatabase';
 import { DataSource } from 'typeorm';
 import Debug from 'debug';
-import {
-    mockVeriffWebhook,
-    mockVeriffWebhookPayloadApproved,
-    mockVeriffWebhookPayloadDeclined,
-} from '../services/veriffMock';
+import { mockVeriffWebhook, mockVeriffApproved, mockVeriffDeclined } from '../services/veriffMock';
 import { VerificationTypeEnum } from '../../src/sdk/types/VerificationTypeEnum';
 
 const debug = Debug('tonomy-sdk-tests:helpers:user');
@@ -183,12 +179,10 @@ export function setupLoginRequestSubscriber(
                 expect(user.communication.socketServer.listeners('v1/verification/veriff/receive').length).toBe(0);
                 verificationEventPromise = user.waitForNextVeriffVerification();
                 const mockData =
-                    testOptions.dataRequestKYCDecision === 'approved'
-                        ? mockVeriffWebhookPayloadApproved
-                        : mockVeriffWebhookPayloadDeclined;
+                    testOptions.dataRequestKYCDecision === 'approved' ? mockVeriffApproved : mockVeriffDeclined;
 
                 debug('TONOMY_ID/SSO: mocking calling the webhook (user completed KYC flow)');
-                await mockVeriffWebhook(mockData);
+                await mockVeriffWebhook(mockData, user);
                 expect(user.communication.socketServer.listeners('v1/verification/veriff/receive').length).toBe(1);
                 const verificationEvent = await verificationEventPromise;
 

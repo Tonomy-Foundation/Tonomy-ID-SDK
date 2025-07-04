@@ -1,7 +1,12 @@
 import { copyObject, getSettings, VeriffWebhookPayload } from '../../src/sdk/util';
+import fetch from 'cross-fetch';
 import * as crypto from 'crypto';
+import Debug from 'debug';
+import { IUserAuthentication } from '../../src/sdk';
 
-export const mockVeriffWebhookPayloadApproved: VeriffWebhookPayload = {
+const debug = Debug('tonomy-sdk-tests:services:veriffMock');
+
+export const mockVeriffApproved: VeriffWebhookPayload = {
     status: 'success',
     eventType: 'fullauto',
     sessionId: 'test-session-id-123',
@@ -105,15 +110,15 @@ export const mockVeriffWebhookPayloadApproved: VeriffWebhookPayload = {
     },
 };
 
-const mockVeriffWebhookPayloadDeclined: VeriffWebhookPayload = copyObject<VeriffWebhookPayload>(
-    mockVeriffWebhookPayloadApproved
-);
+const mockVeriffDeclined: VeriffWebhookPayload = copyObject<VeriffWebhookPayload>(mockVeriffApproved);
 
-mockVeriffWebhookPayloadDeclined.data.verification.decision = 'declined';
-export { mockVeriffWebhookPayloadDeclined };
+mockVeriffDeclined.data.verification.decision = 'declined';
+export { mockVeriffDeclined };
 
 // Call the Veriff webhook, using authenticated data so it is verified and processed
-export async function mockVeriffWebhook(payload: VeriffWebhookPayload) {
+export async function mockVeriffWebhook(payload: VeriffWebhookPayload, user: IUserAuthentication) {
+    debug('mockVeriffWebhook', payload, (await user.getAccountName()).toString());
+    payload.vendorData = await user.createClientAuthorization({ foo: 'bar' });
     const body = JSON.stringify(payload);
     const signature = createHmacSignature(payload);
     const headers = {
@@ -122,11 +127,13 @@ export async function mockVeriffWebhook(payload: VeriffWebhookPayload) {
     };
     const url = getSettings().accountsServiceUrl + '/v1/verification/veriff/webhook';
 
-    await fetch(url, {
+    const res = await fetch(url, {
         method: 'POST',
         headers,
         body,
     });
+
+    debug('Veriff webhook sent', res);
 }
 
 function createHmacSignature(payload: VeriffWebhookPayload): string {

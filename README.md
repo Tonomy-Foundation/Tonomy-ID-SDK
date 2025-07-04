@@ -66,6 +66,10 @@ Then run the tests
 
 `yarn run test:integration`
 
+To run an individual test with debugging logs example:
+
+`DEBUG=tonomy* yarn run test --testNamePattern "Successful login to external website with data request for KYC verification successful" --runTestsByPath /home/dev/Documents/git/tonomy/Tonomy-ID-Integration/Tonomy-ID-SDK/test/externalUser.integration.test.ts`
+
 ### Governance tests
 
 Tests the governance of the system. Can only be run once before a blockchain reset is required.

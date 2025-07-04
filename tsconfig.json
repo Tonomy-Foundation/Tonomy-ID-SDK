@@ -23,7 +23,7 @@
         "moduleResolution": "bundler",
         "paths": {
             "@wharfkit/antelope/src/api/v1/types": [
-                "./src/types/wharfkit-antelope.d.ts"
+                "./src/sdk/types/wharfkit-antelope.d.ts"
             ]
         },
         "types": [

@@ -27,6 +27,7 @@ export class UserDataVault extends UserCommunication implements IUserDataVault {
      * @throws {Error} If message type is incorrect or verification update fails
      */
     private handleVerificationUpdate: VeriffSubscriber = async (message: VerificationMessage): Promise<void> => {
+        debug('handleVerificationUpdate', message.getIssuer(), message.getPayload());
         await message.verify();
 
         const did = message.getIssuer();

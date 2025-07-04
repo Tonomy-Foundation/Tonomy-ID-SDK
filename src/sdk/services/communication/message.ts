@@ -63,7 +63,7 @@ export class Message<T extends object = any> extends VerifiableCredentialWithTyp
             additionalTypes: ['TonomyMessage'],
             ...options,
         };
-        const request = await super.sign(message, issuer, newOptions);
+        const request = await super.sign<T>(message, issuer, newOptions);
 
         return new Message<T>(request.getVc());
     }
@@ -310,9 +310,13 @@ export class VerificationMessage extends Message<VerificationMessagePayload> {
         recipient: DIDurl,
         options: { subject?: URL } = {}
     ): Promise<VerificationMessage> {
-        const vc = await Message.signMessageWithRecipient(message, issuer, recipient, options);
-        const verificationMessage = new VerificationMessage(vc);
+        const vc = await super.signMessageWithRecipient<VerificationMessagePayload>(
+            message,
+            issuer,
+            recipient,
+            options
+        );
 
-        return verificationMessage;
+        return new VerificationMessage(vc);
     }
 }

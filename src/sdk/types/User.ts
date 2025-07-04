@@ -6,12 +6,23 @@ import { AuthenticationMessage, Message } from '../services/communication/messag
 import { UserStatusEnum } from './UserStatusEnum';
 import { Subscriber } from '../services/communication/communication';
 import { App } from '../controllers/App';
-import { URL as URLtype, DataRequest, DualWalletRequests, KYCPayload, PersonCredentialType } from '../util';
+import { URL as URLtype, DataRequest, DualWalletRequests, KYCPayload, PersonCredentialType, JWT } from '../util';
 import { PublicKey } from '@wharfkit/antelope';
 import { AppStatusEnum } from './AppStatusEnum';
 import { Signer } from '../services/blockchain';
 import { KeyManagerLevel } from '../storage/keymanager';
 import { VerificationTypeEnum } from './VerificationTypeEnum';
+
+/**
+ * The data of a client authorization request
+ *
+ * @param {string} [username] - the username of the user
+ *
+ */
+export type ClientAuthorizationData = Record<string, any> &
+    object & {
+        username?: string;
+    };
 
 type KeyFromPasswordFn = (
     password: string,
@@ -67,6 +78,7 @@ export interface IUserAuthentication extends IUserBase {
     checkPin(pin: string): Promise<boolean>;
     saveFingerprint(): Promise<void>;
     saveLocal(): Promise<void>;
+    createClientAuthorization<T extends ClientAuthorizationData = object>(data: T): Promise<JWT>;
 }
 
 export interface IUserCaptcha extends IUserBase {

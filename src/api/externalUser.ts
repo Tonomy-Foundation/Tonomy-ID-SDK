@@ -36,7 +36,7 @@ import { DIDurl, JWT } from '../sdk/util/ssi/types';
 import { Signer, createKeyManagerSigner, transact } from '../sdk/services/blockchain/eosio/transaction';
 import { createDidKeyIssuerAndStore } from '../sdk/helpers/didKeyStorage';
 import { verifyKeyExistsForApp } from '../sdk/helpers/user';
-import { IOnPressLoginOptions } from '../sdk/types/User';
+import { ClientAuthorizationData, IOnPressLoginOptions } from '../sdk/types/User';
 import Debug from 'debug';
 
 const debug = Debug('tonomy-sdk:externalUser');
@@ -76,17 +76,6 @@ export type LoginWithTonomyMessages = {
     requests: DualWalletRequests;
     loginToCommunication: AuthenticationMessage;
 };
-
-/**
- * The data of a client authorization request
- *
- * @param {string} [username] - the username of the user
- *
- */
-export type ClientAuthorizationData = Record<string, any> &
-    object & {
-        username?: string;
-    };
 
 /**
  * An external user on a website that is being logged into by a Tonomy ID user

@@ -28,7 +28,7 @@ import { ExternalUserLoginTestOptions } from '../externalUser.integration.test';
 import { IUserPublic } from './user';
 import Debug from 'debug';
 import { KYCVC, parseAntelopeDid } from '../../src/sdk/util';
-import { mockVeriffWebhookPayloadApproved, mockVeriffWebhookPayloadDeclined } from '../services/veriffMock';
+import { mockVeriffApproved, mockVeriffDeclined } from '../services/veriffMock';
 
 const debug = Debug('tonomy-sdk-tests:helpers:externalUser');
 
@@ -219,10 +219,7 @@ export async function externalWebsiteOnCallback(
         expect(kycVc.getType()).toBe(KYCVC.getType());
 
         const kycPayload = kycVc.getPayload();
-        const mockData =
-            testOptions.dataRequestKYCDecision === 'approved'
-                ? mockVeriffWebhookPayloadApproved
-                : mockVeriffWebhookPayloadDeclined;
+        const mockData = testOptions.dataRequestKYCDecision === 'approved' ? mockVeriffApproved : mockVeriffDeclined;
 
         expect(kycPayload.data.verification.decision).toBe(testOptions.dataRequestKYCDecision);
         expect(kycPayload.data.verification.person.firstName).toBeDefined();
