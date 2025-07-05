@@ -156,14 +156,7 @@ export function setupLoginRequestSubscriber(
             debug('TONOMY_ID/SSO: verifying login request');
             await requests.verify();
 
-            // Calculate expected number of requests based on test options
-            let expectedRequestCount = 1; // Base request
-
-            if (testOptions.dataRequest) {
-                expectedRequestCount++; // Data request
-            }
-
-            expect(requests.external.getRequests().length).toBe(expectedRequestCount);
+            expect(requests.external.getRequests().length).toBe(testOptions.dataRequest ? 2 : 1);
 
             if (!requests.sso) throw new Error('SSO requests are missing in the login request message');
             const receiverDid = requests.sso.getDid();
@@ -263,6 +256,9 @@ export function setupLoginRequestSubscriber(
                     await expect(user.fetchVerificationData(VerificationTypeEnum.NATIONALITY)).rejects.toThrow();
                     await expect(user.fetchVerificationData(VerificationTypeEnum.ADDRESS)).rejects.toThrow();
                 }
+            } else {
+                debug('TONOMY_ID/SSO: accepting login requests and sending confirmation to Tonomy Login Website');
+                await user.acceptLoginRequest(requests, 'message');
             }
 
             resolve();

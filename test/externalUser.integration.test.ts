@@ -279,7 +279,7 @@ describe('Login to external website', () => {
         // Wait for the subscriber to execute
         await TONOMY_ID_requestSubscriber;
 
-        if (testOptions.dataRequestKYCDecision !== 'approved') {
+        if (testOptions.dataRequestKYC && testOptions.dataRequestKYCDecision !== 'approved') {
             debug('TONOMY_ID/SSO: KYC verification failed, login was never executed by user');
             return;
         }
