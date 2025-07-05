@@ -78,8 +78,10 @@ jobs:
 
       - name: Build container
         run: |
+          git submodule update --init --recursive
           cd Tonomy-Communication
           git checkout $GIT_BRANCH
+          git pull
           docker build -t tonomy/communication:local -f Dockerfile.localSdk .
 
       - name: Save Communication service Docker image as artifact
