@@ -10,8 +10,11 @@ WORKDIR /app/Tonomy-Communication
 RUN pwd && ls -la
 RUN yarn install --immutable
 # link to the local SDK
-RUN yarn add ../
+# RUN yarn link ../
+RUN apt install -y jq
+RUN jq '.dependencies["@tonomy/tonomy-id-sdk"] = "file:../"' package.json > package.tmp.json && mv package.tmp.json package.json
 RUN cat package.json
+RUN yarn
 RUN yarn run build
 
 EXPOSE 5000
