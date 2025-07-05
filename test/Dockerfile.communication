@@ -10,7 +10,7 @@ WORKDIR /app/Tonomy-Communication
 RUN pwd && ls -la
 RUN yarn install --immutable
 # link to the local SDK
-RUN yarn link ../
+RUN yarn add ../
 RUN cat package.json
 RUN yarn run build
 
