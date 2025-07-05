@@ -123,10 +123,6 @@ jobs:
           gunzip communication-image.tar.gz
           docker load -i communication-image.tar
 
-      - name: Wait for blockchain service to be ready
-        run: |
-          timeout 60 bash -c 'until curl -f http://localhost:8888/v1/chain/get_info; do sleep 2; done'
-
       - name: Start communication service
         run: |
           docker run -d \

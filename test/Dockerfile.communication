@@ -2,18 +2,14 @@ FROM node:22.3.0
 
 WORKDIR /app
 COPY . .
-RUN pwd && ls -la
 RUN corepack enable
 RUN yarn install --immutable
 RUN yarn run build
 
 WORKDIR /app/Tonomy-Communication
-RUN pwd && ls -la
 RUN yarn install --immutable
 # link to the local SDK
 RUN yarn link ../
-RUN cat package.json
-RUN yarn
 RUN yarn run build
 
 EXPOSE 5000
