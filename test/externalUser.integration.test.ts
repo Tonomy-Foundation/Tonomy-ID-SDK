@@ -17,6 +17,7 @@ import {
     getSettings,
     DualWalletResponse,
     setSettings,
+    Communication,
 } from '../src/sdk/index';
 import { JsKeyManager } from '../src/sdk/storage/jsKeyManager';
 import { DataSource } from 'typeorm';
@@ -150,7 +151,7 @@ describe('Login to external website', () => {
             TONOMY_ID_dataSource = await setupTestDatabase();
         }
 
-        debug('finished test');
+        debug('finished cleanup');
 
         // for some reason this is needed to ensure all the code lines execute. Not sure why needed
         // TODO: figure out why this is needed and remove issue
@@ -281,6 +282,10 @@ describe('Login to external website', () => {
 
         if (testOptions.dataRequestKYC && testOptions.dataRequestKYCDecision !== 'approved') {
             debug('TONOMY_ID/SSO: KYC verification failed, login was never executed by user');
+            await finishTest([
+                TONOMY_LOGIN_WEBSITE_communication,
+            ]);
+
             return;
         }
 
@@ -358,8 +363,17 @@ describe('Login to external website', () => {
 
         await externalWebsiteOnLogout(EXTERNAL_WEBSITE_jsKeyManager, EXTERNAL_WEBSITE_storage_factory);
 
-        // cleanup connections
-        await TONOMY_LOGIN_WEBSITE_communication.disconnect();
-        await EXTERNAL_WEBSITE_user.communication.disconnect();
+        await finishTest([
+            TONOMY_LOGIN_WEBSITE_communication,
+            EXTERNAL_WEBSITE_user.communication,
+        ]);
+    }
+
+    async function finishTest(communications: Communication[]) {
+        for (const communication of communications) {
+            await communication.disconnect();
+        }
+
+        debug('finished test');
     }
 });
