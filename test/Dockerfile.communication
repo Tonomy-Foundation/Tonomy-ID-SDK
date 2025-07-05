@@ -5,6 +5,7 @@ COPY . .
 RUN pwd && ls -la
 RUN corepack enable
 RUN yarn install --immutable
+RUN yarn run build
 
 WORKDIR /app/Tonomy-Communication
 RUN pwd && ls -la
