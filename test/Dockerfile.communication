@@ -1,0 +1,18 @@
+FROM node:22.3.0
+
+WORKDIR /app
+COPY . .
+RUN pwd && ls -la
+RUN corepack enable
+RUN yarn install --immutable
+
+WORKDIR /app/Tonomy-Communication
+RUN pwd && ls -la
+RUN yarn install --immutable
+# link to the local SDK
+RUN yarn link /app
+RUN yarn run build
+
+EXPOSE 5000
+
+CMD [ "yarn", "run", "start:prod" ]
