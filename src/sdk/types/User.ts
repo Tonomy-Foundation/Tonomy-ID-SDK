@@ -12,6 +12,7 @@ import { AppStatusEnum } from './AppStatusEnum';
 import { Signer } from '../services/blockchain';
 import { KeyManagerLevel } from '../storage/keymanager';
 import { VerificationTypeEnum } from './VerificationTypeEnum';
+import { VeriffStatusEnum } from './VeriffStatusEnum';
 
 /**
  * The data of a client authorization request
@@ -143,7 +144,7 @@ export interface IUserRequestsManager extends IUserCommunication, IUserDataVault
 
 export interface IUserDataVault extends IUserCommunication {
     waitForNextVeriffVerification(): Promise<KYCPayload>;
-    fetchVerificationData(type: VerificationTypeEnum): Promise<PersonCredentialType>;
+    fetchVerificationData(type: VerificationTypeEnum, status?: VeriffStatusEnum): Promise<PersonCredentialType>;
 }
 
 export interface IUser extends IUserCaptcha, IUserOnboarding, IUserRequestsManager {

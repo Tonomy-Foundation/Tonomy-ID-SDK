@@ -165,38 +165,32 @@ describe('Login to external website', () => {
 
     describe('SSO login full end-to-end flow with external desktop browser (using communication service)', () => {
         test('Successful login to external website - no data request', async () => {
+            expect.assertions(56);
             await runExternalUserLoginTest({ dataRequest: false });
         });
 
         test('Successful login to external website with empty data request', async () => {
+            expect.assertions(57);
             await runExternalUserLoginTest({ dataRequest: true });
         });
 
         test('Successful login to external website with data request for username', async () => {
+            expect.assertions(60);
             await runExternalUserLoginTest({ dataRequest: true, dataRequestUsername: true });
         });
 
         test('Successful login to external website with data request for KYC verification successful', async () => {
+            expect.assertions(88);
             await runExternalUserLoginTest({ dataRequest: true, dataRequestKYC: true, dataRequestKYCDecision: 'approved' });
         });
 
-        test('Successful login to external website with data request for KYC verification failed', async () => {
+        test('Unsuccessful login to external website with data request for KYC verification failed', async () => {
+            expect.assertions(37);
             await runExternalUserLoginTest({ dataRequest: true, dataRequestKYC: true, dataRequestKYCDecision: 'declined' });
         });
     });
 
     async function runExternalUserLoginTest(testOptions: ExternalUserLoginTestOptions) {
-        let expectedTests = 56;
-
-        if (testOptions.dataRequest) {
-            expectedTests += 1;
-            if (testOptions.dataRequestUsername) expectedTests += 3;
-            if (testOptions.dataRequestKYC) expectedTests += 29;
-            if (testOptions.dataRequestKYCDecision === 'declined') expectedTests -= 3;
-        }
-
-        expect.assertions(expectedTests);
-
         // #####External website user (login page) #####
         // ################################
 
@@ -284,6 +278,11 @@ describe('Login to external website', () => {
 
         // Wait for the subscriber to execute
         await TONOMY_ID_requestSubscriber;
+
+        if (testOptions.dataRequestKYCDecision !== 'approved') {
+            debug('TONOMY_ID/SSO: KYC verification failed, login was never executed by user');
+            return;
+        }
 
         // #####Tonomy Login App website user (callback page) #####
         // ########################################

@@ -21,11 +21,13 @@ import {
     BirthDateVC,
     FirstNameVC,
     generateRandomKeywords,
+    isErrorCode,
     KYCPayload,
     KYCVC,
     LastNameVC,
     NationalityVC,
     parseAntelopeDid,
+    SdkErrors,
 } from '../../src/sdk/util';
 import { ExternalUserLoginTestOptions } from '../externalUser.integration.test';
 import { getChainId, getTonomyOperationsKey } from '../../src/sdk/services/blockchain/eosio/eosio';
@@ -35,6 +37,7 @@ import { DataSource } from 'typeorm';
 import Debug from 'debug';
 import { mockVeriffWebhook, mockVeriffApproved, mockVeriffDeclined } from '../services/veriffMock';
 import { VerificationTypeEnum } from '../../src/sdk/types/VerificationTypeEnum';
+import { VeriffStatusEnum } from '../../src/sdk/types/VeriffStatusEnum';
 
 const debug = Debug('tonomy-sdk-tests:helpers:user');
 
@@ -184,7 +187,22 @@ export function setupLoginRequestSubscriber(
                 debug('TONOMY_ID/SSO: mocking calling the webhook (user completed KYC flow)');
                 await mockVeriffWebhook(mockData, user);
                 expect(user.communication.socketServer.listeners('v1/verification/veriff/receive').length).toBe(1);
-                const verificationEvent = await verificationEventPromise;
+
+                let verificationEvent: KYCPayload;
+
+                try {
+                    verificationEvent = await verificationEventPromise;
+                } catch (error) {
+                    if (!isKycApproved) {
+                        expect(isErrorCode(error, SdkErrors.VerificationDataNotFound)).toBe(true);
+                        verificationEvent = (
+                            (await user.fetchVerificationData(
+                                VerificationTypeEnum.KYC,
+                                VeriffStatusEnum.DECLINED
+                            )) as KYCVC
+                        ).getPayload();
+                    } else throw error;
+                }
 
                 debug('TONOMY_ID/SSO: received KYC verification event', verificationEvent);
                 expect(user.communication.socketServer.listeners('v1/verification/veriff/receive').length).toBe(0);
@@ -195,7 +213,10 @@ export function setupLoginRequestSubscriber(
                     mockData.data.verification.person.firstName?.value
                 );
 
-                const kycVc = (await user.fetchVerificationData(VerificationTypeEnum.KYC)) as KYCVC;
+                const kycVc = (await user.fetchVerificationData(
+                    VerificationTypeEnum.KYC,
+                    isKycApproved ? VeriffStatusEnum.APPROVED : VeriffStatusEnum.DECLINED
+                )) as KYCVC;
                 const issuer = kycVc.getIssuer();
                 const { fragment, account, chain } = parseAntelopeDid(issuer);
 
@@ -208,13 +229,12 @@ export function setupLoginRequestSubscriber(
                 const kycPayload = kycVc.getPayload();
 
                 expect(kycPayload.data.verification.decision).toBe(testOptions.dataRequestKYCDecision);
+                expect(kycPayload.data.verification.person.firstName).toBeDefined();
+                expect(kycPayload.data.verification.person.firstName?.value).toBe(
+                    mockData.data.verification.person.firstName?.value
+                );
 
                 if (isKycApproved) {
-                    expect(kycPayload.data.verification.person.firstName).toBeDefined();
-                    expect(kycPayload.data.verification.person.firstName?.value).toBe(
-                        mockData.data.verification.person.firstName?.value
-                    );
-
                     const firstNameVc = (await user.fetchVerificationData(
                         VerificationTypeEnum.FIRSTNAME
                     )) as FirstNameVC;
@@ -233,6 +253,9 @@ export function setupLoginRequestSubscriber(
                     expect(birthDateVc).toBeDefined();
                     expect(nationalityVc).toBeDefined();
                     expect(addressVc).toBeDefined();
+
+                    debug('TONOMY_ID/SSO: accepting login requests and sending confirmation to Tonomy Login Website');
+                    await user.acceptLoginRequest(requests, 'message');
                 } else {
                     await expect(user.fetchVerificationData(VerificationTypeEnum.FIRSTNAME)).rejects.toThrow();
                     await expect(user.fetchVerificationData(VerificationTypeEnum.LASTNAME)).rejects.toThrow();
@@ -240,12 +263,7 @@ export function setupLoginRequestSubscriber(
                     await expect(user.fetchVerificationData(VerificationTypeEnum.NATIONALITY)).rejects.toThrow();
                     await expect(user.fetchVerificationData(VerificationTypeEnum.ADDRESS)).rejects.toThrow();
                 }
-
-                debug('TONOMY_ID/SSO: KYC verification completed');
             }
-
-            debug('TONOMY_ID/SSO: accepting login requests and sending confirmation to Tonomy Login Website');
-            await user.acceptLoginRequest(requests, 'message');
 
             resolve();
         }, LoginRequestsMessage.getType());

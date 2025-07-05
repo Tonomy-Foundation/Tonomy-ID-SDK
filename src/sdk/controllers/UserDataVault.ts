@@ -7,9 +7,10 @@ import { VeriffSubscriber } from '../services/communication/communication';
 import { VerificationTypeEnum } from '../types/VerificationTypeEnum';
 import { IdentityVerificationStorageManager } from '../storage/identityVerificationStorageManager';
 import { verifyOpsTmyDid } from '../util/ssi/did';
-import { castDecisionToStatus, KYCPayload, KYCVC, PersonCredentialType } from '../util';
+import { castDecisionToStatus, KYCPayload, KYCVC, PersonCredentialType, SdkErrors, throwError } from '../util';
 import { IUserDataVault } from '../types/User';
 import Debug from 'debug';
+import { VeriffStatusEnum } from '../types/VeriffStatusEnum';
 
 const debug = Debug('tonomy-sdk:controllers:UserDataVault');
 
@@ -82,12 +83,18 @@ export class UserDataVault extends UserCommunication implements IUserDataVault {
         });
     }
 
-    async fetchVerificationData(type: VerificationTypeEnum): Promise<PersonCredentialType> {
-        debug('fetchVerificationData()', type);
-        const vc = await this.idVerificationManager.findLatestApproved(type);
+    async fetchVerificationData(
+        type: VerificationTypeEnum,
+        status: VeriffStatusEnum = VeriffStatusEnum.APPROVED
+    ): Promise<PersonCredentialType> {
+        debug('fetchVerificationData()', type, status);
+        const vc = await this.idVerificationManager.findLatestWithTypeAndStatus(type, status);
 
         if (!vc) {
-            throw new Error(`${type} verification data requested but not available in storage`);
+            throwError(
+                `${type} verification data with status ${status} requested but not available in storage`,
+                SdkErrors.VerificationDataNotFound
+            );
         }
 
         return vc;

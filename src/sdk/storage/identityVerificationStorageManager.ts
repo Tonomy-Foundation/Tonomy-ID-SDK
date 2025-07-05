@@ -26,7 +26,14 @@ export class IdentityVerificationStorageManager {
     }
 
     async findLatestApproved(type: VerificationTypeEnum): Promise<PersonCredentialType | null> {
-        const doc = await this.repository.findLatestApproved(type);
+        return await this.findLatestWithTypeAndStatus(type, VeriffStatusEnum.APPROVED);
+    }
+
+    async findLatestWithTypeAndStatus(
+        type: VerificationTypeEnum,
+        status: VeriffStatusEnum
+    ): Promise<PersonCredentialType | null> {
+        const doc = await this.repository.findLatestWithStatus(type, status);
 
         if (doc) {
             return castStringToCredential(doc.vc, type);
@@ -53,14 +60,6 @@ export class IdentityVerificationStorageManager {
 
     async deleteAll(): Promise<void> {
         await this.repository.deleteAll();
-    }
-
-    async findByVeriffIdAndType(veriffId: string, type: VerificationTypeEnum): Promise<PersonCredentialType | null> {
-        const doc = await this.repository.findByIdAndType(veriffId, type);
-
-        if (doc) {
-            return castStringToCredential(doc.vc, type);
-        } else return null;
     }
 
     async emplaceByVeriffIdAndType(

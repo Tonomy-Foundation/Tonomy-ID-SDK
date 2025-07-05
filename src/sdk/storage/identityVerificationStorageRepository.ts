@@ -2,6 +2,9 @@ import { Repository, DataSource } from 'typeorm';
 import { IdentityVerificationStorage } from './entities/identityVerificationStorage';
 import { VerificationTypeEnum } from '../types/VerificationTypeEnum';
 import { VeriffStatusEnum } from '../types/VeriffStatusEnum';
+import Debug from 'debug';
+
+const debug = Debug('tonomy-sdk:storage:IdentityVerificationStorageRepository');
 
 export class IdentityVerificationStorageRepository {
     private ormRepository: Repository<IdentityVerificationStorage>;
@@ -27,12 +30,19 @@ export class IdentityVerificationStorageRepository {
             updatedAt: now,
         });
 
-        return await this.ormRepository.save(appStorageEntity);
+        const doc = await this.ormRepository.save(appStorageEntity);
+
+        // await this.printAllTrimmed('create()');
+        return doc;
     }
 
-    public async findLatestApproved(type: VerificationTypeEnum): Promise<IdentityVerificationStorage | null> {
+    public async findLatestWithStatus(
+        type: VerificationTypeEnum,
+        status: VeriffStatusEnum
+    ): Promise<IdentityVerificationStorage | null> {
+        // await this.printAllTrimmed('findLatestWithStatus()');
         return await this.ormRepository.findOne({
-            where: { status: VeriffStatusEnum.APPROVED, type },
+            where: { status, type },
             order: { createdAt: 'DESC' },
         });
     }
@@ -45,7 +55,10 @@ export class IdentityVerificationStorageRepository {
         const now = new Date();
 
         identityVerification.updatedAt = now;
-        return await this.ormRepository.save(identityVerification);
+        const doc = await this.ormRepository.save(identityVerification);
+
+        // await this.printAllTrimmed('update()');
+        return doc;
     }
 
     public async findByIdAndType(
@@ -55,5 +68,21 @@ export class IdentityVerificationStorageRepository {
         return this.ormRepository.findOne({
             where: { veriffId, type },
         });
+    }
+
+    public async findAll(): Promise<IdentityVerificationStorage[]> {
+        return await this.ormRepository.find();
+    }
+
+    private async printAllTrimmed(context: string): Promise<void> {
+        const all = await this.findAll();
+
+        debug(
+            `${context}.printAllTrimmed()`,
+            all.map((item) => ({
+                ...item,
+                vc: item.vc.slice(0, 10) + '...',
+            }))
+        );
     }
 }
