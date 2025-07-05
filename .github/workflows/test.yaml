@@ -82,7 +82,8 @@ jobs:
           cd Tonomy-Communication
           git checkout $GIT_BRANCH
           git pull
-          docker build -t tonomy/communication:local -f Dockerfile.localSdk .
+          cd ../
+          docker build -t tonomy/communication:local -f Tonomy-Communication/Dockerfile.localSdk .
 
       - name: Save Communication service Docker image as artifact
         run: |
