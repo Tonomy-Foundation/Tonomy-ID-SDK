@@ -1,8 +1,8 @@
 /**
  * @jest-environment jsdom
  */
-import { IdentifyMessage, Message } from '../../src/sdk/services/communication/message';
 import { createRandomID } from '../helpers/user';
+import { IdentifyMessage, Message } from '../../src/sdk/services/communication/message';
 
 describe('user signing messages', () => {
     test('user can sign a message', async () => {
