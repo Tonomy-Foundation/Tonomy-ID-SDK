@@ -19,7 +19,14 @@
         // "isolatedModules": true, // TODO: Enable this and fix errors
         "allowSyntheticDefaultImports": true,
         "moduleResolution": "bundler",
-        "types": ["jest"],
+        "paths": {
+            "@wharfkit/antelope/src/api/v1/types": [
+                "./src/types/wharfkit-antelope.d.ts"
+            ]
+        },
+        "types": [
+            "jest"
+        ],
         "noFallthroughCasesInSwitch": true,
         "noUnusedLocals": true,
         "noUnusedParameters": true,
@@ -33,6 +40,8 @@
     "include": ["src", "test"],
     "exclude": [
         "node_modules",
-        "build"
+        "build",
+        "Tonomy-Communication",
+        "Tonomy-Contracts"
     ]
 }

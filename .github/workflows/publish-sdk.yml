@@ -16,12 +16,12 @@ jobs:
     steps:
       - name: Install jq
         run: sudo apt install jq -y
-      
+
       - name: 🏗 Setup repo
         uses: actions/checkout@v4
         with:
           token: ${{secrets.MY_GITHUB_PERSONAL_ACCESS_TOKEN}}
-      
+
       - name: Enable Corepack before setting up Node
         run: corepack enable
 
@@ -30,7 +30,7 @@ jobs:
         with:
           node-version: 22.3.0
           registry-url: https://registry.npmjs.org/
-      
+
       - name: 🚀 Build and publish SDK
         uses: actions/setup-node@v4
         with:
@@ -46,6 +46,11 @@ jobs:
           if [[ ${GITHUB_REF#refs/*/} == "testnet" ]]; then
             echo "Variable BRANCH_NAME is set to 'testnet'"
             jq --arg tag "rc" '.publishConfig.tag = $tag' package.json > package.tmp.json && mv package.tmp.json package.json
+          fi
+
+          if [[ ${GITHUB_REF#refs/*/} == "master" ]]; then
+            echo "Variable BRANCH_NAME is set to 'master'"
+            jq --arg tag "latest" '.publishConfig.tag = $tag' package.json > package.tmp.json && mv package.tmp.json package.json
           fi
       - run: yarn install --immutable
       - run: yarn run build

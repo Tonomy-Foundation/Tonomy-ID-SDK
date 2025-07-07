@@ -4,7 +4,15 @@ import { Contract, loadContract } from './Contract';
 import { Contract as AntelopeContract, ActionOptions } from '@wharfkit/contract';
 import { Signer, transact } from '../eosio/transaction';
 import { getApi } from '../eosio/eosio';
-import { addMicroseconds, getSettings } from '../../../util';
+import { getSettings } from '../../../util';
+import {
+    addMicroseconds,
+    MICROSECONDS_IN_DAY,
+    MICROSECONDS_IN_MONTH,
+    MICROSECONDS_IN_SECOND,
+    MICROSECONDS_IN_YEAR,
+    SECONDS_IN_HOUR,
+} from '../../../util/time';
 import Decimal from 'decimal.js';
 import { assetToAmount, assetToDecimal } from './EosioTokenContract';
 import abi from '../../../../../Tonomy-Contracts/contracts/vesting.tmy/vesting.tmy.abi.json';
@@ -82,9 +90,9 @@ export const vestingCategories: Map<
     [
         999, // Testing Category
         {
-            startDelay: 10 * MICROSECONDS_PER_SECOND,
-            cliffPeriod: 10 * MICROSECONDS_PER_SECOND,
-            vestingPeriod: 20 * MICROSECONDS_PER_SECOND,
+            startDelay: 10 * MICROSECONDS_IN_SECOND,
+            cliffPeriod: 10 * MICROSECONDS_IN_SECOND,
+            vestingPeriod: 20 * MICROSECONDS_IN_SECOND,
             tgeUnlock: 0.0,
             name: 'Testing Category (no unlock)',
         },
@@ -92,9 +100,9 @@ export const vestingCategories: Map<
     [
         998, // Testing Category
         {
-            startDelay: 10 * MICROSECONDS_PER_SECOND,
-            cliffPeriod: 10 * MICROSECONDS_PER_SECOND,
-            vestingPeriod: 20 * MICROSECONDS_PER_SECOND,
+            startDelay: 10 * MICROSECONDS_IN_SECOND,
+            cliffPeriod: 10 * MICROSECONDS_IN_SECOND,
+            vestingPeriod: 20 * MICROSECONDS_IN_SECOND,
             tgeUnlock: 0.5,
             name: 'Testing Category (50% unlock)',
         },
@@ -102,9 +110,9 @@ export const vestingCategories: Map<
     [
         1, // Seed Private Sale (DEPRECIATED)
         {
-            startDelay: 0 * MICROSECONDS_PER_DAY,
-            cliffPeriod: 6 * 30 * MICROSECONDS_PER_DAY,
-            vestingPeriod: 2 * 365 * MICROSECONDS_PER_DAY,
+            startDelay: 0 * MICROSECONDS_IN_DAY,
+            cliffPeriod: 6 * 30 * MICROSECONDS_IN_DAY,
+            vestingPeriod: 2 * 365 * MICROSECONDS_IN_DAY,
             tgeUnlock: 0.0,
             name: 'Seed Private Sale (DEPRECIATED)',
         },
@@ -112,9 +120,9 @@ export const vestingCategories: Map<
     [
         2, // Strategic Partnerships Private Sale (DEPRECIATED)
         {
-            startDelay: 6 * 30 * MICROSECONDS_PER_DAY,
-            cliffPeriod: 6 * 30 * MICROSECONDS_PER_DAY,
-            vestingPeriod: 2 * 365 * MICROSECONDS_PER_DAY,
+            startDelay: 6 * 30 * MICROSECONDS_IN_DAY,
+            cliffPeriod: 6 * 30 * MICROSECONDS_IN_DAY,
+            vestingPeriod: 2 * 365 * MICROSECONDS_IN_DAY,
             tgeUnlock: 0.0,
             name: 'Strategic Partnerships Private Sale (DEPRECIATED)',
         },
@@ -123,9 +131,9 @@ export const vestingCategories: Map<
     [
         3, // Public Sale (DO NOT USED YET)
         {
-            startDelay: 0 * MICROSECONDS_PER_DAY,
-            cliffPeriod: 0 * MICROSECONDS_PER_DAY,
-            vestingPeriod: 0 * MICROSECONDS_PER_DAY,
+            startDelay: 0 * MICROSECONDS_IN_DAY,
+            cliffPeriod: 0 * MICROSECONDS_IN_DAY,
+            vestingPeriod: 0 * MICROSECONDS_IN_DAY,
             tgeUnlock: 0.0,
             name: 'Public Sale (DEPRECIATED)',
         },
@@ -133,9 +141,9 @@ export const vestingCategories: Map<
     [
         4, // Team
         {
-            startDelay: 1 * 365 * MICROSECONDS_PER_DAY,
-            cliffPeriod: 0 * MICROSECONDS_PER_DAY,
-            vestingPeriod: 5 * 365 * MICROSECONDS_PER_DAY,
+            startDelay: 1 * 365 * MICROSECONDS_IN_DAY,
+            cliffPeriod: 0 * MICROSECONDS_IN_DAY,
+            vestingPeriod: 5 * 365 * MICROSECONDS_IN_DAY,
             tgeUnlock: 0.0,
             name: 'Team',
         },
@@ -143,9 +151,9 @@ export const vestingCategories: Map<
     [
         5, // Legal and Compliance
         {
-            startDelay: 0 * MICROSECONDS_PER_DAY,
-            cliffPeriod: 0 * MICROSECONDS_PER_DAY,
-            vestingPeriod: 1 * 365 * MICROSECONDS_PER_DAY,
+            startDelay: 0 * MICROSECONDS_IN_DAY,
+            cliffPeriod: 0 * MICROSECONDS_IN_DAY,
+            vestingPeriod: 1 * 365 * MICROSECONDS_IN_DAY,
             tgeUnlock: 0.0,
             name: 'Legal and Compliance',
         },
@@ -153,9 +161,9 @@ export const vestingCategories: Map<
     [
         6, // Reserves, Partnerships
         {
-            startDelay: 0 * MICROSECONDS_PER_DAY,
-            cliffPeriod: 0 * MICROSECONDS_PER_DAY,
-            vestingPeriod: 2 * 365 * MICROSECONDS_PER_DAY,
+            startDelay: 0 * MICROSECONDS_IN_DAY,
+            cliffPeriod: 0 * MICROSECONDS_IN_DAY,
+            vestingPeriod: 2 * 365 * MICROSECONDS_IN_DAY,
             tgeUnlock: 0.0,
             name: 'Reserves, Partnerships',
         },
@@ -163,9 +171,9 @@ export const vestingCategories: Map<
     [
         7, // Community and Marketing, Platform Dev, Infra Rewards, Ecosystem
         {
-            startDelay: 0 * MICROSECONDS_PER_DAY,
-            cliffPeriod: 0 * MICROSECONDS_PER_DAY,
-            vestingPeriod: 5 * 365 * MICROSECONDS_PER_DAY,
+            startDelay: 0 * MICROSECONDS_IN_DAY,
+            cliffPeriod: 0 * MICROSECONDS_IN_DAY,
+            vestingPeriod: 5 * 365 * MICROSECONDS_IN_DAY,
             tgeUnlock: 0.0,
             name: 'Community and Marketing, Platform Dev, Infra Rewards, Ecosystem',
         },
@@ -174,9 +182,9 @@ export const vestingCategories: Map<
     [
         8, // Seed
         {
-            startDelay: 6 * MICROSECONDS_PER_MONTH,
-            cliffPeriod: 0 * MICROSECONDS_PER_DAY,
-            vestingPeriod: 12 * MICROSECONDS_PER_MONTH,
+            startDelay: 6 * MICROSECONDS_IN_MONTH,
+            cliffPeriod: 0 * MICROSECONDS_IN_DAY,
+            vestingPeriod: 12 * MICROSECONDS_IN_MONTH,
             tgeUnlock: 0.05,
             name: 'Seed',
         },
@@ -184,9 +192,9 @@ export const vestingCategories: Map<
     [
         9, // Pre-Sale
         {
-            startDelay: 4 * MICROSECONDS_PER_MONTH,
-            cliffPeriod: 0 * MICROSECONDS_PER_DAY,
-            vestingPeriod: 12 * MICROSECONDS_PER_MONTH,
+            startDelay: 4 * MICROSECONDS_IN_MONTH,
+            cliffPeriod: 0 * MICROSECONDS_IN_DAY,
+            vestingPeriod: 12 * MICROSECONDS_IN_MONTH,
             tgeUnlock: 0.075,
             name: 'Pre-Sale',
         },
@@ -194,9 +202,9 @@ export const vestingCategories: Map<
     [
         10, // Public (TGE)
         {
-            startDelay: 1 * MICROSECONDS_PER_MONTH,
-            cliffPeriod: 0 * MICROSECONDS_PER_DAY,
-            vestingPeriod: 3 * MICROSECONDS_PER_MONTH,
+            startDelay: 1 * MICROSECONDS_IN_MONTH,
+            cliffPeriod: 0 * MICROSECONDS_IN_DAY,
+            vestingPeriod: 3 * MICROSECONDS_IN_MONTH,
             tgeUnlock: 0.25,
             name: 'Public (TGE)',
         },
@@ -204,9 +212,9 @@ export const vestingCategories: Map<
     [
         11, // Private
         {
-            startDelay: 3 * MICROSECONDS_PER_MONTH,
-            cliffPeriod: 0 * MICROSECONDS_PER_DAY,
-            vestingPeriod: 9 * MICROSECONDS_PER_MONTH,
+            startDelay: 3 * MICROSECONDS_IN_MONTH,
+            cliffPeriod: 0 * MICROSECONDS_IN_DAY,
+            vestingPeriod: 9 * MICROSECONDS_IN_MONTH,
             tgeUnlock: 0.125,
             name: 'Private',
         },
@@ -214,9 +222,9 @@ export const vestingCategories: Map<
     [
         12, // KOL
         {
-            startDelay: 1 * MICROSECONDS_PER_MONTH,
-            cliffPeriod: 0 * MICROSECONDS_PER_DAY,
-            vestingPeriod: 3 * MICROSECONDS_PER_MONTH,
+            startDelay: 1 * MICROSECONDS_IN_MONTH,
+            cliffPeriod: 0 * MICROSECONDS_IN_DAY,
+            vestingPeriod: 3 * MICROSECONDS_IN_MONTH,
             tgeUnlock: 0.25,
             name: 'KOL',
         },
@@ -224,9 +232,9 @@ export const vestingCategories: Map<
     [
         13, // Incubator
         {
-            startDelay: 0 * MICROSECONDS_PER_MONTH,
-            cliffPeriod: 0 * MICROSECONDS_PER_DAY,
-            vestingPeriod: 6 * MICROSECONDS_PER_DAY,
+            startDelay: 0 * MICROSECONDS_IN_MONTH,
+            cliffPeriod: 0 * MICROSECONDS_IN_DAY,
+            vestingPeriod: 6 * MICROSECONDS_IN_DAY,
             tgeUnlock: 0.7,
             name: 'Incubator',
         },
@@ -234,9 +242,9 @@ export const vestingCategories: Map<
     [
         14, // Liquidity
         {
-            startDelay: 0 * MICROSECONDS_PER_MONTH,
-            cliffPeriod: 0 * MICROSECONDS_PER_DAY,
-            vestingPeriod: 6 * MICROSECONDS_PER_DAY,
+            startDelay: 0 * MICROSECONDS_IN_MONTH,
+            cliffPeriod: 0 * MICROSECONDS_IN_DAY,
+            vestingPeriod: 6 * MICROSECONDS_IN_DAY,
             tgeUnlock: 0.25,
             name: 'Liquidity',
         },

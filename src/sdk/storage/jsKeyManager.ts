@@ -8,7 +8,7 @@ import {
     CheckKeyOptions,
 } from './keymanager';
 import { Checksum256, PrivateKey, PublicKey, Signature } from '@wharfkit/antelope';
-import { SdkErrors, throwError } from '../util/errors';
+import { SdkErrors } from '../util/errors';
 import { STORAGE_NAMESPACE } from './storage';
 
 const KEY_STORAGE_NAMESPACE = STORAGE_NAMESPACE + 'key.';
@@ -42,7 +42,7 @@ export class JsKeyManager implements KeyManager {
                 break;
             case KeyManagerLevel.PASSWORD:
             case KeyManagerLevel.PIN:
-                if (!options.challenge) throwError('Challenge missing', SdkErrors.MissingChallenge);
+                if (!options.challenge) throw new Error(`${SdkErrors.MissingChallenge}: Challenge missing`);
                 keyStore.salt = randomString(32);
                 keyStore.hashedSaltedChallenge = sha256(options.challenge + keyStore.salt);
                 break;
@@ -53,7 +53,7 @@ export class JsKeyManager implements KeyManager {
                 sessionStorage.setItem(KEY_STORAGE_NAMESPACE + options.level, JSON.stringify(keyStore));
                 break;
             default:
-                throwError('Invalid level', SdkErrors.InvalidKeyLevel);
+                throw new Error(`${SdkErrors.InvalidKeyLevel}: Invalid level`);
         }
 
         this.keyStorage[options.level] = keyStore;
@@ -75,7 +75,7 @@ export class JsKeyManager implements KeyManager {
                     ? localStorage.getItem(KEY_STORAGE_NAMESPACE + options.level)
                     : sessionStorage.getItem(KEY_STORAGE_NAMESPACE + options.level);
 
-            if (!storage) throwError(`No key for level ${options.level}`, SdkErrors.KeyNotFound);
+            if (!storage) throw new Error(`${SdkErrors.KeyNotFound}: No key for level ${options.level}`);
             const keyStore = JSON.parse(storage);
 
             this.keyStorage[options.level] = {
@@ -89,7 +89,7 @@ export class JsKeyManager implements KeyManager {
             return this.keyStorage[options.level];
         }
 
-        throwError(`No key for level ${options.level}`, SdkErrors.KeyNotFound);
+        throw new Error(`${SdkErrors.KeyNotFound}: No key for level ${options.level}`);
     }
 
     async signData(options: SignDataOptions): Promise<string | Signature> {
@@ -97,20 +97,20 @@ export class JsKeyManager implements KeyManager {
         const keyStore = this.fetchKey(options);
 
         if (options.level === KeyManagerLevel.PASSWORD || options.level === KeyManagerLevel.PIN) {
-            if (!options.challenge) throwError('Challenge missing', SdkErrors.MissingChallenge);
+            if (!options.challenge) throw new Error(`${SdkErrors.MissingChallenge}: Challenge missing`);
             const validChallenge = await this.checkKey({ level: options.level, challenge: options.challenge });
 
             if (!validChallenge && options.level === KeyManagerLevel.PASSWORD)
-                throwError('Invalid password', SdkErrors.PasswordInvalid);
+                throw new Error(`${SdkErrors.PasswordInvalid}: Invalid password`);
             if (!validChallenge && options.level === KeyManagerLevel.PIN)
-                throwError('Invalid PIN', SdkErrors.PinInvalid);
+                throw new Error(`${SdkErrors.PinInvalid}: Invalid PIN`);
         }
 
         const privateKey = keyStore.privateKey;
 
         if (options.outputType === 'jwt') {
-            if (typeof options.data !== 'string') throw throwError('Data must be a string', SdkErrors.InvalidData);
-            const signer = createSigner(privateKey as any);
+            if (typeof options.data !== 'string') throw new Error(`${SdkErrors.InvalidData}: Data must be a string`);
+            const signer = createSigner(privateKey);
 
             return (await signer(options.data)) as string;
         } else {
@@ -140,12 +140,12 @@ export class JsKeyManager implements KeyManager {
         const keyStore = this.fetchKey(options);
 
         if (options.level === KeyManagerLevel.PIN || options.level === KeyManagerLevel.PASSWORD) {
-            if (!options.challenge) throwError('Challenge is missing', SdkErrors.MissingChallenge);
+            if (!options.challenge) throw new Error(`${SdkErrors.MissingChallenge}: Challenge is missing`);
 
             const hashedSaltedChallenge = sha256(options?.challenge + keyStore.salt);
 
             return hashedSaltedChallenge === keyStore.hashedSaltedChallenge;
-        } else throw throwError('Invalid Level', SdkErrors.InvalidKeyLevel);
+        } else throw new Error(`${SdkErrors.InvalidKeyLevel}: Invalid Level`);
     }
 
     async removeKey(options: GetKeyOptions): Promise<void> {

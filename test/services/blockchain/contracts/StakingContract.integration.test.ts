@@ -14,7 +14,7 @@ import {
 import { KeyManagerLevel } from '../../../../src/sdk/index';
 import { jest } from '@jest/globals';
 import { createRandomID } from '../../../helpers/user';
-import { addSeconds, MILLISECONDS_IN_SECOND, SECONDS_IN_DAY, sleepUntil, sleep, SECONDS_IN_YEAR, SECONDS_IN_HOUR} from '../../../../src/sdk/util';
+import { addSeconds, MILLISECONDS_IN_SECOND, SECONDS_IN_DAY, sleepUntil, sleep, SECONDS_IN_YEAR, SECONDS_IN_HOUR} from '../../../../src/sdk/util/time';
 import { PrivateKey } from '@wharfkit/antelope';
 import Debug from 'debug';
 
@@ -31,7 +31,7 @@ async function resetContract() {
     await stakeContract.addYield('infra.tmy', yieldPool, signer); // 6 months budget in the account
 }
 
-describe('TonomyContract Staking Tests', () => {
+describe('StakingContract Staking Tests', () => {
     jest.setTimeout(60000);
 
     let accountName: string;
@@ -779,16 +779,6 @@ describe('TonomyContract Staking Tests', () => {
             debug('afterUnstake', afterUnstake);
 
             expect(afterUnstake.allocations.length).toBe(0);
-
-            // expect(afterUnstake.allocation.staked).toBe(afterTwoCycles.allocation.staked); // Stayed the same
-            // expect(afterUnstake.account.payments).toBe(afterTwoCycles.account.payments); // Stayed the same
-            // expect(afterUnstake.allocation.yieldSoFar).toBe(afterTwoCycles.allocation.yieldSoFar); // Stayed the same
-            // expect(afterUnstake.allocation.monthlyYield).toBe(0); // No yield after unstake
-            // expect(afterUnstake.account.totalYield).toBe(afterUnstake.allocation.yieldSoFar);
-            // expect(afterUnstake.account.lastPayoutTime.getTime()).toBe(afterTwoCycles.account.lastPayoutTime.getTime()); // Stayed the same
-            // expect(afterUnstake.settings.totalReleasing).toBe(afterUnstake.allocation.staked); // Unstaked
-            // expect(afterUnstake.settings.totalStaked).toBe(0); // Unstaked
-            // expect(afterUnstake.settings.yieldPool).toBe(afterTwoCycles.settings.yieldPool); // Stayed the same
         }, 3 * cycleSeconds * 1000 + 10000);
       
         test('does not change settings if no staking accounts exist while cron runs', async () => {

@@ -59,10 +59,7 @@ export async function vestingBulk(args: { governanceAccounts: string[] }, option
 
                 results.push(data);
             } catch (e) {
-                if (
-                    e instanceof SdkError &&
-                    (e.code === SdkErrors.AccountDoesntExist || e.code === SdkErrors.UsernameNotFound)
-                ) {
+                if (isErrorCode(e, [SdkErrors.AccountDoesntExist, SdkErrors.UsernameNotFound])) {
                     unfoundAccounts.push(data.accountName);
                 } else {
                     throw e;

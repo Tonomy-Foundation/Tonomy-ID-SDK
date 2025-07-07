@@ -97,7 +97,7 @@ export class App implements AppData {
     }
 
     static async getApp(origin: string): Promise<App> {
-        const contractAppData = await tonomyContract.getApp(origin);
+        const contractAppData = await getTonomyContract().getApp(origin);
 
         return new App({
             accountName: contractAppData.accountName,

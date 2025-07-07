@@ -3,24 +3,18 @@ import { KeyManagerLevel } from '../storage/keymanager';
 import { tonomyEosioProxyContract } from '../services/blockchain/contracts/TonomyEosioProxyContract';
 import { tonomyContract } from '../services/blockchain';
 import { createKeyManagerSigner } from '../services/blockchain/eosio/transaction';
-import { SdkErrors, throwError, SdkError } from '../util/errors';
-import { getSettings } from '../util/settings';
+import { SdkErrors, throwError, isErrorCode } from '../util/errors';
 import { Message, LinkAuthRequestMessage, LinkAuthRequestResponseMessage } from '../services/communication/message';
 import { getAccountNameFromDid, parseDid } from '../util/ssi/did';
-import { ICheckedRequest, IUserAppRecord, IUserRequestsManager } from '../types/User';
+import { IUserAppRecord, IUserRequestsManager } from '../types/User';
 import { PublicKey } from '@wharfkit/antelope';
-import { LoginRequest } from '../util/request';
 import { LoginRequestResponseMessage } from '../services/communication/message';
-import { LoginRequestResponseMessagePayload } from '../services/communication/message';
-import { objToBase64Url } from '../util/base64';
-import { DID, URL as URLtype } from '../util/ssi/types';
-import { RequestsManager } from '../helpers/requestsManager';
-import { ResponsesManager } from '../helpers/responsesManager';
+import { URL as URLtype } from '../util/ssi/types';
 import { App } from './App';
 import { AppStatusEnum } from '../types/AppStatusEnum';
-import { getAccountInfo, verifyKeyExistsForApp } from '../helpers/user';
+import { getAccountInfo } from '../helpers/user';
 import { UserCommunication } from './UserCommunication';
-import { sleep } from '../util';
+import { DualWalletRequests, sleep } from '../util';
 import Debug from 'debug';
 
 const debug = Debug('tonomy-sdk:UserRequestsManager');
@@ -42,7 +36,7 @@ export class UserRequestsManager extends UserCommunication implements IUserReque
 
             if (!permission) throwError('DID does not contain App permission', SdkErrors.MissingParams);
 
-            await tonomyContract.getApp(Name.from(permission));
+            await getTonomyContract().getApp(Name.from(permission));
             // Throws SdkErrors.DataQueryNoRowDataFound error if app does not exist
             // which cannot happen in theory, as the user is already logged in
 
@@ -51,7 +45,7 @@ export class UserRequestsManager extends UserCommunication implements IUserReque
 
             const signer = createKeyManagerSigner(this.keyManager, KeyManagerLevel.ACTIVE);
 
-            await tonomyEosioProxyContract.linkAuth(
+            await getTonomyEosioProxyContract().linkAuth(
                 (await this.getAccountName()).toString(),
                 contract.toString(),
                 action.toString(),
@@ -70,7 +64,7 @@ export class UserRequestsManager extends UserCommunication implements IUserReque
 
             await this.sendMessage(linkAuthRequestResponseMessage);
         } catch (e) {
-            if (e instanceof SdkError && e.code === SdkErrors.SenderNotAuthorized) {
+            if (isErrorCode(e, SdkErrors.SenderNotAuthorized)) {
                 // somebody may be trying to DoS the user, drop
                 return;
             } else {
@@ -110,7 +104,7 @@ export class UserRequestsManager extends UserCommunication implements IUserReque
             }
         }
 
-        debug('loginWithApp key', key);
+        debug('loginWithApp key', key.toString(), linkAuth);
 
         await tonomyContract.loginWithApp(myAccount.toString(), app.accountName.toString(), 'local', key, localSigner);
 
@@ -137,81 +131,22 @@ export class UserRequestsManager extends UserCommunication implements IUserReque
     }
 
     async acceptLoginRequest(
-        responsesManager: ResponsesManager,
-        platform: 'mobile' | 'browser',
-        options: {
-            callbackOrigin?: URLtype;
-            callbackPath?: URLtype;
-            messageRecipient?: DID;
-        }
+        requests: DualWalletRequests,
+        respondWith: 'redirect' | 'message'
     ): Promise<void | URLtype> {
-        debug('acceptLoginRequest() options', options);
+        const responses = await requests.accept(this);
 
-        const finalResponses = await responsesManager.createResponses(this);
-
-        const responsePayload: LoginRequestResponseMessagePayload = {
-            success: true,
-            response: finalResponses,
-        };
-
-        if (platform === 'mobile') {
-            if (!options.callbackPath || !options.callbackOrigin)
-                throwError('Missing callback origin or path', SdkErrors.MissingParams);
-            let callbackUrl = options.callbackOrigin + options.callbackPath + '?';
-
-            callbackUrl += 'payload=' + objToBase64Url(responsePayload);
-
-            return callbackUrl;
+        if (respondWith === 'redirect') {
+            // Redirect the user back to the external
+            return responses.getRedirectUrl();
         } else {
-            if (!options.messageRecipient) throwError('Missing message recipient', SdkErrors.MissingParams);
+            // send the response to the SSO
+            if (!requests.sso) throw new Error('SSO requests are missing in the login request message');
+            const messageRecipient = requests.sso.getDid();
             const issuer = await this.getIssuer();
-            const message = await LoginRequestResponseMessage.signMessage(
-                responsePayload,
-                issuer,
-                options.messageRecipient
-            );
+            const message = await LoginRequestResponseMessage.signMessage(responses, issuer, messageRecipient);
 
             await this.sendMessage(message);
         }
-    }
-
-    async checkLoginRequests(requests: LoginRequest[]): Promise<ICheckedRequest[]> {
-        const managedRequests = new RequestsManager(requests);
-
-        await managedRequests.verify();
-
-        const response: ICheckedRequest[] = [];
-
-        for (const request of managedRequests.getLoginRequestsOrThrow()) {
-            const payload = request.getPayload();
-
-            const app = await App.getApp(payload.origin);
-
-            let requiresLogin = true;
-
-            try {
-                await verifyKeyExistsForApp(await this.getAccountName(), {
-                    publicKey: payload.publicKey,
-                });
-                requiresLogin = false;
-            } catch (e) {
-                if (e instanceof SdkError && e.code === SdkErrors.UserNotLoggedInWithThisApp) {
-                    // Never consented
-                    requiresLogin = true;
-                } else {
-                    throw e;
-                }
-            }
-
-            response.push({
-                request,
-                app,
-                requiresLogin,
-                ssoApp: payload.origin === getSettings().ssoWebsiteOrigin,
-                requestDid: request.getIssuer(),
-            });
-        }
-
-        return response;
     }
 }

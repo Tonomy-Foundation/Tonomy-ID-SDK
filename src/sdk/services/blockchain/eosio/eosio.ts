@@ -1,5 +1,4 @@
 import { APIClient, FetchProvider, NameType, API, PrivateKey, Serializer } from '@wharfkit/antelope';
-import { GetInfoResponse } from '@wharfkit/antelope/src/api/v1/types';
 import fetch from 'cross-fetch';
 import { getFetch, getSettings, isProduction } from '../../../util/settings';
 import { throwError, SdkErrors } from '../../../util/errors';
@@ -41,10 +40,21 @@ export async function serializeActionData(account: NameType, type: string, data:
     return hexString;
 }
 
-export async function getChainInfo(): Promise<GetInfoResponse> {
+export async function getChainInfo(): Promise<API.v1.GetInfoResponse> {
     const api = await getApi();
 
-    return (await api.v1.chain.get_info()) as unknown as GetInfoResponse;
+    return await api.v1.chain.get_info();
+}
+
+let chainId: string | undefined;
+
+export async function getChainId(): Promise<string> {
+    if (chainId) return chainId;
+    const api = await getApi();
+    const info = await api.v1.chain.get_info();
+
+    if (!info || !info.chain_id) throw new Error('Chain ID not found in chain info');
+    return (chainId = info.chain_id.toString());
 }
 
 export async function getAccount(account: NameType): Promise<API.v1.AccountObject> {

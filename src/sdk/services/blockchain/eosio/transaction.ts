@@ -12,28 +12,10 @@ import { KeyManager, KeyManagerLevel } from '../../../storage/keymanager';
 import { HttpError } from '../../../util/errors';
 import { getApi } from './eosio';
 import Debug from 'debug';
-import { MapObject } from '../../../util';
 
 const debug = Debug('tonomy-sdk:services:blockchain:eosio:transaction');
 
-/**
- * Action data for a transaction
- * @property {string} account - The smart contract account name
- * @property {string} name - The name of the action (function in the smart contract)
- * @property {object} data - The data for the action (arguments for the function)
- * @property {MapObject} authorization - The authorization for the action
- */
-export type ActionData = {
-    authorization: {
-        actor: string;
-        permission: string;
-    }[];
-    account?: string;
-    name: string;
-    data: MapObject;
-};
-
-interface Signer {
+export interface Signer {
     sign(digest: Checksum256 | string): Promise<Signature>;
 }
 
@@ -53,11 +35,11 @@ interface AntelopePushTransactionErrorConstructor {
             },
         ];
     };
-    actions?: ActionData[];
+    actions?: ActionType[];
     contract?: Name;
 }
 
-function createSigner(privateKey: PrivateKey): Signer {
+export function createSigner(privateKey: PrivateKey): Signer {
     return {
         async sign(digest: Checksum256): Promise<Signature> {
             return privateKey.signDigest(digest);
@@ -65,7 +47,7 @@ function createSigner(privateKey: PrivateKey): Signer {
     };
 }
 
-function createKeyManagerSigner(keyManager: KeyManager, level: KeyManagerLevel, challenge?: string): Signer {
+export function createKeyManagerSigner(keyManager: KeyManager, level: KeyManagerLevel, challenge?: string): Signer {
     return {
         async sign(digest: string | Checksum256): Promise<Signature> {
             return (await keyManager.signData({
@@ -93,7 +75,7 @@ export class AntelopePushTransactionError extends Error {
             },
         ];
     };
-    actions?: ActionData[];
+    actions?: ActionType[];
     contract?: Name;
 
     constructor(err: AntelopePushTransactionErrorConstructor) {
@@ -131,7 +113,10 @@ export class AntelopePushTransactionError extends Error {
     }
 }
 
-async function transact(actions: ActionType[], signer: Signer | Signer[]): Promise<API.v1.PushTransactionResponse> {
+export async function transact(
+    actions: ActionType[],
+    signer: Signer | Signer[]
+): Promise<API.v1.PushTransactionResponse> {
     // Get the ABI
     const api = await getApi();
 
@@ -174,5 +159,3 @@ async function transact(actions: ActionType[], signer: Signer | Signer[]): Promi
 
     return res;
 }
-
-export { transact, Signer, createSigner, createKeyManagerSigner };

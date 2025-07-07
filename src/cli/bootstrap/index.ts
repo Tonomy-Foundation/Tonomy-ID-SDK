@@ -273,87 +273,96 @@ async function createTonomyContractAndSetResources() {
 
     console.log('Set App account type');
 
-    await tonomyContract.adminSetApp(
-        systemAccount,
-        'System Contract',
-        'Antelope blockchain system governance contract',
-        getAppUsernameHash('system'),
-        createSubdomainOnOrigin(getSettings().ssoWebsiteOrigin, 'eosio') + '/tonomy-logo1024.png',
-        createSubdomainOnOrigin(getSettings().ssoWebsiteOrigin, 'eosio'),
-        '#251950',
-        '#BA54D3',
-        signer
-    );
-    await tonomyContract.adminSetApp(
-        'eosio.token',
-        'Native Currency',
-        'Ecosystem native currency',
-        getAppUsernameHash('currency'),
-        createSubdomainOnOrigin(getSettings().ssoWebsiteOrigin, 'eosio.token') + '/tonomy-logo1024.png',
-        createSubdomainOnOrigin(getSettings().ssoWebsiteOrigin, 'eosio.token'),
-        '#251950',
-        '#BA54D3',
-        signer
-    );
-    await tonomyContract.adminSetApp(
-        'tonomy',
-        'Tonomy System',
-        'Tonomy system contract',
-        getAppUsernameHash('tonomy'),
-        createSubdomainOnOrigin(getSettings().ssoWebsiteOrigin, 'tonomy') + '/tonomy-logo1024.png',
-        createSubdomainOnOrigin(getSettings().ssoWebsiteOrigin, 'tonomy'),
-        '#251950',
-        '#BA54D3',
-        signer
-    );
-    await tonomyContract.adminSetApp(
-        'vesting.tmy',
-        'TONO Vesting',
-        'TONO Vesting contract',
-        getAppUsernameHash('vesting'),
-        createSubdomainOnOrigin(getSettings().ssoWebsiteOrigin, 'vesting') + '/tonomy-logo1024.png',
-        createSubdomainOnOrigin(getSettings().ssoWebsiteOrigin, 'vesting'),
-        '#251950',
-        '#BA54D3',
-        signer
-    );
-    await tonomyContract.adminSetApp(
-        'staking.tmy',
-        'TONO Staking',
-        'TONO Staking contract',
-        getAppUsernameHash('staking'),
-        createSubdomainOnOrigin(getSettings().ssoWebsiteOrigin, 'staking') + '/tonomy-logo1024.png',
-        createSubdomainOnOrigin(getSettings().ssoWebsiteOrigin, 'staking'),
-        '#251950',
-        '#BA54D3',
-        signer
-    );
+    const apps = [
+        {
+            accountName: systemAccount,
+            appName: 'System Contract',
+            description: 'Antelope blockchain system governance contract',
+            usernameHash: getAppUsernameHash('system'),
+            logoUrl: createSubdomainOnOrigin(getSettings().ssoWebsiteOrigin, 'eosio') + '/tonomy-logo1024.png',
+            origin: createSubdomainOnOrigin(getSettings().ssoWebsiteOrigin, 'eosio'),
+            backgroundColor: '#251950',
+            accentColor: '#BA54D3',
+            ramAllocation: 3750000, // 3.75MB
+        },
+        {
+            accountName: 'eosio.token',
+            appName: 'Native Currency',
+            description: 'Ecosystem native currency',
+            usernameHash: getAppUsernameHash('currency'),
+            logoUrl: createSubdomainOnOrigin(getSettings().ssoWebsiteOrigin, 'eosio.token') + '/tonomy-logo1024.png',
+            origin: createSubdomainOnOrigin(getSettings().ssoWebsiteOrigin, 'eosio.token'),
+            backgroundColor: '#251950',
+            accentColor: '#BA54D3',
+            ramAllocation: 2400000, // 2.4MB
+        },
+        {
+            accountName: 'tonomy',
+            appName: 'Tonomy System',
+            description: 'Tonomy system contract',
+            usernameHash: getAppUsernameHash('tonomy'),
+            logoUrl: createSubdomainOnOrigin(getSettings().ssoWebsiteOrigin, 'tonomy') + '/tonomy-logo1024.png',
+            origin: createSubdomainOnOrigin(getSettings().ssoWebsiteOrigin, 'tonomy'),
+            backgroundColor: '#251950',
+            accentColor: '#BA54D3',
+            ramAllocation: 4680000, // 4.68MB
+        },
+        {
+            accountName: 'vesting.tmy',
+            appName: 'TONO Vesting',
+            description: 'TONO Vesting contract',
+            usernameHash: getAppUsernameHash('vesting'),
+            logoUrl: createSubdomainOnOrigin(getSettings().ssoWebsiteOrigin, 'vesting') + '/tonomy-logo1024.png',
+            origin: createSubdomainOnOrigin(getSettings().ssoWebsiteOrigin, 'vesting'),
+            backgroundColor: '#251950',
+            accentColor: '#BA54D3',
+            ramAllocation: 4680000, // 4.68MB
+        },
+        {
+            accountName: 'staking.tmy',
+            appName: 'TONO Staking',
+            description: 'TONO Staking contract',
+            usernameHash: getAppUsernameHash('staking'),
+            logoUrl: createSubdomainOnOrigin(getSettings().ssoWebsiteOrigin, 'staking') + '/tonomy-logo1024.png',
+            origin: createSubdomainOnOrigin(getSettings().ssoWebsiteOrigin, 'staking'),
+            backgroundColor: '#251950',
+            accentColor: '#BA54D3',
+            ramAllocation: 4680000, // 4.68MB
+        },
+    ];
+
+    for (const app of apps) {
+        await getTonomyContract().adminSetApp(
+            app.accountName,
+            app.appName,
+            app.description,
+            app.usernameHash,
+            app.logoUrl,
+            app.origin,
+            app.backgroundColor,
+            app.accentColor,
+            signer
+        );
+    }
 
     console.log('Set Tonomy system contract params and allocate RAM');
     console.log('Set resource params', RAM_PRICE, TOTAL_RAM_AVAILABLE, RAM_FEE);
-    await tonomyContract.setResourceParams(RAM_PRICE, TOTAL_RAM_AVAILABLE, RAM_FEE, signer);
+    await getTonomyContract().setResourceParams(RAM_PRICE, TOTAL_RAM_AVAILABLE, RAM_FEE, signer);
 
     console.log('Allocate operational tokens to accounts');
     await tokenContract.transfer('ops.tmy', 'tonomy', bytesToTokens(3750000), 'Initial allocation', signer);
 
     console.log('Allocate RAM to system accounts');
+
     // See calculation: https://docs.google.com/spreadsheets/d/17cd4wt3oDHp6p7hty9njKsuukTTn9BYJ5z3Ab0N6pMM/edit?pli=1#gid=0&range=D30
-    const ramAllocations: [string, number][] = [
-        [systemAccount, 3750000],
-        ['eosio.token', 2400000],
-        ['tonomy', 4680000],
-        ['vesting.tmy', 4680000],
-        ['staking.tmy', 4680000],
-    ];
+    for (const app of apps) {
+        const account = app.accountName;
+        const tokens = bytesToTokens(app.ramAllocation);
 
-    for (const allocation of ramAllocations) {
-        const account = allocation[0];
-        const tokens = bytesToTokens(allocation[1]);
-
-        console.log(`Buying ${allocation[1] / 1000}KB of RAM for ${account} for ${tokens}`);
+        console.log(`Buying ${app.ramAllocation / 1000}KB of RAM for ${account} for ${tokens}`);
 
         await tokenContract.transfer('ops.tmy', account, tokens, 'Initial allocation', signer);
-        await tonomyContract.buyRam('ops.tmy', account, tokens, signer);
+        await getTonomyContract().buyRam('ops.tmy', account, tokens, signer);
     }
 }
 
