@@ -7,7 +7,6 @@ import { Signer, transact } from '../eosio/transaction';
 import { GOVERNANCE_ACCOUNT_NAME } from './TonomyContract';
 import { getApi } from '../eosio/eosio';
 import abi from '../../../../../Tonomy-Contracts/contracts/tonomy/tonomy.abi.json';
-import { getSettings } from '../../../util';
 import { BlockchainParams } from './EosioContract';
 
 const CONTRACT_NAME: NameType = 'tonomy';
@@ -162,6 +161,18 @@ export class TonomyEosioProxyContract extends Contract {
         const actions = await this.deployContractActions(account, wasmFileContent, abiFileContent, extraAuthorization);
 
         return transact(actions, signer);
+    }
+
+    async newAccount(
+        creator: NameType,
+        name: NameType,
+        owner: AuthorityType,
+        active: AuthorityType,
+        signer: Signer | Signer[]
+    ): Promise<API.v1.PushTransactionResponse> {
+        const action = this.actions.newaccount({ creator, name, owner, active });
+
+        return transact([action], signer);
     }
 
     async updateAuth(

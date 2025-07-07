@@ -20,7 +20,7 @@ import {
 } from '../../src/sdk';
 import { ExternalUser, LoginWithTonomyMessages } from '../../src/api/externalUser';
 import { VerifiableCredential } from '../../src/sdk/util/ssi/vc';
-import { getAccount } from '../../src/sdk/services/blockchain';
+import { getAccount, getAccountNameFromUsername } from '../../src/sdk/services/blockchain';
 import { getDidKeyIssuerFromStorage } from '../../src/sdk/helpers/didKeyStorage';
 import { onRedirectLogin } from '../../src/sdk/helpers/urls';
 import { ExternalUserLoginTestOptions } from '../externalUser.integration.test';

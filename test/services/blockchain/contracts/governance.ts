@@ -1,4 +1,4 @@
-import { ActionType, API, Name } from '@wharfkit/antelope';
+import { ActionType, API } from '@wharfkit/antelope';
 import { createSigner, eosioMsigContract, getTonomyOperationsKey } from '../../../../src/sdk/services/blockchain';
 import { randomAccountName, tonomyBoardSigners } from '../../../helpers/eosio';
 

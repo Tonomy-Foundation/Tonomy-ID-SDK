@@ -10,8 +10,6 @@ import {
     MICROSECONDS_IN_DAY,
     MICROSECONDS_IN_MONTH,
     MICROSECONDS_IN_SECOND,
-    MICROSECONDS_IN_YEAR,
-    SECONDS_IN_HOUR,
 } from '../../../util/time';
 import Decimal from 'decimal.js';
 import { assetToAmount, assetToDecimal } from './EosioTokenContract';

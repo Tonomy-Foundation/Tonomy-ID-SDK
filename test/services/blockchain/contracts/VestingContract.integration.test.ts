@@ -12,7 +12,7 @@ import {
     transact,
 } from '../../../../src/sdk/services/blockchain';
 import { addSeconds, sleepUntil, subtractSeconds, sleep } from '../../../../src/sdk/util';
-import { PrivateKey, Name } from '@wharfkit/antelope';
+import { PrivateKey } from '@wharfkit/antelope';
 import { createRandomAccount } from '../../../helpers/eosio';
 import { msigAction } from './governance';
 import { jest } from '@jest/globals';
