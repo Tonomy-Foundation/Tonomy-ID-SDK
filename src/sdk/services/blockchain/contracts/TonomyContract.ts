@@ -11,7 +11,7 @@ import {
     PublicKeyType,
 } from '@wharfkit/antelope';
 import { Contract, loadContract } from './Contract';
-import { Contract as AntelopeContract, ActionOptions } from '@wharfkit/contract';
+import { Contract as AntelopeContract, ActionOptions, QueryParams } from '@wharfkit/contract';
 import { Signer, transact } from '../eosio/transaction';
 import { SdkErrors, TonomyUsername, getSettings, sha256, throwError } from '../../../util';
 import { getAccount, getApi } from '../eosio/eosio';
@@ -77,6 +77,16 @@ type PersonDataRaw = {
     version: number;
 };
 
+function castPersonDataRaw(person: PersonDataRaw): PersonData {
+    return {
+        accountName: person.account_name,
+        status: person.status,
+        usernameHash: person.username_hash,
+        passwordSalt: person.password_salt,
+        version: person.version,
+    };
+}
+
 export type PersonData = {
     accountName: Name;
     status: number;
@@ -93,7 +103,7 @@ type AppData2Raw = {
     version: number;
 };
 
-type AppData2 = {
+export type AppData2 = {
     accountName: Name;
     usernameHash: Checksum256;
     origin: string;
@@ -105,6 +115,23 @@ type AppData2 = {
     backgroundColor: string;
     accentColor: string;
 };
+
+function castAppData2Raw(app: AppData2Raw): AppData2 {
+    const json = JSON.parse(app.json_data);
+
+    return {
+        accountName: app.account_name,
+        appName: json.app_name,
+        description: json.description,
+        logoUrl: json.logo_url,
+        origin: app.origin,
+        backgroundColor: json.background_color,
+        accentColor: json.accent_color,
+        usernameHash: app.username_hash,
+        version: app.version,
+        jsonData: app.json_data,
+    };
+}
 
 function calculateRamPrice(): number {
     // See https://docs.google.com/spreadsheets/d/1_S0S7Gu-PHzt-IzCqNl3CaWnniAt1KwaXDB50roTZUQ/edit?gid=1773951365#gid=1773951365&range=C84
@@ -463,13 +490,22 @@ export class TonomyContract extends Contract {
             personData = await this.getPersonData(account);
         }
 
-        return {
-            accountName: personData.account_name,
-            status: personData.status,
-            usernameHash: personData.username_hash,
-            passwordSalt: personData.password_salt,
-            version: personData.version,
-        };
+        return castPersonDataRaw(personData);
+    }
+
+    async getPeople(query?: QueryParams): Promise<PersonData[]> {
+        const cursor = await this.contract.table<PersonDataRaw>('people', this.contractName).query(query);
+
+        return (await cursor.next()).map(castPersonDataRaw);
+    }
+
+    async getAllPeople(limit: number = 100): Promise<PersonData[]> {
+        // fetch {limit} at a time
+        const cursor = await this.contract.table<PersonDataRaw>('people', this.contractName).query({
+            maxRows: limit,
+        });
+
+        return (await cursor.all()).map(castPersonDataRaw);
     }
 
     async getApp(account: TonomyUsername | Name | string): Promise<AppData2> {
@@ -483,41 +519,13 @@ export class TonomyContract extends Contract {
             appData = await this.getAppDataByOrigin(account);
         }
 
-        const json = JSON.parse(appData.json_data);
-
-        return {
-            accountName: appData.account_name,
-            appName: json.app_name,
-            description: json.description,
-            logoUrl: json.logo_url,
-            origin: appData.origin,
-            backgroundColor: json.background_color,
-            accentColor: json.accent_color,
-            usernameHash: appData.username_hash,
-            version: appData.version,
-            jsonData: appData.json_data,
-        };
+        return castAppData2Raw(appData);
     }
 
-    async getApps(): Promise<AppData2[]> {
+    async getAllApps(): Promise<AppData2[]> {
         const apps = await this.getAppData2s();
 
-        return apps.map((app) => {
-            const json = JSON.parse(app.json_data);
-
-            return {
-                accountName: app.account_name,
-                appName: json.app_name,
-                description: json.description,
-                logoUrl: json.logo_url,
-                origin: app.origin,
-                backgroundColor: json.background_color,
-                accentColor: json.accent_color,
-                usernameHash: app.username_hash,
-                version: app.version,
-                jsonData: app.json_data,
-            };
-        });
+        return apps.map(castAppData2Raw);
     }
 
     async adminSetApp(
@@ -553,4 +561,8 @@ export const tonomyContract = TonomyContract.fromAbi(abi);
 
 export default async function loadTonomyContract(account: NameType = CONTRACT_NAME): Promise<TonomyContract> {
     return await TonomyContract.atAccount(account);
+}
+
+export async function getAccountNameFromUsername(username: TonomyUsername): Promise<NameType> {
+    return (await tonomyContract.getPersonDataByUsername(username)).account_name;
 }

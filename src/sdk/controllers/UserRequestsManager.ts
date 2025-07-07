@@ -36,7 +36,7 @@ export class UserRequestsManager extends UserCommunication implements IUserReque
 
             if (!permission) throwError('DID does not contain App permission', SdkErrors.MissingParams);
 
-            await getTonomyContract().getApp(Name.from(permission));
+            await tonomyContract.getApp(Name.from(permission));
             // Throws SdkErrors.DataQueryNoRowDataFound error if app does not exist
             // which cannot happen in theory, as the user is already logged in
 
@@ -45,13 +45,7 @@ export class UserRequestsManager extends UserCommunication implements IUserReque
 
             const signer = createKeyManagerSigner(this.keyManager, KeyManagerLevel.ACTIVE);
 
-            await getTonomyEosioProxyContract().linkAuth(
-                (await this.getAccountName()).toString(),
-                contract.toString(),
-                action.toString(),
-                permission,
-                signer
-            );
+            await tonomyEosioProxyContract.linkAuth(await this.getAccountName(), contract, action, permission, signer);
 
             const linkAuthRequestResponseMessage = await LinkAuthRequestResponseMessage.signMessage(
                 {
@@ -106,7 +100,7 @@ export class UserRequestsManager extends UserCommunication implements IUserReque
 
         debug('loginWithApp key', key.toString(), linkAuth);
 
-        await tonomyContract.loginWithApp(myAccount.toString(), app.accountName.toString(), 'local', key, localSigner);
+        await tonomyContract.loginWithApp(myAccount, app.accountName, 'local', key, localSigner);
 
         // If the permission was only just created, we link it to the app (using its account name)
         // so that this permission can be used to sign transactions in the app immediately
@@ -116,13 +110,7 @@ export class UserRequestsManager extends UserCommunication implements IUserReque
             await sleep(1000); // wait for the blockchain to catch up
             const activeSigner = createKeyManagerSigner(this.keyManager, KeyManagerLevel.ACTIVE);
 
-            await tonomyEosioProxyContract.linkAuth(
-                myAccount.toString(),
-                app.accountName.toString(),
-                '',
-                app.accountName.toString(),
-                activeSigner
-            );
+            await tonomyEosioProxyContract.linkAuth(myAccount, app.accountName, '', app.accountName, activeSigner);
         }
 
         appRecord.status = AppStatusEnum.READY;

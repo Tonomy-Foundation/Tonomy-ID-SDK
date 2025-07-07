@@ -3,7 +3,7 @@ import { Authority, bytesToTokens, tokenContract, tonomyEosioProxyContract } fro
 import { StandardProposalOptions, createProposal, executeProposal } from '.';
 import { deployContract } from './contract';
 import { AccountType, getSettings, TonomyUsername } from '../../sdk';
-import { Name } from '@wharfkit/antelope';
+import { Action, Name } from '@wharfkit/antelope';
 
 // @ts-expect-error args not used
 export async function hyphaAccountsCreate(args: any, options: StandardProposalOptions) {
@@ -223,7 +223,7 @@ export async function hyphaAddAccountPermissions(args: any, options: StandardPro
         hyphaDaoLinkauthScheduler,
         hyphaDaoAutoenrollPermission,
         hyphaDaoLinkauthAutoenroll,
-    ];
+    ].map((action) => Action.from(action));
 
     const proposalHash = await createProposal(
         options.proposer,
@@ -315,7 +315,9 @@ export async function hyphaContractSet(args: any, options: StandardProposalOptio
 
     if (!deployActions) throw new Error('Expected deployActions to be defined');
 
-    const actions = [adminSetAppAction, transferTokensAction, buyRamAction, ...deployActions];
+    const actions = [adminSetAppAction, transferTokensAction, buyRamAction, ...deployActions].map((action) =>
+        Action.from(action)
+    );
 
     const proposalHash = await createProposal(
         options.proposer,

@@ -1,7 +1,7 @@
 /* eslint-disable camelcase */
 import { Name } from '@wharfkit/antelope';
 import { createProposal, executeProposal, StandardProposalOptions } from '.';
-import { stakingContract, tonomyContract, TonomyContract, vestingContract } from '../../sdk';
+import { stakingContract, tonomyContract, vestingContract } from '../../sdk';
 import { getSettings } from '../../sdk';
 import {
     foundAccount,
@@ -158,7 +158,7 @@ async function migrateStaking(options: StandardProposalOptions) {
 export async function migrateRebrandApps(options: StandardProposalOptions) {
     console.log('### Migrating rebranding');
 
-    const apps = await tonomyContract.getApps();
+    const apps = await tonomyContract.getAllApps();
     const actions = await apps
         .filter((app) => {
             const name = app.appName.toLowerCase();

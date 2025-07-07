@@ -1,4 +1,4 @@
-import { APIClient, FetchProvider, NameType, API, PrivateKey, Serializer } from '@wharfkit/antelope';
+import { APIClient, FetchProvider, NameType, API, PrivateKey, ActionType, Action } from '@wharfkit/antelope';
 import fetch from 'cross-fetch';
 import { getFetch, getSettings, isProduction } from '../../../util/settings';
 import { throwError, SdkErrors } from '../../../util/errors';
@@ -28,16 +28,16 @@ export function getApi(): APIClient {
  * @param {object} data - data of the action that will be executed
  * @returns {string} - hex string of the serialized action
  */
-export async function serializeActionData(account: NameType, type: string, data: object): Promise<string> {
-    const { abi } = await (await getApi()).v1.chain.get_abi(account);
+export async function serializeActionData(action: ActionType): Promise<string> {
+    const { abi } = await (await getApi()).v1.chain.get_abi(action.account);
 
     if (!abi) {
-        throw new Error(`No ABI for ${account}`);
+        throw new Error(`No ABI for ${action.account}`);
     }
 
-    const { hexString } = Serializer.encode({ object: data, abi, type });
+    const myAction = Action.from(action, abi);
 
-    return hexString;
+    return myAction.data.hexString;
 }
 
 export async function getChainInfo(): Promise<API.v1.GetInfoResponse> {

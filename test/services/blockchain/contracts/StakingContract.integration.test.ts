@@ -27,8 +27,8 @@ const cycleSeconds = StakingContract.getStakingCycleHours() * SECONDS_IN_HOUR;
 
 async function resetContract() {
     await stakeContract.resetAll(signer);
-    await stakeContract.setSettings(amountToAsset(StakingContract.yearlyStakePool, 'TONO'), signer);
-    await stakeContract.addYield('infra.tmy', yieldPool, signer); // 6 months budget in the account
+    await stakeContract.setSettings(amountToAsset(StakingContract.yearlyStakePool, 'TONO'));
+    await stakeContract.addYield('infra.tmy', yieldPool); // 6 months budget in the account
 }
 
 describe('StakingContract Staking Tests', () => {
@@ -54,7 +54,7 @@ describe('StakingContract Staking Tests', () => {
     describe('setsettings()', () => {
         test('Successfully update settings with valid asset', async () => {
             const newYearlyStakePool = "100.000000 TONO";
-            const trx = await stakeContract.setSettings(newYearlyStakePool, signer);
+            const trx = await stakeContract.setSettings(newYearlyStakePool);
 
             expect(trx.processed.receipt.status).toBe('executed');
 
@@ -63,7 +63,7 @@ describe('StakingContract Staking Tests', () => {
             expect(updatedSettings.yearlyStakePool).toBe(newYearlyStakePool);
 
             // Revert settings to previous
-            await stakeContract.setSettings(amountToAsset(StakingContract.yearlyStakePool, 'TONO'), signer)
+            await stakeContract.setSettings(amountToAsset(StakingContract.yearlyStakePool, 'TONO'))
         });
 
         test('Fails update with wrong asset symbol', async () => {

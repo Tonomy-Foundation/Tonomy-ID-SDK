@@ -6,8 +6,8 @@ import {
     NameType,
     PermissionLevelType,
     Transaction,
-    Action,
     UInt16Type,
+    ActionType,
 } from '@wharfkit/antelope';
 import { Contract, loadContract } from './Contract';
 import { Signer, transact } from '../eosio/transaction';
@@ -99,7 +99,7 @@ export class EosioMsigContract extends Contract {
         proposer: NameType,
         proposalName: NameType,
         requested: PermissionLevelType[],
-        actions: Action[],
+        actions: ActionType[],
         signer: Signer
     ): Promise<{ transaction: API.v1.PushTransactionResponse; proposalHash: Checksum256 }> {
         // Serialize the actions
@@ -110,7 +110,7 @@ export class EosioMsigContract extends Contract {
                     account: action.account,
                     name: action.name,
                     authorization: action.authorization,
-                    data: await serializeActionData(action.account, action.name.toString(), action.data),
+                    data: await serializeActionData(action),
                 };
             })
         );

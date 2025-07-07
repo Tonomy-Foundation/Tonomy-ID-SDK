@@ -1,4 +1,4 @@
-import { API, Checksum256 } from '@wharfkit/antelope';
+import { API } from '@wharfkit/antelope';
 import { KeyManagerLevel } from '../storage/keymanager';
 import { PersonData, tonomyContract } from '../services/blockchain/contracts/TonomyContract';
 import { createKeyManagerSigner } from '../services/blockchain/eosio/transaction';

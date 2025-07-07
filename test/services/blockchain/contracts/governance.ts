@@ -1,15 +1,12 @@
-import { API, Name } from '@wharfkit/antelope';
-import { EosioMsigContract } from '../../../../src/sdk/index';
-import { ActionData, createSigner, getTonomyOperationsKey } from '../../../../src/sdk/services/blockchain';
+import { ActionType, API, Name } from '@wharfkit/antelope';
+import { createSigner, eosioMsigContract, getTonomyOperationsKey } from '../../../../src/sdk/services/blockchain';
 import { randomAccountName, tonomyBoardSigners } from '../../../helpers/eosio';
-
-const eosioMsigContract = EosioMsigContract.Instance;
 
 export const tonomyOpsSigner = createSigner(getTonomyOperationsKey());
 
 // asserts = 3
 export async function msigAction(
-    actions: ActionData[],
+    actions: ActionType[],
     options: { satisfyRequireApproval?: boolean; requireTonomyOps?: boolean } = {}
 ): Promise<API.v1.PushTransactionResponse | null> {
     const proposalName = randomAccountName();
@@ -50,7 +47,7 @@ export async function msigAction(
     const approve1Trx = await eosioMsigContract.approve(
         proposer,
         proposalName,
-        Name.from('1.found.tmy'),
+        { actor: '1.found.tmy', permission: 'active' },
         proposalHash,
         tonomyBoardSigners[0]
     );
@@ -61,14 +58,20 @@ export async function msigAction(
         await eosioMsigContract.approve(
             proposer,
             proposalName,
-            Name.from('2.found.tmy'),
+            { actor: '2.found.tmy', permission: 'active' },
             proposalHash,
             tonomyBoardSigners[1]
         );
     }
 
     if (options.requireTonomyOps ?? false) {
-        await eosioMsigContract.approve(proposer, proposalName, Name.from('tonomy'), proposalHash, tonomyOpsSigner);
+        await eosioMsigContract.approve(
+            proposer,
+            proposalName,
+            { actor: 'tonomy', permission: 'active' },
+            proposalHash,
+            tonomyOpsSigner
+        );
     }
 
     try {

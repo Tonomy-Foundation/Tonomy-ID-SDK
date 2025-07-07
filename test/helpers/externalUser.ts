@@ -11,7 +11,6 @@ import {
     StorageFactory,
     Subscriber,
     TonomyUsername,
-    getAccountNameFromUsername,
     getSettings,
     IOnPressLoginOptions,
     verifyClientAuthorization,

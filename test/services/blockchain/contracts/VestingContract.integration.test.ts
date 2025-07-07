@@ -12,7 +12,7 @@ import {
     transact,
 } from '../../../../src/sdk/services/blockchain';
 import { addSeconds, sleepUntil, subtractSeconds, sleep } from '../../../../src/sdk/util';
-import { PrivateKey } from '@wharfkit/antelope';
+import { PrivateKey, Name } from '@wharfkit/antelope';
 import { createRandomAccount } from '../../../helpers/eosio';
 import { msigAction } from './governance';
 import { jest } from '@jest/globals';
@@ -339,7 +339,7 @@ describe('VestingContract class', () => {
             expect(vestedBalance).toBe(0);
             expect(vestedBalance2).toBe(0);
 
-            const trx = await transact(actions);
+            const trx = await transact(actions, signer);
             const actionTraces = trx.processed.action_traces;
 
             expect(actionTraces.length).toBe(2);

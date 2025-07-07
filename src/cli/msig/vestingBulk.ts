@@ -1,9 +1,10 @@
 import settings from '../settings';
 import { StandardProposalOptions, createProposal, executeProposal } from '.';
-import { AccountType, SdkError, SdkErrors, TonomyUsername } from '../../sdk';
-import { getAccount, TONO_CURRENT_PRICE } from '../../sdk/services/blockchain';
+import { AccountType, isErrorCode, SdkErrors, TonomyUsername } from '../../sdk';
+import { getAccount, getAccountNameFromUsername, TONO_CURRENT_PRICE } from '../../sdk/services/blockchain';
 import { parse } from 'csv-parse/sync';
 import fs from 'fs';
+import { Action } from '@wharfkit/antelope';
 
 export async function vestingBulk(args: { governanceAccounts: string[] }, options: StandardProposalOptions) {
     const csvFilePath = '/home/dev/Downloads/allocate.csv';
@@ -84,7 +85,7 @@ export async function vestingBulk(args: { governanceAccounts: string[] }, option
         console.log(
             `Assigning: ${tonoQuantity} ($${data.usdQuantity} USD) vested in category ${categoryId} to ${data.accountName} at rate of $${TONO_CURRENT_PRICE}/TONO`
         );
-        return {
+        return Action.from({
             account: 'vesting.tmy',
             name: 'assigntokens',
             authorization: [
@@ -99,7 +100,7 @@ export async function vestingBulk(args: { governanceAccounts: string[] }, option
                 amount: tonoQuantity,
                 category: categoryId,
             },
-        };
+        });
     });
 
     console.log(`Total ${actions.length} accounts to be paid`);

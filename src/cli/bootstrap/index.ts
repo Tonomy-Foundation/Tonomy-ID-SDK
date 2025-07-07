@@ -16,7 +16,6 @@ import { Checksum256, PrivateKey, PublicKey } from '@wharfkit/antelope';
 import {
     Authority,
     Signer,
-    TonomyEosioProxyContract,
     bytesToTokens,
     defaultBlockchainParams,
     TOTAL_RAM_AVAILABLE,
@@ -332,7 +331,7 @@ async function createTonomyContractAndSetResources() {
     ];
 
     for (const app of apps) {
-        await getTonomyContract().adminSetApp(
+        await tonomyContract.adminSetApp(
             app.accountName,
             app.appName,
             app.description,
@@ -347,7 +346,7 @@ async function createTonomyContractAndSetResources() {
 
     console.log('Set Tonomy system contract params and allocate RAM');
     console.log('Set resource params', RAM_PRICE, TOTAL_RAM_AVAILABLE, RAM_FEE);
-    await getTonomyContract().setResourceParams(RAM_PRICE, TOTAL_RAM_AVAILABLE, RAM_FEE, signer);
+    await tonomyContract.setResourceParams(RAM_PRICE, TOTAL_RAM_AVAILABLE, RAM_FEE, signer);
 
     console.log('Allocate operational tokens to accounts');
     await tokenContract.transfer('ops.tmy', 'tonomy', bytesToTokens(3750000), 'Initial allocation', signer);
@@ -362,7 +361,7 @@ async function createTonomyContractAndSetResources() {
         console.log(`Buying ${app.ramAllocation / 1000}KB of RAM for ${account} for ${tokens}`);
 
         await tokenContract.transfer('ops.tmy', account, tokens, 'Initial allocation', signer);
-        await getTonomyContract().buyRam('ops.tmy', account, tokens, signer);
+        await tonomyContract.buyRam('ops.tmy', account, tokens, signer);
     }
 }
 

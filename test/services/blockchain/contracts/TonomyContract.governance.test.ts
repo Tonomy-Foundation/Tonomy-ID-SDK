@@ -19,10 +19,6 @@ import Debug from 'debug';
 
 const debug = Debug('tonomy-sdk-tests:services:blockchain:contracts:TonomyContract.governance.test');
 
-const eosioMsigContract = EosioMsigContract.Instance;
-const tonomyEosioProxyContract = TonomyEosioProxyContract.Instance;
-const eosioContract = EosioContract.Instance;
-
 describe('TonomyContract class', () => {
     jest.setTimeout(60000);
 
@@ -79,7 +75,7 @@ describe('TonomyContract class', () => {
 
         test('sign with tonomy@owner with 2 keys should succeed', async () => {
             expect.assertions(1);
-            const trx = await transact(Name.from('tonomy'), [action], tonomyBoardSigners.slice(0, 2));
+            const trx = await transact([action], tonomyBoardSigners.slice(0, 2));
 
             expect(trx.processed.receipt.status).toBe('executed');
         });
@@ -104,7 +100,7 @@ describe('TonomyContract class', () => {
 
         test('sign with random@owner with board should succeed', async () => {
             expect.assertions(1);
-            await transact(Name.from('tonomy'), [action], tonomyBoardSigners.slice(0, 2));
+            await transact([action]);
 
             // Setup next account to create, signed by the new account
             action.data.creator = randomName;
@@ -123,7 +119,7 @@ describe('TonomyContract class', () => {
 
         test('sign with random@owner without board should fail', async () => {
             expect.assertions(1);
-            await transact(Name.from('tonomy'), [action], tonomyBoardSigners.slice(0, 2));
+            await transact([action]);
 
             // Setup next account to create, signed by the new account
             action.data.creator = randomName;
@@ -176,7 +172,7 @@ describe('TonomyContract class', () => {
                 expect.assertions(1);
 
                 try {
-                    const trx = await transact(Name.from('tonomy'), [action], tonomyBoardSigners.slice(0, 2));
+                    const trx = await transact([action]);
 
                     expect(trx.processed.receipt.status).toBe('executed');
                 } catch (e) {
@@ -189,7 +185,7 @@ describe('TonomyContract class', () => {
                 expect.assertions(1);
 
                 try {
-                    await transact(Name.from('tonomy'), [action], [tonomyBoardSigners[0]]);
+                    await transact([action]);
                 } catch (e) {
                     expect(e.error.details[0].message).toContain('but does not have signatures for it');
                 }
@@ -199,7 +195,7 @@ describe('TonomyContract class', () => {
                 expect.assertions(1);
 
                 try {
-                    await transact(Name.from('tonomy'), [action], [tonomyOpsSigner]);
+                    await transact([action]);
                 } catch (e) {
                     expect(e.error.details[0].message).toContain('but does not have signatures for it');
                 }
@@ -210,7 +206,7 @@ describe('TonomyContract class', () => {
 
                 try {
                     action.authorization = [{ actor: 'tonomy', permission: 'owner' }];
-                    const trx = await transact(Name.from('tonomy'), [action], tonomyBoardSigners.slice(0, 2));
+                    const trx = await transact([action]);
 
                     expect(trx.processed.receipt.status).toBe('executed');
                 } catch (e) {
@@ -275,7 +271,7 @@ describe('TonomyContract class', () => {
                     actions.push(newAccountAction(newAccounts[i], newAuthorities[i]));
                 }
 
-                await transact(Name.from('tonomy'), actions, tonomyBoardSigners.slice(0, 2));
+                await transact(actions);
             });
 
             test('found.tmy@owner update and sign with tonomy@owner using 2 board keys and change back should succeed', async () => {
@@ -305,7 +301,7 @@ describe('TonomyContract class', () => {
                 };
 
                 try {
-                    await transact(Name.from('tonomy'), [updateAuthAction], tonomyBoardSigners.slice(0, 2));
+                    await transact([updateAuthAction]);
                     await restoreFoundTmyAuth();
                 } catch (e) {
                     debug(e.message, JSON.stringify(e, null, 2));
@@ -341,7 +337,7 @@ describe('TonomyContract class', () => {
 
                 try {
                     await sleep(1000);
-                    await transact(Name.from('tonomy'), [updateAuthAction], tonomyBoardSigners.slice(0, 2));
+                    await transact([updateAuthAction]);
 
                     const proposalName = randomAccountName();
                     const proposer = '1.found.tmy';
@@ -438,7 +434,7 @@ describe('TonomyContract class', () => {
                     },
                 };
 
-                const transaction = await transact(Name.from('tonomy'), [updateAuthAction], newSigners.slice(0, 2));
+                const transaction = await transact([updateAuthAction]);
 
                 expect(transaction.processed.receipt.status).toBe('executed');
             }
@@ -488,7 +484,7 @@ describe('TonomyContract class', () => {
 
                 expect(transaction.processed.receipt.status).toBe('executed');
                 updateAuthAction.data.auth = oldTmyActiveAuthority;
-                transaction = await transact(Name.from('tonomy'), [updateAuthAction], tonomyBoardSigners.slice(0, 2));
+                transaction = await transact([updateAuthAction]);
                 expect(transaction.processed.receipt.status).toBe('executed');
             });
 
@@ -621,7 +617,7 @@ describe('TonomyContract class', () => {
             test('sign with tonomy@active and newaccount keys should succeed', async () => {
                 expect.assertions(1);
 
-                await transact(Name.from('tonomy'), [createAccountAction], tonomyBoardSigners.slice(0, 2));
+                await transact([createAccountAction]);
 
                 const trx = await tonomyEosioProxyContract.deployContract(
                     Name.from(newAccount),
@@ -638,7 +634,7 @@ describe('TonomyContract class', () => {
                 expect.assertions(1);
 
                 try {
-                    await transact(Name.from('tonomy'), [createAccountAction], tonomyBoardSigners.slice(0, 2));
+                    await transact([createAccountAction]);
 
                     await tonomyEosioProxyContract.deployContract(
                         Name.from(newAccount),
@@ -656,7 +652,7 @@ describe('TonomyContract class', () => {
                 expect.assertions(1);
 
                 try {
-                    await transact(Name.from('tonomy'), [createAccountAction], tonomyBoardSigners.slice(0, 2));
+                    await transact([createAccountAction]);
 
                     await tonomyEosioProxyContract.deployContract(Name.from(newAccount), wasmFile, abiFile, [
                         createSigner(key),

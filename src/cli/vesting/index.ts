@@ -1,18 +1,17 @@
 import { PrivateKey } from '@wharfkit/antelope';
 import { printCliHelp } from '..';
-import { AccountType, TonomyUsername, VestingContract } from '../../sdk';
+import { AccountType, TonomyUsername } from '../../sdk';
 import {
     assetToAmount,
     createSigner,
     EosioTokenContract,
     getAccount,
     getAccountNameFromUsername,
-    VestingAllocationRaw,
+    VestingAllocation,
+    vestingContract,
 } from '../../sdk/services/blockchain';
 import { getSettings } from '../../sdk/util/settings';
 import settings from '../settings';
-
-const vestingContract = VestingContract.Instance;
 
 export async function getAllUniqueHolders(print = false): Promise<Set<string>> {
     const action = 'assigntokens';
@@ -54,7 +53,7 @@ export async function getAllUniqueHolders(print = false): Promise<Set<string>> {
     return uniqueHolders;
 }
 
-interface VestingAllocationAndAccount extends VestingAllocationRaw {
+interface VestingAllocationAndAccount extends VestingAllocation {
     account: string;
 }
 
@@ -65,13 +64,11 @@ export async function getAllAllocations(accounts: Set<string>, print = false): P
         const accountAllocations = await vestingContract.getAllocations(account);
 
         for (const allocation of accountAllocations) {
-            // eslint-disable-next-line camelcase
-            const { id, tokens_allocated, vesting_category_type } = allocation;
+            const { id, tokensAllocated, vestingCategoryType } = allocation;
 
             if (print)
                 console.log(
-                    // eslint-disable-next-line camelcase
-                    `Holder ${account}: Allocation ${id}: ${tokens_allocated} in category ${vesting_category_type}`
+                    `Holder ${account}: Allocation ${id}: ${tokensAllocated} in category ${vestingCategoryType}`
                 );
             allocations.push({ account, ...allocation });
         }
@@ -129,7 +126,7 @@ export default async function vesting(args: string[]) {
         console.log('');
         const allAllocations = await getAllAllocations(uniqueHolders, true);
         const totalVested = allAllocations.reduce(
-            (previous, allocation) => (previous += assetToAmount(allocation.tokens_allocated)),
+            (previous, allocation) => (previous += assetToAmount(allocation.tokensAllocated)),
             0
         );
 

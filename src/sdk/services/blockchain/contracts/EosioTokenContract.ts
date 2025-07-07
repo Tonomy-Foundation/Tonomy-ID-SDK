@@ -54,6 +54,7 @@ export function amountToSupplyPercentage(amount: Decimal): string {
 }
 
 export class EosioTokenContract extends Contract {
+    // TODO: should move this out of the class, as this only applies to the TONO token
     static TOTAL_SUPPLY = 50000000000.0;
 
     static async atAccount(account: NameType = CONTRACT_NAME): Promise<EosioTokenContract> {
