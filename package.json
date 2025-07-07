@@ -116,7 +116,7 @@
   ],
   "resolutions": {
     "jsonld": "link:./node_modules/@digitalcredentials/jsonld",
-    "@wharfkit/antelope": "1.0.7"
+    "@wharfkit/antelope": "1.0.10"
   },
   "packageManager": "yarn@4.3.1"
 }
