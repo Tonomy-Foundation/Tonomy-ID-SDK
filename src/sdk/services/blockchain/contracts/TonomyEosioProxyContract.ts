@@ -6,7 +6,7 @@ import { activeAuthority } from '../eosio/authority';
 import { Signer, transact } from '../eosio/transaction';
 import { GOVERNANCE_ACCOUNT_NAME } from './TonomyContract';
 import { getApi } from '../eosio/eosio';
-import abi from '../../../../../Tonomy-Contracts/contracts/tonomy/tonomy.abi.json';
+import abi from './abi/tonomy.abi.json';
 import { BlockchainParams } from './EosioContract';
 
 const CONTRACT_NAME: NameType = 'tonomy';

@@ -15,7 +15,7 @@ import { Contract as AntelopeContract } from '@wharfkit/contract';
 import { getApi, getChainInfo, serializeActionData } from '../eosio/eosio';
 import { ActionOptions } from '@wharfkit/contract';
 import { activeAuthority } from '../eosio/authority';
-import abi from '../../../../../Tonomy-Contracts/contracts/eosio.msig/eosio.msig.abi.json';
+import abi from './abi/eosio.msig.abi.json';
 
 const CONTRACT_NAME: NameType = 'eosio.msig';
 

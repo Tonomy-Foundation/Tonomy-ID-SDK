@@ -15,7 +15,7 @@ import { Contract as AntelopeContract, ActionOptions, QueryParams } from '@wharf
 import { Signer, transact } from '../eosio/transaction';
 import { SdkErrors, TonomyUsername, getSettings, sha256, throwError } from '../../../util';
 import { getAccount, getApi } from '../eosio/eosio';
-import abi from '../../../../../Tonomy-Contracts/contracts/tonomy/tonomy.abi.json';
+import abi from './abi/tonomy.abi.json';
 import { activeAuthority, ownerAuthority } from '../eosio/authority';
 import { TONO_PUBLIC_SALE_PRICE } from './VestingContract';
 

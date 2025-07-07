@@ -5,7 +5,7 @@ import { activeAuthority, Authority } from '../eosio/authority';
 import { Signer, transact } from '../eosio/transaction';
 import { getApi } from '../eosio/eosio';
 import { Contract as AntelopeContract, ActionOptions } from '@wharfkit/contract';
-import abi from '../../../../../Tonomy-Contracts/contracts/eosio.tonomy/eosio.tonomy.abi.json';
+import abi from './abi/eosio.tonomy.abi.json';
 
 const CONTRACT_NAME: NameType = 'eosio';
 

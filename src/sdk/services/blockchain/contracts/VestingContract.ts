@@ -13,7 +13,7 @@ import {
 } from '../../../util/time';
 import Decimal from 'decimal.js';
 import { assetToAmount, assetToDecimal } from './EosioTokenContract';
-import abi from '../../../../../Tonomy-Contracts/contracts/vesting.tmy/vesting.tmy.abi.json';
+import abi from './abi/vesting.tmy.abi.json';
 import { activeAuthority } from '../eosio/authority';
 
 const CONTRACT_NAME: NameType = 'vesting.tmy';

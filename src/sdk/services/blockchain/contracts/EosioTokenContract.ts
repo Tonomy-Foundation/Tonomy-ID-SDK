@@ -8,7 +8,7 @@ import Debug from 'debug';
 import { Contract, loadContract } from './Contract';
 import { ActionOptions, Contract as AntelopeContract } from '@wharfkit/contract';
 import { activeAuthority } from '../eosio/authority';
-import abi from '../../../../../Tonomy-Contracts/contracts/eosio.token/eosio.token.abi.json';
+import abi from './abi/eosio.token.abi.json';
 
 const debug = Debug('tonomy-id-sdk:services:blockchain:contracts:token');
 

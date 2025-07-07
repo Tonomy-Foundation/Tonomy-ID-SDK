@@ -8,7 +8,7 @@ import { tonomyContract } from './TonomyContract';
 import { Authority, activeAuthority } from '../eosio/authority';
 import Debug from 'debug';
 import { addSeconds, getSettings, SdkErrors, SECONDS_IN_DAY, throwError } from '../../../util';
-import abi from '../../../../../Tonomy-Contracts/contracts/staking.tmy/staking.tmy.abi.json';
+import abi from './abi/staking.tmy.abi.json';
 import { amountToAsset, assetToAmount, EosioTokenContract } from './EosioTokenContract';
 
 const debug = Debug('tonomy-sdk:services:blockchain:contracts:staking');
