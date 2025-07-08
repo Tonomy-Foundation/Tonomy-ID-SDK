@@ -6,6 +6,7 @@ import { Signer, transact } from '../eosio/transaction';
 import { getApi } from '../eosio/eosio';
 import { Contract as AntelopeContract, ActionOptions } from '@wharfkit/contract';
 import abi from './abi/eosio.tonomy.abi.json';
+import { isProduction } from '../../../util';
 
 const CONTRACT_NAME: NameType = 'eosio';
 
@@ -17,7 +18,7 @@ export class EosioContract extends Contract {
     static fromAbi(abi: any, account: NameType = CONTRACT_NAME): EosioContract {
         const contract = new AntelopeContract({ abi, client: getApi(), account });
 
-        return new this(contract);
+        return new this(contract, isProduction());
     }
 
     actions = {

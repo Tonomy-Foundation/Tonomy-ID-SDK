@@ -2,7 +2,7 @@
 import { API, NameType, AssetType } from '@wharfkit/antelope';
 import { Signer, transact } from '../eosio/transaction';
 import { getApi } from '../eosio/eosio';
-import { getSettings } from '../../../util';
+import { getSettings, isProduction } from '../../../util';
 import Decimal from 'decimal.js';
 import Debug from 'debug';
 import { Contract, loadContract } from './Contract';
@@ -64,7 +64,7 @@ export class EosioTokenContract extends Contract {
     static fromAbi(abi: any, account: NameType = CONTRACT_NAME): EosioTokenContract {
         const contract = new AntelopeContract({ abi, client: getApi(), account });
 
-        return new this(contract, false);
+        return new this(contract, isProduction());
     }
 
     // action getters. add default authorization and values, use camelCase for variables and action names

@@ -16,6 +16,7 @@ import { getApi, getChainInfo, serializeActionData } from '../eosio/eosio';
 import { ActionOptions } from '@wharfkit/contract';
 import { activeAuthority } from '../eosio/authority';
 import abi from './abi/eosio.msig.abi.json';
+import { isProduction } from '../../../util';
 
 const CONTRACT_NAME: NameType = 'eosio.msig';
 
@@ -27,7 +28,7 @@ export class EosioMsigContract extends Contract {
     static fromAbi(abi: any, account: NameType = CONTRACT_NAME): EosioMsigContract {
         const contract = new AntelopeContract({ abi, client: getApi(), account });
 
-        return new this(contract, true);
+        return new this(contract, isProduction());
     }
 
     actions = {

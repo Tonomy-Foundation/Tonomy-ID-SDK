@@ -13,7 +13,7 @@ import {
 import { Contract, loadContract } from './Contract';
 import { Contract as AntelopeContract, ActionOptions, QueryParams } from '@wharfkit/contract';
 import { Signer, transact } from '../eosio/transaction';
-import { SdkErrors, TonomyUsername, getSettings, sha256, throwError } from '../../../util';
+import { SdkErrors, TonomyUsername, getSettings, isProduction, sha256, throwError } from '../../../util';
 import { getAccount, getApi } from '../eosio/eosio';
 import abi from './abi/tonomy.abi.json';
 import { activeAuthority, ownerAuthority } from '../eosio/authority';
@@ -167,7 +167,7 @@ export class TonomyContract extends Contract {
     static fromAbi(abi: any, account: NameType = CONTRACT_NAME): TonomyContract {
         const contract = new AntelopeContract({ abi, client: getApi(), account });
 
-        return new this(contract, false);
+        return new this(contract, isProduction());
     }
 
     actions = {

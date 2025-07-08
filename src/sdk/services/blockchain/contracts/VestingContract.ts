@@ -4,7 +4,7 @@ import { Contract, loadContract } from './Contract';
 import { Contract as AntelopeContract, ActionOptions } from '@wharfkit/contract';
 import { Signer, transact } from '../eosio/transaction';
 import { getApi } from '../eosio/eosio';
-import { getSettings } from '../../../util';
+import { getSettings, isProduction } from '../../../util';
 import {
     addMicroseconds,
     MICROSECONDS_IN_DAY,
@@ -259,7 +259,7 @@ export class VestingContract extends Contract {
     static fromAbi(abi: any, account: NameType = CONTRACT_NAME): VestingContract {
         const contract = new AntelopeContract({ abi, client: getApi(), account });
 
-        return new this(contract, false);
+        return new this(contract, isProduction());
     }
 
     static getMaxAllocations(): number {

@@ -27,10 +27,6 @@ jobs:
         with:
           node-version: 22.3.0
           cache: yarn
-      - run: pwd
-      - run: ls ./Tonomy-Contracts/contracts
-      - run: ls ./Tonomy-Contracts/contracts/eosio.token
-      - run: ls ./Tonomy-Contracts/contracts/eosio.boot
       - run: yarn install --immutable
       - run: yarn run build
       - run: yarn run lint

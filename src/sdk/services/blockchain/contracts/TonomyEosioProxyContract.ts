@@ -8,6 +8,7 @@ import { GOVERNANCE_ACCOUNT_NAME } from './TonomyContract';
 import { getApi } from '../eosio/eosio';
 import abi from './abi/tonomy.abi.json';
 import { BlockchainParams } from './EosioContract';
+import { isProduction } from '../../../util';
 
 const CONTRACT_NAME: NameType = 'tonomy';
 
@@ -50,7 +51,7 @@ export class TonomyEosioProxyContract extends Contract {
     static fromAbi(abi: any, account: NameType = CONTRACT_NAME): TonomyEosioProxyContract {
         const contract = new AntelopeContract({ abi, client: getApi(), account });
 
-        return new this(contract, false);
+        return new this(contract, isProduction());
     }
 
     actions = {

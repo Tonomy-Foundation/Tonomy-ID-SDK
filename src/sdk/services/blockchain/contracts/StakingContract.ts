@@ -7,7 +7,7 @@ import { Contract as AntelopeContract, ActionOptions } from '@wharfkit/contract'
 import { tonomyContract } from './TonomyContract';
 import { Authority, activeAuthority } from '../eosio/authority';
 import Debug from 'debug';
-import { addSeconds, getSettings, SdkErrors, SECONDS_IN_DAY, throwError } from '../../../util';
+import { addSeconds, getSettings, isProduction, SdkErrors, SECONDS_IN_DAY, throwError } from '../../../util';
 import abi from './abi/staking.tmy.abi.json';
 import { amountToAsset, assetToAmount, EosioTokenContract } from './EosioTokenContract';
 
@@ -99,7 +99,7 @@ export class StakingContract extends Contract {
     static fromAbi(abi: any, account: NameType = CONTRACT_NAME): StakingContract {
         const contract = new AntelopeContract({ abi, client: getApi(), account });
 
-        return new this(contract, true);
+        return new this(contract, isProduction());
     }
 
     static async atAccount(account: NameType = CONTRACT_NAME): Promise<StakingContract> {
