@@ -1,12 +1,12 @@
 /* eslint-disable camelcase */
 import { API, NameType, AssetType } from '@wharfkit/antelope';
-import { Signer, transact } from '../eosio/transaction';
-import { getApi } from '../eosio/eosio';
-import { getSettings, isProduction } from '../../../util';
+import { ActionOptions, Contract as AntelopeContract } from '@wharfkit/contract';
 import Decimal from 'decimal.js';
 import Debug from 'debug';
 import { Contract, loadContract } from './Contract';
-import { ActionOptions, Contract as AntelopeContract } from '@wharfkit/contract';
+import { Signer, transact } from '../eosio/transaction';
+import { getApi } from '../eosio/eosio';
+import { getSettings, isProduction } from '../../../util';
 import { activeAuthority } from '../eosio/authority';
 import abi from './abi/eosio.token.abi.json';
 
@@ -114,9 +114,11 @@ export class EosioTokenContract extends Contract {
      * @deprecated use getBalanceDecimal instead
      */
     async getBalance(account: NameType): Promise<number> {
-        const assets = await (
-            await getApi()
-        ).v1.chain.get_currency_balance(this.contractName, account, getSettings().currencySymbol);
+        const assets = await getApi().v1.chain.get_currency_balance(
+            this.contractName,
+            account,
+            getSettings().currencySymbol
+        );
 
         if (assets.length === 0) return 0;
 
@@ -124,9 +126,11 @@ export class EosioTokenContract extends Contract {
     }
 
     async getBalanceDecimal(account: NameType): Promise<Decimal> {
-        const assets = await (
-            await getApi()
-        ).v1.chain.get_currency_balance(this.contractName, account, getSettings().currencySymbol);
+        const assets = await getApi().v1.chain.get_currency_balance(
+            this.contractName,
+            account,
+            getSettings().currencySymbol
+        );
 
         if (assets.length === 0) return new Decimal(0);
 

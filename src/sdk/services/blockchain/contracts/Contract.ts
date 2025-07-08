@@ -7,7 +7,7 @@ import Debug from 'debug';
 const debug = Debug('tonomy-sdk:blockchain:contracts:Contract');
 
 export async function loadContract(account: NameType): Promise<AntelopeContract> {
-    const kit = new ContractKit({ client: await getApi() });
+    const kit = new ContractKit({ client: getApi() });
 
     return await kit.load(account);
 }

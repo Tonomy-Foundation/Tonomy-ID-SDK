@@ -70,9 +70,11 @@ export class DemoTokenContract extends Contract {
     }
 
     async getBalance(account: NameType): Promise<number> {
-        const assets = await (
-            await getApi()
-        ).v1.chain.get_currency_balance(await this.contractName, account, getSettings().currencySymbol);
+        const assets = await getApi().v1.chain.get_currency_balance(
+            this.contractName,
+            account,
+            getSettings().currencySymbol
+        );
 
         if (assets.length === 0) return 0;
 

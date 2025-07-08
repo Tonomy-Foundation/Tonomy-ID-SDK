@@ -8,10 +8,12 @@ import {
     PrivateKey,
     ActionType,
     AnyAction,
+    Action,
+    ABI,
 } from '@wharfkit/antelope';
 import { KeyManager, KeyManagerLevel } from '../../../storage/keymanager';
 import { HttpError } from '../../../util/errors';
-import { getApi } from './eosio';
+import { fetchAbi, getApi, getChainInfo } from './eosio';
 import Debug from 'debug';
 
 const debug = Debug('tonomy-sdk:services:blockchain:eosio:transaction');
@@ -121,20 +123,20 @@ export async function transact(
     signer: Signer | Signer[]
 ): Promise<API.v1.PushTransactionResponse> {
     // Get the ABI
-    const api = await getApi();
+    const actionsArray = await Promise.all((Array.isArray(actions) ? actions : [actions]).map(createActionWithAbi));
 
     // Construct the transaction
-    const info = await api.v1.chain.get_info();
+    const info = await getChainInfo();
     const header = info.getTransactionHeader();
     const transaction = Transaction.from({
         ...header,
-        actions: Array.isArray(actions) ? actions : [actions],
+        actions: actionsArray,
     });
 
     // Create signature
-    if (!Array.isArray(signer)) signer = [signer];
+    const signersArray = Array.isArray(signer) ? signer : [signer];
     const signDigest = transaction.signingDigest(info.chain_id);
-    const signatures = await Promise.all(signer.map((s) => s.sign(signDigest)));
+    const signatures = await Promise.all(signersArray.map((s) => s.sign(signDigest)));
     const signedTransaction = SignedTransaction.from({
         ...transaction,
         signatures,
@@ -144,8 +146,11 @@ export async function transact(
     let res;
 
     try {
-        debug('Pushing transaction', JSON.stringify(actions, null, 2));
-        res = await api.v1.chain.push_transaction(signedTransaction);
+        debug(
+            'Pushing transaction',
+            actionsArray.map((action) => action.decoded)
+        );
+        res = await getApi().v1.chain.push_transaction(signedTransaction);
     } catch (e) {
         debug('Error pushing transaction', e);
 
@@ -161,4 +166,13 @@ export async function transact(
     }
 
     return res;
+}
+
+type ActionWithABI = Action & { abi: ABI };
+
+export async function createActionWithAbi(action: AnyActionType): Promise<ActionWithABI> {
+    if (action instanceof Action && action.abi) return action as ActionWithABI;
+    const abi = await fetchAbi(action.account);
+
+    return Action.from(action, abi) as ActionWithABI;
 }

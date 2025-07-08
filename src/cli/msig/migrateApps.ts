@@ -19,10 +19,8 @@ const customColorMapping: { [appName: string]: { background: string; branding: s
 };
 
 export async function migrateApps(options: StandardProposalOptions) {
-    const api = await getApi();
-
     // Step 1: Query the old table apps
-    const data = await api.v1.chain.get_table_rows({
+    const data = await getApi().v1.chain.get_table_rows({
         json: true,
         code: CONTRACT_NAME,
         scope: CONTRACT_NAME,

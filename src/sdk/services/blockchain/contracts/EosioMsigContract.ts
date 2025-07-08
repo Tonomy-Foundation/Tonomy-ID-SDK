@@ -7,16 +7,18 @@ import {
     PermissionLevelType,
     Transaction,
     UInt16Type,
-    Action,
 } from '@wharfkit/antelope';
 import { Contract, loadContract } from './Contract';
-import { AnyActionType, Signer, transact } from '../eosio/transaction';
+import { AnyActionType, Signer, transact, createActionWithAbi } from '../eosio/transaction';
 import { Contract as AntelopeContract } from '@wharfkit/contract';
-import { getApi, getChainInfo, serializeActionData } from '../eosio/eosio';
+import { getApi, getChainInfo } from '../eosio/eosio';
 import { ActionOptions } from '@wharfkit/contract';
 import { activeAuthority } from '../eosio/authority';
 import abi from './abi/eosio.msig.abi.json';
 import { isProduction } from '../../../util';
+import Debug from 'debug';
+
+const debug = Debug('tonomy-sdk:services:blockchain:contracts:EosioMsigContract');
 
 const CONTRACT_NAME: NameType = 'eosio.msig';
 
@@ -103,18 +105,7 @@ export class EosioMsigContract extends Contract {
         actions: AnyActionType[],
         signer: Signer
     ): Promise<{ transaction: API.v1.PushTransactionResponse; proposalHash: Checksum256 }> {
-        // Serialize the actions
-        const serializedActions = await Promise.all(
-            actions.map(async (action) => {
-                if (!action.account || !action.name) throw new Error('Invalid action');
-                return {
-                    account: action.account,
-                    name: action.name,
-                    authorization: action.authorization,
-                    data: await serializeActionData(Action.from(action)),
-                };
-            })
-        );
+        const actionsArray = await Promise.all(actions.map(createActionWithAbi));
 
         // compute expiration (7 days)
         const now = new Date();
@@ -131,12 +122,13 @@ export class EosioMsigContract extends Contract {
             max_cpu_usage_ms: 0,
             delay_sec: 0,
             context_free_actions: [],
-            actions: serializedActions,
+            actions: actionsArray,
             transaction_extensions: [],
         };
         const proposalTrx = Transaction.from(trx);
         const proposalHash = proposalTrx.id;
 
+        debug('Propose transaction', { ...trx, actions: actionsArray.map((action) => action.decoded) });
         const action = this.actions.propose({ proposer, proposalName, requested, trx });
         const transaction = await transact(action, signer);
 
