@@ -6,7 +6,7 @@ import { AccountType, getSettings, TonomyUsername } from '../../sdk';
 import { Name } from '@wharfkit/antelope';
 
 const logoUrl = 'https://ipfs.hivebp.io/ipfs/Qmexh5r5zJ7Us4Wm3tgedDSHss5t7DrDD8bDRLhz9eQi46';
-const ownerKey = 'EOS5SdLniuD3aBn4pXpKchefT8kdFvkSBoGP91iMPhQEzwKBexobn ';
+const ownerKey = 'EOS5SdLniuD3aBn4pXpKchefT8kdFvkSBoGP91iMPhQEzwKBexobn';
 const activeKey = 'EOS5hyK8XTDA3etSzaq6ntrafMPM37HEmveVv1YorkASpnk2jbMmt';
 const contractDir = '/media/sf_Virtualbox_Shared/tonomy/cXc Contracts';
 
@@ -50,7 +50,7 @@ export const apps = [
     },
 ];
 
-//convert any number to a deterministic number using the digits 12345
+//convert any number to a deterministic number using the digits 12345 (only digits allowed in Antelope account names)
 function indexToNameDigits(index: number): string {
     return index.toString(5).replace('4', '5').replace('3', '4').replace('2', '3').replace('1', '2').replace('0', '1');
 }
@@ -87,9 +87,10 @@ export async function createAccounts(options: StandardProposalOptions) {
     const actions: ActionData[] = apps.map((app) =>
         createNewAccountAction(app.account, Authority.fromKey(app.activeKey), Authority.fromKey(app.ownerKey))
     );
+    const proposalName = createProposalName(options.proposalName, 'crea');
     const proposalHash = await createProposal(
         options.proposer,
-        createProposalName(options.proposalName, 'crea'),
+        proposalName,
         actions,
         options.privateKey,
         [...options.requested],
@@ -97,7 +98,7 @@ export async function createAccounts(options: StandardProposalOptions) {
     );
 
     if (options.dryRun) return;
-    if (options.autoExecute) await executeProposal(options.proposer, options.proposalName, proposalHash);
+    if (options.autoExecute) await executeProposal(options.proposer, proposalName, proposalHash);
 }
 
 // MSIG 2: Set accounts as apps, transfer TONO, buy RAM
@@ -146,9 +147,10 @@ export async function setAppsAndRam(options: StandardProposalOptions) {
 
         return [adminSetAppAction, transferTokensAction, buyRamAction];
     });
+    const proposalName = createProposalName(options.proposalName, 'set');
     const proposalHash = await createProposal(
         options.proposer,
-        createProposalName(options.proposalName, 'set'),
+        proposalName,
         actions,
         options.privateKey,
         [...options.requested, ...apps.map((a) => a.account)],
@@ -156,7 +158,7 @@ export async function setAppsAndRam(options: StandardProposalOptions) {
     );
 
     if (options.dryRun) return;
-    if (options.autoExecute) await executeProposal(options.proposer, options.proposalName, proposalHash);
+    if (options.autoExecute) await executeProposal(options.proposer, proposalName, proposalHash);
 }
 
 // MSIG 3: Deploy contracts
@@ -173,11 +175,10 @@ export async function deployContracts(options: StandardProposalOptions) {
         if (!deployActions) throw new Error(`Expected deployActions for ${app.account}`);
 
         // Generate a sequential proposal name, e.g. baseName-1, baseName-2, etc.
-        const proposalName = Name.from(`${options.proposalName}-${i + 1}`);
-
+        const proposalName = createProposalName(options.proposalName, 'dep', i);
         const proposalHash = await createProposal(
             options.proposer,
-            createProposalName(options.proposalName, 'dep', i),
+            proposalName,
             deployActions,
             options.privateKey,
             [...options.requested, app.account],
