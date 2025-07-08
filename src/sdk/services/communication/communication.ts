@@ -1,14 +1,17 @@
 import { io, Socket } from 'socket.io-client';
 import { CommunicationError, createSdkError, SdkErrors, throwError } from '../../util/errors';
 import { getSettings } from '../../util/settings';
-import { AuthenticationMessage, Message } from '../../services/communication/message';
+import { AuthenticationMessage, Message, VerificationMessage } from '../../services/communication/message';
 import Debug from 'debug';
+import { sha256 } from '../../util';
 
 const debug = Debug('tonomy-sdk:services:communication:communication');
 
 export type Subscriber = (message: Message) => void;
+export type VeriffSubscriber = (message: VerificationMessage) => Promise<void>;
 
 export const SOCKET_TIMEOUT = 5000;
+export const SESSION_TIMEOUT = 40000;
 
 export type WebsocketReturnType = {
     status: number;
@@ -19,12 +22,35 @@ export type WebsocketReturnType = {
 export class Communication {
     socketServer: Socket;
     private static singleton: Communication;
-    private static identifier: 0;
+    private static identifier: number = 0;
     // TODO: fix problem: if server restarts, this will be lost and all clients will need to reconnect
     private subscribers = new Map<number, Subscriber>();
     private authMessage?: AuthenticationMessage;
     private loggedIn = false;
     private url: string;
+    private seenMessages: Map<string, Date> = new Map(); // Map<hash, Date>
+    private readonly seemMessageTTL = 60 * 60; // 1 hour
+
+    // Fixes an issue where subscriber were triggered twice
+    // https://chatgpt.com/share/e/6866b6e9-96a4-8013-b25d-381a3518567e
+    // TODO: figure out the root cause and solve
+    private checkSeenMessage(message: string): boolean {
+        const res = this.seenMessages.has(sha256(message));
+
+        this.addSeenMessage(message);
+        this.trimSeenMessages();
+        return res;
+    }
+    private trimSeenMessages(): void {
+        this.seenMessages.forEach((date, hash) => {
+            if (date.getTime() + this.seemMessageTTL < Date.now()) {
+                this.seenMessages.delete(hash);
+            }
+        });
+    }
+    private addSeenMessage(message: string): void {
+        this.seenMessages.set(sha256(message), new Date());
+    }
 
     constructor(singleton = true) {
         if (Communication.singleton && singleton) return Communication.singleton;
@@ -150,7 +176,7 @@ export class Communication {
     async login(authorization: AuthenticationMessage): Promise<boolean> {
         await this.connect();
 
-        const result = await this.emitMessage('login', authorization);
+        const result = await this.emitMessage('v1/login', authorization);
 
         if (result) {
             this.loggedIn = true;
@@ -169,33 +195,37 @@ export class Communication {
             throwError('You need to login before sending a messages', SdkErrors.CommunicationNotLoggedIn);
         }
 
-        return await this.emitMessage('message', message);
+        return await this.emitMessage('v1/message/relay/send', message);
     }
 
     /**
      * function that adds a new subscriber, which is called every time a message is received
      *
      * @param {Subscriber} subscriber - the message object
-     * @param {string} [type] - the type of message to subscribe to
+     * @param {string} type - the type of message to subscribe to
      * @returns {number} - identifier which will be used for unsubscribe
      */
-    subscribeMessage(subscriber: Subscriber, type?: string): number {
+    subscribeMessage(subscriber: Subscriber, type: string): number {
         Communication.identifier++;
 
         const messageHandler = (message: any) => {
             const msg = new Message(message);
-            const payload = msg.getPayload();
 
-            debug('receiveMessage', msg.getType(), msg.getSender(), msg.getRecipient(), payload.requests?.length);
+            if (this.checkSeenMessage(msg.toString())) {
+                debug('receiveMessage duplicate', msg.getType(), msg.getSender(), msg.getRecipient());
+                return;
+            }
 
-            if (!type || msg.getType() === type) {
+            debug('receiveMessage', msg.getType(), msg.getSender(), msg.getRecipient());
+
+            if (msg.getType() === type) {
                 subscriber(msg);
             }
 
             return this;
         };
 
-        this.socketServer.on('message', messageHandler);
+        this.socketServer.on('v1/message/relay/receive', messageHandler);
         this.subscribers.set(Communication.identifier, messageHandler);
         return Communication.identifier;
     }
@@ -210,7 +240,7 @@ export class Communication {
         const subscriber = this.subscribers.get(id);
 
         if (subscriber) {
-            this.socketServer.off('message', subscriber);
+            this.socketServer.off('v1/message/relay/receive', subscriber);
             this.subscribers.delete(id);
         }
     }
@@ -221,6 +251,47 @@ export class Communication {
 
         if (this.isConnected()) {
             this.socketServer.disconnect();
+        }
+    }
+
+    /**
+     * Subscribes to Veriff verification messages.
+     * Calls the handler every time a verification message is received.
+     *
+     * @param {VeriffSubscriber} handler - Callback invoked with the message.
+     * @returns {number} - Identifier for unsubscribing.
+     */
+    subscribeVeriffVerification(subscriber: VeriffSubscriber): number {
+        Communication.identifier++;
+
+        const messageHandler = (message: any) => {
+            const msg = new VerificationMessage(message);
+
+            if (this.checkSeenMessage(msg.toString())) {
+                debug('receiveVeriffVerification duplicate', msg.getType(), msg.getSender(), msg.getRecipient());
+                return;
+            }
+
+            debug('receiveVeriffVerification', msg.getType(), msg.getSender(), msg.getRecipient());
+
+            if (msg.getType() === VerificationMessage.getType()) {
+                subscriber(msg);
+            }
+
+            return this;
+        };
+
+        this.socketServer.on('v1/verification/veriff/receive', messageHandler);
+        this.subscribers.set(Communication.identifier, messageHandler);
+        return Communication.identifier;
+    }
+
+    unsubscribeVeriffVerification(id: number): void {
+        const subscriber = this.subscribers.get(id);
+
+        if (subscriber) {
+            this.socketServer.off('v1/verification/veriff/receive', subscriber);
+            this.subscribers.delete(id);
         }
     }
 }

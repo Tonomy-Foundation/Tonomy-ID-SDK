@@ -40,6 +40,7 @@ export * from './util/request';
 export * from './util/ssi/did';
 export * from './util/ssi/veramo';
 export * from './util/qr-code';
+export * from './util/veriff';
 export * as util from './util';
 
 // Storage

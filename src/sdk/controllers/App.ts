@@ -4,6 +4,7 @@ import { getSettings } from '../util/settings';
 import { AccountType, TonomyUsername } from '../util/username';
 import { AppStatusEnum } from '../types/AppStatusEnum';
 import { tonomyContract } from '../services/blockchain';
+import { parseDid, SdkErrors, throwError } from '../util';
 
 export interface AppData {
     accountName: Name;
@@ -112,4 +113,24 @@ export class App implements AppData {
             backgroundColor: contractAppData.backgroundColor,
         });
     }
+}
+
+export async function checkOriginMatchesApp(
+    vcId: string,
+    did: string,
+    verifyOrigin: boolean = true
+): Promise<{ origin: string; app: App } | undefined> {
+    if (verifyOrigin) {
+        const origin = vcId?.split('/vc/auth/')[0];
+
+        if (!origin) throwError('Invalid origin', SdkErrors.InvalidData);
+        const app = await App.getApp(origin);
+        const { fragment } = parseDid(did);
+
+        if (fragment !== app.accountName.toString()) throwError('Invalid app', SdkErrors.InvalidData);
+
+        return { origin, app };
+    }
+
+    return;
 }

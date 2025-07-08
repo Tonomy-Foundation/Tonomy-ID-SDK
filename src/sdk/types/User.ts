@@ -6,11 +6,24 @@ import { AuthenticationMessage, Message } from '../services/communication/messag
 import { UserStatusEnum } from './UserStatusEnum';
 import { Subscriber } from '../services/communication/communication';
 import { App } from '../controllers/App';
-import { URL as URLtype, DataRequest, DualWalletRequests } from '../util';
+import { URL as URLtype, DataRequest, DualWalletRequests, KYCPayload, PersonCredentialType, JWT } from '../util';
 import { PublicKey } from '@wharfkit/antelope';
 import { AppStatusEnum } from './AppStatusEnum';
 import { Signer } from '../services/blockchain';
 import { KeyManagerLevel } from '../storage/keymanager';
+import { VerificationTypeEnum } from './VerificationTypeEnum';
+import { VeriffStatusEnum } from './VeriffStatusEnum';
+
+/**
+ * The data of a client authorization request
+ *
+ * @param {string} [username] - the username of the user
+ *
+ */
+export type ClientAuthorizationData = Record<string, any> &
+    object & {
+        username?: string;
+    };
 
 type KeyFromPasswordFn = (
     password: string,
@@ -66,6 +79,7 @@ export interface IUserAuthentication extends IUserBase {
     checkPin(pin: string): Promise<boolean>;
     saveFingerprint(): Promise<void>;
     saveLocal(): Promise<void>;
+    createClientAuthorization<T extends ClientAuthorizationData = object>(data: T): Promise<JWT>;
 }
 
 export interface IUserCaptcha extends IUserBase {
@@ -81,7 +95,7 @@ export interface IUserCommunication extends IUserAuthentication {
      * @returns {boolean} - true if successful
      */
     loginCommunication(authorization: AuthenticationMessage): Promise<boolean>;
-    subscribeMessage(subscriber: Subscriber, type?: string): number;
+    subscribeMessage(subscriber: Subscriber, type: string): number;
     /**
      * unsubscribes a function from the receiving a message
      *
@@ -111,7 +125,7 @@ export interface IUserOnboarding extends IUserCommunication {
     initializeFromStorage(): Promise<boolean>;
 }
 
-export interface IUserRequestsManager extends IUserCommunication {
+export interface IUserRequestsManager extends IUserCommunication, IUserDataVault {
     handleLinkAuthRequestMessage(message: Message): Promise<void>;
     loginWithApp(app: App, key: PublicKey): Promise<void>;
 
@@ -126,6 +140,11 @@ export interface IUserRequestsManager extends IUserCommunication {
      *   or void if respondWith is 'message'
      */
     acceptLoginRequest(requests: DualWalletRequests, respondWith: 'redirect' | 'message'): Promise<void | URLtype>;
+}
+
+export interface IUserDataVault extends IUserCommunication {
+    waitForNextVeriffVerification(): Promise<KYCPayload>;
+    fetchVerificationData(type: VerificationTypeEnum, status?: VeriffStatusEnum): Promise<PersonCredentialType>;
 }
 
 export interface IUser extends IUserCaptcha, IUserOnboarding, IUserRequestsManager {

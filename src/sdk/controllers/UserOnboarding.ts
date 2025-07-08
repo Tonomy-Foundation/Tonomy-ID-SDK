@@ -13,7 +13,7 @@ import { getAccountInfo } from '../helpers/user';
 import { UserCommunication } from './UserCommunication';
 import Debug from 'debug';
 
-const debug = Debug('tonomy-sdk:controllers:user-onboarding');
+const debug = Debug('tonomy-sdk:controllers:UserOnboarding');
 
 export class UserOnboarding extends UserCommunication implements IUserOnboarding {
     private chainID!: string;

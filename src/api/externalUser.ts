@@ -17,8 +17,9 @@ import {
     DualWalletResponse,
     DualWalletRequests,
 } from '../sdk/util/request';
-import { getAccountNameFromDid, parseDid } from '../sdk/util';
+import { getAccountNameFromDid, KYCPayload, KYCVC, parseDid, verifyOpsTmyDid } from '../sdk/util';
 import {
+    App,
     AuthenticationMessage,
     Communication,
     LinkAuthRequestMessage,
@@ -31,12 +32,20 @@ import { Signer, createKeyManagerSigner, transact } from '../sdk/services/blockc
 import { tonomyContract } from '../sdk/services/blockchain/contracts/TonomyContract';
 import { createDidKeyIssuerAndStore } from '../sdk/helpers/didKeyStorage';
 import { verifyKeyExistsForApp } from '../sdk/helpers/user';
-import { IOnPressLoginOptions } from '../sdk/types/User';
-import { App } from '../sdk/controllers/App';
+import { ClientAuthorizationData, IOnPressLoginOptions } from '../sdk/types/User';
 import Debug from 'debug';
 
 const debug = Debug('tonomy-sdk:externalUser');
 
+type CallbackResponse = {
+    user: ExternalUser;
+    data?: {
+        kyc?: {
+            value: KYCPayload;
+            verifiableCredential: KYCVC;
+        };
+    };
+};
 /**
  * The storage data for an external user that has logged in with Tonomy ID
  *
@@ -65,17 +74,6 @@ export type LoginWithTonomyMessages = {
 };
 
 /**
- * The data of a client authorization request
- *
- * @param {string} [username] - the username of the user
- *
- */
-export type ClientAuthorizationData = Record<string, any> &
-    object & {
-        username?: string;
-    };
-
-/**
  * An external user on a website that is being logged into by a Tonomy ID user
  *
  */
@@ -91,6 +89,7 @@ export class ExternalUser {
      * @param {KeyManager} _keyManager - the key manager to use for signing
      * @param {StorageFactory} _storageFactory - the storage factory to use for persistent storage
      */
+
     constructor(_keyManager: KeyManager, _storageFactory: StorageFactory) {
         this.keyManager = _keyManager;
         this.storage = createStorage<ExternalUserStorage>(STORAGE_NAMESPACE + 'external.user.', _storageFactory);
@@ -333,9 +332,9 @@ export class ExternalUser {
      * @property {KeyManager} [options.keyManager = new JsKeyManager()] - the key manager to use to storage and manage keys
      * @property {StorageFactory} [options.storageFactory = browserStorageFactory] - the storage factory to use to store data
      *
-     * @returns {Promise<ExternalUser>} an external user object ready to use
+     * @returns {Promise<CallbackResponse>} an external user object ready to use
      */
-    static async verifyLoginResponse(options: VerifyLoginOptions = {}): Promise<ExternalUser> {
+    static async verifyLoginResponse(options: VerifyLoginOptions = {}): Promise<CallbackResponse> {
         const {
             external = true,
             checkKeys = true,
@@ -354,10 +353,12 @@ export class ExternalUser {
                 throw Error(`No request found in dual wallet responses for ${external ? 'external' : 'sso'} app`);
             const externalUser = new ExternalUser(keyManager, storageFactory);
             const accountName = response.getAccountName();
+            const callbackResponse: CallbackResponse = { user: externalUser };
+            const dataSharingResponse = response.getDataSharingResponse();
 
             await verifyTonomyVc(response.vc, {
                 verifyOrigin: false,
-                verifyUsername: response.getDataSharingResponse()?.data.username ? true : false,
+                verifyUsername: dataSharingResponse?.data.username ? true : false,
             });
 
             if (checkKeys) {
@@ -368,13 +369,25 @@ export class ExternalUser {
 
             await externalUser.setAccountName(accountName);
 
-            const username = response.getDataSharingResponse()?.data.username;
+            if (dataSharingResponse?.data.kyc) {
+                const did = dataSharingResponse.data.kyc.getIssuer();
+
+                await verifyOpsTmyDid(did);
+                callbackResponse.data = {
+                    kyc: {
+                        value: dataSharingResponse.data.kyc.getPayload(),
+                        verifiableCredential: dataSharingResponse.data.kyc,
+                    },
+                };
+            }
+
+            const username = dataSharingResponse?.data.username;
 
             if (username) {
                 await externalUser.setUsername(username);
             }
 
-            return externalUser;
+            return callbackResponse;
         } else {
             if (!responses.error) throw Error('No error found in dual wallet responses');
 
@@ -418,7 +431,7 @@ export class ExternalUser {
         const id = origin + '/vc/auth/' + random;
         const type = 'ClientAuthorization';
 
-        return (await this.signVc(id, type, data)).toString();
+        return (await this.signVc<T>(id, type, data)).toString();
     }
 
     /**

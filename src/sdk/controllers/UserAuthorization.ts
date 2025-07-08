@@ -1,11 +1,12 @@
 import { PrivateKey, Checksum256 } from '@wharfkit/antelope';
 import { KeyManagerLevel } from '../storage/keymanager';
 import { SdkErrors, throwError } from '../util/errors';
-import { generateRandomKeyPair } from '../util/crypto';
-import { ICreateAccountOptions, ILoginOptions, IUserAuthentication } from '../types/User';
+import { generateRandomKeyPair, randomString } from '../util/crypto';
+import { ClientAuthorizationData, ICreateAccountOptions, ILoginOptions, IUserAuthentication } from '../types/User';
 import { getAccountInfo } from '../helpers/user';
 import { UserBase } from './UserBase';
 import { tonomyContract } from '../services/blockchain';
+import { JWT, VerifiableCredential } from '../util';
 
 export class UserAuthorization extends UserBase implements IUserAuthentication {
     async savePassword(masterPassword: string, options: ICreateAccountOptions): Promise<void> {
@@ -97,5 +98,17 @@ export class UserAuthorization extends UserBase implements IUserAuthentication {
             level: KeyManagerLevel.LOCAL,
             privateKey,
         });
+    }
+
+    async createClientAuthorization<T extends ClientAuthorizationData = object>(data: T): Promise<JWT> {
+        const random = randomString(8);
+        const id = (await this.getDid()) + '/vc/auth/' + random;
+        const type = 'ClientAuthorization';
+
+        const issuer = await this.getIssuer();
+
+        const vc = await VerifiableCredential.sign<T>(id, type, data, issuer);
+
+        return vc.toString();
     }
 }

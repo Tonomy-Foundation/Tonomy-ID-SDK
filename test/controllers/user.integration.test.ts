@@ -1,8 +1,8 @@
 /**
  * @jest-environment jsdom
  */
-import { IUserPublic, createRandomID, createUserObject } from '../helpers/user';
-import { KeyManager, KeyManagerLevel, TonomyUsername } from '../../src/sdk/index';
+import { IUserPublic, createRandomID, createTestUserObject } from '../helpers/user';
+import { KeyManagerLevel, TonomyUsername } from '../../src/sdk/index';
 import { SdkErrors } from '../../src/sdk/index';
 import { JsKeyManager } from '../../src/sdk/storage/jsKeyManager';
 import { jsStorageFactory } from '../../src/cli/bootstrap/jsstorage';
@@ -11,20 +11,22 @@ import { getAccount, getChainId } from '../../src/sdk/services/blockchain/eosio/
 import { getAccountInfo } from '../../src/sdk/helpers/user';
 import { jest } from '@jest/globals';
 import { MILLISECONDS_IN_SECOND } from '../../src/sdk/util/time';
-
-let auth: KeyManager;
-let user: IUserPublic;
+import { setupTestDatabase, teardownTestDatabase } from '../storage/testDatabase';
+import { DataSource } from 'typeorm';
 
 describe('User class', () => {
     jest.setTimeout(60 * MILLISECONDS_IN_SECOND);
+    let dataSource: DataSource;
+    let user: IUserPublic;
 
-    beforeEach((): void => {
-        auth = new JsKeyManager();
-        user = createUserObject(auth, jsStorageFactory);
+    beforeEach(async (): Promise<void> => {
+        dataSource = await setupTestDatabase();
+        user = await createTestUserObject(new JsKeyManager(), jsStorageFactory, dataSource);
     });
 
-    afterEach(async () => {
+    afterEach(async (): Promise<void> => {
         await user.logout();
+        await teardownTestDatabase();
     });
 
     test('savePassword() generates and saves new private key', async () => {
@@ -100,8 +102,8 @@ describe('User class', () => {
 
         const username = await user.getUsername();
 
-        const newKeyManager = new JsKeyManager();
-        const userLogin = createUserObject(newKeyManager, jsStorageFactory);
+        const dataSource2 = await setupTestDatabase();
+        const userLogin = await createTestUserObject(new JsKeyManager(), jsStorageFactory, dataSource2);
 
         expect(userLogin.isLoggedIn()).resolves.toBeFalsy();
         const idInfo = await userLogin.login(username, password, {
@@ -124,8 +126,8 @@ describe('User class', () => {
 
         const username = await user.getUsername();
 
-        const newKeyManager = new JsKeyManager();
-        const userLogin = createUserObject(newKeyManager, jsStorageFactory);
+        const dataSource2 = await setupTestDatabase();
+        const userLogin = await createTestUserObject(new JsKeyManager(), jsStorageFactory, dataSource2);
 
         await expect(() =>
             userLogin.login(username, 'differentpassword', { keyFromPasswordFn: generatePrivateKeyFromPassword })
@@ -235,8 +237,8 @@ describe('User class', () => {
     test('login() fails with userName does not exists', async () => {
         const { user, password } = await createRandomID();
 
-        const newKeyManager = new JsKeyManager();
-        const userLogin = createUserObject(newKeyManager, jsStorageFactory);
+        const dataSource2 = await setupTestDatabase();
+        const userLogin = await createTestUserObject(new JsKeyManager(), jsStorageFactory, dataSource2);
 
         expect(userLogin.isLoggedIn()).resolves.toBeFalsy();
 

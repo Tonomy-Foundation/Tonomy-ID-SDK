@@ -20,12 +20,14 @@ import {
 } from '../../src/sdk';
 import { ExternalUser, LoginWithTonomyMessages } from '../../src/api/externalUser';
 import { VerifiableCredential } from '../../src/sdk/util/ssi/vc';
-import { getAccount, getAccountNameFromUsername } from '../../src/sdk/services/blockchain';
+import { getAccount, getChainId, getAccountNameFromUsername } from '../../src/sdk/services/blockchain';
 import { getDidKeyIssuerFromStorage } from '../../src/sdk/helpers/didKeyStorage';
 import { onRedirectLogin } from '../../src/sdk/helpers/urls';
 import { ExternalUserLoginTestOptions } from '../externalUser.integration.test';
 import { IUserPublic } from './user';
 import Debug from 'debug';
+import { KYCVC, parseAntelopeDid } from '../../src/sdk/util';
+import { mockVeriffApproved, mockVeriffDeclined } from '../services/veriffMock';
 
 const debug = Debug('tonomy-sdk-tests:helpers:externalUser');
 
@@ -42,9 +44,15 @@ export async function externalWebsiteUserPressLoginToTonomyButton(
     };
 
     if (testOptions.dataRequest) {
-        onPressLoginOptions.dataRequest = testOptions.dataRequestUsername
-            ? { username: testOptions.dataRequestUsername }
-            : {};
+        onPressLoginOptions.dataRequest = {};
+
+        if (testOptions.dataRequestUsername) {
+            onPressLoginOptions.dataRequest.username = testOptions.dataRequestUsername;
+        }
+
+        if (testOptions.dataRequestKYC) {
+            onPressLoginOptions.dataRequest.kyc = testOptions.dataRequestKYC;
+        }
     }
 
     const { requests } = (await ExternalUser.loginWithTonomy(
@@ -154,7 +162,6 @@ export async function sendLoginRequestsMessage(
 
     const loginRequestMessage = await LoginRequestsMessage.signMessage(requests, didKeyIssuer, recipientDid);
 
-    debug('TONOMY_LOGIN_WEBSITE/login: sending login request to Tonomy ID app');
     const sendMessageResponse = await communication.sendMessage(loginRequestMessage);
 
     expect(sendMessageResponse).toBe(true);
@@ -181,20 +188,55 @@ export async function loginWebsiteOnCallback(keyManager: KeyManager, storageFact
 export async function externalWebsiteOnCallback(
     keyManager: KeyManager,
     storageFactory: StorageFactory,
-    accountName: Name
+    accountName: Name,
+    testOptions: ExternalUserLoginTestOptions
 ) {
     debug('EXTERNAL_WEBSITE/callback: fetching response from URL');
-    const externalUser = await ExternalUser.verifyLoginResponse({
+    const { user, data } = await ExternalUser.verifyLoginResponse({
         keyManager,
         storageFactory,
     });
 
-    const externalWebsiteAccount = await externalUser.getAccountName();
+    const externalWebsiteAccount = await user.getAccountName();
     const tonomyIdAccount = accountName;
 
     expect(externalWebsiteAccount.toString()).toBe(tonomyIdAccount.toString());
 
-    return externalUser;
+    if (testOptions.dataRequest && testOptions.dataRequestKYC) {
+        if (!testOptions.dataRequestKYCDecision) throw new Error('dataRequestKYCDecision is undefined');
+
+        const kycVc = data?.kyc?.verifiableCredential;
+
+        if (!kycVc) throw new Error('kycVc is undefined');
+        const issuer = kycVc.getIssuer();
+        const { fragment, account, chain } = parseAntelopeDid(issuer);
+
+        expect(kycVc instanceof KYCVC).toBe(true);
+        expect(account).toBe('ops.tmy');
+        expect(fragment).toBe('active');
+        expect(chain).toBe(await getChainId());
+        expect(kycVc.getType()).toBe(KYCVC.getType());
+
+        const kycPayload = kycVc.getPayload();
+        const mockData = testOptions.dataRequestKYCDecision === 'approved' ? mockVeriffApproved : mockVeriffDeclined;
+
+        expect(kycPayload.data.verification.decision).toBe(testOptions.dataRequestKYCDecision);
+        expect(kycPayload.data.verification.person.firstName).toBeDefined();
+        expect(kycPayload.data.verification.person.firstName?.value).toBe(
+            mockData.data.verification.person.firstName?.value
+        );
+
+        const kycValue = data?.kyc?.value;
+
+        if (!kycValue) throw new Error('kycValue is undefined');
+
+        expect(kycValue.data.verification.person.firstName?.value).toBeDefined();
+        expect(kycValue.data.verification.person.firstName?.value).toBe(
+            mockData.data.verification.person.firstName?.value
+        );
+    }
+
+    return user;
 }
 
 export async function externalWebsiteOnReload(
@@ -322,11 +364,14 @@ export async function externalWebsiteClientAuth(
         data.username = username.toString();
     }
 
+    debug('EXTERNAL_WEBSITE/client-auth: creating client auth', options, data);
     const clientAuth = await externalUser.createClientAuthorization(data);
 
     const verifiedAuth = await verifyClientAuthorization(clientAuth, {
         verifyUsername: options.dataRequestUsername,
     });
+
+    debug('EXTERNAL_WEBSITE/client-auth: verified client auth', verifiedAuth);
 
     expect(verifiedAuth).toBeDefined();
     expect(verifiedAuth.account).toBe((await externalUser.getAccountName()).toString());
