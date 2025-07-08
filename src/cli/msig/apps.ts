@@ -65,7 +65,7 @@ function createProposalName(proposalName: Name, suffix: string, index?: number):
     return Name.from(str);
 }
 
-// MSIG 1: Create three accounts each with active and owner key
+// MSIG 1: Create accounts for apps
 export async function createAccounts(options: StandardProposalOptions) {
     function createNewAccountAction(name: string, active: Authority, owner: Authority) {
         return {
@@ -161,7 +161,7 @@ export async function setAppsAndRam(options: StandardProposalOptions) {
     if (options.autoExecute) await executeProposal(options.proposer, proposalName, proposalHash);
 }
 
-// MSIG 3: Deploy contracts
+// MSIG 3: Deploy contracts for apps
 export async function deployContracts(options: StandardProposalOptions) {
     for (let i = 0; i < apps.length; i++) {
         const app = apps[i];
@@ -190,6 +190,7 @@ export async function deployContracts(options: StandardProposalOptions) {
     }
 }
 
+// Create a new app
 export async function newApp(options: StandardProposalOptions) {
     const appName = 'Fiddl.Art';
     const description = 'Create and Earn with AI Art';
