@@ -29,13 +29,15 @@ export abstract class Contract {
         this.contractName = contract.account;
 
         if (reload) {
-            loadContract(this.contractName)
-                .then((loadedContract) => {
-                    this.contract = loadedContract;
-                })
-                .catch((error) => {
-                    console.error(`Failed to reload contract ${this.contractName}:`, error);
-                });
+            this.reloadContract();
+        }
+    }
+
+    protected async reloadContract(): Promise<void> {
+        try {
+            this.contract = await loadContract(this.contractName);
+        } catch (error) {
+            console.error(`Failed to reload contract ${this.contractName}:`, error);
         }
     }
 
