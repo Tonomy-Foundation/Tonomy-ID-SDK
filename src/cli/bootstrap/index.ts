@@ -73,8 +73,8 @@ export default async function bootstrap() {
         await updateMsigControl(tonomyGovKeys, newSigner);
 
         console.log('Bootstrap complete');
-    } catch (e: any) {
-        console.error('Bootstrap error', e.message, JSON.stringify(e, null, 2));
+    } catch (e) {
+        console.error('Bootstrap error', e, JSON.stringify(e, null, 2));
         process.exit(1);
     }
 }

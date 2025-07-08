@@ -18,6 +18,9 @@ import { getAccount, getApi } from '../eosio/eosio';
 import abi from './abi/tonomy.abi.json';
 import { activeAuthority, ownerAuthority } from '../eosio/authority';
 import { TONO_PUBLIC_SALE_PRICE } from './VestingContract';
+import Debug from 'debug';
+
+const debug = Debug('tonomy-sdk:blockchain:contracts:TonomyContract');
 
 const CONTRACT_NAME: NameType = 'tonomy';
 
@@ -413,7 +416,7 @@ export class TonomyContract extends Contract {
     }
 
     async getPersonData(account: NameType): Promise<PersonDataRaw> {
-        const res = this.contract.table<PersonDataRaw>('people', this.contractName).get(account);
+        const res = await this.contract.table<PersonDataRaw>('people', this.contractName).get(account);
 
         if (!res) {
             throwError(`Person "${account.toString()}" not found`, SdkErrors.AccountDoesntExist);
@@ -425,7 +428,7 @@ export class TonomyContract extends Contract {
     async getPersonDataByUsername(username: TonomyUsername): Promise<PersonDataRaw> {
         const hash = Checksum256.from(username.usernameHash);
 
-        const res = this.contract
+        const res = await this.contract
             .table<PersonDataRaw>('people', this.contractName)
             .get(hash, { index_position: 'secondary' });
 
@@ -484,6 +487,8 @@ export class TonomyContract extends Contract {
     async getPerson(account: TonomyUsername | NameType): Promise<PersonData> {
         let personData: PersonDataRaw;
 
+        debug('getPerson', account, account instanceof TonomyUsername);
+
         if (account instanceof TonomyUsername) {
             personData = await this.getPersonDataByUsername(account);
         } else {
@@ -494,14 +499,13 @@ export class TonomyContract extends Contract {
     }
 
     async getPeople(query?: QueryParams): Promise<PersonData[]> {
-        const cursor = await this.contract.table<PersonDataRaw>('people', this.contractName).query(query);
+        const cursor = this.contract.table<PersonDataRaw>('people', this.contractName).query(query);
 
         return (await cursor.next()).map(castPersonDataRaw);
     }
 
     async getAllPeople(limit: number = 100): Promise<PersonData[]> {
-        // fetch {limit} at a time
-        const cursor = await this.contract.table<PersonDataRaw>('people', this.contractName).query({
+        const cursor = this.contract.table<PersonDataRaw>('people', this.contractName).query({
             maxRows: limit,
         });
 

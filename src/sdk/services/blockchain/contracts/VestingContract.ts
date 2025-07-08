@@ -385,8 +385,7 @@ export class VestingContract extends Contract {
     }
 
     private async getSettingsData(): Promise<VestingSettingsRaw> {
-        const table = this.contract.table<VestingSettingsRaw>('settings', this.contractName);
-        const res = await table.get();
+        const res = await this.contract.table<VestingSettingsRaw>('settings', this.contractName).get();
 
         if (!res) throw new Error('Vesting settings have not yet been set');
         return res;

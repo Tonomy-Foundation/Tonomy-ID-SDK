@@ -256,8 +256,7 @@ export class StakingContract extends Contract {
     }
 
     private async getSettingsData(): Promise<StakingSettingsRaw> {
-        const settingsTable = this.contract.table<StakingSettingsRaw>('settings', this.contractName);
-        const settings = await settingsTable.get();
+        const settings = await this.contract.table<StakingSettingsRaw>('settings', this.contractName).get();
 
         if (!settings) throw new Error('Staking settings have not yet been set');
         return settings;
