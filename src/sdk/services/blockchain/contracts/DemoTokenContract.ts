@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 import { API, NameType, AssetType } from '@wharfkit/antelope';
 import { Signer, transact } from '../eosio/transaction';
 import { getApi } from '../eosio/eosio';
@@ -6,6 +7,9 @@ import { Contract, loadContract } from './Contract';
 import { ActionOptions } from '@wharfkit/contract';
 import { tonomyContract } from './TonomyContract';
 import { activeAuthority } from '../eosio/authority';
+import Debug from 'debug';
+
+const debug = Debug('tonomy-sdk:blockchain:contracts:DemoTokenContract');
 
 export class DemoTokenContract extends Contract {
     static async atAccount(account?: NameType): Promise<DemoTokenContract> {
@@ -18,36 +22,38 @@ export class DemoTokenContract extends Contract {
         const username = TonomyUsername.fromUsername('demo', AccountType.APP, getSettings().accountSuffix);
         const app = await tonomyContract.getApp(username);
 
+        debug('demo contract found', app.accountName.toString());
+
         return app.accountName;
     }
 
     // action getters. add default authorization and values, use camelCase for variables and action names
     actions = {
-        create: (data: { supply: AssetType }, authorization?: ActionOptions) =>
-            this.action('create', data, authorization),
+        create: (data: { issuer: NameType; maximumSupply: AssetType }, authorization?: ActionOptions) =>
+            this.action('create', { issuer: data.issuer, maximum_supply: data.maximumSupply }, authorization),
         issue: (
-            { issuer, quantity, memo = '' }: { issuer: NameType; quantity: AssetType; memo?: string },
+            { to, quantity, memo = '' }: { to: NameType; quantity: AssetType; memo?: string },
             authorization?: ActionOptions
-        ) => this.action('issue', { issuer, quantity, memo }, authorization),
+        ) => this.action('issue', { to, quantity, memo }, authorization),
         selfIssue: (
             { to, quantity, memo = '' }: { to: NameType; quantity: AssetType; memo?: string },
             authorization: ActionOptions = activeAuthority(to)
         ) => this.action('selfissue', { to, quantity, memo }, authorization),
     };
 
-    async create(supply: AssetType, signer: Signer): Promise<API.v1.PushTransactionResponse> {
-        const action = this.actions.create({ supply });
+    async create(issuer: NameType, maximumSupply: AssetType, signer: Signer): Promise<API.v1.PushTransactionResponse> {
+        const action = this.actions.create({ issuer, maximumSupply });
 
         return await transact(action, signer);
     }
 
     async issue(
-        issuer: NameType,
+        to: NameType,
         quantity: AssetType,
         memo: string,
         signer: Signer
     ): Promise<API.v1.PushTransactionResponse> {
-        const action = this.actions.issue({ issuer, quantity, memo });
+        const action = this.actions.issue({ to, quantity, memo });
 
         return await transact(action, signer);
     }

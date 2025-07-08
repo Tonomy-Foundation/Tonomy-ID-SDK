@@ -4,7 +4,7 @@ import { Issuer } from 'did-jwt-vc';
 import { getSettings } from '../sdk/util/settings';
 import { isErrorCode, SdkErrors, createSdkError, throwError } from '../sdk/util/errors';
 import { createStorage, PersistentStorageClean, StorageFactory, STORAGE_NAMESPACE } from '../sdk/storage/storage';
-import { Name, API, NameType, Action } from '@wharfkit/antelope';
+import { Name, API, NameType } from '@wharfkit/antelope';
 import { TonomyUsername } from '../sdk/util/username';
 import { browserStorageFactory } from '../sdk/storage/browserStorage';
 import { getAccount, getChainId } from '../sdk/services/blockchain/eosio/eosio';
@@ -483,7 +483,7 @@ export class ExternalUser {
         await this.checkLinkAuthRequirements(account, permission, contractAccount, action);
 
         // Setup the action to sign
-        const newAction = await Action.from({
+        const newAction = {
             account: contractAccount,
             name: action,
             authorization: [
@@ -493,7 +493,7 @@ export class ExternalUser {
                 },
             ],
             data,
-        });
+        };
         const signer = this.getTransactionSigner();
 
         debug(

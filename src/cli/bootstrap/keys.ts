@@ -53,7 +53,7 @@ export async function updateAccountKey(account: NameType, newPublicKey: PublicKe
     if (addCodePermission) authority.addCodePermission(account.toString());
 
     await eosioContract.updateAuth(account.toString(), 'active', 'owner', authority, getSigner());
-    await eosioContract.updateAuth(account.toString(), 'owner', 'owner', authority, getSigner());
+    await eosioContract.updateAuth(account.toString(), 'owner', 'owner', authority, getSigner(), true);
 }
 
 /**
@@ -112,5 +112,5 @@ export async function updateControlByAccount(
         await contract.updateAuth(account.toString(), 'active', 'owner', activeAuthority, signer);
     }
 
-    await contract.updateAuth(account.toString(), 'owner', 'owner', ownerAuthority, signer);
+    await contract.updateAuth(account.toString(), 'owner', 'owner', ownerAuthority, signer, true);
 }

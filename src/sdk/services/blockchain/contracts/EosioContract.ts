@@ -5,7 +5,7 @@ import { activeAuthority, Authority } from '../eosio/authority';
 import { Signer, transact } from '../eosio/transaction';
 import { getApi } from '../eosio/eosio';
 import { Contract as AntelopeContract, ActionOptions } from '@wharfkit/contract';
-import abi from './abi/eosio.tonomy.abi.json';
+import abi from './abi/eosio.bios.abi.json';
 import { isProduction } from '../../../util';
 
 const CONTRACT_NAME: NameType = 'eosio';
@@ -32,7 +32,7 @@ export class EosioContract extends Contract {
         ) => this.action('setabi', data, authorization),
         updateAuth: (
             data: { account: NameType; permission: NameType; parent: NameType; auth: AuthorityType },
-            authorization: ActionOptions = activeAuthority(data.account)
+            authorization: ActionOptions = { authorization: [{ actor: data.account, permission: data.permission }] }
         ) =>
             this.action(
                 'updateauth',
@@ -98,9 +98,11 @@ export class EosioContract extends Contract {
         permission: NameType,
         parent: NameType,
         auth: AuthorityType,
-        signer: Signer
+        signer: Signer,
+        authParent?: boolean
     ): Promise<API.v1.PushTransactionResponse> {
-        const action = this.actions.updateAuth({ account, permission, parent, auth });
+        const authorization = authParent ? { authorization: [{ actor: account, permission: parent }] } : undefined;
+        const action = this.actions.updateAuth({ account, permission, parent, auth }, authorization);
 
         return transact(action, signer);
     }

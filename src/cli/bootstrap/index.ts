@@ -163,7 +163,7 @@ async function deployEosioMsig() {
 async function configureDemoToken(newSigner: Signer) {
     const demoTokenContract = await loadDemoTokenContract();
 
-    await demoTokenContract.create(`1000000000 DEMO`, newSigner);
+    await demoTokenContract.create(demoTokenContract.contractName, `1000000000 DEMO`, newSigner);
     await demoTokenContract.issue(demoTokenContract.contractName, `10000 DEMO`, '', newSigner);
 }
 
@@ -462,7 +462,7 @@ async function updateAccountControllers(govKeys: string[], newPublicKey: PublicK
     activeAuthority.addKey(newPublicKey.toString(), 1);
     activeAuthority.addCodePermission('vesting.tmy');
     await eosioContract.updateAuth(operationsAccount, 'active', 'owner', activeAuthority, signer);
-    await eosioContract.updateAuth(operationsAccount, 'owner', 'owner', ownerAuthority, signer);
+    await eosioContract.updateAuth(operationsAccount, 'owner', 'owner', ownerAuthority, signer, true);
 
     // accounts controlled by ops.tmy
     for (const account of opsControlledAccounts.filter(

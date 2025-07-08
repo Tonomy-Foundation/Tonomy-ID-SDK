@@ -12,7 +12,6 @@ PARENT_PATH=$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )
 echo "Copying smart contracts ABIs"
 
 CONTRACTS=(
-    "demo.tmy"
     "eosio.bios"
     "eosio.msig"
     "eosio.token"
