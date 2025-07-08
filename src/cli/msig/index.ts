@@ -16,7 +16,6 @@ import { addProd, changeProds, removeProd, updateProd } from './producers';
 import { hyphaAccountsCreate, hyphaContractSet, hyphaAddAccountPermissions } from './hypha';
 import { sleep } from '../../sdk/util';
 import { vestingMigrate, vestingMigrate2, vestingMigrate3 } from './vestingMigrateAllocate';
-import { newApp } from './newApp';
 import {
     buyRam,
     createStakingTmyAccount,
@@ -29,7 +28,7 @@ import {
 } from './staking';
 import { migrateApps } from './migrateApps';
 import { symbolMigrate, migrateRebrandApps } from './symbolMigrate';
-import { createAccounts, deployContracts, setAppsAndRam } from './deployApps';
+import { createAccounts, deployContracts, setAppsAndRam, newApp } from './apps';
 
 const eosioMsigContract = EosioMsigContract.Instance;
 
