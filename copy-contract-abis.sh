@@ -14,7 +14,6 @@ echo "Copying smart contracts ABIs"
 CONTRACTS=(
     "demo.tmy"
     "eosio.bios"
-    "eosio.boot"
     "eosio.msig"
     "eosio.token"
     "eosio.tonomy"
@@ -25,6 +24,7 @@ CONTRACTS=(
 
 for CONTRACT in "${CONTRACTS[@]}"
 do
+    echo "Copying ${CONTRACT} ABI"
     cp "${PARENT_PATH}/Tonomy-Contracts/contracts/${CONTRACT}/${CONTRACT}.abi" "${PARENT_PATH}/src/sdk/services/blockchain/contracts/abi/${CONTRACT}.abi.json"
 done
 
