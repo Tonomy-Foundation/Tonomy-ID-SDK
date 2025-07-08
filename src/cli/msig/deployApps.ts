@@ -20,7 +20,7 @@ export const apps = [
         activeKey,
         ownerKey,
         ramKb: 5000, // 5MB
-        contractDir: `${contractDir}/bridge.cxc`,
+        contractDir,
         usernameShort: 'bridge.cxc',
     },
     {
@@ -33,7 +33,7 @@ export const apps = [
         activeKey,
         ownerKey,
         ramKb: 5000, // 5MB
-        contractDir: `${contractDir}/invite.cxc`,
+        contractDir,
         usernameShort: 'music.cxc',
     },
     {
@@ -45,10 +45,25 @@ export const apps = [
         activeKey,
         ownerKey,
         ramKb: 1000, // 1MB
-        contractDir: `${contractDir}/tokens.cxc`,
+        contractDir,
         usernameShort: 'tokens.cxc',
     },
 ];
+
+//convert any number to a deterministic number using the digits 12345
+function indexToNameDigits(index: number): string {
+    return index.toString(5).replace('4', '5').replace('3', '4').replace('2', '3').replace('1', '2').replace('0', '1');
+}
+
+function createProposalName(proposalName: Name, suffix: string, index?: number): Name {
+    const NAME_MAX_LENGTH = 13;
+
+    if (suffix.length > 5) throw new Error(`Choose a shorter suffix, ${suffix} is too long`);
+    const fullSuffix = suffix + (index ? indexToNameDigits(index) : '');
+    const str = `${proposalName.toString().slice(0, NAME_MAX_LENGTH - fullSuffix.length)}${fullSuffix}`;
+
+    return Name.from(str);
+}
 
 // MSIG 1: Create three accounts each with active and owner key
 export async function createAccounts(options: StandardProposalOptions) {
@@ -74,7 +89,7 @@ export async function createAccounts(options: StandardProposalOptions) {
     );
     const proposalHash = await createProposal(
         options.proposer,
-        options.proposalName,
+        createProposalName(options.proposalName, 'crea'),
         actions,
         options.privateKey,
         [...options.requested],
@@ -133,7 +148,7 @@ export async function setAppsAndRam(options: StandardProposalOptions) {
     });
     const proposalHash = await createProposal(
         options.proposer,
-        options.proposalName,
+        createProposalName(options.proposalName, 'set'),
         actions,
         options.privateKey,
         [...options.requested, ...apps.map((a) => a.account)],
@@ -162,7 +177,7 @@ export async function deployContracts(options: StandardProposalOptions) {
 
         const proposalHash = await createProposal(
             options.proposer,
-            proposalName,
+            createProposalName(options.proposalName, 'dep', i),
             deployActions,
             options.privateKey,
             [...options.requested, app.account],
