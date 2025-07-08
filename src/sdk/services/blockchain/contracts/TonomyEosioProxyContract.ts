@@ -172,7 +172,7 @@ export class TonomyEosioProxyContract extends Contract {
     ): Promise<API.v1.PushTransactionResponse> {
         const action = this.actions.newaccount({ creator, name, owner, active });
 
-        return transact([action], signer);
+        return transact(action, signer);
     }
 
     async updateAuth(
@@ -191,7 +191,7 @@ export class TonomyEosioProxyContract extends Contract {
             authParent: options.authParent,
         });
 
-        return transact([action], signer);
+        return transact(action, signer);
     }
 
     async linkAuth(
@@ -203,13 +203,13 @@ export class TonomyEosioProxyContract extends Contract {
     ): Promise<API.v1.PushTransactionResponse> {
         const action = this.actions.linkauth({ account, code, type, requirement });
 
-        return transact([action], signer);
+        return transact(action, signer);
     }
 
     async setPriv(account: NameType, isPriv: number, signer: Signer): Promise<API.v1.PushTransactionResponse> {
         const action = this.actions.setpriv({ account, isPriv });
 
-        return transact([action], signer);
+        return transact(action, signer);
     }
 }
 

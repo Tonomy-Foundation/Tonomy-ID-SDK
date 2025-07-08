@@ -26,15 +26,14 @@ describe('TonomyContract class', () => {
 
         let key: PrivateKey;
         let authority: Authority;
-        let rawAction: any;
-        let action: ActionType;
+        let action: any;
         let randomName: string;
 
         beforeEach(async () => {
             key = PrivateKey.generate(KeyType.K1);
             authority = Authority.fromKey(key.toPublic().toString());
             randomName = randomAccountName();
-            rawAction = {
+            action = {
                 account: 'tonomy',
                 name: 'newaccount',
                 authorization: [
@@ -50,7 +49,6 @@ describe('TonomyContract class', () => {
                     active: authority,
                 },
             };
-            action = Action.from(rawAction);
         });
 
         test('sign with tonomy@active should fail', async () => {
@@ -58,7 +56,7 @@ describe('TonomyContract class', () => {
             action.authorization = [{ actor: 'tonomy', permission: 'active' }];
 
             try {
-                await transact([action], tonomyOpsSigner);
+                await transact(action, tonomyOpsSigner);
             } catch (e) {
                 expect(e.error.details[0].message).toBe('missing authority of tonomy/owner');
             }
@@ -68,7 +66,7 @@ describe('TonomyContract class', () => {
             expect.assertions(1);
 
             try {
-                await transact([action], tonomyBoardSigners[0]);
+                await transact(action, tonomyBoardSigners[0]);
             } catch (e) {
                 expect(e.error.details[0].message).toContain('but does not have signatures for it');
             }
@@ -76,14 +74,14 @@ describe('TonomyContract class', () => {
 
         test('sign with tonomy@owner with 2 keys should succeed', async () => {
             expect.assertions(1);
-            const trx = await transact([action], tonomyBoardSigners.slice(0, 2));
+            const trx = await transact(action, tonomyBoardSigners.slice(0, 2));
 
             expect(trx.processed.receipt.status).toBe('executed');
         });
 
         test('sign with tonomy@owner with 2 keys using eosio.msig should succeed', async () => {
             try {
-                await msigAction([action], { satisfyRequireApproval: true });
+                await msigAction(action, { satisfyRequireApproval: true });
             } catch (e) {
                 debug(e.message, JSON.stringify(e, null, 2));
                 throw e;
@@ -92,7 +90,7 @@ describe('TonomyContract class', () => {
 
         test('sign with tonomy@owner with 1 keys using eosio.msig should fail', async () => {
             try {
-                await msigAction([action]);
+                await msigAction(action);
             } catch (e) {
                 debug(e.message, JSON.stringify(e, null, 2));
                 throw e;
@@ -104,15 +102,12 @@ describe('TonomyContract class', () => {
 
             // Setup next account to create, signed by the new account
 
-            rawAction.data.creator = randomName;
-            rawAction.data.name = randomAccountName();
-            rawAction.authorization.push({ actor: randomName, permission: 'active' });
+            action.data.creator = randomName;
+            action.data.name = randomAccountName();
+            action.authorization.push({ actor: randomName, permission: 'active' });
             const randomAccountSigner = createSigner(key);
 
-            const trx = await transact(
-                [Action.from(rawAction)],
-                [randomAccountSigner, tonomyBoardSigners[0], tonomyBoardSigners[1]]
-            );
+            const trx = await transact(action, [randomAccountSigner, tonomyBoardSigners[0], tonomyBoardSigners[1]]);
 
             expect(trx.processed.receipt.status).toBe('executed');
         });
@@ -121,13 +116,13 @@ describe('TonomyContract class', () => {
             expect.assertions(1);
 
             // Setup next account to create, signed by the new account
-            rawAction.data.creator = randomName;
-            rawAction.data.name = randomAccountName();
-            rawAction.authorization = [{ actor: randomName, permission: 'active' }];
+            action.data.creator = randomName;
+            action.data.name = randomAccountName();
+            action.authorization = [{ actor: randomName, permission: 'active' }];
             const randomAccountSigner = createSigner(key);
 
             try {
-                await transact([Action.from(rawAction)], [randomAccountSigner]);
+                await transact(action, [randomAccountSigner]);
             } catch (e) {
                 expect(e.error.details[0].message).toBe('missing authority of tonomy/owner');
             }
@@ -139,8 +134,7 @@ describe('TonomyContract class', () => {
             // special_governance_check()
             let key: PrivateKey;
             let authority: Authority;
-            let rawAction: any;
-            let action: Action;
+            let action: any;
             let newPermission: string;
 
             beforeEach(() => {
@@ -148,7 +142,7 @@ describe('TonomyContract class', () => {
                 authority = Authority.fromKey(key.toPublic().toString());
                 newPermission = randomAccountName();
 
-                rawAction = {
+                action = {
                     account: 'tonomy',
                     name: 'updateauth',
                     authorization: [
@@ -166,14 +160,13 @@ describe('TonomyContract class', () => {
                         auth_parent: true, // should be true when a new permission is being created, otherwise false
                     },
                 };
-                action = Action.from(rawAction);
             });
 
             test('sign with tonomy@owner should succeed', async () => {
                 expect.assertions(1);
 
                 try {
-                    const trx = await transact([action], tonomyBoardSigners.slice(0, 2));
+                    const trx = await transact(action, tonomyBoardSigners.slice(0, 2));
 
                     expect(trx.processed.receipt.status).toBe('executed');
                 } catch (e) {
@@ -186,7 +179,7 @@ describe('TonomyContract class', () => {
                 expect.assertions(1);
 
                 try {
-                    await transact([action], tonomyBoardSigners[0]);
+                    await transact(action, tonomyBoardSigners[0]);
                 } catch (e) {
                     expect(e.error.details[0].message).toContain('but does not have signatures for it');
                 }
@@ -196,7 +189,7 @@ describe('TonomyContract class', () => {
                 expect.assertions(1);
 
                 try {
-                    await transact([action], tonomyOpsSigner);
+                    await transact(action, tonomyOpsSigner);
                 } catch (e) {
                     expect(e.error.details[0].message).toContain('but does not have signatures for it');
                 }
@@ -206,9 +199,8 @@ describe('TonomyContract class', () => {
                 expect.assertions(1);
 
                 try {
-                    rawAction.authorization = [{ actor: 'tonomy', permission: 'owner' }];
-                    action = Action.from(rawAction);
-                    const trx = await transact([action], tonomyBoardSigners.slice(0, 2));
+                    action.authorization = [{ actor: 'tonomy', permission: 'owner' }];
+                    const trx = await transact(action, tonomyBoardSigners.slice(0, 2));
 
                     expect(trx.processed.receipt.status).toBe('executed');
                 } catch (e) {
@@ -221,7 +213,7 @@ describe('TonomyContract class', () => {
                 expect.assertions(3);
 
                 try {
-                    await msigAction([action], { satisfyRequireApproval: true });
+                    await msigAction(action, { satisfyRequireApproval: true });
                 } catch (e) {
                     debug(e.message, JSON.stringify(e, null, 2));
                     throw e;
@@ -232,7 +224,7 @@ describe('TonomyContract class', () => {
                 expect.assertions(3);
 
                 try {
-                    await msigAction([action]);
+                    await msigAction(action);
                 } catch (e) {
                     debug(e.message, JSON.stringify(e, null, 2));
                     throw e;

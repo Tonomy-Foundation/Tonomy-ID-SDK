@@ -7,10 +7,10 @@ import {
     PermissionLevelType,
     Transaction,
     UInt16Type,
-    ActionType,
+    Action,
 } from '@wharfkit/antelope';
 import { Contract, loadContract } from './Contract';
-import { Signer, transact } from '../eosio/transaction';
+import { AnyActionType, Signer, transact } from '../eosio/transaction';
 import { Contract as AntelopeContract } from '@wharfkit/contract';
 import { getApi, getChainInfo, serializeActionData } from '../eosio/eosio';
 import { ActionOptions } from '@wharfkit/contract';
@@ -99,7 +99,7 @@ export class EosioMsigContract extends Contract {
         proposer: NameType,
         proposalName: NameType,
         requested: PermissionLevelType[],
-        actions: ActionType[],
+        actions: AnyActionType[],
         signer: Signer
     ): Promise<{ transaction: API.v1.PushTransactionResponse; proposalHash: Checksum256 }> {
         // Serialize the actions
@@ -110,7 +110,7 @@ export class EosioMsigContract extends Contract {
                     account: action.account,
                     name: action.name,
                     authorization: action.authorization,
-                    data: await serializeActionData(action),
+                    data: await serializeActionData(Action.from(action)),
                 };
             })
         );
@@ -137,7 +137,7 @@ export class EosioMsigContract extends Contract {
         const proposalHash = proposalTrx.id;
 
         const action = this.actions.propose({ proposer, proposalName, requested, trx });
-        const transaction = await transact([action], signer);
+        const transaction = await transact(action, signer);
 
         return { proposalHash, transaction };
     }
@@ -151,7 +151,7 @@ export class EosioMsigContract extends Contract {
     ): Promise<API.v1.PushTransactionResponse> {
         const action = this.actions.approve({ proposer, proposalName, level, proposalHash });
 
-        return await transact([action], signer);
+        return await transact(action, signer);
     }
 
     async exec(
@@ -162,7 +162,7 @@ export class EosioMsigContract extends Contract {
     ): Promise<API.v1.PushTransactionResponse> {
         const action = this.actions.exec({ proposer, proposalName, executer });
 
-        return await transact([action], signer);
+        return await transact(action, signer);
     }
 
     async cancel(
@@ -173,7 +173,7 @@ export class EosioMsigContract extends Contract {
     ): Promise<API.v1.PushTransactionResponse> {
         const action = this.actions.cancel({ proposer, proposalName, canceler });
 
-        return await transact([action], signer);
+        return await transact(action, signer);
     }
 }
 

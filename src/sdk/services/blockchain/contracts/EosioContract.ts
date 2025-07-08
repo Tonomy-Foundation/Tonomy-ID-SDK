@@ -101,7 +101,7 @@ export class EosioContract extends Contract {
     ): Promise<API.v1.PushTransactionResponse> {
         const action = this.actions.updateAuth({ account, permission, parent, auth });
 
-        return transact([action], signer);
+        return transact(action, signer);
     }
 
     async newAccount(
@@ -113,7 +113,7 @@ export class EosioContract extends Contract {
     ): Promise<API.v1.PushTransactionResponse> {
         const action = this.actions.newAccount({ creator, name, owner, active });
 
-        return transact([action], signer);
+        return transact(action, signer);
     }
 
     async linkAuth(
@@ -125,13 +125,13 @@ export class EosioContract extends Contract {
     ): Promise<API.v1.PushTransactionResponse> {
         const action = this.actions.linkAuth({ account, code, type, requirement });
 
-        return transact([action], signer);
+        return transact(action, signer);
     }
 
     async setPriv(account: NameType, isPriv: number, signer: Signer): Promise<API.v1.PushTransactionResponse> {
         const action = this.actions.setPriv({ account, isPriv });
 
-        return transact([action], signer);
+        return transact(action, signer);
     }
 
     async setParams(
@@ -140,7 +140,7 @@ export class EosioContract extends Contract {
     ): Promise<API.v1.PushTransactionResponse> {
         const action = this.actions.setParams({ params: blockchainParameters });
 
-        return transact([action], signer);
+        return transact(action, signer);
     }
 }
 

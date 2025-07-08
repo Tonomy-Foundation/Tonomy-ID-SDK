@@ -488,7 +488,7 @@ export class ExternalUser {
             JSON.stringify(newAction, null, 2)
         );
 
-        return await transact([newAction], signer);
+        return await transact(newAction, signer);
     }
 
     private async checkLinkAuthRequirements(

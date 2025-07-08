@@ -280,7 +280,7 @@ export class TonomyContract extends Contract {
     ): Promise<API.v1.PushTransactionResponse> {
         const action = this.actions.buyRam({ daoOwner, app, quant });
 
-        return transact([action], signer);
+        return transact(action, signer);
     }
 
     async setResourceParams(
@@ -291,7 +291,7 @@ export class TonomyContract extends Contract {
     ): Promise<API.v1.PushTransactionResponse> {
         const action = this.actions.setResParams({ ramPrice, totalRamAvailable, ramFee });
 
-        return transact([action], signer);
+        return transact(action, signer);
     }
 
     async newPerson(
@@ -302,7 +302,7 @@ export class TonomyContract extends Contract {
     ): Promise<API.v1.PushTransactionResponse> {
         const action = this.actions.newPerson({ usernameHash, passwordKey, passwordSalt });
 
-        return transact([action], signer);
+        return transact(action, signer);
     }
 
     async updateKeysPerson(
@@ -369,7 +369,7 @@ export class TonomyContract extends Contract {
     ): Promise<API.v1.PushTransactionResponse> {
         const action = this.actions.updateActive({ account, active });
 
-        return transact([action], signer);
+        return transact(action, signer);
     }
 
     async newApp(
@@ -397,7 +397,7 @@ export class TonomyContract extends Contract {
             key,
         });
 
-        return transact([action], signer);
+        return transact(action, signer);
     }
 
     async loginWithApp(
@@ -409,7 +409,7 @@ export class TonomyContract extends Contract {
     ): Promise<API.v1.PushTransactionResponse> {
         const action = this.actions.loginWithApp({ account, app, parent, key });
 
-        return transact([action], signer);
+        return transact(action, signer);
     }
 
     async getPersonData(account: NameType): Promise<PersonDataRaw> {

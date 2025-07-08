@@ -36,9 +36,9 @@ export class DemoTokenContract extends Contract {
     };
 
     async create(supply: AssetType, signer: Signer): Promise<API.v1.PushTransactionResponse> {
-        const actions = [this.actions.create({ supply })];
+        const action = this.actions.create({ supply });
 
-        return await transact(actions, signer);
+        return await transact(action, signer);
     }
 
     async issue(
@@ -47,9 +47,9 @@ export class DemoTokenContract extends Contract {
         memo: string,
         signer: Signer
     ): Promise<API.v1.PushTransactionResponse> {
-        const actions = [this.actions.issue({ issuer, quantity, memo })];
+        const action = this.actions.issue({ issuer, quantity, memo });
 
-        return await transact(actions, signer);
+        return await transact(action, signer);
     }
 
     async selfIssue(
@@ -58,9 +58,9 @@ export class DemoTokenContract extends Contract {
         memo: string,
         signer: Signer
     ): Promise<API.v1.PushTransactionResponse> {
-        const actions = [this.actions.selfIssue({ to, quantity, memo })];
+        const action = this.actions.selfIssue({ to, quantity, memo });
 
-        return await transact(actions, signer);
+        return await transact(action, signer);
     }
 
     async getBalance(account: NameType): Promise<number> {

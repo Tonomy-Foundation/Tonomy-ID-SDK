@@ -82,9 +82,9 @@ export class EosioTokenContract extends Contract {
     };
 
     async create(issuer: NameType, maximumSupply: AssetType, signer: Signer): Promise<API.v1.PushTransactionResponse> {
-        const actions = [this.actions.create({ issuer, maximumSupply })];
+        const action = this.actions.create({ issuer, maximumSupply });
 
-        return await transact(actions, signer);
+        return await transact(action, signer);
     }
 
     async issue(
@@ -93,9 +93,9 @@ export class EosioTokenContract extends Contract {
         memo: string,
         signer: Signer
     ): Promise<API.v1.PushTransactionResponse> {
-        const actions = [this.actions.issue({ to, quantity, memo })];
+        const action = this.actions.issue({ to, quantity, memo });
 
-        return await transact(actions, signer);
+        return await transact(action, signer);
     }
 
     async transfer(
@@ -105,9 +105,9 @@ export class EosioTokenContract extends Contract {
         memo: string,
         signer: Signer
     ): Promise<API.v1.PushTransactionResponse> {
-        const actions = [this.actions.transfer({ from, to, quantity, memo })];
+        const action = this.actions.transfer({ from, to, quantity, memo });
 
-        return await transact(actions, signer);
+        return await transact(action, signer);
     }
 
     /**

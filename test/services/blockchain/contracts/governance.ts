@@ -1,12 +1,17 @@
-import { ActionType, API } from '@wharfkit/antelope';
-import { createSigner, eosioMsigContract, getTonomyOperationsKey } from '../../../../src/sdk/services/blockchain';
+import { API } from '@wharfkit/antelope';
+import {
+    AnyActionType,
+    createSigner,
+    eosioMsigContract,
+    getTonomyOperationsKey,
+} from '../../../../src/sdk/services/blockchain';
 import { randomAccountName, tonomyBoardSigners } from '../../../helpers/eosio';
 
 export const tonomyOpsSigner = createSigner(getTonomyOperationsKey());
 
 // asserts = 3
 export async function msigAction(
-    actions: ActionType[],
+    actions: AnyActionType | AnyActionType[],
     options: { satisfyRequireApproval?: boolean; requireTonomyOps?: boolean } = {}
 ): Promise<API.v1.PushTransactionResponse | null> {
     const proposalName = randomAccountName();
@@ -38,7 +43,7 @@ export async function msigAction(
         proposer,
         proposalName,
         requested,
-        actions,
+        Array.isArray(actions) ? actions : [actions],
         tonomyBoardSigners[0]
     );
 

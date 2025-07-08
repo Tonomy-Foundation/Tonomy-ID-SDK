@@ -7,6 +7,7 @@ import {
     Name,
     PrivateKey,
     ActionType,
+    AnyAction,
 } from '@wharfkit/antelope';
 import { KeyManager, KeyManagerLevel } from '../../../storage/keymanager';
 import { HttpError } from '../../../util/errors';
@@ -113,8 +114,10 @@ export class AntelopePushTransactionError extends Error {
     }
 }
 
+export type AnyActionType = ActionType | AnyAction;
+
 export async function transact(
-    actions: ActionType[],
+    actions: AnyActionType | AnyActionType[],
     signer: Signer | Signer[]
 ): Promise<API.v1.PushTransactionResponse> {
     // Get the ABI
@@ -125,7 +128,7 @@ export async function transact(
     const header = info.getTransactionHeader();
     const transaction = Transaction.from({
         ...header,
-        actions,
+        actions: Array.isArray(actions) ? actions : [actions],
     });
 
     // Create signature

@@ -161,7 +161,7 @@ export class StakingContract extends Contract {
 
         const action = this.actions.stakeTokens({ accountName: staker, quantity });
 
-        return await transact([action], signer);
+        return await transact(action, signer);
     }
 
     async requestUnstake(
@@ -171,7 +171,7 @@ export class StakingContract extends Contract {
     ): Promise<API.v1.PushTransactionResponse> {
         const action = this.actions.requestUnstake({ accountName: staker, allocationId });
 
-        return await transact([action], signer);
+        return await transact(action, signer);
     }
 
     async releaseToken(
@@ -181,31 +181,31 @@ export class StakingContract extends Contract {
     ): Promise<API.v1.PushTransactionResponse> {
         const action = this.actions.releaseToken({ accountName: staker, allocationId });
 
-        return await transact([action], signer);
+        return await transact(action, signer);
     }
 
     async cron(signer: Signer): Promise<API.v1.PushTransactionResponse> {
         const action = this.actions.cron();
 
-        return await transact([action], signer);
+        return await transact(action, signer);
     }
 
     async resetAll(signer: Signer): Promise<API.v1.PushTransactionResponse> {
         const action = this.actions.resetAll();
 
-        return await transact([action], signer);
+        return await transact(action, signer);
     }
 
     async addYield(sender: NameType, quantity: AssetType, signer: Signer): Promise<API.v1.PushTransactionResponse> {
         const action = this.actions.addYield({ sender, quantity });
 
-        return await transact([action], signer);
+        return await transact(action, signer);
     }
 
     async setSettings(yearlyStakePool: string, signer: Signer): Promise<API.v1.PushTransactionResponse> {
         const action = this.actions.setSettings({ yearlyStakePool });
 
-        return await transact([action], signer);
+        return await transact(action, signer);
     }
 
     private async getAllocationsData(staker: NameType): Promise<StakingAllocationData[]> {

@@ -340,7 +340,7 @@ export class VestingContract extends Contract {
     ): Promise<API.v1.PushTransactionResponse> {
         const action = this.actions.setsettings({ salesStartDate, launchDate });
 
-        return transact([action], signer);
+        return transact(action, signer);
     }
 
     async assignTokens(
@@ -352,13 +352,13 @@ export class VestingContract extends Contract {
     ): Promise<API.v1.PushTransactionResponse> {
         const action = this.actions.assigntokens({ sender, holder, amount, category });
 
-        return transact([action], signer);
+        return transact(action, signer);
     }
 
     async withdraw(holder: NameType, signer: Signer): Promise<API.v1.PushTransactionResponse> {
         const action = this.actions.withdraw({ holder });
 
-        return transact([action], signer);
+        return transact(action, signer);
     }
 
     async migrateAllocation(
@@ -381,7 +381,7 @@ export class VestingContract extends Contract {
             newCategoryId,
         });
 
-        return transact([action], signer);
+        return transact(action, signer);
     }
 
     private async getSettingsData(): Promise<VestingSettingsRaw> {
