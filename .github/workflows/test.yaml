@@ -18,6 +18,8 @@ jobs:
         with:
           name: Tonomy-Contracts
           path: ./Tonomy-Contracts
+      - run: ls ./Tonomy-Contracts/contracts
+      - run: ls ./Tonomy-Contracts/contracts/eosio.token
 
       - name: Enable Corepack before setting up Node
         run: corepack enable
