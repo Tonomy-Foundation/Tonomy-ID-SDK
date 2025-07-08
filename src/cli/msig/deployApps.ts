@@ -1,0 +1,175 @@
+/* eslint-disable camelcase */
+import { ActionData, Authority, bytesToTokens } from '../../sdk/services/blockchain';
+import { StandardProposalOptions, createProposal, executeProposal } from '.';
+import { deployContract } from './contract';
+import { AccountType, getSettings, TonomyUsername } from '../../sdk';
+import { Name } from '@wharfkit/antelope';
+
+const logoUrl = 'https://ipfs.hivebp.io/ipfs/Qmexh5r5zJ7Us4Wm3tgedDSHss5t7DrDD8bDRLhz9eQi46';
+const ownerKey = 'EOS5SdLniuD3aBn4pXpKchefT8kdFvkSBoGP91iMPhQEzwKBexobn ';
+const activeKey = 'EOS5hyK8XTDA3etSzaq6ntrafMPM37HEmveVv1YorkASpnk2jbMmt';
+const contractDir = '/media/sf_Virtualbox_Shared/tonomy/cXc Contracts';
+
+export const apps = [
+    {
+        account: 'bridge.cxc',
+        appName: 'cXc Bridge',
+        description: 'Bridge for cXc.world',
+        logoUrl,
+        origin: 'https://bridge.cxc.world',
+        activeKey,
+        ownerKey,
+        ramKb: 5000, // 5MB
+        contractDir: `${contractDir}/bridge.cxc`,
+        usernameShort: 'bridge.cxc',
+    },
+    {
+        account: 'invite.cxc',
+        appName: 'cXc Music',
+        description:
+            'cXc.world is the tokenized Reddit, on a map. Subreddits become districts and nations where music competes to represent the area. One song can go to the top of the world of music, as charts grow and reset daily. Upvote once per 5 minutes. Buy Music NFTs from artists. Use BLUX to boost songs to #1.',
+        logoUrl,
+        origin: 'https://music.cxc.world',
+        activeKey,
+        ownerKey,
+        ramKb: 5000, // 5MB
+        contractDir: `${contractDir}/invite.cxc`,
+        usernameShort: 'music.cxc',
+    },
+    {
+        account: 'tokens.cxc',
+        appName: 'cXc Tokens',
+        description: 'Tokens for cxc.world',
+        logoUrl,
+        origin: 'https://tokens.cxc.world',
+        activeKey,
+        ownerKey,
+        ramKb: 1000, // 1MB
+        contractDir: `${contractDir}/tokens.cxc`,
+        usernameShort: 'tokens.cxc',
+    },
+];
+
+// MSIG 1: Create three accounts each with active and owner key
+export async function createAccounts(options: StandardProposalOptions) {
+    function createNewAccountAction(name: string, active: Authority, owner: Authority) {
+        return {
+            account: 'tonomy',
+            name: 'newaccount',
+            authorization: [
+                { actor: 'tonomy', permission: 'owner' },
+                { actor: 'tonomy', permission: 'active' },
+            ],
+            data: {
+                creator: 'tonomy',
+                name,
+                owner,
+                active,
+            },
+        };
+    }
+
+    const actions: ActionData[] = apps.map((app) =>
+        createNewAccountAction(app.account, Authority.fromKey(app.activeKey), Authority.fromKey(app.ownerKey))
+    );
+    const proposalHash = await createProposal(
+        options.proposer,
+        options.proposalName,
+        actions,
+        options.privateKey,
+        [...options.requested],
+        options.dryRun
+    );
+
+    if (options.dryRun) return;
+    if (options.autoExecute) await executeProposal(options.proposer, options.proposalName, proposalHash);
+}
+
+// MSIG 2: Set accounts as apps, transfer TONO, buy RAM
+export async function setAppsAndRam(options: StandardProposalOptions) {
+    const actions: ActionData[] = apps.flatMap((app) => {
+        const tonomyUsername = TonomyUsername.fromUsername(
+            app.usernameShort,
+            AccountType.APP,
+            getSettings().accountSuffix
+        );
+        const tokens = bytesToTokens(app.ramKb * 1000);
+        const adminSetAppAction = {
+            authorization: [{ actor: 'tonomy', permission: 'active' }],
+            account: 'tonomy',
+            name: 'adminsetapp',
+            data: {
+                account_name: Name.from(app.account),
+                app_name: app.appName,
+                description: app.description,
+                username_hash: tonomyUsername.usernameHash,
+                logo_url: app.logoUrl,
+                origin: app.origin,
+            },
+        };
+        const transferTokensAction = {
+            authorization: [{ actor: 'partners.tmy', permission: 'active' }],
+            account: 'eosio.token',
+            name: 'transfer',
+            data: {
+                from: 'partners.tmy',
+                to: app.account,
+                quantity: tokens,
+                memo: `RAM for ${app.account}`,
+            },
+        };
+        const buyRamAction = {
+            account: 'tonomy',
+            name: 'buyram',
+            authorization: [{ actor: app.account, permission: 'active' }],
+            data: {
+                dao_owner: app.account,
+                app: app.account,
+                quant: tokens,
+            },
+        };
+
+        return [adminSetAppAction, transferTokensAction, buyRamAction];
+    });
+    const proposalHash = await createProposal(
+        options.proposer,
+        options.proposalName,
+        actions,
+        options.privateKey,
+        [...options.requested, ...apps.map((a) => a.account)],
+        options.dryRun
+    );
+
+    if (options.dryRun) return;
+    if (options.autoExecute) await executeProposal(options.proposer, options.proposalName, proposalHash);
+}
+
+// MSIG 3: Deploy contracts
+export async function deployContracts(options: StandardProposalOptions) {
+    for (let i = 0; i < apps.length; i++) {
+        const app = apps[i];
+        const deployActions = await deployContract({
+            contract: app.account,
+            directory: app.contractDir,
+            returnActions: true,
+            ...options,
+        });
+
+        if (!deployActions) throw new Error(`Expected deployActions for ${app.account}`);
+
+        // Generate a sequential proposal name, e.g. baseName-1, baseName-2, etc.
+        const proposalName = Name.from(`${options.proposalName}-${i + 1}`);
+
+        const proposalHash = await createProposal(
+            options.proposer,
+            proposalName,
+            deployActions,
+            options.privateKey,
+            [...options.requested, app.account],
+            options.dryRun
+        );
+
+        if (options.dryRun) continue;
+        if (options.autoExecute) await executeProposal(options.proposer, proposalName, proposalHash);
+    }
+}

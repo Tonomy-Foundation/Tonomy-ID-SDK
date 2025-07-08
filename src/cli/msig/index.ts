@@ -29,6 +29,7 @@ import {
 } from './staking';
 import { migrateApps } from './migrateApps';
 import { symbolMigrate, migrateRebrandApps } from './symbolMigrate';
+import { createAccounts, deployContracts, setAppsAndRam } from './deployApps';
 
 const eosioMsigContract = EosioMsigContract.Instance;
 
@@ -170,6 +171,16 @@ export default async function msig(args: string[]) {
             } else if (proposalSubtype === 'contract-set') {
                 await hyphaContractSet({}, options);
             } else printMsigHelp();
+        } else if (proposalType === 'apps') {
+            if (proposalSubtype === 'create') {
+                await newApp(options);
+            } else if (proposalSubtype === 'accounts-create') {
+                await createAccounts(options);
+            } else if (proposalSubtype === 'set-apps-and-ram') {
+                await setAppsAndRam(options);
+            } else if (proposalSubtype === 'deploy-contracts') {
+                await deployContracts(options);
+            } else printMsigHelp();
         } else if (proposalType === 'res-config-set') {
             await setResourceConfig({}, options);
         } else if (proposalType === 'set-chain-config') {
@@ -178,10 +189,6 @@ export default async function msig(args: string[]) {
             await newApp(options);
         } else if (proposalType === 'migrate-appsv2') {
             await migrateApps(options);
-        } else if (proposalType === 'app') {
-            if (proposalSubtype === 'create') {
-                await newApp(options);
-            } else printMsigHelp();
         } else if (proposalType === 'staking') {
             if (proposalSubtype === 'account') {
                 await createStakingTmyAccount(options);
@@ -372,7 +379,10 @@ function printMsigHelp() {
                 cancel <proposalName>
                 exec <proposalName>
                 propose account create <proposalName>
-                propose app create <proposalName>
+                propose apps create <proposalName>
+                propose apps accounts-create <proposalName>
+                propose apps set-apps-and-ram <proposalName>
+                propose apps deploy-contracts <proposalName>
                 propose auth add-eosiocode <proposalName>
                 propose auth create <proposalName>
                 propose auth gov-migrate <proposalName>
