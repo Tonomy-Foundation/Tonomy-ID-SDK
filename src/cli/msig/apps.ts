@@ -93,7 +93,7 @@ export async function createAccounts(options: StandardProposalOptions) {
         proposalName,
         actions,
         options.privateKey,
-        [...options.requested],
+        options.requested,
         options.dryRun
     );
 
