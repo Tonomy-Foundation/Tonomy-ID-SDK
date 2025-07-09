@@ -146,7 +146,7 @@ class EosioTokenContract {
         ).v1.chain.get_currency_balance(CONTRACT_NAME, account, getSettings().currencySymbol);
 
         if (assets.length === 0) return new Decimal(0);
-        return new Decimal(assets[0].toString());
+        return assetToDecimal(assets[0].toString());
     }
 }
 

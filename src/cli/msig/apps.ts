@@ -105,9 +105,12 @@ export async function createAccounts(options: StandardProposalOptions) {
         };
     }
 
-    const actions: ActionData[] = apps.map((app) =>
-        createNewAccountAction(app.account, Authority.fromKey(app.activeKey), Authority.fromKey(app.ownerKey))
-    );
+    const actions: ActionData[] = apps.map((app) => {
+        const active = Authority.fromKey(app.activeKey).addAccount({ actor: 'gov.tmy', permission: 'active' });
+        const owner = Authority.fromKey(app.ownerKey).addAccount({ actor: 'gov.tmy', permission: 'active' });
+
+        return createNewAccountAction(app.account, active, owner);
+    });
     const proposalName = createProposalName(options.proposalName, 'crea');
     const proposalHash = await createProposal(
         options.proposer,

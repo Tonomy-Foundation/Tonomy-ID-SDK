@@ -103,11 +103,11 @@ export default async function msig(args: string[]) {
             dryRun,
         };
 
-        if (proposalType === 'account') {
+        if (proposalType === 'accounts') {
             if (proposalSubtype === 'create') {
                 await newAccount({ governanceAccounts }, options);
             } else printMsigHelp();
-        } else if (proposalType === 'transfer') {
+        } else if (proposalType === 'tokens') {
             if (proposalSubtype === 'transfer') {
                 await transfer(options);
             } else printMsigHelp();
@@ -363,7 +363,7 @@ function printMsigHelp() {
                 approve stakeacc
                 cancel <proposalName>
                 exec <proposalName>
-                propose account create <proposalName>
+                propose accounts create <proposalName>
                 propose apps create <proposalName>
                 propose apps accounts-create <proposalName>
                 propose apps set-apps-and-ram <proposalName>
@@ -390,7 +390,7 @@ function printMsigHelp() {
                 propose staking redeploy-tonomy-contract <proposalName>
                 propose staking setSettings <proposalName>
                 propose symbol migrate <proposalName>
-                propose token transfer <proposalName>
+                propose tokens transfer <proposalName>
                 propose vesting bulk <proposalName>
                 propose vesting migrate <proposalName>
                 propose vesting migrate2 <proposalName>
