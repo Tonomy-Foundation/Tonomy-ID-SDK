@@ -147,17 +147,6 @@ export async function setAppsAndRam(options: StandardProposalOptions) {
                 origin: app.origin,
             },
         };
-        const transferTokensAction = {
-            authorization: [{ actor: 'partners.tmy', permission: 'active' }],
-            account: 'eosio.token',
-            name: 'transfer',
-            data: {
-                from: 'partners.tmy',
-                to: app.account,
-                quantity: tokens,
-                memo: `deposit`, // needed for the bridge.cxc world app
-            },
-        };
         const buyRamAction = {
             account: 'tonomy',
             name: 'buyram',
@@ -172,7 +161,7 @@ export async function setAppsAndRam(options: StandardProposalOptions) {
             },
         };
 
-        return [adminSetAppAction, transferTokensAction, buyRamAction];
+        return [adminSetAppAction, buyRamAction];
     });
     const proposalName = createProposalName(options.proposalName, 'set');
     const proposalHash = await createProposal(

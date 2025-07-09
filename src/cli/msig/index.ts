@@ -131,7 +131,7 @@ export default async function msig(args: string[]) {
                     }
                 );
             } else printMsigHelp();
-        } else if (proposalType === 'vesting-migrate') {
+        } else if (proposalType === 'vesting') {
             if (proposalSubtype === 'migrate') {
                 await vestingMigrate(options);
             } else if (proposalSubtype === 'migrate2') {
