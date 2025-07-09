@@ -2,20 +2,17 @@ import { PrivateKey, Name, Checksum256, NameType } from '@wharfkit/antelope';
 import { EosioMsigContract } from '../../sdk';
 import { ActionData, createSigner } from '../../sdk/services/blockchain';
 import settings from '../settings';
-import { govMigrate } from './govMigrate';
-import { newAccount } from './newAccount';
+import { newAccount } from './accounts';
 import { transfer } from './token';
-import { updateAuth } from './addAuth';
+import { updateAuth, govMigrate, addEosioCode } from './auth';
 import { deployContract } from './contract';
-import { addEosioCode } from './addEosioCode';
 import { printCliHelp } from '..';
-import { vestingBulk } from './vestingBulk';
 import { setResourceConfig } from './setResourceConfig';
 import { setBlockchainConfig } from './setBlockchainConfig';
 import { addProd, changeProds, removeProd, updateProd } from './producers';
 import { hyphaAccountsCreate, hyphaContractSet, hyphaAddAccountPermissions } from './hypha';
 import { sleep } from '../../sdk/util';
-import { vestingMigrate, vestingMigrate2, vestingMigrate3 } from './vestingMigrateAllocate';
+import { vestingMigrate, vestingMigrate2, vestingMigrate3, vestingBulk } from './vesting';
 import {
     createStakingTmyAccount,
     deployStakingContract,
@@ -25,9 +22,8 @@ import {
     stakingContractSetup,
     stakingSettings,
 } from './staking';
-import { migrateApps } from './migrateApps';
 import { symbolMigrate, migrateRebrandApps } from './symbolMigrate';
-import { createAccounts, deployContracts, setAppsAndRam, newApp } from './apps';
+import { createAccounts, deployContracts, setAppsAndRam, newApp, migrateApps } from './apps';
 
 const eosioMsigContract = EosioMsigContract.Instance;
 
