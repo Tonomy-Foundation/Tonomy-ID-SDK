@@ -5,7 +5,7 @@ import settings from '../settings';
 import { govMigrate } from './govMigrate';
 import { newAccount } from './newAccount';
 import { transfer } from './token';
-import { addAuth } from './addAuth';
+import { updateAuth } from './addAuth';
 import { deployContract } from './contract';
 import { addEosioCode } from './addEosioCode';
 import { printCliHelp } from '..';
@@ -17,7 +17,6 @@ import { hyphaAccountsCreate, hyphaContractSet, hyphaAddAccountPermissions } fro
 import { sleep } from '../../sdk/util';
 import { vestingMigrate, vestingMigrate2, vestingMigrate3 } from './vestingMigrateAllocate';
 import {
-    buyRam,
     createStakingTmyAccount,
     deployStakingContract,
     reDeployEosioContract,
@@ -33,7 +32,7 @@ import { createAccounts, deployContracts, setAppsAndRam, newApp } from './apps';
 const eosioMsigContract = EosioMsigContract.Instance;
 
 const governanceAccounts = ['1.found.tmy', '2.found.tmy', '3.found.tmy'];
-let newGovernanceAccounts = ['13.found.tmy', '5.found.tmy', '11.found.tmy', '12.found.tmy', '14.found.tmy'];
+let newGovernanceAccounts = ['14.found.tmy', '5.found.tmy', '11.found.tmy', '12.found.tmy', '13.found.tmy'];
 
 if (!settings.isProduction()) {
     newGovernanceAccounts = governanceAccounts;
@@ -116,23 +115,17 @@ export default async function msig(args: string[]) {
             if (proposalSubtype === 'transfer') {
                 await transfer(options);
             } else printMsigHelp();
-        } else if (proposalType === 'deploy-contract') {
-            const contractName = args[3] ?? 'tonomy';
+        } else if (proposalType === 'contract') {
+            if (proposalSubtype === 'deploy') {
+                const contractName = args[4] ?? 'tonomy';
 
-            await deployContract({ contract: contractName, ...options });
+                await deployContract({ contract: contractName, ...options });
+            } else printMsigHelp();
         } else if (proposalType === 'auth') {
             if (proposalSubtype === 'add-eosiocode') {
                 await addEosioCode(options);
-            } else if (proposalSubtype === 'create') {
-                await addAuth(
-                    {
-                        account: 'srvice.hypha',
-                        permission: 'active',
-                        newDelegate: 'gov.tmy',
-                        useParentAuth: true,
-                    },
-                    options
-                );
+            } else if (proposalSubtype === 'update') {
+                await updateAuth(options);
             } else if (proposalSubtype === 'gov-migrate') {
                 await govMigrate(
                     { newGovernanceAccounts },
@@ -179,22 +172,18 @@ export default async function msig(args: string[]) {
                 await setAppsAndRam(options);
             } else if (proposalSubtype === 'deploy-contracts') {
                 await deployContracts(options);
+            } else if (proposalSubtype === 'migrate') {
+                await migrateApps(options);
             } else printMsigHelp();
         } else if (proposalType === 'res-config-set') {
             await setResourceConfig({}, options);
         } else if (proposalType === 'set-chain-config') {
             await setBlockchainConfig({}, options);
-        } else if (proposalType === 'new-app') {
-            await newApp(options);
-        } else if (proposalType === 'migrate-appsv2') {
-            await migrateApps(options);
         } else if (proposalType === 'staking') {
             if (proposalSubtype === 'account') {
                 await createStakingTmyAccount(options);
             } else if (proposalSubtype === 'contract') {
                 await stakingContractSetup(options);
-            } else if (proposalSubtype === 'buyram') {
-                await buyRam(options);
             } else if (proposalSubtype === 'deploy-staking-contract') {
                 await deployStakingContract(options);
             } else if (proposalSubtype === 'redeploy-vesting-contract') {
@@ -350,6 +339,7 @@ export async function executeProposal(
 
         console.log('Proposal approved succeeded');
 
+        await sleep(1000);
         await eosioMsigContract.exec(proposer, proposalName, signingAccount ?? proposer, tonomyGovSigners[0]);
 
         console.log('Proposal executed succeeded');
@@ -382,9 +372,11 @@ function printMsigHelp() {
                 propose apps accounts-create <proposalName>
                 propose apps set-apps-and-ram <proposalName>
                 propose apps deploy-contracts <proposalName>
+                propose apps migrate <proposalName>
                 propose auth add-eosiocode <proposalName>
-                propose auth create <proposalName>
                 propose auth gov-migrate <proposalName>
+                propose auth update <proposalName>
+                propose contract deploy <proposalName> <contractName>
                 propose hypha accounts-create <proposalName>
                 propose hypha add-permissions <proposalName>
                 propose hypha contract-set <proposalName>
@@ -396,7 +388,6 @@ function printMsigHelp() {
                 propose set-chain-config <proposalName>
                 propose staking account <proposalName>
                 propose staking contract <proposalName>
-                propose staking buyram <proposalName>
                 propose staking deploy-staking-contract <proposalName>
                 propose staking redeploy-vesting-contract <proposalName>
                 propose staking redeploy-eosio-contract <proposalName>
@@ -408,7 +399,6 @@ function printMsigHelp() {
                 propose vesting migrate <proposalName>
                 propose vesting migrate2 <proposalName>
                 propose vesting migrate3 <proposalName>
-                propose migrate-appsv2 <proposalName>
                 propose ... --auto-execute
                 propose ... --dry-run
         `);

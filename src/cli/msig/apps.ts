@@ -10,7 +10,22 @@ const ownerKey = 'EOS5SdLniuD3aBn4pXpKchefT8kdFvkSBoGP91iMPhQEzwKBexobn';
 const activeKey = 'EOS5hyK8XTDA3etSzaq6ntrafMPM37HEmveVv1YorkASpnk2jbMmt';
 const contractDir = '/media/sf_Virtualbox_Shared/tonomy/cXc Contracts';
 
-export const apps = [
+type AppData = {
+    account: string;
+    appName: string;
+    description: string;
+    logoUrl: string;
+    origin: string;
+    activeKey: string;
+    ownerKey: string;
+    ramKb: number;
+    contractDir: string;
+    username: string;
+    backgroundColor: string;
+    accentColor: string;
+};
+
+export const apps: AppData[] = [
     {
         account: 'bridge.cxc',
         appName: 'cXc Bridge',
@@ -21,7 +36,9 @@ export const apps = [
         ownerKey,
         ramKb: 5000, // 5MB
         contractDir,
-        usernameShort: 'bridge.cxc',
+        username: 'bridge.cxc',
+        backgroundColor: '#444444',
+        accentColor: '#D19836',
     },
     {
         account: 'invite.cxc',
@@ -34,7 +51,9 @@ export const apps = [
         ownerKey,
         ramKb: 5000, // 5MB
         contractDir,
-        usernameShort: 'music.cxc',
+        username: 'music.cxc',
+        backgroundColor: '#444444',
+        accentColor: '#D19836',
     },
     {
         account: 'tokens.cxc',
@@ -46,7 +65,9 @@ export const apps = [
         ownerKey,
         ramKb: 1000, // 1MB
         contractDir,
-        usernameShort: 'tokens.cxc',
+        username: 'tokens.cxc',
+        backgroundColor: '#444444',
+        accentColor: '#D19836',
     },
 ];
 
@@ -104,11 +125,7 @@ export async function createAccounts(options: StandardProposalOptions) {
 // MSIG 2: Set accounts as apps, transfer TONO, buy RAM
 export async function setAppsAndRam(options: StandardProposalOptions) {
     const actions: ActionData[] = apps.flatMap((app) => {
-        const tonomyUsername = TonomyUsername.fromUsername(
-            app.usernameShort,
-            AccountType.APP,
-            getSettings().accountSuffix
-        );
+        const tonomyUsername = TonomyUsername.fromUsername(app.username, AccountType.APP, getSettings().accountSuffix);
         const tokens = bytesToTokens(app.ramKb * 1000);
         const adminSetAppAction = {
             authorization: [{ actor: 'tonomy', permission: 'active' }],
@@ -116,10 +133,14 @@ export async function setAppsAndRam(options: StandardProposalOptions) {
             name: 'adminsetapp',
             data: {
                 account_name: Name.from(app.account),
-                app_name: app.appName,
-                description: app.description,
+                json_data: JSON.stringify({
+                    app_name: app.appName,
+                    description: app.description,
+                    logo_url: app.logoUrl,
+                    background_color: app.backgroundColor,
+                    accent_color: app.accentColor,
+                }),
                 username_hash: tonomyUsername.usernameHash,
-                logo_url: app.logoUrl,
                 origin: app.origin,
             },
         };
@@ -131,15 +152,18 @@ export async function setAppsAndRam(options: StandardProposalOptions) {
                 from: 'partners.tmy',
                 to: app.account,
                 quantity: tokens,
-                memo: `RAM for ${app.account}`,
+                memo: `deposit`, // needed for the bridge.cxc world app
             },
         };
         const buyRamAction = {
             account: 'tonomy',
             name: 'buyram',
-            authorization: [{ actor: app.account, permission: 'active' }],
+            authorization: [
+                { actor: app.account, permission: 'active' },
+                { actor: 'partners.tmy', permission: 'active' },
+            ],
             data: {
-                dao_owner: app.account,
+                dao_owner: 'partners.tmy',
                 app: app.account,
                 quant: tokens,
             },
