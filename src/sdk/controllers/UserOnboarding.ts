@@ -10,12 +10,12 @@ import { createAccount } from '../services/communication/accounts';
 import { UserStatusEnum } from '../types/UserStatusEnum';
 import { ILoginOptions, IUserOnboarding } from '../types/User';
 import { getAccountInfo } from '../helpers/user';
-import { UserCommunication } from './UserCommunication';
+import { UserDataVault } from './UserDataVault';
 import Debug from 'debug';
 
 const debug = Debug('tonomy-sdk:controllers:UserOnboarding');
 
-export class UserOnboarding extends UserCommunication implements IUserOnboarding {
+export class UserOnboarding extends UserDataVault implements IUserOnboarding {
     private chainID!: string;
 
     private validateUsername(username: string): void {
@@ -292,8 +292,37 @@ export class UserOnboarding extends UserCommunication implements IUserOnboarding
         this.disconnectCommunication();
     }
 
+    async checkTableExists(tableName: string) {
+        const queryRunner = this.dataSource.createQueryRunner();
+
+        try {
+            const result = await queryRunner.query(`SELECT name FROM sqlite_master WHERE type='table' AND name=?`, [
+                tableName,
+            ]);
+
+            debug(`Table check result for ${tableName}:`, result);
+            return result.length > 0;
+        } finally {
+            await queryRunner.release();
+        }
+    }
+
+    async initializeKycDataSource(): Promise<void> {
+        if (this.dataSource && !this.dataSource.isInitialized) {
+            await this.dataSource.initialize();
+        }
+
+        const identityVerificationTableExists = await this.checkTableExists('IdentityVerificationStorage');
+
+        if (!identityVerificationTableExists) {
+            await this.dataSource.synchronize();
+        }
+    }
+
     async initializeFromStorage(): Promise<boolean> {
         const accountName = await this.getAccountName();
+
+        await this.initializeKycDataSource();
 
         if (accountName) {
             return await this.checkKeysStillValid();

@@ -55,8 +55,11 @@ export class IdentityVerificationStorageRepository {
         veriffId: string,
         type: VerificationTypeEnum
     ): Promise<IdentityVerificationStorage | null> {
-        return this.ormRepository.findOne({
-            where: { veriffId, type },
+        return await this.ormRepository.findOne({
+            where: {
+                veriffId: veriffId,
+                type: type,
+            },
         });
     }
 }

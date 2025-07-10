@@ -41,7 +41,7 @@ import Debug from 'debug';
 
 const debug = Debug('tonomy-sdk:externalUser');
 
-type CallbackResponse = {
+export type CallbackResponse = {
     user: ExternalUser;
     data?: {
         kyc?: {
@@ -641,6 +641,7 @@ export async function verifyClientAuthorization<T extends ClientAuthorizationDat
         verifyOrigin,
     });
 
+    console.log('verifiedVc', verifiedVc);
     const request = {
         jwt: clientAuthorization,
         origin: verifiedVc.origin,

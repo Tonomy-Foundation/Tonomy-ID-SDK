@@ -11,15 +11,20 @@ import { castDecisionToStatus, KYCPayload, KYCVC, PersonCredentialType, SdkError
 import { IUserDataVault } from '../types/User';
 import Debug from 'debug';
 import { VeriffStatusEnum } from '../types/VeriffStatusEnum';
+import { IdentityVerificationStorageRepository } from '../storage/identityVerificationStorageRepository';
 
 const debug = Debug('tonomy-sdk:controllers:UserDataVault');
 
 export class UserDataVault extends UserCommunication implements IUserDataVault {
-    private readonly idVerificationManager: IdentityVerificationStorageManager;
+    protected readonly idVerificationManager: IdentityVerificationStorageManager;
+    protected readonly dataSource: DataSource;
 
     constructor(keyManager: KeyManager, storageFactory: StorageFactory, dataSource: DataSource) {
         super(keyManager, storageFactory);
-        this.idVerificationManager = new IdentityVerificationStorageManager(dataSource);
+        this.dataSource = dataSource;
+        const repository = new IdentityVerificationStorageRepository(dataSource);
+
+        this.idVerificationManager = new IdentityVerificationStorageManager(repository);
     }
 
     /**
@@ -45,8 +50,12 @@ export class UserDataVault extends UserCommunication implements IUserDataVault {
         for (const [key, signedVc] of Object.entries(vcPayload)) {
             const type = VerificationTypeEnum.from(key);
 
-            await this.idVerificationManager.emplaceByVeriffIdAndType(kycPayload.sessionId, type, status, signedVc);
-            debug(`handleVerificationUpdate() successfully stored ${key} VC in storage`);
+            try {
+                await this.idVerificationManager.emplaceByVeriffIdAndType(kycPayload.sessionId, type, status, signedVc);
+                debug(`handleVerificationUpdate() successfully stored ${key} VC in storage`);
+            } catch (error) {
+                debug('emplaceByVeriffIdAndType', error);
+            }
         }
     };
 
@@ -57,6 +66,7 @@ export class UserDataVault extends UserCommunication implements IUserDataVault {
      * @returns {Promise<KYCPayload>}
      */
     async waitForNextVeriffVerification(): Promise<KYCPayload> {
+        debug('waitForNextVeriffVerification');
         let id: number | undefined;
 
         return await new Promise<KYCPayload>((resolve, reject) => {

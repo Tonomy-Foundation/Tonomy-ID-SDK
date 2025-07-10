@@ -13,6 +13,8 @@ export * from './helpers/urls';
 export * from './types/AppStatusEnum';
 export * from './types/UserStatusEnum';
 export * from './types/User';
+export * from './types/VerificationTypeEnum';
+export * from './types/VeriffStatusEnum';
 
 // Services
 export * as EosioUtil from './services/blockchain';
@@ -51,3 +53,5 @@ export * from './storage/jsKeyManager';
 
 // API
 export * from '../api/externalUser';
+
+export * from '../sdk/storage/entities/identityVerificationStorage';
