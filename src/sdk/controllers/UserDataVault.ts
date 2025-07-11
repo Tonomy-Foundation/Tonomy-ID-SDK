@@ -11,7 +11,6 @@ import { castDecisionToStatus, KYCPayload, KYCVC, PersonCredentialType, SdkError
 import { IUserDataVault } from '../types/User';
 import Debug from 'debug';
 import { VeriffStatusEnum } from '../types/VeriffStatusEnum';
-import { IdentityVerificationStorageRepository } from '../storage/identityVerificationStorageRepository';
 
 const debug = Debug('tonomy-sdk:controllers:UserDataVault');
 
@@ -22,9 +21,35 @@ export class UserDataVault extends UserCommunication implements IUserDataVault {
     constructor(keyManager: KeyManager, storageFactory: StorageFactory, dataSource: DataSource) {
         super(keyManager, storageFactory);
         this.dataSource = dataSource;
-        const repository = new IdentityVerificationStorageRepository(dataSource);
 
-        this.idVerificationManager = new IdentityVerificationStorageManager(repository);
+        this.idVerificationManager = new IdentityVerificationStorageManager(dataSource);
+    }
+
+    async checkTableExists(tableName: string) {
+        const queryRunner = this.dataSource.createQueryRunner();
+
+        try {
+            const result = await queryRunner.query(`SELECT name FROM sqlite_master WHERE type='table' AND name=?`, [
+                tableName,
+            ]);
+
+            debug(`Table check result for ${tableName}:`, result);
+            return result.length > 0;
+        } finally {
+            await queryRunner.release();
+        }
+    }
+
+    async initializeKycDataSource(): Promise<void> {
+        if (this.dataSource && !this.dataSource.isInitialized) {
+            await this.dataSource.initialize();
+        }
+
+        const identityVerificationTableExists = await this.checkTableExists('IdentityVerificationStorage');
+
+        if (!identityVerificationTableExists) {
+            await this.dataSource.synchronize();
+        }
     }
 
     /**
@@ -50,12 +75,8 @@ export class UserDataVault extends UserCommunication implements IUserDataVault {
         for (const [key, signedVc] of Object.entries(vcPayload)) {
             const type = VerificationTypeEnum.from(key);
 
-            try {
-                await this.idVerificationManager.emplaceByVeriffIdAndType(kycPayload.sessionId, type, status, signedVc);
-                debug(`handleVerificationUpdate() successfully stored ${key} VC in storage`);
-            } catch (error) {
-                debug('emplaceByVeriffIdAndType', error);
-            }
+            await this.idVerificationManager.emplaceByVeriffIdAndType(kycPayload.sessionId, type, status, signedVc);
+            debug(`handleVerificationUpdate() successfully stored ${key} VC in storage`);
         }
     };
 
