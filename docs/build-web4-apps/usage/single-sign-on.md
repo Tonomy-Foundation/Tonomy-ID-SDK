@@ -4,7 +4,7 @@ Tonomy ID allows **users to log in securely without passwords**, eliminating cre
 
 ### Before You Start
 
-Ensure your app is registered with the Tonomynetwork (See [Register Your Web4 App](register-app.md))
+Ensure your app is registered with the Tonomynetwork (See [Register Your Web4 App](../register-app.md))
 
 {% hint style="info" %}
 For local testing, run your app on [http://localhost:3000](http://localhost:3000) and connect to the testnet
@@ -55,7 +55,7 @@ On your `/callback` page:
 
 {% code title="/callback" %}
 ```typescript
-const user = await ExternalUser.verifyLoginRequest();
+const { user } = await ExternalUser.verifyLoginResponse();
 ```
 {% endcode %}
 
@@ -64,22 +64,16 @@ const user = await ExternalUser.verifyLoginRequest();
 Check user status when your app starts (e.g., in `App.tsx`):
 
 ```typescript
-import { ExternalUser, SdkError, SdkErrors } from '@tonomy/tonomy-id-sdk';
 
+import { ExternalUser, isErrorCode, SdkErrors } from '@tonomy/tonomy-id-sdk';
+​
 async function checkSession() {
   try {
     const user = await ExternalUser.getUser();
     console.log('User session:', user);
   } catch (e) {
-    if (e instanceof SdkError) {
-      switch (e.code) {
-        case SdkErrors.AccountNotFound:
-        case SdkErrors.UserNotLoggedIn:
-          console.log('User not logged in');
-          break;
-        default:
-          console.error('Unexpected error:', e);
-      }
+    if (isErrorCode(e, [SdkErrors.AccountNotFound, SdkErrors.UserNotLoggedIn])) {
+      console.log('User not logged in');
     } else {
       console.error('Error fetching user:', e);
     }

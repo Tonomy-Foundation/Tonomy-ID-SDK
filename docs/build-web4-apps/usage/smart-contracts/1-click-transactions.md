@@ -10,7 +10,7 @@ These transactions have lower security guarantees than [wallet-signed transactio
 
 {% tabs %}
 {% tab title="Smart contract @ Registered App account" %}
-If you have deployed the smart contract to the same account as your [Registered App](../register-app.md), then you can get the permission name with `get_self()`.
+If you have deployed the smart contract to the same account as your [Registered App](../../register-app.md), then you can get the permission name with `get_self()`.
 
 {% code title="token.cpp" %}
 ```cpp
@@ -27,7 +27,7 @@ token::transfer(const name &from,
 {% endtab %}
 
 {% tab title="Smart contract @ different account" %}
-If your smart contract is deployed to a different account than your [Registered App](../register-app.md), then you can use a helper function to look up the permission name with the origin or username.
+If your smart contract is deployed to a different account than your [Registered App](../../register-app.md), then you can use a helper function to look up the permission name with the origin or username.
 
 {% code title="token.cpp" %}
 ```cpp

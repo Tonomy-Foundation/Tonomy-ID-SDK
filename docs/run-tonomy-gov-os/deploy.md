@@ -66,7 +66,7 @@ Then you will need to deploy each service, with configuration so that they conne
 
 #### (Optional) Sign blockchain transactions in your apps
 
-If you want to have your applications sign blockchain transactions, see[ Sign a blockchain transaction ](../build-web4-apps/usage.md)for how to configure your smart contracts.
+If you want to have your applications sign blockchain transactions, see[ Sign a blockchain transaction ](../build-web4-apps/usage/usage.md)for how to configure your smart contracts.
 
 #### (Optional) Run the [Demo website](broken-reference)
 

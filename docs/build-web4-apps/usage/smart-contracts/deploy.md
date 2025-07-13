@@ -8,11 +8,11 @@ At this stage, **only Tonomy Foundation can deploy contracts on Tonomy Blockchai
 
 **Submit the following details to the Tonomy Foundation via** [**Contact Us**](https://tonomy.io/contact-us) **or Discord:**
 
-| Property                                          | Example         |
-| ------------------------------------------------- | --------------- |
-| [Registeded App](../register-app.md) Account Name | ahe23hehbaz5    |
-| Contract WASM File                                | mycontract.wasm |
-| Contract ABI File                                 | mycontract.abi  |
+| Property                                             | Example         |
+| ---------------------------------------------------- | --------------- |
+| [Registeded App](../../register-app.md) Account Name | ahe23hehbaz5    |
+| Contract WASM File                                   | mycontract.wasm |
+| Contract ABI File                                    | mycontract.abi  |
 
 You can alternatively send us your contract c++ source files and the CDT version used to compile them.
 
