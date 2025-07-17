@@ -84,9 +84,10 @@ export class UserDataVault extends UserCommunication implements IUserDataVault {
 
         for (const [key, signedVc] of Object.entries(vcPayload)) {
             const type = VerificationTypeEnum.from(key);
+
             const vc = castStringToCredential(signedVc.toString(), type);
 
-            await this.idVerificationManager.emplaceByVeriffIdAndType(kycPayload.sessionId, type, status, vc);
+            await this.idVerificationManager.emplaceByVeriffIdAndType(kycPayload.sessionId + key, type, status, vc);
             debug(`handleVerificationUpdate() successfully stored ${key} VC in storage`);
         }
     };

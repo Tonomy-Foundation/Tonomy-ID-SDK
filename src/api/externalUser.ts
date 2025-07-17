@@ -641,7 +641,6 @@ export async function verifyClientAuthorization<T extends ClientAuthorizationDat
         verifyOrigin,
     });
 
-    console.log('verifiedVc', verifiedVc);
     const request = {
         jwt: clientAuthorization,
         origin: verifiedVc.origin,
