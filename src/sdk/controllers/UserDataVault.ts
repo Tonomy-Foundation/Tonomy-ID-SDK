@@ -7,10 +7,19 @@ import { VeriffSubscriber } from '../services/communication/communication';
 import { VerificationTypeEnum } from '../types/VerificationTypeEnum';
 import { IdentityVerificationStorageManager } from '../storage/identityVerificationStorageManager';
 import { verifyOpsTmyDid } from '../util/ssi/did';
-import { castDecisionToStatus, KYCPayload, KYCVC, PersonCredentialType, SdkErrors, throwError } from '../util';
+import {
+    castDecisionToStatus,
+    castStringToCredential,
+    KYCPayload,
+    KYCVC,
+    PersonCredentialType,
+    SdkErrors,
+    throwError,
+} from '../util';
 import { IUserDataVault } from '../types/User';
 import Debug from 'debug';
 import { VeriffStatusEnum } from '../types/VeriffStatusEnum';
+import { IdentityVerificationStorageRepository } from '../storage/identityVerificationStorageRepository';
 
 const debug = Debug('tonomy-sdk:controllers:UserDataVault');
 
@@ -21,8 +30,9 @@ export class UserDataVault extends UserCommunication implements IUserDataVault {
     constructor(keyManager: KeyManager, storageFactory: StorageFactory, dataSource: DataSource) {
         super(keyManager, storageFactory);
         this.dataSource = dataSource;
+        const repository = new IdentityVerificationStorageRepository(dataSource);
 
-        this.idVerificationManager = new IdentityVerificationStorageManager(dataSource);
+        this.idVerificationManager = new IdentityVerificationStorageManager(repository);
     }
 
     async checkTableExists(tableName: string) {
@@ -70,12 +80,13 @@ export class UserDataVault extends UserCommunication implements IUserDataVault {
         const decision = kycPayload.data.verification.decision;
         const status = castDecisionToStatus(decision);
 
-        debug('handleVerificationUpdate() kycPayload', did, kycPayload);
+        debug('handleVerificationUpdate() kycPayload', did, kycPayload, vcPayload);
 
         for (const [key, signedVc] of Object.entries(vcPayload)) {
             const type = VerificationTypeEnum.from(key);
+            const vc = castStringToCredential(signedVc.toString(), type);
 
-            await this.idVerificationManager.emplaceByVeriffIdAndType(kycPayload.sessionId, type, status, signedVc);
+            await this.idVerificationManager.emplaceByVeriffIdAndType(kycPayload.sessionId, type, status, vc);
             debug(`handleVerificationUpdate() successfully stored ${key} VC in storage`);
         }
     };
