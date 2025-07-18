@@ -4,8 +4,17 @@ import { VerifiableCredentialWithType, VCWithTypeType } from '../../util/ssi/vc'
 import { DualWalletRequests, DualWalletResponse } from '../../util';
 import { Name } from '@wharfkit/antelope';
 import Debug from 'debug';
+import {
+    VerificationMessagePayload,
+    KYCVC,
+    FirstNameVC,
+    LastNameVC,
+    BirthDateVC,
+    AddressVC,
+    NationalityVC,
+} from '../../util/veriff';
 
-const debug = Debug('tonomy-sdk:LoginRequestResponseMessage');
+const debug = Debug('tonomy-sdk:services:communication:message');
 
 /**
  * A message that can be sent between two Tonomy identities
@@ -54,7 +63,7 @@ export class Message<T extends object = any> extends VerifiableCredentialWithTyp
             additionalTypes: ['TonomyMessage'],
             ...options,
         };
-        const request = await super.sign(message, issuer, newOptions);
+        const request = await super.sign<T>(message, issuer, newOptions);
 
         return new Message<T>(request.getVc());
     }
@@ -164,7 +173,20 @@ export class LoginRequestResponseMessage extends Message<DualWalletResponse> {
         super(vc);
         this.decodedPayload = DualWalletResponse.fromString(this.decodedPayload as unknown as string);
 
-        debug('LoginRequestResponseMessage payload', this.decodedPayload);
+        debug(
+            'LoginRequestResponseMessage payload',
+            JSON.stringify(
+                {
+                    success: this.decodedPayload.success,
+                    external: this.decodedPayload.external?.vc.getPayload(),
+                    sso: this.decodedPayload.sso?.vc.getPayload(),
+                    error: this.decodedPayload.error,
+                    requests: this.decodedPayload.requests,
+                },
+                null,
+                2
+            )
+        );
     }
 
     /**
@@ -253,5 +275,48 @@ export class LinkAuthRequestResponseMessage extends Message<LinkAuthRequestRespo
         );
 
         return new LinkAuthRequestResponseMessage(vc);
+    }
+}
+
+export class VerificationMessage extends Message<VerificationMessagePayload> {
+    protected static type = 'VeriffVerificationMessage';
+    public type: string;
+    public payload: VerificationMessagePayload;
+
+    constructor(vc: Message<VerificationMessagePayload> | VCWithTypeType<VerificationMessagePayload>) {
+        super(vc);
+
+        this.decodedPayload = {
+            ...this.decodedPayload,
+            kyc: new KYCVC(this.decodedPayload.kyc),
+        };
+
+        if (this.decodedPayload.firstName)
+            this.decodedPayload.firstName = new FirstNameVC(this.decodedPayload.firstName);
+        if (this.decodedPayload.lastName) this.decodedPayload.lastName = new LastNameVC(this.decodedPayload.lastName);
+        if (this.decodedPayload.birthDate)
+            this.decodedPayload.birthDate = new BirthDateVC(this.decodedPayload.birthDate);
+        if (this.decodedPayload.address) this.decodedPayload.address = new AddressVC(this.decodedPayload.address);
+        if (this.decodedPayload.nationality)
+            this.decodedPayload.nationality = new NationalityVC(this.decodedPayload.nationality);
+    }
+
+    /**
+     * Alternative constructor that returns type VerificationMessage
+     */
+    static async signMessage(
+        message: VerificationMessagePayload,
+        issuer: Issuer,
+        recipient: DIDurl,
+        options: { subject?: URL } = {}
+    ): Promise<VerificationMessage> {
+        const vc = await super.signMessageWithRecipient<VerificationMessagePayload>(
+            message,
+            issuer,
+            recipient,
+            options
+        );
+
+        return new VerificationMessage(vc);
     }
 }

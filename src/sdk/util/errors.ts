@@ -141,6 +141,7 @@ enum SdkErrors {
     WrongOrigin = 'WrongOrigin',
     UserCancelled = 'UserCancelled',
     UserLogout = 'UserLogout',
+    VerificationDataNotFound = 'VerificationDataNotFound',
 }
 
 // eslint-disable-next-line @typescript-eslint/no-namespace

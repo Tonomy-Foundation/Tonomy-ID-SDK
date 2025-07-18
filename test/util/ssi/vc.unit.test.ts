@@ -1,4 +1,3 @@
-import { VerifiableCredential, VerifiableCredentialWithType } from '../../../src/sdk/util/ssi/vc';
 import { generateRandomKeyPair, randomString } from '../../../src/sdk';
 import { Issuer } from 'did-jwt-vc';
 import {
@@ -8,6 +7,7 @@ import {
     WalletRequestVerifiableCredential,
 } from '../../../src/sdk/util/request';
 import { toDidKeyIssuer } from '../../../src/sdk/util/ssi/did-key';
+import { VerifiableCredential, VerifiableCredentialWithType } from '../../../src/sdk/util/ssi/vc';
 
 type TestObject = {
     name: string;

@@ -12,6 +12,8 @@ import { getAccountNameFromDid } from './ssi/did';
 import Debug from 'debug';
 import { getSettings } from './settings';
 import { isSameOrigin } from '../helpers/urls';
+import { KYCVC } from './veriff';
+import { VerificationTypeEnum } from '../types/VerificationTypeEnum';
 
 const debug = Debug('tonomy-sdk:util:WalletRequest');
 
@@ -28,14 +30,12 @@ export type LoginRequestPayload = {
 
 export type DataRequest = {
     username?: boolean;
-    // verified: {
-    //     kyc: boolean;
-    //     firstName: boolean;
-    //     lastName: boolean;
-    //     address: boolean;
-    //     birthdate: boolean;
-    //     nationality: boolean;
-    // };
+    kyc?: boolean;
+    // firstName: boolean;
+    // lastName: boolean;
+    // address: boolean;
+    // birthdate: boolean;
+    // nationality: boolean;
 };
 
 export type DataSharingRequestPayload = {
@@ -58,12 +58,12 @@ export type LoginRequestResponsePayload = {
 export type DataSharingResponsePayload = {
     data: {
         username?: TonomyUsername;
-        // verified?: {
-        //     kyc?: ...;
-        //     firstName?: ...;
-        //     lastName?: ...;
-        //     address?: ...;
-        //     birthDate?: ...;
+        kyc?: KYCVC;
+        // firstName?: FirstNameVC;
+        // lastName?: LastNameVC;
+        // birthDate?: BirthDateVC;
+        // address?: AddressVC;
+        // nationality?: NationalityVC;
     };
 };
 
@@ -125,6 +125,13 @@ export class WalletResponseVerifiableCredential extends VerifiableCredentialWith
                 if (data.username && !(data.username instanceof TonomyUsername)) {
                     data.username = TonomyUsername.fromFullUsername(data.username as unknown as string);
                 }
+
+                if (data.kyc) data.kyc = new KYCVC(data.kyc);
+                // if (data.firstName) data.firstName = new FirstNameVC(data.firstName);
+                // if (data.lastName) data.lastName = new LastNameVC(data.lastName);
+                // if (data.birthDate) data.birthDate = new BirthDateVC(data.birthDate);
+                // if (data.address) data.address = new AddressVC(data.address);
+                // if (data.nationality) data.nationality = new NationalityVC(data.nationality);
             }
 
             return response;
@@ -218,54 +225,51 @@ export class WalletRequest implements Serializable {
      * @returns {Promise<WalletResponse>} - The wallet response containing the accepted requests.
      */
     async accept(user: IUserRequestsManager, checkSsoDomain = false): Promise<WalletResponse> {
-        const external = await this.getApp();
+        const app = await this.getApp();
 
-        debug(`WalletRequest/accept: Accepting request from app ${external.origin}`);
+        debug(`WalletRequest/accept: ${app.origin}`);
 
         const responses: WalletResponsePayloadType[] = [];
 
         for (const request of this.getRequests()) {
             if (WalletRequest.isLoginRequest(request)) {
                 const req = request as LoginRequestPayload;
+                const publicKey = req.login.publicKey;
 
-                debug(`WalletRequest/accept: Accepting request from app ${external.origin}: login request`);
+                debug(`WalletRequest/accept: ${app.origin}: login request`, JSON.stringify(req, null, 2));
 
                 if (checkSsoDomain) {
-                    if (!isSameOrigin(req.login.origin, getSettings().ssoWebsiteOrigin))
+                    if (!isSameOrigin(app.origin, getSettings().ssoWebsiteOrigin))
                         throw new Error(
-                            `Invalid origin for SSO login request. Received ${req.login.origin}, expected ${getSettings().accountsServiceUrl}`
+                            `Invalid origin for SSO login request. Received ${app.origin}, expected ${getSettings().accountsServiceUrl}`
                         );
                 }
 
-                const app = await App.getApp(req.login.origin);
-
                 try {
                     const appPermission = await verifyKeyExistsForApp(await user.getAccountName(), {
-                        publicKey: req.login.publicKey,
+                        publicKey,
                     });
 
                     if (app.accountName.toString() !== appPermission.toString()) {
-                        throw new Error(
-                            `App ${app.accountName} is not authorized for the key ${req.login.publicKey.toString()}`
-                        );
+                        throw new Error(`App ${app.accountName} is not authorized for the key ${publicKey.toString()}`);
                     }
                 } catch (e) {
                     if (isErrorCode(e, SdkErrors.UserNotLoggedInWithThisApp)) {
-                        debug(
-                            `WalletRequest/accept: Accepting request from app ${external.origin}: calling loginWithApp()`
-                        );
-                        await user.loginWithApp(external, req.login.publicKey);
+                        debug(`WalletRequest/accept: ${app.origin}: calling loginWithApp()`);
+                        await user.loginWithApp(app, publicKey);
                     } else throw e;
                 }
 
                 responses.push({
                     login: {
-                        origin: req.login.origin,
+                        origin: app.origin,
                         callbackPath: req.login.callbackPath,
                     },
                 });
             } else if (WalletRequest.isDataSharingRequest(request)) {
                 const req = request as DataSharingRequestPayload;
+
+                debug(`WalletRequest/accept: ${app.origin}: data sharing request`, req);
 
                 const res: DataSharingResponsePayload = { data: {} };
 
@@ -273,9 +277,11 @@ export class WalletRequest implements Serializable {
                     res.data.username = await user.getUsername();
                 }
 
-                debug(
-                    `WalletRequest/accept: Accepting request from app ${external.origin}: data sharing request ${JSON.stringify(res.data, null, 2)}`
-                );
+                if (req.data.kyc) {
+                    res.data.kyc = (await user.fetchVerificationData(VerificationTypeEnum.KYC)) as KYCVC;
+                }
+
+                debug(`WalletRequest/accept: ${app.origin}: data sharing response`, JSON.stringify(res, null, 2));
 
                 responses.push(res);
             } else {

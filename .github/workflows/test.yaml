@@ -19,8 +19,8 @@ jobs:
           cache: yarn
       - run: yarn install --immutable
       - run: yarn run build
-      - run: yarn run lint
       - run: yarn run typeCheck
+      - run: yarn run lint
       - run: yarn run test:unit
 
   compile-contracts:
@@ -67,8 +67,37 @@ jobs:
           name: Tonomy-Contracts
           path: ./Tonomy-Contracts
 
+  build-communication-container:
+    name: Build Communication Container
+    runs-on: ubuntu-latest
+    env:
+      # update ref to change communication branch, if needed for temporary CI testing
+      GIT_BRANCH: development
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build container
+        run: |
+          git submodule update --init --recursive
+          cd Tonomy-Communication
+          git checkout $GIT_BRANCH
+          git pull
+          cd ../
+          docker build -t tonomy/communication:local -f test/Dockerfile.communication .
+
+      - name: Save Communication service Docker image as artifact
+        run: |
+          docker save tonomy/communication:local -o communication-image.tar
+          gzip communication-image.tar
+
+      - name: Upload Communication service Docker image artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: communication-docker-image
+          path: communication-image.tar.gz
+
   integration-test:
-    needs: compile-contracts
+    needs: [compile-contracts, build-communication-container]
     runs-on: ubuntu-24.04
     env:
       TONOMY_OPS_PRIVATE_KEY: PVT_K1_24kG9VcMk3VkkgY4hh42X262AWV18YcPjBTd2Hox4YWoP8vRTU
@@ -79,15 +108,28 @@ jobs:
         image: tonomy/blockchain:initialized-development
         ports:
           - 8888:8888
-      communication:
-        image: tonomy/communication:development
-        env:
-          BLOCKCHAIN_URL: "http://blockchain:8888"
-        ports:
-          - 5000:5000
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Download Communication service Docker image artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: communication-docker-image
+          path: ./
+
+      - name: Load Communication service Docker image
+        run: |
+          gunzip communication-image.tar.gz
+          docker load -i communication-image.tar
+
+      - name: Start communication service
+        run: |
+          docker run -d \
+            --name communication \
+            --network host \
+            -e BLOCKCHAIN_URL=http://localhost:8888 \
+            tonomy/communication:local
 
       - name: Delete Tonomy-Contracts directory
         run: rm -rf ./Tonomy-Contracts
