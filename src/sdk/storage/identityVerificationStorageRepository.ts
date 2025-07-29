@@ -81,4 +81,12 @@ export class IdentityVerificationStorageRepository {
             },
         });
     }
+
+    public async findCountByType(type: VerificationTypeEnum): Promise<number> {
+        return await this.ormRepository.count({ where: { type } });
+    }
+
+    public async findAllCount(): Promise<number> {
+        return await this.ormRepository.count();
+    }
 }

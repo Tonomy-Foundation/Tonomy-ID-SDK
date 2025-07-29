@@ -52,4 +52,7 @@ export class IdentityVerificationStorage {
     @Column({ type: 'datetime' })
     @Index()
     updatedAt!: Date;
+
+    @Column({ type: 'int' })
+    reuseCount!: number;
 }

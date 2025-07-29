@@ -145,6 +145,7 @@ export interface IUserRequestsManager extends IUserCommunication, IUserDataVault
 export interface IUserDataVault extends IUserCommunication {
     waitForNextVeriffVerification(): Promise<KYCPayload>;
     fetchVerificationData(type: VerificationTypeEnum, status?: VeriffStatusEnum): Promise<PersonCredentialType>;
+    fetchReuseableKycCount(type?: VerificationTypeEnum): Promise<number>;
 }
 
 export interface IUser extends IUserCaptcha, IUserOnboarding, IUserRequestsManager {

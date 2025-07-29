@@ -78,4 +78,15 @@ export class IdentityVerificationStorageManager {
             return this.create(sessionId, type, status, vc);
         }
     }
+    async countReuseableLogin(type?: VerificationTypeEnum): Promise<number> {
+        let count = 0;
+
+        if (type) {
+            count = await this.repository.findCountByType(type);
+        } else {
+            count = await this.repository.findAllCount();
+        }
+
+        return count;
+    }
 }
