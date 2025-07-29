@@ -27,6 +27,7 @@ export class IdentityVerificationStorageRepository {
             provider: ProviderEnum.VERIFF,
             vcType: VCTypeEnum.VERIFFv1,
             version: 1,
+            reuseCount: 1,
             createdAt: now,
             updatedAt: now,
         });
@@ -82,11 +83,13 @@ export class IdentityVerificationStorageRepository {
         });
     }
 
-    public async findCountByType(type: VerificationTypeEnum): Promise<number> {
-        return await this.ormRepository.count({ where: { type } });
+    public async findCountByType(type?: VerificationTypeEnum): Promise<number> {
+        return (await this.ormRepository.sum('reuseCount', type ? { type } : {})) || 0;
     }
 
-    public async findAllCount(): Promise<number> {
-        return await this.ormRepository.count();
+    public async findByType(type: VerificationTypeEnum): Promise<IdentityVerificationStorage | null> {
+        return await this.ormRepository.findOne({
+            where: { type },
+        });
     }
 }

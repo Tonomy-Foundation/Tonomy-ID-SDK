@@ -310,6 +310,7 @@ export class UserOnboarding extends UserDataVault implements IUserOnboarding {
     async initializeKycDataSource(): Promise<void> {
         if (this.dataSource && !this.dataSource.isInitialized) {
             await this.dataSource.initialize();
+            await this.dataSource.runMigrations();
         }
 
         const identityVerificationTableExists = await this.checkTableExists('IdentityVerificationStorage');

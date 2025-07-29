@@ -51,6 +51,7 @@ export class IdentityVerificationStorageManager {
         if (doc) {
             doc.vc = vc.toString();
             doc.status = status;
+            doc.reuseCount = doc.reuseCount + 1;
             await this.repository.update(doc);
             return castStringToCredential(doc.vc, doc.type);
         } else {
@@ -71,22 +72,22 @@ export class IdentityVerificationStorageManager {
         const doc = await this.repository.findByIdAndType(sessionId, type);
 
         if (doc) {
-            doc.vc = vc.toString();
-            doc.status = status;
             return this.updateRecord(sessionId, type, status, vc);
         } else {
             return this.create(sessionId, type, status, vc);
         }
     }
+
     async countReuseableLogin(type?: VerificationTypeEnum): Promise<number> {
-        let count = 0;
+        return await this.repository.findCountByType(type);
+    }
 
-        if (type) {
-            count = await this.repository.findCountByType(type);
-        } else {
-            count = await this.repository.findAllCount();
+    async updateReuseableCount(type: VerificationTypeEnum): Promise<void> {
+        const doc = await this.repository.findByType(type);
+
+        if (doc) {
+            doc.reuseCount += 1;
+            await this.repository.update(doc);
         }
-
-        return count;
     }
 }
