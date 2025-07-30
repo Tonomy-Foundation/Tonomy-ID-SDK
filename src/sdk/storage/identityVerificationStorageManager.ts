@@ -51,7 +51,7 @@ export class IdentityVerificationStorageManager {
         if (doc) {
             doc.vc = vc.toString();
             doc.status = status;
-            doc.reuseCount = doc.reuseCount + 1;
+            doc.reuseCount += 1;
             await this.repository.update(doc);
             return castStringToCredential(doc.vc, doc.type);
         } else {
@@ -78,7 +78,7 @@ export class IdentityVerificationStorageManager {
         }
     }
 
-    async countReuseableLogin(type?: VerificationTypeEnum): Promise<number> {
+    async countReuse(type?: VerificationTypeEnum): Promise<number> {
         return await this.repository.findCountByType(type);
     }
 

@@ -144,7 +144,7 @@ export class UserDataVault extends UserCommunication implements IUserDataVault {
     }
 
     async fetchReuseableKycCount(type?: VerificationTypeEnum): Promise<number> {
-        return await this.idVerificationManager.countReuseableLogin(type);
+        return await this.idVerificationManager.countReuse(type);
     }
 
     async updateReuseableKycCount(type: VerificationTypeEnum): Promise<void> {
