@@ -2,14 +2,13 @@
 import { API, Name, NameType } from '@wharfkit/antelope';
 import { Signer, transact } from '../eosio/transaction';
 import { getAccount, getApi } from '../eosio/eosio';
-import { TonomyContract } from './TonomyContract';
+import { getTonomyContract } from './TonomyContract';
 import { Authority } from '../eosio/authority';
 import Debug from 'debug';
 import { addSeconds, getSettings, SdkErrors, SECONDS_IN_DAY, throwError } from '../../../util';
 import { amountToAsset, assetToAmount, EosioTokenContract } from './EosioTokenContract';
 
 const debug = Debug('tonomy-sdk:services:blockchain:contracts:staking');
-const tonomyContract = TonomyContract.Instance;
 const CONTRACT_NAME = 'staking.tmy';
 
 export interface StakingAllocationData {
@@ -121,7 +120,7 @@ export class StakingContract {
 
             newPermission.addCodePermission(CONTRACT_NAME);
             debug('Adding staking.tmy@eosio.code to active permission', JSON.stringify(newPermission, null, 2));
-            await tonomyContract.updateactive(staker.toString(), newPermission, signer);
+            await getTonomyContract().updateactive(staker.toString(), newPermission, signer);
         }
 
         const action = {

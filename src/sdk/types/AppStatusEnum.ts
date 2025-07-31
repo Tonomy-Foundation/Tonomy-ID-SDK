@@ -25,12 +25,15 @@ namespace AppStatusEnum {
         let index: number;
 
         if (typeof value !== 'number') {
-            index = AppStatusEnum.indexFor(value as AppStatusEnum);
+            index = AppStatusEnum.indexFor(value.toUpperCase() as AppStatusEnum);
         } else {
             index = value;
         }
 
-        return Object.values(AppStatusEnum)[index] as AppStatusEnum;
+        const val = Object.values(AppStatusEnum)[index] as AppStatusEnum;
+
+        if (val === undefined) throw new Error('Invalid AppStatusEnum');
+        return val;
     }
 }
 

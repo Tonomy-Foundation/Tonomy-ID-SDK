@@ -1,16 +1,16 @@
 {
-  "version": "0.31.0-rc.1",
+  "version": "0.32.0-development.4",
   "license": "Apache-2.0",
   "type": "module",
   "source": "src/sdk/index.ts",
   "main": "./build/sdk/index.cjs",
   "module": "./build/sdk/index.module.js",
   "unpkg": "./build/sdk/index.umd.js",
-  "types": "./build/sdk/types/sdk/index.d.ts",
+  "types": "./build/sdk/types/src/sdk/index.d.ts",
   "umd:main": "./build/sdk/index.umd.js",
   "exports": {
     ".": {
-      "types": "./build/sdk/types/sdk/index.d.ts",
+      "types": "./build/sdk/types/src/sdk/index.d.ts",
       "require": "./build/sdk/index.cjs",
       "import": "./build/sdk/index.module.js"
     }
@@ -37,7 +37,8 @@
     "lint": "eslint src test",
     "lint:fix": "yarn run lint -- --fix",
     "release": "semantic-release  --debug",
-    "prepare": "yarn run build"
+    "prepare": "yarn run build",
+    "typeCheck": "tsc --noEmit --skipLibCheck"
   },
   "name": "@tonomy/tonomy-id-sdk",
   "author": "Jack Tanner",
@@ -54,7 +55,7 @@
     "@veramo/key-manager": "^6.0.0",
     "@veramo/kms-local": "^6.0.0",
     "@wharfkit/antelope": "^1.0.7",
-    "argon2": "^0.40.3",
+    "argon2": "^0.41.1",
     "cross-fetch": "^4.0.0",
     "csv-parse": "^5.5.6",
     "debug": "^4.3.6",
@@ -102,7 +103,7 @@
   },
   "publishConfig": {
     "access": "public",
-    "tag": "rc"
+    "tag": "development"
   },
   "repository": {
     "type": "git",
