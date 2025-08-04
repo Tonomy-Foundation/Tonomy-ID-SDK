@@ -53,6 +53,15 @@ export class Communication {
         this.seenMessages.set(sha256(message), new Date());
     }
 
+    private isMessageSeen(message: string): boolean {
+        return this.seenMessages.has(sha256(message));
+    }
+
+    private rememberMessage(message: string): void {
+        this.seenMessages.set(sha256(message), new Date());
+        this.trimSeenMessages();
+    }
+
     constructor(singleton = true) {
         if (Communication.singleton && singleton) return Communication.singleton;
         this.url = getSettings().communicationUrl;
@@ -212,16 +221,20 @@ export class Communication {
         const messageHandler = (message: any) => {
             const msg = new Message(message);
 
-            // if (this.checkSeenMessage(msg.toString())) {
-            //     debug('receiveMessage duplicate', msg.getType(), msg.getSender(), msg.getRecipient());
-            //     return;
-            // }
+            const msgStr = msg.toString();
+
+            if (this.isMessageSeen(msgStr)) {
+                debug('receiveMessage duplicate', msg.getType(), msg.getSender(), msg.getRecipient());
+                return;
+            }
 
             debug('receiveMessage', msg.getType(), msg.getSender(), msg.getRecipient());
 
             if (msg.getType() === type) {
                 subscriber(msg);
             }
+
+            this.rememberMessage(msgStr);
 
             return this;
         };
