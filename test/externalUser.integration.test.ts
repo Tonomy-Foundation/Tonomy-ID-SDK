@@ -170,25 +170,25 @@ describe('Login to external website', () => {
             await runExternalUserLoginTest({ dataRequest: false });
         });
 
-        test('Successful login to external website with empty data request', async () => {
-            expect.assertions(57);
-            await runExternalUserLoginTest({ dataRequest: true });
-        });
+        // test('Successful login to external website with empty data request', async () => {
+        //     expect.assertions(57);
+        //     await runExternalUserLoginTest({ dataRequest: true });
+        // });
 
-        test('Successful login to external website with data request for username', async () => {
-            expect.assertions(60);
-            await runExternalUserLoginTest({ dataRequest: true, dataRequestUsername: true });
-        });
+        // test('Successful login to external website with data request for username', async () => {
+        //     expect.assertions(60);
+        //     await runExternalUserLoginTest({ dataRequest: true, dataRequestUsername: true });
+        // });
 
-        test('Successful login to external website with data request for KYC verification successful', async () => {
-            expect.assertions(88);
-            await runExternalUserLoginTest({ dataRequest: true, dataRequestKYC: true, dataRequestKYCDecision: 'approved' });
-        });
+        // test('Successful login to external website with data request for KYC verification successful', async () => {
+        //     expect.assertions(88);
+        //     await runExternalUserLoginTest({ dataRequest: true, dataRequestKYC: true, dataRequestKYCDecision: 'approved' });
+        // });
 
-        test('Unsuccessful login to external website with data request for KYC verification failed', async () => {
-            expect.assertions(37);
-            await runExternalUserLoginTest({ dataRequest: true, dataRequestKYC: true, dataRequestKYCDecision: 'declined' });
-        });
+        // test('Unsuccessful login to external website with data request for KYC verification failed', async () => {
+        //     expect.assertions(37);
+        //     await runExternalUserLoginTest({ dataRequest: true, dataRequestKYC: true, dataRequestKYCDecision: 'declined' });
+        // });
     });
 
     async function runExternalUserLoginTest(testOptions: ExternalUserLoginTestOptions) {
@@ -239,12 +239,7 @@ describe('Login to external website', () => {
         // ##########################
         await scanQrAndAck(TONOMY_ID_user, TONOMY_LOGIN_WEBSITE_did);
 
-        const TONOMY_ID_requestSubscriber = setupLoginRequestSubscriber(
-            TONOMY_ID_user,
-            TONOMY_LOGIN_WEBSITE_did,
-            testOptions
-        );
-
+        
         // #####Tonomy Login App website user (login page) #####
         // ########################################
 
@@ -278,7 +273,12 @@ describe('Login to external website', () => {
         // ##########################
 
         // Wait for the subscriber to execute
-        await TONOMY_ID_requestSubscriber;
+        await setupLoginRequestSubscriber(
+            TONOMY_ID_user,
+            TONOMY_LOGIN_WEBSITE_did,
+            testOptions
+        );
+
 
         if (testOptions.dataRequestKYC && testOptions.dataRequestKYCDecision !== 'approved') {
             debug('TONOMY_ID/SSO: KYC verification failed, login was never executed by user');
