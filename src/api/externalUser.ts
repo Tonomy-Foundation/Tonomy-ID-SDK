@@ -348,6 +348,8 @@ export class ExternalUser {
             responses = DualWalletResponse.fromUrl(),
         } = options;
 
+        debug('verifyLoginResponse()', { external, checkKeys });
+
         if (responses.isSuccess()) {
             await responses.verify();
             const response = external ? responses.external : responses.sso;
