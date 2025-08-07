@@ -205,9 +205,9 @@ export const vestingCategories: Map<
     [
         15, // Special Token Round
         {
-            startDelay: 0 * MICROSECONDS_PER_MONTH,
-            cliffPeriod: 1 * MICROSECONDS_PER_MONTH,
-            vestingPeriod: 1 * MICROSECONDS_PER_MONTH,
+            startDelay: 0 * MICROSECONDS_IN_MONTH,
+            cliffPeriod: 1 * MICROSECONDS_IN_MONTH,
+            vestingPeriod: 1 * MICROSECONDS_IN_MONTH,
             tgeUnlock: 1.0,
             name: 'Special Token Round',
         },
