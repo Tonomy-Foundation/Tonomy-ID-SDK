@@ -325,8 +325,11 @@ export class VerificationMessage extends Message<VerificationMessagePayload> {
 export class SwapTokenMessagePayload {
     amount: Decimal;
     baseAddress: string;
-    proofOfBaseAddress: string;
-    destination: ['Base', 'Tonomy'];
+    proof: {
+        message: string;
+        signature: string;
+    };
+    destination: ['base', 'tonomy'];
 }
 
 export class SwapTokenMessage extends Message<SwapTokenMessagePayload> {
