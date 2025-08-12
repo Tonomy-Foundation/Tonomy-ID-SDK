@@ -32,6 +32,7 @@ export * from './services/blockchain/contracts/StakingContract';
 export * from './services/blockchain/contracts/TonomyEosioProxyContract';
 export * from './services/communication/communication';
 export * from './services/communication/message';
+export * from './services/ethereum';
 
 // Utilities
 export * from './util/settings';
