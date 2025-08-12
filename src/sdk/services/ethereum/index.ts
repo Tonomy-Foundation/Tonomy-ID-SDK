@@ -12,7 +12,7 @@ const debug = Debug('tonomy-sdk:services:ethereum');
  *
  * @returns Configured ethers.Contract instance
  */
-export function createBaseTokenContract(): ethers.Contract {
+export function getBaseTokenContract(): ethers.Contract {
     const settings = getSettings();
 
     const provider = new ethers.JsonRpcProvider(settings.baseRpcUrl, settings.baseNetwork, { staticNetwork: true });
