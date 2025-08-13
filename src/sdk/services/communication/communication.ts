@@ -19,8 +19,6 @@ export type WebsocketReturnType = {
     error?: any;
 };
 
-console.log(process.env);
-
 export class Communication {
     socketServer: Socket;
     private static singleton: Communication;
@@ -33,11 +31,17 @@ export class Communication {
     private seenMessages: Map<string, Date> = new Map(); // Map<hash, Date>
     private readonly seemMessageTTL = 60 * 60; // 1 hour
 
-    // Fixes an issue where subscriber were triggered twice
-    // https://chatgpt.com/share/e/6866b6e9-96a4-8013-b25d-381a3518567e
-    // TODO: figure out the root cause and solve
+    /**
+     * Checks if a message has been seen before (only in CI)
+     * @description Fixes an issue where subscriber were triggered twice
+     * @link https://chatgpt.com/share/e/6866b6e9-96a4-8013-b25d-381a3518567e
+     * TODO: figure out the root cause and solve
+     *
+     * @param {string} message - the message to check
+     * @returns {boolean} true if the message has been seen before
+     */
     private checkSeenMessage(message: string): boolean {
-        if (!process.env.GITHUB_ACTIONS) return false;
+        if (!process.env.CI) return false;
         const res = this.seenMessages.has(sha256(message));
 
         this.addSeenMessage(message);
