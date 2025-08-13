@@ -106,6 +106,14 @@ type AppData2Raw = {
     version: number;
 };
 
+type AppJsonDataRaw = {
+    app_name: string;
+    description: string;
+    logo_url: string;
+    background_color: string;
+    accent_color: string;
+};
+
 export type AppData2 = {
     accountName: Name;
     usernameHash: Checksum256;
@@ -119,8 +127,28 @@ export type AppData2 = {
     accentColor: string;
 };
 
+function parseAppJsonData(jsonString: string): AppJsonDataRaw {
+    return JSON.parse(jsonString);
+}
+
+export function createAppJsonDataString(
+    appName: string,
+    description: string,
+    logoUrl: string,
+    backgroundColor: string,
+    accentColor: string
+): string {
+    return JSON.stringify({
+        app_name: appName,
+        description,
+        logo_url: logoUrl,
+        background_color: backgroundColor,
+        accent_color: accentColor,
+    });
+}
+
 function castAppData2Raw(app: AppData2Raw): AppData2 {
-    const json = JSON.parse(app.json_data);
+    const json = parseAppJsonData(app.json_data);
 
     return {
         accountName: app.account_name,
@@ -386,13 +414,7 @@ export class TonomyContract extends Contract {
         key: PublicKeyType,
         signer: Signer
     ): Promise<API.v1.PushTransactionResponse> {
-        const jsonData = JSON.stringify({
-            app_name: appName,
-            description,
-            logo_url: logoUrl,
-            background_color: backgroundColor,
-            accent_color: accentColor,
-        });
+        const jsonData = createAppJsonDataString(appName, description, logoUrl, backgroundColor, accentColor);
         const action = this.actions.newApp({
             jsonData,
             usernameHash,
@@ -543,13 +565,7 @@ export class TonomyContract extends Contract {
         accentColor: string,
         signer: Signer
     ): Promise<API.v1.PushTransactionResponse> {
-        const jsonData = JSON.stringify({
-            app_name: appName,
-            description,
-            logo_url: logoUrl,
-            background_color: backgroundColor,
-            accent_color: accentColor,
-        });
+        const jsonData = createAppJsonDataString(appName, description, logoUrl, backgroundColor, accentColor);
         const action = this.actions.adminSetApp({
             accountName,
             jsonData,

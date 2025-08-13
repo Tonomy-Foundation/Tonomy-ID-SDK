@@ -118,7 +118,7 @@ async function migrateVesting(options: StandardProposalOptions) {
 
     const actions = Array.from(vestingHolders).map((holder) => {
         console.log(`vesting.tmy::migrateacc(${holder})`);
-        return vestingContract.actions.migrateacc({
+        return vestingContract.actions.migrateAcc({
             holder,
         });
     });

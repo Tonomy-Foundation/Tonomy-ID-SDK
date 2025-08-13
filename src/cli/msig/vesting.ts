@@ -348,22 +348,12 @@ export async function vestingBulk(args: { governanceAccounts: string[] }, option
         console.log(
             `Assigning: ${tonoQuantity} ($${data.usdQuantity} USD) vested in category ${categoryId} to ${data.accountName} at rate of $${TONO_CURRENT_PRICE}/TONO`
         );
-        return {
-            account: 'vesting.tmy',
-            name: 'assigntokens',
-            authorization: [
-                {
-                    actor: sender.toString(),
-                    permission: 'active',
-                },
-            ],
-            data: {
-                sender,
-                holder: data.accountName,
-                amount: tonoQuantity,
-                category: categoryId,
-            },
-        };
+        return vestingContract.actions.assignTokens({
+            sender,
+            holder: data.accountName,
+            amount: tonoQuantity,
+            category: categoryId,
+        });
     });
 
     console.log(`Total ${actions.length} accounts to be paid`);

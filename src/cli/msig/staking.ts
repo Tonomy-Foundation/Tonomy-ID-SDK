@@ -1,8 +1,8 @@
-/* eslint-disable camelcase */
 import {
     amountToAsset,
     Authority,
     bytesToTokens,
+    createAppJsonDataString,
     stakingContract,
     StakingContract,
     tonomyContract,
@@ -94,13 +94,13 @@ export async function stakingContractSetup(options: StandardProposalOptions) {
 
     console.log(`Setting up hypha contract "${contract}" with ${tokens} tokens to buy ${ramKb}KB of RAM`);
 
-    const jsonData = JSON.stringify({
-        app_name: 'TONO Staking',
-        description: 'TONO Staking contract',
-        logo_url: createSubdomainOnOrigin('https://accounts.testnet.tonomy.io', 'staking') + '/tonomy-logo1024.png',
-        background_color: '#000000',
-        accent_color: '#FFFFFF',
-    });
+    const jsonData = createAppJsonDataString(
+        'TONO Staking',
+        'TONO Staking contract',
+        createSubdomainOnOrigin('https://accounts.testnet.tonomy.io', 'staking') + '/tonomy-logo1024.png',
+        '#000000',
+        '#FFFFFF'
+    );
 
     const adminSetAppAction = tonomyContract.actions.adminSetApp({
         accountName: 'staking.tmy',

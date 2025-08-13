@@ -1,6 +1,6 @@
 import { tonomyEosioProxyContract } from '../../sdk/services/blockchain';
 import { StandardProposalOptions, createProposal, executeProposal } from '.';
-import { Name, ABI, Serializer } from '@wharfkit/antelope';
+import { Name } from '@wharfkit/antelope';
 import fs from 'fs';
 import { getDeployableFilesFromDir } from '../bootstrap/deploy-contract';
 import path, { dirname } from 'path';

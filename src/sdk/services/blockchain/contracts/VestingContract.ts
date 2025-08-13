@@ -291,7 +291,7 @@ export class VestingContract extends Contract {
     }
 
     actions = {
-        setsettings: (data: { salesStartDate: string; launchDate: string }, auth?: ActionOptions): Action =>
+        setSettings: (data: { salesStartDate: string; launchDate: string }, auth?: ActionOptions): Action =>
             this.action(
                 'setsettings',
                 {
@@ -300,8 +300,7 @@ export class VestingContract extends Contract {
                 },
                 auth
             ),
-
-        assigntokens: (
+        assignTokens: (
             data: {
                 sender: NameType;
                 holder: NameType;
@@ -312,7 +311,7 @@ export class VestingContract extends Contract {
         ): Action => this.action('assigntokens', data, auth),
         withdraw: (data: { holder: NameType }, auth: ActionOptions = activeAuthority(data.holder)): Action =>
             this.action('withdraw', { holder: data.holder }, auth),
-        migratealloc: (
+        migrateAlloc: (
             data: {
                 sender: NameType;
                 holder: NameType;
@@ -337,9 +336,9 @@ export class VestingContract extends Contract {
                 },
                 auth
             ),
-        migrateacc: (data: { holder: NameType }, auth: ActionOptions = activeAuthority(data.holder)): Action =>
+        migrateAcc: (data: { holder: NameType }, auth: ActionOptions = activeAuthority(data.holder)): Action =>
             this.action('migrateacc', data, auth),
-        resetall: (data = {}, auth: ActionOptions = activeAuthority(CONTRACT_NAME)): Action =>
+        resetAll: (data = {}, auth: ActionOptions = activeAuthority(CONTRACT_NAME)): Action =>
             this.action('resetall', data, auth),
     };
 
@@ -348,7 +347,7 @@ export class VestingContract extends Contract {
         launchDate: string,
         signer: Signer
     ): Promise<API.v1.PushTransactionResponse> {
-        const action = this.actions.setsettings({ salesStartDate, launchDate });
+        const action = this.actions.setSettings({ salesStartDate, launchDate });
 
         return transact(action, signer);
     }
@@ -360,7 +359,7 @@ export class VestingContract extends Contract {
         category: number,
         signer: Signer
     ): Promise<API.v1.PushTransactionResponse> {
-        const action = this.actions.assigntokens({ sender, holder, amount, category });
+        const action = this.actions.assignTokens({ sender, holder, amount, category });
 
         return transact(action, signer);
     }
@@ -381,7 +380,7 @@ export class VestingContract extends Contract {
         newCategoryId: number,
         signer: Signer
     ): Promise<API.v1.PushTransactionResponse> {
-        const action = this.actions.migratealloc({
+        const action = this.actions.migrateAlloc({
             sender,
             holder,
             allocationId,
