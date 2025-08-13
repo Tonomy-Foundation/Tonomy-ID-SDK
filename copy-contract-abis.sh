@@ -22,7 +22,9 @@ fi
 
 echo "Tonomy Contracts: Building smart contracts"
 cd "${PARENT_PATH}/Tonomy-Contracts"
-./build-contracts.sh
+if [ ! -f "contracts/eosio.token/eosio.token.wasm" ]; then
+    ./build-contracts.sh
+fi
 
 CONTRACTS=(
     "eosio.bios"
