@@ -9,8 +9,16 @@ set -e ## exit if any statement fails
 # Make sure working dir is same as this dir, so that script can be excuted from another working directory
 PARENT_PATH=$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )
 
+# Get the current git branch
+BRANCH=$(git rev-parse --abbrev-ref HEAD)
+echo "Current branch: ${BRANCH}"
 echo "Checking for submodules"
-git submodule update --init --recursive
+if [ ! -d "${PARENT_PATH}/Tonomy-Contracts/contracts" ]; then
+    echo "Installing submodules"
+    git submodule update --init --recursive
+    git submodule foreach git checkout ${BRANCH}
+    git submodule foreach git pull
+fi
 
 echo "Tonomy Contracts: Building smart contracts"
 cd "${PARENT_PATH}/Tonomy-Contracts"
