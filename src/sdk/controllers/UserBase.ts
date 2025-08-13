@@ -1,4 +1,4 @@
-import { Name } from '@wharfkit/antelope';
+import { Name, NameType } from '@wharfkit/antelope';
 import { KeyManager, KeyManagerLevel } from '../storage/keymanager';
 import { createStorage, PersistentStorageClean, StorageFactory, STORAGE_NAMESPACE } from '../storage/storage';
 import { SdkErrors, throwError } from '../util/errors';
@@ -39,8 +39,8 @@ export class UserBase implements IUserBase {
         }
     }
 
-    async getDid(): Promise<string> {
-        return await this.storage.did;
+    async getDid(appName?: NameType): Promise<string> {
+        return (await this.storage.did) + (appName ? `#${appName}` : '');
     }
 
     async getIssuer(): Promise<Issuer> {

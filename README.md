@@ -66,6 +66,10 @@ Then run the tests
 
 `yarn run test:integration`
 
+To run an individual test with debugging logs example:
+
+`DEBUG=tonomy* yarn run test --testNamePattern "Successful login to external website with data request for KYC verification successful" --runTestsByPath /home/dev/Documents/git/tonomy/Tonomy-ID-Integration/Tonomy-ID-SDK/test/externalUser.integration.test.ts`
+
 ### Governance tests
 
 Tests the governance of the system. Can only be run once before a blockchain reset is required.
@@ -99,6 +103,12 @@ Environment variables are required to bootstrap the network. These values are pr
 - `TONOMY_OPS_PRIVATE_KEY`: the private key of the operations account that will be used for the tonomy@active account.
 - `TONOMY_BOARD_PUBLIC_KEYS`: the public keys (in JSON array format) of the network governance multi-signature account that controls governance operations
 - `TONOMY_TEST_ACCOUNTS_PASSPHRASE`: the passphrase that will be used for the App store test user and demo app users
+
+## Type checking
+
+```bash
+yarn run typeCheck
+```
 
 ## Linting
 

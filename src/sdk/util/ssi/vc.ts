@@ -10,6 +10,13 @@ import { toDateTime } from '../time';
 import { randomString } from '../crypto';
 import { Serializable } from '../serializable';
 import { getDidKeyResolver } from '@veramo/did-provider-key';
+import { checkChainId, getAccountNameFromDid } from './did';
+import { checkUsername, TonomyUsername } from '../username';
+import { App, checkOriginMatchesApp } from '../../controllers/App';
+import { Name } from '@wharfkit/antelope';
+import Debug from 'debug';
+
+const debug = Debug('tonomy-sdk:vc');
 
 /**
  * A W3C Verifiable Credential
@@ -372,4 +379,61 @@ export class VerifiableCredentialWithType<T extends object = object> implements 
     toJSON(): string {
         return this.toString();
     }
+}
+
+export type VerifyTonomyVcOptions = {
+    verifyChainId?: boolean;
+    verifyUsername?: boolean;
+    verifyOrigin?: boolean;
+};
+
+export const defaultVerifyTonomyVcOptions: VerifyTonomyVcOptions = {
+    verifyChainId: true,
+    verifyUsername: true,
+    verifyOrigin: true,
+};
+
+export async function verifyTonomyVc<T extends object>(
+    vcJwt: VCWithTypeType<T>,
+    {
+        verifyChainId = true,
+        verifyUsername = true,
+        verifyOrigin = true,
+    }: VerifyTonomyVcOptions = defaultVerifyTonomyVcOptions
+): Promise<{
+    account: Name;
+    chainId?: string;
+    did: string;
+    username?: TonomyUsername;
+    origin?: string;
+    app?: App;
+}> {
+    let vc: VerifiableCredential;
+
+    if (typeof vcJwt === 'string') vc = new VerifiableCredential(vcJwt);
+    else if (vcJwt instanceof VerifiableCredential) vc = vcJwt;
+    else if (vcJwt instanceof VerifiableCredentialWithType) vc = vcJwt.getVc();
+    else throw Error('Invalid VC type, expected string or VerifiableCredential');
+
+    const vcId = vc.getId();
+    const did = vc.getIssuer();
+    const data: T = vc.getCredentialSubject() as T;
+    const account = await getAccountNameFromDid(did);
+
+    debug('verifyTonomyVc()', vcId, did, data, account, verifyChainId, verifyUsername, verifyOrigin);
+    const [, chainId, username, originAndApp] = await Promise.all([
+        vc.verify(),
+        checkChainId(did, verifyChainId),
+        checkUsername(account, (data as any)?.username, verifyUsername),
+        checkOriginMatchesApp(vcId ? vcId : '', did, verifyOrigin),
+    ]);
+
+    return {
+        account,
+        chainId,
+        did,
+        username,
+        origin: originAndApp?.origin,
+        app: originAndApp?.app,
+    };
 }

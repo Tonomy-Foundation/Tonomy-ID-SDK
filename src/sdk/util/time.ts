@@ -1,11 +1,15 @@
 export const MILLISECONDS_IN_SECOND = 1000;
+export const MICROSECONDS_IN_SECOND = 1000000;
 export const SECONDS_IN_MINUTE = 60;
 export const MINUTES_IN_HOUR = 60;
 export const HOURS_IN_DAY = 24;
+export const DAYS_IN_YEAR = 365.25;
 export const SECONDS_IN_HOUR = MINUTES_IN_HOUR * SECONDS_IN_MINUTE;
 export const SECONDS_IN_DAY = HOURS_IN_DAY * SECONDS_IN_HOUR;
-export const DAYS_IN_YEAR = 365.25;
 export const SECONDS_IN_YEAR = DAYS_IN_YEAR * SECONDS_IN_DAY;
+export const MICROSECONDS_IN_DAY = SECONDS_IN_DAY * MICROSECONDS_IN_SECOND;
+export const MICROSECONDS_IN_MONTH = SECONDS_IN_DAY * 30 * MICROSECONDS_IN_SECOND;
+export const MICROSECONDS_IN_YEAR = SECONDS_IN_YEAR * MICROSECONDS_IN_SECOND;
 
 /**
  * Takes the number of seconds since epoch and returns a Date object

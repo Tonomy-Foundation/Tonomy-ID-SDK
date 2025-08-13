@@ -10,9 +10,9 @@ import {
     createSigner,
     getAccount,
     getAccountNameFromUsername,
-    TonomyContract,
     GetPersonResponse,
     vestingCategories as vestingCategoriesList,
+    getTonomyContract,
 } from '../../sdk/services/blockchain';
 import { getApi } from '../../sdk/services/blockchain/eosio/eosio';
 import settings from '../settings';
@@ -127,7 +127,7 @@ export async function audit() {
     console.log('');
     console.log('Fetching apps tokens');
 
-    const apps = await TonomyContract.Instance.getApps();
+    const apps = await getTonomyContract().getApps();
 
     const appAccounts: AccountBalance[] = (
         await Promise.all(

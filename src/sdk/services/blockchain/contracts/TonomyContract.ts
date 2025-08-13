@@ -466,7 +466,6 @@ export class TonomyContract {
                 index_position: 'tertiary',
             });
             if (!data || !data.rows) throwError('No data found', SdkErrors.DataQueryNoRowDataFound);
-            debug('getApp table row', origin, JSON.stringify(data.rows, null, 2));
 
             if (data.rows.length === 0 || data.rows[0].origin !== origin) {
                 throwError('Account with origin "' + origin + '" not found', SdkErrors.OriginNotFound);
@@ -475,7 +474,7 @@ export class TonomyContract {
 
         const idData = data.rows[0];
 
-        debug('getApp idData', JSON.stringify(idData, null, 2));
+        debug('getApp data', JSON.stringify(idData, null, 2));
 
         const appInfo = JSON.parse(idData.json_data);
 
@@ -558,6 +557,10 @@ export class TonomyContract {
 
         return await transact(Name.from(CONTRACT_NAME), [action], signer);
     }
+}
+
+export function getTonomyContract(): TonomyContract {
+    return TonomyContract.Instance;
 }
 
 export async function getAccountNameFromUsername(username: TonomyUsername): Promise<Name> {
