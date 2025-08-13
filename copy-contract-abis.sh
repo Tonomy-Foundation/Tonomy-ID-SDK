@@ -17,9 +17,9 @@ if [ "${GITHUB_ACTIONS}" == "true" ] && [ "${BRANCH}" != "master" ] && [ "${BRAN
 fi
 echo "Using branch: ${BRANCH}"
 
-echo "Checking for submodules"
+echo "Checking submodules"
 if [ ! -d "${PARENT_PATH}/Ethereum-token/contracts" ]; then
-    echo "Installing submodules"
+    echo "Updating submodules"
     git submodule update --init --recursive
     git submodule foreach git checkout ${BRANCH}
     git submodule foreach git pull
