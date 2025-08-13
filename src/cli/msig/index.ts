@@ -69,7 +69,7 @@ export default async function msig(args: string[]) {
 
     const proposer = newGovernanceAccounts[0];
     let signingKey: string | undefined = process.env.SIGNING_KEY;
-    const signingAccount = proposer;
+    const signingAccount = '14.found.tmy';
 
     if (!signingKey) {
         if (!process.env.TONOMY_BOARD_PRIVATE_KEYS)

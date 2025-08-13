@@ -1,11 +1,10 @@
 import { jsStorageFactory } from './jsstorage';
 import { generatePrivateKeyFromPassword, getSigner } from './keys';
-import { TonomyContract, JsKeyManager, KeyManager, createUserObject } from '../../sdk';
+import { getTonomyContract, JsKeyManager, KeyManager, createUserObject } from '../../sdk';
 import { CreateAccountRequest, CreateAccountResponse } from '../../sdk/services/communication/accounts';
 import * as accounts from '../../sdk/services/communication/accounts';
 import { Name } from '@wharfkit/antelope';
-
-const tonomyContract = TonomyContract.Instance;
+import { setupTestDatabase } from '../../../test/storage/testDatabase';
 
 const defaultCreateAccount = accounts.createAccount;
 
@@ -19,7 +18,7 @@ export function mockCreateAccount() {
     accounts.createAccount = async function (data: CreateAccountRequest): Promise<CreateAccountResponse> {
         console.log('Calling mocked createAccount()');
 
-        const res = await tonomyContract.newperson(
+        const res = await getTonomyContract().newperson(
             data.usernameHash.toString(),
             data.publicKey.toString(),
             data.salt.toString(),
@@ -46,7 +45,8 @@ export function restoreCreateAccountFromMock() {
 
 export async function createUser(username: string, password: string) {
     const auth: KeyManager = new JsKeyManager();
-    const user = createUserObject(auth, jsStorageFactory);
+    const dataSource = await setupTestDatabase();
+    const user = await createUserObject(auth, jsStorageFactory, dataSource);
 
     await user.saveUsername(username);
     await user.savePassword(password, { keyFromPasswordFn: generatePrivateKeyFromPassword });

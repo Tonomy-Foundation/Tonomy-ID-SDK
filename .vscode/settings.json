@@ -7,7 +7,7 @@
         "source.fixAll.eslint": "explicit"
     },
     "cSpell.words": [
-        "tonomy"
+        "tonomy", "veriff"
     ],
     "jest.autoRun": {
         "onSave": false,

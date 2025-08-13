@@ -15,13 +15,14 @@ import {
     ExternalUser,
     DemoTokenContract,
     getSettings,
-    LoginRequestResponseMessagePayload,
-    ResponsesManager,
+    DualWalletResponse,
     setSettings,
+    Communication,
 } from '../src/sdk/index';
 import { JsKeyManager } from '../src/sdk/storage/jsKeyManager';
+import { DataSource } from 'typeorm';
 import { jest } from '@jest/globals';
-// helpers
+import { setupTestDatabase } from './storage/testDatabase';
 import {
     IUserPublic,
     createRandomApp,
@@ -46,7 +47,6 @@ import {
     externalWebsiteClientAuth,
 } from './helpers/externalUser';
 import { createStorageFactory } from './helpers/storageFactory';
-import { objToBase64Url } from '../src/sdk/util/base64';
 import { createSigner, getTonomyOperationsKey } from '../src/sdk/services/blockchain';
 import { setTestSettings, settings } from './helpers/settings';
 import deployContract from '../src/cli/bootstrap/deploy-contract';
@@ -58,6 +58,8 @@ const debug = Debug('tonomy-sdk-tests:externalUser.integration.test');
 export type ExternalUserLoginTestOptions = {
     dataRequest: boolean;
     dataRequestUsername?: boolean;
+    dataRequestKYC?: boolean;
+    dataRequestKYCDecision?: 'approved' | 'declined';
 };
 
 setTestSettings();
@@ -65,7 +67,7 @@ setTestSettings();
 const signer = createSigner(getTonomyOperationsKey());
 
 describe('Login to external website', () => {
-    jest.setTimeout(30000);
+    jest.setTimeout(50000);
 
     // OBJECTS HERE denote the different devices/apps the user is using
     // it shows which device is doing what action and has access to which variables
@@ -82,8 +84,12 @@ describe('Login to external website', () => {
     let TONOMY_LOGIN_WEBSITE_storage_factory: StorageFactory;
     let EXTERNAL_WEBSITE_storage_factory: StorageFactory;
     let EXTERNAL_WEBSITE_user: ExternalUser;
+    let TONOMY_ID_dataSource: DataSource;
 
     beforeEach(async () => {
+        // Initialize typeorm data source
+        TONOMY_ID_dataSource = await setupTestDatabase();
+
         // ##### Tonomy ID user #####
         // ##########################
         // Create new Tonomy ID user
@@ -136,38 +142,56 @@ describe('Login to external website', () => {
     });
 
     afterEach(async () => {
-        await TONOMY_ID_user.logout();
-        debug('finished test');
+        if (TONOMY_ID_user) {
+            await TONOMY_ID_user.logout();
+        }
+
+        if (TONOMY_ID_dataSource) {
+            await TONOMY_ID_dataSource.destroy();
+            TONOMY_ID_dataSource = await setupTestDatabase();
+        }
+
+        debug('finished cleanup');
 
         // for some reason this is needed to ensure all the code lines execute. Not sure why needed
         // TODO: figure out why this is needed and remove issue
         await sleep(500);
     });
 
+    afterAll(async () => {
+        if (TONOMY_ID_dataSource) {
+            await TONOMY_ID_dataSource.destroy();
+        }
+    });
+
     describe('SSO login full end-to-end flow with external desktop browser (using communication service)', () => {
-        test('Successful login to external website', async () => {
+        test('Successful login to external website - no data request', async () => {
+            expect.assertions(56);
             await runExternalUserLoginTest({ dataRequest: false });
         });
 
         test('Successful login to external website with empty data request', async () => {
+            expect.assertions(57);
             await runExternalUserLoginTest({ dataRequest: true });
         });
 
         test('Successful login to external website with data request for username', async () => {
+            expect.assertions(60);
             await runExternalUserLoginTest({ dataRequest: true, dataRequestUsername: true });
+        });
+
+        test('Successful login to external website with data request for KYC verification successful', async () => {
+            expect.assertions(88);
+            await runExternalUserLoginTest({ dataRequest: true, dataRequestKYC: true, dataRequestKYCDecision: 'approved' });
+        });
+
+        test('Unsuccessful login to external website with data request for KYC verification failed', async () => {
+            expect.assertions(37);
+            await runExternalUserLoginTest({ dataRequest: true, dataRequestKYC: true, dataRequestKYCDecision: 'declined' });
         });
     });
 
     async function runExternalUserLoginTest(testOptions: ExternalUserLoginTestOptions) {
-        let expectedTests = 55;
-
-        if (testOptions.dataRequest) {
-            expectedTests += 1;
-            if (testOptions.dataRequestUsername) expectedTests += 3;
-        }
-
-        expect.assertions(expectedTests);
-
         // #####External website user (login page) #####
         // ################################
 
@@ -202,13 +226,14 @@ describe('Login to external website', () => {
         const { subscriber: TONOMY_LOGIN_WEBSITE_messageSubscriber, promise: TONOMY_LOGIN_WEBSITE_ackMessagePromise } =
             await setupTonomyIdIdentifySubscriber(TONOMY_ID_did);
 
-        expect(TONOMY_LOGIN_WEBSITE_communication.socketServer.listeners('message').length).toBe(0);
+        expect(TONOMY_LOGIN_WEBSITE_communication.socketServer.listeners('v1/message/relay/receive').length).toBe(0);
         const TONOMY_LOGIN_WEBSITE_subscription = TONOMY_LOGIN_WEBSITE_communication.subscribeMessage(
             TONOMY_LOGIN_WEBSITE_messageSubscriber,
             IdentifyMessage.getType()
         );
 
-        expect(TONOMY_LOGIN_WEBSITE_communication.socketServer.listeners('message').length).toBe(1);
+        debug('TONOMY_LOGIN_WEBSITE_communication.socketServer', TONOMY_LOGIN_WEBSITE_communication.socketServer.listenersAny())
+        expect(TONOMY_LOGIN_WEBSITE_communication.socketServer.listeners('v1/message/relay/receive').length).toBe(1);
 
         // ##### Tonomy ID user (QR code scanner screen) #####
         // ##########################
@@ -247,13 +272,22 @@ describe('Login to external website', () => {
             LoginRequestResponseMessage.getType()
         );
 
-        expect(TONOMY_LOGIN_WEBSITE_communication.socketServer.listeners('message').length).toBe(1);
+        expect(TONOMY_LOGIN_WEBSITE_communication.socketServer.listeners('v1/message/relay/receive').length).toBe(1);
 
         // ##### Tonomy ID user (SSO screen) #####
         // ##########################
 
         // Wait for the subscriber to execute
         await TONOMY_ID_requestSubscriber;
+
+        if (testOptions.dataRequestKYC && testOptions.dataRequestKYCDecision !== 'approved') {
+            debug('TONOMY_ID/SSO: KYC verification failed, login was never executed by user');
+            await finishTest([
+                TONOMY_LOGIN_WEBSITE_communication,
+            ]);
+
+            return;
+        }
 
         // #####Tonomy Login App website user (callback page) #####
         // ########################################
@@ -262,71 +296,55 @@ describe('Login to external website', () => {
         // Receive the message back, and redirect to the callback
         const requestConfirmedMessageFromTonomyId = await TONOMY_LOGIN_WEBSITE_requestsConfirmedMessagePromise;
 
-        expect(TONOMY_LOGIN_WEBSITE_communication.socketServer.listeners('message').length).toBe(1);
+        expect(TONOMY_LOGIN_WEBSITE_communication.socketServer.listeners('v1/message/relay/receive').length).toBe(1);
         TONOMY_LOGIN_WEBSITE_communication.unsubscribeMessage(TONOMY_LOGIN_WEBSITE_subscription2);
-        expect(TONOMY_LOGIN_WEBSITE_communication.socketServer.listeners('message').length).toBe(0);
+        expect(TONOMY_LOGIN_WEBSITE_communication.socketServer.listeners('v1/message/relay/receive').length).toBe(0);
 
-        const payload = requestConfirmedMessageFromTonomyId.getPayload();
+        const walletResponse = requestConfirmedMessageFromTonomyId.getPayload();
 
-        expect(payload).toBeDefined();
-        expect(payload.success).toBe(true);
-        expect(payload.response).toBeDefined();
+        expect(walletResponse).toBeDefined();
+        expect(walletResponse.success).toBe(true);
+        expect(walletResponse.external).toBeDefined();
+        expect(walletResponse.sso).toBeDefined();
 
-        expect(payload.response?.length).toBe(testOptions.dataRequest ? 4 : 3);
+        expect(walletResponse.external?.getResponses()?.length).toBe(testOptions.dataRequest ? 2 : 1);
+        expect(walletResponse.sso?.getResponses()?.length).toBe(2);
 
-        if (!payload.response) throw new Error('payload.response is undefined');
-
-        const managedResponses = new ResponsesManager(payload.response);
-
-        await managedResponses.fetchMeta({ accountName: await TONOMY_ID_user.getAccountName() });
-        const loginResponse = managedResponses.getLoginResponsesWithSameOriginOrThrow();
-
-        expect(loginResponse.getResponse().getPayload().accountName?.toString()).toBe(
+        expect(walletResponse.sso?.getAccountName().toString()).toBe(
             (await TONOMY_ID_user.getAccountName()).toString()
         );
-
-        const dataRequestResponse = managedResponses.getDataSharingResponseWithSameOrigin();
+        const dataRequestResponse = walletResponse.sso?.getDataSharingResponse();
 
         if (testOptions.dataRequest) {
             expect(dataRequestResponse).toBeDefined();
 
             if (testOptions.dataRequestUsername) {
-                expect(dataRequestResponse?.getResponse().getPayload().data?.username?.toString()).toBe(
+                expect(dataRequestResponse?.data.username?.toString()).toBe(
                     (await TONOMY_ID_user.getUsername()).username.toString()
                 );
             }
         }
 
         debug('TONOMY_LOGIN_WEBSITE/login: sending to callback page');
-        const TONOMY_LOGIN_WEBSITE_base64UrlPayload = objToBase64Url(payload);
+        setUrl(walletResponse.getRedirectUrl(false));
 
-        setUrl(tonomyLoginApp.origin + `/callback?payload=${TONOMY_LOGIN_WEBSITE_base64UrlPayload}`);
-
-        const { externalLoginRequest, managedResponses: TONOMY_LOGIN_WEBSITE_managedResponses } =
+        const { responses: TONOMY_LOGIN_WEBSITE_responses } =
             await loginWebsiteOnCallback(TONOMY_LOGIN_WEBSITE_jsKeyManager, TONOMY_LOGIN_WEBSITE_storage_factory);
 
-        const EXTERNAL_WEBSITE_loginRequestResponseMessagePayload: LoginRequestResponseMessagePayload = {
-            success: true,
-            response: TONOMY_LOGIN_WEBSITE_managedResponses.getResponsesWithDifferentOriginOrThrow().map((response) =>
-                response.getRequestAndResponse()
-            ),
-        };
-
-        const EXTERNAL_WEBSITE_base64UrlPayload = objToBase64Url(EXTERNAL_WEBSITE_loginRequestResponseMessagePayload);
+        if (!TONOMY_LOGIN_WEBSITE_responses.external) throw new Error('TONOMY_LOGIN_WEBSITE_responses.external is undefined');
+        const EXTERNAL_WEBSITE_response = DualWalletResponse.fromResponses(TONOMY_LOGIN_WEBSITE_responses.external)
+        const EXTERNAL_WEBSITE_redirectBackUrl = EXTERNAL_WEBSITE_response.getRedirectUrl();
 
         // #####External website user (callback page) #####
         // ################################
 
-        setUrl(
-            externalLoginRequest.getPayload().origin +
-            externalLoginRequest.getPayload().callbackPath +
-            `?payload=${EXTERNAL_WEBSITE_base64UrlPayload}`
-        );
+        setUrl(EXTERNAL_WEBSITE_redirectBackUrl);
 
         EXTERNAL_WEBSITE_user = await externalWebsiteOnCallback(
             EXTERNAL_WEBSITE_jsKeyManager,
             EXTERNAL_WEBSITE_storage_factory,
-            await TONOMY_ID_user.getAccountName()
+            await TONOMY_ID_user.getAccountName(),
+            testOptions
         );
 
         await EXTERNAL_WEBSITE_user.communication.disconnect();
@@ -345,8 +363,17 @@ describe('Login to external website', () => {
 
         await externalWebsiteOnLogout(EXTERNAL_WEBSITE_jsKeyManager, EXTERNAL_WEBSITE_storage_factory);
 
-        // cleanup connections
-        await TONOMY_LOGIN_WEBSITE_communication.disconnect();
-        await EXTERNAL_WEBSITE_user.communication.disconnect();
+        await finishTest([
+            TONOMY_LOGIN_WEBSITE_communication,
+            EXTERNAL_WEBSITE_user.communication,
+        ]);
+    }
+
+    async function finishTest(communications: Communication[]) {
+        for (const communication of communications) {
+            await communication.disconnect();
+        }
+
+        debug('finished test');
     }
 });

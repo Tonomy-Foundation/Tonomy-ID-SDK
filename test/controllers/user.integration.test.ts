@@ -1,38 +1,38 @@
 /**
  * @jest-environment jsdom
  */
-import { IUserPublic, createRandomID, createUserObject } from '../helpers/user';
-import { KeyManager, KeyManagerLevel, TonomyUsername, EosioUtil } from '../../src/sdk/index';
+import { IUserPublic, createRandomID, createTestUserObject } from '../helpers/user';
+import { KeyManagerLevel, TonomyUsername } from '../../src/sdk/index';
 import { SdkErrors } from '../../src/sdk/index';
 import { JsKeyManager } from '../../src/sdk/storage/jsKeyManager';
 import { jsStorageFactory } from '../../src/cli/bootstrap/jsstorage';
-import { Checksum256 } from '@wharfkit/antelope';
 import { generatePrivateKeyFromPassword } from '../../src/cli/bootstrap/keys';
-import { getAccount } from '../../src/sdk/services/blockchain/eosio/eosio';
+import { getAccount, getChainId } from '../../src/sdk/services/blockchain/eosio/eosio';
 import { getAccountInfo } from '../../src/sdk/helpers/user';
 import { jest } from '@jest/globals';
-
-let auth: KeyManager;
-let user: IUserPublic;
-
-const SECONDS = 1000;
+import { MILLISECONDS_IN_SECOND } from '../../src/sdk/util/time';
+import { setupTestDatabase, teardownTestDatabase } from '../storage/testDatabase';
+import { DataSource } from 'typeorm';
 
 describe('User class', () => {
-    jest.setTimeout(60 * SECONDS);
+    jest.setTimeout(60 * MILLISECONDS_IN_SECOND);
+    let dataSource: DataSource;
+    let user: IUserPublic;
 
-    beforeEach((): void => {
-        auth = new JsKeyManager();
-        user = createUserObject(auth, jsStorageFactory);
+    beforeEach(async (): Promise<void> => {
+        dataSource = await setupTestDatabase();
+        user = await createTestUserObject(new JsKeyManager(), jsStorageFactory, dataSource);
     });
 
-    afterEach(async () => {
+    afterEach(async (): Promise<void> => {
         await user.logout();
+        await teardownTestDatabase();
     });
 
     test('savePassword() generates and saves new private key', async () => {
         expect(user.savePassword).toBeDefined();
 
-        expect(() => user.keyManager.getKey({ level: KeyManagerLevel.PASSWORD })).rejects.toThrowError(Error);
+        expect(() => user.keyManager.getKey({ level: KeyManagerLevel.PASSWORD })).rejects.toThrow(Error);
         expect(await user.storage.salt).not.toBeDefined();
         await user.savePassword('actual zoo topple expire paper follow', {
             keyFromPasswordFn: generatePrivateKeyFromPassword,
@@ -42,19 +42,19 @@ describe('User class', () => {
     });
 
     test('savePIN() saves new private key', async () => {
-        expect(() => user.keyManager.getKey({ level: KeyManagerLevel.PIN })).rejects.toThrowError(Error);
+        expect(() => user.keyManager.getKey({ level: KeyManagerLevel.PIN })).rejects.toThrow(Error);
         await user.savePIN('4568');
         expect(user.keyManager.getKey({ level: KeyManagerLevel.PIN })).resolves.toBeDefined();
     });
 
     test('saveFingerprint() saves new private key', async () => {
-        expect(() => user.keyManager.getKey({ level: KeyManagerLevel.BIOMETRIC })).rejects.toThrowError(Error);
+        expect(() => user.keyManager.getKey({ level: KeyManagerLevel.BIOMETRIC })).rejects.toThrow(Error);
         await user.saveFingerprint();
         expect(user.keyManager.getKey({ level: KeyManagerLevel.BIOMETRIC })).resolves.toBeDefined();
     });
 
     test('saveLocal() saves new private key', async () => {
-        expect(() => user.keyManager.getKey({ level: KeyManagerLevel.LOCAL })).rejects.toThrowError(Error);
+        expect(() => user.keyManager.getKey({ level: KeyManagerLevel.LOCAL })).rejects.toThrow(Error);
         await user.saveLocal();
         expect(user.keyManager.getKey({ level: KeyManagerLevel.LOCAL })).resolves.toBeDefined();
     });
@@ -102,8 +102,8 @@ describe('User class', () => {
 
         const username = await user.getUsername();
 
-        const newKeyManager = new JsKeyManager();
-        const userLogin = createUserObject(newKeyManager, jsStorageFactory);
+        const dataSource2 = await setupTestDatabase();
+        const userLogin = await createTestUserObject(new JsKeyManager(), jsStorageFactory, dataSource2);
 
         expect(userLogin.isLoggedIn()).resolves.toBeFalsy();
         const idInfo = await userLogin.login(username, password, {
@@ -126,12 +126,12 @@ describe('User class', () => {
 
         const username = await user.getUsername();
 
-        const newKeyManager = new JsKeyManager();
-        const userLogin = createUserObject(newKeyManager, jsStorageFactory);
+        const dataSource2 = await setupTestDatabase();
+        const userLogin = await createTestUserObject(new JsKeyManager(), jsStorageFactory, dataSource2);
 
         await expect(() =>
             userLogin.login(username, 'differentpassword', { keyFromPasswordFn: generatePrivateKeyFromPassword })
-        ).rejects.toThrowError(Error);
+        ).rejects.toThrow(Error);
 
         // Close connections
         await user.logout();
@@ -167,7 +167,7 @@ describe('User class', () => {
         await user.saveLocal();
         await user.savePIN('1234');
 
-        await expect(user.checkKeysStillValid()).rejects.toThrowError(SdkErrors.KeyNotFound);
+        await expect(user.checkKeysStillValid()).rejects.toThrow(SdkErrors.KeyNotFound);
 
         // Close connections
         // TODO: if expect fails, then the user.logout() is not called and we dont cleanup. We need to fix this
@@ -175,7 +175,7 @@ describe('User class', () => {
     });
 
     test("checkKeysStillValid() throws error if user doesn't exist", async () => {
-        await expect(user.checkKeysStillValid()).rejects.toThrowError(SdkErrors.AccountDoesntExist);
+        await expect(user.checkKeysStillValid()).rejects.toThrow(SdkErrors.AccountDoesntExist);
     });
 
     test("checkPassword() throws error if password doesn't match", async () => {
@@ -185,7 +185,7 @@ describe('User class', () => {
 
         await expect(
             user.checkPassword('verify earn dad end easily earn', { keyFromPasswordFn: generatePrivateKeyFromPassword })
-        ).rejects.toThrowError(SdkErrors.PasswordInvalid);
+        ).rejects.toThrow(SdkErrors.PasswordInvalid);
         await user.logout();
     });
 
@@ -207,10 +207,10 @@ describe('User class', () => {
         await user.logout();
 
         expect(await user.storage.status).toBeFalsy();
-        expect(() => user.keyManager.getKey({ level: KeyManagerLevel.PASSWORD })).rejects.toThrowError(Error);
-        expect(() => user.keyManager.getKey({ level: KeyManagerLevel.PIN })).rejects.toThrowError(Error);
-        expect(() => user.keyManager.getKey({ level: KeyManagerLevel.BIOMETRIC })).rejects.toThrowError(Error);
-        expect(() => user.keyManager.getKey({ level: KeyManagerLevel.LOCAL })).rejects.toThrowError(Error);
+        expect(() => user.keyManager.getKey({ level: KeyManagerLevel.PASSWORD })).rejects.toThrow(Error);
+        expect(() => user.keyManager.getKey({ level: KeyManagerLevel.PIN })).rejects.toThrow(Error);
+        expect(() => user.keyManager.getKey({ level: KeyManagerLevel.BIOMETRIC })).rejects.toThrow(Error);
+        expect(() => user.keyManager.getKey({ level: KeyManagerLevel.LOCAL })).rejects.toThrow(Error);
         expect(user.isLoggedIn()).resolves.toBeFalsy();
 
         // Close connections
@@ -237,8 +237,8 @@ describe('User class', () => {
     test('login() fails with userName does not exists', async () => {
         const { user, password } = await createRandomID();
 
-        const newKeyManager = new JsKeyManager();
-        const userLogin = createUserObject(newKeyManager, jsStorageFactory);
+        const dataSource2 = await setupTestDatabase();
+        const userLogin = await createTestUserObject(new JsKeyManager(), jsStorageFactory, dataSource2);
 
         expect(userLogin.isLoggedIn()).resolves.toBeFalsy();
 
@@ -246,7 +246,7 @@ describe('User class', () => {
             userLogin.login(new TonomyUsername('random'), password, {
                 keyFromPasswordFn: generatePrivateKeyFromPassword,
             })
-        ).rejects.toThrowError(Error);
+        ).rejects.toThrow(Error);
         // Close connections
         await userLogin.logout();
         await user.logout();
@@ -255,7 +255,7 @@ describe('User class', () => {
     test('getDid() expect chainId and account name defined', async () => {
         const { user } = await createRandomID();
         const accountName = await user.storage.accountName;
-        const chainId = (await EosioUtil.getChainInfo()).chain_id as unknown as Checksum256;
+        const chainId = await getChainId();
 
         expect(chainId).toBeDefined();
         expect(accountName).toBeDefined();
@@ -274,7 +274,7 @@ describe('User class', () => {
     });
 
     test("initializeFromStorage() throws error if storage doesn't exist", async () => {
-        await expect(user.initializeFromStorage()).rejects.toThrowError(SdkErrors.AccountDoesntExist);
+        await expect(user.initializeFromStorage()).rejects.toThrow(SdkErrors.AccountDoesntExist);
     });
 
     test('CheckPin() returns true when pin matches', async () => {
@@ -297,7 +297,7 @@ describe('User class', () => {
 
         await user.savePIN('12345');
         await expect(user.keyManager.getKey({ level: KeyManagerLevel.PIN })).resolves.toBeDefined();
-        await expect(user.checkPin('12121')).rejects.toThrowError(SdkErrors.PinInvalid);
+        await expect(user.checkPin('12121')).rejects.toThrow(SdkErrors.PinInvalid);
 
         await user.logout();
     });

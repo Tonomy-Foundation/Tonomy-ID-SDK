@@ -1,4 +1,7 @@
+import { Name } from '@wharfkit/antelope';
+import { getTonomyContract } from '../services/blockchain';
 import { sha256 } from './crypto';
+import { SdkErrors, throwError } from './errors';
 import { Serializable } from './serializable';
 
 enum AccountType {
@@ -86,4 +89,27 @@ export class TonomyUsername implements Serializable {
     toJSON(): string {
         return this.toString();
     }
+}
+
+export async function checkUsername(
+    account: Name,
+    username?: string,
+    verifyUsername: boolean = true
+): Promise<TonomyUsername | undefined> {
+    if (verifyUsername && username) {
+        const tonomyUsername = TonomyUsername.fromFullUsername(username);
+
+        // this will throw if the username is not valid
+        // eslint-disable-next-line camelcase
+        const { account_name } = await getTonomyContract().getPerson(tonomyUsername);
+
+        // eslint-disable-next-line camelcase
+        if (!account_name.equals(account)) {
+            throwError('Username does not match account', SdkErrors.InvalidData);
+        }
+
+        return tonomyUsername;
+    }
+
+    return;
 }
