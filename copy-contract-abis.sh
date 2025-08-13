@@ -10,7 +10,6 @@ set -e ## exit if any statement fails
 PARENT_PATH=$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )
 
 echo "Copying smart contracts ABIs"
-
 CONTRACTS=(
     "eosio.bios"
     "eosio.msig"
@@ -28,3 +27,17 @@ do
 done
 
 echo "All contract ABIs copied successfully"
+
+# Build Ethereum Token
+cd "${PARENT_PATH}/Ethereum-token"
+if [ ! -d "node_modules" ]; then
+    echo "EthereumToken: Installing dependencies"
+    yarn install
+fi
+if [ ! -d "artifacts" ]; then
+    echo "EthereumToken: Compiling contracts"
+    yarn compile
+fi
+
+echo "Copying EthereumToken ABI"
+cp "${PARENT_PATH}/Ethereum-token/artifacts/contracts/TonomyToken.sol/TonomyToken.json" "${PARENT_PATH}/src/sdk/services/ethereum/abi/TonomyToken.json"

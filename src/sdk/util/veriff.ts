@@ -163,12 +163,12 @@ export type VeriffWebhookPayload = {
                 number?: DocumentField;
                 validFrom?: DocumentField;
                 validUntil?: DocumentField;
-                issuedBy?: DocumentField;
-                firstIssue?: DocumentField;
-                placeOfIssue?: DocumentField;
-                processNumber?: DocumentField;
-                residencePermitType?: DocumentField;
-                licenseNumber?: DocumentField;
+                issuedBy?: DocumentField | null | undefined;
+                firstIssue?: DocumentField | null | undefined;
+                placeOfIssue?: DocumentField | null | undefined;
+                processNumber?: DocumentField | null | undefined;
+                residencePermitType?: DocumentField | null | undefined;
+                licenseNumber?: DocumentField | null | undefined;
                 [extra: string]: DocumentField | null | undefined;
             };
             insights:

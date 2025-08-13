@@ -3,13 +3,18 @@ import { StandardProposalOptions, createProposal, executeProposal } from '.';
 
 // @ts-expect-error args not used
 export async function newAccount(args: { governanceAccounts: string[] }, options: StandardProposalOptions) {
-    const accountName = 'login.hypha';
+    const accountName = 'mexctesttest';
+    const ownerKey = 'EOS6ASYi2oDnRwNw16MYMs3jUe3TPCo1mNjNxQ1qaDZBaeqtREHDq';
+    const activeKey = 'EOS5DMPJ4DsJ2Vc4f7g5o8z9o5HswcpXrE4C58r7wxxzZgYxQn8rB';
 
-    const active = Authority.fromKey('EOS5DMPJ4DsJ2Vc4f7g5o8z9o5HswcpXrE4C58r7wxxzZgYxQn8rB');
-
-    active.addAccount({ actor: 'gov.tmy', permission: 'active' });
-
-    const owner = active;
+    const owner = Authority.fromKey(ownerKey).addAccount({
+        actor: 'gov.tmy',
+        permission: 'active',
+    });
+    const active = Authority.fromKey(activeKey).addAccount({
+        actor: 'gov.tmy',
+        permission: 'active',
+    });
 
     const action = tonomyEosioProxyContract.actions.newaccount({
         creator: 'tonomy',

@@ -32,7 +32,7 @@ import {
 import { ExternalUserLoginTestOptions } from '../externalUser.integration.test';
 import { getChainId, getTonomyOperationsKey } from '../../src/sdk/services/blockchain/eosio/eosio';
 import { createSigner } from '../../src/sdk/services/blockchain';
-import { dataSource } from '../storage/testDatabase';
+import { setupTestDatabase } from '../storage/testDatabase';
 import { DataSource } from 'typeorm';
 import Debug from 'debug';
 import { mockVeriffWebhook, mockVeriffApproved, mockVeriffDeclined } from '../services/veriffMock';
@@ -60,7 +60,9 @@ export const HCAPCHA_CI_RESPONSE_TOKEN = '10000000-aaaa-bbbb-cccc-000000000001';
 
 export async function createRandomID(checkKeys = true) {
     const auth: KeyManager = new JsKeyManager();
-    const user = createTestUserObject(auth, jsStorageFactory, dataSource);
+
+    const datasource = await setupTestDatabase();
+    const user = createTestUserObject(auth, jsStorageFactory, datasource);
 
     const username = randomString(8);
     const password = generateRandomKeywords().join(' ');

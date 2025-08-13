@@ -34,6 +34,7 @@ export class Communication {
     // Fixes an issue where subscriber were triggered twice
     // https://chatgpt.com/share/e/6866b6e9-96a4-8013-b25d-381a3518567e
     // TODO: figure out the root cause and solve
+
     private checkSeenMessage(message: string): boolean {
         const res = this.seenMessages.has(sha256(message));
 
@@ -211,10 +212,10 @@ export class Communication {
         const messageHandler = (message: any) => {
             const msg = new Message(message);
 
-            if (this.checkSeenMessage(msg.toString())) {
-                debug('receiveMessage duplicate', msg.getType(), msg.getSender(), msg.getRecipient());
-                return;
-            }
+            // if (this.checkSeenMessage(msg.toString())) {
+            //     debug('receiveMessage duplicate', msg.getType(), msg.getSender(), msg.getRecipient());
+            //     return;
+            // }
 
             debug('receiveMessage', msg.getType(), msg.getSender(), msg.getRecipient());
 
@@ -263,8 +264,10 @@ export class Communication {
      */
     subscribeVeriffVerification(subscriber: VeriffSubscriber): number {
         Communication.identifier++;
+        debug('subscribeVeriffVerification() called');
 
         const messageHandler = (message: any) => {
+            debug('message', message);
             const msg = new VerificationMessage(message);
 
             if (this.checkSeenMessage(msg.toString())) {

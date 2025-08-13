@@ -16,12 +16,12 @@ export class IdentityVerificationStorageManager {
     }
 
     async create(
-        veriffId: string,
+        sessionId: string,
         type: VerificationTypeEnum,
         status: VeriffStatusEnum,
         vc: PersonCredentialType
     ): Promise<PersonCredentialType> {
-        await this.repository.create(veriffId, type, status, vc.toString());
+        await this.repository.create(sessionId, type, status, vc.toString());
         return vc;
     }
 
@@ -41,16 +41,17 @@ export class IdentityVerificationStorageManager {
     }
 
     async updateRecord(
-        veriffId: string,
+        sessionId: string,
         type: VerificationTypeEnum,
         status: VeriffStatusEnum,
         vc: PersonCredentialType
     ): Promise<PersonCredentialType> {
-        const doc = await this.repository.findByIdAndType(veriffId, type);
+        const doc = await this.repository.findByIdAndType(sessionId, type);
 
         if (doc) {
             doc.vc = vc.toString();
             doc.status = status;
+            doc.reuseCount += 1;
             await this.repository.update(doc);
             return castStringToCredential(doc.vc, doc.type);
         } else {
@@ -63,19 +64,30 @@ export class IdentityVerificationStorageManager {
     }
 
     async emplaceByVeriffIdAndType(
-        veriffId: string,
+        sessionId: string,
         type: VerificationTypeEnum,
         status: VeriffStatusEnum,
         vc: PersonCredentialType
     ): Promise<PersonCredentialType> {
-        const doc = await this.repository.findByIdAndType(veriffId, type);
+        const doc = await this.repository.findByIdAndType(sessionId, type);
 
         if (doc) {
-            doc.vc = vc.toString();
-            doc.status = status;
-            return this.updateRecord(veriffId, type, status, vc);
+            return this.updateRecord(sessionId, type, status, vc);
         } else {
-            return this.create(veriffId, type, status, vc);
+            return this.create(sessionId, type, status, vc);
+        }
+    }
+
+    async countReuse(type?: VerificationTypeEnum): Promise<number> {
+        return await this.repository.findCountByType(type);
+    }
+
+    async updateReuseableCount(type: VerificationTypeEnum): Promise<void> {
+        const doc = await this.repository.findByType(type);
+
+        if (doc) {
+            doc.reuseCount += 1;
+            await this.repository.update(doc);
         }
     }
 }

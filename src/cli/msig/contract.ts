@@ -23,27 +23,14 @@ export async function deployContract(
     const contractName = Name.from(options.contract);
     const contractDir = `${options.directory ?? defaultContractDirectory}/${contractName.toString()}`;
 
-    if (!contractName) {
-        throw new Error('Contract name must be provided for deploy-contract proposal');
-    }
+    console.log(`Deploying contract ${options.contract} from ${contractDir}`);
 
-    const contractInfo = {
-        account: contractName,
-        contractDir,
-    };
-
-    const { wasmPath, abiPath } = getDeployableFilesFromDir(contractInfo.contractDir);
+    const { wasmPath, abiPath } = getDeployableFilesFromDir(contractDir);
 
     const wasmFile = fs.readFileSync(wasmPath);
     const abiFile = fs.readFileSync(abiPath, 'utf8');
-    const wasm = wasmFile.toString(`hex`);
 
-    // 2. Prepare SETABI
-    const abi = JSON.parse(abiFile);
-    const abiDef = ABI.from(abi);
-    const abiSerializedHex = Serializer.encode({ object: abiDef }).hexString;
-
-    const actions = await tonomyEosioProxyContract.deployContractActions(contractName, wasm, abiSerializedHex, {
+    const actions = await tonomyEosioProxyContract.deployContractActions(contractName, wasmFile, abiFile, {
         actor: 'tonomy',
         permission: 'active',
     });
@@ -55,7 +42,7 @@ export async function deployContract(
         options.proposalName,
         actions,
         options.privateKey,
-        options.requested,
+        [...options.requested, contractName.toString()],
         options.dryRun
     );
 

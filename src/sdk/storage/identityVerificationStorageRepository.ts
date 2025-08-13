@@ -2,6 +2,8 @@ import { Repository, DataSource } from 'typeorm';
 import { IdentityVerificationStorage } from './entities/identityVerificationStorage';
 import { VerificationTypeEnum } from '../types/VerificationTypeEnum';
 import { VeriffStatusEnum } from '../types/VeriffStatusEnum';
+import { ProviderEnum } from '../types/ProviderEnum';
+import { VCTypeEnum } from '../types/VCTypeEnum';
 
 export class IdentityVerificationStorageRepository {
     private ormRepository: Repository<IdentityVerificationStorage>;
@@ -11,23 +13,26 @@ export class IdentityVerificationStorageRepository {
     }
 
     public async create(
-        veriffId: string,
+        sessionId: string,
         type: VerificationTypeEnum,
         status: VeriffStatusEnum,
         vc: string
     ): Promise<IdentityVerificationStorage> {
         const now = new Date();
         const appStorageEntity = this.ormRepository.create({
-            veriffId,
-            type,
-            status,
+            sessionId,
             vc,
+            status,
+            type,
+            provider: ProviderEnum.VERIFF,
+            vcType: VCTypeEnum.VERIFFv1,
             version: 1,
+            reuseCount: 1,
             createdAt: now,
             updatedAt: now,
         });
 
-        return await this.ormRepository.save(appStorageEntity);
+        return this.ormRepository.save(appStorageEntity);
     }
 
     public async findLatestWithStatus(
@@ -52,11 +57,39 @@ export class IdentityVerificationStorageRepository {
     }
 
     public async findByIdAndType(
-        veriffId: string,
+        sessionId: string,
         type: VerificationTypeEnum
     ): Promise<IdentityVerificationStorage | null> {
-        return this.ormRepository.findOne({
-            where: { veriffId, type },
+        return await this.ormRepository.findOne({
+            where: {
+                sessionId: sessionId,
+                type: type,
+            },
+        });
+    }
+
+    public async findLatestWithTypeAndStatus(
+        type: VerificationTypeEnum,
+        status: VeriffStatusEnum
+    ): Promise<IdentityVerificationStorage | null> {
+        return await this.ormRepository.findOne({
+            where: {
+                type: type,
+                status: status,
+            },
+            order: {
+                updatedAt: 'DESC',
+            },
+        });
+    }
+
+    public async findCountByType(type?: VerificationTypeEnum): Promise<number> {
+        return (await this.ormRepository.sum('reuseCount', type ? { type } : {})) || 0;
+    }
+
+    public async findByType(type: VerificationTypeEnum): Promise<IdentityVerificationStorage | null> {
+        return await this.ormRepository.findOne({
+            where: { type },
         });
     }
 }

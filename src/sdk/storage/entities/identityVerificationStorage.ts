@@ -1,17 +1,15 @@
 /* eslint-disable indent */
-import { Entity, Unique, Column, Index, PrimaryColumn, PrimaryGeneratedColumn } from 'typeorm';
+import { Entity, Column, Index, PrimaryColumn } from 'typeorm';
 import { VeriffStatusEnum } from '../../types/VeriffStatusEnum';
 import { VerificationTypeEnum } from '../../types/VerificationTypeEnum';
+import { ProviderEnum } from '../../types/ProviderEnum';
+import { VCTypeEnum } from '../../types/VCTypeEnum';
 
 @Entity('IdentityVerificationStorage')
-@Unique(['veriffId', 'type'])
 export class IdentityVerificationStorage {
-    @PrimaryGeneratedColumn('uuid')
-    id!: string;
-
     @PrimaryColumn({ type: 'varchar' })
     @Index()
-    veriffId!: string;
+    sessionId!: string;
 
     @Column({ type: 'varchar' })
     vc!: string;
@@ -23,6 +21,28 @@ export class IdentityVerificationStorage {
     })
     status!: VeriffStatusEnum;
 
+    @Column({
+        type: 'varchar',
+        enum: VerificationTypeEnum,
+        default: VerificationTypeEnum.KYC,
+    })
+    @Index()
+    type!: VerificationTypeEnum;
+
+    @Column({
+        type: 'varchar',
+        enum: ProviderEnum,
+        default: ProviderEnum.VERIFF,
+    })
+    provider!: ProviderEnum;
+
+    @Column({
+        type: 'varchar',
+        enum: VCTypeEnum,
+        default: VCTypeEnum.VERIFFv1,
+    })
+    vcType!: VCTypeEnum;
+
     @Column({ type: 'int' })
     version!: number;
 
@@ -33,11 +53,6 @@ export class IdentityVerificationStorage {
     @Index()
     updatedAt!: Date;
 
-    @Column({
-        type: 'varchar',
-        enum: VerificationTypeEnum,
-        default: VerificationTypeEnum.KYC,
-    })
-    @Index()
-    type!: VerificationTypeEnum;
+    @Column({ type: 'int' })
+    reuseCount!: number;
 }

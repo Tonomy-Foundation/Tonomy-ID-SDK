@@ -7,19 +7,59 @@ import { VeriffSubscriber } from '../services/communication/communication';
 import { VerificationTypeEnum } from '../types/VerificationTypeEnum';
 import { IdentityVerificationStorageManager } from '../storage/identityVerificationStorageManager';
 import { verifyOpsTmyDid } from '../util/ssi/did';
-import { castDecisionToStatus, KYCPayload, KYCVC, PersonCredentialType, SdkErrors, throwError } from '../util';
+import {
+    castDecisionToStatus,
+    castStringToCredential,
+    KYCPayload,
+    KYCVC,
+    PersonCredentialType,
+    SdkErrors,
+    throwError,
+} from '../util';
 import { IUserDataVault } from '../types/User';
 import Debug from 'debug';
 import { VeriffStatusEnum } from '../types/VeriffStatusEnum';
+import { IdentityVerificationStorageRepository } from '../storage/identityVerificationStorageRepository';
 
 const debug = Debug('tonomy-sdk:controllers:UserDataVault');
 
 export class UserDataVault extends UserCommunication implements IUserDataVault {
-    private readonly idVerificationManager: IdentityVerificationStorageManager;
+    protected readonly idVerificationManager: IdentityVerificationStorageManager;
+    protected readonly dataSource: DataSource;
 
     constructor(keyManager: KeyManager, storageFactory: StorageFactory, dataSource: DataSource) {
         super(keyManager, storageFactory);
-        this.idVerificationManager = new IdentityVerificationStorageManager(dataSource);
+        this.dataSource = dataSource;
+        const repository = new IdentityVerificationStorageRepository(dataSource);
+
+        this.idVerificationManager = new IdentityVerificationStorageManager(repository);
+    }
+
+    async checkTableExists(tableName: string) {
+        const queryRunner = this.dataSource.createQueryRunner();
+
+        try {
+            const result = await queryRunner.query(`SELECT name FROM sqlite_master WHERE type='table' AND name=?`, [
+                tableName,
+            ]);
+
+            debug(`Table check result for ${tableName}:`, result);
+            return result.length > 0;
+        } finally {
+            await queryRunner.release();
+        }
+    }
+
+    async initializeKycDataSource(): Promise<void> {
+        if (this.dataSource && !this.dataSource.isInitialized) {
+            await this.dataSource.initialize();
+        }
+
+        const identityVerificationTableExists = await this.checkTableExists('IdentityVerificationStorage');
+
+        if (!identityVerificationTableExists) {
+            await this.dataSource.synchronize();
+        }
     }
 
     /**
@@ -40,12 +80,14 @@ export class UserDataVault extends UserCommunication implements IUserDataVault {
         const decision = kycPayload.data.verification.decision;
         const status = castDecisionToStatus(decision);
 
-        debug('handleVerificationUpdate() kycPayload', did, kycPayload);
+        debug('handleVerificationUpdate() kycPayload', did, kycPayload, vcPayload);
 
         for (const [key, signedVc] of Object.entries(vcPayload)) {
             const type = VerificationTypeEnum.from(key);
 
-            await this.idVerificationManager.emplaceByVeriffIdAndType(kycPayload.sessionId, type, status, signedVc);
+            const vc = castStringToCredential(signedVc.toString(), type);
+
+            await this.idVerificationManager.emplaceByVeriffIdAndType(kycPayload.sessionId + key, type, status, vc);
             debug(`handleVerificationUpdate() successfully stored ${key} VC in storage`);
         }
     };
@@ -57,6 +99,7 @@ export class UserDataVault extends UserCommunication implements IUserDataVault {
      * @returns {Promise<KYCPayload>}
      */
     async waitForNextVeriffVerification(): Promise<KYCPayload> {
+        debug('waitForNextVeriffVerification');
         let id: number | undefined;
 
         return await new Promise<KYCPayload>((resolve, reject) => {
@@ -98,5 +141,13 @@ export class UserDataVault extends UserCommunication implements IUserDataVault {
         }
 
         return vc;
+    }
+
+    async fetchReuseableKycCount(type?: VerificationTypeEnum): Promise<number> {
+        return await this.idVerificationManager.countReuse(type);
+    }
+
+    async updateReuseableKycCount(type: VerificationTypeEnum): Promise<void> {
+        await this.idVerificationManager.updateReuseableCount(type);
     }
 }

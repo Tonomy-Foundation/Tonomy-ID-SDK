@@ -37,7 +37,7 @@ import Debug from 'debug';
 
 const debug = Debug('tonomy-sdk:externalUser');
 
-type CallbackResponse = {
+export type CallbackResponse = {
     user: ExternalUser;
     data?: {
         kyc?: {
@@ -66,6 +66,7 @@ export type VerifyLoginOptions = {
     checkKeys?: boolean;
     keyManager?: KeyManager;
     storageFactory?: StorageFactory;
+    responses?: DualWalletResponse;
 };
 
 export type LoginWithTonomyMessages = {
@@ -340,10 +341,10 @@ export class ExternalUser {
             checkKeys = true,
             keyManager = new JsKeyManager(),
             storageFactory = browserStorageFactory,
+            responses = DualWalletResponse.fromUrl(),
         } = options;
 
         debug('verifyLoginResponse()', { external, checkKeys });
-        const responses = DualWalletResponse.fromUrl();
 
         if (responses.isSuccess()) {
             await responses.verify();

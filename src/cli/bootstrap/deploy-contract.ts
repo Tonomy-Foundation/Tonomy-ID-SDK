@@ -23,7 +23,7 @@ export function getDeployableFilesFromDir(dir: string) {
 
 export default async function deployContract(
     { account, contractDir }: { account: NameType; contractDir: string },
-    signer: Signer,
+    signer: Signer | Signer[],
     options?: {
         extraAuthorization?: PermissionLevelType;
         throughTonomyProxy?: boolean;
