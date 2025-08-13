@@ -20,9 +20,9 @@ if [ ! -d "${PARENT_PATH}/Tonomy-Contracts/contracts" ]; then
     git submodule foreach git pull
 fi
 
-echo "Tonomy Contracts: Building smart contracts"
 cd "${PARENT_PATH}/Tonomy-Contracts"
 if [ ! -f "contracts/eosio.token/eosio.token.wasm" ]; then
+    echo "Tonomy Contracts: Building smart contracts"
     ./build-contracts.sh
 fi
 
@@ -50,10 +50,12 @@ if [ ! -d "node_modules" ]; then
 fi
 if [ ! -d "artifacts" ]; then
     echo "Ethereum Token Contract: Compiling contracts"
-    yarn compile
+    ls -la
+    yarn -v
+    yarn run compile
 fi
 
 echo "Ethereum Token Contract: Copying ABI"
-cp "${PARENT_PATH}/Ethereum-token/artifacts/contracts/TonomyToken.sol/TonomyToken.json" "${PARENT_PATH}/src/sdk/services/ethereum/abi/TonomyToken.json"
+cp "./artifacts/contracts/TonomyToken.sol/TonomyToken.json" "${PARENT_PATH}/src/sdk/services/ethereum/abi/TonomyToken.json"
 
 echo "All contract ABIs copied successfully"
