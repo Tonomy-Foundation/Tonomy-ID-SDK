@@ -441,6 +441,18 @@ async function createTonomyApps(newPublicKey: PublicKey, newSigner: Signer): Pro
         publicKey: newPublicKey,
         signer,
     });
+
+    await createApp({
+        appName: 'Tonomy Bankless',
+        usernamePrefix: 'tonomy-bankless',
+        description: `Swap your Tonomy coins quickly and securely — no banks, no middlemen, no hassle`,
+        origin: settings.config.banklessWebsiteOrigin,
+        logoUrl: settings.config.banklessWebsiteOrigin + '/tonomy-logo1024.png',
+        backgroundColor: '#F9FAFB',
+        accentColor: '#5833BC',
+        publicKey: newPublicKey,
+        signer,
+    });
 }
 
 async function updateAccountControllers(govKeys: string[], newPublicKey: PublicKey) {
