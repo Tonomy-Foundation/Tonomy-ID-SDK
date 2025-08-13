@@ -3,17 +3,22 @@
 # If ARG1=local then will use local cdt-cpp, otherwise will use docker cdt-cpp
 ARG1=$1
 
-set -u ## exit if you try to use an uninitialised variable
 set -e ## exit if any statement fails
 
 # Make sure working dir is same as this dir, so that script can be excuted from another working directory
 PARENT_PATH=$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )
 
-# Get the current git branch
+# Get the current git branch. If in CI on a non-standard branch, use development
+echo "GITHUB_ACTIONS: ${GITHUB_ACTIONS}"
 BRANCH=$(git rev-parse --abbrev-ref HEAD)
 echo "Current branch: ${BRANCH}"
+if [ "${GITHUB_ACTIONS}" == "true" ] && [ "${BRANCH}" != "master" ] && [ "${BRANCH}" != "testnet" ] && [ "${BRANCH}" != "development" ]; then
+    BRANCH="development"
+fi
+echo "Using branch: ${BRANCH}"
+
 echo "Checking for submodules"
-if [ ! -d "${PARENT_PATH}/Tonomy-Contracts/contracts" ]; then
+if [ ! -d "${PARENT_PATH}/Ethereum-token/contracts" ]; then
     echo "Installing submodules"
     git submodule update --init --recursive
     git submodule foreach git checkout ${BRANCH}
