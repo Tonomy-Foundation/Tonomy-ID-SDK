@@ -10,6 +10,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Enable Corepack before setting up Node
+        run: corepack enable
+
+      - name: Install and build dependencies
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.3.0
+          cache: yarn
+      - run: yarn install --immutable
+      - run: yarn run build:setup
+      
       - name: Delete Tonomy-Contracts directory
         run: rm -rf ./Tonomy-Contracts
 
@@ -19,15 +30,11 @@ jobs:
           name: Tonomy-Contracts
           path: ./Tonomy-Contracts
 
-      - name: Enable Corepack before setting up Node
-        run: corepack enable
-
       - name: Run lint and test
         uses: actions/setup-node@v4
         with:
           node-version: 22.3.0
           cache: yarn
-      - run: yarn install --immutable
       - run: yarn run build
       - run: yarn run typeCheck
       - run: yarn run lint
