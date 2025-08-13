@@ -372,7 +372,6 @@ describe('StakingContract Staking Tests', () => {
 
                 allocation = allocations[0];
                 allocationId = allocation.id;
-                stakeSettings = await stakeContract.getSettings();
             });
       
             test('Successfully request unstake after lockup period and update tables', async () => {
@@ -381,6 +380,7 @@ describe('StakingContract Staking Tests', () => {
                 await sleepUntil(addSeconds(allocation.unstakeableTime, 1));
                 const now = new Date();
 
+                stakeSettings = await stakeContract.getSettings();
                 const unstakeTrx = await stakeContract.requestUnstake(accountName, allocationId, accountSigner);
 
                 expect(unstakeTrx.processed.receipt.status).toBe('executed');
@@ -477,12 +477,12 @@ describe('StakingContract Staking Tests', () => {
 
                 allocation = allocations[0];
                 allocationId = allocation.id;
-                stakeSettings = await stakeContract.getSettings();
             });
 
             test('Successfully finalize unstake after release period and update tables', async () => {
                 expect.assertions(12);
                 await sleepUntil(addSeconds(allocation.releaseTime, 1));
+                stakeSettings = await stakeContract.getSettings();
                 const releaseTrx = await stakeContract.releaseToken(accountName, allocationId, accountSigner);
 
                 debug("releaseTrxr eleaseTrx", releaseTrx)
