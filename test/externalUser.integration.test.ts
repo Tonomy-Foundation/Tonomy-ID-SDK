@@ -85,6 +85,7 @@ describe('Login to external website', () => {
     let EXTERNAL_WEBSITE_storage_factory: StorageFactory;
     let EXTERNAL_WEBSITE_user: ExternalUser;
     let TONOMY_ID_dataSource: DataSource;
+    const communicationsToCleanup: Communication[] = [];
 
     beforeEach(async () => {
         // Initialize typeorm data source
@@ -95,6 +96,7 @@ describe('Login to external website', () => {
         // Create new Tonomy ID user
         debug('TONOMY_ID: creating new Tonomy ID user');
         TONOMY_ID_user = (await createRandomID()).user;
+        communicationsToCleanup.push(TONOMY_ID_user.communication);
         TONOMY_ID_did = await TONOMY_ID_user.getDid();
 
         expect(TONOMY_ID_did).toContain('did:antelope:');
@@ -154,11 +156,13 @@ describe('Login to external website', () => {
             TONOMY_ID_dataSource = await setupTestDatabase();
         }
 
+        disconnectCommunications(communicationsToCleanup);
+
         debug('finished cleanup');
 
         // for some reason this is needed to ensure all the code lines execute. Not sure why needed
         // TODO: figure out why this is needed and remove issue
-        await sleep(500);
+        await sleep(1000);
     });
 
     afterAll(async () => {
@@ -225,6 +229,8 @@ describe('Login to external website', () => {
             communication: TONOMY_LOGIN_WEBSITE_communication,
         } = await loginWebsiteOnRedirect(EXTERNAL_WEBSITE_did, TONOMY_LOGIN_WEBSITE_jsKeyManager);
 
+        communicationsToCleanup.push(TONOMY_LOGIN_WEBSITE_communication);
+
         // setup subscriber for connection to Tonomy ID acknowledgement
         const { subscriber: TONOMY_LOGIN_WEBSITE_messageSubscriber, promise: TONOMY_LOGIN_WEBSITE_ackMessagePromise } =
             await setupTonomyIdIdentifySubscriber(TONOMY_ID_did);
@@ -285,10 +291,6 @@ describe('Login to external website', () => {
 
         if (testOptions.dataRequestKYC && testOptions.dataRequestKYCDecision !== 'approved') {
             debug('TONOMY_ID/SSO: KYC verification failed, login was never executed by user');
-            await finishTest([
-                TONOMY_LOGIN_WEBSITE_communication,
-            ]);
-
             return;
         }
 
@@ -350,13 +352,14 @@ describe('Login to external website', () => {
             testOptions
         );
 
-        await EXTERNAL_WEBSITE_user.communication.disconnect();
+        await disconnectCommunications([EXTERNAL_WEBSITE_user.communication]);
 
         EXTERNAL_WEBSITE_user = await externalWebsiteOnReload(
             EXTERNAL_WEBSITE_jsKeyManager,
             EXTERNAL_WEBSITE_storage_factory,
             TONOMY_ID_user
         );
+        communicationsToCleanup.push(EXTERNAL_WEBSITE_user.communication);
 
         await externalWebsiteSignVc(EXTERNAL_WEBSITE_user);
 
@@ -365,18 +368,13 @@ describe('Login to external website', () => {
         await externalWebsiteClientAuth(EXTERNAL_WEBSITE_user, externalApp, testOptions);
 
         await externalWebsiteOnLogout(EXTERNAL_WEBSITE_jsKeyManager, EXTERNAL_WEBSITE_storage_factory);
-
-        await finishTest([
-            TONOMY_LOGIN_WEBSITE_communication,
-            EXTERNAL_WEBSITE_user.communication,
-        ]);
     }
 
-    async function finishTest(communications: Communication[]) {
+    async function disconnectCommunications(communications: Communication[]) {
         for (const communication of communications) {
             await communication.disconnect();
         }
 
-        debug('finished test');
+        debug('finished disconnecting all communications');
     }
 });
