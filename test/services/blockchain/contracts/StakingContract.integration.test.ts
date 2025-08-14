@@ -623,7 +623,7 @@ describe('StakingContract Staking Tests', () => {
             state?: StakingState;
             unstaked?: boolean;
         };
-        const WATCH_INTERVAL_MS = 250;
+        const WATCH_INTERVAL_MS = 500;
 
         async function watchAllocation(options: { watching: boolean, stakingAllocationLog: StakingAllocationLog[], watchInternalMs: number}) {
             while (options.watching) {
@@ -696,7 +696,7 @@ describe('StakingContract Staking Tests', () => {
         
         test('watch and print the account stake and yield', async () => {
             // only run on local machine to understand the staking yield. No tests are run.
-            // if (process.env.CI) return;
+            if (process.env.CI) return;
             await resetContract();
 
             // Use a large stake to minimize rounding issues.

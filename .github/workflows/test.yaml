@@ -157,7 +157,5 @@ jobs:
         with:
           node-version: 22.3.0
           cache: yarn
-      # - run: DEBUG=tonomy* yarn run test:integration --runTestsByPath ./test/services/blockchain/contracts/StakingContract.integration.test.ts 
-      # - run: DEBUG=tonomy* yarn run test:integration --runTestsByPath ./test/externalUser.integration.test.ts 
-      - run: DEBUG=tonomy* yarn run test:integration
-      # - run: yarn run test:governance
+      - run: yarn run test:integration
+      - run: yarn run test:governance
