@@ -19,10 +19,28 @@ echo "Using branch: ${BRANCH}"
 
 echo "Checking submodules"
 if [ ! -d "${PARENT_PATH}/Ethereum-token/contracts" ]; then
-    echo "Updating submodules"
-    git submodule update --init --recursive
-    git submodule foreach git checkout ${BRANCH}
-    git submodule foreach git pull
+    echo "Updating submodules: Ethereum-token"
+    git submodule update --init --recursive Ethereum-token
+    cd Ethereum-token
+    git checkout ${BRANCH}
+    git pull
+    cd ../
+fi
+if [ ! -d "${PARENT_PATH}/Tonomy-Contracts/contracts" ]; then
+    echo "Updating submodules: Tonomy-Contracts"
+    git submodule update --init --recursive Tonomy-Contracts
+    cd Tonomy-Contracts
+    git checkout ${BRANCH}
+    git pull
+    cd ../
+fi
+if [ ! -d "${PARENT_PATH}/Tonomy-Communication/src" ]; then
+    echo "Updating submodules: Tonomy-Communication"
+    git submodule update --init --recursive Tonomy-Communication
+    cd Tonomy-Communication
+    git checkout ${BRANCH}
+    git pull
+    cd ../
 fi
 
 cd "${PARENT_PATH}/Tonomy-Contracts"
