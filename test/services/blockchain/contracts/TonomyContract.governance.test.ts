@@ -33,22 +33,12 @@ describe('TonomyContract class', () => {
             key = PrivateKey.generate(KeyType.K1);
             authority = Authority.fromKey(key.toPublic().toString());
             randomName = randomAccountName();
-            action = {
-                account: 'tonomy',
-                name: 'newaccount',
-                authorization: [
-                    {
-                        actor: 'tonomy',
-                        permission: 'owner',
-                    },
-                ],
-                data: {
-                    creator: 'tonomy',
-                    name: randomName,
-                    owner: authority,
-                    active: authority,
-                },
-            };
+            action = tonomyEosioProxyContract.actions.newAccount({
+                creator: 'tonomy',
+                name: randomName,
+                owner: authority,
+                active: authority,
+            });
         });
 
         test('sign with tonomy@active should fail', async () => {
@@ -142,24 +132,13 @@ describe('TonomyContract class', () => {
                 authority = Authority.fromKey(key.toPublic().toString());
                 newPermission = randomAccountName();
 
-                action = {
-                    account: 'tonomy',
-                    name: 'updateauth',
-                    authorization: [
-                        {
-                            actor: 'tonomy',
-                            permission: 'owner',
-                        },
-                    ],
-                    data: {
-                        account: 'eosio',
-                        permission: newPermission,
-                        parent: 'owner',
-                        auth: authority,
-                        // eslint-disable-next-line camelcase
-                        auth_parent: true, // should be true when a new permission is being created, otherwise false
-                    },
-                };
+                action = tonomyEosioProxyContract.actions.updateAuth({
+                    account: 'eosio',
+                    permission: newPermission,
+                    parent: 'owner',
+                    auth: authority,
+                    authParent: true, // should be true when a new permission is being created, otherwise false
+                });
             });
 
             test('sign with tonomy@owner should succeed', async () => {

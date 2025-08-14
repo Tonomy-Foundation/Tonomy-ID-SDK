@@ -18,7 +18,7 @@ export async function updateAuth(options: StandardProposalOptions) {
     newAuthority.addAccount({ actor: newDelegate, permission: 'active' });
     // const newAuthority = Authority.fromAccount({ actor: 'found.tmy', permission: 'active' });
 
-    const action = tonomyEosioProxyContract.actions.updateauth({
+    const action = tonomyEosioProxyContract.actions.updateAuth({
         account,
         permission,
         parent: perm.parent,
@@ -61,7 +61,7 @@ export async function addEosioCode(options: StandardProposalOptions) {
         ownerAuthority.addCodePermission('staking.tmy');
 
         actions.push(
-            tonomyEosioProxyContract.actions.updateauth({
+            tonomyEosioProxyContract.actions.updateAuth({
                 account,
                 permission: 'owner',
                 parent: '',
@@ -71,7 +71,7 @@ export async function addEosioCode(options: StandardProposalOptions) {
         );
 
         actions.push(
-            tonomyEosioProxyContract.actions.updateauth({
+            tonomyEosioProxyContract.actions.updateAuth({
                 account,
                 permission: 'active',
                 parent: 'owner',
@@ -96,7 +96,7 @@ export async function addEosioCode(options: StandardProposalOptions) {
 
 export async function govMigrate(args: { newGovernanceAccounts: string[] }, options: StandardProposalOptions) {
     const threshold = settings.isProduction() ? 3 : 2;
-    const action = tonomyEosioProxyContract.actions.updateauth({
+    const action = tonomyEosioProxyContract.actions.updateAuth({
         account: 'found.tmy',
         permission: 'owner',
         parent: '',

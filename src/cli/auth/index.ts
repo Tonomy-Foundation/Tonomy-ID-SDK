@@ -17,7 +17,7 @@ export default async function auth(args: string[]) {
         const perm = accountInfo.getPermission(permission);
         const newAuthority = Authority.fromAccount({ actor: 'found.tmy', permission: 'active' });
 
-        const action = tonomyEosioProxyContract.actions.updateauth({
+        const action = tonomyEosioProxyContract.actions.updateAuth({
             account,
             permission,
             parent: perm.parent,

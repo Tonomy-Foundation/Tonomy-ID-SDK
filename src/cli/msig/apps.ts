@@ -95,7 +95,7 @@ function createProposalName(proposalName: Name, suffix: string, index?: number):
 // MSIG 1: Create accounts for apps
 export async function createAccounts(options: StandardProposalOptions) {
     function createNewAccountAction(name: string, active: Authority, owner: Authority) {
-        return tonomyEosioProxyContract.actions.newaccount({
+        return tonomyEosioProxyContract.actions.newAccount({
             creator: 'tonomy',
             name,
             owner,

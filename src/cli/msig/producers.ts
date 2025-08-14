@@ -225,7 +225,7 @@ function createSetProdsAction(schedule: ProducerSchedule[]) {
         );
     }
 
-    return tonomyEosioProxyContract.actions.setprods({
+    return tonomyEosioProxyContract.actions.setProds({
         schedule,
     });
 }

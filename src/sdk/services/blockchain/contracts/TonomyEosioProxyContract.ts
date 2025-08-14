@@ -55,7 +55,7 @@ export class TonomyEosioProxyContract extends Contract {
     }
 
     actions = {
-        newaccount: (
+        newAccount: (
             data: {
                 creator: NameType;
                 name: NameType;
@@ -64,15 +64,15 @@ export class TonomyEosioProxyContract extends Contract {
             },
             auth: ActionOptions = addSpecialGovernancePermission(activeAuthority(data.creator), data.creator)
         ): Action => this.action('newaccount', data, auth),
-        setcode: (
+        setCode: (
             data: { account: NameType; vmtype: number; vmversion: number; code: string },
             auth: ActionOptions = addSpecialGovernancePermission(activeAuthority(data.account), data.account)
         ): Action => this.action('setcode', data, auth),
-        setabi: (
+        setAbi: (
             data: { account: NameType; abi: string },
             auth: ActionOptions = addSpecialGovernancePermission(activeAuthority(data.account), data.account)
         ): Action => this.action('setabi', data, auth),
-        updateauth: (
+        updateAuth: (
             data: {
                 account: NameType;
                 permission: NameType;
@@ -100,7 +100,7 @@ export class TonomyEosioProxyContract extends Contract {
                 },
                 auth
             ),
-        linkauth: (
+        linkAuth: (
             data: { account: NameType; code: NameType; type: NameType; requirement: NameType },
             auth: ActionOptions = activeAuthority(data.account)
         ): Action =>
@@ -114,16 +114,16 @@ export class TonomyEosioProxyContract extends Contract {
                 },
                 auth
             ),
-        setpriv: (
+        setPriv: (
             data: { account: NameType; isPriv: number },
             auth: ActionOptions = addSpecialGovernancePermission(activeAuthority(data.account), data.account)
         ): Action => this.action('setpriv', { account: data.account, is_priv: data.isPriv }, auth),
-        setprods: (
+        setProds: (
             // TODO: use ProducerSchedule type
             data: { schedule: any[] },
             auth: ActionOptions = addSpecialGovernancePermission(activeAuthority(this.contractName), this.contractName)
         ): Action => this.action('setprods', data, auth),
-        setparams: (
+        setParams: (
             data: { params: BlockchainParams },
             auth: ActionOptions = addSpecialGovernancePermission(activeAuthority(this.contractName), this.contractName)
         ): Action => this.action('setparams', data, auth),
@@ -145,8 +145,8 @@ export class TonomyEosioProxyContract extends Contract {
 
         if (extraAuthorization) auth.authorization.push(extraAuthorization);
 
-        const setCode = this.actions.setcode({ account, vmtype: 0, vmversion: 0, code: wasmHex }, auth);
-        const setAbi = this.actions.setabi({ account, abi: abiHex }, auth);
+        const setCode = this.actions.setCode({ account, vmtype: 0, vmversion: 0, code: wasmHex }, auth);
+        const setAbi = this.actions.setAbi({ account, abi: abiHex }, auth);
 
         return [setCode, setAbi];
     }
@@ -171,7 +171,7 @@ export class TonomyEosioProxyContract extends Contract {
         active: AuthorityType,
         signer: Signer | Signer[]
     ): Promise<API.v1.PushTransactionResponse> {
-        const action = this.actions.newaccount({ creator, name, owner, active });
+        const action = this.actions.newAccount({ creator, name, owner, active });
 
         return transact(action, signer);
     }
@@ -184,7 +184,7 @@ export class TonomyEosioProxyContract extends Contract {
         signer: Signer,
         options: { authParent?: boolean } = {}
     ): Promise<API.v1.PushTransactionResponse> {
-        const action = this.actions.updateauth({
+        const action = this.actions.updateAuth({
             account,
             permission,
             parent,
@@ -202,13 +202,13 @@ export class TonomyEosioProxyContract extends Contract {
         requirement: NameType,
         signer: Signer
     ): Promise<API.v1.PushTransactionResponse> {
-        const action = this.actions.linkauth({ account, code, type, requirement });
+        const action = this.actions.linkAuth({ account, code, type, requirement });
 
         return transact(action, signer);
     }
 
     async setPriv(account: NameType, isPriv: number, signer: Signer): Promise<API.v1.PushTransactionResponse> {
-        const action = this.actions.setpriv({ account, isPriv });
+        const action = this.actions.setPriv({ account, isPriv });
 
         return transact(action, signer);
     }

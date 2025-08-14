@@ -1,5 +1,12 @@
 /* eslint-disable camelcase */
-import { Authority, bytesToTokens, tokenContract, tonomyEosioProxyContract } from '../../sdk/services/blockchain';
+import {
+    Authority,
+    bytesToTokens,
+    createAppJsonDataString,
+    tokenContract,
+    tonomyContract,
+    tonomyEosioProxyContract,
+} from '../../sdk/services/blockchain';
 import { StandardProposalOptions, createProposal, executeProposal } from '.';
 import { deployContract } from './contract';
 import { AccountType, getSettings, TonomyUsername } from '../../sdk';
@@ -8,7 +15,7 @@ import { Action, Name } from '@wharfkit/antelope';
 // @ts-expect-error args not used
 export async function hyphaAccountsCreate(args: any, options: StandardProposalOptions) {
     function createNewAccountAction(name: string, active: Authority, owner: Authority) {
-        return tonomyEosioProxyContract.actions.newaccount({
+        return tonomyEosioProxyContract.actions.newAccount({
             creator: 'tonomy',
             name,
             owner: owner,
@@ -264,24 +271,12 @@ export async function hyphaContractSet(args: any, options: StandardProposalOptio
 
     console.log(`Setting up hypha contract "${contract}" with ${tokens} tokens to buy ${ramKb}KB of RAM`);
 
-    const adminSetAppAction = {
-        authorization: [
-            {
-                actor: 'tonomy',
-                permission: 'active',
-            },
-        ],
-        account: 'tonomy',
-        name: 'adminsetapp',
-        data: {
-            account_name: Name.from(contract),
-            app_name: appName,
-            description,
-            username_hash: tonomyUsername.usernameHash,
-            logo_url: logoUrl,
-            origin,
-        },
-    };
+    const adminSetAppAction = tonomyContract.actions.adminSetApp({
+        jsonData: createAppJsonDataString(appName, description, logoUrl, '#000000', '#FFFFFF'),
+        accountName: Name.from(contract),
+        usernameHash: tonomyUsername.usernameHash,
+        origin,
+    });
 
     const transferTokensAction = tokenContract.actions.transfer({
         from: 'partners.tmy',
@@ -290,21 +285,11 @@ export async function hyphaContractSet(args: any, options: StandardProposalOptio
         memo: `RAM for ${contract}`,
     });
 
-    const buyRamAction = {
-        account: 'tonomy',
-        name: 'buyram',
-        authorization: [
-            {
-                actor: contract,
-                permission: 'active',
-            },
-        ],
-        data: {
-            dao_owner: contract,
-            app: contract,
-            quant: tokens,
-        },
-    };
+    const buyRamAction = tonomyContract.actions.buyRam({
+        daoOwner: contract,
+        app: contract,
+        quant: tokens,
+    });
 
     const deployActions = await deployContract({
         contract: contract,

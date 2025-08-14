@@ -302,27 +302,18 @@ describe('VestingContract class', () => {
             const contract = 'vesting.tmy';
             const { user } = await createRandomID();
             const accountName2 = (await user.getAccountName()).toString()
+            const amount = '2.000000 TONO';
 
-            const assignTokensAction = {
-                authorization: [
-                    {
-                        actor: sender.toString(),
-                        permission: 'active',
-                    },
-                ],
-                account: contract,
-                name: 'assigntokens',
-                data: {
-                    sender,
-                    holder: accountName,
-                    amount: '2.000000 TONO',
-                    category: 999,
-                },
-            }
+            const assignTokensAction = vestingContract.actions.assignTokens({
+                sender,
+                holder: accountName,
+                amount,
+                category: 999,
+            })
             const eosioTokenTransferData = {
                 from: sender,
                 to: contract,
-                quantity: assignTokensAction.data.amount,
+                quantity: amount,
                 memo: "Allocated vested funds"
             }
 
@@ -380,27 +371,18 @@ describe('VestingContract class', () => {
             const contract = 'vesting.tmy';
             const { user } = await createRandomID();
             const accountName2 = (await user.getAccountName()).toString()
+            const amount = '2.000000 TONO';
 
-            const assignTokensAction = {
-                authorization: [
-                    {
-                        actor: sender.toString(),
-                        permission: 'active',
-                    },
-                ],
-                account: contract,
-                name: 'assigntokens',
-                data: {
-                    sender,
-                    holder: accountName,
-                    amount: '2.000000 TONO',
-                    category: 999,
-                },
-            }
+            const assignTokensAction = vestingContract.actions.assignTokens({
+                sender,
+                holder: accountName,
+                amount,
+                category: 999,
+            })
             const eosioTokenTransferData = {
                 from: sender,
                 to: contract,
-                quantity: assignTokensAction.data.amount,
+                quantity: amount,
                 memo: "Allocated vested funds"
             }
 

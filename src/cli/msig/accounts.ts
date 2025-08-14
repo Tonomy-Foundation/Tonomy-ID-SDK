@@ -16,7 +16,7 @@ export async function newAccount(args: { governanceAccounts: string[] }, options
         permission: 'active',
     });
 
-    const action = tonomyEosioProxyContract.actions.newaccount({
+    const action = tonomyEosioProxyContract.actions.newAccount({
         creator: 'tonomy',
         name: accountName,
         owner: owner,

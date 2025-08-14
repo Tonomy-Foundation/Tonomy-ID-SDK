@@ -18,7 +18,7 @@ import { deployContract } from './contract';
 //create staking.tmy account controlled by ops.tmy
 export async function createStakingTmyAccount(options: StandardProposalOptions) {
     function createNewAccountAction(name: string, active: Authority, owner: Authority) {
-        return tonomyEosioProxyContract.actions.newaccount({
+        return tonomyEosioProxyContract.actions.newAccount({
             creator: 'tonomy',
             name,
             active,
@@ -51,7 +51,7 @@ export async function createStakingTmyAccount(options: StandardProposalOptions) 
     ownerAuthorityInfra.addCodePermission('staking.tmy');
     activeAuthorityInfra.addCodePermission('staking.tmy');
 
-    const updateInfraOwnerPermission = tonomyEosioProxyContract.actions.updateauth({
+    const updateInfraOwnerPermission = tonomyEosioProxyContract.actions.updateAuth({
         account: 'infra.tmy',
         permission: 'owner',
         parent: '',
@@ -60,7 +60,7 @@ export async function createStakingTmyAccount(options: StandardProposalOptions) 
         authParent: false,
     });
 
-    const updateInfraActivePermission = tonomyEosioProxyContract.actions.updateauth({
+    const updateInfraActivePermission = tonomyEosioProxyContract.actions.updateAuth({
         account: 'infra.tmy',
         permission: 'active',
         parent: 'owner',
@@ -109,21 +109,11 @@ export async function stakingContractSetup(options: StandardProposalOptions) {
         jsonData,
     });
 
-    // const buyRamAction = {
-    //     account: 'tonomy',
-    //     name: 'buyram',
-    //     authorization: [
-    //         {
-    //             actor: contract,
-    //             permission: 'active',
-    //         },
-    //     ],
-    //     data: {
-    //         dao_owner: 'ops.tmy',
-    //         app: contract,
-    //         quant: tokens,
-    //     },
-    // };
+    // const buyRamAction = tonomyContract.actions.buyRam({
+    //     daoOwner: 'ops.tmy',
+    //     app: contract,
+    //     quant: tokens,
+    // });
 
     const setres = tonomyContract.actions.setResParams({
         ramFee: RAM_FEE,

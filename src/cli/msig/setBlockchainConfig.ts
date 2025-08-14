@@ -3,7 +3,7 @@ import { StandardProposalOptions, createProposal, executeProposal } from '.';
 
 // @ts-expect-error args not used
 export async function setBlockchainConfig(args, options: StandardProposalOptions) {
-    const action = tonomyEosioProxyContract.actions.setparams({
+    const action = tonomyEosioProxyContract.actions.setParams({
         params: defaultBlockchainParams,
     });
 
