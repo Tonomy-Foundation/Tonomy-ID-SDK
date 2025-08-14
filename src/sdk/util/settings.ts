@@ -21,6 +21,10 @@ export type SettingsType = {
     tonomyIdSchema: string;
     loggerLevel: LoggerLevel;
     currencySymbol: string;
+    baseTokenAddress: string;
+    baseRpcUrl: string;
+    basePrivateKey: string;
+    baseNetwork: 'base' | 'base_testnet' | 'hardhat' | 'localhost';
 };
 
 type FetchType = (input: RequestInfo, init?: RequestInit) => Promise<Response>;

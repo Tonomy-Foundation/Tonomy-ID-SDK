@@ -177,4 +177,5 @@ interface KeyManager {
     removeKey(options: GetKeyOptions): Promise<void>;
 }
 
-export { KeyManager, KeyManagerLevel, StoreKeyOptions, SignDataOptions, GetKeyOptions, CheckKeyOptions };
+export { KeyManagerLevel, StoreKeyOptions, SignDataOptions, GetKeyOptions, CheckKeyOptions };
+export type { KeyManager };
