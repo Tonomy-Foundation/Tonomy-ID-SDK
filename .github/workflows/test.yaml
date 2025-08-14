@@ -78,6 +78,7 @@ jobs:
           path: ./Tonomy-Contracts
 
   build-communication-container:
+    needs: compile-contracts
     name: Build Communication Container
     runs-on: ubuntu-latest
     env:
@@ -86,6 +87,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Delete Tonomy-Contracts directory
+        run: rm -rf ./Tonomy-Contracts
+
+      - name: Get Tonomy-Contracts directory from artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: Tonomy-Contracts
+          path: ./Tonomy-Contracts
+
       - name: Build container
         run: |
           git submodule update --init --recursive
@@ -93,6 +103,7 @@ jobs:
           git checkout $GIT_BRANCH
           git pull
           cd ../
+          yarn run build:setup
           docker build -t tonomy/communication:local -f test/Dockerfile.communication .
 
       - name: Save Communication service Docker image as artifact
