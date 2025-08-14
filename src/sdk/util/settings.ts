@@ -18,9 +18,11 @@ export type SettingsType = {
     accountSuffix: string;
     communicationUrl: string;
     accountsServiceUrl: string;
+    tonomyAppsOrigin: string;
     tonomyIdSchema: string;
     loggerLevel: LoggerLevel;
     currencySymbol: string;
+    demoWebsiteOrigin: string;
 };
 
 type FetchType = (input: RequestInfo, init?: RequestInit) => Promise<Response>;

@@ -10,7 +10,7 @@ type ConfigType = {
     ssoWebsiteOrigin: string;
     demoWebsiteOrigin: string;
     consoleWebsiteOrigin: string;
-    banklessWebsiteOrigin: string;
+    tonomyAppsOrigin: string;
     accountSuffix: string;
     communicationUrl: string;
     accountsServiceUrl: string;
@@ -27,7 +27,7 @@ const defaultConfig = {
     ssoWebsiteOrigin: `http://${ipAddress}:3000`,
     demoWebsiteOrigin: `http://${ipAddress}:3001`,
     consoleWebsiteOrigin: `http://${ipAddress}:3002`,
-    banklessWebsiteOrigin: `http://${ipAddress}:3003`,
+    tonomyAppsOrigin: `http://${ipAddress}:3003`,
     blockchainUrl: `http://${ipAddress}:8888`,
     accountSuffix: '.stag.tonomy.id',
     communicationUrl: 'ws://localhost:5000',
@@ -43,7 +43,7 @@ const stagingConfig = {
     ssoWebsiteOrigin: `https://accounts.staging.tonomy.foundation`,
     demoWebsiteOrigin: `https://demo.staging.tonomy.foundation`,
     consoleWebsiteOrigin: `https://console.developers.staging.tonomy.foundation`,
-    banklessWebsiteOrigin: `http://${ipAddress}:3003`,
+    tonomyAppsOrigin: `http://${ipAddress}:3003`,
     blockchainUrl: `https://blockchain-api-staging.tonomy.foundation`,
     accountSuffix: '.stag.tonomy.id',
     communicationUrl: 'wss://communication.staging.tonomy.foundation',
@@ -59,7 +59,7 @@ const testnetConfig = {
     ssoWebsiteOrigin: `https://accounts.testnet.tonomy.io`,
     demoWebsiteOrigin: `https://demo.testnet.tonomy.io`,
     consoleWebsiteOrigin: `https://console.developers.testnet.tonomy.io`,
-    banklessWebsiteOrigin: `http://${ipAddress}:3003`,
+    tonomyAppsOrigin: `http://${ipAddress}:3003`,
     blockchainUrl: `https://blockchain-api-testnet.tonomy.io`,
     accountSuffix: '.testnet.pangea',
     communicationUrl: 'wss://communication.testnet.tonomy.io',
@@ -75,7 +75,7 @@ const productionConfig = {
     ssoWebsiteOrigin: `https://accounts.tonomy.io`,
     demoWebsiteOrigin: `https://demo.tonomy.io`,
     consoleWebsiteOrigin: `https://console.developers.tonomy.io`,
-    banklessWebsiteOrigin: `http://${ipAddress}:3003`,
+    tonomyAppsOrigin: `http://${ipAddress}:3003`,
     blockchainUrl: `https://blockchain-api.tonomy.io`,
     accountSuffix: '.pangea.id',
     communicationUrl: 'wss://communication.tonomy.io',
