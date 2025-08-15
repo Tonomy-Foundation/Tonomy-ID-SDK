@@ -110,7 +110,7 @@ describe('User class', () => {
             keyFromPasswordFn: generatePrivateKeyFromPassword,
         });
 
-        expect(idInfo.username_hash.toString()).toBe(username.usernameHash);
+        expect(idInfo.usernameHash.toString()).toBe(username.usernameHash);
         expect(userLogin.keyManager.getKey({ level: KeyManagerLevel.PASSWORD })).resolves.toBeDefined();
         expect(await userLogin.storage.accountName).toBeDefined();
         expect((await userLogin.getUsername()).username).toBe(username.username);

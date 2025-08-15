@@ -3,7 +3,7 @@ import { CommunicationError, createSdkError, SdkErrors, throwError } from '../..
 import { getSettings } from '../../util/settings';
 import { AuthenticationMessage, Message, VerificationMessage } from '../../services/communication/message';
 import Debug from 'debug';
-import { sha256 } from '../../util';
+import { sha256 } from '../../util/crypto';
 
 const debug = Debug('tonomy-sdk:services:communication:communication');
 

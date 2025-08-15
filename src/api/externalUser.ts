@@ -17,23 +17,19 @@ import {
     DualWalletResponse,
     DualWalletRequests,
 } from '../sdk/util/request';
-import { KYCPayload, KYCVC, verifyOpsTmyDid } from '../sdk/util';
+import { getAccountNameFromDid, KYCPayload, KYCVC, parseDid, verifyOpsTmyDid } from '../sdk/util';
 import {
+    App,
     AuthenticationMessage,
     Communication,
-    getTonomyContract,
     LinkAuthRequestMessage,
     LinkAuthRequestResponseMessage,
     Message,
 } from '../sdk';
-import {
-    defaultVerifyTonomyVcOptions,
-    VerifiableCredential,
-    verifyTonomyVc,
-    VerifyTonomyVcOptions,
-} from '../sdk/util/ssi/vc';
+import { VCWithTypeType, VerifiableCredential, VerifiableCredentialWithType } from '../sdk/util/ssi/vc';
 import { DIDurl, JWT } from '../sdk/util/ssi/types';
 import { Signer, createKeyManagerSigner, transact } from '../sdk/services/blockchain/eosio/transaction';
+import { getTonomyContract } from '../sdk/services/blockchain/contracts/TonomyContract';
 import { createDidKeyIssuerAndStore } from '../sdk/helpers/didKeyStorage';
 import { verifyKeyExistsForApp } from '../sdk/helpers/user';
 import { ClientAuthorizationData, IOnPressLoginOptions } from '../sdk/types/User';
@@ -148,7 +144,7 @@ export class ExternalUser {
             if (username) {
                 const personData = await getTonomyContract().getPerson(username);
 
-                if (accountName.toString() !== personData.account_name.toString())
+                if (!accountName.equals(personData.accountName))
                     throwError('Username has changed', SdkErrors.InvalidData);
             }
 
@@ -477,7 +473,7 @@ export class ExternalUser {
         if (contract instanceof TonomyUsername) {
             const app = await getTonomyContract().getApp(contract);
 
-            contractAccount = app.account_name;
+            contractAccount = app.accountName;
         } else {
             contractAccount = Name.from(contract);
         }
@@ -489,14 +485,15 @@ export class ExternalUser {
 
         // Setup the action to sign
         const newAction = {
-            name: action.toString(),
+            account: contractAccount,
+            name: action,
             authorization: [
                 {
                     actor: account.toString(),
                     permission: permission.toString(),
                 },
             ],
-            data: data,
+            data,
         };
         const signer = this.getTransactionSigner();
 
@@ -505,7 +502,7 @@ export class ExternalUser {
             JSON.stringify(newAction, null, 2)
         );
 
-        return await transact(Name.from(contractAccount), [newAction], signer);
+        return await transact(newAction, signer);
     }
 
     private async checkLinkAuthRequirements(
@@ -654,5 +651,129 @@ export async function verifyClientAuthorization<T extends ClientAuthorizationDat
         account: verifiedVc.account.toString(),
         data: vc.getCredentialSubject() as T,
         username: verifiedVc.username ? verifiedVc.username.toString() : undefined,
+    };
+}
+
+async function checkChainId(did: string, verifyChainId: boolean): Promise<string | undefined> {
+    if (verifyChainId) {
+        const chainId = await getChainId();
+        const didChainId = did.split(':')[0];
+
+        if (didChainId !== chainId.toString()) {
+            throwError(`Invalid chain ID expected ${chainId.toString()} found ${didChainId}`, SdkErrors.InvalidData);
+        }
+
+        return didChainId;
+    }
+
+    return;
+}
+
+async function checkUsername(
+    account: Name,
+    data: object,
+    verifyUsername: boolean
+): Promise<TonomyUsername | undefined> {
+    if (verifyUsername) {
+        const username = (data as any).username;
+
+        if (username) {
+            const tonomyUsername = TonomyUsername.fromFullUsername(username);
+
+            // this will throw if the username is not valid
+            const { accountName } = await getTonomyContract().getPerson(tonomyUsername);
+
+            if (!accountName.equals(account)) {
+                throwError('Username does not match account', SdkErrors.InvalidData);
+            }
+
+            return tonomyUsername;
+        }
+
+        return;
+    }
+
+    return;
+}
+
+async function checkOrigin(
+    vcId: string,
+    did: string,
+    verifyOrigin: boolean
+): Promise<{ origin: string; app: App } | undefined> {
+    if (verifyOrigin) {
+        const origin = vcId?.split('/vc/auth/')[0];
+
+        if (!origin) throwError('Invalid origin', SdkErrors.InvalidData);
+        const app = await App.getApp(origin);
+        const { fragment } = parseDid(did);
+
+        if (fragment !== app.accountName.toString()) throwError('Invalid app', SdkErrors.InvalidData);
+
+        return { origin, app };
+    }
+
+    return;
+}
+
+type VerifyTonomyVcOptions = {
+    verifyChainId?: boolean;
+    verifyUsername?: boolean;
+    verifyOrigin?: boolean;
+};
+
+const defaultVerifyTonomyVcOptions: VerifyTonomyVcOptions = {
+    verifyChainId: true,
+    verifyUsername: true,
+    verifyOrigin: true,
+};
+
+async function verifyTonomyVc<T extends object>(
+    vcJwt: VCWithTypeType<T>,
+    {
+        verifyChainId = true,
+        verifyUsername = true,
+        verifyOrigin = true,
+    }: VerifyTonomyVcOptions = defaultVerifyTonomyVcOptions
+): Promise<{
+    account: Name;
+    chainId?: string;
+    did: string;
+    username?: TonomyUsername;
+    origin?: string;
+    app?: App;
+}> {
+    let vc: VerifiableCredential;
+
+    if (typeof vcJwt === 'string') vc = new VerifiableCredential(vcJwt);
+    else if (vcJwt instanceof VerifiableCredential) vc = vcJwt;
+    else if (vcJwt instanceof VerifiableCredentialWithType) vc = vcJwt.getVc();
+    else throw Error('Invalid VC type, expected string or VerifiableCredential');
+
+    const vcId = vc.getId();
+    const did = vc.getIssuer();
+    const data: T = vc.getCredentialSubject() as T;
+    const account = await getAccountNameFromDid(did);
+
+    const { method, id } = parseDid(did);
+
+    if (method !== 'antelope') {
+        throwError(`Invalid DID method: ${method}`, SdkErrors.InvalidData);
+    }
+
+    const [, chainId, username, originAndApp] = await Promise.all([
+        vc.verify(),
+        checkChainId(id, verifyChainId),
+        checkUsername(account, data, verifyUsername),
+        checkOrigin(vcId ? vcId : '', did, verifyOrigin),
+    ]);
+
+    return {
+        account,
+        chainId,
+        did,
+        username,
+        origin: originAndApp?.origin,
+        app: originAndApp?.app,
     };
 }

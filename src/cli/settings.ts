@@ -1,5 +1,5 @@
 import { ip } from 'address';
-import { LoggerLevel } from '../sdk/util/settings';
+import { LoggerLevel, setSettings } from '../sdk/util/settings';
 
 // cannot use NODE_ENV as it is always "production" on `yarn run build`
 const env = process.env.NODE_ENV || 'development';
@@ -113,5 +113,7 @@ switch (env) {
 }
 
 settings.config = config;
+
+setSettings(settings.config);
 
 export default settings;
