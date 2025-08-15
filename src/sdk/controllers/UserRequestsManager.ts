@@ -1,7 +1,7 @@
 import { Name } from '@wharfkit/antelope';
 import { KeyManagerLevel } from '../storage/keymanager';
-import { tonomyEosioProxyContract } from '../services/blockchain/contracts/TonomyEosioProxyContract';
-import { tonomyContract } from '../services/blockchain';
+import { getTonomyEosioProxyContract } from '../services/blockchain/contracts/TonomyEosioProxyContract';
+import { getTonomyContract } from '../services/blockchain';
 import { createKeyManagerSigner } from '../services/blockchain/eosio/transaction';
 import { SdkErrors, throwError, isErrorCode } from '../util/errors';
 import { Message, LinkAuthRequestMessage, LinkAuthRequestResponseMessage } from '../services/communication/message';
@@ -36,7 +36,7 @@ export class UserRequestsManager extends UserDataVault implements IUserRequestsM
 
             if (!permission) throwError('DID does not contain App permission', SdkErrors.MissingParams);
 
-            await tonomyContract.getApp(Name.from(permission));
+            await getTonomyContract().getApp(Name.from(permission));
             // Throws SdkErrors.DataQueryNoRowDataFound error if app does not exist
             // which cannot happen in theory, as the user is already logged in
 
@@ -45,7 +45,13 @@ export class UserRequestsManager extends UserDataVault implements IUserRequestsM
 
             const signer = createKeyManagerSigner(this.keyManager, KeyManagerLevel.ACTIVE);
 
-            await tonomyEosioProxyContract.linkAuth(await this.getAccountName(), contract, action, permission, signer);
+            await getTonomyEosioProxyContract().linkAuth(
+                await this.getAccountName(),
+                contract,
+                action,
+                permission,
+                signer
+            );
 
             const linkAuthRequestResponseMessage = await LinkAuthRequestResponseMessage.signMessage(
                 {
@@ -100,7 +106,7 @@ export class UserRequestsManager extends UserDataVault implements IUserRequestsM
 
         debug('loginWithApp key', key.toString(), linkAuth);
 
-        await tonomyContract.loginWithApp(myAccount, app.accountName, 'local', key, localSigner);
+        await getTonomyContract().loginWithApp(myAccount, app.accountName, 'local', key, localSigner);
 
         // If the permission was only just created, we link it to the app (using its account name)
         // so that this permission can be used to sign transactions in the app immediately
@@ -110,7 +116,7 @@ export class UserRequestsManager extends UserDataVault implements IUserRequestsM
             await sleep(1000); // wait for the blockchain to catch up
             const activeSigner = createKeyManagerSigner(this.keyManager, KeyManagerLevel.ACTIVE);
 
-            await tonomyEosioProxyContract.linkAuth(myAccount, app.accountName, '', app.accountName, activeSigner);
+            await getTonomyEosioProxyContract().linkAuth(myAccount, app.accountName, '', app.accountName, activeSigner);
         }
 
         appRecord.status = AppStatusEnum.READY;

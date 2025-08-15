@@ -8,14 +8,14 @@ import { getAccount } from '../services/blockchain/eosio/eosio';
 import { StorageFactory } from '../storage/storage';
 import { TonomyUsername } from '../util/username';
 import { User } from '../controllers/User';
-import { tonomyContract } from '../services/blockchain';
+import { getTonomyContract } from '../services/blockchain';
 import { DataSource } from 'typeorm';
 
 export async function getAccountInfo(account: TonomyUsername | Name): Promise<API.v1.AccountObject> {
     let accountName: Name;
 
     if (account instanceof TonomyUsername) {
-        const idData = await tonomyContract.getPerson(account);
+        const idData = await getTonomyContract().getPerson(account);
 
         accountName = idData.accountName;
     } else {

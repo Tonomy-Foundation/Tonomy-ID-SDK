@@ -3,9 +3,9 @@ import {
     Authority,
     bytesToTokens,
     createAppJsonDataString,
-    tokenContract,
-    tonomyContract,
-    tonomyEosioProxyContract,
+    getTokenContract,
+    getTonomyContract,
+    getTonomyEosioProxyContract,
 } from '../../sdk/services/blockchain';
 import { StandardProposalOptions, createProposal, executeProposal } from '.';
 import { deployContract } from './contract';
@@ -15,7 +15,7 @@ import { Action, Name } from '@wharfkit/antelope';
 // @ts-expect-error args not used
 export async function hyphaAccountsCreate(args: any, options: StandardProposalOptions) {
     function createNewAccountAction(name: string, active: Authority, owner: Authority) {
-        return tonomyEosioProxyContract.actions.newAccount({
+        return getTonomyEosioProxyContract().actions.newAccount({
             creator: 'tonomy',
             name,
             owner: owner,
@@ -271,21 +271,21 @@ export async function hyphaContractSet(args: any, options: StandardProposalOptio
 
     console.log(`Setting up hypha contract "${contract}" with ${tokens} tokens to buy ${ramKb}KB of RAM`);
 
-    const adminSetAppAction = tonomyContract.actions.adminSetApp({
+    const adminSetAppAction = getTonomyContract().actions.adminSetApp({
         jsonData: createAppJsonDataString(appName, description, logoUrl, '#000000', '#FFFFFF'),
         accountName: Name.from(contract),
         usernameHash: tonomyUsername.usernameHash,
         origin,
     });
 
-    const transferTokensAction = tokenContract.actions.transfer({
+    const transferTokensAction = getTokenContract().actions.transfer({
         from: 'partners.tmy',
         to: contract,
         quantity: tokens,
         memo: `RAM for ${contract}`,
     });
 
-    const buyRamAction = tonomyContract.actions.buyRam({
+    const buyRamAction = getTonomyContract().actions.buyRam({
         daoOwner: contract,
         app: contract,
         quant: tokens,

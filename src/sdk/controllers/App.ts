@@ -3,7 +3,7 @@ import { Signer } from '../services/blockchain/eosio/transaction';
 import { getSettings } from '../util/settings';
 import { AccountType, TonomyUsername } from '../util/username';
 import { AppStatusEnum } from '../types/AppStatusEnum';
-import { tonomyContract } from '../services/blockchain';
+import { getTonomyContract } from '../services/blockchain';
 import { parseDid, SdkErrors, throwError } from '../util';
 
 export interface AppData {
@@ -74,7 +74,7 @@ export class App implements AppData {
             getSettings().accountSuffix
         );
 
-        const res = await tonomyContract.newApp(
+        const res = await getTonomyContract().newApp(
             options.appName,
             options.description,
             username.usernameHash,
@@ -98,7 +98,7 @@ export class App implements AppData {
     }
 
     static async getApp(origin: string): Promise<App> {
-        const contractAppData = await tonomyContract.getApp(origin);
+        const contractAppData = await getTonomyContract().getApp(origin);
 
         return new App({
             accountName: contractAppData.accountName,

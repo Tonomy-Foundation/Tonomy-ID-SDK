@@ -1,6 +1,6 @@
 import { Name, PrivateKey, PublicKey } from '@wharfkit/antelope';
 import { Authority, EosioUtil, getAccountInfo } from '../../sdk';
-import { tonomyEosioProxyContract, transact } from '../../sdk/services/blockchain';
+import { getTonomyEosioProxyContract, transact } from '../../sdk/services/blockchain';
 
 export default async function auth(args: string[]) {
     if (args[0] === 'update') {
@@ -17,7 +17,7 @@ export default async function auth(args: string[]) {
         const perm = accountInfo.getPermission(permission);
         const newAuthority = Authority.fromAccount({ actor: 'found.tmy', permission: 'active' });
 
-        const action = tonomyEosioProxyContract.actions.updateAuth({
+        const action = getTonomyEosioProxyContract().actions.updateAuth({
             account,
             permission,
             parent: perm.parent,

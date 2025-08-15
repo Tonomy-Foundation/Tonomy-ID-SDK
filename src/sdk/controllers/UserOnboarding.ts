@@ -1,6 +1,6 @@
 import { API } from '@wharfkit/antelope';
 import { KeyManagerLevel } from '../storage/keymanager';
-import { PersonData, tonomyContract } from '../services/blockchain/contracts/TonomyContract';
+import { PersonData, getTonomyContract } from '../services/blockchain/contracts/TonomyContract';
 import { createKeyManagerSigner } from '../services/blockchain/eosio/transaction';
 import { getChainId } from '../services/blockchain/eosio/eosio';
 import { SdkErrors, throwError, isErrorCode } from '../util/errors';
@@ -43,7 +43,7 @@ export class UserOnboarding extends UserDataVault implements IUserOnboarding {
         this.validateUsername(username.getBaseUsername());
         const { keyManager } = this;
 
-        const idData = await tonomyContract.getPerson(username);
+        const idData = await getTonomyContract().getPerson(username);
         const salt = idData.passwordSalt;
 
         await this.savePassword(password, { ...options, salt });
@@ -193,7 +193,7 @@ export class UserOnboarding extends UserDataVault implements IUserOnboarding {
         const signer = createKeyManagerSigner(keyManager, KeyManagerLevel.PASSWORD, password);
         const accountName = await this.getAccountName();
 
-        await tonomyContract.updateKeysPerson(accountName, keys, signer);
+        await getTonomyContract().updateKeysPerson(accountName, keys, signer);
 
         this.storage.status = UserStatusEnum.READY;
         await this.storage.status;

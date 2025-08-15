@@ -1,4 +1,4 @@
-import { tonomyEosioProxyContract } from '../../sdk/services/blockchain';
+import { getTonomyEosioProxyContract } from '../../sdk/services/blockchain';
 import { StandardProposalOptions, createProposal, executeProposal } from '.';
 import { Name } from '@wharfkit/antelope';
 import fs from 'fs';
@@ -30,7 +30,7 @@ export async function deployContract(
     const wasmFile = fs.readFileSync(wasmPath);
     const abiFile = fs.readFileSync(abiPath, 'utf8');
 
-    const actions = await tonomyEosioProxyContract.deployContractActions(contractName, wasmFile, abiFile, {
+    const actions = await getTonomyEosioProxyContract().deployContractActions(contractName, wasmFile, abiFile, {
         actor: 'tonomy',
         permission: 'active',
     });

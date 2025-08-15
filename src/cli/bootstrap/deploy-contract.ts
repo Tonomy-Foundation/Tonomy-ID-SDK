@@ -4,7 +4,7 @@ import fs from 'fs';
 import path from 'path';
 import { Name, NameType, PermissionLevelType } from '@wharfkit/antelope';
 import { Signer } from '../../sdk/services/blockchain/eosio/transaction';
-import { eosioContract, tonomyEosioProxyContract } from '../../sdk';
+import { getEosioContract, getTonomyEosioProxyContract } from '../../sdk';
 
 export function getDeployableFilesFromDir(dir: string) {
     const dirCont = fs.readdirSync(dir);
@@ -34,7 +34,7 @@ export default async function deployContract(
     const wasmFile = fs.readFileSync(wasmPath);
     const abiFile = fs.readFileSync(abiPath, 'utf8');
 
-    const contract = options?.throughTonomyProxy ? tonomyEosioProxyContract : eosioContract;
+    const contract = options?.throughTonomyProxy ? getTonomyEosioProxyContract() : getEosioContract();
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await contract.deployContract(Name.from(account) as any, wasmFile, abiFile, signer, options?.extraAuthorization);

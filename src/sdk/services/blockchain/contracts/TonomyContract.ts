@@ -577,12 +577,20 @@ export class TonomyContract extends Contract {
     }
 }
 
-export const tonomyContract = TonomyContract.fromAbi(abi);
+let tonomyContract: TonomyContract | undefined;
+
+export const getTonomyContract = () => {
+    if (!tonomyContract) {
+        tonomyContract = TonomyContract.fromAbi(abi);
+    }
+
+    return tonomyContract;
+};
 
 export default async function loadTonomyContract(account: NameType = CONTRACT_NAME): Promise<TonomyContract> {
     return await TonomyContract.atAccount(account);
 }
 
 export async function getAccountNameFromUsername(username: TonomyUsername): Promise<NameType> {
-    return (await tonomyContract.getPersonDataByUsername(username)).account_name;
+    return (await getTonomyContract().getPersonDataByUsername(username)).account_name;
 }

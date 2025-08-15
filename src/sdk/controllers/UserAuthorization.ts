@@ -5,7 +5,7 @@ import { generateRandomKeyPair, randomString } from '../util/crypto';
 import { ClientAuthorizationData, ICreateAccountOptions, ILoginOptions, IUserAuthentication } from '../types/User';
 import { getAccountInfo } from '../helpers/user';
 import { UserBase } from './UserBase';
-import { tonomyContract } from '../services/blockchain';
+import { getTonomyContract } from '../services/blockchain';
 import { JWT, VerifiableCredential } from '../util';
 
 export class UserAuthorization extends UserBase implements IUserAuthentication {
@@ -45,7 +45,7 @@ export class UserAuthorization extends UserBase implements IUserAuthentication {
     async checkPassword(password: string, options: ILoginOptions): Promise<boolean> {
         const username = await this.getAccountName();
 
-        const idData = await tonomyContract.getPerson(username);
+        const idData = await getTonomyContract().getPerson(username);
         const salt = idData.passwordSalt;
 
         await this.savePassword(password, { ...options, salt });

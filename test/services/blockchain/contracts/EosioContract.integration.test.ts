@@ -1,7 +1,7 @@
 /**
  * @jest-environment jsdom
  */
-import { tonomyContract } from '../../../../src/sdk';
+import { getTonomyContract } from '../../../../src/sdk';
 import { createRandomID, createRandomApp } from '../../../helpers/user';
 import { jest } from '@jest/globals';
 
@@ -18,7 +18,7 @@ describe('TonomyContract class', () => {
         const salt = await user.storage.salt;
 
         // get by account name
-        let idInfo = await tonomyContract.getPerson(accountName);
+        let idInfo = await getTonomyContract().getPerson(accountName);
 
         expect(idInfo.accountName).toEqual(accountName);
         expect(idInfo.usernameHash.toString()).toEqual(username.usernameHash);
@@ -29,7 +29,7 @@ describe('TonomyContract class', () => {
         // expect(idInfo.version).toBe(1);
 
         // get by username
-        idInfo = await tonomyContract.getPerson(username);
+        idInfo = await getTonomyContract().getPerson(username);
         expect(idInfo.accountName.toString()).toEqual(accountName.toString());
         expect(idInfo.usernameHash.toString()).toEqual(username.usernameHash);
 
@@ -42,7 +42,7 @@ describe('TonomyContract class', () => {
 
         if (!username) throw new Error('Username not found');
 
-        let appInfo = await tonomyContract.getApp(username);
+        let appInfo = await getTonomyContract().getApp(username);
 
         expect(appInfo.appName).toEqual(appName);
         expect(appInfo.description).toEqual(description);
@@ -51,7 +51,7 @@ describe('TonomyContract class', () => {
         expect(appInfo.origin).toEqual(origin);
         expect(appInfo.accountName.toString()).toEqual(accountName.toString());
 
-        appInfo = await tonomyContract.getApp(origin);
+        appInfo = await getTonomyContract().getApp(origin);
 
         expect(appInfo.appName).toEqual(appName);
         expect(appInfo.description).toEqual(description);
@@ -60,7 +60,7 @@ describe('TonomyContract class', () => {
         expect(appInfo.origin).toEqual(origin);
         expect(appInfo.accountName.toString()).toEqual(accountName.toString());
 
-        appInfo = await tonomyContract.getApp(accountName);
+        appInfo = await getTonomyContract().getApp(accountName);
 
         expect(appInfo.appName).toEqual(appName);
         expect(appInfo.description).toEqual(description);

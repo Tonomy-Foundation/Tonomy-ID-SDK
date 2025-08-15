@@ -1,4 +1,4 @@
-import { Authority, tonomyEosioProxyContract } from '../../sdk/services/blockchain';
+import { Authority, getTonomyEosioProxyContract } from '../../sdk/services/blockchain';
 import { StandardProposalOptions, createProposal, executeProposal } from '.';
 
 // @ts-expect-error args not used
@@ -16,7 +16,7 @@ export async function newAccount(args: { governanceAccounts: string[] }, options
         permission: 'active',
     });
 
-    const action = tonomyEosioProxyContract.actions.newAccount({
+    const action = getTonomyEosioProxyContract().actions.newAccount({
         creator: 'tonomy',
         name: accountName,
         owner: owner,

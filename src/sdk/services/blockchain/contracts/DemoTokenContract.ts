@@ -5,7 +5,7 @@ import { getApi } from '../eosio/eosio';
 import { AccountType, TonomyUsername, getSettings } from '../../../util';
 import { Contract, loadContract } from './Contract';
 import { ActionOptions } from '@wharfkit/contract';
-import { tonomyContract } from './TonomyContract';
+import { getTonomyContract } from './TonomyContract';
 import { activeAuthority } from '../eosio/authority';
 import Debug from 'debug';
 
@@ -20,7 +20,7 @@ export class DemoTokenContract extends Contract {
         if (account) return account;
 
         const username = TonomyUsername.fromUsername('demo', AccountType.APP, getSettings().accountSuffix);
-        const app = await tonomyContract.getApp(username);
+        const app = await getTonomyContract().getApp(username);
 
         debug('demo contract found', app.accountName.toString());
 

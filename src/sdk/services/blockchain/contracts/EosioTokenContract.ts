@@ -138,7 +138,15 @@ export class EosioTokenContract extends Contract {
     }
 }
 
-export const tokenContract = EosioTokenContract.fromAbi(abi);
+let tonomyContract: EosioTokenContract | undefined;
+
+export const getTokenContract = () => {
+    if (!tonomyContract) {
+        tonomyContract = EosioTokenContract.fromAbi(abi);
+    }
+
+    return tonomyContract;
+};
 
 export default async function loadTokenContract(): Promise<EosioTokenContract> {
     return await EosioTokenContract.atAccount();

@@ -2,7 +2,7 @@ import { API } from '@wharfkit/antelope';
 import {
     AnyActionType,
     createSigner,
-    eosioMsigContract,
+    getEosioMsigContract,
     getTonomyOperationsKey,
 } from '../../../../src/sdk/services/blockchain';
 import { randomAccountName, tonomyBoardSigners } from '../../../helpers/eosio';
@@ -39,7 +39,7 @@ export async function msigAction(
         });
     }
 
-    const { proposalHash, transaction } = await eosioMsigContract.propose(
+    const { proposalHash, transaction } = await getEosioMsigContract().propose(
         proposer,
         proposalName,
         requested,
@@ -49,7 +49,7 @@ export async function msigAction(
 
     expect(transaction.processed.receipt.status).toBe('executed');
 
-    const approve1Trx = await eosioMsigContract.approve(
+    const approve1Trx = await getEosioMsigContract().approve(
         proposer,
         proposalName,
         { actor: '1.found.tmy', permission: 'active' },
@@ -60,7 +60,7 @@ export async function msigAction(
     expect(approve1Trx.processed.receipt.status).toBe('executed');
 
     if (options.satisfyRequireApproval ?? false) {
-        await eosioMsigContract.approve(
+        await getEosioMsigContract().approve(
             proposer,
             proposalName,
             { actor: '2.found.tmy', permission: 'active' },
@@ -70,7 +70,7 @@ export async function msigAction(
     }
 
     if (options.requireTonomyOps ?? false) {
-        await eosioMsigContract.approve(
+        await getEosioMsigContract().approve(
             proposer,
             proposalName,
             { actor: 'tonomy', permission: 'active' },
@@ -80,7 +80,7 @@ export async function msigAction(
     }
 
     try {
-        const execTrx = await eosioMsigContract.exec(proposer, proposalName, '1.found.tmy', tonomyBoardSigners[0]);
+        const execTrx = await getEosioMsigContract().exec(proposer, proposalName, '1.found.tmy', tonomyBoardSigners[0]);
 
         if (options.satisfyRequireApproval ?? false) {
             expect(execTrx.processed.receipt.status).toBe('executed');

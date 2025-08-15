@@ -4,9 +4,9 @@ import {
     getTonomyOperationsKey,
     transact,
     Authority,
-    eosioMsigContract,
-    tonomyEosioProxyContract,
-    eosioContract,
+    getEosioMsigContract,
+    getTonomyEosioProxyContract,
+    getEosioContract,
 } from '../../../../src/sdk/services/blockchain';
 import { getDeployableFilesFromDir } from '../../../../src/cli/bootstrap/deploy-contract';
 import fs from 'fs';
@@ -33,7 +33,7 @@ describe('TonomyContract class', () => {
             key = PrivateKey.generate(KeyType.K1);
             authority = Authority.fromKey(key.toPublic().toString());
             randomName = randomAccountName();
-            action = tonomyEosioProxyContract.actions.newAccount({
+            action = getTonomyEosioProxyContract().actions.newAccount({
                 creator: 'tonomy',
                 name: randomName,
                 owner: authority,
@@ -132,7 +132,7 @@ describe('TonomyContract class', () => {
                 authority = Authority.fromKey(key.toPublic().toString());
                 newPermission = randomAccountName();
 
-                action = tonomyEosioProxyContract.actions.updateAuth({
+                action = getTonomyEosioProxyContract().actions.updateAuth({
                     account: 'eosio',
                     permission: newPermission,
                     parent: 'owner',
@@ -342,7 +342,7 @@ describe('TonomyContract class', () => {
                         },
                     });
 
-                    const { proposalHash, transaction } = await eosioMsigContract.propose(
+                    const { proposalHash, transaction } = await getEosioMsigContract().propose(
                         proposer,
                         proposalName,
                         requested,
@@ -352,7 +352,7 @@ describe('TonomyContract class', () => {
 
                     expect(transaction.processed.receipt.status).toBe('executed');
 
-                    const approve1Trx = await eosioMsigContract.approve(
+                    const approve1Trx = await getEosioMsigContract().approve(
                         proposer,
                         proposalName,
                         { actor: newAccounts[0], permission: 'active' },
@@ -362,14 +362,14 @@ describe('TonomyContract class', () => {
 
                     expect(approve1Trx.processed.receipt.status).toBe('executed');
 
-                    await eosioMsigContract.approve(
+                    await getEosioMsigContract().approve(
                         proposer,
                         proposalName,
                         { actor: newAccounts[1], permission: 'active' },
                         proposalHash,
                         newSigners[1]
                     );
-                    const execTrx = await eosioMsigContract.exec(
+                    const execTrx = await getEosioMsigContract().exec(
                         proposer,
                         proposalName,
                         '1.found.tmy',
@@ -590,7 +590,7 @@ describe('TonomyContract class', () => {
 
                 await transact([createAccountAction], tonomyBoardSigners.slice(0, 2));
 
-                const trx = await tonomyEosioProxyContract.deployContract(
+                const trx = await getTonomyEosioProxyContract().deployContract(
                     newAccount,
                     wasmFile,
                     abiFile,
@@ -607,10 +607,16 @@ describe('TonomyContract class', () => {
                 try {
                     await transact([createAccountAction], tonomyBoardSigners.slice(0, 2));
 
-                    await tonomyEosioProxyContract.deployContract(newAccount, wasmFile, abiFile, [tonomyOpsSigner], {
-                        actor: 'tonomy',
-                        permission: 'active',
-                    });
+                    await getTonomyEosioProxyContract().deployContract(
+                        newAccount,
+                        wasmFile,
+                        abiFile,
+                        [tonomyOpsSigner],
+                        {
+                            actor: 'tonomy',
+                            permission: 'active',
+                        }
+                    );
                 } catch (e) {
                     expect(e.error.details[0].message).toContain('but does not have signatures for it');
                 }
@@ -622,7 +628,12 @@ describe('TonomyContract class', () => {
                 try {
                     await transact([createAccountAction], tonomyBoardSigners.slice(0, 2));
 
-                    await tonomyEosioProxyContract.deployContract(newAccount, wasmFile, abiFile, createSigner(key));
+                    await getTonomyEosioProxyContract().deployContract(
+                        newAccount,
+                        wasmFile,
+                        abiFile,
+                        createSigner(key)
+                    );
                 } catch (e) {
                     expect(e.error.details[0].message).toContain(`missing authority of tonomy/active`);
                 }
@@ -634,7 +645,7 @@ describe('TonomyContract class', () => {
                 expect.assertions(1);
 
                 try {
-                    await tonomyEosioProxyContract.deployContract('eosio', wasmFile, abiFile, tonomyOpsSigner);
+                    await getTonomyEosioProxyContract().deployContract('eosio', wasmFile, abiFile, tonomyOpsSigner);
                 } catch (e) {
                     expect(e.error.details[0].message).toContain(`missing authority of tonomy/owner`);
                 }
@@ -644,7 +655,7 @@ describe('TonomyContract class', () => {
                 expect.assertions(1);
 
                 try {
-                    await tonomyEosioProxyContract.deployContract('eosio', wasmFile, abiFile, tonomyOpsSigner, {
+                    await getTonomyEosioProxyContract().deployContract('eosio', wasmFile, abiFile, tonomyOpsSigner, {
                         actor: 'tonomy',
                         permission: 'owner',
                     });
@@ -657,10 +668,16 @@ describe('TonomyContract class', () => {
                 expect.assertions(1);
 
                 try {
-                    await tonomyEosioProxyContract.deployContract('eosio', wasmFile, abiFile, tonomyBoardSigners[0], {
-                        actor: 'tonomy',
-                        permission: 'owner',
-                    });
+                    await getTonomyEosioProxyContract().deployContract(
+                        'eosio',
+                        wasmFile,
+                        abiFile,
+                        tonomyBoardSigners[0],
+                        {
+                            actor: 'tonomy',
+                            permission: 'owner',
+                        }
+                    );
                 } catch (e) {
                     expect(e.error.details[0].message).toContain(`but does not have signatures for it`);
                 }
@@ -670,7 +687,7 @@ describe('TonomyContract class', () => {
                 expect.assertions(1);
 
                 try {
-                    await tonomyEosioProxyContract.deployContract(
+                    await getTonomyEosioProxyContract().deployContract(
                         'eosio',
                         wasmFile,
                         abiFile,
@@ -688,7 +705,7 @@ describe('TonomyContract class', () => {
             test('sign with tonomy@owner with two board signers and Tonomy ops signer should succeed', async () => {
                 expect.assertions(1);
 
-                const trx = await tonomyEosioProxyContract.deployContract(
+                const trx = await getTonomyEosioProxyContract().deployContract(
                     'eosio',
                     wasmFile,
                     abiFile,
@@ -719,7 +736,7 @@ describe('TonomyContract class', () => {
         describe('deploy tonomy contract (special)', () => {
             test('sign with tonomy@owner with two board signers should succeed', async () => {
                 expect.assertions(2);
-                const trx = await eosioContract.deployContract(
+                const trx = await getEosioContract().deployContract(
                     'tonomy',
                     wasmFile,
                     abiFile,
@@ -734,7 +751,7 @@ describe('TonomyContract class', () => {
             test('using tonomy contract, sign with tonomy@owner with two board signers should succeed', async () => {
                 expect.assertions(2);
                 await sleep(1000);
-                const trx = await tonomyEosioProxyContract.deployContract(
+                const trx = await getTonomyEosioProxyContract().deployContract(
                     'tonomy',
                     wasmFile,
                     abiFile,
@@ -753,7 +770,7 @@ describe('TonomyContract class', () => {
             const wasmFile = fs.readFileSync(wasmPath);
             const abiFile = fs.readFileSync(abiPath, 'utf8');
 
-            await tonomyEosioProxyContract.deployContract(
+            await getTonomyEosioProxyContract().deployContract(
                 'eosio',
                 wasmFile,
                 abiFile,
@@ -768,7 +785,7 @@ describe('TonomyContract class', () => {
             const wasmFile = fs.readFileSync(wasmPath);
             const abiFile = fs.readFileSync(abiPath, 'utf8');
 
-            const transaction = await eosioContract.deployContract(
+            const transaction = await getEosioContract().deployContract(
                 'tonomy',
                 wasmFile,
                 abiFile,

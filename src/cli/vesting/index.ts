@@ -8,7 +8,7 @@ import {
     getAccount,
     getAccountNameFromUsername,
     VestingAllocation,
-    vestingContract,
+    getVestingContract,
 } from '../../sdk/services/blockchain';
 import { getSettings } from '../../sdk/util/settings';
 import settings from '../settings';
@@ -61,7 +61,7 @@ export async function getAllAllocations(accounts: Set<string>, print = false): P
     const allocations: VestingAllocationAndAccount[] = [];
 
     for (const account of accounts) {
-        const accountAllocations = await vestingContract.getAllocations(account);
+        const accountAllocations = await getVestingContract().getAllocations(account);
 
         for (const allocation of accountAllocations) {
             const { id, tokensAllocated, vestingCategoryType } = allocation;
@@ -110,11 +110,11 @@ export default async function vesting(args: string[]) {
             categoryId,
         });
 
-        const vestingSettings = await vestingContract.getSettings();
+        const vestingSettings = await getVestingContract().getSettings();
 
         console.log('settings', vestingSettings);
 
-        const res = await vestingContract.assignTokens(sender, recipient, quantity, categoryId, signer);
+        const res = await getVestingContract().assignTokens(sender, recipient, quantity, categoryId, signer);
 
         console.log('Transaction ID: ', JSON.stringify(res, null, 2));
     } else if (args[0] === 'audit') {
@@ -141,7 +141,7 @@ export default async function vesting(args: string[]) {
         const privateKey = PrivateKey.from(process.env.SIGNING_KEY || '');
         const signer = createSigner(privateKey);
 
-        await vestingContract.setSettings('2024-04-30T12:00:00', '2030-01-01T00:00:00', signer);
+        await getVestingContract().setSettings('2024-04-30T12:00:00', '2030-01-01T00:00:00', signer);
     } else {
         printCliHelp();
         throw new Error(`Unknown command ${args[0]}`);

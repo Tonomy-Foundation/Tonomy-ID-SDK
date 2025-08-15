@@ -1,7 +1,7 @@
 /* eslint-disable camelcase */
 import { Name } from '@wharfkit/antelope';
 import { createProposal, executeProposal, StandardProposalOptions } from '.';
-import { stakingContract, tonomyContract, vestingContract } from '../../sdk';
+import { getStakingContract, getTonomyContract, getVestingContract } from '../../sdk';
 import { getSettings } from '../../sdk';
 import {
     foundAccount,
@@ -118,7 +118,7 @@ async function migrateVesting(options: StandardProposalOptions) {
 
     const actions = Array.from(vestingHolders).map((holder) => {
         console.log(`vesting.tmy::migrateacc(${holder})`);
-        return vestingContract.actions.migrateAcc({
+        return getVestingContract().actions.migrateAcc({
             holder,
         });
     });
@@ -140,7 +140,7 @@ async function migrateVesting(options: StandardProposalOptions) {
 
 async function migrateStaking(options: StandardProposalOptions) {
     console.log('### Migrating staking.tmy');
-    const action = stakingContract.actions.resetAll({});
+    const action = getStakingContract().actions.resetAll({});
     const proposalName = Name.from(options.proposalName.toString() + '4');
 
     const proposalHash = await createProposal(
@@ -158,7 +158,7 @@ async function migrateStaking(options: StandardProposalOptions) {
 export async function migrateRebrandApps(options: StandardProposalOptions) {
     console.log('### Migrating rebranding');
 
-    const apps = await tonomyContract.getAllApps();
+    const apps = await getTonomyContract().getAllApps();
     const actions = await apps
         .filter((app) => {
             const name = app.appName.toLowerCase();
@@ -197,7 +197,7 @@ export async function migrateRebrandApps(options: StandardProposalOptions) {
                     'https://cdn.prod.website-files.com/67ea90b224287f4cbb2dd180/67ef991d349ec01179aec16d_icon1.png';
             }
 
-            return tonomyContract.actions.adminSetApp({
+            return getTonomyContract().actions.adminSetApp({
                 accountName: app.accountName,
                 usernameHash: app.usernameHash,
                 origin: newOrigin,

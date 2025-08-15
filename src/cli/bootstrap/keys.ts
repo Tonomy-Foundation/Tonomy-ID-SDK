@@ -3,7 +3,7 @@ import argon2 from 'argon2';
 import { randomBytes } from '../../sdk/util/crypto';
 import { EosioUtil } from '../../sdk';
 import { Authority } from '../../sdk/services/blockchain/eosio/authority';
-import { eosioContract, Signer, tonomyEosioProxyContract } from '../../sdk/services/blockchain';
+import { getEosioContract, getTonomyEosioProxyContract, Signer } from '../../sdk/services/blockchain';
 
 /**
  * creates a key based on secure (hashing) key generation algorithm Argon2
@@ -52,8 +52,8 @@ export async function updateAccountKey(account: NameType, newPublicKey: PublicKe
 
     if (addCodePermission) authority.addCodePermission(account.toString());
 
-    await eosioContract.updateAuth(account.toString(), 'active', 'owner', authority, getSigner());
-    await eosioContract.updateAuth(account.toString(), 'owner', 'owner', authority, getSigner(), true);
+    await getEosioContract().updateAuth(account.toString(), 'active', 'owner', authority, getSigner());
+    await getEosioContract().updateAuth(account.toString(), 'owner', 'owner', authority, getSigner(), true);
 }
 
 /**
@@ -101,11 +101,11 @@ export async function updateControlByAccount(
         activeAuthority.setThreshold(threshold);
     }
 
-    let contract = eosioContract;
+    let contract = getEosioContract();
 
     if (options.useTonomyContract ?? false) {
         // @ts-expect-error contract does not have some of the functions of eosioContract type
-        contract = tonomyEosioProxyContract;
+        contract = getTonomyEosioProxyContract();
     }
 
     if (options.replaceActive ?? true) {

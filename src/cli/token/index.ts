@@ -9,8 +9,8 @@ import {
     createSigner,
     getAccount,
     vestingCategories as vestingCategoriesList,
-    tokenContract,
-    tonomyContract,
+    getTokenContract,
+    getTonomyContract,
     EosioTokenContract,
     PersonData,
     getAccountNameFromUsername,
@@ -59,7 +59,7 @@ export async function transfer(args: string[]) {
         memo,
     });
 
-    const res = await tokenContract.transfer(sender, recipient, quantity, memo, signer);
+    const res = await getTokenContract().transfer(sender, recipient, quantity, memo, signer);
 
     console.log('Transaction ID: ', JSON.stringify(res, null, 2));
 }
@@ -96,7 +96,7 @@ export async function audit() {
     const bootstrappedData = (
         await Promise.all(
             Array.from(bootstrappedAccounts).map(async (account) => {
-                const balance = await tokenContract.getBalanceDecimal(account);
+                const balance = await getTokenContract().getBalanceDecimal(account);
 
                 return {
                     account,
@@ -126,12 +126,12 @@ export async function audit() {
     console.log('');
     console.log('Fetching apps tokens');
 
-    const apps = await tonomyContract.getAllApps();
+    const apps = await getTonomyContract().getAllApps();
 
     const appAccounts: AccountBalance[] = (
         await Promise.all(
             apps.map(async (app) => {
-                const balance = await tokenContract.getBalanceDecimal(app.accountName);
+                const balance = await getTokenContract().getBalanceDecimal(app.accountName);
                 const account = await getAccount(app.accountName);
 
                 return {
@@ -164,7 +164,7 @@ export async function audit() {
 
     console.log('');
     console.log('Fetching people tokens');
-    const people = await tonomyContract.getAllPeople();
+    const people = await getTonomyContract().getAllPeople();
 
     const peopleAccounts: AccountBalance[] = [];
     const batchSize = 100;
@@ -174,7 +174,7 @@ export async function audit() {
 
         const batchResults: AccountBalance[] = await Promise.all(
             batch.map(async (person) => {
-                const balance = await tokenContract.getBalanceDecimal(person.accountName);
+                const balance = await getTokenContract().getBalanceDecimal(person.accountName);
 
                 return {
                     account: person.accountName.toString(),

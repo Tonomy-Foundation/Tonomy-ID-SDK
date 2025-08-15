@@ -29,7 +29,7 @@ import {
 import { VCWithTypeType, VerifiableCredential, VerifiableCredentialWithType } from '../sdk/util/ssi/vc';
 import { DIDurl, JWT } from '../sdk/util/ssi/types';
 import { Signer, createKeyManagerSigner, transact } from '../sdk/services/blockchain/eosio/transaction';
-import { tonomyContract } from '../sdk/services/blockchain/contracts/TonomyContract';
+import { getTonomyContract } from '../sdk/services/blockchain/contracts/TonomyContract';
 import { createDidKeyIssuerAndStore } from '../sdk/helpers/didKeyStorage';
 import { verifyKeyExistsForApp } from '../sdk/helpers/user';
 import { ClientAuthorizationData, IOnPressLoginOptions } from '../sdk/types/User';
@@ -142,7 +142,7 @@ export class ExternalUser {
             const username = await user.getUsername();
 
             if (username) {
-                const personData = await tonomyContract.getPerson(username);
+                const personData = await getTonomyContract().getPerson(username);
 
                 if (!accountName.equals(personData.accountName))
                     throwError('Username has changed', SdkErrors.InvalidData);
@@ -471,7 +471,7 @@ export class ExternalUser {
         let contractAccount: Name;
 
         if (contract instanceof TonomyUsername) {
-            const app = await tonomyContract.getApp(contract);
+            const app = await getTonomyContract().getApp(contract);
 
             contractAccount = app.accountName;
         } else {
@@ -681,7 +681,7 @@ async function checkUsername(
             const tonomyUsername = TonomyUsername.fromFullUsername(username);
 
             // this will throw if the username is not valid
-            const { accountName } = await tonomyContract.getPerson(tonomyUsername);
+            const { accountName } = await getTonomyContract().getPerson(tonomyUsername);
 
             if (!accountName.equals(account)) {
                 throwError('Username does not match account', SdkErrors.InvalidData);

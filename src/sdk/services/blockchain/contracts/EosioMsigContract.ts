@@ -170,7 +170,15 @@ export class EosioMsigContract extends Contract {
     }
 }
 
-export const eosioMsigContract = EosioMsigContract.fromAbi(abi);
+let eosioMsigContract: EosioMsigContract | undefined;
+
+export const getEosioMsigContract = () => {
+    if (!eosioMsigContract) {
+        eosioMsigContract = EosioMsigContract.fromAbi(abi);
+    }
+
+    return eosioMsigContract;
+};
 
 export async function loadEosioMsigContract(account: NameType = CONTRACT_NAME): Promise<EosioMsigContract> {
     return await EosioMsigContract.atAccount(account);

@@ -5,8 +5,8 @@ import {
     assetToDecimal,
     TONO_SEED_LATE_ROUND_PRICE,
     TONO_SEED_ROUND_PRICE,
-    tonomyContract,
-    vestingContract,
+    getTonomyContract,
+    getVestingContract,
 } from '../../sdk/services/blockchain';
 import { getAllAllocations, getAllUniqueHolders } from '../vesting';
 import { AccountType, isErrorCode, SdkErrors, TonomyUsername } from '../../sdk';
@@ -115,7 +115,7 @@ export async function vestingMigrate3(options: StandardProposalOptions) {
     let count = 0;
     let proposals = 0;
     const priceMultiplier = 2.0;
-    const people = await tonomyContract.getAllPeople();
+    const people = await getTonomyContract().getAllPeople();
     const vestingHolders = await getAllUniqueHolders();
 
     const peopleNotInVestingHolders: Set<string> = new Set();
@@ -180,7 +180,7 @@ export async function vestingMigrate3(options: StandardProposalOptions) {
 }
 
 async function createAccountActions(account: NameType): Promise<Action[]> {
-    const allocations = await vestingContract.getAllocations(account);
+    const allocations = await getVestingContract().getAllocations(account);
 
     const actions: Action[] = [];
 
@@ -348,7 +348,7 @@ export async function vestingBulk(args: { governanceAccounts: string[] }, option
         console.log(
             `Assigning: ${tonoQuantity} ($${data.usdQuantity} USD) vested in category ${categoryId} to ${data.accountName} at rate of $${TONO_CURRENT_PRICE}/TONO`
         );
-        return vestingContract.actions.assignTokens({
+        return getVestingContract().actions.assignTokens({
             sender,
             holder: data.accountName,
             amount: tonoQuantity,

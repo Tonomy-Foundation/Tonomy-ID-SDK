@@ -214,7 +214,15 @@ export class TonomyEosioProxyContract extends Contract {
     }
 }
 
-export const tonomyEosioProxyContract = TonomyEosioProxyContract.fromAbi(abi);
+let tonomyEosioProxyContract: TonomyEosioProxyContract | undefined;
+
+export const getTonomyEosioProxyContract = () => {
+    if (!tonomyEosioProxyContract) {
+        tonomyEosioProxyContract = TonomyEosioProxyContract.fromAbi(abi);
+    }
+
+    return tonomyEosioProxyContract;
+};
 
 export default async function loadTonomyEosioProxyContract(
     account: NameType = CONTRACT_NAME

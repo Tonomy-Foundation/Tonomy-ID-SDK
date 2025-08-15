@@ -3,10 +3,10 @@ import {
     Authority,
     bytesToTokens,
     createAppJsonDataString,
-    stakingContract,
+    getStakingContract,
     StakingContract,
-    tonomyContract,
-    tonomyEosioProxyContract,
+    getTonomyContract,
+    getTonomyEosioProxyContract,
 } from '../../sdk/services/blockchain';
 import { StandardProposalOptions, createProposal, executeProposal } from '.';
 import { createSubdomainOnOrigin, getAppUsernameHash } from '../bootstrap';
@@ -18,7 +18,7 @@ import { deployContract } from './contract';
 //create staking.tmy account controlled by ops.tmy
 export async function createStakingTmyAccount(options: StandardProposalOptions) {
     function createNewAccountAction(name: string, active: Authority, owner: Authority) {
-        return tonomyEosioProxyContract.actions.newAccount({
+        return getTonomyEosioProxyContract().actions.newAccount({
             creator: 'tonomy',
             name,
             active,
@@ -51,7 +51,7 @@ export async function createStakingTmyAccount(options: StandardProposalOptions) 
     ownerAuthorityInfra.addCodePermission('staking.tmy');
     activeAuthorityInfra.addCodePermission('staking.tmy');
 
-    const updateInfraOwnerPermission = tonomyEosioProxyContract.actions.updateAuth({
+    const updateInfraOwnerPermission = getTonomyEosioProxyContract().actions.updateAuth({
         account: 'infra.tmy',
         permission: 'owner',
         parent: '',
@@ -60,7 +60,7 @@ export async function createStakingTmyAccount(options: StandardProposalOptions) 
         authParent: false,
     });
 
-    const updateInfraActivePermission = tonomyEosioProxyContract.actions.updateAuth({
+    const updateInfraActivePermission = getTonomyEosioProxyContract().actions.updateAuth({
         account: 'infra.tmy',
         permission: 'active',
         parent: 'owner',
@@ -102,7 +102,7 @@ export async function stakingContractSetup(options: StandardProposalOptions) {
         '#FFFFFF'
     );
 
-    const adminSetAppAction = tonomyContract.actions.adminSetApp({
+    const adminSetAppAction = getTonomyContract().actions.adminSetApp({
         accountName: 'staking.tmy',
         usernameHash: tonomyUsername,
         origin: createSubdomainOnOrigin('https://accounts.testnet.tonomy.io', 'staking'),
@@ -115,7 +115,7 @@ export async function stakingContractSetup(options: StandardProposalOptions) {
     //     quant: tokens,
     // });
 
-    const setres = tonomyContract.actions.setResParams({
+    const setres = getTonomyContract().actions.setResParams({
         ramFee: RAM_FEE,
         ramPrice: RAM_PRICE,
         totalRamAvailable: TOTAL_RAM_AVAILABLE,
@@ -145,7 +145,7 @@ export async function buyRam(options: StandardProposalOptions) {
 
     console.log(`Setting up hypha contract "${contract}" with ${tokens} tokens to buy ${ramKb}KB of RAM`);
 
-    const buyRamAction = tonomyContract.actions.buyRam({
+    const buyRamAction = getTonomyContract().actions.buyRam({
         daoOwner: 'ops.tmy',
         app: contract,
         quant: tokens,
@@ -200,11 +200,11 @@ export async function reDeployTonomyContract(options: StandardProposalOptions) {
 
 //setup staking by calling setSettings() and addYield()
 export async function stakingSettings(options: StandardProposalOptions) {
-    const setSettings = stakingContract.actions.setSettings({
+    const setSettings = getStakingContract().actions.setSettings({
         yearlyStakePool: amountToAsset(StakingContract.yearlyStakePool, 'TONO'),
     });
 
-    const setYearlyYield = stakingContract.actions.addYield({
+    const setYearlyYield = getStakingContract().actions.addYield({
         sender: 'infra.tmy',
         quantity: amountToAsset(StakingContract.yearlyStakePool / 2, 'TONO'),
     });

@@ -4,7 +4,7 @@ import { Signer, transact } from '../eosio/transaction';
 import { getAccount, getApi } from '../eosio/eosio';
 import { Contract, loadContract } from './Contract';
 import { Contract as AntelopeContract, ActionOptions } from '@wharfkit/contract';
-import { tonomyContract } from './TonomyContract';
+import { getTonomyContract } from './TonomyContract';
 import { Authority, activeAuthority } from '../eosio/authority';
 import Debug from 'debug';
 import { addSeconds, getSettings, isProduction, SdkErrors, SECONDS_IN_DAY, throwError } from '../../../util';
@@ -156,7 +156,7 @@ export class StakingContract extends Contract {
 
             newPerm.addCodePermission(CONTRACT_NAME.toString());
             debug('Adding staking.tmy@eosio.code to active permission', JSON.stringify(newPerm, null, 2));
-            await tonomyContract.updateActive(staker, newPerm, signer);
+            await getTonomyContract().updateActive(staker, newPerm, signer);
         }
 
         const action = this.actions.stakeTokens({ accountName: staker, quantity });
@@ -354,7 +354,15 @@ export class StakingContract extends Contract {
     }
 }
 
-export const stakingContract = StakingContract.fromAbi(abi);
+let stakingContract: StakingContract | undefined;
+
+export const getStakingContract = () => {
+    if (!stakingContract) {
+        stakingContract = StakingContract.fromAbi(abi);
+    }
+
+    return stakingContract;
+};
 
 export async function loadStakingContract(account: NameType = CONTRACT_NAME): Promise<StakingContract> {
     return await StakingContract.atAccount(account);

@@ -197,4 +197,12 @@ export async function loadEosioContract(account: NameType = CONTRACT_NAME): Prom
     return await EosioContract.atAccount(account);
 }
 
-export const eosioContract = EosioContract.fromAbi(abi);
+let eosioContract: EosioContract | undefined;
+
+export const getEosioContract = () => {
+    if (!eosioContract) {
+        eosioContract = EosioContract.fromAbi(abi);
+    }
+
+    return eosioContract;
+};

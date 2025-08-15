@@ -2,7 +2,7 @@ import { Name } from '@wharfkit/antelope';
 import { sha256 } from './crypto';
 import { SdkErrors, throwError } from './errors';
 import { Serializable } from './serializable';
-import { tonomyContract } from '../services/blockchain';
+import { getTonomyContract } from '../services/blockchain';
 
 enum AccountType {
     PERSON = 'PERSON',
@@ -100,7 +100,7 @@ export async function checkUsername(
         const tonomyUsername = TonomyUsername.fromFullUsername(username);
 
         // this will throw if the username is not valid
-        const { accountName } = await tonomyContract.getPerson(tonomyUsername);
+        const { accountName } = await getTonomyContract().getPerson(tonomyUsername);
 
         if (!accountName.equals(account)) {
             throwError('Username does not match account', SdkErrors.InvalidData);

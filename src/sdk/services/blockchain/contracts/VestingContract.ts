@@ -535,7 +535,15 @@ export class VestingContract extends Contract {
     }
 }
 
-export const vestingContract = VestingContract.fromAbi(abi);
+let vestingContract: VestingContract | undefined;
+
+export const getVestingContract = () => {
+    if (!vestingContract) {
+        vestingContract = VestingContract.fromAbi(abi);
+    }
+
+    return vestingContract;
+};
 
 export async function loadVestingContract(account: NameType = CONTRACT_NAME): Promise<VestingContract> {
     return VestingContract.atAccount(account);

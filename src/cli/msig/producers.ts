@@ -1,4 +1,4 @@
-import { getProducers, tonomyEosioProxyContract } from '../../sdk/services/blockchain';
+import { getProducers, getTonomyEosioProxyContract } from '../../sdk/services/blockchain';
 import { StandardProposalOptions, createProposal, executeProposal } from '.';
 import { Name, PublicKey, Weight } from '@wharfkit/antelope';
 
@@ -225,7 +225,7 @@ function createSetProdsAction(schedule: ProducerSchedule[]) {
         );
     }
 
-    return tonomyEosioProxyContract.actions.setProds({
+    return getTonomyEosioProxyContract().actions.setProds({
         schedule,
     });
 }

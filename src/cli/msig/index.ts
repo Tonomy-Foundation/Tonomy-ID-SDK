@@ -1,5 +1,5 @@
 import { PrivateKey, Name, Checksum256, NameType, ActionType } from '@wharfkit/antelope';
-import { activePermissionLevel, createSigner, eosioMsigContract } from '../../sdk/services/blockchain';
+import { activePermissionLevel, createSigner, getEosioMsigContract } from '../../sdk/services/blockchain';
 import settings from '../settings';
 import { newAccount } from './accounts';
 import { transfer } from './token';
@@ -78,7 +78,7 @@ export default async function msig(args: string[]) {
         const proposalName = Name.from(args[1]);
 
         try {
-            const transaction = await eosioMsigContract.cancel(proposer, proposalName, signingAccount, signer);
+            const transaction = await getEosioMsigContract().cancel(proposer, proposalName, signingAccount, signer);
 
             console.log('Transaction: ', JSON.stringify(transaction, null, 2));
             console.error('Transaction succeeded');
@@ -201,7 +201,7 @@ export default async function msig(args: string[]) {
         const proposalName = Name.from(args[1]);
 
         try {
-            const transaction = await eosioMsigContract.approve(
+            const transaction = await getEosioMsigContract().approve(
                 proposer,
                 proposalName,
                 activePermissionLevel(signingAccount),
@@ -219,7 +219,7 @@ export default async function msig(args: string[]) {
         const proposalName = Name.from(args[1]);
 
         try {
-            const transaction = await eosioMsigContract.exec(proposer, proposalName, signingAccount, signer);
+            const transaction = await getEosioMsigContract().exec(proposer, proposalName, signingAccount, signer);
 
             console.log('Transaction: ', JSON.stringify(transaction, null, 2));
             console.error('Transaction succeeded');
@@ -282,7 +282,7 @@ export async function createProposal(
     }
 
     try {
-        const { transaction, proposalHash } = await eosioMsigContract.propose(
+        const { transaction, proposalHash } = await getEosioMsigContract().propose(
             proposer,
             proposalName,
             requestedPermissions,
@@ -321,7 +321,7 @@ export async function executeProposal(
     try {
         for (let i = 0; i < 2; i++) {
             await sleep(1000);
-            await eosioMsigContract.approve(
+            await getEosioMsigContract().approve(
                 proposer,
                 proposalName,
                 activePermissionLevel(governanceAccounts[i]),
@@ -333,7 +333,7 @@ export async function executeProposal(
         console.log('Proposal approved succeeded');
 
         await sleep(1000);
-        await eosioMsigContract.exec(proposer, proposalName, signingAccount ?? proposer, tonomyGovSigners[0]);
+        await getEosioMsigContract().exec(proposer, proposalName, signingAccount ?? proposer, tonomyGovSigners[0]);
 
         console.log('Proposal executed succeeded');
     } catch (e) {

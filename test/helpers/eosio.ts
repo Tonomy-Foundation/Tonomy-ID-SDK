@@ -1,7 +1,7 @@
 import { APIClient, FetchProvider, PrivateKey } from '@wharfkit/antelope';
 import fetch from 'cross-fetch';
 import { getSettings } from '../../src/sdk';
-import { Authority, createSigner, tonomyEosioProxyContract } from '../../src/sdk/services/blockchain';
+import { Authority, createSigner, getTonomyEosioProxyContract } from '../../src/sdk/services/blockchain';
 
 export const api = new APIClient({
     url: getSettings().blockchainUrl,
@@ -18,7 +18,7 @@ export function randomAccountName(): string {
 export async function createRandomAccount(authority: Authority) {
     const newAccountName = randomAccountName();
 
-    await tonomyEosioProxyContract.newAccount(
+    await getTonomyEosioProxyContract().newAccount(
         'tonomy',
         newAccountName,
         authority,

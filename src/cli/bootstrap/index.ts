@@ -23,12 +23,12 @@ import {
     RAM_PRICE,
     StakingContract,
     amountToAsset,
-    tokenContract,
-    eosioContract,
-    vestingContract,
-    stakingContract,
-    tonomyContract,
-    tonomyEosioProxyContract,
+    getTokenContract,
+    getEosioContract,
+    getVestingContract,
+    getStakingContract,
+    getTonomyContract,
+    getTonomyEosioProxyContract,
 } from '../../sdk/services/blockchain';
 import { createUser, mockCreateAccount, restoreCreateAccountFromMock } from './user';
 import { sleep } from '../../sdk/util';
@@ -140,13 +140,13 @@ function indexToAccountName(index: number): string {
 
 async function setPrivilegedAccounts() {
     console.log('Set privileged accounts');
-    await eosioContract.setPriv('tonomy', 1, signer);
-    await eosioContract.setPriv('eosio.msig', 1, signer);
+    await getEosioContract().setPriv('tonomy', 1, signer);
+    await getEosioContract().setPriv('eosio.msig', 1, signer);
 }
 
 async function setBlockchainParameters() {
     console.log('Set blockchain parameters');
-    await eosioContract.setParams(defaultBlockchainParams, signer);
+    await getEosioContract().setParams(defaultBlockchainParams, signer);
 }
 
 async function deployEosioMsig() {
@@ -190,12 +190,20 @@ async function deployStaking() {
 }
 
 async function setupVestingAndStaking(newSigner: Signer) {
-    await vestingContract.setSettings(VestingContract.SALE_START_DATE, VestingContract.VESTING_START_DATE, newSigner);
+    await getVestingContract().setSettings(
+        VestingContract.SALE_START_DATE,
+        VestingContract.VESTING_START_DATE,
+        newSigner
+    );
 
-    await stakingContract.setSettings(amountToAsset(StakingContract.yearlyStakePool, 'TONO'), newSigner);
+    await getStakingContract().setSettings(amountToAsset(StakingContract.yearlyStakePool, 'TONO'), newSigner);
     await sleep(1000);
-    await stakingContract.addYield('infra.tmy', amountToAsset(StakingContract.yearlyStakePool / 2, 'TONO'), newSigner); // 6 months budget in the account
-    console.log('Staking settings', await stakingContract.getSettings());
+    await getStakingContract().addYield(
+        'infra.tmy',
+        amountToAsset(StakingContract.yearlyStakePool / 2, 'TONO'),
+        newSigner
+    ); // 6 months budget in the account
+    console.log('Staking settings', await getStakingContract().getSettings());
 }
 
 async function createNativeToken() {
@@ -208,9 +216,9 @@ async function createNativeToken() {
         signer
     );
     console.log('Create and issue native token');
-    await tokenContract.create('eosio.token', `50000000000.000000 ${getSettings().currencySymbol}`, signer);
+    await getTokenContract().create('eosio.token', `50000000000.000000 ${getSettings().currencySymbol}`, signer);
     console.log('Issue native token');
-    await tokenContract.issue('eosio.token', `50000000000.000000 ${getSettings().currencySymbol}`, '', signer);
+    await getTokenContract().issue('eosio.token', `50000000000.000000 ${getSettings().currencySymbol}`, '', signer);
 }
 
 const allocations: [string, number][] = [
@@ -246,7 +254,7 @@ async function createTokenDistribution() {
             account.padEnd(13),
             (percentage * EosioTokenContract.TOTAL_SUPPLY).toFixed(0) + `.000000 ${getSettings().currencySymbol}`
         );
-        await tokenContract.transfer(
+        await getTokenContract().transfer(
             'eosio.token',
             account,
             (percentage * EosioTokenContract.TOTAL_SUPPLY).toFixed(0) + `.000000 ${getSettings().currencySymbol}`,
@@ -331,7 +339,7 @@ async function createTonomyContractAndSetResources() {
     ];
 
     for (const app of apps) {
-        await tonomyContract.adminSetApp(
+        await getTonomyContract().adminSetApp(
             app.accountName,
             app.appName,
             app.description,
@@ -346,10 +354,10 @@ async function createTonomyContractAndSetResources() {
 
     console.log('Set Tonomy system contract params and allocate RAM');
     console.log('Set resource params', RAM_PRICE, TOTAL_RAM_AVAILABLE, RAM_FEE);
-    await tonomyContract.setResourceParams(RAM_PRICE, TOTAL_RAM_AVAILABLE, RAM_FEE, signer);
+    await getTonomyContract().setResourceParams(RAM_PRICE, TOTAL_RAM_AVAILABLE, RAM_FEE, signer);
 
     console.log('Allocate operational tokens to accounts');
-    await tokenContract.transfer('ops.tmy', 'tonomy', bytesToTokens(3750000), 'Initial allocation', signer);
+    await getTokenContract().transfer('ops.tmy', 'tonomy', bytesToTokens(3750000), 'Initial allocation', signer);
 
     console.log('Allocate RAM to system accounts');
 
@@ -360,8 +368,8 @@ async function createTonomyContractAndSetResources() {
 
         console.log(`Buying ${app.ramAllocation / 1000}KB of RAM for ${account} for ${tokens}`);
 
-        await tokenContract.transfer('ops.tmy', account, tokens, 'Initial allocation', signer);
-        await tonomyContract.buyRam('ops.tmy', account, tokens, signer);
+        await getTokenContract().transfer('ops.tmy', account, tokens, 'Initial allocation', signer);
+        await getTonomyContract().buyRam('ops.tmy', account, tokens, signer);
     }
 }
 
@@ -461,8 +469,8 @@ async function updateAccountControllers(govKeys: string[], newPublicKey: PublicK
 
     activeAuthority.addKey(newPublicKey.toString(), 1);
     activeAuthority.addCodePermission('vesting.tmy');
-    await eosioContract.updateAuth(operationsAccount, 'active', 'owner', activeAuthority, signer);
-    await eosioContract.updateAuth(operationsAccount, 'owner', 'owner', ownerAuthority, signer, true);
+    await getEosioContract().updateAuth(operationsAccount, 'active', 'owner', activeAuthority, signer);
+    await getEosioContract().updateAuth(operationsAccount, 'owner', 'owner', ownerAuthority, signer, true);
 
     // accounts controlled by ops.tmy
     for (const account of opsControlledAccounts.filter(
@@ -517,7 +525,7 @@ async function updateMsigControl(govKeys: string[], signer: Signer) {
     const threshold = Math.ceil((govAccounts.length * 2) / 3);
     const ownerAuthority = Authority.fromAccountArray(govAccounts, 'active', threshold);
 
-    await tonomyEosioProxyContract.updateAuth('found.tmy', 'active', 'owner', activeAuthority, signer);
+    await getTonomyEosioProxyContract().updateAuth('found.tmy', 'active', 'owner', activeAuthority, signer);
 
-    await tonomyEosioProxyContract.updateAuth('found.tmy', 'owner', 'owner', ownerAuthority, signer);
+    await getTonomyEosioProxyContract().updateAuth('found.tmy', 'owner', 'owner', ownerAuthority, signer);
 }
