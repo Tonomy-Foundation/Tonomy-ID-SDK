@@ -96,20 +96,14 @@ jobs:
           name: Tonomy-Contracts
           path: ./Tonomy-Contracts
 
-      - name: Enable Corepack before setting up Node
-        run: corepack enable
-
       - name: Build container
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22.3.0
-          cache: yarn
-      - run: yarn run build:setup
-      - run: cd Tonomy-Communication
-      - run: git checkout $GIT_BRANCH
-      - run: git pull
-      - run: cd ../
-      - run: docker build -t tonomy/communication:local -f test/Dockerfile.communication .
+        run: |
+          ./copy-contract-abis.sh
+          cd Tonomy-Communication
+          git checkout $GIT_BRANCH
+          git pull
+          cd ../
+          docker build -t tonomy/communication:local -f test/Dockerfile.communication .
 
       - name: Save Communication service Docker image as artifact
         run: |
