@@ -94,7 +94,7 @@ export class TonomyEosioProxyContract extends Contract {
                 {
                     account: data.account,
                     permission: data.permission,
-                    parent: data.authParent ? data.parent : data.permission === 'owner' ? '' : data.parent,
+                    parent: data.permission === 'owner' ? '' : data.parent,
                     auth: data.auth,
                     auth_parent: data.authParent ?? false,
                 },

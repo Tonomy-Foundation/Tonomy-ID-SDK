@@ -39,7 +39,7 @@ export class EosioContract extends Contract {
                 {
                     account: data.account,
                     permission: data.permission,
-                    parent: data.parent === 'owner' ? '' : data.parent,
+                    parent: data.permission === 'owner' ? '' : data.parent,
                     auth: data.auth,
                 },
                 authorization
