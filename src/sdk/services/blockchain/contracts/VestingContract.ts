@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { API, NameType, Action, AssetType } from '@wharfkit/antelope';
+import { API, NameType, Action, AssetType, Asset } from '@wharfkit/antelope';
 import { Contract, loadContract } from './Contract';
 import { Contract as AntelopeContract, ActionOptions } from '@wharfkit/contract';
 import { Signer, transact } from '../eosio/transaction';
@@ -35,8 +35,8 @@ export interface VestingAllocationRaw {
     id: number;
     holder: NameType;
     time_since_sale_start: { _count: number };
-    tokens_claimed: string; // Asset
-    tokens_allocated: string; // Asset
+    tokens_claimed: Asset;
+    tokens_allocated: Asset;
     vesting_category_type: number;
 }
 
@@ -423,8 +423,8 @@ export class VestingContract extends Contract {
             id: a.id,
             holder: a.holder,
             timeSinceSaleStart: a.time_since_sale_start._count,
-            tokensClaimed: a.tokens_claimed,
-            tokensAllocated: a.tokens_allocated,
+            tokensClaimed: a.tokens_claimed.toString(),
+            tokensAllocated: a.tokens_allocated.toString(),
             vestingCategoryType: a.vesting_category_type,
         }));
     }

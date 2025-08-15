@@ -51,8 +51,17 @@ export abstract class Contract {
         data: any,
         authorization: ActionOptions = activeAuthority(this.contractName)
     ): Action {
-        return this.contract.action(name, data, authorization);
+        return this.contract.action(name, data, removeDuplicatePermissions(authorization));
     }
 
     actions: ActionGetters;
+}
+
+function removeDuplicatePermissions(auth: ActionOptions): ActionOptions {
+    if (!auth.authorization) throw new Error('Authorization is undefined');
+
+    // @ts-expect-error authorization is not undefined
+    auth.authorization = auth.authorization.filter((perm, index) => auth.authorization.indexOf(perm) === index);
+
+    return auth;
 }

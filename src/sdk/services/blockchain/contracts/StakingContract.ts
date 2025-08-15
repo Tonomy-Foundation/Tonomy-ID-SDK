@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { API, Name, NameType, AssetType, Action } from '@wharfkit/antelope';
+import { API, Name, NameType, AssetType, Action, Asset } from '@wharfkit/antelope';
 import { Signer, transact } from '../eosio/transaction';
 import { getAccount, getApi } from '../eosio/eosio';
 import { Contract, loadContract } from './Contract';
@@ -20,8 +20,8 @@ const CONTRACT_NAME: NameType = 'staking.tmy';
 
 export interface StakingAllocationData {
     id: number;
-    initial_stake: string; // Asset
-    tokens_staked: string; // Asset
+    initial_stake: Asset;
+    tokens_staked: Asset;
     stake_time: { _count: number };
     unstake_time: { _count: number };
     unstake_requested: number;
@@ -42,10 +42,10 @@ export interface StakingAllocation {
 }
 
 export interface StakingSettingsRaw {
-    current_yield_pool: string; // Asset
-    yearly_stake_pool: string; // Asset
-    total_staked: string; // Asset
-    total_releasing: string; // Asset
+    current_yield_pool: Asset;
+    yearly_stake_pool: Asset;
+    total_staked: Asset;
+    total_releasing: Asset;
 }
 
 export interface StakingSettings {
@@ -58,7 +58,7 @@ export interface StakingSettings {
 
 export interface StakingAccountRaw {
     staker: Name;
-    total_yield: string; // Asset
+    total_yield: Asset;
     last_payout: { _count: number };
     payments: number;
     version: number;
@@ -231,19 +231,19 @@ export class StakingContract extends Contract {
             const monthlyYield = amountToAsset(
                 allocation.unstake_requested
                     ? 0
-                    : await this.calculateMonthlyYield(assetToAmount(allocation.tokens_staked), settings),
+                    : await this.calculateMonthlyYield(assetToAmount(allocation.tokens_staked.toString()), settings),
                 'TONO'
             ); // Monthly yield from yearly APY.
             const yieldSoFar = amountToAsset(
-                assetToAmount(allocation.tokens_staked) - assetToAmount(allocation.initial_stake),
+                assetToAmount(allocation.tokens_staked.toString()) - assetToAmount(allocation.initial_stake.toString()),
                 'TONO'
             );
 
             allocationDetails.push({
                 id: allocation.id,
                 staker: Name.from(staker),
-                initialStake: allocation.initial_stake,
-                staked: allocation.tokens_staked,
+                initialStake: allocation.initial_stake.toString(),
+                staked: allocation.tokens_staked.toString(),
                 yieldSoFar,
                 stakedTime,
                 unstakeableTime: addSeconds(stakedTime, StakingContract.getLockedDays() * SECONDS_IN_DAY),
@@ -272,15 +272,15 @@ export class StakingContract extends Contract {
      */
     async getSettings(): Promise<StakingSettings> {
         const settings = await this.getSettingsData();
-        const yearly = assetToAmount(settings.yearly_stake_pool);
-        const total = assetToAmount(settings.total_staked);
+        const yearly = assetToAmount(settings.yearly_stake_pool.toString());
+        const total = assetToAmount(settings.total_staked.toString());
         const apy = total > 0 ? Math.min(yearly / total, StakingContract.MAX_APY) : StakingContract.MAX_APY;
 
         return {
-            currentYieldPool: settings.current_yield_pool,
-            yearlyStakePool: settings.yearly_stake_pool,
-            totalStaked: settings.total_staked,
-            totalReleasing: settings.total_releasing,
+            currentYieldPool: settings.current_yield_pool.toString(),
+            yearlyStakePool: settings.yearly_stake_pool.toString(),
+            totalStaked: settings.total_staked.toString(),
+            totalReleasing: settings.total_releasing.toString(),
             apy,
         };
     }
@@ -298,7 +298,7 @@ export class StakingContract extends Contract {
 
         return {
             staker: raw.staker,
-            totalYield: raw.total_yield,
+            totalYield: raw.total_yield.toString(),
             lastPayout: new Date(raw.last_payout + 'Z'),
             payments: raw.payments,
             version: raw.version,

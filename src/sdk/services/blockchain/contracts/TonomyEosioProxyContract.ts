@@ -14,33 +14,33 @@ const CONTRACT_NAME: NameType = 'tonomy';
 
 const specialAccounts = ['eosio', 'eosio.token', 'tonomy', 'vesting.tmy', 'staking.tmy', 'tonomy'];
 
-function getSpecialGovernancePermission(contractName: NameType): PermissionLevelType {
-    if (specialAccounts.includes(contractName.toString())) {
-        return { actor: GOVERNANCE_ACCOUNT_NAME, permission: 'owner' };
-    }
-
-    return { actor: contractName, permission: 'active' };
-}
-
-// Add special governance permission to the action authorization (if not already present)
-function addSpecialGovernancePermission(auth: ActionOptions, contractName: NameType): ActionOptions {
+function addGovernanceOwner(auth: ActionOptions): ActionOptions {
     if (!auth.authorization) {
         auth.authorization = [];
     }
 
-    const specialGovPermission = getSpecialGovernancePermission(contractName);
-
-    if (
-        !auth.authorization.some(
-            (perm) =>
-                perm.actor.toString() === specialGovPermission.actor.toString() &&
-                perm.permission.toString() === specialGovPermission.permission.toString()
-        )
-    ) {
-        auth.authorization.push(specialGovPermission);
-    }
+    auth.authorization.push({ actor: GOVERNANCE_ACCOUNT_NAME, permission: 'owner' });
 
     return auth;
+}
+
+function addGovernanceActive(auth: ActionOptions): ActionOptions {
+    if (!auth.authorization) {
+        auth.authorization = [];
+    }
+
+    auth.authorization.push({ actor: GOVERNANCE_ACCOUNT_NAME, permission: 'active' });
+
+    return auth;
+}
+
+// Add special governance permission to the action authorization
+function addSpecialGovernancePermission(auth: ActionOptions, account: NameType): ActionOptions {
+    if (specialAccounts.includes(account.toString())) {
+        return addGovernanceOwner(auth);
+    }
+
+    return addGovernanceActive(auth);
 }
 
 export class TonomyEosioProxyContract extends Contract {
@@ -62,7 +62,7 @@ export class TonomyEosioProxyContract extends Contract {
                 owner: AuthorityType;
                 active: AuthorityType;
             },
-            auth: ActionOptions = addSpecialGovernancePermission(activeAuthority(data.creator), data.creator)
+            auth: ActionOptions = addGovernanceOwner(activeAuthority(data.creator))
         ): Action => this.action('newaccount', data, auth),
         setCode: (
             data: { account: NameType; vmtype: number; vmversion: number; code: string },
@@ -116,16 +116,16 @@ export class TonomyEosioProxyContract extends Contract {
             ),
         setPriv: (
             data: { account: NameType; isPriv: number },
-            auth: ActionOptions = addSpecialGovernancePermission(activeAuthority(data.account), data.account)
+            auth: ActionOptions = addGovernanceOwner(activeAuthority(this.contractName))
         ): Action => this.action('setpriv', { account: data.account, is_priv: data.isPriv }, auth),
         setProds: (
             // TODO: use ProducerSchedule type
             data: { schedule: any[] },
-            auth: ActionOptions = addSpecialGovernancePermission(activeAuthority(this.contractName), this.contractName)
+            auth: ActionOptions = addGovernanceOwner(activeAuthority(this.contractName))
         ): Action => this.action('setprods', data, auth),
         setParams: (
             data: { params: BlockchainParams },
-            auth: ActionOptions = addSpecialGovernancePermission(activeAuthority(this.contractName), this.contractName)
+            auth: ActionOptions = addGovernanceOwner(activeAuthority(this.contractName))
         ): Action => this.action('setparams', data, auth),
     };
 
