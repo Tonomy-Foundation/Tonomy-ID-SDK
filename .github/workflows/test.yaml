@@ -98,12 +98,11 @@ jobs:
 
       - name: Build container
         run: |
-          git submodule update --init --recursive
+          yarn run build:setup
           cd Tonomy-Communication
           git checkout $GIT_BRANCH
           git pull
           cd ../
-          yarn run build:setup
           docker build -t tonomy/communication:local -f test/Dockerfile.communication .
 
       - name: Save Communication service Docker image as artifact
