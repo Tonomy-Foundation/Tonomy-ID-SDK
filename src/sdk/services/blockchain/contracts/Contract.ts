@@ -2,9 +2,6 @@ import { Name, NameType, Action } from '@wharfkit/antelope';
 import { ContractKit, Contract as AntelopeContract, ActionOptions } from '@wharfkit/contract';
 import { getApi } from '../eosio/eosio';
 import { activeAuthority } from '../eosio/authority';
-import Debug from 'debug';
-
-const debug = Debug('tonomy-sdk:blockchain:contracts:Contract');
 
 export async function loadContract(account: NameType): Promise<AntelopeContract> {
     const kit = new ContractKit({ client: getApi() });
@@ -54,7 +51,6 @@ export abstract class Contract {
         data: any,
         authorization: ActionOptions = activeAuthority(this.contractName)
     ): Action {
-        debug('action', name, data, authorization, this.contract.abi);
         return this.contract.action(name, data, authorization);
     }
 

@@ -93,7 +93,9 @@ export class AntelopePushTransactionError extends Error {
 
         this.error = err.error;
         this.contract = err.contract;
-        this.actions = err.actions;
+        this.actions = err.actions
+            ? err.actions.map((action) => (action instanceof Action ? action.decoded : action))
+            : undefined;
         this.stack = new Error().stack;
         // Ensure the name of this error is the same as the class name
         this.name = this.constructor.name;
@@ -111,7 +113,7 @@ export class AntelopePushTransactionError extends Error {
     }
 
     hasTonomyErrorCode(code: string): boolean {
-        // TODO: iterate over deatils array instead of only looking at first element
+        // TODO: iterate over details array instead of only looking at first element
         return this.error.details[0].message.search(code) > 0;
     }
 }
@@ -142,21 +144,22 @@ export async function transact(
         signatures,
     });
 
-    // Send to the node
-    let res;
-
     try {
         debug(
             'Pushing transaction',
-            actionsArray.map((action) => action.decoded)
+            JSON.stringify(
+                actionsArray.map((action) => action.decoded),
+                null,
+                2
+            )
         );
-        res = await getApi().v1.chain.push_transaction(signedTransaction);
+        return await getApi().v1.chain.push_transaction(signedTransaction);
     } catch (e) {
         debug('Error pushing transaction', e);
 
         if (e.response?.headers) {
             if (e.response?.json) {
-                throw new AntelopePushTransactionError({ ...e.response.json, actions });
+                throw new AntelopePushTransactionError({ ...e.response.json, actions: actionsArray });
             }
 
             throw new HttpError(e);
@@ -164,8 +167,6 @@ export async function transact(
 
         throw e;
     }
-
-    return res;
 }
 
 type ActionWithABI = Action & { abi: ABI };
