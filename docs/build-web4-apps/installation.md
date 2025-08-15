@@ -17,3 +17,13 @@ The Tonomy SDK is ESM-only. Set your package.json to "type": "module".
 {% hint style="info" %}
 See [Troubleshooting](../run-tonomy-infrastructure/troubleshooting.md) for other issues while compiling or executing the SDK.
 {% endhint %}
+
+### Using the Command Line Interface
+
+```bash
+git clone https://github.com/Tonomy-Foundation/Tonomy-ID-SDK.git
+cd Tonomy-ID-SDK
+yarn
+# you can now run CLI commands, for example:
+yarn run cli keys create
+```
