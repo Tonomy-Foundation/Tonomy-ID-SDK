@@ -17,6 +17,7 @@ if [ "${GITHUB_ACTIONS}" == "true" ] && [ "${BRANCH}" != "master" ] && [ "${BRAN
 fi
 echo "Using branch: ${BRANCH}"
 
+# Submodule update needs to work locally, in the Github pipeline, and in the Github pipeline to build the Tonomy-Communication Docker container
 echo "Checking submodules"
 if [ ! -d "${PARENT_PATH}/Ethereum-token/contracts" ]; then
     echo "Updating submodules: Ethereum-token"
