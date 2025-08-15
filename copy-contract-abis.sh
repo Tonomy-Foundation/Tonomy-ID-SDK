@@ -74,8 +74,6 @@ if [ ! -d "node_modules" ]; then
 fi
 if [ ! -d "artifacts" ]; then
     echo "Ethereum Token Contract: Compiling contracts"
-    ls -la
-    yarn -v
     yarn run compile
 fi
 
