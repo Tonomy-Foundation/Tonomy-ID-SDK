@@ -2,7 +2,7 @@ import { APIClient, FetchProvider, NameType, API, PrivateKey, ABI } from '@wharf
 import fetch from 'cross-fetch';
 import { getFetch, getSettings, isProduction } from '../../../util/settings';
 import { throwError, SdkErrors } from '../../../util/errors';
-import { MILLISECONDS_IN_SECOND } from '../../../util';
+import { MILLISECONDS_IN_SECOND } from '../../../util/time';
 import Debug from 'debug';
 
 const debug = Debug('tonomy-sdk:services:blockchain:eosio:eosio');
