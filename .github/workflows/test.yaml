@@ -83,7 +83,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       # update ref to change communication branch, if needed for temporary CI testing
-      GIT_BRANCH: development
+      GIT_BRANCH: feature/contracts-refactor
     steps:
       - uses: actions/checkout@v4
 
@@ -105,7 +105,7 @@ jobs:
           node-version: 22.3.0
           cache: yarn
       - run: ./copy-contract-abis.sh
-      - run: cd Tonomy-Communication && ls && git checkout $GIT_BRANCH && git pull && cd ../
+      - run: cd Tonomy-Communication && git checkout $GIT_BRANCH && git pull && cd ../
       - run: docker build -t tonomy/communication:local -f test/Dockerfile.communication .
 
       - name: Save Communication service Docker image as artifact
