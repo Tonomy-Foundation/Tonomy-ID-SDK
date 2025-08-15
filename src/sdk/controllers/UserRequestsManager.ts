@@ -13,7 +13,8 @@ import { URL as URLtype } from '../util/ssi/types';
 import { App } from './App';
 import { AppStatusEnum } from '../types/AppStatusEnum';
 import { getAccountInfo } from '../helpers/user';
-import { DualWalletRequests, sleep } from '../util';
+import { DualWalletRequests } from '../util/request';
+import { sleep } from '../util/time';
 import Debug from 'debug';
 import { UserDataVault } from './UserDataVault';
 

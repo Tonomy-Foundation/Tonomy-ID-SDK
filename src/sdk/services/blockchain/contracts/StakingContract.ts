@@ -7,7 +7,9 @@ import { Contract as AntelopeContract, ActionOptions } from '@wharfkit/contract'
 import { getTonomyContract } from './TonomyContract';
 import { Authority, activeAuthority } from '../eosio/authority';
 import Debug from 'debug';
-import { addSeconds, getSettings, isProduction, SdkErrors, SECONDS_IN_DAY, throwError } from '../../../util';
+import { getSettings, isProduction } from '../../../util/settings';
+import { SdkErrors, throwError } from '../../../util/errors';
+import { addSeconds, SECONDS_IN_DAY } from '../../../util/time';
 import abi from './abi/staking.tmy.abi.json';
 import { amountToAsset, assetToAmount, EosioTokenContract } from './EosioTokenContract';
 

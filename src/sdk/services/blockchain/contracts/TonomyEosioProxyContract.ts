@@ -8,7 +8,7 @@ import { GOVERNANCE_ACCOUNT_NAME } from './TonomyContract';
 import { getApi } from '../eosio/eosio';
 import abi from './abi/tonomy.abi.json';
 import { BlockchainParams } from './EosioContract';
-import { isProduction } from '../../../util';
+import { isProduction } from '../../../util/settings';
 
 const CONTRACT_NAME: NameType = 'tonomy';
 

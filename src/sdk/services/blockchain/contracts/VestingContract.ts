@@ -4,7 +4,7 @@ import { Contract, loadContract } from './Contract';
 import { Contract as AntelopeContract, ActionOptions } from '@wharfkit/contract';
 import { Signer, transact } from '../eosio/transaction';
 import { getApi } from '../eosio/eosio';
-import { getSettings, isProduction } from '../../../util';
+import { getSettings, isProduction } from '../../../util/settings';
 import {
     addMicroseconds,
     MICROSECONDS_IN_DAY,

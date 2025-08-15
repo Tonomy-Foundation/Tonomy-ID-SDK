@@ -6,7 +6,8 @@ import { ClientAuthorizationData, ICreateAccountOptions, ILoginOptions, IUserAut
 import { getAccountInfo } from '../helpers/user';
 import { UserBase } from './UserBase';
 import { getTonomyContract } from '../services/blockchain';
-import { JWT, VerifiableCredential } from '../util';
+import { VerifiableCredential } from '../util/ssi/vc';
+import { JWT } from '../util/ssi/types';
 
 export class UserAuthorization extends UserBase implements IUserAuthentication {
     async savePassword(masterPassword: string, options: ICreateAccountOptions): Promise<void> {

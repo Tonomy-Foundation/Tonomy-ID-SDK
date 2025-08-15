@@ -4,7 +4,8 @@ import { getSettings } from '../util/settings';
 import { AccountType, TonomyUsername } from '../util/username';
 import { AppStatusEnum } from '../types/AppStatusEnum';
 import { getTonomyContract } from '../services/blockchain';
-import { parseDid, SdkErrors, throwError } from '../util';
+import { parseDid } from '../util/ssi/did';
+import { SdkErrors, throwError } from '../util/errors';
 
 export interface AppData {
     accountName: Name;

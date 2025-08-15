@@ -6,7 +6,9 @@ import { AuthenticationMessage, Message } from '../services/communication/messag
 import { UserStatusEnum } from './UserStatusEnum';
 import { Subscriber } from '../services/communication/communication';
 import { App } from '../controllers/App';
-import { URL as URLtype, DataRequest, DualWalletRequests, KYCPayload, PersonCredentialType, JWT } from '../util';
+import { URL as URLtype, JWT } from '../util/ssi/types';
+import { DataRequest, DualWalletRequests } from '../util/request';
+import { KYCPayload, PersonCredentialType } from '../util/veriff';
 import { PublicKey } from '@wharfkit/antelope';
 import { AppStatusEnum } from './AppStatusEnum';
 import { Signer } from '../services/blockchain';

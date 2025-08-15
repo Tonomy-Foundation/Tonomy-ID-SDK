@@ -2,7 +2,8 @@
 import { API, NameType, AssetType } from '@wharfkit/antelope';
 import { Signer, transact } from '../eosio/transaction';
 import { getApi } from '../eosio/eosio';
-import { AccountType, TonomyUsername, getSettings } from '../../../util';
+import { getSettings } from '../../../util/settings';
+import { AccountType, TonomyUsername } from '../../../util/username';
 import { Contract, loadContract } from './Contract';
 import { ActionOptions } from '@wharfkit/contract';
 import { getTonomyContract } from './TonomyContract';

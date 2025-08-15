@@ -2,7 +2,7 @@ import { Name } from '@wharfkit/antelope';
 import { sha256 } from './crypto';
 import { SdkErrors, throwError } from './errors';
 import { Serializable } from './serializable';
-import { getTonomyContract } from '../services/blockchain';
+import { getTonomyContract } from '../services/blockchain/contracts/TonomyContract';
 
 enum AccountType {
     PERSON = 'PERSON',

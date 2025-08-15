@@ -6,7 +6,7 @@ import { Signer, transact } from '../eosio/transaction';
 import { getApi } from '../eosio/eosio';
 import { Contract as AntelopeContract, ActionOptions } from '@wharfkit/contract';
 import abi from './abi/eosio.bios.abi.json';
-import { isProduction } from '../../../util';
+import { isProduction } from '../../../util/settings';
 
 const CONTRACT_NAME: NameType = 'eosio';
 

@@ -6,7 +6,7 @@ import Debug from 'debug';
 import { Contract, loadContract } from './Contract';
 import { Signer, transact } from '../eosio/transaction';
 import { getApi } from '../eosio/eosio';
-import { getSettings, isProduction } from '../../../util';
+import { getSettings, isProduction } from '../../../util/settings';
 import { activeAuthority } from '../eosio/authority';
 import abi from './abi/eosio.token.abi.json';
 

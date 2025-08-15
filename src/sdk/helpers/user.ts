@@ -1,14 +1,16 @@
 import { Name, API, PublicKey } from '@wharfkit/antelope';
 import { LoginRequestResponseMessage } from '../services/communication/message';
 import { IUser } from '../types/User';
-import { SdkErrors, throwError, URL as URLtype, DualWalletRequests, WalletResponseError } from '../util';
+import { URL as URLtype } from '../util/ssi/types';
+import { DualWalletRequests, WalletResponseError } from '../util/request';
+import { SdkErrors, throwError } from '../util/errors';
 import { KeyManager, KeyManagerLevel } from '../storage/keymanager';
 import { App } from '../controllers/App';
 import { getAccount } from '../services/blockchain/eosio/eosio';
 import { StorageFactory } from '../storage/storage';
 import { TonomyUsername } from '../util/username';
 import { User } from '../controllers/User';
-import { getTonomyContract } from '../services/blockchain';
+import { getTonomyContract } from '../services/blockchain/contracts/TonomyContract';
 import { DataSource } from 'typeorm';
 
 export async function getAccountInfo(account: TonomyUsername | Name): Promise<API.v1.AccountObject> {

@@ -13,7 +13,10 @@ import {
 import { Contract, loadContract } from './Contract';
 import { Contract as AntelopeContract, ActionOptions, QueryParams } from '@wharfkit/contract';
 import { Signer, transact } from '../eosio/transaction';
-import { SdkErrors, TonomyUsername, getSettings, isProduction, sha256, throwError } from '../../../util';
+import { TonomyUsername } from '../../../util/username';
+import { SdkErrors, throwError } from '../../../util/errors';
+import { getSettings, isProduction } from '../../../util/settings';
+import { sha256 } from '../../../util/crypto';
 import { getAccount, getApi } from '../eosio/eosio';
 import abi from './abi/tonomy.abi.json';
 import { activeAuthority, ownerAuthority } from '../eosio/authority';

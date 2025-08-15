@@ -15,7 +15,7 @@ import { getApi, getChainInfo } from '../eosio/eosio';
 import { ActionOptions } from '@wharfkit/contract';
 import { activeAuthority } from '../eosio/authority';
 import abi from './abi/eosio.msig.abi.json';
-import { isProduction } from '../../../util';
+import { isProduction } from '../../../util/settings';
 import Debug from 'debug';
 
 const debug = Debug('tonomy-sdk:services:blockchain:contracts:EosioMsigContract');
