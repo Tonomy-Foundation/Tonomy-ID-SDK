@@ -101,7 +101,7 @@ describe('VestingContract class', () => {
             const allocations = await getVestingContract().getAllocations(accountName);
 
             expect(allocations.length).toBe(1);
-            expect(allocations[0].holder).toBe(accountName);
+            expect(allocations[0].holder.toString()).toBe(accountName);
             expect(allocations[0].tokensAllocated).toBe('1.000000 TONO');
             expect(allocations[0].tokensClaimed).toBe('0.000000 TONO');
             expect(allocations[0].vestingCategoryType).toBe(999);
@@ -120,10 +120,10 @@ describe('VestingContract class', () => {
             const allocations = await getVestingContract().getAllocations(accountName);
 
             expect(allocations.length).toBe(2);
-            expect(allocations[0].holder).toBe(accountName);
+            expect(allocations[0].holder.toString()).toBe(accountName);
             expect(allocations[0].tokensAllocated).toBe('1.000000 TONO');
             expect(allocations[0].vestingCategoryType).toBe(999);
-            expect(allocations[1].holder).toBe(accountName);
+            expect(allocations[1].holder.toString()).toBe(accountName);
             expect(allocations[1].tokensAllocated).toBe('10.000000 TONO');
             expect(allocations[1].vestingCategoryType).toBe(998);
         });
@@ -316,9 +316,12 @@ describe('VestingContract class', () => {
                 memo: "Allocated vested funds"
             }
 
-            const assignTokensAction2 = JSON.parse(JSON.stringify(assignTokensAction));
-
-            assignTokensAction2.data.holder = accountName2;
+            const assignTokensAction2 = getVestingContract().actions.assignTokens({
+                sender,
+                holder: accountName2,
+                amount,
+                category: 999,
+            })
 
             const actions = [assignTokensAction, assignTokensAction2];
 
@@ -385,9 +388,12 @@ describe('VestingContract class', () => {
                 memo: "Allocated vested funds"
             }
 
-            const assignTokensAction2 = JSON.parse(JSON.stringify(assignTokensAction));
-
-            assignTokensAction2.data.holder = accountName2;
+            const assignTokensAction2 = getVestingContract().actions.assignTokens({
+                sender,
+                holder: accountName2,
+                amount,
+                category: 999,
+            })
 
             const actions = [assignTokensAction, assignTokensAction2];
 

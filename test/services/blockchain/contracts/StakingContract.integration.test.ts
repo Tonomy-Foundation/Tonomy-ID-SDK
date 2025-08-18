@@ -201,7 +201,7 @@ describe('StakingContract Staking Tests', () => {
             // Verify that the staking account table has been updated.
             const accountData = await getStakingContract().getAccount(accountName);
 
-            expect(accountData.staker).toBe(accountName);
+            expect(accountData.staker.toString()).toBe(accountName);
             expect(accountData.lastPayout.toString()).toBe(allocation.stakedTime.toString())
             expect(accountData.totalYield).toBe(amountToAsset(0, "TONO"));
             expect(accountData.version).toBe(1);
@@ -498,8 +498,8 @@ describe('StakingContract Staking Tests', () => {
                 expect(inlineActions[1].act.account).toBe("eosio.token");
                 const data = inlineActions[1].act.data;
 
-                expect(data.to).toBe(accountName);
-                expect(data.from).toBe(getStakingContract().contractName);
+                expect(data.to.toString()).toBe(accountName);
+                expect(data.from.toString()).toBe(getStakingContract().contractName);
                 expect(data.quantity).toBe(allocation.staked);
                 expect(data.memo).toBe("unstake tokens");
 
@@ -604,7 +604,7 @@ describe('StakingContract Staking Tests', () => {
             };
             account: {
                 lastPayoutTime: Date;
-                payments: number;
+                payments: number; // FIXME: not a number type
                 totalYield: number;
             };
             settings: {

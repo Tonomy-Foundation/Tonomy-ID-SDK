@@ -9,6 +9,7 @@ import {
     AuthorityType,
     AssetType,
     PublicKeyType,
+    UInt8,
 } from '@wharfkit/antelope';
 import { Contract, loadContract } from './Contract';
 import { Contract as AntelopeContract, ActionOptions, QueryParams } from '@wharfkit/contract';
@@ -77,7 +78,7 @@ namespace PermissionLevel {
 
 type PersonDataRaw = {
     account_name: Name;
-    status: number;
+    status: UInt8;
     username_hash: Checksum256;
     password_salt: Checksum256;
     version: number;
@@ -86,7 +87,7 @@ type PersonDataRaw = {
 function castPersonDataRaw(person: PersonDataRaw): PersonData {
     return {
         accountName: person.account_name,
-        status: person.status,
+        status: person.status.toNumber(),
         usernameHash: person.username_hash,
         passwordSalt: person.password_salt,
         version: person.version,
