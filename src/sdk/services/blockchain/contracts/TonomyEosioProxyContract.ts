@@ -14,7 +14,7 @@ const CONTRACT_NAME: NameType = 'tonomy';
 
 const specialAccounts = ['eosio', 'eosio.token', 'tonomy', 'vesting.tmy', 'staking.tmy', 'tonomy'];
 
-function addGovernanceOwner(auth: ActionOptions): ActionOptions {
+export function addGovernanceOwner(auth: ActionOptions): ActionOptions {
     if (!auth.authorization) {
         auth.authorization = [];
     }
@@ -24,7 +24,7 @@ function addGovernanceOwner(auth: ActionOptions): ActionOptions {
     return auth;
 }
 
-function addGovernanceActive(auth: ActionOptions): ActionOptions {
+export function addGovernanceActive(auth: ActionOptions): ActionOptions {
     if (!auth.authorization) {
         auth.authorization = [];
     }
@@ -35,7 +35,7 @@ function addGovernanceActive(auth: ActionOptions): ActionOptions {
 }
 
 // Add special governance permission to the action authorization
-function addSpecialGovernancePermission(auth: ActionOptions, account: NameType): ActionOptions {
+export function addSpecialGovernancePermission(auth: ActionOptions, account: NameType): ActionOptions {
     if (specialAccounts.includes(account.toString())) {
         return addGovernanceOwner(auth);
     }
@@ -141,9 +141,12 @@ export class TonomyEosioProxyContract extends Contract {
         const abiDef = ABI.from(abiJson);
         const abiHex = Serializer.encode({ object: abiDef }).hexString;
 
-        const auth = activeAuthority(account);
+        let auth: ActionOptions | undefined;
 
-        if (extraAuthorization) auth.authorization.push(extraAuthorization);
+        if (extraAuthorization) {
+            auth = activeAuthority(account);
+            auth.authorization!.push(extraAuthorization);
+        }
 
         const setCode = this.actions.setCode({ account, vmtype: 0, vmversion: 0, code: wasmHex }, auth);
         const setAbi = this.actions.setAbi({ account, abi: abiHex }, auth);
