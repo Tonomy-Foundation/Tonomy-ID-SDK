@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { API, Name, NameType, AssetType, Action, Asset } from '@wharfkit/antelope';
+import { API, Name, NameType, AssetType, Action, Asset, TimePoint, UInt32, Int32, UInt64 } from '@wharfkit/antelope';
 import { Signer, transact } from '../eosio/transaction';
 import { getAccount, getApi } from '../eosio/eosio';
 import { Contract, loadContract } from './Contract';
@@ -18,13 +18,13 @@ const CONTRACT_NAME: NameType = 'staking.tmy';
 
 // TODO: update assets to use Asset class instead
 
-export interface StakingAllocationData {
-    id: number;
+export interface StakingAllocationRaw {
+    id: UInt64;
     initial_stake: Asset;
     tokens_staked: Asset;
-    stake_time: { _count: number };
-    unstake_time: { _count: number };
-    unstake_requested: number;
+    stake_time: TimePoint;
+    unstake_time: TimePoint;
+    unstake_requested: boolean;
 }
 
 export interface StakingAllocation {
@@ -59,9 +59,9 @@ export interface StakingSettings {
 export interface StakingAccountRaw {
     staker: Name;
     total_yield: Asset;
-    last_payout: { _count: number };
-    payments: number;
-    version: number;
+    last_payout: TimePoint;
+    payments: UInt32;
+    version: Int32;
 }
 
 export interface StakingAccount {
@@ -210,8 +210,8 @@ export class StakingContract extends Contract {
         return await transact(action, signer);
     }
 
-    private async getAllocationsData(staker: NameType): Promise<StakingAllocationData[]> {
-        const stakingAllocationsTable = this.contract.table<StakingAllocationData>('stakingalloc', staker);
+    private async getAllocationsData(staker: NameType): Promise<StakingAllocationRaw[]> {
+        const stakingAllocationsTable = this.contract.table<StakingAllocationRaw>('stakingalloc', staker);
 
         return await stakingAllocationsTable.all();
     }
@@ -223,6 +223,7 @@ export class StakingContract extends Contract {
      */
     async getAllocations(staker: NameType, settings: StakingSettings): Promise<StakingAllocation[]> {
         const allocations = await this.getAllocationsData(staker);
+
         const allocationDetails: StakingAllocation[] = [];
 
         for (const allocation of allocations) {
@@ -240,7 +241,7 @@ export class StakingContract extends Contract {
             );
 
             allocationDetails.push({
-                id: allocation.id,
+                id: allocation.id.toNumber(),
                 staker: Name.from(staker),
                 initialStake: allocation.initial_stake.toString(),
                 staked: allocation.tokens_staked.toString(),
@@ -249,7 +250,7 @@ export class StakingContract extends Contract {
                 unstakeableTime: addSeconds(stakedTime, StakingContract.getLockedDays() * SECONDS_IN_DAY),
                 unstakeTime,
                 releaseTime: addSeconds(unstakeTime, StakingContract.getReleaseDays() * SECONDS_IN_DAY),
-                unstakeRequested: allocation.unstake_requested === 1,
+                unstakeRequested: allocation.unstake_requested,
                 monthlyYield,
             });
         }
@@ -300,8 +301,8 @@ export class StakingContract extends Contract {
             staker: raw.staker,
             totalYield: raw.total_yield.toString(),
             lastPayout: new Date(raw.last_payout + 'Z'),
-            payments: raw.payments,
-            version: raw.version,
+            payments: raw.payments.toNumber(),
+            version: raw.version.toNumber(),
         };
     }
 

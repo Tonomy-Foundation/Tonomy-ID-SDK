@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-import { API, NameType, Action, AssetType, Asset, Name, Int32 } from '@wharfkit/antelope';
+import { API, NameType, Action, AssetType, Asset, Name, Int32, TimePoint, UInt64, Int64 } from '@wharfkit/antelope';
 import { Contract, loadContract } from './Contract';
 import { Contract as AntelopeContract, ActionOptions } from '@wharfkit/contract';
 import { Signer, transact } from '../eosio/transaction';
@@ -31,9 +31,9 @@ const MICROSECONDS_PER_MONTH = 30 * MICROSECONDS_PER_DAY;
 const MICROSECONDS_PER_YEAR = 365 * MICROSECONDS_PER_DAY;
 
 export interface VestingAllocationRaw {
-    id: number;
+    id: UInt64;
     holder: Name;
-    time_since_sale_start: { _count: number };
+    time_since_sale_start: { _count: Int64 };
     tokens_claimed: Asset;
     tokens_allocated: Asset;
     vesting_category_type: Int32;
@@ -72,8 +72,8 @@ interface VestingAllocationsParsed {
     categoryId: number;
 }
 export interface VestingSettingsRaw {
-    sales_start_date: string;
-    launch_date: string;
+    sales_start_date: TimePoint;
+    launch_date: TimePoint;
 }
 export interface VestingSettings {
     salesStartDate: Date;
@@ -413,13 +413,13 @@ export class VestingContract extends Contract {
         const settings = await this.getSettingsData();
 
         return {
-            salesStartDate: new Date(settings.sales_start_date + 'Z'),
-            launchDate: new Date(settings.launch_date + 'Z'),
+            salesStartDate: new Date(settings.sales_start_date.toString() + 'Z'),
+            launchDate: new Date(settings.launch_date.toString() + 'Z'),
         };
     }
 
     private async getAllocationsData(account: NameType): Promise<VestingAllocationRaw[]> {
-        const res = this.contract.table<VestingAllocationRaw>('allocation', account).all();
+        const res = await this.contract.table<VestingAllocationRaw>('allocation', account).all();
 
         if (!res) throw new Error(`No allocations found for account ${account}`);
         return res;
@@ -429,9 +429,9 @@ export class VestingContract extends Contract {
         const res = await this.getAllocationsData(account);
 
         return res.map((a) => ({
-            id: a.id,
+            id: a.id.toNumber(),
             holder: a.holder,
-            timeSinceSaleStart: a.time_since_sale_start._count,
+            timeSinceSaleStart: a.time_since_sale_start._count.toNumber(),
             tokensClaimed: a.tokens_claimed.toString(),
             tokensAllocated: a.tokens_allocated.toString(),
             vestingCategoryType: a.vesting_category_type.toNumber(),

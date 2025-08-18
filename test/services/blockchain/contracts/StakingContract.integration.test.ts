@@ -280,7 +280,7 @@ describe('StakingContract Staking Tests', () => {
             expect(fullData.allocations.length).toBe(2);
             expect(fullData.lastPayout.getTime()).toBeGreaterThanOrEqual(fullData.allocations[0].stakedTime.getTime());
             expect(fullData.lastPayout.getTime()).toBeLessThanOrEqual(fullData.allocations[0].stakedTime.getTime() + MILLISECONDS_IN_SECOND);
-            expect(fullData.staker).toBe(accountName);
+            expect(fullData.staker.toString()).toBe(accountName);
             expect(fullData.totalYield).toBe(amountToAsset(0, "TONO"));
             expect(fullData.version).toBe(1);
             expect(fullData.totalUnlockable).toBe(0);

@@ -10,6 +10,7 @@ import {
     AssetType,
     PublicKeyType,
     UInt8,
+    UInt16,
 } from '@wharfkit/antelope';
 import { Contract, loadContract } from './Contract';
 import { Contract as AntelopeContract, ActionOptions, QueryParams } from '@wharfkit/contract';
@@ -81,7 +82,6 @@ type PersonDataRaw = {
     status: UInt8;
     username_hash: Checksum256;
     password_salt: Checksum256;
-    version: number;
 };
 
 function castPersonDataRaw(person: PersonDataRaw): PersonData {
@@ -90,7 +90,6 @@ function castPersonDataRaw(person: PersonDataRaw): PersonData {
         status: person.status.toNumber(),
         usernameHash: person.username_hash,
         passwordSalt: person.password_salt,
-        version: person.version,
     };
 }
 
@@ -99,7 +98,6 @@ export type PersonData = {
     status: number;
     usernameHash: Checksum256;
     passwordSalt: Checksum256;
-    version: number;
 };
 
 type AppData2Raw = {
@@ -107,7 +105,7 @@ type AppData2Raw = {
     json_data: string;
     username_hash: Checksum256;
     origin: string;
-    version: number;
+    version: UInt16;
 };
 
 type AppJsonDataRaw = {
@@ -163,7 +161,7 @@ function castAppData2Raw(app: AppData2Raw): AppData2 {
         backgroundColor: json.background_color,
         accentColor: json.accent_color,
         usernameHash: app.username_hash,
-        version: app.version,
+        version: app.version.toNumber(),
         jsonData: app.json_data,
     };
 }
@@ -465,7 +463,7 @@ export class TonomyContract extends Contract {
         return res;
     }
 
-    async getAppData2s(): Promise<AppData2Raw[]> {
+    async getAllAppData2(): Promise<AppData2Raw[]> {
         const res = await this.contract.table<AppData2Raw>('appsv2', this.contractName).all();
 
         if (!res || res.length === 0) {
@@ -553,7 +551,7 @@ export class TonomyContract extends Contract {
     }
 
     async getAllApps(): Promise<AppData2[]> {
-        const apps = await this.getAppData2s();
+        const apps = await this.getAllAppData2();
 
         return apps.map(castAppData2Raw);
     }

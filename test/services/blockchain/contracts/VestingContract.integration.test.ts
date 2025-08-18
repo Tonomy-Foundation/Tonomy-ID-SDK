@@ -12,7 +12,7 @@ import {
     transact,
 } from '../../../../src/sdk/services/blockchain';
 import { addSeconds, sleepUntil, subtractSeconds, sleep } from '../../../../src/sdk/util';
-import { PrivateKey } from '@wharfkit/antelope';
+import { Action, PrivateKey } from '@wharfkit/antelope';
 import { createRandomAccount } from '../../../helpers/eosio';
 import { msigAction } from './governance';
 import { jest } from '@jest/globals';
@@ -338,9 +338,9 @@ describe('VestingContract class', () => {
             expect(actionTraces.length).toBe(2);
 
             // vesting.tmy::assigntokens for accountName
-            checkAction(actionTraces[0], contract, contract, 'assigntokens', assignTokensAction.data);
+            checkAction(actionTraces[0], contract, contract, 'assigntokens', assignTokensAction);
             // vesting.tmy::assigntokens account notification
-            checkAction(actionTraces[0].inline_traces[0], accountName, contract, 'assigntokens', assignTokensAction.data);
+            checkAction(actionTraces[0].inline_traces[0], accountName, contract, 'assigntokens', assignTokensAction);
             // eosio.token::transfer
             checkAction(actionTraces[0].inline_traces[1], "eosio.token", "eosio.token", "transfer", eosioTokenTransferData);
             // eosio.token::transfer account notifications (2x)
@@ -348,9 +348,9 @@ describe('VestingContract class', () => {
             checkAction(actionTraces[0].inline_traces[1].inline_traces[1], contract, "eosio.token", "transfer", eosioTokenTransferData);
 
             // vesting.tmy::assigntokens for accountName2
-            checkAction(actionTraces[1], contract, contract, 'assigntokens', assignTokensAction2.data);
+            checkAction(actionTraces[1], contract, contract, 'assigntokens', assignTokensAction2);
             // vesting.tmy::assigntokens account notification
-            checkAction(actionTraces[1].inline_traces[0], accountName2, contract, 'assigntokens', assignTokensAction2.data);
+            checkAction(actionTraces[1].inline_traces[0], accountName2, contract, 'assigntokens', assignTokensAction2);
             // eosio.token::transfer
             checkAction(actionTraces[1].inline_traces[1], "eosio.token", "eosio.token", "transfer", eosioTokenTransferData)
             // eosio.token::transfer account notifications (2x)
@@ -1035,9 +1035,11 @@ describe('VestingContract class', () => {
     });
 });
 
-function checkAction(action: any, receiver: string, contract: string, name: string, data: object) {
+function checkAction(action: any, receiver: string, contract: string, name: string, data: Action | object) {
+    const dataObject = data instanceof Action ? data.decoded.data : data;
+
     expect(action.receiver).toBe(receiver)
     expect(action.act.account).toBe(contract);
     expect(action.act.name).toBe(name)
-    expect(JSON.stringify(action.act.data)).toBe(JSON.stringify(data))
+    expect(JSON.stringify(action.act.data)).toBe(JSON.stringify(dataObject))
 }
