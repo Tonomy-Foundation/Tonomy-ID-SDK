@@ -414,9 +414,9 @@ describe('VestingContract class', () => {
 
             expect(inlineTraces.length).toBe(2);
             // vesting.tmy::assigntokens for accountName
-            checkAction(inlineTraces[0], contract, contract, 'assigntokens', assignTokensAction.data);
+            checkAction(inlineTraces[0], contract, contract, 'assigntokens', assignTokensAction);
             // vesting.tmy::assigntokens account notification
-            checkAction(inlineTraces[0].inline_traces[0], accountName, contract, 'assigntokens', assignTokensAction.data);
+            checkAction(inlineTraces[0].inline_traces[0], accountName, contract, 'assigntokens', assignTokensAction);
             // eosio.token::transfer
             checkAction(inlineTraces[0].inline_traces[1], "eosio.token", "eosio.token", "transfer", eosioTokenTransferData);
             // eosio.token::transfer account notifications (2x)
@@ -424,9 +424,9 @@ describe('VestingContract class', () => {
             checkAction(inlineTraces[0].inline_traces[1].inline_traces[1], contract, "eosio.token", "transfer", eosioTokenTransferData);
 
             // vesting.tmy::assigntokens for accountName2
-            checkAction(inlineTraces[1], contract, contract, 'assigntokens', assignTokensAction2.data);
+            checkAction(inlineTraces[1], contract, contract, 'assigntokens', assignTokensAction2);
             // vesting.tmy::assigntokens account notification
-            checkAction(inlineTraces[1].inline_traces[0], accountName2, contract, 'assigntokens', assignTokensAction2.data);
+            checkAction(inlineTraces[1].inline_traces[0], accountName2, contract, 'assigntokens', assignTokensAction2);
             // eosio.token::transfer
             checkAction(inlineTraces[1].inline_traces[1], "eosio.token", "eosio.token", "transfer", eosioTokenTransferData)
             // eosio.token::transfer account notifications (2x)

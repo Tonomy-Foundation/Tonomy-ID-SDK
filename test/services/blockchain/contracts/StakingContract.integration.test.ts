@@ -484,7 +484,7 @@ describe('StakingContract Staking Tests', () => {
                 stakeSettings = await getStakingContract().getSettings();
                 const releaseTrx = await getStakingContract().releaseToken(accountName, allocationId, accountSigner);
 
-                debug("releaseTrxr eleaseTrx", releaseTrx)
+                debug("releaseTrx", releaseTrx)
                 expect(releaseTrx.processed.receipt.status).toBe('executed');
 
                 // check the inline action sends the stake amount
@@ -498,8 +498,8 @@ describe('StakingContract Staking Tests', () => {
                 expect(inlineActions[1].act.account).toBe("eosio.token");
                 const data = inlineActions[1].act.data;
 
-                expect(data.to.toString()).toBe(accountName);
-                expect(data.from.toString()).toBe(getStakingContract().contractName);
+                expect(data.to).toBe(accountName);
+                expect(data.from).toBe(getStakingContract().contractName.toString());
                 expect(data.quantity).toBe(allocation.staked);
                 expect(data.memo).toBe("unstake tokens");
 
