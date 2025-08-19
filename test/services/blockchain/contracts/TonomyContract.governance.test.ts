@@ -1,4 +1,4 @@
-import { ABI, Action, ActionType, AuthorityType, KeyType, NameType, PrivateKey, Serializer } from '@wharfkit/antelope';
+import { Action, AuthorityType, KeyType, NameType, PrivateKey } from '@wharfkit/antelope';
 import {
     createSigner,
     getTonomyOperationsKey,

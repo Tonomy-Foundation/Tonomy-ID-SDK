@@ -767,7 +767,7 @@ describe('StakingContract Staking Tests', () => {
       
             // Wait for one full staking cycles
             debug(`Waiting for till end of 1st staking cycle: (${cycleSeconds} seconds)`);
-            await sleepUntil(addSeconds(initialStakedTime, cycleSeconds));
+            await sleepUntil(addSeconds(initialStakedTime, cycleSeconds+cycleSeconds*0.05));
 
             const afterOneCycle = await getStakingState();
 
@@ -787,7 +787,7 @@ describe('StakingContract Staking Tests', () => {
 
             // Wait for one full staking cycles
             debug(`Waiting for till end of 2nd staking cycle: (${cycleSeconds} seconds)`);
-            await sleepUntil(addSeconds(initialStakedTime, 2*cycleSeconds));
+            await sleepUntil(addSeconds(initialStakedTime, 2*cycleSeconds+cycleSeconds*0.05));
 
             const afterTwoCycles = await getStakingState();
 
@@ -813,7 +813,7 @@ describe('StakingContract Staking Tests', () => {
 
             // Wait for one full staking cycles
             debug(`Waiting for till end of 3rd staking cycle: (${cycleSeconds} seconds)`);
-            await sleepUntil(addSeconds(initialStakedTime, 3*cycleSeconds));
+            await sleepUntil(addSeconds(initialStakedTime, 3*cycleSeconds+cycleSeconds*0.05));
 
             const afterUnstake = await getStakingContract().getAccountState(accountName);
 
