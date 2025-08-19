@@ -6,3 +6,7 @@
 	path = Tonomy-Contracts
 	url = ../Tonomy-Contracts.git
 	branch = development
+[submodule "Ethereum-token"]
+	path = Ethereum-token
+	url = ../Ethereum-token.git
+	branch = development
