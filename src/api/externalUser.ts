@@ -301,7 +301,14 @@ export class ExternalUser {
         const requests = new DualWalletRequests(request);
 
         if (redirect) {
-            window.location.href = `${getSettings().ssoWebsiteOrigin}/login?payload=${requests.toString()}`;
+            const hasPageParam = callbackPath.includes('page=');
+            let url = `${getSettings().ssoWebsiteOrigin}/login?payload=${requests.toString()}`;
+
+            if (hasPageParam) {
+                url = url + `&page=${callbackPath.split('page=')[1]}`;
+            }
+
+            window.location.href = url;
             return;
         } else {
             const loginToCommunication = await AuthenticationMessage.signMessageWithoutRecipient({}, issuer);
