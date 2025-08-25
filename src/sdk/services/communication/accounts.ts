@@ -1,7 +1,7 @@
 import { getSettings } from '../../util/settings';
 import { Checksum256Type, Name, PublicKeyType } from '@wharfkit/antelope';
 import fetch from 'cross-fetch';
-import { SdkErrors, throwError } from '../../util';
+import { SdkErrors, throwError } from '../../util/errors';
 
 export type CreateAccountRequest = {
     usernameHash: Checksum256Type;

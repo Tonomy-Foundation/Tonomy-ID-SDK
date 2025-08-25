@@ -7,15 +7,8 @@ import { VeriffSubscriber } from '../services/communication/communication';
 import { VerificationTypeEnum } from '../types/VerificationTypeEnum';
 import { IdentityVerificationStorageManager } from '../storage/identityVerificationStorageManager';
 import { verifyOpsTmyDid } from '../util/ssi/did';
-import {
-    castDecisionToStatus,
-    castStringToCredential,
-    KYCPayload,
-    KYCVC,
-    PersonCredentialType,
-    SdkErrors,
-    throwError,
-} from '../util';
+import { SdkErrors, throwError } from '../util/errors';
+import { castDecisionToStatus, castStringToCredential, KYCPayload, KYCVC, PersonCredentialType } from '../util/veriff';
 import { IUserDataVault } from '../types/User';
 import Debug from 'debug';
 import { VeriffStatusEnum } from '../types/VeriffStatusEnum';

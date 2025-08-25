@@ -1,6 +1,6 @@
-import { ActionData } from '../../sdk/services/blockchain';
+import { getTonomyEosioProxyContract } from '../../sdk/services/blockchain';
 import { StandardProposalOptions, createProposal, executeProposal } from '.';
-import { Name, ABI, Serializer } from '@wharfkit/antelope';
+import { Name } from '@wharfkit/antelope';
 import fs from 'fs';
 import { getDeployableFilesFromDir } from '../bootstrap/deploy-contract';
 import path, { dirname } from 'path';
@@ -29,53 +29,11 @@ export async function deployContract(
 
     const wasmFile = fs.readFileSync(wasmPath);
     const abiFile = fs.readFileSync(abiPath, 'utf8');
-    const wasm = wasmFile.toString(`hex`);
 
-    // 2. Prepare SETABI
-    const abi = JSON.parse(abiFile);
-    const abiDef = ABI.from(abi);
-    const abiSerializedHex = Serializer.encode({ object: abiDef }).hexString;
-
-    const authorization = [
-        {
-            actor: contractName.toString(),
-            permission: 'active',
-        },
-        {
-            actor: 'tonomy',
-            permission: 'active',
-        },
-        // {
-        //     actor: 'tonomy',
-        //     permission: 'owner',
-        // },
-    ];
-
-    // Prepare SETCODE action
-    const setCodeAction: ActionData = {
-        account: 'tonomy',
-        name: 'setcode',
-        authorization,
-        data: {
-            account: contractName.toString(),
-            vmtype: 0,
-            vmversion: 0,
-            code: wasm,
-        },
-    };
-
-    // Prepare SETABI action
-    const setAbiAction: ActionData = {
-        account: 'tonomy',
-        name: 'setabi',
-        authorization,
-        data: {
-            account: contractName.toString(),
-            abi: abiSerializedHex,
-        },
-    };
-
-    const actions = [setCodeAction, setAbiAction];
+    const actions = await getTonomyEosioProxyContract().deployContractActions(contractName, wasmFile, abiFile, {
+        actor: 'tonomy',
+        permission: 'active',
+    });
 
     if (options.returnActions ?? false) return actions;
 

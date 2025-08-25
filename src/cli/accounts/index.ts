@@ -14,9 +14,9 @@ export default async function accounts(args: string[]) {
                 AccountType.PERSON,
                 settings.config.accountSuffix
             );
-            const { account_name: account } = await getTonomyContract().getPerson(usernameInstance);
+            const { accountName } = await getTonomyContract().getPerson(usernameInstance);
 
-            console.log('Account name: ', account.toString());
+            console.log('Account name: ', accountName.toString());
         } else {
             console.log('Searching for account: ', username);
 

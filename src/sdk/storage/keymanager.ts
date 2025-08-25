@@ -1,5 +1,5 @@
 import { Checksum256, PrivateKey, PublicKey, Signature } from '@wharfkit/antelope';
-import { SdkErrors, throwError } from '../util';
+import { SdkErrors, throwError } from '../util/errors';
 
 enum KeyManagerLevel {
     PASSWORD = 'PASSWORD',
