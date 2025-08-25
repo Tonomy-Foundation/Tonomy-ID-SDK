@@ -5,7 +5,7 @@ import { getSettings } from '../sdk/util/settings';
 import { isErrorCode, SdkErrors, createSdkError, throwError } from '../sdk/util/errors';
 import { createStorage, PersistentStorageClean, StorageFactory, STORAGE_NAMESPACE } from '../sdk/storage/storage';
 import { Name, API, NameType } from '@wharfkit/antelope';
-import { TonomyUsername } from '../sdk/util/username';
+import { checkUsername, TonomyUsername } from '../sdk/util/username';
 import { browserStorageFactory } from '../sdk/storage/browserStorage';
 import { getAccount, getChainId } from '../sdk/services/blockchain/eosio/eosio';
 import { JsKeyManager } from '../sdk/storage/jsKeyManager';
@@ -17,10 +17,11 @@ import {
     DualWalletResponse,
     DualWalletRequests,
 } from '../sdk/util/request';
-import { getAccountNameFromDid, KYCPayload, KYCVC, parseDid, verifyOpsTmyDid } from '../sdk/util';
+import { checkChainId, getAccountNameFromDid, KYCPayload, KYCVC, parseDid, verifyOpsTmyDid } from '../sdk/util';
 import {
     App,
     AuthenticationMessage,
+    checkOriginMatchesApp,
     Communication,
     LinkAuthRequestMessage,
     LinkAuthRequestResponseMessage,
@@ -654,68 +655,6 @@ export async function verifyClientAuthorization<T extends ClientAuthorizationDat
     };
 }
 
-async function checkChainId(did: string, verifyChainId: boolean): Promise<string | undefined> {
-    if (verifyChainId) {
-        const chainId = await getChainId();
-        const didChainId = did.split(':')[0];
-
-        if (didChainId !== chainId.toString()) {
-            throwError(`Invalid chain ID expected ${chainId.toString()} found ${didChainId}`, SdkErrors.InvalidData);
-        }
-
-        return didChainId;
-    }
-
-    return;
-}
-
-async function checkUsername(
-    account: Name,
-    data: object,
-    verifyUsername: boolean
-): Promise<TonomyUsername | undefined> {
-    if (verifyUsername) {
-        const username = (data as any).username;
-
-        if (username) {
-            const tonomyUsername = TonomyUsername.fromFullUsername(username);
-
-            // this will throw if the username is not valid
-            const { accountName } = await getTonomyContract().getPerson(tonomyUsername);
-
-            if (!accountName.equals(account)) {
-                throwError('Username does not match account', SdkErrors.InvalidData);
-            }
-
-            return tonomyUsername;
-        }
-
-        return;
-    }
-
-    return;
-}
-
-async function checkOrigin(
-    vcId: string,
-    did: string,
-    verifyOrigin: boolean
-): Promise<{ origin: string; app: App } | undefined> {
-    if (verifyOrigin) {
-        const origin = vcId?.split('/vc/auth/')[0];
-
-        if (!origin) throwError('Invalid origin', SdkErrors.InvalidData);
-        const app = await App.getApp(origin);
-        const { fragment } = parseDid(did);
-
-        if (fragment !== app.accountName.toString()) throwError('Invalid app', SdkErrors.InvalidData);
-
-        return { origin, app };
-    }
-
-    return;
-}
-
 type VerifyTonomyVcOptions = {
     verifyChainId?: boolean;
     verifyUsername?: boolean;
@@ -764,8 +703,8 @@ async function verifyTonomyVc<T extends object>(
     const [, chainId, username, originAndApp] = await Promise.all([
         vc.verify(),
         checkChainId(id, verifyChainId),
-        checkUsername(account, data, verifyUsername),
-        checkOrigin(vcId ? vcId : '', did, verifyOrigin),
+        checkUsername(account, (data as { username?: string })?.username, verifyUsername),
+        checkOriginMatchesApp(vcId ? vcId : '', did, verifyOrigin),
     ]);
 
     return {
