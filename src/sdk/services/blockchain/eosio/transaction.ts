@@ -122,6 +122,7 @@ export type AnyActionType = ActionType | AnyAction;
 
 export async function toPrintableActions(actions: AnyActionType | AnyActionType[]): Promise<any[]> {
     const actionsArray = await Promise.all((Array.isArray(actions) ? actions : [actions]).map(createActionWithAbi));
+
     return actionsArray.map((action) => action.decoded);
 }
 
@@ -150,14 +151,7 @@ export async function transact(
     });
 
     try {
-        debug(
-            'Pushing transaction',
-            JSON.stringify(
-                await toPrintableActions(actionsArray),
-                null,
-                2
-            )
-        );
+        debug('Pushing transaction', JSON.stringify(await toPrintableActions(actionsArray), null, 2));
         return await getApi().v1.chain.push_transaction(signedTransaction);
     } catch (e) {
         debug('Error pushing transaction', e);

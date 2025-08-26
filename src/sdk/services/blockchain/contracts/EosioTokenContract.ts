@@ -55,6 +55,7 @@ export class EosioTokenContract extends Contract {
         return new this(await loadContract(account));
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     static fromAbi(abi: any, account: NameType = CONTRACT_NAME): EosioTokenContract {
         const contract = new AntelopeContract({ abi, client: getApi(), account });
 
@@ -79,6 +80,14 @@ export class EosioTokenContract extends Contract {
             { from, to, quantity, memo = '' }: { from: NameType; to: NameType; quantity: AssetType; memo?: string },
             authorization: ActionOptions = activeAuthority(from)
         ) => this.action('transfer', { from, to, quantity, memo }, authorization),
+        bridgeIssue: (
+            { to, quantity, memo = '' }: { to: NameType; quantity: AssetType; memo: string },
+            authorization: ActionOptions = activeAuthority(this.contractName)
+        ) => this.action('bridgeissue', { to, quantity, memo }, authorization),
+        bridgeRetire: (
+            { from, quantity, memo = '' }: { from: NameType; quantity: AssetType; memo: string },
+            authorization: ActionOptions = activeAuthority(this.contractName)
+        ) => this.action('bridgeretire', { from, quantity, memo }, authorization),
     };
 
     async create(issuer: NameType, maximumSupply: AssetType, signer: Signer): Promise<API.v1.PushTransactionResponse> {
@@ -112,6 +121,28 @@ export class EosioTokenContract extends Contract {
 
     async retire(quantity: AssetType, memo: string, signer: Signer): Promise<API.v1.PushTransactionResponse> {
         const action = this.actions.retire({ quantity, memo });
+
+        return await transact(action, signer);
+    }
+
+    async bridgeIssue(
+        to: NameType,
+        quantity: AssetType,
+        memo: string,
+        signer: Signer
+    ): Promise<API.v1.PushTransactionResponse> {
+        const action = this.actions.bridgeIssue({ to, quantity, memo });
+
+        return await transact(action, signer);
+    }
+
+    async bridgeRetire(
+        from: NameType,
+        quantity: AssetType,
+        memo: string,
+        signer: Signer
+    ): Promise<API.v1.PushTransactionResponse> {
+        const action = this.actions.bridgeRetire({ from, quantity, memo });
 
         return await transact(action, signer);
     }

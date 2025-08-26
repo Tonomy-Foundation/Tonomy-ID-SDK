@@ -387,18 +387,18 @@ export function createSubdomainOnOrigin(origin: string, subdomain: string): stri
 
 async function createUsers(passphrase: string) {
     mockCreateAccount();
-    // Google and Apple app store managers needs to have a test user for their review. That is this user.
-    await createUser('testuser', passphrase);
-
-    // Create users for the demo website
-    await createUser('lovesboost', passphrase);
-    await createUser('sweetkristy', passphrase);
-    await createUser('cheesecakeophobia', passphrase);
-    await createUser('ultimateBeast', passphrase);
-    await createUser('tomtom', passphrase);
-    await createUser('readingpro', passphrase);
-
-    restoreCreateAccountFromMock();
+    await Promise.all([
+        // Google and Apple app store managers needs to have a test user for their review. That is this user.
+        createUser('testuser', passphrase),
+        // Create users for the demo website
+        createUser('lovesboost', passphrase),
+        createUser('sweetkristy', passphrase),
+        createUser('cheesecakeophobia', passphrase),
+        createUser('ultimateBeast', passphrase),
+        createUser('tomtom', passphrase),
+        createUser('readingpro', passphrase),
+    ]);
+    await restoreCreateAccountFromMock();
 }
 
 async function createTonomyApps(newPublicKey: PublicKey, newSigner: Signer): Promise<void> {
