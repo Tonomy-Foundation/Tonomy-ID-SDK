@@ -120,6 +120,11 @@ export class AntelopePushTransactionError extends Error {
 
 export type AnyActionType = ActionType | AnyAction;
 
+export async function toPrintableActions(actions: AnyActionType | AnyActionType[]): Promise<any[]> {
+    const actionsArray = await Promise.all((Array.isArray(actions) ? actions : [actions]).map(createActionWithAbi));
+    return actionsArray.map((action) => action.decoded);
+}
+
 export async function transact(
     actions: AnyActionType | AnyActionType[],
     signer: Signer | Signer[]
@@ -148,7 +153,7 @@ export async function transact(
         debug(
             'Pushing transaction',
             JSON.stringify(
-                actionsArray.map((action) => action.decoded),
+                await toPrintableActions(actionsArray),
                 null,
                 2
             )
