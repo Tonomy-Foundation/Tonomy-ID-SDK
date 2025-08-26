@@ -1,6 +1,6 @@
-import { Name, API } from '@wharfkit/antelope';
+import { API } from '@wharfkit/antelope';
 import { KeyManagerLevel } from '../storage/keymanager';
-import { GetPersonResponse, getTonomyContract } from '../services/blockchain/contracts/TonomyContract';
+import { PersonData, getTonomyContract } from '../services/blockchain/contracts/TonomyContract';
 import { createKeyManagerSigner } from '../services/blockchain/eosio/transaction';
 import { getChainId } from '../services/blockchain/eosio/eosio';
 import { SdkErrors, throwError, isErrorCode } from '../util/errors';
@@ -39,25 +39,25 @@ export class UserOnboarding extends UserDataVault implements IUserOnboarding {
         return this.storage.did;
     }
 
-    async login(username: TonomyUsername, password: string, options: ILoginOptions): Promise<GetPersonResponse> {
+    async login(username: TonomyUsername, password: string, options: ILoginOptions): Promise<PersonData> {
         this.validateUsername(username.getBaseUsername());
         const { keyManager } = this;
 
         const idData = await getTonomyContract().getPerson(username);
-        const salt = idData.password_salt;
+        const salt = idData.passwordSalt;
 
         await this.savePassword(password, { ...options, salt });
         const passwordKey = await keyManager.getKey({
             level: KeyManagerLevel.PASSWORD,
         });
 
-        const accountData = await getAccountInfo(idData.account_name);
+        const accountData = await getAccountInfo(idData.accountName);
         const onchainKey = accountData.getPermission('owner').required_auth.keys[0].key; // TODO: change to active/other permissions when we make the change
 
         if (passwordKey.toString() !== onchainKey.toString())
             throwError('Password is incorrect', SdkErrors.PasswordInvalid);
 
-        this.storage.accountName = Name.from(idData.account_name);
+        this.storage.accountName = idData.accountName;
         this.storage.username = username;
         this.storage.status = UserStatusEnum.LOGGING_IN;
 
@@ -193,7 +193,7 @@ export class UserOnboarding extends UserDataVault implements IUserOnboarding {
         const signer = createKeyManagerSigner(keyManager, KeyManagerLevel.PASSWORD, password);
         const accountName = await this.getAccountName();
 
-        await getTonomyContract().updatekeysper(accountName.toString(), keys, signer);
+        await getTonomyContract().updateKeysPerson(accountName, keys, signer);
 
         this.storage.status = UserStatusEnum.READY;
         await this.storage.status;

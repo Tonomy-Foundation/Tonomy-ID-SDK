@@ -3501,6 +3501,7 @@ __metadata:
     "@veramo/key-manager": "npm:^6.0.0"
     "@veramo/kms-local": "npm:^6.0.0"
     "@wharfkit/antelope": "npm:^1.0.7"
+    "@wharfkit/contract": "npm:^1.2.1"
     address: "npm:^2.0.3"
     argon2: "npm:^0.41.1"
     babel-jest: "npm:^29.7.0"
@@ -4389,7 +4390,19 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@wharfkit/antelope@npm:^1.0.7":
+"@wharfkit/abicache@npm:^1.2.0":
+  version: 1.2.2
+  resolution: "@wharfkit/abicache@npm:1.2.2"
+  dependencies:
+    "@wharfkit/antelope": "npm:^1.0.2"
+    "@wharfkit/signing-request": "npm:^3.1.0"
+    pako: "npm:^2.0.4"
+    tslib: "npm:^2.1.0"
+  checksum: 10c0/596e42974413fa802e623896233cf1ad76c689ff8953e9a8ecc8ca5a92e73de79332d19a173a5174316c7ebffad644fdd015ce07b164231f0db591f49a41777f
+  languageName: node
+  linkType: hard
+
+"@wharfkit/antelope@npm:1.0.10":
   version: 1.0.10
   resolution: "@wharfkit/antelope@npm:1.0.10"
   dependencies:
@@ -4400,6 +4413,28 @@ __metadata:
     pako: "npm:^2.1.0"
     tslib: "npm:^2.0.3"
   checksum: 10c0/af71ca1d519e6ba2f8fe840eeee76f654010c0b50aecb2ab81aa2c793cfa43d62b3cd7c3db29934e093e5de476b5592dbf0ea0bb3304e730815b31b16f4c3523
+  languageName: node
+  linkType: hard
+
+"@wharfkit/contract@npm:^1.2.1":
+  version: 1.2.1
+  resolution: "@wharfkit/contract@npm:1.2.1"
+  dependencies:
+    "@wharfkit/abicache": "npm:^1.2.0"
+    "@wharfkit/antelope": "npm:^1.0.4"
+    "@wharfkit/signing-request": "npm:^3.1.0"
+    tslib: "npm:^2.1.0"
+  checksum: 10c0/9abf44e9521423e88b9822422d386f584536dddc9d7653027eedaff38003330ce8db1a4fb8f9d1aa1ba6b33c3ddd36de7f46e3d22c661bb9723eedb26fa8555a
+  languageName: node
+  linkType: hard
+
+"@wharfkit/signing-request@npm:^3.1.0":
+  version: 3.2.0
+  resolution: "@wharfkit/signing-request@npm:3.2.0"
+  dependencies:
+    "@wharfkit/antelope": "npm:^1.0.7"
+    tslib: "npm:^2.0.3"
+  checksum: 10c0/4c1212060a8cba57d4e0c227eec1cb7b582a4df934af54abe00aa024a49e00ed7d7cb9827c00c949a763ef059b0d203e5e8c4fe4ddb25f942562eccdd5569892
   languageName: node
   linkType: hard
 
@@ -11657,7 +11692,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"pako@npm:^2.1.0":
+"pako@npm:^2.0.4, pako@npm:^2.1.0":
   version: 2.1.0
   resolution: "pako@npm:2.1.0"
   checksum: 10c0/8e8646581410654b50eb22a5dfd71159cae98145bd5086c9a7a816ec0370b5f72b4648d08674624b3870a521e6a3daffd6c2f7bc00fdefc7063c9d8232ff5116
@@ -14463,6 +14498,13 @@ __metadata:
   version: 2.6.3
   resolution: "tslib@npm:2.6.3"
   checksum: 10c0/2598aef53d9dbe711af75522464b2104724d6467b26a60f2bdac8297d2b5f1f6b86a71f61717384aa8fd897240467aaa7bcc36a0700a0faf751293d1331db39a
+  languageName: node
+  linkType: hard
+
+"tslib@npm:^2.1.0":
+  version: 2.8.1
+  resolution: "tslib@npm:2.8.1"
+  checksum: 10c0/9c4759110a19c53f992d9aae23aac5ced636e99887b51b9e61def52611732872ff7668757d4e4c61f19691e36f4da981cd9485e869b4a7408d689f6bf1f14e62
   languageName: node
   linkType: hard
 

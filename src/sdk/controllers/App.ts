@@ -1,10 +1,11 @@
 import { Checksum256, Name, PublicKey } from '@wharfkit/antelope';
-import { getTonomyContract } from '../services/blockchain/contracts/TonomyContract';
 import { Signer } from '../services/blockchain/eosio/transaction';
 import { getSettings } from '../util/settings';
 import { AccountType, TonomyUsername } from '../util/username';
 import { AppStatusEnum } from '../types/AppStatusEnum';
-import { parseDid, SdkErrors, throwError } from '../util';
+import { getTonomyContract } from '../services/blockchain';
+import { parseDid } from '../util/ssi/did';
+import { SdkErrors, throwError } from '../util/errors';
 
 export interface AppData {
     accountName: Name;
@@ -74,7 +75,7 @@ export class App implements AppData {
             getSettings().accountSuffix
         );
 
-        const res = await getTonomyContract().newapp(
+        const res = await getTonomyContract().newApp(
             options.appName,
             options.description,
             username.usernameHash,
@@ -101,16 +102,16 @@ export class App implements AppData {
         const contractAppData = await getTonomyContract().getApp(origin);
 
         return new App({
-            accountName: contractAppData.account_name,
-            appName: contractAppData.app_name,
-            usernameHash: contractAppData.username_hash,
+            accountName: contractAppData.accountName,
+            appName: contractAppData.appName,
+            usernameHash: contractAppData.usernameHash,
             description: contractAppData.description,
-            logoUrl: contractAppData.logo_url,
+            logoUrl: contractAppData.logoUrl,
             origin: contractAppData.origin,
             version: contractAppData.version,
             status: AppStatusEnum.READY,
-            accentColor: contractAppData.accent_color,
-            backgroundColor: contractAppData.background_color,
+            accentColor: contractAppData.accentColor,
+            backgroundColor: contractAppData.backgroundColor,
         });
     }
 }

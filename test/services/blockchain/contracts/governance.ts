@@ -1,15 +1,17 @@
-import { API, Name } from '@wharfkit/antelope';
-import { EosioMsigContract } from '../../../../src/sdk/index';
-import { ActionData, createSigner, getTonomyOperationsKey } from '../../../../src/sdk/services/blockchain';
+import { API } from '@wharfkit/antelope';
+import {
+    AnyActionType,
+    createSigner,
+    getEosioMsigContract,
+    getTonomyOperationsKey,
+} from '../../../../src/sdk/services/blockchain';
 import { randomAccountName, tonomyBoardSigners } from '../../../helpers/eosio';
-
-const eosioMsigContract = EosioMsigContract.Instance;
 
 export const tonomyOpsSigner = createSigner(getTonomyOperationsKey());
 
 // asserts = 3
 export async function msigAction(
-    actions: ActionData[],
+    actions: AnyActionType | AnyActionType[],
     options: { satisfyRequireApproval?: boolean; requireTonomyOps?: boolean } = {}
 ): Promise<API.v1.PushTransactionResponse | null> {
     const proposalName = randomAccountName();
@@ -37,20 +39,20 @@ export async function msigAction(
         });
     }
 
-    const { proposalHash, transaction } = await eosioMsigContract.propose(
+    const { proposalHash, transaction } = await getEosioMsigContract().propose(
         proposer,
         proposalName,
         requested,
-        actions,
+        Array.isArray(actions) ? actions : [actions],
         tonomyBoardSigners[0]
     );
 
     expect(transaction.processed.receipt.status).toBe('executed');
 
-    const approve1Trx = await eosioMsigContract.approve(
+    const approve1Trx = await getEosioMsigContract().approve(
         proposer,
         proposalName,
-        Name.from('1.found.tmy'),
+        { actor: '1.found.tmy', permission: 'active' },
         proposalHash,
         tonomyBoardSigners[0]
     );
@@ -58,21 +60,27 @@ export async function msigAction(
     expect(approve1Trx.processed.receipt.status).toBe('executed');
 
     if (options.satisfyRequireApproval ?? false) {
-        await eosioMsigContract.approve(
+        await getEosioMsigContract().approve(
             proposer,
             proposalName,
-            Name.from('2.found.tmy'),
+            { actor: '2.found.tmy', permission: 'active' },
             proposalHash,
             tonomyBoardSigners[1]
         );
     }
 
     if (options.requireTonomyOps ?? false) {
-        await eosioMsigContract.approve(proposer, proposalName, Name.from('tonomy'), proposalHash, tonomyOpsSigner);
+        await getEosioMsigContract().approve(
+            proposer,
+            proposalName,
+            { actor: 'tonomy', permission: 'active' },
+            proposalHash,
+            tonomyOpsSigner
+        );
     }
 
     try {
-        const execTrx = await eosioMsigContract.exec(proposer, proposalName, '1.found.tmy', tonomyBoardSigners[0]);
+        const execTrx = await getEosioMsigContract().exec(proposer, proposalName, '1.found.tmy', tonomyBoardSigners[0]);
 
         if (options.satisfyRequireApproval ?? false) {
             expect(execTrx.processed.receipt.status).toBe('executed');

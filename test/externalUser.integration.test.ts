@@ -118,12 +118,15 @@ describe('Login to external website', () => {
                 },
             }
         );
-        await DemoTokenContract.atAccount(externalApp.accountName).create(
+        const demoTokenContract = await DemoTokenContract.atAccount(externalApp.accountName);
+
+        await demoTokenContract.create(
+            demoTokenContract.contractName,
             `1000000000.000000 ${getSettings().currencySymbol}`,
             signer
         );
-        await DemoTokenContract.atAccount(externalApp.accountName).issue(
-            `10000.000000 ${getSettings().currencySymbol}`,
+        await demoTokenContract.issue(demoTokenContract.contractName,
+            `10000.000000 ${getSettings().currencySymbol}`, '',
             signer
         );
 

@@ -1,67 +1,65 @@
-import { ABI, KeyType, Name, PrivateKey, Serializer } from '@wharfkit/antelope';
-import { EosioMsigContract } from '../../../../src/sdk/index';
+import { Action, AuthorityType, KeyType, NameType, PrivateKey } from '@wharfkit/antelope';
 import {
-    ActionData,
-    TonomyEosioProxyContract,
     createSigner,
     getTonomyOperationsKey,
     transact,
     Authority,
-    EosioContract,
+    getEosioMsigContract,
+    getTonomyEosioProxyContract,
+    getEosioContract,
+    activeAuthority,
+    ownerAuthority,
+    activePermissionLevel,
 } from '../../../../src/sdk/services/blockchain';
 import { getDeployableFilesFromDir } from '../../../../src/cli/bootstrap/deploy-contract';
 import fs from 'fs';
 import { sleep } from '../../../../src/sdk/util';
-import { randomAccountName, tonomyBoardAccounts, tonomyBoardSigners } from '../../../helpers/eosio';
+import {
+    createRandomAccount,
+    randomAccountName,
+    tonomyBoardAccounts,
+    tonomyBoardSigners,
+} from '../../../helpers/eosio';
 import { msigAction, tonomyOpsSigner } from './governance';
 import { jest } from '@jest/globals';
 import Debug from 'debug';
 
 const debug = Debug('tonomy-sdk-tests:services:blockchain:contracts:TonomyContract.governance.test');
 
-const eosioMsigContract = EosioMsigContract.Instance;
-const tonomyEosioProxyContract = TonomyEosioProxyContract.Instance;
-const eosioContract = EosioContract.Instance;
-
 describe('TonomyContract class', () => {
     jest.setTimeout(60000);
 
     describe('native::newaccount()', () => {
-        // require_governance_owner()
-
         let key: PrivateKey;
         let authority: Authority;
-        let action: ActionData;
         let randomName: string;
+        let actionData: {
+            creator: NameType;
+            name: NameType;
+            owner: AuthorityType;
+            active: AuthorityType;
+        };
 
         beforeEach(async () => {
             key = PrivateKey.generate(KeyType.K1);
             authority = Authority.fromKey(key.toPublic().toString());
             randomName = randomAccountName();
-            action = {
-                account: 'tonomy',
-                name: 'newaccount',
-                authorization: [
-                    {
-                        actor: 'tonomy',
-                        permission: 'owner',
-                    },
-                ],
-                data: {
-                    creator: 'tonomy',
-                    name: randomName,
-                    owner: authority,
-                    active: authority,
-                },
+            actionData = {
+                creator: 'tonomy',
+                name: randomName,
+                owner: authority,
+                active: authority,
             };
         });
 
         test('sign with tonomy@active should fail', async () => {
             expect.assertions(1);
-            action.authorization = [{ actor: 'tonomy', permission: 'active' }];
+            const auth = { authorization: [{ actor: 'tonomy', permission: 'active' }] };
+
+            const action = getTonomyEosioProxyContract().actions.newAccount(actionData, auth);
 
             try {
-                await transact(Name.from('tonomy'), [action], tonomyOpsSigner);
+                await transact(action, tonomyOpsSigner);
             } catch (e) {
                 expect(e.error.details[0].message).toBe('missing authority of tonomy/owner');
             }
@@ -69,9 +67,12 @@ describe('TonomyContract class', () => {
 
         test('sign with tonomy@owner with 1 key should fail', async () => {
             expect.assertions(1);
+            const auth = { authorization: [{ actor: 'tonomy', permission: 'owner' }] };
+
+            const action = getTonomyEosioProxyContract().actions.newAccount(actionData, auth);
 
             try {
-                await transact(Name.from('tonomy'), [action], tonomyBoardSigners[0]);
+                await transact(action, tonomyBoardSigners[0]);
             } catch (e) {
                 expect(e.error.details[0].message).toContain('but does not have signatures for it');
             }
@@ -79,14 +80,21 @@ describe('TonomyContract class', () => {
 
         test('sign with tonomy@owner with 2 keys should succeed', async () => {
             expect.assertions(1);
-            const trx = await transact(Name.from('tonomy'), [action], tonomyBoardSigners.slice(0, 2));
+            const auth = { authorization: [{ actor: 'tonomy', permission: 'owner' }] };
+
+            const action = getTonomyEosioProxyContract().actions.newAccount(actionData, auth);
+            const trx = await transact(action, tonomyBoardSigners.slice(0, 2));
 
             expect(trx.processed.receipt.status).toBe('executed');
         });
 
         test('sign with tonomy@owner with 2 keys using eosio.msig should succeed', async () => {
             try {
-                await msigAction([action], { satisfyRequireApproval: true });
+                const auth = { authorization: [{ actor: 'tonomy', permission: 'owner' }] };
+
+                const action = getTonomyEosioProxyContract().actions.newAccount(actionData, auth);
+
+                await msigAction(action, { satisfyRequireApproval: true });
             } catch (e) {
                 debug(e.message, JSON.stringify(e, null, 2));
                 throw e;
@@ -95,80 +103,126 @@ describe('TonomyContract class', () => {
 
         test('sign with tonomy@owner with 1 keys using eosio.msig should fail', async () => {
             try {
-                await msigAction([action]);
+                const auth = { authorization: [{ actor: 'tonomy', permission: 'owner' }] };
+
+                const action = getTonomyEosioProxyContract().actions.newAccount(actionData, auth);
+
+                await msigAction(action);
             } catch (e) {
                 debug(e.message, JSON.stringify(e, null, 2));
                 throw e;
             }
         });
 
-        test('sign with random@owner with board should succeed', async () => {
+        test('sign with random@active with board should succeed', async () => {
             expect.assertions(1);
-            await transact(Name.from('tonomy'), [action], tonomyBoardSigners.slice(0, 2));
 
-            // Setup next account to create, signed by the new account
-            action.data.creator = randomName;
-            action.data.name = randomAccountName();
-            action.authorization.push({ actor: randomName, permission: 'active' });
             const randomAccountSigner = createSigner(key);
+            const { name: randomName } = await createRandomAccount(authority);
+            const auth = {
+                authorization: [
+                    { actor: randomName, permission: 'active' },
+                    { actor: 'tonomy', permission: 'owner' },
+                ],
+            };
 
-            const trx = await transact(
-                Name.from('tonomy'),
-                [action],
-                [randomAccountSigner, tonomyBoardSigners[0], tonomyBoardSigners[1]]
+            const action = getTonomyEosioProxyContract().actions.newAccount(
+                {
+                    creator: randomName,
+                    name: randomAccountName(),
+                    owner: authority,
+                    active: authority,
+                },
+                auth
             );
+
+            const trx = await transact(action, [randomAccountSigner, tonomyBoardSigners[0], tonomyBoardSigners[1]]);
 
             expect(trx.processed.receipt.status).toBe('executed');
         });
 
-        test('sign with random@owner without board should fail', async () => {
+        test('sign with random@active without board should fail', async () => {
             expect.assertions(1);
-            await transact(Name.from('tonomy'), [action], tonomyBoardSigners.slice(0, 2));
 
-            // Setup next account to create, signed by the new account
-            action.data.creator = randomName;
-            action.data.name = randomAccountName();
-            action.authorization = [{ actor: randomName, permission: 'active' }];
             const randomAccountSigner = createSigner(key);
+            const { name: randomName } = await createRandomAccount(authority);
+            const auth = {
+                authorization: [
+                    { actor: randomName, permission: 'active' },
+                    { actor: 'tonomy', permission: 'owner' },
+                ],
+            };
+
+            const action = getTonomyEosioProxyContract().actions.newAccount(
+                {
+                    creator: randomName,
+                    name: randomAccountName(),
+                    owner: authority,
+                    active: authority,
+                },
+                auth
+            );
 
             try {
-                await transact(Name.from('tonomy'), [action], [randomAccountSigner]);
+                await transact(action, [randomAccountSigner]);
             } catch (e) {
-                expect(e.error.details[0].message).toBe('missing authority of tonomy/owner');
+                expect(e.error.details[0].message).toContain(
+                    'transaction declares authority \'{"actor":"tonomy","permission":"owner"}\', but does not have signatures for it under a provided delay'
+                );
             }
+        });
+
+        test('sign using action helper should succeed', async () => {
+            expect.assertions(1);
+
+            const action = getTonomyEosioProxyContract().actions.newAccount(actionData);
+
+            const trx = await transact(action, tonomyBoardSigners.slice(0, 2));
+
+            expect(trx.processed.receipt.status).toBe('executed');
+        });
+
+        test('sign using action helper should succeed with randomAccount should succeed', async () => {
+            expect.assertions(1);
+
+            const randomAccountSigner = createSigner(key);
+            const { name: randomName } = await createRandomAccount(authority);
+            const action = getTonomyEosioProxyContract().actions.newAccount({
+                creator: randomName,
+                name: randomAccountName(),
+                owner: authority,
+                active: authority,
+            });
+
+            const trx = await transact(action, [randomAccountSigner, tonomyBoardSigners[0], tonomyBoardSigners[1]]);
+
+            expect(trx.processed.receipt.status).toBe('executed');
         });
     });
 
     describe('native::updateauth()', () => {
         describe('update eosio@[new] auth', () => {
-            // special_governance_check()
             let key: PrivateKey;
             let authority: Authority;
-            let action: ActionData;
+            let actionData: {
+                account: NameType;
+                permission: NameType;
+                parent: NameType;
+                auth: AuthorityType;
+                authParent?: boolean;
+            };
             let newPermission: string;
 
             beforeEach(() => {
                 key = PrivateKey.generate(KeyType.K1);
                 authority = Authority.fromKey(key.toPublic().toString());
                 newPermission = randomAccountName();
-
-                action = {
-                    account: 'tonomy',
-                    name: 'updateauth',
-                    authorization: [
-                        {
-                            actor: 'tonomy',
-                            permission: 'owner',
-                        },
-                    ],
-                    data: {
-                        account: 'eosio',
-                        permission: newPermission,
-                        parent: 'owner',
-                        auth: authority,
-                        // eslint-disable-next-line camelcase
-                        auth_parent: true, // should be true when a new permission is being created, otherwise false
-                    },
+                actionData = {
+                    account: 'eosio',
+                    permission: newPermission,
+                    parent: 'owner',
+                    auth: authority,
+                    authParent: true, // should be true when a new permission is being created, otherwise false
                 };
             });
 
@@ -176,7 +230,11 @@ describe('TonomyContract class', () => {
                 expect.assertions(1);
 
                 try {
-                    const trx = await transact(Name.from('tonomy'), [action], tonomyBoardSigners.slice(0, 2));
+                    const auth = {
+                        authorization: [{ actor: 'tonomy', permission: 'owner' }],
+                    };
+                    const action = getTonomyEosioProxyContract().actions.updateAuth(actionData, auth);
+                    const trx = await transact(action, tonomyBoardSigners.slice(0, 2));
 
                     expect(trx.processed.receipt.status).toBe('executed');
                 } catch (e) {
@@ -189,7 +247,10 @@ describe('TonomyContract class', () => {
                 expect.assertions(1);
 
                 try {
-                    await transact(Name.from('tonomy'), [action], [tonomyBoardSigners[0]]);
+                    const auth = ownerAuthority('tonomy');
+                    const action = getTonomyEosioProxyContract().actions.updateAuth(actionData, auth);
+
+                    await transact(action, tonomyBoardSigners[0]);
                 } catch (e) {
                     expect(e.error.details[0].message).toContain('but does not have signatures for it');
                 }
@@ -199,46 +260,54 @@ describe('TonomyContract class', () => {
                 expect.assertions(1);
 
                 try {
-                    await transact(Name.from('tonomy'), [action], [tonomyOpsSigner]);
+                    const auth = activeAuthority('tonomy');
+                    const action = getTonomyEosioProxyContract().actions.updateAuth(actionData, auth);
+
+                    await transact(action, tonomyOpsSigner);
                 } catch (e) {
-                    expect(e.error.details[0].message).toContain('but does not have signatures for it');
+                    expect(e.error.details[0].message).toContain('missing authority of tonomy/owner');
                 }
             });
 
             test('sign with tonomy@owner should succeed', async () => {
                 expect.assertions(1);
 
-                try {
-                    action.authorization = [{ actor: 'tonomy', permission: 'owner' }];
-                    const trx = await transact(Name.from('tonomy'), [action], tonomyBoardSigners.slice(0, 2));
+                const auth = ownerAuthority('tonomy');
+                const action = getTonomyEosioProxyContract().actions.updateAuth(actionData, auth);
+                const trx = await transact(action, tonomyBoardSigners.slice(0, 2));
 
-                    expect(trx.processed.receipt.status).toBe('executed');
-                } catch (e) {
-                    debug(e.message, JSON.stringify(e, null, 2));
-                    throw e;
-                }
+                expect(trx.processed.receipt.status).toBe('executed');
             });
 
             test('sign with tonomy@owner using eosio.msig 2 keys should succeed', async () => {
                 expect.assertions(3);
 
-                try {
-                    await msigAction([action], { satisfyRequireApproval: true });
-                } catch (e) {
-                    debug(e.message, JSON.stringify(e, null, 2));
-                    throw e;
-                }
+                const auth = ownerAuthority('tonomy');
+                const action = getTonomyEosioProxyContract().actions.updateAuth(actionData, auth);
+
+                await msigAction(action, { satisfyRequireApproval: true });
             });
 
             test('sign with tonomy@owner using eosio.msig 1 keys should fail', async () => {
                 expect.assertions(3);
 
+                const auth = ownerAuthority('tonomy');
+                const action = getTonomyEosioProxyContract().actions.updateAuth(actionData, auth);
+
                 try {
-                    await msigAction([action]);
+                    await msigAction(action);
                 } catch (e) {
-                    debug(e.message, JSON.stringify(e, null, 2));
-                    throw e;
+                    expect(e.error.details[0].message).toContain('but does not have signatures for it');
                 }
+            });
+
+            test('sign using the helpers should succeed', async () => {
+                expect.assertions(1);
+
+                const action = getTonomyEosioProxyContract().actions.updateAuth(actionData);
+                const trx = await transact(action, tonomyBoardSigners.slice(0, 2));
+
+                expect(trx.processed.receipt.status).toBe('executed');
             });
         });
 
@@ -247,198 +316,134 @@ describe('TonomyContract class', () => {
             const newKeys = newAccounts.map(() => PrivateKey.generate(KeyType.K1));
             const newAuthorities = newKeys.map((key) => Authority.fromKey(key.toPublic().toString()));
             const newSigners = newKeys.map((key) => createSigner(key));
+            const auth = ownerAuthority('tonomy');
+
+            auth.authorization!.push(activePermissionLevel('tonomy'));
 
             beforeAll(async () => {
-                function newAccountAction(name: string, authority: Authority) {
-                    return {
-                        account: 'tonomy',
-                        name: 'newaccount',
-                        authorization: [
-                            {
-                                actor: 'tonomy',
-                                permission: 'owner',
-                            },
-                        ],
-                        data: {
+                const auth = ownerAuthority('tonomy');
+
+                function newAccountAction(name: string, authority: Authority): Action {
+                    return getTonomyEosioProxyContract().actions.newAccount(
+                        {
                             creator: 'tonomy',
                             name,
                             owner: authority,
                             active: authority,
                         },
-                    };
+                        auth
+                    );
                 }
 
                 // Create new accounts to use as new governance accounts
-                const actions: ActionData[] = [];
+                const actions: Action[] = [];
 
                 for (let i = 0; i < newAccounts.length; i++) {
                     actions.push(newAccountAction(newAccounts[i], newAuthorities[i]));
                 }
 
-                await transact(Name.from('tonomy'), actions, tonomyBoardSigners.slice(0, 2));
+                await transact(actions, tonomyBoardSigners.slice(0, 2));
             });
 
             test('found.tmy@owner update and sign with tonomy@owner using 2 board keys and change back should succeed', async () => {
                 expect.assertions(1);
 
-                const updateAuthAction: ActionData = {
-                    account: 'tonomy',
-                    name: 'updateauth',
-                    authorization: [
-                        {
-                            actor: 'tonomy',
-                            permission: 'owner',
-                        },
-                        {
-                            actor: 'tonomy',
-                            permission: 'active',
-                        },
-                    ],
-                    data: {
+                const updateAuthAction = getTonomyEosioProxyContract().actions.updateAuth(
+                    {
                         account: 'found.tmy',
                         permission: 'owner',
                         parent: '',
                         auth: Authority.fromAccountArray(newAccounts, 'active', 2),
-                        // eslint-disable-next-line camelcase
-                        auth_parent: false, // should be true when a new permission is being created, otherwise false
+                        authParent: false,
                     },
-                };
+                    auth
+                );
 
-                try {
-                    await transact(Name.from('tonomy'), [updateAuthAction], tonomyBoardSigners.slice(0, 2));
-                    await restoreFoundTmyAuth();
-                } catch (e) {
-                    debug(e.message, JSON.stringify(e, null, 2));
-                    throw e;
-                }
+                await transact(updateAuthAction, tonomyBoardSigners.slice(0, 2));
+                await restoreFoundTmyAuth();
             });
 
             test('found.tmy@owner update and sign with tonomy@owner using 2 eosio.msig with board keys and change back should succeed', async () => {
                 expect.assertions(3);
 
-                const updateAuthAction: ActionData = {
-                    account: 'tonomy',
-                    name: 'updateauth',
-                    authorization: [
-                        {
-                            actor: 'tonomy',
-                            permission: 'owner',
-                        },
-                        {
-                            actor: 'tonomy',
-                            permission: 'active',
-                        },
-                    ],
-                    data: {
+                const updateAuthAction = getTonomyEosioProxyContract().actions.updateAuth(
+                    {
                         account: 'found.tmy',
                         permission: 'owner',
                         parent: '',
                         auth: Authority.fromAccountArray(newAccounts, 'active', 2),
-                        // eslint-disable-next-line camelcase
-                        auth_parent: false, // should be true when a new permission is being created, otherwise false
+                        authParent: false,
                     },
-                };
+                    auth
+                );
 
-                try {
-                    await sleep(1000);
-                    await transact(Name.from('tonomy'), [updateAuthAction], tonomyBoardSigners.slice(0, 2));
+                await transact(updateAuthAction, tonomyBoardSigners.slice(0, 2));
 
-                    const proposalName = randomAccountName();
-                    const proposer = '1.found.tmy';
+                const proposalName = randomAccountName();
+                const proposer = '1.found.tmy';
 
-                    const requested = newAccounts.map((account) => {
-                        return { actor: account, permission: 'active' };
-                    });
+                const requested = newAccounts.map((account) => activePermissionLevel(account));
 
-                    const updateAuthActionRestore: ActionData = {
-                        account: 'tonomy',
-                        name: 'updateauth',
-                        authorization: [
-                            {
-                                actor: 'tonomy',
-                                permission: 'owner',
-                            },
-                            {
-                                actor: 'tonomy',
-                                permission: 'active',
-                            },
-                        ],
-                        data: {
-                            account: 'found.tmy',
-                            permission: 'owner',
-                            parent: '',
-                            auth: Authority.fromAccountArray(tonomyBoardAccounts, 'active', 2),
-                            // eslint-disable-next-line camelcase
-                            auth_parent: false, // should be true when a new permission is being created, otherwise false
-                        },
-                    };
-
-                    const { proposalHash, transaction } = await eosioMsigContract.propose(
-                        proposer,
-                        proposalName,
-                        requested,
-                        [updateAuthActionRestore],
-                        tonomyBoardSigners[0]
-                    );
-
-                    expect(transaction.processed.receipt.status).toBe('executed');
-
-                    const approve1Trx = await eosioMsigContract.approve(
-                        proposer,
-                        proposalName,
-                        Name.from(newAccounts[0]),
-                        proposalHash,
-                        newSigners[0]
-                    );
-
-                    expect(approve1Trx.processed.receipt.status).toBe('executed');
-
-                    await eosioMsigContract.approve(
-                        proposer,
-                        proposalName,
-                        Name.from(newAccounts[1]),
-                        proposalHash,
-                        newSigners[1]
-                    );
-                    const execTrx = await eosioMsigContract.exec(
-                        proposer,
-                        proposalName,
-                        '1.found.tmy',
-                        tonomyBoardSigners[0]
-                    );
-
-                    expect(execTrx.processed.receipt.status).toBe('executed');
-                } catch (e) {
-                    debug(e.message, JSON.stringify(e, null, 2));
-                    throw e;
-                }
-            });
-
-            async function restoreFoundTmyAuth() {
-                const updateAuthAction: ActionData = {
-                    account: 'tonomy',
-                    name: 'updateauth',
-                    authorization: [
-                        {
-                            actor: 'tonomy',
-                            permission: 'owner',
-                        },
-                        {
-                            actor: 'tonomy',
-                            permission: 'active',
-                        },
-                    ],
-                    data: {
+                const updateAuthActionRestore = getTonomyEosioProxyContract().actions.updateAuth(
+                    {
                         account: 'found.tmy',
                         permission: 'owner',
                         parent: '',
                         auth: Authority.fromAccountArray(tonomyBoardAccounts, 'active', 2),
-                        // eslint-disable-next-line camelcase
-                        auth_parent: false, // should be true when a new permission is being created, otherwise false
+                        authParent: false,
                     },
-                };
+                    auth
+                );
 
-                const transaction = await transact(Name.from('tonomy'), [updateAuthAction], newSigners.slice(0, 2));
+                const { proposalHash, transaction } = await getEosioMsigContract().propose(
+                    proposer,
+                    proposalName,
+                    requested,
+                    [updateAuthActionRestore],
+                    tonomyBoardSigners[0]
+                );
+
+                expect(transaction.processed.receipt.status).toBe('executed');
+
+                const approve1Trx = await getEosioMsigContract().approve(
+                    proposer,
+                    proposalName,
+                    activePermissionLevel(newAccounts[0]),
+                    proposalHash,
+                    newSigners[0]
+                );
+
+                expect(approve1Trx.processed.receipt.status).toBe('executed');
+
+                await getEosioMsigContract().approve(
+                    proposer,
+                    proposalName,
+                    activePermissionLevel(newAccounts[1]),
+                    proposalHash,
+                    newSigners[1]
+                );
+                const execTrx = await getEosioMsigContract().exec(
+                    proposer,
+                    proposalName,
+                    '1.found.tmy',
+                    tonomyBoardSigners[0]
+                );
+
+                expect(execTrx.processed.receipt.status).toBe('executed');
+            });
+
+            async function restoreFoundTmyAuth() {
+                const updateAuthAction = getTonomyEosioProxyContract().actions.updateAuth(
+                    {
+                        account: 'found.tmy',
+                        permission: 'owner',
+                        parent: '',
+                        auth: Authority.fromAccountArray(tonomyBoardAccounts, 'active', 2),
+                        authParent: false,
+                    },
+                    auth
+                );
+                const transaction = await transact([updateAuthAction], newSigners.slice(0, 2));
 
                 expect(transaction.processed.receipt.status).toBe('executed');
             }
@@ -453,79 +458,71 @@ describe('TonomyContract class', () => {
             test('remove (1 of 2) public key using 2 board keys and change back should succeed', async () => {
                 expect.assertions(2);
 
-                const updateAuthAction: ActionData = {
-                    account: 'tonomy',
-                    name: 'updateauth',
-                    authorization: [
-                        {
-                            actor: 'tonomy',
-                            permission: 'owner',
-                        },
-                        {
-                            actor: 'ops.tmy',
-                            permission: 'active',
-                        },
-                        {
-                            actor: 'tonomy',
-                            permission: 'active',
-                        },
-                    ],
-                    data: {
+                const auth = ownerAuthority('tonomy');
+
+                auth.authorization!.push(activePermissionLevel('tonomy'));
+                auth.authorization!.push(activePermissionLevel('ops.tmy'));
+                const updateAuthAction = getTonomyEosioProxyContract().actions.updateAuth(
+                    {
                         account: 'ops.tmy',
                         permission: 'active',
                         parent: 'owner',
                         auth: govTmyActiveAuthority,
-                        // eslint-disable-next-line camelcase
-                        auth_parent: false, // should be true when a new permission is being created, otherwise false
+                        authParent: false,
                     },
-                };
-
-                let transaction = await transact(
-                    Name.from('tonomy'),
-                    [updateAuthAction],
-                    tonomyBoardSigners.slice(0, 2)
+                    auth
                 );
 
+                let transaction = await transact(updateAuthAction, tonomyBoardSigners.slice(0, 2));
+
                 expect(transaction.processed.receipt.status).toBe('executed');
-                updateAuthAction.data.auth = oldTmyActiveAuthority;
-                transaction = await transact(Name.from('tonomy'), [updateAuthAction], tonomyBoardSigners.slice(0, 2));
+                const updateAuthAction2 = getTonomyEosioProxyContract().actions.updateAuth(
+                    {
+                        account: 'ops.tmy',
+                        permission: 'active',
+                        parent: 'owner',
+                        auth: oldTmyActiveAuthority,
+                        authParent: false,
+                    },
+                    auth
+                );
+
+                transaction = await transact(updateAuthAction2, tonomyBoardSigners.slice(0, 2));
                 expect(transaction.processed.receipt.status).toBe('executed');
             });
 
             test('remove (1 of 2) public key using eosio.msig with 2 board keys and change back should succeed', async () => {
                 expect.assertions(6);
 
-                const updateAuthAction: ActionData = {
-                    account: 'tonomy',
-                    name: 'updateauth',
-                    authorization: [
-                        {
-                            actor: 'tonomy',
-                            permission: 'owner',
-                        },
-                        {
-                            actor: 'ops.tmy',
-                            permission: 'active',
-                        },
-                        {
-                            actor: 'tonomy',
-                            permission: 'active',
-                        },
-                    ],
-                    data: {
+                const auth = ownerAuthority('tonomy');
+
+                auth.authorization!.push(activePermissionLevel('tonomy'));
+                auth.authorization!.push(activePermissionLevel('ops.tmy'));
+                const updateAuthAction = getTonomyEosioProxyContract().actions.updateAuth(
+                    {
                         account: 'ops.tmy',
                         permission: 'active',
                         parent: 'owner',
                         auth: govTmyActiveAuthority,
-                        // eslint-disable-next-line camelcase
-                        auth_parent: false, // should be true when a new permission is being created, otherwise false
+                        authParent: false,
                     },
-                };
+                    auth
+                );
 
-                await msigAction([updateAuthAction], { satisfyRequireApproval: true });
+                await msigAction(updateAuthAction, { satisfyRequireApproval: true });
 
-                updateAuthAction.data.auth = oldTmyActiveAuthority;
-                await msigAction([updateAuthAction], { satisfyRequireApproval: true });
+                const updateAuthAction2 = getTonomyEosioProxyContract().actions.updateAuth(
+                    {
+                        account: 'ops.tmy',
+                        permission: 'active',
+                        parent: 'owner',
+                        auth: oldTmyActiveAuthority,
+                        authParent: false,
+                    },
+                    auth
+                );
+
+                await msigAction(updateAuthAction2, { satisfyRequireApproval: true });
             });
         });
     });
@@ -534,101 +531,41 @@ describe('TonomyContract class', () => {
         // special_governance_check() + eosio.tonomy special checks
         let key: PrivateKey;
         let authority: Authority;
-        let createAccountAction: ActionData;
+        let createAccountAction: Action;
         let newAccount: string;
-        let actions: ActionData[];
+        let actions: Action[];
 
         const { wasmPath, abiPath } = getDeployableFilesFromDir('./Tonomy-Contracts/contracts/eosio.bios');
         const wasmFile = fs.readFileSync(wasmPath);
         const abiFile = fs.readFileSync(abiPath, 'utf8');
 
-        beforeEach(() => {
+        beforeEach(async () => {
             key = PrivateKey.generate(KeyType.K1);
             authority = Authority.fromKey(key.toPublic().toString());
             newAccount = randomAccountName();
 
-            createAccountAction = {
-                account: 'tonomy',
-                name: 'newaccount',
-                authorization: [
-                    {
-                        actor: 'tonomy',
-                        permission: 'owner',
-                    },
-                ],
-                data: {
-                    creator: 'tonomy',
-                    name: newAccount,
-                    owner: authority,
-                    active: authority,
-                },
-            };
+            createAccountAction = getTonomyEosioProxyContract().actions.newAccount({
+                creator: 'tonomy',
+                name: newAccount,
+                owner: authority,
+                active: authority,
+            });
 
-            // 1. Prepare SETCODE
-            // read the file and make a hex string out of it
-            const wasm = wasmFile.toString(`hex`);
-
-            // 2. Prepare SETABI
-            const abi = JSON.parse(abiFile);
-            const abiDef = ABI.from(abi);
-            const abiSerializedHex = Serializer.encode({ object: abiDef }).hexString;
-
-            // 3. Send transaction with both setcode and setabi actions
-            const setCodeAction = {
-                account: 'eosio',
-                name: 'setcode',
-                authorization: [
-                    {
-                        actor: 'eosio',
-                        permission: 'active',
-                    },
-                    {
-                        actor: 'tonomy',
-                        permission: 'owner',
-                    },
-                ],
-                data: {
-                    account: 'eosio',
-                    vmtype: 0,
-                    vmversion: 0,
-                    code: wasm,
-                },
-            };
-
-            const setAbiAction = {
-                account: 'eosio',
-                name: 'setabi',
-                authorization: [
-                    {
-                        actor: 'eosio',
-                        permission: 'active',
-                    },
-                    {
-                        actor: 'tonomy',
-                        permission: 'owner',
-                    },
-                ],
-                data: {
-                    account: 'eosio',
-                    abi: abiSerializedHex,
-                },
-            };
-
-            actions = [setCodeAction, setAbiAction];
+            actions = await getTonomyEosioProxyContract().deployContractActions('eosio', wasmFile, abiFile);
         });
 
         describe('new account with contract', () => {
-            test('sign with tonomy@active and newaccount keys should succeed', async () => {
+            test('sign with tonomy@active and newaccount@active should succeed', async () => {
                 expect.assertions(1);
 
-                await transact(Name.from('tonomy'), [createAccountAction], tonomyBoardSigners.slice(0, 2));
+                await transact(createAccountAction, tonomyBoardSigners.slice(0, 2));
 
-                const trx = await tonomyEosioProxyContract.deployContract(
-                    Name.from(newAccount),
+                const trx = await getTonomyEosioProxyContract().deployContract(
+                    newAccount,
                     wasmFile,
                     abiFile,
                     [createSigner(key), tonomyOpsSigner],
-                    { extraAuthorization: { actor: 'tonomy', permission: 'active' } }
+                    { actor: 'tonomy', permission: 'active' }
                 );
 
                 expect(trx.processed.receipt.status).toBe('executed');
@@ -638,29 +575,39 @@ describe('TonomyContract class', () => {
                 expect.assertions(1);
 
                 try {
-                    await transact(Name.from('tonomy'), [createAccountAction], tonomyBoardSigners.slice(0, 2));
+                    await transact(createAccountAction, tonomyBoardSigners.slice(0, 2));
 
-                    await tonomyEosioProxyContract.deployContract(
-                        Name.from(newAccount),
+                    await getTonomyEosioProxyContract().deployContract(
+                        newAccount,
                         wasmFile,
                         abiFile,
                         [tonomyOpsSigner],
-                        { extraAuthorization: { actor: 'tonomy', permission: 'active' } }
+                        {
+                            actor: 'tonomy',
+                            permission: 'active',
+                        }
                     );
                 } catch (e) {
                     expect(e.error.details[0].message).toContain('but does not have signatures for it');
                 }
             });
 
-            test('sign with newaccount key should fail', async () => {
+            test('sign with newaccount@active should fail', async () => {
                 expect.assertions(1);
 
                 try {
-                    await transact(Name.from('tonomy'), [createAccountAction], tonomyBoardSigners.slice(0, 2));
+                    await transact(createAccountAction, tonomyBoardSigners.slice(0, 2));
 
-                    await tonomyEosioProxyContract.deployContract(Name.from(newAccount), wasmFile, abiFile, [
+                    await getTonomyEosioProxyContract().deployContract(
+                        newAccount,
+                        wasmFile,
+                        abiFile,
                         createSigner(key),
-                    ]);
+                        {
+                            actor: newAccount,
+                            permission: 'active',
+                        }
+                    );
                 } catch (e) {
                     expect(e.error.details[0].message).toContain(`missing authority of tonomy/active`);
                 }
@@ -672,9 +619,10 @@ describe('TonomyContract class', () => {
                 expect.assertions(1);
 
                 try {
-                    await tonomyEosioProxyContract.deployContract(Name.from('eosio'), wasmFile, abiFile, [
-                        tonomyOpsSigner,
-                    ]);
+                    await getTonomyEosioProxyContract().deployContract('eosio', wasmFile, abiFile, tonomyOpsSigner, {
+                        actor: 'eosio',
+                        permission: 'active',
+                    });
                 } catch (e) {
                     expect(e.error.details[0].message).toContain(`missing authority of tonomy/owner`);
                 }
@@ -684,13 +632,10 @@ describe('TonomyContract class', () => {
                 expect.assertions(1);
 
                 try {
-                    await tonomyEosioProxyContract.deployContract(
-                        Name.from('eosio'),
-                        wasmFile,
-                        abiFile,
-                        [tonomyOpsSigner],
-                        { extraAuthorization: { actor: 'tonomy', permission: 'owner' } }
-                    );
+                    await getTonomyEosioProxyContract().deployContract('eosio', wasmFile, abiFile, tonomyOpsSigner, {
+                        actor: 'tonomy',
+                        permission: 'owner',
+                    });
                 } catch (e) {
                     expect(e.error.details[0].message).toContain(`but does not have signatures for it`);
                 }
@@ -700,12 +645,15 @@ describe('TonomyContract class', () => {
                 expect.assertions(1);
 
                 try {
-                    await tonomyEosioProxyContract.deployContract(
-                        Name.from('eosio'),
+                    await getTonomyEosioProxyContract().deployContract(
+                        'eosio',
                         wasmFile,
                         abiFile,
-                        [tonomyBoardSigners[0]],
-                        { extraAuthorization: { actor: 'tonomy', permission: 'owner' } }
+                        tonomyBoardSigners[0],
+                        {
+                            actor: 'tonomy',
+                            permission: 'owner',
+                        }
                     );
                 } catch (e) {
                     expect(e.error.details[0].message).toContain(`but does not have signatures for it`);
@@ -716,12 +664,15 @@ describe('TonomyContract class', () => {
                 expect.assertions(1);
 
                 try {
-                    await eosioContract.deployContract(
-                        Name.from('eosio'),
+                    await getTonomyEosioProxyContract().deployContract(
+                        'eosio',
                         wasmFile,
                         abiFile,
                         tonomyBoardSigners.slice(0, 2),
-                        { extraAuthorization: { actor: 'tonomy', permission: 'owner' } }
+                        {
+                            actor: 'tonomy',
+                            permission: 'owner',
+                        }
                     );
                 } catch (e) {
                     expect(e.error.details[0].message).toContain(`but does not have signatures for it`);
@@ -731,12 +682,12 @@ describe('TonomyContract class', () => {
             test('sign with tonomy@owner with two board signers and Tonomy ops signer should succeed', async () => {
                 expect.assertions(1);
 
-                const trx = await tonomyEosioProxyContract.deployContract(
-                    Name.from('eosio'),
+                const trx = await getTonomyEosioProxyContract().deployContract(
+                    'eosio',
                     wasmFile,
                     abiFile,
                     [...tonomyBoardSigners.slice(0, 2), tonomyOpsSigner],
-                    { extraAuthorization: { actor: 'tonomy', permission: 'owner' } }
+                    { actor: 'tonomy', permission: 'owner' }
                 );
 
                 expect(trx.processed.receipt.status).toBe('executed');
@@ -762,12 +713,12 @@ describe('TonomyContract class', () => {
         describe('deploy tonomy contract (special)', () => {
             test('sign with tonomy@owner with two board signers should succeed', async () => {
                 expect.assertions(2);
-                const trx = await eosioContract.deployContract(
-                    Name.from('tonomy'),
+                const trx = await getEosioContract().deployContract(
+                    'tonomy',
                     wasmFile,
                     abiFile,
                     tonomyBoardSigners.slice(0, 2),
-                    { extraAuthorization: { actor: 'tonomy', permission: 'owner' } }
+                    { actor: 'tonomy', permission: 'owner' }
                 );
 
                 expect(trx.processed.receipt.status).toBe('executed');
@@ -777,12 +728,12 @@ describe('TonomyContract class', () => {
             test('using tonomy contract, sign with tonomy@owner with two board signers should succeed', async () => {
                 expect.assertions(2);
                 await sleep(1000);
-                const trx = await tonomyEosioProxyContract.deployContract(
-                    Name.from('tonomy'),
+                const trx = await getTonomyEosioProxyContract().deployContract(
+                    'tonomy',
                     wasmFile,
                     abiFile,
                     tonomyBoardSigners.slice(0, 2),
-                    { extraAuthorization: { actor: 'tonomy', permission: 'owner' } }
+                    { actor: 'tonomy', permission: 'owner' }
                 );
 
                 expect(trx.processed.receipt.status).toBe('executed');
@@ -796,12 +747,12 @@ describe('TonomyContract class', () => {
             const wasmFile = fs.readFileSync(wasmPath);
             const abiFile = fs.readFileSync(abiPath, 'utf8');
 
-            await tonomyEosioProxyContract.deployContract(
-                Name.from('eosio'),
+            await getTonomyEosioProxyContract().deployContract(
+                'eosio',
                 wasmFile,
                 abiFile,
                 [...tonomyBoardSigners.slice(0, 2), tonomyOpsSigner],
-                { extraAuthorization: { actor: 'tonomy', permission: 'owner' } }
+                { actor: 'tonomy', permission: 'owner' }
             );
         }
 
@@ -811,12 +762,12 @@ describe('TonomyContract class', () => {
             const wasmFile = fs.readFileSync(wasmPath);
             const abiFile = fs.readFileSync(abiPath, 'utf8');
 
-            const transaction = await eosioContract.deployContract(
-                Name.from('tonomy'),
+            const transaction = await getEosioContract().deployContract(
+                'tonomy',
                 wasmFile,
                 abiFile,
                 [...tonomyBoardSigners.slice(0, 2), tonomyOpsSigner],
-                { extraAuthorization: { actor: 'tonomy', permission: 'owner' } }
+                { actor: 'tonomy', permission: 'owner' }
             );
 
             expect(transaction.processed.receipt.status).toBe('executed');

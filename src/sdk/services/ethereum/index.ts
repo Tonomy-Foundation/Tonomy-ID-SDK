@@ -2,7 +2,7 @@ import { ethers } from 'ethers';
 import { getSettings } from '../../util/settings';
 import TonomyTokenABI from './abi/TonomyToken.json';
 import Debug from 'debug';
-import { randomString } from '../../util';
+import { randomString } from '../../util/crypto';
 
 const debug = Debug('tonomy-sdk:services:ethereum');
 
