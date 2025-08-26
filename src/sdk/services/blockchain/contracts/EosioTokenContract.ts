@@ -2,7 +2,6 @@
 import { API, NameType, AssetType } from '@wharfkit/antelope';
 import { ActionOptions, Contract as AntelopeContract } from '@wharfkit/contract';
 import Decimal from 'decimal.js';
-import Debug from 'debug';
 import { Contract, loadContract } from './Contract';
 import { Signer, transact } from '../eosio/transaction';
 import { getApi } from '../eosio/eosio';
@@ -10,20 +9,15 @@ import { getSettings, isProduction } from '../../../util/settings';
 import { activeAuthority } from '../eosio/authority';
 import abi from './abi/eosio.token.abi.json';
 
-const debug = Debug('tonomy-id-sdk:services:blockchain:contracts:token');
-
 const CONTRACT_NAME = 'eosio.token';
 
 function assetToNumberString(asset: string, symbol?: string): string {
-    if (!symbol) {
-        symbol = getSettings().currencySymbol;
-    }
+    const currencySymbol = symbol || getSettings().currencySymbol;
 
     const [res, currency] = asset.split(' ');
 
-    if (currency !== symbol) {
-        debug(`Invalid currency symbol: expected ${symbol}, for asset ${asset}`);
-        throw new Error(`Invalid currency symbol: expected ${symbol}, got ${currency}`);
+    if (currency !== currencySymbol) {
+        throw new Error(`Invalid currency symbol: expected ${currencySymbol}, got ${currency}`);
     }
 
     return res;
@@ -33,12 +27,12 @@ function assetToNumberString(asset: string, symbol?: string): string {
 /**
  * @deprecated use assetToDecimal instead
  */
-export function assetToAmount(asset: string): number {
-    return parseFloat(assetToNumberString(asset));
+export function assetToAmount(asset: string, symbol?: string): number {
+    return parseFloat(assetToNumberString(asset, symbol));
 }
 
-export function assetToDecimal(asset: string): Decimal {
-    return new Decimal(assetToNumberString(asset));
+export function assetToDecimal(asset: string, symbol?: string): Decimal {
+    return new Decimal(assetToNumberString(asset, symbol));
 }
 
 /**
@@ -69,12 +63,18 @@ export class EosioTokenContract extends Contract {
 
     // action getters. add default authorization and values, use camelCase for variables and action names
     actions = {
-        create: (data: { issuer: NameType; maximumSupply: AssetType }, authorization?: ActionOptions) =>
-            this.action('create', { issuer: data.issuer, maximum_supply: data.maximumSupply }, authorization),
+        create: (
+            data: { issuer: NameType; maximumSupply: AssetType },
+            authorization: ActionOptions = activeAuthority(this.contractName)
+        ) => this.action('create', { issuer: data.issuer, maximum_supply: data.maximumSupply }, authorization),
         issue: (
             { to, quantity, memo = '' }: { to: NameType; quantity: AssetType; memo: string },
-            authorization?: ActionOptions
+            authorization: ActionOptions = activeAuthority(this.contractName)
         ) => this.action('issue', { to, quantity, memo }, authorization),
+        retire: (
+            { quantity, memo = '' }: { quantity: AssetType; memo: string },
+            authorization: ActionOptions = activeAuthority(this.contractName)
+        ) => this.action('retire', { quantity, memo }, authorization),
         transfer: (
             { from, to, quantity, memo = '' }: { from: NameType; to: NameType; quantity: AssetType; memo?: string },
             authorization: ActionOptions = activeAuthority(from)
@@ -110,31 +110,31 @@ export class EosioTokenContract extends Contract {
         return await transact(action, signer);
     }
 
+    async retire(quantity: AssetType, memo: string, signer: Signer): Promise<API.v1.PushTransactionResponse> {
+        const action = this.actions.retire({ quantity, memo });
+
+        return await transact(action, signer);
+    }
+
     /**
      * @deprecated use getBalanceDecimal instead
      */
-    async getBalance(account: NameType): Promise<number> {
-        const assets = await getApi().v1.chain.get_currency_balance(
-            this.contractName,
-            account,
-            getSettings().currencySymbol
-        );
+    async getBalance(account: NameType, symbol?: string): Promise<number> {
+        const currencySymbol = symbol || getSettings().currencySymbol;
+        const assets = await getApi().v1.chain.get_currency_balance(this.contractName, account, currencySymbol);
 
         if (assets.length === 0) return 0;
 
         return assets[0].value;
     }
 
-    async getBalanceDecimal(account: NameType): Promise<Decimal> {
-        const assets = await getApi().v1.chain.get_currency_balance(
-            this.contractName,
-            account,
-            getSettings().currencySymbol
-        );
+    async getBalanceDecimal(account: NameType, symbol?: string): Promise<Decimal> {
+        const currencySymbol = symbol || getSettings().currencySymbol;
+        const assets = await getApi().v1.chain.get_currency_balance(this.contractName, account, currencySymbol);
 
         if (assets.length === 0) return new Decimal(0);
 
-        return assetToDecimal(assets[0].toString());
+        return assetToDecimal(assets[0].toString(), currencySymbol);
     }
 }
 
