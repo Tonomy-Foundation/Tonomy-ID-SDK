@@ -32,7 +32,7 @@ import {
 } from '../../sdk/services/blockchain';
 import { createUser, mockCreateAccount, restoreCreateAccountFromMock } from './user';
 import { sleep } from '../../sdk/util';
-import loadDemoTokenContract from '../../sdk/services/blockchain/contracts/DemoTokenContract';
+import { DemoTokenContract } from '../../sdk/services/blockchain/contracts/DemoTokenContract';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -161,7 +161,7 @@ async function deployEosioMsig() {
 }
 
 async function configureDemoToken(newSigner: Signer) {
-    const demoTokenContract = await loadDemoTokenContract();
+    const demoTokenContract = await DemoTokenContract.atAccount();
 
     await demoTokenContract.create(demoTokenContract.contractName, `1000000000 DEMO`, newSigner);
     await demoTokenContract.issue(demoTokenContract.contractName, `10000 DEMO`, '', newSigner);
