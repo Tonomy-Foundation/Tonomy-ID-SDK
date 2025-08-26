@@ -553,7 +553,3 @@ export const getVestingContract = () => {
 
     return vestingContract;
 };
-
-export async function loadVestingContract(account: NameType = CONTRACT_NAME): Promise<VestingContract> {
-    return VestingContract.atAccount(account);
-}

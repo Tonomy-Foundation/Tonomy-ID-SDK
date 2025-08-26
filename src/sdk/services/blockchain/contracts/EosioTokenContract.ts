@@ -147,7 +147,3 @@ export const getTokenContract = () => {
 
     return tonomyContract;
 };
-
-export default async function loadTokenContract(): Promise<EosioTokenContract> {
-    return await EosioTokenContract.atAccount();
-}

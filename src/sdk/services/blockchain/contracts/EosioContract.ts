@@ -193,10 +193,6 @@ export const defaultBlockchainParams: BlockchainParams = {
     max_authority_depth: 6,
 };
 
-export async function loadEosioContract(account: NameType = CONTRACT_NAME): Promise<EosioContract> {
-    return await EosioContract.atAccount(account);
-}
-
 let eosioContract: EosioContract | undefined;
 
 export const getEosioContract = () => {

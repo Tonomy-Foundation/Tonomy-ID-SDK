@@ -226,9 +226,3 @@ export const getTonomyEosioProxyContract = () => {
 
     return tonomyEosioProxyContract;
 };
-
-export default async function loadTonomyEosioProxyContract(
-    account: NameType = CONTRACT_NAME
-): Promise<TonomyEosioProxyContract> {
-    return await TonomyEosioProxyContract.atAccount(account);
-}

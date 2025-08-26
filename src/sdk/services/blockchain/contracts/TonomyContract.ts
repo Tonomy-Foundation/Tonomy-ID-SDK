@@ -589,10 +589,6 @@ export const getTonomyContract = () => {
     return tonomyContract;
 };
 
-export default async function loadTonomyContract(account: NameType = CONTRACT_NAME): Promise<TonomyContract> {
-    return await TonomyContract.atAccount(account);
-}
-
 export async function getAccountNameFromUsername(username: TonomyUsername): Promise<NameType> {
     return (await getTonomyContract().getPersonDataByUsername(username)).account_name;
 }

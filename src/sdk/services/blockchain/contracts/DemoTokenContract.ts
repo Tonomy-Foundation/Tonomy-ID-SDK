@@ -82,7 +82,3 @@ export class DemoTokenContract extends Contract {
         return assets[0].value;
     }
 }
-
-export default async function loadDemoTokenContract(): Promise<DemoTokenContract> {
-    return await DemoTokenContract.atAccount();
-}

@@ -179,7 +179,3 @@ export const getEosioMsigContract = () => {
 
     return eosioMsigContract;
 };
-
-export async function loadEosioMsigContract(account: NameType = CONTRACT_NAME): Promise<EosioMsigContract> {
-    return await EosioMsigContract.atAccount(account);
-}

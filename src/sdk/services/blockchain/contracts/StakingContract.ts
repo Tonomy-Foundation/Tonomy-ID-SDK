@@ -366,7 +366,3 @@ export const getStakingContract = () => {
 
     return stakingContract;
 };
-
-export async function loadStakingContract(account: NameType = CONTRACT_NAME): Promise<StakingContract> {
-    return await StakingContract.atAccount(account);
-}
