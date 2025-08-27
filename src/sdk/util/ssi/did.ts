@@ -35,10 +35,9 @@ export function parseAntelopeDid(did: DIDurl): ParsedDID & {
 }
 
 export function parseDid(did: DIDurl): ParsedDID {
-    debug('did', did);
     const parsed = parse(did);
 
-    if (!parsed) throw new Error('Invalid DID');
+    if (!parsed) throw new Error(`Invalid DID: ${did}`);
 
     return parsed;
 }

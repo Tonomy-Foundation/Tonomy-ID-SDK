@@ -21,7 +21,7 @@ describe('EosioTokenContract Tests', () => {
     let userAccount: string;
     let userSigner: Signer;
     let receiverAccount: string;
-    let symbol: string;
+    let SYMBOL: string;
     let MAX_SUPPLY: string;
     let INITIAL_ISSUE: string;
     let TRANSFER_AMOUNT: string;
@@ -46,8 +46,8 @@ describe('EosioTokenContract Tests', () => {
 
     beforeEach(async () => {
         // Generate unique symbol and test assets for each test
-        symbol = generateUniqueSymbol();
-        const assets = getTestAssets(symbol);
+        SYMBOL = generateUniqueSymbol();
+        const assets = getTestAssets(SYMBOL);
 
         MAX_SUPPLY = assets.MAX_SUPPLY;
         INITIAL_ISSUE = assets.INITIAL_ISSUE;
@@ -83,7 +83,7 @@ describe('EosioTokenContract Tests', () => {
             expect.assertions(1);
 
             try {
-                await tokenContract.create('eosio.token', `-1000.0000 ${symbol}`, signer);
+                await tokenContract.create('eosio.token', `-1000.0000 ${SYMBOL}`, signer);
             } catch (e) {
                 expect(e.error.details[0].message).toContain('max-supply must be positive');
             }
@@ -93,7 +93,7 @@ describe('EosioTokenContract Tests', () => {
             expect.assertions(1);
 
             try {
-                await tokenContract.create('eosio.token', `0.0000 ${symbol}`, signer);
+                await tokenContract.create('eosio.token', `0.0000 ${SYMBOL}`, signer);
             } catch (e) {
                 expect(e.error.details[0].message).toContain('max-supply must be positive');
             }
@@ -146,7 +146,7 @@ describe('EosioTokenContract Tests', () => {
             expect(trx.processed.receipt.status).toBe('executed');
 
             // Verify the balance was updated
-            const balance = await tokenContract.getBalanceDecimal('eosio.token', symbol);
+            const balance = await tokenContract.getBalanceDecimal('eosio.token', SYMBOL);
 
             expect(balance.toNumber()).toBe(100);
         });
@@ -159,12 +159,12 @@ describe('EosioTokenContract Tests', () => {
             await tokenContract.issue('eosio.token', INITIAL_ISSUE, 'First issue', signer);
             
             // Issue second batch
-            const secondIssue = `50.0000 ${symbol}`;
+            const secondIssue = `50.0000 ${SYMBOL}`;
 
             await tokenContract.issue('eosio.token', secondIssue, 'Second issue', signer);
 
             // Verify total balance
-            const balance = await tokenContract.getBalanceDecimal('eosio.token', symbol);
+            const balance = await tokenContract.getBalanceDecimal('eosio.token', SYMBOL);
 
             expect(balance.toNumber()).toBe(150);
         });
@@ -184,7 +184,7 @@ describe('EosioTokenContract Tests', () => {
 
         test('Fails to issue tokens exceeding maximum supply', async () => {
             expect.assertions(1);
-            const excessiveAmount = `1000001.0000 ${symbol}`;
+            const excessiveAmount = `1000001.0000 ${SYMBOL}`;
             
             // Create the token first
             await tokenContract.create('eosio.token', MAX_SUPPLY, signer);
@@ -203,7 +203,7 @@ describe('EosioTokenContract Tests', () => {
             await tokenContract.create('eosio.token', MAX_SUPPLY, signer);
 
             try {
-                await tokenContract.issue('eosio.token', `-10.0000 ${symbol}`, 'Invalid issue', signer);
+                await tokenContract.issue('eosio.token', `-10.0000 ${SYMBOL}`, 'Invalid issue', signer);
             } catch (e) {
                 expect(e.error.details[0].message).toContain('must be positive quantity');
             }
@@ -216,7 +216,7 @@ describe('EosioTokenContract Tests', () => {
             await tokenContract.create('eosio.token', MAX_SUPPLY, signer);
 
             try {
-                await tokenContract.issue('eosio.token', `0.0000 ${symbol}`, 'Invalid issue', signer);
+                await tokenContract.issue('eosio.token', `0.0000 ${SYMBOL}`, 'Invalid issue', signer);
             } catch (e) {
                 expect(e.error.details[0].message).toContain('must be positive quantity');
             }
@@ -242,7 +242,7 @@ describe('EosioTokenContract Tests', () => {
             await tokenContract.create('eosio.token', MAX_SUPPLY, signer);
 
             try {
-                await tokenContract.issue('eosio.token', `100.00 ${symbol}`, 'Invalid issue', signer);
+                await tokenContract.issue('eosio.token', `100.00 ${SYMBOL}`, 'Invalid issue', signer);
             } catch (e) {
                 expect(e.error.details[0].message).toContain('symbol precision mismatch');
             }
@@ -283,8 +283,8 @@ describe('EosioTokenContract Tests', () => {
             await tokenContract.create('eosio.token', MAX_SUPPLY, signer);
             await tokenContract.issue('eosio.token', INITIAL_ISSUE, 'Initial issue', signer);
             
-            const initialSenderBalance = await tokenContract.getBalanceDecimal('eosio.token', symbol);
-            const initialReceiverBalance = await tokenContract.getBalanceDecimal(userAccount, symbol);
+            const initialSenderBalance = await tokenContract.getBalanceDecimal('eosio.token', SYMBOL);
+            const initialReceiverBalance = await tokenContract.getBalanceDecimal(userAccount, SYMBOL);
 
             const trx = await tokenContract.transfer(
                 'eosio.token', 
@@ -297,15 +297,15 @@ describe('EosioTokenContract Tests', () => {
             expect(trx.processed.receipt.status).toBe('executed');
 
             // Verify balances updated correctly
-            const finalSenderBalance = await tokenContract.getBalanceDecimal('eosio.token', symbol);
-            const finalReceiverBalance = await tokenContract.getBalanceDecimal(userAccount, symbol);
+            const finalSenderBalance = await tokenContract.getBalanceDecimal('eosio.token', SYMBOL);
+            const finalReceiverBalance = await tokenContract.getBalanceDecimal(userAccount, SYMBOL);
 
             expect(finalSenderBalance.toNumber()).toBe(initialSenderBalance.minus(10).toNumber());
             expect(finalReceiverBalance.toNumber()).toBe(initialReceiverBalance.plus(10).toNumber());
         });
 
         test('Successfully transfer all tokens', async () => {
-            const allTokens = `100.0000 ${symbol}`;
+            const allTokens = `100.0000 ${SYMBOL}`;
             
             // Create token and issue to issuer account
             await tokenContract.create('eosio.token', MAX_SUPPLY, signer);
@@ -322,8 +322,8 @@ describe('EosioTokenContract Tests', () => {
             expect(trx.processed.receipt.status).toBe('executed');
 
             // Verify balances
-            const senderBalance = await tokenContract.getBalanceDecimal('eosio.token', symbol);
-            const receiverBalance = await tokenContract.getBalanceDecimal(userAccount, symbol);
+            const senderBalance = await tokenContract.getBalanceDecimal('eosio.token', SYMBOL);
+            const receiverBalance = await tokenContract.getBalanceDecimal(userAccount, SYMBOL);
 
             expect(senderBalance.toNumber()).toBe(0);
             expect(receiverBalance.toNumber()).toBe(100);
@@ -351,7 +351,7 @@ describe('EosioTokenContract Tests', () => {
 
         test('Fails to transfer tokens with insufficient balance', async () => {
             expect.assertions(1);
-            const excessiveAmount = `1000.0000 ${symbol}`;
+            const excessiveAmount = `1000.0000 ${SYMBOL}`;
             
             // Create token and issue to issuer account
             await tokenContract.create('eosio.token', MAX_SUPPLY, signer);
@@ -402,7 +402,7 @@ describe('EosioTokenContract Tests', () => {
                 await tokenContract.transfer(
                     'eosio.token', 
                     userAccount, 
-                    `-10.0000 ${symbol}`, 
+                    `-10.0000 ${SYMBOL}`, 
                     'Negative transfer', 
                     signer
                 );
@@ -422,7 +422,7 @@ describe('EosioTokenContract Tests', () => {
                 await tokenContract.transfer(
                     'eosio.token', 
                     userAccount, 
-                    `0.0000 ${symbol}`, 
+                    `0.0000 ${SYMBOL}`, 
                     'Zero transfer', 
                     signer
                 );
@@ -462,7 +462,7 @@ describe('EosioTokenContract Tests', () => {
                 await tokenContract.transfer(
                     'eosio.token', 
                     userAccount, 
-                    `10.00 ${symbol}`, 
+                    `10.00 ${SYMBOL}`, 
                     'Wrong precision transfer', 
                     signer
                 );
@@ -542,7 +542,7 @@ describe('EosioTokenContract Tests', () => {
             await tokenContract.transfer(
                 'eosio.token', 
                 userAccount, 
-                `30.0000 ${symbol}`, 
+                `30.0000 ${SYMBOL}`, 
                 'First transfer', 
                 signer
             );
@@ -551,15 +551,15 @@ describe('EosioTokenContract Tests', () => {
             await tokenContract.transfer(
                 userAccount, 
                 receiverAccount, 
-                `20.0000 ${symbol}`, 
+                `20.0000 ${SYMBOL}`, 
                 'Second transfer', 
                 userSigner
             );
 
             // Verify final balances
-            const eosioTokenBalance = await tokenContract.getBalanceDecimal('eosio.token', symbol);
-            const userBalance = await tokenContract.getBalanceDecimal(userAccount, symbol);
-            const receiverBalance = await tokenContract.getBalanceDecimal(receiverAccount, symbol);
+            const eosioTokenBalance = await tokenContract.getBalanceDecimal('eosio.token', SYMBOL);
+            const userBalance = await tokenContract.getBalanceDecimal(userAccount, SYMBOL);
+            const receiverBalance = await tokenContract.getBalanceDecimal(receiverAccount, SYMBOL);
 
             expect(eosioTokenBalance.toNumber()).toBe(70); // 100 - 30
             expect(userBalance.toNumber()).toBe(10);   // 30 - 20
@@ -571,17 +571,17 @@ describe('EosioTokenContract Tests', () => {
             await tokenContract.create('eosio.token', MAX_SUPPLY, signer);
             
             // Regular issue tokens to issuer
-            await tokenContract.issue('eosio.token', `500.0000 ${symbol}`, 'Initial issue', signer);
+            await tokenContract.issue('eosio.token', `500.0000 ${SYMBOL}`, 'Initial issue', signer);
             
             // Bridge issue additional tokens to different accounts (bypassing issuer restriction)
-            await tokenContract.bridgeIssue(userAccount, `200.0000 ${symbol}`, 'Bridge issue to user', signer);
-            await tokenContract.bridgeIssue(receiverAccount, `100.0000 ${symbol}`, 'Bridge issue to receiver', signer);
+            await tokenContract.bridgeIssue(userAccount, `200.0000 ${SYMBOL}`, 'Bridge issue to user', signer);
+            await tokenContract.bridgeIssue(receiverAccount, `100.0000 ${SYMBOL}`, 'Bridge issue to receiver', signer);
             
             // Transfer between accounts
             await tokenContract.transfer(
                 'eosio.token', 
                 userAccount, 
-                `50.0000 ${symbol}`, 
+                `50.0000 ${SYMBOL}`, 
                 'Transfer to user', 
                 signer
             );
@@ -590,21 +590,21 @@ describe('EosioTokenContract Tests', () => {
             await tokenContract.transfer(
                 userAccount,
                 receiverAccount,
-                `25.0000 ${symbol}`,
+                `25.0000 ${SYMBOL}`,
                 'User to receiver',
                 userSigner
             );
             
             // Bridge retire some tokens (can retire from any account)
-            await tokenContract.bridgeRetire(userAccount, `25.0000 ${symbol}`, 'Bridge retire from user', signer);
+            await tokenContract.bridgeRetire(userAccount, `25.0000 ${SYMBOL}`, 'Bridge retire from user', signer);
             
             // Regular retire from issuer
-            await tokenContract.retire(`50.0000 ${symbol}`, 'Regular retire', signer);
+            await tokenContract.retire(`50.0000 ${SYMBOL}`, 'Regular retire', signer);
             
             // Verify final balances
-            const eosioTokenBalance = await tokenContract.getBalanceDecimal('eosio.token', symbol);
-            const userBalance = await tokenContract.getBalanceDecimal(userAccount, symbol);
-            const receiverBalance = await tokenContract.getBalanceDecimal(receiverAccount, symbol);
+            const eosioTokenBalance = await tokenContract.getBalanceDecimal('eosio.token', SYMBOL);
+            const userBalance = await tokenContract.getBalanceDecimal(userAccount, SYMBOL);
+            const receiverBalance = await tokenContract.getBalanceDecimal(receiverAccount, SYMBOL);
             
             expect(eosioTokenBalance.toNumber()).toBe(400); // 500 - 50 (transfer) - 50 (retire)
             expect(userBalance.toNumber()).toBe(200);   // 200 (bridge) + 50 (transfer) - 25 (to receiver) - 25 (bridge retire)
@@ -626,15 +626,15 @@ describe('EosioTokenContract Tests', () => {
             await tokenContract.create('eosio.token', MAX_SUPPLY, signer);
             await tokenContract.issue('eosio.token', INITIAL_ISSUE, 'Initial issue', signer);
             
-            const retireAmount = `50.0000 ${symbol}`;
-            const initialBalance = await tokenContract.getBalanceDecimal('eosio.token', symbol);
+            const retireAmount = `50.0000 ${SYMBOL}`;
+            const initialBalance = await tokenContract.getBalanceDecimal('eosio.token', SYMBOL);
 
             const trx = await tokenContract.retire(retireAmount, 'Retire tokens', signer);
 
             expect(trx.processed.receipt.status).toBe('executed');
 
             // Verify balance decreased
-            const finalBalance = await tokenContract.getBalanceDecimal('eosio.token', symbol);
+            const finalBalance = await tokenContract.getBalanceDecimal('eosio.token', SYMBOL);
 
             expect(finalBalance.toNumber()).toBe(initialBalance.minus(50).toNumber());
         });
@@ -646,7 +646,7 @@ describe('EosioTokenContract Tests', () => {
             await tokenContract.create('eosio.token', MAX_SUPPLY, signer);
             await tokenContract.issue('eosio.token', INITIAL_ISSUE, 'Initial issue', signer);
             
-            const excessiveAmount = `200.0000 ${symbol}`;
+            const excessiveAmount = `200.0000 ${SYMBOL}`;
 
             try {
                 await tokenContract.retire(excessiveAmount, 'Excessive retire', signer);
@@ -657,7 +657,7 @@ describe('EosioTokenContract Tests', () => {
 
         test('Fails to retire tokens with unauthorized signer', async () => {
             expect.assertions(1);
-            const retireAmount = `50.0000 ${symbol}`;
+            const retireAmount = `50.0000 ${SYMBOL}`;
             const wrongSigner = createSigner(PrivateKey.generate("K1"));
             
             // Create token and issue to issuer account
@@ -678,7 +678,7 @@ describe('EosioTokenContract Tests', () => {
             await tokenContract.create('eosio.token', MAX_SUPPLY, signer);
             await tokenContract.issue('eosio.token', INITIAL_ISSUE, 'Initial issue', signer);
             
-            const balance = await tokenContract.getBalanceDecimal('eosio.token', symbol);
+            const balance = await tokenContract.getBalanceDecimal('eosio.token', SYMBOL);
 
             expect(balance.toNumber()).toBe(100);
         });
@@ -688,7 +688,7 @@ describe('EosioTokenContract Tests', () => {
             await tokenContract.create('eosio.token', MAX_SUPPLY, signer);
             await tokenContract.issue('eosio.token', INITIAL_ISSUE, 'Initial issue', signer);
             
-            const balance = await tokenContract.getBalanceDecimal(userAccount, symbol);
+            const balance = await tokenContract.getBalanceDecimal(userAccount, SYMBOL);
 
             expect(balance.toNumber()).toBe(0);
         });
@@ -707,8 +707,8 @@ describe('EosioTokenContract Tests', () => {
                 signer
             );
 
-            const eosioTokenBalance = await tokenContract.getBalanceDecimal('eosio.token', symbol);
-            const userBalance = await tokenContract.getBalanceDecimal(userAccount, symbol);
+            const eosioTokenBalance = await tokenContract.getBalanceDecimal('eosio.token', SYMBOL);
+            const userBalance = await tokenContract.getBalanceDecimal(userAccount, SYMBOL);
 
             expect(eosioTokenBalance.toNumber()).toBe(90);
             expect(userBalance.toNumber()).toBe(10);
@@ -720,13 +720,13 @@ describe('EosioTokenContract Tests', () => {
             // Create the token first
             await tokenContract.create('eosio.token', MAX_SUPPLY, signer);
             
-            const bridgeIssueAmount = `100.0000 ${symbol}`;
+            const bridgeIssueAmount = `100.0000 ${SYMBOL}`;
             const trx = await tokenContract.bridgeIssue(userAccount, bridgeIssueAmount, 'Bridge issue', signer);
 
             expect(trx.processed.receipt.status).toBe('executed');
 
             // Verify the balance was updated
-            const balance = await tokenContract.getBalanceDecimal(userAccount, symbol);
+            const balance = await tokenContract.getBalanceDecimal(userAccount, SYMBOL);
 
             expect(balance.toNumber()).toBe(100);
         });
@@ -735,7 +735,7 @@ describe('EosioTokenContract Tests', () => {
             // Create the token first
             await tokenContract.create('eosio.token', MAX_SUPPLY, signer);
             
-            const bridgeIssueAmount = `50.0000 ${symbol}`;
+            const bridgeIssueAmount = `50.0000 ${SYMBOL}`;
             
             // Issue to first account
             await tokenContract.bridgeIssue(userAccount, bridgeIssueAmount, 'Bridge issue to user', signer);
@@ -744,8 +744,8 @@ describe('EosioTokenContract Tests', () => {
             await tokenContract.bridgeIssue(receiverAccount, bridgeIssueAmount, 'Bridge issue to receiver', signer);
 
             // Verify balances
-            const userBalance = await tokenContract.getBalanceDecimal(userAccount, symbol);
-            const receiverBalance = await tokenContract.getBalanceDecimal(receiverAccount, symbol);
+            const userBalance = await tokenContract.getBalanceDecimal(userAccount, SYMBOL);
+            const receiverBalance = await tokenContract.getBalanceDecimal(receiverAccount, SYMBOL);
             
             expect(userBalance.toNumber()).toBe(50);
             expect(receiverBalance.toNumber()).toBe(50);
@@ -756,22 +756,22 @@ describe('EosioTokenContract Tests', () => {
             await tokenContract.create('eosio.token', MAX_SUPPLY, signer);
             
             // Bridge issue can exceed max supply unlike regular issue
-            const excessiveAmount = `2000000.0000 ${symbol}`;
+            const excessiveAmount = `2000000.0000 ${SYMBOL}`;
             const trx = await tokenContract.bridgeIssue(userAccount, excessiveAmount, 'Excessive bridge issue', signer);
 
             expect(trx.processed.receipt.status).toBe('executed');
 
             // Verify the balance
-            const balance = await tokenContract.getBalanceDecimal(userAccount, symbol);
+            const balance = await tokenContract.getBalanceDecimal(userAccount, SYMBOL);
 
             expect(balance.toNumber()).toBe(2000000);
         });
 
         test('Bridge issue with precision handling', async () => {
             await tokenContract.create('eosio.token', MAX_SUPPLY, signer);
-            await tokenContract.bridgeIssue(userAccount, `100.0001 ${symbol}`, 'Precise bridge issue', signer);
+            await tokenContract.bridgeIssue(userAccount, `100.0001 ${SYMBOL}`, 'Precise bridge issue', signer);
             
-            const balance = await tokenContract.getBalanceDecimal(userAccount, symbol);
+            const balance = await tokenContract.getBalanceDecimal(userAccount, SYMBOL);
 
             expect(balance.toString()).toBe('100.0001');
         });
@@ -797,7 +797,7 @@ describe('EosioTokenContract Tests', () => {
             await tokenContract.create('eosio.token', MAX_SUPPLY, signer);
 
             try {
-                await tokenContract.bridgeIssue(userAccount, `-10.0000 ${symbol}`, 'Invalid bridge issue', signer);
+                await tokenContract.bridgeIssue(userAccount, `-10.0000 ${SYMBOL}`, 'Invalid bridge issue', signer);
             } catch (e) {
                 expect(e.error.details[0].message).toContain('must be positive quantity');
             }
@@ -810,7 +810,7 @@ describe('EosioTokenContract Tests', () => {
             await tokenContract.create('eosio.token', MAX_SUPPLY, signer);
 
             try {
-                await tokenContract.bridgeIssue(userAccount, `0.0000 ${symbol}`, 'Invalid bridge issue', signer);
+                await tokenContract.bridgeIssue(userAccount, `0.0000 ${SYMBOL}`, 'Invalid bridge issue', signer);
             } catch (e) {
                 expect(e.error.details[0].message).toContain('must be positive quantity');
             }
@@ -836,7 +836,7 @@ describe('EosioTokenContract Tests', () => {
             await tokenContract.create('eosio.token', MAX_SUPPLY, signer);
 
             try {
-                await tokenContract.bridgeIssue(userAccount, `100.00 ${symbol}`, 'Invalid bridge issue', signer);
+                await tokenContract.bridgeIssue(userAccount, `100.00 ${SYMBOL}`, 'Invalid bridge issue', signer);
             } catch (e) {
                 expect(e.error.details[0].message).toContain('symbol precision mismatch');
             }
@@ -877,15 +877,15 @@ describe('EosioTokenContract Tests', () => {
             await tokenContract.create('eosio.token', MAX_SUPPLY, signer);
             await tokenContract.bridgeIssue(userAccount, INITIAL_ISSUE, 'Bridge issue', signer);
             
-            const retireAmount = `50.0000 ${symbol}`;
-            const initialBalance = await tokenContract.getBalanceDecimal(userAccount, symbol);
+            const retireAmount = `50.0000 ${SYMBOL}`;
+            const initialBalance = await tokenContract.getBalanceDecimal(userAccount, SYMBOL);
 
             const trx = await tokenContract.bridgeRetire(userAccount, retireAmount, 'Bridge retire', signer);
 
             expect(trx.processed.receipt.status).toBe('executed');
 
             // Verify balance decreased
-            const finalBalance = await tokenContract.getBalanceDecimal(userAccount, symbol);
+            const finalBalance = await tokenContract.getBalanceDecimal(userAccount, SYMBOL);
 
             expect(finalBalance.toNumber()).toBe(initialBalance.minus(50).toNumber());
         });
@@ -900,7 +900,7 @@ describe('EosioTokenContract Tests', () => {
             expect(trx.processed.receipt.status).toBe('executed');
 
             // Verify balance is zero
-            const finalBalance = await tokenContract.getBalanceDecimal(userAccount, symbol);
+            const finalBalance = await tokenContract.getBalanceDecimal(userAccount, SYMBOL);
 
             expect(finalBalance.toNumber()).toBe(0);
         });
@@ -911,15 +911,15 @@ describe('EosioTokenContract Tests', () => {
             await tokenContract.bridgeIssue(userAccount, INITIAL_ISSUE, 'Bridge issue to user', signer);
             await tokenContract.bridgeIssue(receiverAccount, INITIAL_ISSUE, 'Bridge issue to receiver', signer);
             
-            const retireAmount = `30.0000 ${symbol}`;
+            const retireAmount = `30.0000 ${SYMBOL}`;
             
             // Retire from both accounts
             await tokenContract.bridgeRetire(userAccount, retireAmount, 'Bridge retire from user', signer);
             await tokenContract.bridgeRetire(receiverAccount, retireAmount, 'Bridge retire from receiver', signer);
 
             // Verify balances
-            const userBalance = await tokenContract.getBalanceDecimal(userAccount, symbol);
-            const receiverBalance = await tokenContract.getBalanceDecimal(receiverAccount, symbol);
+            const userBalance = await tokenContract.getBalanceDecimal(userAccount, SYMBOL);
+            const receiverBalance = await tokenContract.getBalanceDecimal(receiverAccount, SYMBOL);
             
             expect(userBalance.toNumber()).toBe(70);
             expect(receiverBalance.toNumber()).toBe(70);
@@ -928,11 +928,11 @@ describe('EosioTokenContract Tests', () => {
         test('Bridge retire with precision handling', async () => {
             // Create token and bridge issue to account
             await tokenContract.create('eosio.token', MAX_SUPPLY, signer);
-            await tokenContract.bridgeIssue(userAccount, `100.0001 ${symbol}`, 'Bridge issue', signer);
+            await tokenContract.bridgeIssue(userAccount, `100.0001 ${SYMBOL}`, 'Bridge issue', signer);
             
-            await tokenContract.bridgeRetire(userAccount, `50.0001 ${symbol}`, 'Precise bridge retire', signer);
+            await tokenContract.bridgeRetire(userAccount, `50.0001 ${SYMBOL}`, 'Precise bridge retire', signer);
             
-            const finalBalance = await tokenContract.getBalanceDecimal(userAccount, symbol);
+            const finalBalance = await tokenContract.getBalanceDecimal(userAccount, SYMBOL);
 
             expect(finalBalance.toString()).toBe('50');
         });
@@ -956,9 +956,10 @@ describe('EosioTokenContract Tests', () => {
             
             // Create token and bridge issue smaller amount
             await tokenContract.create('eosio.token', MAX_SUPPLY, signer);
-            await tokenContract.bridgeIssue(userAccount, `50.0000 ${symbol}`, 'Bridge issue', signer);
+            await tokenContract.issue('eosio.token', INITIAL_ISSUE, 'Initial issue', signer);
+            await tokenContract.bridgeIssue(userAccount, `50.0000 ${SYMBOL}`, 'Bridge issue', signer);
             
-            const excessiveAmount = `100.0000 ${symbol}`;
+            const excessiveAmount = `100.0000 ${SYMBOL}`;
 
             try {
                 await tokenContract.bridgeRetire(userAccount, excessiveAmount, 'Excessive bridge retire', signer);
@@ -975,7 +976,7 @@ describe('EosioTokenContract Tests', () => {
             await tokenContract.bridgeIssue(userAccount, INITIAL_ISSUE, 'Bridge issue', signer);
 
             try {
-                await tokenContract.bridgeRetire(userAccount, `-10.0000 ${symbol}`, 'Invalid bridge retire', signer);
+                await tokenContract.bridgeRetire(userAccount, `-10.0000 ${SYMBOL}`, 'Invalid bridge retire', signer);
             } catch (e) {
                 expect(e.error.details[0].message).toContain('must be positive quantity');
             }
@@ -989,7 +990,7 @@ describe('EosioTokenContract Tests', () => {
             await tokenContract.bridgeIssue(userAccount, INITIAL_ISSUE, 'Bridge issue', signer);
 
             try {
-                await tokenContract.bridgeRetire(userAccount, `0.0000 ${symbol}`, 'Invalid bridge retire', signer);
+                await tokenContract.bridgeRetire(userAccount, `0.0000 ${SYMBOL}`, 'Invalid bridge retire', signer);
             } catch (e) {
                 expect(e.error.details[0].message).toContain('must be positive quantity');
             }
@@ -1017,7 +1018,7 @@ describe('EosioTokenContract Tests', () => {
             await tokenContract.bridgeIssue(userAccount, INITIAL_ISSUE, 'Bridge issue', signer);
 
             try {
-                await tokenContract.bridgeRetire(userAccount, `50.00 ${symbol}`, 'Invalid bridge retire', signer);
+                await tokenContract.bridgeRetire(userAccount, `50.00 ${SYMBOL}`, 'Invalid bridge retire', signer);
             } catch (e) {
                 expect(e.error.details[0].message).toContain('symbol precision mismatch');
             }
@@ -1032,7 +1033,7 @@ describe('EosioTokenContract Tests', () => {
             await tokenContract.bridgeIssue(userAccount, INITIAL_ISSUE, 'Bridge issue', signer);
 
             try {
-                await tokenContract.bridgeRetire(userAccount, `50.0000 ${symbol}`, 'Unauthorized bridge retire', wrongSigner);
+                await tokenContract.bridgeRetire(userAccount, `50.0000 ${SYMBOL}`, 'Unauthorized bridge retire', wrongSigner);
             } catch (e) {
                 expect(e.error.details[0].message).toContain('transaction declares authority');
             }
@@ -1047,7 +1048,7 @@ describe('EosioTokenContract Tests', () => {
             await tokenContract.bridgeIssue(userAccount, INITIAL_ISSUE, 'Bridge issue', signer);
 
             try {
-                await tokenContract.bridgeRetire(userAccount, `50.0000 ${symbol}`, longMemo, signer);
+                await tokenContract.bridgeRetire(userAccount, `50.0000 ${SYMBOL}`, longMemo, signer);
             } catch (e) {
                 expect(e.error.details[0].message).toContain('memo has more than 256 bytes');
             }
