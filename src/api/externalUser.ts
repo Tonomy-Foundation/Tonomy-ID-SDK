@@ -694,7 +694,7 @@ async function verifyTonomyVc<T extends object>(
     const data: T = vc.getCredentialSubject() as T;
     const account = await getAccountNameFromDid(did);
 
-    const { method, id } = parseDid(did);
+    const { method } = parseDid(did);
 
     if (method !== 'antelope') {
         throwError(`Invalid DID method: ${method}`, SdkErrors.InvalidData);
@@ -702,7 +702,7 @@ async function verifyTonomyVc<T extends object>(
 
     const [, chainId, username, originAndApp] = await Promise.all([
         vc.verify(),
-        checkChainId(id, verifyChainId),
+        checkChainId(did, verifyChainId),
         checkUsername(account, (data as { username?: string })?.username, verifyUsername),
         checkOriginMatchesApp(vcId ? vcId : '', did, verifyOrigin),
     ]);

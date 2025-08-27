@@ -241,7 +241,7 @@ export class WalletRequest implements Serializable {
                 if (checkSsoDomain) {
                     if (!isSameOrigin(app.origin, getSettings().ssoWebsiteOrigin))
                         throw new Error(
-                            `Invalid origin for SSO login request. Received ${app.origin}, expected ${getSettings().accountsServiceUrl}`
+                            `Invalid origin for SSO login request. Received ${app.origin}, expected ${getSettings().ssoWebsiteOrigin}`
                         );
                 }
 

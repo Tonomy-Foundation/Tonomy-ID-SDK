@@ -16,8 +16,6 @@ export function mockCreateAccount() {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     accounts.createAccount = async function (data: CreateAccountRequest): Promise<CreateAccountResponse> {
-        console.log('Calling mocked createAccount()');
-
         const res = await getTonomyContract().newPerson(
             data.usernameHash.toString(),
             data.publicKey.toString(),

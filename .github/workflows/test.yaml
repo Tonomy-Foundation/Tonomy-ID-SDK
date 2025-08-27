@@ -44,7 +44,7 @@ jobs:
         with:
           repository: Tonomy-Foundation/Tonomy-Contracts
           # update ref to change contract branch, if needed for temporary CI testing
-          ref: development
+          ref: feature/bridge-functions
           path: Tonomy-Contracts
 
       - name: Build demo.tmy contract

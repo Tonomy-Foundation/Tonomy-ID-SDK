@@ -329,7 +329,7 @@ export class SwapTokenMessagePayload {
         message: string;
         signature: string;
     };
-    destination: ['base', 'tonomy'];
+    destination: 'base' | 'tonomy';
 }
 
 export class SwapTokenMessage extends Message<SwapTokenMessagePayload> {
