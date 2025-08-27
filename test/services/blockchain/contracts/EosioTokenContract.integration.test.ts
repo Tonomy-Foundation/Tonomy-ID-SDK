@@ -103,7 +103,7 @@ describe('EosioTokenContract Tests', () => {
             expect.assertions(1);
 
             try {
-                await tokenContract.create('eosio.token', `1000.0000 ${generateUniqueSymbol(1000)}`, signer);
+                await tokenContract.create('eosio.token', `1000.0000 TES34`, signer);
             } catch (e) {
                 expect(e.error.details[0].message).toContain('invalid supply');
             }
