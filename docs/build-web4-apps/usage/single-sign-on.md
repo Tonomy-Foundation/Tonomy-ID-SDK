@@ -20,13 +20,17 @@ import { setSettings } from '@tonomy/tonomy-id-sdk';
 //Testnet Configuration
 setSettings({
     ssoWebsiteOrigin: "https://accounts.testnet.tonomy.io",
-    blockchainUrl: "https://blockchain-api-testnet.tonomy.io"
+    blockchainUrl: "https://blockchain-api-testnet.tonomy.io",
+    communicationUrl: "wss://communication.tonomy.io",
+    currencySymbol: "TONO",
 });
 
 //Mainnet Configuration
 setSettings({
-    ssoWebsiteOrigin: "https://accounts.tonomy.io",
-    blockchainUrl: "https://blockchain-api.tonomy.io"
+    ssoWebsiteOrigin: "https://accountstonomy.io",
+    blockchainUrl: "https://blockchain-api.tonomy.io",
+    communicationUrl: "wss://communication.testnet.tonomy.io",
+    currencySymbol: "TONO",
 });
 ```
 
