@@ -105,7 +105,7 @@ describe('EosioTokenContract Tests', () => {
             try {
                 await tokenContract.create('eosio.token', `1000.0000 TES34`, signer);
             } catch (e) {
-                expect(e.error.details[0].message).toContain('invalid supply');
+                expect(e.message).toContain('Invalid asset symbol, name must be uppercase A-Z');
             }
         });
 
@@ -751,20 +751,33 @@ describe('EosioTokenContract Tests', () => {
             expect(receiverBalance.toNumber()).toBe(50);
         });
 
-        test('Successfully bridge issue tokens exceeding regular maximum supply', async () => {
+        test('Successfully bridge issue tokens up to maximum supply', async () => {
             // Create the token first
             await tokenContract.create('eosio.token', MAX_SUPPLY, signer);
             
-            // Bridge issue can exceed max supply unlike regular issue
-            const excessiveAmount = `2000000.0000 ${SYMBOL}`;
-            const trx = await tokenContract.bridgeIssue(userAccount, excessiveAmount, 'Excessive bridge issue', signer);
+            // Bridge issue close to but not exceeding max supply
+            const largeAmount = `999999.0000 ${SYMBOL}`;
+            const trx = await tokenContract.bridgeIssue(userAccount, largeAmount, 'Large bridge issue', signer);
 
             expect(trx.processed.receipt.status).toBe('executed');
 
             // Verify the balance
             const balance = await tokenContract.getBalanceDecimal(userAccount, SYMBOL);
 
-            expect(balance.toNumber()).toBe(2000000);
+            expect(balance.toNumber()).toBe(999999);
+        });
+
+        test('Fails to bridge issue tokens exceeding maximum supply', async () => {
+            expect.assertions(1);
+            const excessiveAmount = `1000001.0000 ${SYMBOL}`;
+    
+            await tokenContract.create('eosio.token', MAX_SUPPLY, signer);
+
+            try {
+                await tokenContract.bridgeIssue(userAccount, excessiveAmount, 'Excessive bridge issue', signer);
+            } catch (e) {
+                expect(e.error.details[0].message).toContain('quantity exceeds available supply');
+            }
         });
 
         test('Bridge issue with precision handling', async () => {
