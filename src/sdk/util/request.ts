@@ -517,7 +517,7 @@ export class DualWalletResponse implements Serializable {
             return (
                 response.getLoginResponse().login.origin +
                 response.getLoginResponse().login.callbackPath +
-                '?payload=' +
+                'payload=' +
                 this.toString()
             );
         } else {
@@ -529,7 +529,7 @@ export class DualWalletResponse implements Serializable {
             return (
                 request.getLoginRequest().login.origin +
                 request.getLoginRequest().login.callbackPath +
-                '?payload=' +
+                'payload=' +
                 this.toString()
             );
         }

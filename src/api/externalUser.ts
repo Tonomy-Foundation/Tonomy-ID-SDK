@@ -279,12 +279,14 @@ export class ExternalUser {
         const issuer = await createDidKeyIssuerAndStore(keyManager);
         const publicKey = await keyManager.getKey({ level: KeyManagerLevel.BROWSER_LOCAL_STORAGE });
 
+        const hasPageParam = callbackPath.includes('page=');
+
         const loginRequestPayload: LoginRequestPayload = {
             login: {
                 randomString: randomString(32),
                 origin: window.location.origin,
                 publicKey: publicKey,
-                callbackPath,
+                callbackPath: callbackPath + (hasPageParam ? '&' : '?'),
             },
         };
         const requestPayloads: WalletRequestPayloadType[] = [loginRequestPayload];
@@ -301,7 +303,6 @@ export class ExternalUser {
         const requests = new DualWalletRequests(request);
 
         if (redirect) {
-            const hasPageParam = callbackPath.includes('page=');
             let url = `${getSettings().ssoWebsiteOrigin}/login?payload=${requests.toString()}`;
 
             if (hasPageParam) {

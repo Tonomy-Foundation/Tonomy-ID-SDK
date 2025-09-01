@@ -443,11 +443,11 @@ async function createTonomyApps(newPublicKey: PublicKey, newSigner: Signer): Pro
     });
 
     await createApp({
-        appName: 'Tonomy Bankless',
-        usernamePrefix: 'tonomy-bankless',
-        description: `Swap your Tonomy coins quickly and securely — no banks, no middlemen, no hassle`,
+        appName: 'Tonomy',
+        usernamePrefix: 'tonomy',
+        description: `Access all your Tonomy apps in one hub. Manage tokens, explore the blockchain, create, collaborate, and build — it’s all at your fingertips`,
         origin: settings.config.tonomyAppsOrigin,
-        logoUrl: settings.config.tonomyAppsOrigin + '/tonomy-logo1024.png',
+        logoUrl: settings.config.tonomyAppsOrigin + '/market.com.png',
         backgroundColor: '#F9FAFB',
         accentColor: '#5833BC',
         publicKey: newPublicKey,
