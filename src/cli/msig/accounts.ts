@@ -1,4 +1,4 @@
-import { Authority } from '../../sdk/services/blockchain';
+import { Authority, getTonomyEosioProxyContract } from '../../sdk/services/blockchain';
 import { StandardProposalOptions, createProposal, executeProposal } from '.';
 
 // @ts-expect-error args not used
@@ -16,26 +16,12 @@ export async function newAccount(args: { governanceAccounts: string[] }, options
         permission: 'active',
     });
 
-    const action = {
-        account: 'tonomy',
-        name: 'newaccount',
-        authorization: [
-            {
-                actor: 'tonomy',
-                permission: 'owner',
-            },
-            {
-                actor: 'tonomy',
-                permission: 'active',
-            },
-        ],
-        data: {
-            creator: 'tonomy',
-            name: accountName,
-            owner,
-            active,
-        },
-    };
+    const action = getTonomyEosioProxyContract().actions.newAccount({
+        creator: 'tonomy',
+        name: accountName,
+        owner: owner,
+        active: active,
+    });
 
     const proposalHash = await createProposal(
         options.proposer,

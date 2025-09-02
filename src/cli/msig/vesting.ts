@@ -1,15 +1,14 @@
-import { Name, NameType } from '@wharfkit/antelope';
+import { Action, ActionType, Name, NameType } from '@wharfkit/antelope';
 import { StandardProposalOptions, createProposal, executeProposal } from '.';
 import {
-    ActionData,
     assetToAmount,
     assetToDecimal,
     TONO_SEED_LATE_ROUND_PRICE,
     TONO_SEED_ROUND_PRICE,
-    VestingContract,
+    getTonomyContract,
+    getVestingContract,
 } from '../../sdk/services/blockchain';
 import { getAllAllocations, getAllUniqueHolders } from '../vesting';
-import { getAllPeople } from '../token';
 import { AccountType, isErrorCode, SdkErrors, TonomyUsername } from '../../sdk';
 import { getAccount, getAccountNameFromUsername, TONO_CURRENT_PRICE } from '../../sdk/services/blockchain';
 import { parse } from 'csv-parse/sync';
@@ -24,7 +23,7 @@ export async function vestingMigrate(options: StandardProposalOptions) {
         'p2mbvozcqp2l', // 5 allocations
     ];
 
-    const actions: ActionData[] = [];
+    const actions: ActionType[] = [];
 
     for (const account of migrateAccounts) {
         const accountActions = await createAccountActions(account);
@@ -66,12 +65,12 @@ export async function vestingMigrate2(options: StandardProposalOptions) {
     for (let i = 0; i < allAllocations.length; i += batchSize) {
         const batch = allAllocations.slice(i, i + batchSize);
 
-        const actions: ActionData[] = batch.map((allocation) => {
-            const newAmount = assetToDecimal(allocation.tokens_allocated).mul(priceMultiplier);
+        const actions: ActionType[] = batch.map((allocation) => {
+            const newAmount = assetToDecimal(allocation.tokensAllocated).mul(priceMultiplier);
             const newAsset = `${newAmount.toFixed(6)} TONO`;
 
             console.log(
-                `Migrating account ${allocation.holder} allocation ${allocation.id} in category ${allocation.vesting_category_type} from ${allocation.tokens_allocated} to ${newAsset}`
+                `Migrating account ${allocation.holder} allocation ${allocation.id} in category ${allocation.vestingCategoryType} from ${allocation.tokensAllocated} to ${newAsset}`
             );
             count++;
 
@@ -79,10 +78,10 @@ export async function vestingMigrate2(options: StandardProposalOptions) {
                 'coinsale.tmy',
                 allocation.holder,
                 allocation.id,
-                allocation.tokens_allocated,
+                allocation.tokensAllocated,
                 newAsset,
-                allocation.vesting_category_type,
-                allocation.vesting_category_type
+                allocation.vestingCategoryType,
+                allocation.vestingCategoryType
             );
         });
 
@@ -116,14 +115,14 @@ export async function vestingMigrate3(options: StandardProposalOptions) {
     let count = 0;
     let proposals = 0;
     const priceMultiplier = 2.0;
-    const people = await getAllPeople();
+    const people = await getTonomyContract().getAllPeople();
     const vestingHolders = await getAllUniqueHolders();
 
     const peopleNotInVestingHolders: Set<string> = new Set();
 
     for (const person of people) {
-        if (!vestingHolders.has(person.account_name.toString())) {
-            peopleNotInVestingHolders.add(person.account_name.toString());
+        if (!vestingHolders.has(person.accountName.toString())) {
+            peopleNotInVestingHolders.add(person.accountName.toString());
         }
     }
 
@@ -134,12 +133,12 @@ export async function vestingMigrate3(options: StandardProposalOptions) {
     for (let i = 0; i < missedAllocations.length; i += batchSize) {
         const batch = missedAllocations.slice(i, i + batchSize);
 
-        const actions: ActionData[] = batch.map((allocation) => {
-            const newAmount = assetToDecimal(allocation.tokens_allocated).mul(priceMultiplier);
+        const actions: Action[] = batch.map((allocation) => {
+            const newAmount = assetToDecimal(allocation.tokensAllocated).mul(priceMultiplier);
             const newAsset = `${newAmount.toFixed(6)} TONO`;
 
             console.log(
-                `Migrating account ${allocation.holder} allocation ${allocation.id} in category ${allocation.vesting_category_type} from ${allocation.tokens_allocated} to ${newAsset}`
+                `Migrating account ${allocation.holder} allocation ${allocation.id} in category ${allocation.vestingCategoryType} from ${allocation.tokensAllocated} to ${newAsset}`
             );
             count++;
 
@@ -147,10 +146,10 @@ export async function vestingMigrate3(options: StandardProposalOptions) {
                 'coinsale.tmy',
                 allocation.holder,
                 allocation.id,
-                allocation.tokens_allocated,
+                allocation.tokensAllocated,
                 newAsset,
-                allocation.vesting_category_type,
-                allocation.vesting_category_type
+                allocation.vestingCategoryType,
+                allocation.vestingCategoryType
             );
         });
 
@@ -180,13 +179,13 @@ export async function vestingMigrate3(options: StandardProposalOptions) {
     console.log(`Processed ${count} / ${missedAllocations.length} allocations`);
 }
 
-async function createAccountActions(account: NameType): Promise<ActionData[]> {
-    const allocations = await VestingContract.Instance.getAllocations(account);
+async function createAccountActions(account: NameType): Promise<Action[]> {
+    const allocations = await getVestingContract().getAllocations(account);
 
-    const actions: ActionData[] = [];
+    const actions: Action[] = [];
 
     for (const allocation of allocations) {
-        const oldCategory = allocation.vesting_category_type;
+        const oldCategory = allocation.vestingCategoryType;
 
         let newCategory = 8;
         let newAmount = 0;
@@ -195,20 +194,20 @@ async function createAccountActions(account: NameType): Promise<ActionData[]> {
             if (oldCategory === 1) {
                 const oldTokenPrice = 0.002;
                 const newTokenPrice = TONO_SEED_ROUND_PRICE;
-                const amount = assetToAmount(allocation.tokens_allocated);
+                const amount = assetToAmount(allocation.tokensAllocated);
 
                 newAmount = (amount * oldTokenPrice) / newTokenPrice;
             } else {
                 const oldTokenPrice = 0.004;
                 const newTokenPrice = TONO_SEED_LATE_ROUND_PRICE;
-                const amount = assetToAmount(allocation.tokens_allocated);
+                const amount = assetToAmount(allocation.tokensAllocated);
 
                 newAmount = (amount * oldTokenPrice) / newTokenPrice;
 
                 newCategory = 9;
             }
 
-            const oldAmount = allocation.tokens_allocated;
+            const oldAmount = allocation.tokensAllocated;
             const newAsset = `${newAmount.toFixed(6)} TONO`;
 
             console.log(
@@ -233,14 +232,14 @@ async function createAccountActions(account: NameType): Promise<ActionData[]> {
 
 function createMigrateAction(
     sender: string,
-    holder: string,
+    holder: NameType,
     allocationId: number,
     oldAmount: string,
     newAmount: string,
     oldCategoryId: number,
     newCategoryId: number
 ) {
-    return {
+    return Action.from({
         account: 'vesting.tmy',
         name: 'migratealloc',
         authorization: [
@@ -267,7 +266,7 @@ function createMigrateAction(
             // eslint-disable-next-line camelcase
             new_category_id: newCategoryId,
         },
-    };
+    });
 }
 
 export async function vestingBulk(args: { governanceAccounts: string[] }, options: StandardProposalOptions) {
@@ -349,22 +348,12 @@ export async function vestingBulk(args: { governanceAccounts: string[] }, option
         console.log(
             `Assigning: ${tonoQuantity} ($${data.usdQuantity} USD) vested in category ${categoryId} to ${data.accountName} at rate of $${TONO_CURRENT_PRICE}/TONO`
         );
-        return {
-            account: 'vesting.tmy',
-            name: 'assigntokens',
-            authorization: [
-                {
-                    actor: sender.toString(),
-                    permission: 'active',
-                },
-            ],
-            data: {
-                sender,
-                holder: data.accountName,
-                amount: tonoQuantity,
-                category: categoryId,
-            },
-        };
+        return getVestingContract().actions.assignTokens({
+            sender,
+            holder: data.accountName,
+            amount: tonoQuantity,
+            category: categoryId,
+        });
     });
 
     console.log(`Total ${actions.length} accounts to be paid`);
