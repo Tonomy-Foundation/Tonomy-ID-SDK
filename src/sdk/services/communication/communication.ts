@@ -1,7 +1,12 @@
 import { io, Socket } from 'socket.io-client';
 import { CommunicationError, createSdkError, SdkErrors, throwError } from '../../util/errors';
 import { getSettings } from '../../util/settings';
-import { AuthenticationMessage, Message, VerificationMessage } from '../../services/communication/message';
+import {
+    AuthenticationMessage,
+    Message,
+    SwapTokenMessage,
+    VerificationMessage,
+} from '../../services/communication/message';
 import Debug from 'debug';
 import { sha256 } from '../../util/crypto';
 
@@ -203,6 +208,14 @@ export class Communication {
         }
 
         return await this.emitMessage('v1/message/relay/send', message);
+    }
+
+    async sendSwapMessage(message: SwapTokenMessage): Promise<boolean> {
+        if (!this.isLoggedIn()) {
+            throwError('You need to login before sending a messages', SdkErrors.CommunicationNotLoggedIn);
+        }
+
+        return await this.emitMessage('v1/swap/token/tono', message);
     }
 
     /**

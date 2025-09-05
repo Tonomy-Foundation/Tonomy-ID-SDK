@@ -26,6 +26,7 @@ import {
     LinkAuthRequestMessage,
     LinkAuthRequestResponseMessage,
     Message,
+    SwapTokenMessage,
 } from '../sdk';
 import { VCWithTypeType, VerifiableCredential, VerifiableCredentialWithType } from '../sdk/util/ssi/vc';
 import { DIDurl, JWT } from '../sdk/util/ssi/types';
@@ -574,6 +575,18 @@ export class ExternalUser {
     async sendMessage(message: Message): Promise<void> {
         await this.loginToCommunication();
         const res = await this.communication.sendMessage(message);
+
+        if (!res) throwError('Failed to send message', SdkErrors.MessageSendError);
+    }
+
+    /**
+     * Sends a message to another DID
+     *
+     * @param {Message} message - the message to send
+     */
+    async sendSwapMessage(message: SwapTokenMessage): Promise<void> {
+        await this.loginToCommunication();
+        const res = await this.communication.sendSwapMessage(message);
 
         if (!res) throwError('Failed to send message', SdkErrors.MessageSendError);
     }
