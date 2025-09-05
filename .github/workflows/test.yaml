@@ -83,7 +83,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       # update ref to change communication branch, if needed for temporary CI testing
-      GIT_BRANCH: feature/bridge-functions
+      GIT_BRANCH: feature/swap-service
     steps:
       - uses: actions/checkout@v4
 
