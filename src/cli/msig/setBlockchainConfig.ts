@@ -1,23 +1,12 @@
-import { defaultBlockchainParams } from '../../sdk/services/blockchain';
+import { defaultBlockchainParams, getTonomyEosioProxyContract } from '../../sdk/services/blockchain';
 import { StandardProposalOptions, createProposal, executeProposal } from '.';
 
 // @ts-expect-error args not used
 export async function setBlockchainConfig(args, options: StandardProposalOptions) {
-    const action = {
-        authorization: [
-            {
-                actor: 'tonomy',
-                permission: 'active',
-            },
-            {
-                actor: 'tonomy',
-                permission: 'owner',
-            },
-        ],
-        account: 'tonomy',
-        name: 'setparams',
-        data: { params: defaultBlockchainParams },
-    };
+    const action = getTonomyEosioProxyContract().actions.setParams({
+        params: defaultBlockchainParams,
+    });
+
     const proposalHash = await createProposal(
         options.proposer,
         options.proposalName,

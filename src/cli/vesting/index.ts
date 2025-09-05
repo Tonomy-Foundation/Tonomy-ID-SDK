@@ -1,6 +1,6 @@
 import { PrivateKey } from '@wharfkit/antelope';
 import { printCliHelp } from '..';
-import { AccountType, TonomyUsername, VestingContract } from '../../sdk';
+import { AccountType, TonomyUsername } from '../../sdk';
 import {
     assetToAmount,
     createSigner,
@@ -8,11 +8,10 @@ import {
     getAccount,
     getAccountNameFromUsername,
     VestingAllocation,
+    getVestingContract,
 } from '../../sdk/services/blockchain';
 import { getSettings } from '../../sdk/util/settings';
 import settings from '../settings';
-
-const vestingContract = VestingContract.Instance;
 
 export async function getAllUniqueHolders(print = false): Promise<Set<string>> {
     const action = 'assigntokens';
@@ -62,16 +61,14 @@ export async function getAllAllocations(accounts: Set<string>, print = false): P
     const allocations: VestingAllocationAndAccount[] = [];
 
     for (const account of accounts) {
-        const accountAllocations = await vestingContract.getAllocations(account);
+        const accountAllocations = await getVestingContract().getAllocations(account);
 
         for (const allocation of accountAllocations) {
-            // eslint-disable-next-line camelcase
-            const { id, tokens_allocated, vesting_category_type } = allocation;
+            const { id, tokensAllocated, vestingCategoryType } = allocation;
 
             if (print)
                 console.log(
-                    // eslint-disable-next-line camelcase
-                    `Holder ${account}: Allocation ${id}: ${tokens_allocated} in category ${vesting_category_type}`
+                    `Holder ${account}: Allocation ${id}: ${tokensAllocated} in category ${vestingCategoryType}`
                 );
             allocations.push({ account, ...allocation });
         }
@@ -113,11 +110,11 @@ export default async function vesting(args: string[]) {
             categoryId,
         });
 
-        const vestingSettings = await vestingContract.getSettings();
+        const vestingSettings = await getVestingContract().getSettings();
 
         console.log('settings', vestingSettings);
 
-        const res = await vestingContract.assignTokens(sender, recipient, quantity, categoryId, signer);
+        const res = await getVestingContract().assignTokens(sender, recipient, quantity, categoryId, signer);
 
         console.log('Transaction ID: ', JSON.stringify(res, null, 2));
     } else if (args[0] === 'audit') {
@@ -129,7 +126,7 @@ export default async function vesting(args: string[]) {
         console.log('');
         const allAllocations = await getAllAllocations(uniqueHolders, true);
         const totalVested = allAllocations.reduce(
-            (previous, allocation) => (previous += assetToAmount(allocation.tokens_allocated)),
+            (previous, allocation) => (previous += assetToAmount(allocation.tokensAllocated)),
             0
         );
 
@@ -144,7 +141,7 @@ export default async function vesting(args: string[]) {
         const privateKey = PrivateKey.from(process.env.SIGNING_KEY || '');
         const signer = createSigner(privateKey);
 
-        await vestingContract.setSettings('2024-04-30T12:00:00', '2030-01-01T00:00:00', signer);
+        await getVestingContract().setSettings('2024-04-30T12:00:00', '2030-01-01T00:00:00', signer);
     } else {
         printCliHelp();
         throw new Error(`Unknown command ${args[0]}`);

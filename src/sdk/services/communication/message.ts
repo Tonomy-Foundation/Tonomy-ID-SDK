@@ -1,7 +1,7 @@
 import { Issuer } from 'did-jwt-vc';
 import { DIDurl, URL } from '../../util/ssi/types';
 import { VerifiableCredentialWithType, VCWithTypeType } from '../../util/ssi/vc';
-import { DualWalletRequests, DualWalletResponse } from '../../util';
+import { DualWalletRequests, DualWalletResponse } from '../../util/request';
 import { Name } from '@wharfkit/antelope';
 import Debug from 'debug';
 import {
@@ -13,6 +13,7 @@ import {
     AddressVC,
     NationalityVC,
 } from '../../util/veriff';
+import Decimal from 'decimal.js';
 
 const debug = Debug('tonomy-sdk:services:communication:message');
 
@@ -318,5 +319,41 @@ export class VerificationMessage extends Message<VerificationMessagePayload> {
         );
 
         return new VerificationMessage(vc);
+    }
+}
+
+export class SwapTokenMessagePayload {
+    amount: Decimal;
+    baseAddress: string;
+    proof: {
+        message: string;
+        signature: string;
+    };
+    destination: 'base' | 'tonomy';
+}
+
+export class SwapTokenMessage extends Message<SwapTokenMessagePayload> {
+    protected static type = 'SwapTokenMessage';
+
+    constructor(vc: SwapTokenMessage | Message<SwapTokenMessagePayload> | VCWithTypeType<SwapTokenMessagePayload>) {
+        super(vc);
+        this.decodedPayload = {
+            ...this.decodedPayload,
+            amount: new Decimal(this.decodedPayload.amount),
+        };
+    }
+
+    /**
+     * Alternative constructor that returns type SwapTokenMessage
+     */
+    static async signMessage(
+        message: SwapTokenMessagePayload,
+        issuer: Issuer,
+        recipient: DIDurl,
+        options: { subject?: URL } = {}
+    ) {
+        const vc = await super.signMessageWithRecipient<SwapTokenMessagePayload>(message, issuer, recipient, options);
+
+        return new SwapTokenMessage(vc);
     }
 }

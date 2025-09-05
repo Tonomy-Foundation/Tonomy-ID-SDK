@@ -11,7 +11,6 @@ import {
     StorageFactory,
     Subscriber,
     TonomyUsername,
-    getAccountNameFromUsername,
     getSettings,
     IOnPressLoginOptions,
     verifyClientAuthorization,
@@ -21,7 +20,7 @@ import {
 } from '../../src/sdk';
 import { ExternalUser, LoginWithTonomyMessages } from '../../src/api/externalUser';
 import { VerifiableCredential } from '../../src/sdk/util/ssi/vc';
-import { getAccount, getChainId } from '../../src/sdk/services/blockchain';
+import { getAccount, getChainId, getAccountNameFromUsername } from '../../src/sdk/services/blockchain';
 import { getDidKeyIssuerFromStorage } from '../../src/sdk/helpers/didKeyStorage';
 import { onRedirectLogin } from '../../src/sdk/helpers/urls';
 import { ExternalUserLoginTestOptions } from '../externalUser.integration.test';
@@ -362,7 +361,7 @@ export async function externalWebsiteClientAuth(
         const username = await externalUser.getUsername();
 
         if (!username) throw new Error('Username not found');
-        data.username = username.toString();
+        data.username = username;
     }
 
     debug('EXTERNAL_WEBSITE/client-auth: creating client auth', options, data);

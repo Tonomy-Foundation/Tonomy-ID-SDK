@@ -3,7 +3,7 @@ import { CommunicationError, createSdkError, SdkErrors, throwError } from '../..
 import { getSettings } from '../../util/settings';
 import { AuthenticationMessage, Message, VerificationMessage } from '../../services/communication/message';
 import Debug from 'debug';
-import { sha256 } from '../../util';
+import { sha256 } from '../../util/crypto';
 
 const debug = Debug('tonomy-sdk:services:communication:communication');
 
@@ -31,11 +31,17 @@ export class Communication {
     private seenMessages: Map<string, Date> = new Map(); // Map<hash, Date>
     private readonly seemMessageTTL = 60 * 60; // 1 hour
 
-    // Fixes an issue where subscriber were triggered twice
-    // https://chatgpt.com/share/e/6866b6e9-96a4-8013-b25d-381a3518567e
-    // TODO: figure out the root cause and solve
-
+    /**
+     * Checks if a message has been seen before (only in CI and test environment)
+     * @description Fixes an issue where subscriber were triggered twice
+     * @link https://chatgpt.com/share/e/6866b6e9-96a4-8013-b25d-381a3518567e
+     * TODO: figure out the root cause and solve
+     *
+     * @param {string} message - the message to check
+     * @returns {boolean} true if the message has been seen before
+     */
     private checkSeenMessage(message: string): boolean {
+        if (!process.env.CI || process.env.NODE_ENV !== 'test') return false;
         const res = this.seenMessages.has(sha256(message));
 
         this.addSeenMessage(message);
@@ -212,10 +218,10 @@ export class Communication {
         const messageHandler = (message: any) => {
             const msg = new Message(message);
 
-            // if (this.checkSeenMessage(msg.toString())) {
-            //     debug('receiveMessage duplicate', msg.getType(), msg.getSender(), msg.getRecipient());
-            //     return;
-            // }
+            if (this.checkSeenMessage(msg.toString())) {
+                debug('receiveMessage duplicate', msg.getType(), msg.getSender(), msg.getRecipient());
+                return;
+            }
 
             debug('receiveMessage', msg.getType(), msg.getSender(), msg.getRecipient());
 

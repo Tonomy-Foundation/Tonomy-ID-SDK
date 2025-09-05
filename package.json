@@ -1,5 +1,5 @@
 {
-  "version": "0.33.0-development.1",
+  "version": "0.33.0-development.3",
   "license": "Apache-2.0",
   "type": "module",
   "source": "src/sdk/index.ts",
@@ -24,9 +24,10 @@
   },
   "scripts": {
     "start": "microbundle watch  -i ./src/sdk/index.ts -o build/sdk/index.js",
+    "build:setup": "./copy-contract-abis.sh",
     "build:sdk": "microbundle --compress=false -i ./src/sdk/index.ts -o build/sdk/index.js",
     "build:cli": "microbundle --compress=false --target=node -f esm -i ./src/cli/index.ts -o build/cli/index.js",
-    "build": "yarn run build:sdk && yarn run build:cli",
+    "build": "yarn run build:setup && yarn run build:sdk && yarn run build:cli",
     "test:setup": "./test/build-and-run-services.sh start",
     "test:setup-down": "./test/build-and-run-services.sh stop",
     "test:unit": "yarn run test --selectProjects \"Unit tests\"",
@@ -55,6 +56,7 @@
     "@veramo/key-manager": "^6.0.0",
     "@veramo/kms-local": "^6.0.0",
     "@wharfkit/antelope": "^1.0.7",
+    "@wharfkit/contract": "^1.2.1",
     "argon2": "^0.41.1",
     "cross-fetch": "^4.0.0",
     "csv-parse": "^5.5.6",
@@ -114,7 +116,8 @@
     "tonomy"
   ],
   "resolutions": {
-    "jsonld": "link:./node_modules/@digitalcredentials/jsonld"
+    "jsonld": "link:./node_modules/@digitalcredentials/jsonld",
+    "@wharfkit/antelope": "1.0.10"
   },
   "packageManager": "yarn@4.3.1"
 }

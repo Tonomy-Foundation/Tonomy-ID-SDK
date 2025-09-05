@@ -2,7 +2,7 @@ import { Name } from '@wharfkit/antelope';
 import { AccountType, getTonomyContract, TonomyUsername, getAccountInfo } from '../../sdk';
 import settings from '../settings';
 
-export default async function apps(args: string[]) {
+export default async function accounts(args: string[]) {
     if (args[0] === 'get') {
         const username = args[1];
 
@@ -14,9 +14,9 @@ export default async function apps(args: string[]) {
                 AccountType.PERSON,
                 settings.config.accountSuffix
             );
-            const { account_name: account } = await getTonomyContract().getPerson(usernameInstance);
+            const { accountName } = await getTonomyContract().getPerson(usernameInstance);
 
-            console.log('Account name: ', account.toString());
+            console.log('Account name: ', accountName.toString());
         } else {
             console.log('Searching for account: ', username);
 
