@@ -39,14 +39,42 @@ function setup {
     if [ ! -d "node_modules" ]; then
         yarn install
     fi
+
+
+    # Install dependencies Ethereum-token
+    cd "${SDK_DIR}/Ethereum-token"
+    if [ ! -d "node_modules" ]; then
+        yarn install
+    fi
+    if [ ! -d "artifacts" ]; then
+        yarn run compile
+    fi
 }
 
 function start {
+    # For development environment use set keys, otherwise these should be set in the environment
+    cd  "$SDK_DIR"
+    if [[ "${NODE_ENV:-development}" == "development" ]]
+    then
+        echo "Using development environment: setting keys"
+        source ./test/export_test_keys.sh
+    fi
+
     # Run blockchain node
     cd "${SDK_DIR}"
     docker run -p 8888:8888 --name tonomy_blockchain_integration -d tonomy_blockchain_initialized
     echo "Waiting 8 seconds for blockchain node to start"
     sleep 8
+
+    # Run Ethereum node and deploy contract
+    cd  "$SDK_DIR/Ethereum-token"
+    npx pm2 stop hardhat || true
+    npx pm2 delete hardhat || true
+    npx pm2 start --interpreter /bin/bash yarn --name "hardhat" -- run node
+    DEPLOY_OUTPUT=$(yarn run deploy)
+    echo "$DEPLOY_OUTPUT"
+    TOKEN_PROXY_CONTRACT_ADDRESS=$(echo "$DEPLOY_OUTPUT" | grep "Proxy contract:" | awk '{print $3}')
+    echo "Token proxy contract address: $TOKEN_PROXY_CONTRACT_ADDRESS"
 
     # Run Communication server
     cd  "$SDK_DIR/Tonomy-Communication"
@@ -66,14 +94,6 @@ function bootstrap {
 
     # Run bootstrap script
     cd "$SDK_DIR"
-
-    # For development environment use set keys, otherwise these should be set in the environment
-    NODE_ENV="${NODE_ENV:-development}"
-    if [[ "${NODE_ENV}" == "development" ]]
-    then
-        echo "Using development environment: setting keys"
-        source ./test/export_test_keys.sh
-    fi
     yarn run cli bootstrap
 }
 
@@ -85,6 +105,11 @@ function stop {
     # Stop Communication server
     npx pm2 stop micro || true
     npx pm2 delete micro || true
+
+
+    # Stop Ethereum node
+    npx pm2 stop hardhat || true
+    npx pm2 delete hardhat || true
 }
 
 function help {
