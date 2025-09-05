@@ -73,8 +73,8 @@ function start {
     npx pm2 start --interpreter /bin/bash yarn --name "hardhat" -- run node
     DEPLOY_OUTPUT=$(yarn run deploy)
     echo "$DEPLOY_OUTPUT"
-    TOKEN_PROXY_CONTRACT_ADDRESS=$(echo "$DEPLOY_OUTPUT" | grep "Proxy contract:" | awk '{print $3}')
-    echo "Token proxy contract address: $TOKEN_PROXY_CONTRACT_ADDRESS"
+    BASE_TOKEN_ADDRESS=$(echo "$DEPLOY_OUTPUT" | grep "Proxy contract:" | awk '{print $3}')
+    echo "Token proxy contract address: $BASE_TOKEN_ADDRESS"
 
     # Run Communication server
     cd  "$SDK_DIR/Tonomy-Communication"
@@ -82,6 +82,7 @@ function start {
     npx pm2 delete micro || true
     unset TONOMY_OPS_PRIVATE_KEY
     unset HCAPTCHA_SECRET
+    export BASE_TOKEN_ADDRESS
     npx pm2 start --interpreter /bin/bash yarn --name "micro" -- run start
 }
 

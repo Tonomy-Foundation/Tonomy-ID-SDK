@@ -18,9 +18,23 @@ type ConfigType = {
     loggerLevel: LoggerLevel;
     ecosystemName: string;
     currencySymbol: string;
+    baseNetwork: 'base' | 'base_testnet' | 'hardhat' | 'localhost';
+    baseRpcUrl: string;
+    basePrivateKey?: string;
+    baseTokenAddress: string;
 };
 
 const ipAddress = ip();
+
+if (env === 'development') {
+    if (!process.env.BASE_TOKEN_ADDRESS) {
+        throw new Error('BASE_TOKEN_ADDRESS is not set in the environment variables');
+    }
+} else {
+    if (!process.env.INFURA_API_KEY) {
+        throw new Error('INFURA_API_KEY is not set in the environment variables');
+    }
+}
 
 const defaultConfig = {
     environment: 'development',
@@ -36,6 +50,10 @@ const defaultConfig = {
     loggerLevel: 'info' as LoggerLevel,
     ecosystemName: 'Tonomy - Development',
     currencySymbol: 'TONO',
+    baseNetwork: 'hardhat' as const,
+    baseRpcUrl: 'http://localhost:8545',
+    basePrivateKey: '0xdf57089febbacf7ba0bc227dafbffa9fc08a93fdc68e1e42411a14efcf23656e',
+    baseTokenAddress: process.env.BASE_TOKEN_ADDRESS!,
 };
 
 const stagingConfig = {
@@ -52,6 +70,9 @@ const stagingConfig = {
     loggerLevel: 'info' as LoggerLevel,
     ecosystemName: 'Tonomy - Staging',
     currencySymbol: 'TONO',
+    baseNetwork: 'base_testnet' as const,
+    baseRpcUrl: 'https://base-sepolia.infura.io/v3/' + process.env.INFURA_API_KEY,
+    baseTokenAddress: 'TODO:',
 };
 
 const testnetConfig = {
@@ -68,6 +89,9 @@ const testnetConfig = {
     loggerLevel: 'info' as LoggerLevel,
     ecosystemName: 'Tonomy Testnet',
     currencySymbol: 'TONO',
+    baseNetwork: 'base_testnet' as const,
+    baseRpcUrl: 'https://base-sepolia.infura.io/v3/' + process.env.INFURA_API_KEY,
+    baseTokenAddress: 'TODO:',
 };
 
 const productionConfig = {
@@ -84,6 +108,9 @@ const productionConfig = {
     loggerLevel: 'info' as LoggerLevel,
     ecosystemName: 'Tonomy',
     currencySymbol: 'TONO',
+    baseNetwork: 'base_testnet' as const,
+    baseRpcUrl: 'https://base.infura.io/v3/' + process.env.INFURA_API_KEY,
+    baseTokenAddress: 'TODO:',
 };
 
 type SettingsType = {
