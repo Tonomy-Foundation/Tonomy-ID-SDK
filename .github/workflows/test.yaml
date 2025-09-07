@@ -132,7 +132,6 @@ jobs:
         image: tonomy/blockchain:initialized-development
         ports:
           - 8888:8888
-
     steps:
       - uses: actions/checkout@v4
 
@@ -175,14 +174,19 @@ jobs:
       - run: git submodule update --init Ethereum-token
       - run: cd Ethereum-token
       - run: yarn install --immutable
-      - run: yarn run node &
+      - run: npx pm2 start --interpreter /bin/bash yarn --name "hardhat" -- run node
+      - run: DEPLOY_OUTPUT=$(yarn run deploy)
+      - run: echo "$DEPLOY_OUTPUT"
+      - run: BASE_TOKEN_ADDRESS=$(echo "$DEPLOY_OUTPUT" | grep "Proxy contract:" | awk '{print $3}')
+      - run: echo "Base Token Address: $BASE_TOKEN_ADDRESS"
       - run: cd ../
-
+      
       - name: Install SDK and Bootstrap blockchain
         uses: actions/setup-node@v4
         with:
           node-version: 22.3.0
           cache: yarn
+      - run: echo "Base Token Address: $BASE_TOKEN_ADDRESS"
       - run: yarn install --immutable
       - run: yarn run build
       - run: yarn run cli bootstrap
