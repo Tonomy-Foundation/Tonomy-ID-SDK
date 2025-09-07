@@ -51,7 +51,7 @@ function setup {
     fi
 }
 
-function start {
+function export_variables {
     # For development environment use set keys, otherwise these should be set in the environment
     cd  "$SDK_DIR"
     if [[ "${NODE_ENV:-development}" == "development" ]]
@@ -59,7 +59,11 @@ function start {
         echo "Using development environment: setting keys"
         source ./test/export_test_keys.sh
     fi
+}
 
+function start {
+    export_variables
+    
     # Run blockchain node
     cd "${SDK_DIR}"
     docker run -p 8888:8888 --name tonomy_blockchain_integration -d tonomy_blockchain_initialized
@@ -87,6 +91,8 @@ function start {
 }
 
 function bootstrap {
+    export_variables
+    
     echo "WARNING: Make sure you have built the smart contract with:"
     echo "export BUILD_TEST=true"
     echo "./Tonomy-Contracts/delete-built-contracts.sh"
