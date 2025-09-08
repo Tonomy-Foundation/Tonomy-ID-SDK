@@ -2,6 +2,13 @@ name: Run Tonomy-ID-SDK Tests
 
 on: push
 
+env:
+  NODE_VERSION: 22.3.0
+  # change git branches, if needed for temporary CI testing
+  GIT_BRANCH_COMMUNICATION: feature/swap-service
+  GIT_BRANCH_ETHEREUM: master
+  GIT_BRANCH_CONTRACTS: feature/bridge-functions
+
 jobs:
   test:
     name: Run lint and unit tests
@@ -26,7 +33,7 @@ jobs:
       - name: Run lint and test
         uses: actions/setup-node@v4
         with:
-          node-version: 22.3.0
+          node-version: ${{ env.NODE_VERSION }}
           cache: yarn
       - run: yarn install --immutable
       - run: yarn run build
@@ -44,8 +51,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: Tonomy-Foundation/Tonomy-Contracts
-          # update ref to change contract branch, if needed for temporary CI testing
-          ref: feature/bridge-functions
+          ref: ${{ env.GIT_BRANCH_CONTRACTS }}
           path: Tonomy-Contracts
 
       - name: Build demo.tmy contract
@@ -87,8 +93,6 @@ jobs:
       TONOMY_BOARD_PUBLIC_KEYS: '{"keys":["PUB_K1_81aU18Y3RdyFf2WY4Wy7g7fvG9M9d7hmY4rhNFeXouYYPjExua","PUB_K1_5HWprCobEy8LiYUpfVmh8BdGDb8ANPc8rhBhtNqhvXnuxpyCaq","PUB_K1_5VLYVhqfe7oh8TW2i6Nw251wbpoZ4p15DV7udqDjiaKnryx9YU"]}'
       TONOMY_TEST_ACCOUNTS_PASSPHRASE: "above day fever lemon piano sport"
       ETHEREUM_PRIVATE_KEY: "0xdf57089febbacf7ba0bc227dafbffa9fc08a93fdc68e1e42411a14efcf23656e"
-      GIT_BRANCH_COMMUNICATION: feature/swap-service
-      GIT_BRANCH_ETHEREUM: master
     services:
       blockchain:
         image: tonomy/blockchain:initialized-development
@@ -113,7 +117,7 @@ jobs:
       - name: Install and build SDK
         uses: actions/setup-node@v4
         with:
-          node-version: 22.3.0
+          node-version: ${{ env.NODE_VERSION }}
           cache: yarn
       - run: yarn install --immutable
       - run: yarn run build
@@ -121,19 +125,19 @@ jobs:
       - name: Run communication service
         uses: actions/setup-node@v4
         with:
-          node-version: 22.3.0
+          node-version: ${{ env.NODE_VERSION }}
           cache: yarn
       - run: git submodule update --init Tonomy-Communication
       - run: cd Tonomy-Communication && git checkout $GIT_BRANCH_COMMUNICATION && git pull && yarn install --immutable
       - run: cd Tonomy-Communication && yarn link ../ && yarn run build
-      - run: timeout 10s bash -c "cd Tonomy-Communication && yarn run start:prod"
+      # - run: timeout 10s bash -c "cd Tonomy-Communication && yarn run start:prod"
       - run: cd Tonomy-Communication && BLOCKCHAIN_URL=http://localhost:8888 npx pm2 start --interpreter /bin/bash yarn --name "communication" -- run start:prod
       - run: cd Tonomy-Communication && npx pm2 logs --lines 50 --nostream micro
 
       - name: Run hardhat node and Deploy Ethereum contracts
         uses: actions/setup-node@v4
         with:
-          node-version: 22.3.0
+          node-version: ${{ env.NODE_VERSION }}
           cache: yarn
       - run: git submodule update --init Ethereum-token
       - run: cd Ethereum-token && git checkout $GIT_BRANCH_ETHEREUM && git pull && yarn install --immutable
@@ -151,14 +155,14 @@ jobs:
       - name: Bootstrap blockchain
         uses: actions/setup-node@v4
         with:
-          node-version: 22.3.0
+          node-version: ${{ env.NODE_VERSION }}
           cache: yarn
       - run: yarn run cli bootstrap
 
       - name: Run integration and governance tests
         uses: actions/setup-node@v4
         with:
-          node-version: 22.3.0
+          node-version: ${{ env.NODE_VERSION }}
           cache: yarn
       - run: yarn run test:integration
       - run: yarn run test:governance
