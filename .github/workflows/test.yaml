@@ -167,6 +167,25 @@ jobs:
       - name: Enable Corepack before setting up Node
         run: corepack enable
 
+      - name: Setup and Deploy Ethereum contracts
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.3.0
+          cache: yarn
+      - run: ls -la
+      - run: ls -la Ethereum-token
+      - run: git submodule update --init Ethereum-token
+      - run: cd Ethereum-token && yarn install --immutable
+      - run: cd Ethereum-token && npx pm2 start --interpreter /bin/bash yarn --name "hardhat" -- run node
+      - run: sleep 5
+      - run: |
+          cd Ethereum-token
+          DEPLOY_OUTPUT=$(yarn run deploy)
+          echo "$DEPLOY_OUTPUT"
+          BASE_TOKEN_ADDRESS=$(echo "$DEPLOY_OUTPUT" | grep "Proxy contract:" | awk '{print $3}')
+          echo "Base Token Address: $BASE_TOKEN_ADDRESS"
+          echo "BASE_TOKEN_ADDRESS=$BASE_TOKEN_ADDRESS" >> $GITHUB_ENV
+
       - name: Install SDK and Bootstrap blockchain
         uses: actions/setup-node@v4
         with:
