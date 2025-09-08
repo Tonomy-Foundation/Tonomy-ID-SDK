@@ -281,7 +281,7 @@ export class ExternalUser {
                 randomString: randomString(32),
                 origin: window.location.origin,
                 publicKey: publicKey,
-                callbackPath: callbackPath,
+                callbackPath,
             },
         };
         const requestPayloads: WalletRequestPayloadType[] = [loginRequestPayload];

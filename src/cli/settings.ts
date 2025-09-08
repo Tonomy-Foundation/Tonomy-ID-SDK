@@ -30,6 +30,8 @@ if (env === 'development') {
     if (!process.env.BASE_TOKEN_ADDRESS) {
         throw new Error('BASE_TOKEN_ADDRESS is not set in the environment variables');
     }
+
+    console.log('Using BASE_TOKEN_ADDRESS:', process.env.BASE_TOKEN_ADDRESS);
 } else {
     if (!process.env.INFURA_API_KEY) {
         throw new Error('INFURA_API_KEY is not set in the environment variables');
