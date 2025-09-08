@@ -6,7 +6,7 @@ env:
   NODE_VERSION: 22.3.0
   # change git branches, if needed for temporary CI testing
   GIT_BRANCH_COMMUNICATION: feature/swap-service
-  GIT_BRANCH_ETHEREUM: master
+  GIT_BRANCH_ETHEREUM: feature/anti-sniping-functions
   GIT_BRANCH_CONTRACTS: feature/bridge-functions
 
 jobs:
@@ -132,7 +132,9 @@ jobs:
       - run: cd Tonomy-Communication && yarn link ../ && yarn run build
       # - run: timeout 10s bash -c "cd Tonomy-Communication && yarn run start:prod" || true
       - run: cd Tonomy-Communication && BLOCKCHAIN_URL=http://localhost:8888 npx pm2 start yarn --name "communication" -- run start:prod
+      - run: sleep 5
       - run: cd Tonomy-Communication && npx pm2 logs --lines 50 --nostream communication
+      - run: curl http://localhost:5000
 
       - name: Run hardhat node and Deploy Ethereum contracts
         uses: actions/setup-node@v4
@@ -144,6 +146,7 @@ jobs:
       - run: cd Ethereum-token && npx pm2 start yarn --name "hardhat" -- run node
       - run: cd Ethereum-token && npx pm2 logs --lines 50 --nostream hardhat
       - run: sleep 5
+      - run: curl http://localhost:8545
       - run: |
           cd Ethereum-token
           DEPLOY_OUTPUT=$(yarn run deploy)
