@@ -132,6 +132,14 @@ jobs:
         image: tonomy/blockchain:initialized-development
         ports:
           - 8888:8888
+      hardhat:
+        image: node:22.3.0
+        ports:
+          - 8545:8546
+        volume:
+          - ${{ github.workspace }}:/github/workspace
+        options: >-
+          --entrypoint ls
     steps:
       - uses: actions/checkout@v4
 
@@ -178,7 +186,7 @@ jobs:
       - run: DEPLOY_OUTPUT=$(yarn run deploy)
       - run: echo "$DEPLOY_OUTPUT"
       - run: BASE_TOKEN_ADDRESS=$(echo "$DEPLOY_OUTPUT" | grep "Proxy contract:" | awk '{print $3}')
-      - run: echo "Base Token Address: $BASE_TOKEN_ADDRESS"
+      - run: echo "Base Token Address ${BASE_TOKEN_ADDRESS}"
       - run: cd ../
       
       - name: Install SDK and Bootstrap blockchain
@@ -186,7 +194,7 @@ jobs:
         with:
           node-version: 22.3.0
           cache: yarn
-      - run: echo "Base Token Address: $BASE_TOKEN_ADDRESS"
+      - run: echo "Base Token Address $BASE_TOKEN_ADDRESS"
       - run: yarn install --immutable
       - run: yarn run build
       - run: yarn run cli bootstrap
