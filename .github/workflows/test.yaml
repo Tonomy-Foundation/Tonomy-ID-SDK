@@ -4,6 +4,7 @@ on: push
 
 jobs:
   test:
+    name: Run lint and unit tests
     needs: compile-contracts
     runs-on: ubuntu-latest
 
@@ -34,7 +35,7 @@ jobs:
       - run: yarn run test:unit
 
   compile-contracts:
-    name: Compiles contracts needed for bootstrap script
+    name: Compiles contracts
     runs-on: ubuntu-24.04
     container: tonomy/antelope
     env:
@@ -78,6 +79,7 @@ jobs:
           path: ./Tonomy-Contracts
 
   integration-test:
+    name: Run integration and governance tests
     needs: compile-contracts
     runs-on: ubuntu-latest
     env:
