@@ -123,7 +123,7 @@ jobs:
           cache: yarn
       - run: git submodule update --init Tonomy-Communication
       - run: cd Tonomy-Communication && git checkout $GIT_BRANCH_COMMUNICATION && git pull && yarn install --immutable
-      - run: cd Tonomy-Communication && yarn run link ../ && yarn run build
+      - run: cd Tonomy-Communication && yarn link ../ && yarn run build
       - run: cd Tonomy-Communication && BLOCKCHAIN_URL=http://localhost:8888 npx pm2 start --interpreter /bin/bash yarn --name "communication" -- run start:prod
 
       - name: Run hardhat node and Deploy Ethereum contracts
