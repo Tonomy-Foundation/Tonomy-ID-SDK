@@ -125,6 +125,7 @@ jobs:
       - run: cd Tonomy-Communication && git checkout $GIT_BRANCH_COMMUNICATION && git pull && yarn install --immutable
       - run: cd Tonomy-Communication && yarn link ../ && yarn run build
       - run: cd Tonomy-Communication && BLOCKCHAIN_URL=http://localhost:8888 npx pm2 start --interpreter /bin/bash yarn --name "communication" -- run start:prod
+      - run: cd Tonomy-Communication && npx pm2 logs --lines 20 micro
 
       - name: Run hardhat node and Deploy Ethereum contracts
         uses: actions/setup-node@v4
@@ -134,6 +135,7 @@ jobs:
       - run: git submodule update --init Ethereum-token
       - run: cd Ethereum-token && git checkout $GIT_BRANCH_ETHEREUM && git pull && yarn install --immutable
       - run: cd Ethereum-token && npx pm2 start --interpreter /bin/bash yarn --name "hardhat" -- run node
+      - run: cd Ethereum-token && npx pm2 logs --lines 20 hardhat
       - run: sleep 5
       - run: |
           cd Ethereum-token
