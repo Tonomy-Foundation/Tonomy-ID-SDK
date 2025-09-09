@@ -528,9 +528,9 @@ export class TonomyContract extends Contract {
         return (await cursor.next()).map(castPersonDataRaw);
     }
 
-    async getAllPeople(limit: number = 100): Promise<PersonData[]> {
+    async getAllPeople(rowsPerAPIRequest: number = 1000): Promise<PersonData[]> {
         const cursor = this.contract.table<PersonDataRaw>('people', this.contractName).query({
-            maxRows: limit,
+            rowsPerAPIRequest,
         });
 
         return (await cursor.all()).map(castPersonDataRaw);
