@@ -178,6 +178,117 @@ export async function vestingMigrate3(options: StandardProposalOptions) {
     console.log(`Processed ${count} / ${missedAllocations.length} allocations`);
 }
 
+export async function vestingMigrate4(options: StandardProposalOptions) {
+    let count = 0;
+    let proposals = 0;
+    const multipliers = new Map<number, number>([
+        [7, 6.0], // Community and Marketing, Platform Dev, Infra Rewards
+        [8, 1.5], // Seed
+        [9, 3.0], // Pre-sale
+        [11, 6.0], // Private Sale
+        [15, 1.5], // Special
+    ]);
+    // map username > allocation ID > multiplier
+    const multiplierOverrides = new Map<string, Map<number, number>>([
+        // Team allocation in category 7 should only be multiplied by 1.5
+        ['pegcnjcnnaqd', new Map([[2, 1.5]])],
+        ['pdbma2o2zalz', new Map([[0, 1.5]])],
+        ['pxofpde2rzz3', new Map([[0, 1.5]])],
+        ['pnkhrwvpnjne', new Map([[0, 1.5]])],
+        ['pczkpas1xwgy', new Map([[0, 1.5]])],
+        ['pdwxshjdhapd', new Map([[0, 1.5]])],
+        ['p3quckancxou', new Map([[0, 1.5]])],
+        ['pydft3snil3d', new Map([[0, 1.5]])],
+        ['putzvkbtugyc', new Map([[0, 1.5]])],
+        ['p1wrsvrvhd1', new Map([[0, 1.5]])],
+        ['pb1wegfo2rsk', new Map([[0, 1.5]])],
+        // Network operators in category 7 should only be multiplied by 1.5
+        ['pzqi3jdfewjf', new Map([[0, 1.5]])],
+        ['pjoqns2tjrao', new Map([[0, 1.5]])],
+        ['pvijs1a5fwjp', new Map([[1, 1.5]])],
+        ['p4lojkytrjql', new Map([[0, 1.5]])],
+        ['team.tmy', new Map([[0, 1.5]])],
+        // Fiddl.art grant in category 7 should only be multiplied by 3.0
+        ['p44yuopaawi3', new Map([[0, 3.0]])],
+    ]);
+    const uniqueHolders = await getVestingContract().getAllUniqueHolders();
+    const allAllocations = await getVestingContract().getAllAllocations(uniqueHolders);
+
+    function getMultiplier(
+        categoryId: number,
+        account: string,
+        allocationId: number
+    ): { multiplier: number; message: string } {
+        const res = multipliers.get(categoryId);
+
+        if (!res) throw new Error(`No multiplier for category ${categoryId}`);
+
+        const override = multiplierOverrides.get(account)?.get(allocationId);
+
+        if (override) {
+            return { multiplier: override, message: `(override multiplier from ${res}x to ${override}x)` };
+        }
+
+        return { multiplier: res, message: `` };
+    }
+
+    const batchSize = 100;
+
+    for (let i = 0; i < allAllocations.length; i += batchSize) {
+        const batch = allAllocations.slice(i, i + batchSize);
+
+        const actions: ActionType[] = batch.map((allocation) => {
+            const { multiplier, message } = getMultiplier(
+                allocation.vestingCategoryType,
+                allocation.account,
+                allocation.id
+            );
+            const newAmount = assetToDecimal(allocation.tokensAllocated).mul(multiplier);
+
+            const newAsset = `${newAmount.toFixed(6)} TONO`;
+
+            console.log(
+                `Migrating account ${allocation.holder} allocation ${allocation.id} with ${multiplier}x in category ${allocation.vestingCategoryType} from ${allocation.tokensAllocated} to ${newAsset}${message ? ': ' + message : ''}`
+            );
+            count++;
+
+            return createMigrateAction(
+                'coinsale.tmy',
+                allocation.holder,
+                allocation.id,
+                allocation.tokensAllocated,
+                newAsset,
+                allocation.vestingCategoryType,
+                allocation.vestingCategoryType
+            );
+        });
+
+        const proposalName = Name.from(`${options.proposalName}${toBase6Plus1(Math.floor(i / batchSize))}`);
+
+        console.log(
+            `Creating proposal ${proposalName.toString()} with ${actions.length} actions: ${i} - ${i + batchSize}`
+        );
+        console.log('----------------------------------------');
+        proposals++;
+        const proposalHash = await createProposal(
+            options.proposer,
+            proposalName,
+            actions,
+            options.privateKey,
+            options.requested,
+            options.dryRun
+        );
+
+        if (!options.dryRun && options.autoExecute) await executeProposal(options.proposer, proposalName, proposalHash);
+
+        console.log('----------------------------------------');
+    }
+
+    console.log(`Batch size: ${batchSize}`);
+    console.log(`Proposals created: ${proposals}`);
+    console.log(`Processed ${count} / ${allAllocations.length} allocations`);
+}
+
 async function createAccountActions(account: NameType): Promise<Action[]> {
     const allocations = await getVestingContract().getAllocations(account);
 
