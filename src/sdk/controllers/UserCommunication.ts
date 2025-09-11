@@ -1,5 +1,5 @@
 import { Communication, Subscriber, VeriffSubscriber } from '../services/communication/communication';
-import { AuthenticationMessage, Message } from '../services/communication/message';
+import { AuthenticationMessage, Message, SwapTokenMessage } from '../services/communication/message';
 import { KeyManager } from '../storage/keymanager';
 import { StorageFactory } from '../storage/storage';
 import { IUserCommunication } from '../types/User';
@@ -35,6 +35,10 @@ export abstract class UserCommunication extends UserAuthorization implements IUs
 
     async sendMessage(message: Message): Promise<boolean> {
         return await this.communication.sendMessage(message);
+    }
+
+    async sendSwapMessage(message: SwapTokenMessage): Promise<boolean> {
+        return await this.communication.sendSwapMessage(message);
     }
 
     disconnectCommunication(): void {
