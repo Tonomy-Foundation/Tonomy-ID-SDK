@@ -18,7 +18,6 @@ import {
     DualWalletResponse,
     setSettings,
     Communication,
-    getDidKeyIssuerFromStorage,
 } from '../src/sdk/index';
 import { JsKeyManager } from '../src/sdk/storage/jsKeyManager';
 import { DataSource } from 'typeorm';
@@ -244,7 +243,7 @@ describe('Login to external website', () => {
             };
 
             // 3. Sign VC → returns SwapTokenMessage
-            const issuer = await getDidKeyIssuerFromStorage(TONOMY_ID_user.keyManager);
+            const issuer = await TONOMY_ID_user.getIssuer();
             const recipientDid = "did:antelope:swapservice";
 
             const swapMessage = await SwapTokenMessage.signMessage(payload, issuer, recipientDid);
@@ -253,43 +252,38 @@ describe('Login to external website', () => {
             expect(swapMessage.getPayload().proof.signature).toBe(mockProof.signature);
 
             // 4. Send via communication
-            const result = await TONOMY_ID_user.communication.sendSwapMessage(swapMessage);
+            const result = await EXTERNAL_WEBSITE_user.sendSwapMessage(swapMessage);
 
             expect(result).toBe(true);
         });
         test('SwapTokenMessage flow works (base → tonomy)', async () => {
-            expect.assertions(5);
-
-            // 1. Create proof (mock Ethereum wallet)
+            // Arrange
             const mockBaseAddress = '0xdf57089febbacf7ba0bc227dafbffa9fc08a93fdc68e1e42411a14efcf23656e';
-            const mockMessage = createProofMessage(mockBaseAddress, 'base');
-            const mockSignature = '0x' + 'a'.repeat(130); // 65-byte signature
+            const proofMessage = createProofMessage(mockBaseAddress, 'base');
+            const proofSignature = '0x' + 'a'.repeat(130);
 
-            expect(verifySignature(mockMessage, mockSignature, mockBaseAddress)).toBe(false); 
-            // false because we didn’t actually sign, just mocked — still good for structure
-
-            // 2. Build payload
             const payload = {
                 amount: new Decimal('10'),
                 baseAddress: mockBaseAddress,
-                proof: { message: mockMessage, signature: mockSignature },
+                proof: { message: proofMessage, signature: proofSignature },
                 destination: 'tonomy' as const,
             };
 
-            // 3. Sign VC → SwapTokenMessage
-            const issuer = await getDidKeyIssuerFromStorage(TONOMY_ID_user.keyManager);
+            const issuer = await TONOMY_ID_user.getIssuer();
             const recipientDid = 'did:antelope:swapservice';
             const swapMessage = await SwapTokenMessage.signMessage(payload, issuer, recipientDid);
 
+            // Act
+            const result = await EXTERNAL_WEBSITE_user.sendSwapMessage(swapMessage);
+
+            // Assert
             expect(swapMessage).toBeInstanceOf(SwapTokenMessage);
-
-            // 4. Send swap message through communication
-            const result = await TONOMY_ID_user.communication.sendSwapMessage(swapMessage);
-
-            // 5. Assert
-            expect(result).toBe(true);
+            expect(swapMessage.getPayload().baseAddress).toBe(mockBaseAddress);
+            expect(swapMessage.getPayload().proof.message).toContain('I am the owner');
             expect(swapMessage.getPayload().destination).toBe('tonomy');
+            expect(result).toBe(true);
         });
+
     });
 
     async function runExternalUserLoginTest(testOptions: ExternalUserLoginTestOptions) {
