@@ -18,6 +18,7 @@ import {
     DualWalletResponse,
     setSettings,
     Communication,
+    getDidKeyIssuerFromStorage,
 } from '../src/sdk/index';
 import { JsKeyManager } from '../src/sdk/storage/jsKeyManager';
 import { DataSource } from 'typeorm';
@@ -51,6 +52,9 @@ import { createSigner, getTonomyOperationsKey } from '../src/sdk/services/blockc
 import { setTestSettings, settings } from './helpers/settings';
 import deployContract from '../src/cli/bootstrap/deploy-contract';
 import { setReferrer, setUrl } from './helpers/browser';
+import { SwapTokenMessage } from '../src/sdk/services/communication/message';
+import { verifySignature, createProofMessage } from '../src/sdk/services/ethereum';
+import Decimal from 'decimal.js';
 import Debug from 'debug';
 
 const debug = Debug('tonomy-sdk-tests:externalUser.integration.test');
@@ -65,6 +69,32 @@ export type ExternalUserLoginTestOptions = {
 setTestSettings();
 
 const signer = createSigner(getTonomyOperationsKey());
+
+// Mock contracts to avoid hitting blockchain
+jest.mock('../src/sdk/services/ethereum', () => {
+    const original = jest.requireActual('../src/sdk/services/ethereum') as object;
+
+    return {
+        ...original,
+        getBaseTokenContract: jest.fn().mockReturnValue({
+            mint: jest.fn<() => Promise<boolean>>().mockResolvedValue(true),
+            burn: jest.fn<() => Promise<boolean>>().mockResolvedValue(true),
+        }),
+    };
+});
+
+jest.mock('../src/sdk/services/blockchain', () => {
+    const original = jest.requireActual('../src/sdk/services/blockchain') as object;
+
+    return {
+        ...original,
+        getTokenContract: jest.fn().mockReturnValue({           
+            bridgeIssue: jest.fn<() => Promise<boolean>>().mockResolvedValue(true),
+            bridgeRetire: jest.fn<() => Promise<boolean>>().mockResolvedValue(true),
+        }),
+    };
+});
+
 
 describe('Login to external website', () => {
     jest.setTimeout(50000);
@@ -195,6 +225,70 @@ describe('Login to external website', () => {
         test('Unsuccessful login to external website with data request for KYC verification failed', async () => {
             expect.assertions(37);
             await runExternalUserLoginTest({ dataRequest: true, dataRequestKYC: true, dataRequestKYCDecision: 'declined' });
+        });
+        test('should create and send SwapTokenMessage with mocked Ethereum proof', async () => {
+            expect.assertions(3);
+
+            // 1. Mock ethereum proof
+            const mockProof = {
+                message: "I am the owner of this address: 0x123... on base\nNonce: abc123\nTimestamp: 2025-09-11T00:00:00Z",
+                signature: "0x" + "a".repeat(130),
+            };
+
+            // 2. Build payload
+            const payload = {
+                amount: new Decimal("10"),
+                baseAddress: "0xdf57089febbacf7ba0bc227dafbffa9fc08a93fdc68e1e42411a14efcf23656e",
+                proof: mockProof,
+                destination: "tonomy" as const,
+            };
+
+            // 3. Sign VC → returns SwapTokenMessage
+            const issuer = await getDidKeyIssuerFromStorage(TONOMY_ID_user.keyManager);
+            const recipientDid = "did:antelope:swapservice";
+
+            const swapMessage = await SwapTokenMessage.signMessage(payload, issuer, recipientDid);
+
+            expect(swapMessage).toBeInstanceOf(SwapTokenMessage);
+            expect(swapMessage.getPayload().proof.signature).toBe(mockProof.signature);
+
+            // 4. Send via communication
+            const result = await TONOMY_ID_user.communication.sendSwapMessage(swapMessage);
+
+            expect(result).toBe(true);
+        });
+        test('SwapTokenMessage flow works (base → tonomy)', async () => {
+            expect.assertions(5);
+
+            // 1. Create proof (mock Ethereum wallet)
+            const mockBaseAddress = '0xdf57089febbacf7ba0bc227dafbffa9fc08a93fdc68e1e42411a14efcf23656e';
+            const mockMessage = createProofMessage(mockBaseAddress, 'base');
+            const mockSignature = '0x' + 'a'.repeat(130); // 65-byte signature
+
+            expect(verifySignature(mockMessage, mockSignature, mockBaseAddress)).toBe(false); 
+            // false because we didn’t actually sign, just mocked — still good for structure
+
+            // 2. Build payload
+            const payload = {
+                amount: new Decimal('10'),
+                baseAddress: mockBaseAddress,
+                proof: { message: mockMessage, signature: mockSignature },
+                destination: 'tonomy' as const,
+            };
+
+            // 3. Sign VC → SwapTokenMessage
+            const issuer = await getDidKeyIssuerFromStorage(TONOMY_ID_user.keyManager);
+            const recipientDid = 'did:antelope:swapservice';
+            const swapMessage = await SwapTokenMessage.signMessage(payload, issuer, recipientDid);
+
+            expect(swapMessage).toBeInstanceOf(SwapTokenMessage);
+
+            // 4. Send swap message through communication
+            const result = await TONOMY_ID_user.communication.sendSwapMessage(swapMessage);
+
+            // 5. Assert
+            expect(result).toBe(true);
+            expect(swapMessage.getPayload().destination).toBe('tonomy');
         });
     });
 
