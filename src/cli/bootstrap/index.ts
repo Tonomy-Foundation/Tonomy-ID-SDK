@@ -438,13 +438,13 @@ async function createTonomyApps(newPublicKey: PublicKey, newSigner: Signer): Pro
     });
 
     await createApp({
-        appName: 'Developers Console',
-        usernamePrefix: 'developer-console',
-        description: `Developer console to manage ${settings.config.ecosystemName} applications and infrastucture`,
-        origin: settings.config.consoleWebsiteOrigin,
-        logoUrl: settings.config.consoleWebsiteOrigin + '/tonomy-logo1024.png',
-        backgroundColor: '#251950',
-        accentColor: '#BA54D3',
+        appName: 'Tonomy',
+        usernamePrefix: 'tonomy-apps',
+        description: `Access all your Tonomy apps in one hub. Manage tokens, explore the blockchain, create, collaborate, and build — it’s all at your fingertips`,
+        origin: settings.config.tonomyAppsOrigin,
+        logoUrl: settings.config.tonomyAppsOrigin + '/market.com.png',
+        backgroundColor: '#F9FAFB',
+        accentColor: '#5833BC',
         publicKey: newPublicKey,
         signer,
     });

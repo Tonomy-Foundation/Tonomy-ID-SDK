@@ -1,7 +1,3 @@
-[submodule "Tonomy-Communication"]
-	path = Tonomy-Communication
-	url = ../Tonomy-Communication.git
-	branch = development
 [submodule "Tonomy-Contracts"]
 	path = Tonomy-Contracts
 	url = ../Tonomy-Contracts.git
@@ -9,4 +5,8 @@
 [submodule "Ethereum-token"]
 	path = Ethereum-token
 	url = ../Ethereum-token.git
+	branch = development
+[submodule "Tonomy-Communication"]
+	path = Tonomy-Communication
+	url = ../Tonomy-Communication.git
 	branch = development
