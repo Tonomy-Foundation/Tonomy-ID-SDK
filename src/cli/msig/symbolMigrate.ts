@@ -11,7 +11,6 @@ import {
     systemAccount,
 } from '../bootstrap';
 import settings from '../settings';
-import { getAllUniqueHolders } from '../vesting';
 import { deployContract } from './contract';
 
 export async function symbolMigrate(options: StandardProposalOptions) {
@@ -114,7 +113,7 @@ async function migrateVesting(options: StandardProposalOptions) {
     const vestingHolders =
         getSettings().environment === 'development'
             ? new Set<string>(['team.tmy', 'found.tmy'])
-            : await getAllUniqueHolders();
+            : await getVestingContract().getAllUniqueHolders();
 
     const actions = Array.from(vestingHolders).map((holder) => {
         console.log(`vesting.tmy::migrateacc(${holder})`);

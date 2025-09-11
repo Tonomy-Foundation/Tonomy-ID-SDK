@@ -8,7 +8,6 @@ import {
     getTonomyContract,
     getVestingContract,
 } from '../../sdk/services/blockchain';
-import { getAllAllocations, getAllUniqueHolders } from '../vesting';
 import { AccountType, isErrorCode, SdkErrors, TonomyUsername } from '../../sdk';
 import { getAccount, getAccountNameFromUsername, TONO_CURRENT_PRICE } from '../../sdk/services/blockchain';
 import { parse } from 'csv-parse/sync';
@@ -57,8 +56,8 @@ export async function vestingMigrate2(options: StandardProposalOptions) {
     let count = 0;
     let proposals = 0;
     const priceMultiplier = 2.0;
-    const uniqueHolders = await getAllUniqueHolders();
-    const allAllocations = await getAllAllocations(uniqueHolders);
+    const uniqueHolders = await getVestingContract().getAllUniqueHolders();
+    const allAllocations = await getVestingContract().getAllAllocations(uniqueHolders);
 
     const batchSize = 100;
 
@@ -116,7 +115,7 @@ export async function vestingMigrate3(options: StandardProposalOptions) {
     let proposals = 0;
     const priceMultiplier = 2.0;
     const people = await getTonomyContract().getAllPeople();
-    const vestingHolders = await getAllUniqueHolders();
+    const vestingHolders = await getVestingContract().getAllUniqueHolders();
 
     const peopleNotInVestingHolders: Set<string> = new Set();
 
@@ -126,7 +125,7 @@ export async function vestingMigrate3(options: StandardProposalOptions) {
         }
     }
 
-    const missedAllocations = await getAllAllocations(peopleNotInVestingHolders);
+    const missedAllocations = await getVestingContract().getAllAllocations(peopleNotInVestingHolders);
 
     const batchSize = 100;
 

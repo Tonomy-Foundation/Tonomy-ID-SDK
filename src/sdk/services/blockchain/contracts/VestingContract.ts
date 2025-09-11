@@ -16,6 +16,7 @@ import Decimal from 'decimal.js';
 import { assetToAmount, assetToDecimal } from './EosioTokenContract';
 import abi from './abi/vesting.tmy.abi.json';
 import { activeAuthority } from '../eosio/authority';
+import { getTonomyContract } from './TonomyContract';
 
 const CONTRACT_NAME: NameType = 'vesting.tmy';
 
@@ -542,6 +543,87 @@ export class VestingContract extends Contract {
 
         return { totalAllocation, unlockable, unlocked, locked, allocationsDetails: details };
     }
+
+    async getAllUniqueHolders(print = false): Promise<Set<string>> {
+        const action = 'assigntokens';
+        const contract = 'vesting.tmy';
+        const limit = 100;
+        let skip = 0;
+        let actionsFound = 0;
+
+        const uniqueHolders = new Set<string>();
+
+        let host = 'pangea.eosusa.io';
+
+        if (getSettings().environment === 'testnet') {
+            host = 'test.pangea.eosusa.io';
+        } else if (getSettings().environment !== 'production') {
+            throw new Error(`environment ${getSettings().environment} not supported for fetching all vesting holders`);
+        }
+
+        do {
+            const url = `https://${host}/v2/history/get_actions?act.name=${action}&sort=desc&skip=${skip}&limit=${limit}&account=${contract}&global_sequence=0-45539775`;
+            const res = await fetch(url);
+            const data = await res.json();
+            const actions = data.actions;
+
+            actionsFound = data?.actions?.length || 0;
+
+            for (const action of actions) {
+                const { sender, holder, amount, category } = action.act.data;
+
+                uniqueHolders.add(holder);
+
+                if (print)
+                    console.log(
+                        `${action.timestamp}: Sent ${amount} from ${sender} to ${holder} in category ${category}`
+                    );
+            }
+
+            skip += limit;
+        } while (actionsFound > 0);
+
+        const allPeople = await getTonomyContract().getAllPeople();
+        const allPeopleAllocations = await this.getAllAllocations(
+            new Set<string>(allPeople.map((person) => person.accountName.toString())),
+            false
+        );
+        const peopleWithAllocations = new Set<string>(allPeopleAllocations.map((allocation) => allocation.account));
+
+        // any people in `peopleWithAllocations` that are not in `uniqueHolders` should be added
+        for (const person of peopleWithAllocations) {
+            if (!uniqueHolders.has(person)) {
+                uniqueHolders.add(person);
+                if (print) console.log(`Adding person with allocation but no found actions: ${person}`);
+            }
+        }
+
+        return uniqueHolders;
+    }
+
+    async getAllAllocations(accounts: Set<string>, print = false): Promise<VestingAllocationAndAccount[]> {
+        const allocations: VestingAllocationAndAccount[] = [];
+
+        for (const account of accounts) {
+            const accountAllocations = await this.getAllocations(account);
+
+            for (const allocation of accountAllocations) {
+                const { id, tokensAllocated, vestingCategoryType } = allocation;
+
+                if (print)
+                    console.log(
+                        `Holder ${account}: Allocation ${id}: ${tokensAllocated} in category ${vestingCategoryType}`
+                    );
+                allocations.push({ account, ...allocation });
+            }
+        }
+
+        return allocations;
+    }
+}
+
+interface VestingAllocationAndAccount extends VestingAllocation {
+    account: string;
 }
 
 let vestingContract: VestingContract | undefined;
