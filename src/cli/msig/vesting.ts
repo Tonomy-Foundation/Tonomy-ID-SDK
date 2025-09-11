@@ -13,6 +13,8 @@ import { getAccount, getAccountNameFromUsername, TONO_CURRENT_PRICE } from '../.
 import { parse } from 'csv-parse/sync';
 import fs from 'fs';
 import settings from '../settings';
+import Decimal from 'decimal.js';
+import { bulkTransfer } from './token';
 
 export async function vestingMigrate(options: StandardProposalOptions) {
     // Testnet list
@@ -178,7 +180,7 @@ export async function vestingMigrate3(options: StandardProposalOptions) {
     console.log(`Processed ${count} / ${missedAllocations.length} allocations`);
 }
 
-export async function vestingMigrate4(options: StandardProposalOptions) {
+async function vestingMigrate4Vesting(options: StandardProposalOptions) {
     let count = 0;
     let proposals = 0;
     const multipliers = new Map<number, number>([
@@ -263,7 +265,7 @@ export async function vestingMigrate4(options: StandardProposalOptions) {
             );
         });
 
-        const proposalName = Name.from(`${options.proposalName}${toBase6Plus1(Math.floor(i / batchSize))}`);
+        const proposalName = Name.from(`${options.proposalName}v${toBase6Plus1(Math.floor(i / batchSize))}`);
 
         console.log(
             `Creating proposal ${proposalName.toString()} with ${actions.length} actions: ${i} - ${i + batchSize}`
@@ -287,6 +289,45 @@ export async function vestingMigrate4(options: StandardProposalOptions) {
     console.log(`Batch size: ${batchSize}`);
     console.log(`Proposals created: ${proposals}`);
     console.log(`Processed ${count} / ${allAllocations.length} allocations`);
+}
+
+async function vestingMigrate4Tokenomics(options: StandardProposalOptions) {
+    // to, from, amount
+    const transfers: [string, string, Decimal][] = [
+        ['ecosystm.tmy', 'coinsale.tmy', new Decimal('6345000000.000000')],
+        ['ecosystm.tmy', 'liquidty.tmy', new Decimal('655000000.000000')],
+        ['infra.tmy', 'liquidty.tmy', new Decimal('2500000000.000000')],
+        ['marketng.tmy', 'liquidty.tmy', new Decimal('2500000000.000000')],
+        ['ops.tmy', 'liquidty.tmy', new Decimal('750000000.000000')],
+        ['partners.tmy', 'liquidty.tmy', new Decimal('1000000000.000000')],
+        ['reserves.tmy', 'liquidty.tmy', new Decimal('500000000.000000')],
+        ['team.tmy', 'liquidty.tmy', new Decimal('1500000000.000000')],
+    ];
+    const proposalName = Name.from(options.proposalName.toString() + 't1');
+
+    await bulkTransfer({ transfers, ...options, proposalName });
+}
+
+async function vestingMigrate4TokenFixes(options: StandardProposalOptions) {
+    // to, from, amount
+    const transfers: [string, string, Decimal][] = [
+        ['team.tmy', 'coinsale.tmy', new Decimal('150310000.000000')],
+        ['team.tmy', 'coinsale.tmy', new Decimal('1080233320.000000')],
+        ['infra.tmy', 'coinsale.tmy', new Decimal('103875000.000000')],
+        ['team.tmy', 'coinsale.tmy', new Decimal('250000000.000000')],
+        ['marketing.tmy', 'team.tmy', new Decimal('216046664.000000')],
+        ['partners.tmy', 'team.tmy', new Decimal('50000000.000000')],
+        ['reserves.tmy', 'coinsale.tmy', new Decimal('1368936893.000000')],
+    ];
+    const proposalName = Name.from(options.proposalName.toString() + 't2');
+
+    await bulkTransfer({ transfers, ...options, proposalName });
+}
+
+export async function vestingMigrate4(options: StandardProposalOptions) {
+    await vestingMigrate4Vesting(options);
+    await vestingMigrate4Tokenomics(options);
+    await vestingMigrate4TokenFixes(options);
 }
 
 async function createAccountActions(account: NameType): Promise<Action[]> {

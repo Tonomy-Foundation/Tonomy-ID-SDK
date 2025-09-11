@@ -16,7 +16,7 @@ import { setBlockchainConfig } from './setBlockchainConfig';
 import { addProd, changeProds, removeProd, updateProd } from './producers';
 import { hyphaAccountsCreate, hyphaContractSet, hyphaAddAccountPermissions } from './hypha';
 import { sleep } from '../../sdk/util';
-import { vestingMigrate, vestingMigrate2, vestingMigrate3, vestingBulk } from './vesting';
+import { vestingMigrate, vestingMigrate2, vestingMigrate3, vestingBulk, vestingMigrate4 } from './vesting';
 import {
     createStakingTmyAccount,
     deployStakingContract,
@@ -140,6 +140,8 @@ export default async function msig(args: string[]) {
                 await vestingMigrate2(options);
             } else if (proposalSubtype === 'migrate3') {
                 await vestingMigrate3(options);
+            } else if (proposalSubtype === 'migrate4') {
+                await vestingMigrate4(options);
             } else if (proposalSubtype === 'bulk') {
                 await vestingBulk({ governanceAccounts }, options);
             } else printMsigHelp();
@@ -359,7 +361,7 @@ export type StandardProposalOptions = {
 function printMsigHelp() {
     console.log(`
         Usage:
-            yarn run cli msig [commands]
+            yarn run cli msig [commands] [options]
             
             Commands:
                 approve stakeacc
@@ -397,7 +399,17 @@ function printMsigHelp() {
                 propose vesting migrate <proposalName>
                 propose vesting migrate2 <proposalName>
                 propose vesting migrate3 <proposalName>
-                propose ... --auto-execute
-                propose ... --dry-run
+                propose vesting migrate4 <proposalName>
+        Options:
+                --help
+                --dry-run          Create the proposal but do not send the transaction
+                --auto-execute     Automatically approve and execute the proposal (for testing only)
+        Examples:
+                approve stakeacc
+                cancel myproposal
+                exec myproposal
+                propose accounts create myproposal
+                propose apps create myproposal --dry-run
+                propose apps auth update myproposal --auto-execute
         `);
 }
