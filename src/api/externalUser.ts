@@ -1,7 +1,7 @@
 import { KeyManager, KeyManagerLevel } from '../sdk/storage/keymanager';
 import { createVCSigner, randomString } from '../sdk/util/crypto';
 import { Issuer } from 'did-jwt-vc';
-import { getSettings } from '../sdk/util/settings';
+import { getSettings, setSettings } from '../sdk/util/settings';
 import { isErrorCode, SdkErrors, createSdkError, throwError } from '../sdk/util/errors';
 import { createStorage, PersistentStorageClean, StorageFactory, STORAGE_NAMESPACE } from '../sdk/storage/storage';
 import { Name, API, NameType } from '@wharfkit/antelope';
@@ -27,6 +27,8 @@ import {
     LinkAuthRequestResponseMessage,
     Message,
     SwapTokenMessage,
+    SwapTokenMessagePayload,
+    User,
 } from '../sdk';
 import { VCWithTypeType, VerifiableCredential, VerifiableCredentialWithType } from '../sdk/util/ssi/vc';
 import { DIDurl, JWT } from '../sdk/util/ssi/types';
@@ -36,6 +38,9 @@ import { createDidKeyIssuerAndStore } from '../sdk/helpers/didKeyStorage';
 import { verifyKeyExistsForApp } from '../sdk/helpers/user';
 import { ClientAuthorizationData, IOnPressLoginOptions } from '../sdk/types/User';
 import Debug from 'debug';
+import Decimal from 'decimal.js';
+import { createSignedProofMessage } from '../sdk/services/ethereum';
+import settings from '../cli/settings';
 
 const debug = Debug('tonomy-sdk:externalUser');
 
@@ -598,6 +603,41 @@ export class ExternalUser {
 
             await this.communication.login(authMessage);
         }
+    }
+
+    /**
+     * High-level service to swap $TONO between Base and Tonomy chains.
+     *
+     * @param amount Decimal amount to swap
+     * @param tonoAddress Tonomy DID user address
+     * @param baseAddress Ethereum/Base chain wallet address
+     * @param destination Either "base" or "tonomy"
+     */
+    async swapToken(
+        amount: Decimal,
+        tonoAddress: User | DIDurl,
+        baseAddress: string,
+        destination: 'base' | 'base_testnet' | 'hardhat' | 'localhost' | 'tonomy'
+    ): Promise<boolean> {
+        setSettings({
+            ...settings,
+            baseTokenAddress: baseAddress,
+            baseNetwork: destination,
+        });
+
+        const payload: SwapTokenMessagePayload = {
+            amount,
+            baseAddress,
+            proof: await createSignedProofMessage(),
+            destination,
+        };
+
+        const issuer = await this.getIssuer();
+        const swapMessage = await SwapTokenMessage.signMessage(payload, issuer, tonoAddress as DIDurl);
+
+        await this.sendSwapMessage(swapMessage);
+
+        return true;
     }
 }
 

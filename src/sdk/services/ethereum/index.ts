@@ -125,7 +125,7 @@ export function extractProofMessage(message: string): {
  *
  * @returns {Promise<string>} The signed proof message
  */
-export async function createSignedProofMessage(): Promise<string> {
+export async function createSignedProofMessage(): Promise<{ message: string; signature: string }> {
     const signer = getSigner();
 
     if (!signer) {
@@ -134,5 +134,7 @@ export async function createSignedProofMessage(): Promise<string> {
 
     const message = createProofMessage(getSettings().baseTokenAddress, getSettings().baseNetwork);
 
-    return await signer.signMessage(message);
+    const signature = await signer.signMessage(message);
+
+    return { message, signature };
 }

@@ -48,12 +48,11 @@ import {
     externalWebsiteClientAuth,
 } from './helpers/externalUser';
 import { createStorageFactory } from './helpers/storageFactory';
-import { createSigner, getTonomyOperationsKey } from '../src/sdk/services/blockchain';
+import { createSigner, getTokenContract, getTonomyOperationsKey } from '../src/sdk/services/blockchain';
 import { setTestSettings, settings } from './helpers/settings';
 import deployContract from '../src/cli/bootstrap/deploy-contract';
 import { setReferrer, setUrl } from './helpers/browser';
-import { SwapTokenMessage } from '../src/sdk/services/communication/message';
-import { createProofMessage } from '../src/sdk/services/ethereum';
+import {  getBaseTokenContract } from '../src/sdk/services/ethereum';
 import Decimal from 'decimal.js';
 import Debug from 'debug';
 
@@ -70,31 +69,6 @@ export type ExternalUserLoginTestOptions = {
 setTestSettings();
 
 const signer = createSigner(getTonomyOperationsKey());
-
-// Mock contracts to avoid hitting blockchain
-jest.mock('../src/sdk/services/ethereum', () => {
-    const original = jest.requireActual('../src/sdk/services/ethereum') as object;
-
-    return {
-        ...original,
-        getBaseTokenContract: jest.fn().mockReturnValue({
-            mint: jest.fn<() => Promise<boolean>>().mockResolvedValue(true),
-            burn: jest.fn<() => Promise<boolean>>().mockResolvedValue(true),
-        }),
-    };
-});
-
-jest.mock('../src/sdk/services/blockchain', () => {
-    const original = jest.requireActual('../src/sdk/services/blockchain') as object;
-
-    return {
-        ...original,
-        getTokenContract: jest.fn().mockReturnValue({           
-            bridgeIssue: jest.fn<() => Promise<boolean>>().mockResolvedValue(true),
-            bridgeRetire: jest.fn<() => Promise<boolean>>().mockResolvedValue(true),
-        }),
-    };
-});
 
 
 describe('Login to external website', () => {
@@ -366,7 +340,6 @@ describe('Login to external website', () => {
             }
         }
 
-
         debug('TONOMY_LOGIN_WEBSITE/login: sending to callback page');
         setUrl(walletResponse.getRedirectUrl(false));
 
@@ -403,48 +376,31 @@ describe('Login to external website', () => {
         await externalWebsiteSignTransaction(EXTERNAL_WEBSITE_user, externalApp);
 
         if (testOptions.SwapToken) {
-            const mockAddress = "0xdf57089febbacf7ba0bc227dafbffa9fc08a93fdc68e1e42411a14efcf23656e";
-            const mockNetwork = "base";
-
-            setSettings({
-                ...settings,
-                baseTokenAddress: mockAddress,
-                baseNetwork: mockNetwork,
+        
+            const amount = new Decimal("0.5");
+            const tonoAddress = (await EXTERNAL_WEBSITE_user.getAccountName()).toString();
+            const baseAddress = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266';
+            const destination = 'base';
+            // 1. Get balances before
+            const baseTokenContract = getBaseTokenContract();
+            const balanceBeforeBase = await baseTokenContract.balanceOf(baseAddress);
+            const tokenContract = getTokenContract();
             
-            });
-            const message = createProofMessage(mockAddress, mockNetwork);
-            const mockProof = {
-                message,
-                // Fake signature: 65 bytes (130 hex chars) prefixed with 0x
-                signature: "0x" + "a".repeat(130),
-            };
+            const balanceBeforeTonomy = await tokenContract.getBalanceDecimal(tonoAddress);
 
-            const payload = {
-                amount: new Decimal("0.5"),
-                baseAddress: (await EXTERNAL_WEBSITE_user.getAccountName()).toString(),
-                proof: mockProof,
-                destination: "tonomy" as const,
-            };
-
-            const didKeyIssuer = await getDidKeyIssuerFromStorage(
-                TONOMY_LOGIN_WEBSITE_jsKeyManager
-            );
-
-            const swapMessage = await SwapTokenMessage.signMessage(
-                payload,
-                didKeyIssuer,
-                TONOMY_LOGIN_WEBSITE_did
-            );
-
-            expect(swapMessage).toBeInstanceOf(SwapTokenMessage);
-            expect(swapMessage.getPayload().proof.signature).toBe(
-                mockProof.signature
-            );
-
+            console.log("Before Swap:");
+            console.log("Base balance:", balanceBeforeBase.toString());
+            console.log("Tonomy balance:", balanceBeforeTonomy.toString());
             // 4. Send via communication
-            const result = await EXTERNAL_WEBSITE_user.sendSwapMessage(swapMessage);
+            const result = await EXTERNAL_WEBSITE_user.swapToken(amount, tonoAddress, baseAddress, destination);
 
             expect(result).toBe(true);
+            const balanceAfterBase = await baseTokenContract.balanceOf(baseAddress);
+            const balanceAfterTonomy = await tokenContract.getBalanceDecimal(tonoAddress);
+
+            console.log("After Swap:");
+            console.log("Base balance:", balanceAfterBase.toString());
+            console.log("Tonomy balance:", balanceAfterTonomy.toString());
         }
 
 
