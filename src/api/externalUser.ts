@@ -28,7 +28,6 @@ import {
     Message,
     SwapTokenMessage,
     SwapTokenMessagePayload,
-    User,
 } from '../sdk';
 import { VCWithTypeType, VerifiableCredential, VerifiableCredentialWithType } from '../sdk/util/ssi/vc';
 import { DIDurl, JWT } from '../sdk/util/ssi/types';
