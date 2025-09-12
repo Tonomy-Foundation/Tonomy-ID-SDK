@@ -617,7 +617,7 @@ export class ExternalUser {
         amount: Decimal,
         tonoAddress: User | DIDurl,
         baseAddress: string,
-        destination: 'base' | 'base_testnet' | 'hardhat' | 'localhost' | 'tonomy'
+        destination: 'base' | 'tonomy'
     ): Promise<boolean> {
         setSettings({
             ...settings,
