@@ -42,8 +42,8 @@ export async function vestingMigrate(options: StandardProposalOptions) {
         options.dryRun
     );
 
-    if (options.dryRun) return;
-    if (options.autoExecute) await executeProposal(options.proposer, options.proposalName, proposalHash);
+    if (!options.dryRun && options.autoExecute)
+        await executeProposal(options.proposer, options.proposalName, proposalHash);
 }
 
 function toBase6Plus1(num: number): string {
@@ -334,9 +334,12 @@ async function burnBaseTokens(options: StandardProposalOptions) {
         memo: 'Burn tokens that will be minted on Base blockchain',
     });
 
+    console.log('Burning 3,000,000,000.000000 TONO that will be minted on Base blockchain');
+    const proposalName = Name.from(options.proposalName.toString() + 'burn');
+
     const proposalHash = await createProposal(
         options.proposer,
-        options.proposalName,
+        proposalName,
         [burnAction],
         options.privateKey,
         options.requested,
@@ -376,9 +379,11 @@ async function vestAllTreasuries(options: StandardProposalOptions) {
         );
     }
 
+    const proposalName = Name.from(options.proposalName.toString() + 'vest');
+
     const proposalHash = await createProposal(
         options.proposer,
-        options.proposalName,
+        proposalName,
         actions,
         options.privateKey,
         options.requested,
@@ -393,7 +398,7 @@ export async function vestingMigrate4(options: StandardProposalOptions) {
     await vestingMigrate4Vesting(options);
     await vestingMigrate4Tokenomics(options);
     await vestingMigrate4TokenFixes(options);
-    await vestingBulk(options); // pre TGE allocations
+    await vestingBulk({ ...options, proposalName: Name.from(options.proposalName.toString() + 'bulk') }); // pre TGE allocations
     await burnBaseTokens(options);
     await vestAllTreasuries(options); // should only be called once all above proposals are executed
 }
@@ -582,6 +587,6 @@ export async function vestingBulk(options: StandardProposalOptions) {
         options.dryRun
     );
 
-    if (options.dryRun) return;
-    if (options.autoExecute) await executeProposal(options.proposer, options.proposalName, proposalHash);
+    if (!options.dryRun && options.autoExecute)
+        await executeProposal(options.proposer, options.proposalName, proposalHash);
 }

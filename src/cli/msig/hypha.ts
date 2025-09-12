@@ -116,8 +116,8 @@ export async function hyphaAccountsCreate(args: any, options: StandardProposalOp
         options.dryRun
     );
 
-    if (options.dryRun) return;
-    if (options.autoExecute) await executeProposal(options.proposer, options.proposalName, proposalHash);
+    if (!options.dryRun && options.autoExecute)
+        await executeProposal(options.proposer, options.proposalName, proposalHash);
 }
 
 // @ts-expect-error args not used
@@ -241,8 +241,8 @@ export async function hyphaAddAccountPermissions(args: any, options: StandardPro
         options.dryRun
     );
 
-    if (options.dryRun) return;
-    if (options.autoExecute) await executeProposal(options.proposer, options.proposalName, proposalHash);
+    if (!options.dryRun && options.autoExecute)
+        await executeProposal(options.proposer, options.proposalName, proposalHash);
 }
 
 // @ts-expect-error args not used
@@ -313,6 +313,6 @@ export async function hyphaContractSet(args: any, options: StandardProposalOptio
         options.dryRun
     );
 
-    if (options.dryRun) return;
-    if (options.autoExecute) await executeProposal(options.proposer, options.proposalName, proposalHash);
+    if (!options.dryRun && options.autoExecute)
+        await executeProposal(options.proposer, options.proposalName, proposalHash);
 }

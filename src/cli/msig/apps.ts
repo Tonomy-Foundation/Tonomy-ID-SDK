@@ -119,8 +119,7 @@ export async function createAccounts(options: StandardProposalOptions) {
         options.dryRun
     );
 
-    if (options.dryRun) return;
-    if (options.autoExecute) await executeProposal(options.proposer, proposalName, proposalHash);
+    if (!options.dryRun && options.autoExecute) await executeProposal(options.proposer, proposalName, proposalHash);
 }
 
 // MSIG 2: Set accounts as apps, transfer TONO, buy RAM
@@ -158,8 +157,7 @@ export async function setAppsAndRam(options: StandardProposalOptions) {
         options.dryRun
     );
 
-    if (options.dryRun) return;
-    if (options.autoExecute) await executeProposal(options.proposer, proposalName, proposalHash);
+    if (!options.dryRun && options.autoExecute) await executeProposal(options.proposer, proposalName, proposalHash);
 }
 
 // MSIG 3: Deploy contracts for apps
@@ -217,8 +215,8 @@ export async function newApp(options: StandardProposalOptions) {
         options.dryRun
     );
 
-    if (options.dryRun) return;
-    if (options.autoExecute) await executeProposal(options.proposer, options.proposalName, proposalHash);
+    if (!options.dryRun && options.autoExecute)
+        await executeProposal(options.proposer, options.proposalName, proposalHash);
 }
 
 const CONTRACT_NAME = 'tonomy';
@@ -281,6 +279,6 @@ export async function migrateApps(options: StandardProposalOptions) {
         options.dryRun
     );
 
-    if (options.dryRun) return;
-    if (options.autoExecute) await executeProposal(options.proposer, options.proposalName, proposalHash);
+    if (!options.dryRun && options.autoExecute)
+        await executeProposal(options.proposer, options.proposalName, proposalHash);
 }
