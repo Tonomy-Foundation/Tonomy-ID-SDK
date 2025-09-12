@@ -49,7 +49,7 @@ export async function bulkTransfer(options: StandardProposalOptions & { transfer
         const balance = await getTokenContract().getBalanceDecimal(from);
 
         if (balance.lessThan(amount)) {
-            throw new Error(`Insufficient balance. Required: ${amount}, Available: ${balance}`);
+            throw new Error(`Insufficient balance on account ${from}. Required: ${amount}, Available: ${balance}`);
         }
 
         const fraction = amountToSupplyPercentage(amount);

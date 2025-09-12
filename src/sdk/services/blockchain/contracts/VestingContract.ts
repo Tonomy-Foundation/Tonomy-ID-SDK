@@ -20,9 +20,9 @@ import { getTonomyContract } from './TonomyContract';
 
 const CONTRACT_NAME: NameType = 'vesting.tmy';
 
-export const TONO_SEED_ROUND_PRICE = 0.0001;
-export const TONO_SEED_LATE_ROUND_PRICE = 0.0002;
-export const TONO_PUBLIC_SALE_PRICE = 0.0006;
+export const TONO_SEED_ROUND_PRICE = 0.00006666666666666666;
+export const TONO_SEED_LATE_ROUND_PRICE = 0.00006666666666666666;
+export const TONO_PUBLIC_SALE_PRICE = 0.0001;
 export const TONO_CURRENT_PRICE = TONO_SEED_ROUND_PRICE;
 
 const MICROSECONDS_PER_SECOND = 1_000_000;

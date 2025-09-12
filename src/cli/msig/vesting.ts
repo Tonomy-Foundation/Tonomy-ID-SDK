@@ -10,7 +10,12 @@ import {
     getTokenContract,
 } from '../../sdk/services/blockchain';
 import { AccountType, isErrorCode, SdkErrors, TonomyUsername } from '../../sdk';
-import { getAccount, getAccountNameFromUsername, TONO_CURRENT_PRICE } from '../../sdk/services/blockchain';
+import {
+    getAccount,
+    getAccountNameFromUsername,
+    TONO_CURRENT_PRICE,
+    vestingCategories as vestingSchedules,
+} from '../../sdk/services/blockchain';
 import { parse } from 'csv-parse/sync';
 import fs from 'fs';
 import settings from '../settings';
@@ -295,6 +300,7 @@ async function vestingMigrate4Vesting(options: StandardProposalOptions) {
     console.log(`Processed ${count} / ${allAllocations.length} allocations`);
 }
 
+// https://docs.google.com/spreadsheets/d/159Tg4nBDud-uaRMsaP1sMtZgzG3JAw4FjvRWAJ44J8I/edit?gid=2036125243#gid=2036125243&range=A39
 async function vestingMigrate4Tokenomics(options: StandardProposalOptions) {
     // to, from, amount
     const transfers: [string, string, Decimal][] = [
@@ -312,6 +318,7 @@ async function vestingMigrate4Tokenomics(options: StandardProposalOptions) {
     await bulkTransfer({ transfers, ...options, proposalName });
 }
 
+// https://docs.google.com/spreadsheets/d/159Tg4nBDud-uaRMsaP1sMtZgzG3JAw4FjvRWAJ44J8I/edit?gid=2036125243#gid=2036125243&range=E39
 async function vestingMigrate4TokenFixes(options: StandardProposalOptions) {
     // to, from, amount
     const transfers: [string, string, Decimal][] = [
@@ -319,9 +326,9 @@ async function vestingMigrate4TokenFixes(options: StandardProposalOptions) {
         ['team.tmy', 'coinsale.tmy', new Decimal('1080233320.000000')],
         ['infra.tmy', 'coinsale.tmy', new Decimal('103875000.000000')],
         ['team.tmy', 'coinsale.tmy', new Decimal('250000000.000000')],
-        ['marketing.tmy', 'team.tmy', new Decimal('216046664.000000')],
+        ['marketng.tmy', 'team.tmy', new Decimal('216046664.000000')],
         ['partners.tmy', 'team.tmy', new Decimal('50000000.000000')],
-        ['reserves.tmy', 'coinsale.tmy', new Decimal('1368936893.000000')],
+        ['reserves.tmy', 'coinsale.tmy', new Decimal('136893689.000000')],
     ];
     const proposalName = Name.from(options.proposalName.toString() + 't2');
 
@@ -365,7 +372,17 @@ async function vestAllTreasuries(options: StandardProposalOptions) {
     const actions: Action[] = [];
 
     for (const [account, category] of vestingCategories) {
-        const balance = await getTokenContract().getBalanceDecimal(account);
+        let balance = await getTokenContract().getBalanceDecimal(account);
+
+        if (account === 'liquidty.tmy') {
+            // liquidity treasury has to distribute tokens to some partners (e.g. market maker before TGE so we vest only the vesting part
+            // The vested part has the %TGE unlocked removed in the vesting schedule at accommodate for this
+            const vesting = vestingSchedules.get(category);
+
+            if (!vesting) throw new Error(`No vesting schedule for category ${category}`);
+
+            balance = balance.mul(1 - vesting.tgeUnlock);
+        }
 
         console.log(`Vesting ${balance.toFixed(6)} TONO for ${account} in category ${category}`);
 
@@ -394,11 +411,19 @@ async function vestAllTreasuries(options: StandardProposalOptions) {
         await executeProposal(options.proposer, options.proposalName, proposalHash);
 }
 
+export async function vestingMigrationBulk(options: StandardProposalOptions) {
+    // https://docs.google.com/spreadsheets/d/159Tg4nBDud-uaRMsaP1sMtZgzG3JAw4FjvRWAJ44J8I/edit?gid=1969710758#gid=1969710758&range=A1
+
+    const proposalName = Name.from(options.proposalName.toString() + 'bulk');
+
+    await vestingBulk({ ...options, proposalName });
+}
+
 export async function vestingMigrate4(options: StandardProposalOptions) {
     await vestingMigrate4Vesting(options);
     await vestingMigrate4Tokenomics(options);
     await vestingMigrate4TokenFixes(options);
-    await vestingBulk({ ...options, proposalName: Name.from(options.proposalName.toString() + 'bulk') }); // pre TGE allocations
+    await vestingMigrationBulk(options); // pre TGE allocations
     await burnBaseTokens(options);
     await vestAllTreasuries(options); // should only be called once all above proposals are executed
 }
@@ -462,34 +487,15 @@ function createMigrateAction(
     newAmount: string,
     oldCategoryId: number,
     newCategoryId: number
-) {
-    return Action.from({
-        account: 'vesting.tmy',
-        name: 'migratealloc',
-        authorization: [
-            {
-                actor: sender,
-                permission: 'owner',
-            },
-            {
-                actor: 'vesting.tmy',
-                permission: 'active',
-            },
-        ],
-        data: {
-            sender,
-            holder,
-            // eslint-disable-next-line camelcase
-            allocation_id: allocationId,
-            // eslint-disable-next-line camelcase
-            old_amount: oldAmount,
-            // eslint-disable-next-line camelcase
-            new_amount: newAmount,
-            // eslint-disable-next-line camelcase
-            old_category_id: oldCategoryId,
-            // eslint-disable-next-line camelcase
-            new_category_id: newCategoryId,
-        },
+): Action {
+    return getVestingContract().actions.migrateAlloc({
+        sender,
+        holder,
+        allocationId,
+        oldAmount,
+        newAmount,
+        oldCategoryId,
+        newCategoryId,
     });
 }
 
