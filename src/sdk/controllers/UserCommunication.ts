@@ -1,5 +1,5 @@
 import { Communication, Subscriber, VeriffSubscriber } from '../services/communication/communication';
-import { AuthenticationMessage, Message, SwapTokenMessage } from '../services/communication/message';
+import { AuthenticationMessage, Message } from '../services/communication/message';
 import { KeyManager } from '../storage/keymanager';
 import { StorageFactory } from '../storage/storage';
 import { IUserCommunication } from '../types/User';
