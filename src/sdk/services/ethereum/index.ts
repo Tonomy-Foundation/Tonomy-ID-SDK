@@ -85,6 +85,7 @@ export function createProofMessage(address: string, network: string): string {
     const nonce = randomString(8);
     const now = new Date().toISOString();
 
+    //set base address and network
     return `I am the owner of this address: ${address} on ${network}\nNonce: ${nonce}\nTimestamp: ${now}`;
 }
 

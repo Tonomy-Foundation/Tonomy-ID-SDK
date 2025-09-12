@@ -18,7 +18,6 @@ import {
     DualWalletResponse,
     setSettings,
     Communication,
-    getDidKeyIssuerFromStorage,
 } from '../src/sdk/index';
 import { JsKeyManager } from '../src/sdk/storage/jsKeyManager';
 import { DataSource } from 'typeorm';
@@ -52,7 +51,7 @@ import { createSigner, getTokenContract, getTonomyOperationsKey } from '../src/s
 import { setTestSettings, settings } from './helpers/settings';
 import deployContract from '../src/cli/bootstrap/deploy-contract';
 import { setReferrer, setUrl } from './helpers/browser';
-import {  getBaseTokenContract } from '../src/sdk/services/ethereum';
+import {  createSignedProofMessage, getBaseTokenContract } from '../src/sdk/services/ethereum';
 import Decimal from 'decimal.js';
 import Debug from 'debug';
 
@@ -381,6 +380,12 @@ describe('Login to external website', () => {
             const tonoAddress = (await EXTERNAL_WEBSITE_user.getAccountName()).toString();
             const baseAddress = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266';
             const destination = 'base';
+
+            setSettings({
+                ...settings,
+                baseTokenAddress: baseAddress,
+                baseNetwork: destination,
+            });
             // 1. Get balances before
             const baseTokenContract = getBaseTokenContract();
             const balanceBeforeBase = await baseTokenContract.balanceOf(baseAddress);
@@ -392,7 +397,8 @@ describe('Login to external website', () => {
             console.log("Base balance:", balanceBeforeBase.toString());
             console.log("Tonomy balance:", balanceBeforeTonomy.toString());
             // 4. Send via communication
-            const result = await EXTERNAL_WEBSITE_user.swapToken(amount, tonoAddress, baseAddress, destination);
+            const proof = await createSignedProofMessage()
+            const result = await EXTERNAL_WEBSITE_user.swapToken(amount, proof, 'base');
 
             expect(result).toBe(true);
             const balanceAfterBase = await baseTokenContract.balanceOf(baseAddress);

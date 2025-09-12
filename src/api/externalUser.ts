@@ -39,8 +39,7 @@ import { verifyKeyExistsForApp } from '../sdk/helpers/user';
 import { ClientAuthorizationData, IOnPressLoginOptions } from '../sdk/types/User';
 import Debug from 'debug';
 import Decimal from 'decimal.js';
-import { createSignedProofMessage } from '../sdk/services/ethereum';
-import settings from '../cli/settings';
+import { extractProofMessage } from '../sdk/services/ethereum';
 
 const debug = Debug('tonomy-sdk:externalUser');
 
@@ -606,34 +605,28 @@ export class ExternalUser {
     }
 
     /**
-     * High-level service to swap $TONO between Base and Tonomy chains.
+     * Service to swap $TONO between Base and Tonomy chains.
      *
      * @param amount Decimal amount to swap
-     * @param tonoAddress Tonomy DID user address
-     * @param baseAddress Ethereum/Base chain wallet address
+     * @param proof contains message and signature
      * @param destination Either "base" or "tonomy"
      */
     async swapToken(
         amount: Decimal,
-        tonoAddress: User | DIDurl,
-        baseAddress: string,
+        proof: { message: string; signature: string },
         destination: 'base' | 'tonomy'
     ): Promise<boolean> {
-        setSettings({
-            ...settings,
-            baseTokenAddress: baseAddress,
-            baseNetwork: destination,
-        });
+        const { address } = extractProofMessage(proof.message);
 
         const payload: SwapTokenMessagePayload = {
             amount,
-            baseAddress,
-            proof: await createSignedProofMessage(),
+            baseAddress: address,
+            proof: proof,
             destination,
         };
 
         const issuer = await this.getIssuer();
-        const swapMessage = await SwapTokenMessage.signMessage(payload, issuer, tonoAddress as DIDurl);
+        const swapMessage = await SwapTokenMessage.signMessage(payload, issuer, address);
 
         await this.sendSwapMessage(swapMessage);
 

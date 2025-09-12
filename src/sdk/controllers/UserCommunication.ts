@@ -37,10 +37,6 @@ export abstract class UserCommunication extends UserAuthorization implements IUs
         return await this.communication.sendMessage(message);
     }
 
-    async sendSwapMessage(message: SwapTokenMessage): Promise<boolean> {
-        return await this.communication.sendSwapMessage(message);
-    }
-
     disconnectCommunication(): void {
         this.communication.disconnect();
     }
