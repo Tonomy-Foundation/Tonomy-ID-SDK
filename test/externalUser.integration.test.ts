@@ -166,6 +166,7 @@ describe('Login to external website', () => {
         setSettings({
             ...settings,
             ssoWebsiteOrigin: tonomyLoginApp.origin,
+
         });
 
         // setup KeyManagers for the external website and tonomy login website
@@ -405,6 +406,12 @@ describe('Login to external website', () => {
             const mockAddress = "0xdf57089febbacf7ba0bc227dafbffa9fc08a93fdc68e1e42411a14efcf23656e";
             const mockNetwork = "base";
 
+            setSettings({
+                ...settings,
+                baseTokenAddress: mockAddress,
+                baseNetwork: mockNetwork,
+            
+            });
             const message = createProofMessage(mockAddress, mockNetwork);
             const mockProof = {
                 message,
