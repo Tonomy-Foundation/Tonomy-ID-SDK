@@ -52,7 +52,7 @@ import { setTestSettings, settings } from './helpers/settings';
 import deployContract from '../src/cli/bootstrap/deploy-contract';
 import { setReferrer, setUrl } from './helpers/browser';
 import { SwapTokenMessage } from '../src/sdk/services/communication/message';
-import { verifySignature, createProofMessage } from '../src/sdk/services/ethereum';
+import { createProofMessage } from '../src/sdk/services/ethereum';
 import Decimal from 'decimal.js';
 import Debug from 'debug';
 
