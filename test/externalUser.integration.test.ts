@@ -18,6 +18,7 @@ import {
     DualWalletResponse,
     setSettings,
     Communication,
+    getDidKeyIssuerFromStorage,
 } from '../src/sdk/index';
 import { JsKeyManager } from '../src/sdk/storage/jsKeyManager';
 import { DataSource } from 'typeorm';
@@ -63,6 +64,7 @@ export type ExternalUserLoginTestOptions = {
     dataRequestUsername?: boolean;
     dataRequestKYC?: boolean;
     dataRequestKYCDecision?: 'approved' | 'declined';
+    SwapToken?: boolean;
 };
 
 setTestSettings();
@@ -226,64 +228,9 @@ describe('Login to external website', () => {
             await runExternalUserLoginTest({ dataRequest: true, dataRequestKYC: true, dataRequestKYCDecision: 'declined' });
         });
         test('should create and send SwapTokenMessage with mocked Ethereum proof', async () => {
-            expect.assertions(3);
-
-            // 1. Mock ethereum proof
-            const mockProof = {
-                message: "I am the owner of this address: 0x123... on base\nNonce: abc123\nTimestamp: 2025-09-11T00:00:00Z",
-                signature: "0x" + "a".repeat(130),
-            };
-
-            // 2. Build payload
-            const payload = {
-                amount: new Decimal("10"),
-                baseAddress: "0xdf57089febbacf7ba0bc227dafbffa9fc08a93fdc68e1e42411a14efcf23656e",
-                proof: mockProof,
-                destination: "tonomy" as const,
-            };
-
-            // 3. Sign VC → returns SwapTokenMessage
-            const issuer = await TONOMY_ID_user.getIssuer();
-            const recipientDid = "did:antelope:swapservice";
-
-            const swapMessage = await SwapTokenMessage.signMessage(payload, issuer, recipientDid);
-
-            expect(swapMessage).toBeInstanceOf(SwapTokenMessage);
-            expect(swapMessage.getPayload().proof.signature).toBe(mockProof.signature);
-
-            // 4. Send via communication
-            const result = await EXTERNAL_WEBSITE_user.sendSwapMessage(swapMessage);
-
-            expect(result).toBe(true);
+            expect.assertions(59);
+            await runExternalUserLoginTest({ dataRequest: false, SwapToken: true });           
         });
-        test('SwapTokenMessage flow works (base → tonomy)', async () => {
-            // Arrange
-            const mockBaseAddress = '0xdf57089febbacf7ba0bc227dafbffa9fc08a93fdc68e1e42411a14efcf23656e';
-            const proofMessage = createProofMessage(mockBaseAddress, 'base');
-            const proofSignature = '0x' + 'a'.repeat(130);
-
-            const payload = {
-                amount: new Decimal('10'),
-                baseAddress: mockBaseAddress,
-                proof: { message: proofMessage, signature: proofSignature },
-                destination: 'tonomy' as const,
-            };
-
-            const issuer = await TONOMY_ID_user.getIssuer();
-            const recipientDid = 'did:antelope:swapservice';
-            const swapMessage = await SwapTokenMessage.signMessage(payload, issuer, recipientDid);
-
-            // Act
-            const result = await EXTERNAL_WEBSITE_user.sendSwapMessage(swapMessage);
-
-            // Assert
-            expect(swapMessage).toBeInstanceOf(SwapTokenMessage);
-            expect(swapMessage.getPayload().baseAddress).toBe(mockBaseAddress);
-            expect(swapMessage.getPayload().proof.message).toContain('I am the owner');
-            expect(swapMessage.getPayload().destination).toBe('tonomy');
-            expect(result).toBe(true);
-        });
-
     });
 
     async function runExternalUserLoginTest(testOptions: ExternalUserLoginTestOptions) {
@@ -418,6 +365,7 @@ describe('Login to external website', () => {
             }
         }
 
+
         debug('TONOMY_LOGIN_WEBSITE/login: sending to callback page');
         setUrl(walletResponse.getRedirectUrl(false));
 
@@ -452,6 +400,46 @@ describe('Login to external website', () => {
         await externalWebsiteSignVc(EXTERNAL_WEBSITE_user);
 
         await externalWebsiteSignTransaction(EXTERNAL_WEBSITE_user, externalApp);
+
+        if (testOptions.SwapToken) {
+            const mockAddress = "0xdf57089febbacf7ba0bc227dafbffa9fc08a93fdc68e1e42411a14efcf23656e";
+            const mockNetwork = "base";
+
+            const message = createProofMessage(mockAddress, mockNetwork);
+            const mockProof = {
+                message,
+                // Fake signature: 65 bytes (130 hex chars) prefixed with 0x
+                signature: "0x" + "a".repeat(130),
+            };
+
+            const payload = {
+                amount: new Decimal("0.5"),
+                baseAddress: (await EXTERNAL_WEBSITE_user.getAccountName()).toString(),
+                proof: mockProof,
+                destination: "tonomy" as const,
+            };
+
+            const didKeyIssuer = await getDidKeyIssuerFromStorage(
+                TONOMY_LOGIN_WEBSITE_jsKeyManager
+            );
+
+            const swapMessage = await SwapTokenMessage.signMessage(
+                payload,
+                didKeyIssuer,
+                TONOMY_LOGIN_WEBSITE_did
+            );
+
+            expect(swapMessage).toBeInstanceOf(SwapTokenMessage);
+            expect(swapMessage.getPayload().proof.signature).toBe(
+                mockProof.signature
+            );
+
+            // 4. Send via communication
+            const result = await EXTERNAL_WEBSITE_user.sendSwapMessage(swapMessage);
+
+            expect(result).toBe(true);
+        }
+
 
         await externalWebsiteClientAuth(EXTERNAL_WEBSITE_user, externalApp, testOptions);
 
