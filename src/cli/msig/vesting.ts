@@ -7,6 +7,7 @@ import {
     TONO_SEED_ROUND_PRICE,
     getTonomyContract,
     getVestingContract,
+    getTokenContract,
 } from '../../sdk/services/blockchain';
 import { AccountType, isErrorCode, SdkErrors, TonomyUsername } from '../../sdk';
 import { getAccount, getAccountNameFromUsername, TONO_CURRENT_PRICE } from '../../sdk/services/blockchain';
@@ -228,7 +229,10 @@ async function vestingMigrate4Vesting(options: StandardProposalOptions) {
         const override = multiplierOverrides.get(account)?.get(allocationId);
 
         if (override) {
-            return { multiplier: override, message: `(override multiplier from ${res}x to ${override}x)` };
+            return {
+                multiplier: override,
+                message: `(override multiplier from ${res.toFixed(1)}x to ${override.toFixed(1)}x)`,
+            };
         }
 
         return { multiplier: res, message: `` };
@@ -324,10 +328,74 @@ async function vestingMigrate4TokenFixes(options: StandardProposalOptions) {
     await bulkTransfer({ transfers, ...options, proposalName });
 }
 
+async function burnBaseTokens(options: StandardProposalOptions) {
+    const burnAction = getTokenContract().actions.retire({
+        quantity: '3000000000.000000 TONO',
+        memo: 'Burn tokens that will be minted on Base blockchain',
+    });
+
+    const proposalHash = await createProposal(
+        options.proposer,
+        options.proposalName,
+        [burnAction],
+        options.privateKey,
+        options.requested,
+        options.dryRun
+    );
+
+    if (!options.dryRun && options.autoExecute)
+        await executeProposal(options.proposer, options.proposalName, proposalHash);
+}
+
+async function vestAllTreasuries(options: StandardProposalOptions) {
+    const vestingCategories = new Map<string, number>([
+        ['ecosystm.tmy', 7],
+        ['infra.tmy', 7],
+        ['liquidty.tmy', 14],
+        ['marketng.tmy', 7],
+        ['ops.tmy', 7],
+        ['partners.tmy', 6],
+        ['reserves.tmy', 6],
+        ['team.tmy', 4],
+    ]);
+
+    const actions: Action[] = [];
+
+    for (const [account, category] of vestingCategories) {
+        const balance = await getTokenContract().getBalanceDecimal(account);
+
+        console.log(`Vesting ${balance.toFixed(6)} TONO for ${account} in category ${category}`);
+
+        actions.push(
+            getVestingContract().actions.assignTokens({
+                sender: account,
+                holder: account,
+                amount: `${balance.toFixed(6)} TONO`,
+                category,
+            })
+        );
+    }
+
+    const proposalHash = await createProposal(
+        options.proposer,
+        options.proposalName,
+        actions,
+        options.privateKey,
+        options.requested,
+        options.dryRun
+    );
+
+    if (!options.dryRun && options.autoExecute)
+        await executeProposal(options.proposer, options.proposalName, proposalHash);
+}
+
 export async function vestingMigrate4(options: StandardProposalOptions) {
     await vestingMigrate4Vesting(options);
     await vestingMigrate4Tokenomics(options);
     await vestingMigrate4TokenFixes(options);
+    await vestingBulk(options); // pre TGE allocations
+    await burnBaseTokens(options);
+    await vestAllTreasuries(options); // should only be called once all above proposals are executed
 }
 
 async function createAccountActions(account: NameType): Promise<Action[]> {
@@ -420,28 +488,24 @@ function createMigrateAction(
     });
 }
 
-export async function vestingBulk(args: { governanceAccounts: string[] }, options: StandardProposalOptions) {
+export async function vestingBulk(options: StandardProposalOptions) {
     const csvFilePath = '/home/dev/Downloads/allocate.csv';
 
     console.log('Reading file: ', csvFilePath);
-    const sender = settings.isProduction() ? 'advteam.tmy' : 'team.tmy';
-    const requiredAuthority = options.autoExecute ? args.governanceAccounts[2] : '11.found.tmy';
-    const categoryId = 7; // Community and Marketing, Platform Dev, Infra Rewards
-    // https://github.com/Tonomy-Foundation/Tonomy-Contracts/blob/master/contracts/vesting.tmy/include/vesting.tmy/vesting.tmy.hpp#L31
 
     const records = parse(fs.readFileSync(csvFilePath, 'utf8'), {
         columns: true,
         // eslint-disable-next-line camelcase
         skip_empty_lines: true,
     });
-    const results: { accountName: string; usdQuantity: number }[] = [];
+    const results: { sender: string; accountName: string; usdQuantity: number; categoryId: number }[] = [];
 
     const unfoundAccounts: string[] = [];
 
     await Promise.all(
         records.map(async (data: any) => {
             // accountName, usdQuantity
-            if (!data.accountName || !data.usdQuantity) {
+            if (!data.sender || !data.accountName || !data.usdQuantity) {
                 throw new Error(`Invalid CSV format on line ${results.length + 1}: ${data}`);
             }
 
@@ -497,13 +561,13 @@ export async function vestingBulk(args: { governanceAccounts: string[] }, option
         const tonoQuantity = tonoNumber.toFixed(0) + '.000000 TONO';
 
         console.log(
-            `Assigning: ${tonoQuantity} ($${data.usdQuantity} USD) vested in category ${categoryId} to ${data.accountName} at rate of $${TONO_CURRENT_PRICE}/TONO`
+            `Assigning: ${tonoQuantity} ($${data.usdQuantity} USD) vested in category ${data.categoryId} from ${data.sender} to ${data.accountName} at rate of $${TONO_CURRENT_PRICE}/TONO`
         );
         return getVestingContract().actions.assignTokens({
-            sender,
+            sender: data.sender,
             holder: data.accountName,
             amount: tonoQuantity,
-            category: categoryId,
+            category: data.categoryId,
         });
     });
 
@@ -514,7 +578,7 @@ export async function vestingBulk(args: { governanceAccounts: string[] }, option
         options.proposalName,
         actions,
         options.privateKey,
-        [requiredAuthority],
+        options.requested,
         options.dryRun
     );
 

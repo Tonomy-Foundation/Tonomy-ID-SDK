@@ -143,7 +143,7 @@ export default async function msig(args: string[]) {
             } else if (proposalSubtype === 'migrate4') {
                 await vestingMigrate4(options);
             } else if (proposalSubtype === 'bulk') {
-                await vestingBulk({ governanceAccounts }, options);
+                await vestingBulk(options);
             } else printMsigHelp();
         } else if (proposalType === 'producers') {
             if (proposalSubtype === 'add') {
