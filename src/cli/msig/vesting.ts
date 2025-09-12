@@ -189,12 +189,13 @@ export async function vestingMigrate3(options: StandardProposalOptions) {
 async function vestingMigrate4Vesting(options: StandardProposalOptions) {
     let count = 0;
     let proposals = 0;
-    const multipliers = new Map<number, number>([
-        [7, 6.0], // Community and Marketing, Platform Dev, Infra Rewards
-        [8, 1.5], // Seed
-        [9, 3.0], // Pre-sale
-        [11, 6.0], // Private Sale
-        [15, 1.5], // Special
+    // categoryId -> multiplier, newCategoryId
+    const multipliers = new Map<number, { multiplier: number; newCategoryId: number }>([
+        [7, { multiplier: 6.0, newCategoryId: 7 }], // Community and Marketing, Platform Dev, Infra Rewards
+        [8, { multiplier: 1.5, newCategoryId: 16 }], // Seed
+        [9, { multiplier: 3.0, newCategoryId: 17 }], // Pre-sale
+        [11, { multiplier: 6.0, newCategoryId: 18 }], // Private Sale
+        [15, { multiplier: 1.5, newCategoryId: 19 }], // Special
     ]);
     // map username > allocation ID > multiplier
     const multiplierOverrides = new Map<string, Map<number, number>>([
@@ -226,7 +227,7 @@ async function vestingMigrate4Vesting(options: StandardProposalOptions) {
         categoryId: number,
         account: string,
         allocationId: number
-    ): { multiplier: number; message: string } {
+    ): { multiplier: number; message: string; newCategoryId: number } {
         const res = multipliers.get(categoryId);
 
         if (!res) throw new Error(`No multiplier for category ${categoryId}`);
@@ -236,11 +237,12 @@ async function vestingMigrate4Vesting(options: StandardProposalOptions) {
         if (override) {
             return {
                 multiplier: override,
-                message: `(override multiplier from ${res.toFixed(1)}x to ${override.toFixed(1)}x)`,
+                message: `(override multiplier from ${res.multiplier.toFixed(1)}x to ${override.toFixed(1)}x)`,
+                newCategoryId: res.newCategoryId,
             };
         }
 
-        return { multiplier: res, message: `` };
+        return { multiplier: res.multiplier, message: ``, newCategoryId: res.newCategoryId };
     }
 
     const batchSize = 100;
@@ -249,7 +251,7 @@ async function vestingMigrate4Vesting(options: StandardProposalOptions) {
         const batch = allAllocations.slice(i, i + batchSize);
 
         const actions: ActionType[] = batch.map((allocation) => {
-            const { multiplier, message } = getMultiplier(
+            const { multiplier, message, newCategoryId } = getMultiplier(
                 allocation.vestingCategoryType,
                 allocation.account,
                 allocation.id
@@ -259,7 +261,7 @@ async function vestingMigrate4Vesting(options: StandardProposalOptions) {
             const newAsset = `${newAmount.toFixed(6)} TONO`;
 
             console.log(
-                `Migrating account ${allocation.holder} allocation ${allocation.id} with ${multiplier}x in category ${allocation.vestingCategoryType} from ${allocation.tokensAllocated} to ${newAsset}${message ? ': ' + message : ''}`
+                `Migrating account ${allocation.holder} allocation ${allocation.id} with ${multiplier}x in category ${allocation.vestingCategoryType} from ${allocation.tokensAllocated} to ${newAsset} in category ${newCategoryId}${message ? ': ' + message : ''}`
             );
             count++;
 
@@ -270,7 +272,7 @@ async function vestingMigrate4Vesting(options: StandardProposalOptions) {
                 allocation.tokensAllocated,
                 newAsset,
                 allocation.vestingCategoryType,
-                allocation.vestingCategoryType
+                newCategoryId
             );
         });
 
@@ -336,12 +338,15 @@ async function vestingMigrate4TokenFixes(options: StandardProposalOptions) {
 }
 
 async function burnBaseTokens(options: StandardProposalOptions) {
-    const burnAction = getTokenContract().actions.retire({
+    const burnAction = getTokenContract().actions.bridgeRetire({
+        from: 'coinsale.tmy',
         quantity: '3000000000.000000 TONO',
         memo: 'Burn tokens that will be minted on Base blockchain',
     });
 
-    console.log('Burning 3,000,000,000.000000 TONO that will be minted on Base blockchain');
+    console.log(
+        'Burning 3,000,000,000.000000 TONO from the coinsale.tmy account, that will be minted on Base blockchain'
+    );
     const proposalName = Name.from(options.proposalName.toString() + 'burn');
 
     const proposalHash = await createProposal(
