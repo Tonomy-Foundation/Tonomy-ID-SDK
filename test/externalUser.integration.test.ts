@@ -90,6 +90,8 @@ describe('Login to external website', () => {
     let EXTERNAL_WEBSITE_user: ExternalUser;
     let TONOMY_ID_dataSource: DataSource;
     const communicationsToCleanup: Communication[] = [];
+    let baseAddress: string;
+    let destination: 'base' | 'tonomy' | 'hardhat' | 'localhost';
 
     beforeEach(async () => {
         // Initialize typeorm data source
@@ -135,10 +137,14 @@ describe('Login to external website', () => {
         );
 
         tonomyLoginApp = await createRandomApp();
-
+        baseAddress = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266';
+        destination = 'hardhat';
+       
         setSettings({
             ...settings,
             ssoWebsiteOrigin: tonomyLoginApp.origin,
+            baseTokenAddress: baseAddress,
+            baseNetwork: destination,
 
         });
 
@@ -378,14 +384,7 @@ describe('Login to external website', () => {
         
             const amount = new Decimal("0.5");
             const tonoAddress = (await EXTERNAL_WEBSITE_user.getAccountName()).toString();
-            const baseAddress = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266';
-            const destination = 'base';
-
-            setSettings({
-                ...settings,
-                baseTokenAddress: baseAddress,
-                baseNetwork: destination,
-            });
+            
             // 1. Get balances before
             const baseTokenContract = getBaseTokenContract();
             const balanceBeforeBase = await baseTokenContract.balanceOf(baseAddress);
@@ -393,12 +392,12 @@ describe('Login to external website', () => {
             
             const balanceBeforeTonomy = await tokenContract.getBalanceDecimal(tonoAddress);
 
-            console.log("Before Swap:");
+            console.log("Before Swap:", baseAddress);
             console.log("Base balance:", balanceBeforeBase.toString());
             console.log("Tonomy balance:", balanceBeforeTonomy.toString());
             // 4. Send via communication
             const proof = await createSignedProofMessage()
-            const result = await EXTERNAL_WEBSITE_user.swapToken(amount, proof, 'base');
+            const result = await EXTERNAL_WEBSITE_user.swapTokenService(amount, proof, 'base');
 
             expect(result).toBe(true);
             const balanceAfterBase = await baseTokenContract.balanceOf(baseAddress);

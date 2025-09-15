@@ -39,6 +39,7 @@ import { ClientAuthorizationData, IOnPressLoginOptions } from '../sdk/types/User
 import Debug from 'debug';
 import Decimal from 'decimal.js';
 import { extractProofMessage } from '../sdk/services/ethereum';
+import { SwapService } from '../sdk/util/swap';
 
 const debug = Debug('tonomy-sdk:externalUser');
 
@@ -630,6 +631,18 @@ export class ExternalUser {
         await this.sendSwapMessage(swapMessage);
 
         return true;
+    }
+
+    async swapTokenService(
+        amount: Decimal,
+        proof: { message: string; signature: string },
+        destination: 'base' | 'tonomy'
+    ) {
+        const user = await ExternalUser.getUser();
+        const swapService = new SwapService(user);
+        const result = await swapService.swapToken(amount, proof, destination);
+
+        return result;
     }
 }
 
