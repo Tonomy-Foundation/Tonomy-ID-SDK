@@ -611,28 +611,6 @@ export class ExternalUser {
      * @param proof contains message and signature
      * @param destination Either "base" or "tonomy"
      */
-    async swapToken(
-        amount: Decimal,
-        proof: { message: string; signature: string },
-        destination: 'base' | 'tonomy'
-    ): Promise<boolean> {
-        const { address } = extractProofMessage(proof.message);
-
-        const payload: SwapTokenMessagePayload = {
-            amount,
-            baseAddress: address,
-            proof: proof,
-            destination,
-        };
-
-        const issuer = await this.getIssuer();
-        const swapMessage = await SwapTokenMessage.signMessage(payload, issuer, address);
-
-        await this.sendSwapMessage(swapMessage);
-
-        return true;
-    }
-
     async swapTokenService(
         amount: Decimal,
         proof: { message: string; signature: string },
