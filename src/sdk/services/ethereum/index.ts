@@ -40,6 +40,7 @@ function getSigner(): ethers.Signer | undefined {
 
         return new ethers.Wallet(privateKey, provider);
     } catch (error) {
+        console.error('Failed to create signer:', error);
         return undefined;
     }
 }
@@ -129,7 +130,7 @@ export function extractProofMessage(message: string): {
 /**
  * Creates a signed proof message
  *
- * @returns {Promise<string>} The signed proof message
+ * @returns {Promise<{ message: string; signature: string }>} The message and signature
  */
 export async function createSignedProofMessage(): Promise<{ message: string; signature: string }> {
     const signer = getSigner();

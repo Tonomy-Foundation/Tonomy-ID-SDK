@@ -2,11 +2,11 @@ import Decimal from 'decimal.js';
 import { extractProofMessage, SdkErrors, SwapTokenMessage, SwapTokenMessagePayload, throwError } from '../sdk';
 import { ExternalUser } from './externalUser';
 
-export class AppsUser extends ExternalUser {
+export class AppsExternalUser extends ExternalUser {
     /**
-     * Sends a message to another DID
+     * Sends a swap message to the communication service
      *
-     * @param {Message} message - the message to send
+     * @param {SwapTokenMessage} message - the message to send
      */
     async sendSwapMessage(message: SwapTokenMessage): Promise<void> {
         await this.loginToCommunication();

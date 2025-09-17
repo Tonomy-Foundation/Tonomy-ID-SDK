@@ -362,14 +362,14 @@ describe('Login to external website', () => {
             testOptions
         );
 
-        await disconnectCommunications([EXTERNAL_WEBSITE_user.communication]);
+        await disconnectCommunications([getProtectedCommunication(EXTERNAL_WEBSITE_user)]);
 
         EXTERNAL_WEBSITE_user = await externalWebsiteOnReload(
             EXTERNAL_WEBSITE_jsKeyManager,
             EXTERNAL_WEBSITE_storage_factory,
             TONOMY_ID_user
         );
-        communicationsToCleanup.push(EXTERNAL_WEBSITE_user.communication);
+        communicationsToCleanup.push(getProtectedCommunication(EXTERNAL_WEBSITE_user));
 
         await externalWebsiteSignVc(EXTERNAL_WEBSITE_user);
 
@@ -418,3 +418,9 @@ describe('Login to external website', () => {
         debug('finished disconnecting all communications');
     }
 });
+
+function getProtectedCommunication(user: ExternalUser): Communication {
+    return (user as unknown as { communication: Communication }).communication;
+}
+
+        

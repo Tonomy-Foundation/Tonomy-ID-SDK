@@ -80,10 +80,10 @@ export type LoginWithTonomyMessages = {
  *
  */
 export class ExternalUser {
-    keyManager: KeyManager;
-    storage: ExternalUserStorage & PersistentStorageClean;
-    did: string;
-    communication: Communication;
+    protected keyManager: KeyManager;
+    protected storage: ExternalUserStorage & PersistentStorageClean;
+    protected communication: Communication;
+    public did: string;
 
     /**
      * Creates a new external user
