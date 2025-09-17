@@ -386,7 +386,7 @@ async function vestAllTreasuries(options: StandardProposalOptions) {
 
             if (!vesting) throw new Error(`No vesting schedule for category ${category}`);
 
-            balance = balance.mul(1 - vesting.tgeUnlock);
+            balance = balance.mul(1 - 0.25); // 25% TGE unlocked
         }
 
         console.log(`Vesting ${balance.toFixed(6)} TONO for ${account} in category ${category}`);
