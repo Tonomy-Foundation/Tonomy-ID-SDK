@@ -126,7 +126,6 @@ describe('Login to external website', () => {
         // for some reason this is needed to ensure all the code lines execute. Not sure why needed
         // TODO: figure out why this is needed and remove issue
         await sleep(1000);
-        console.log('Finished afterEach()!')
     });
 
     afterAll(async () => {
@@ -139,9 +138,8 @@ describe('Login to external website', () => {
         const loginToExternalAppAssertions = 27;
 
         test('should swap a token to the Base network and back again', async () => {
-            expect.assertions(loginToExternalAppAssertions + 2);
+            expect.assertions(loginToExternalAppAssertions + 4);
             await runAppsExternalUserLoginTest();  
-            console.log("Test complete");         
         });
     });
 
@@ -167,16 +165,13 @@ describe('Login to external website', () => {
 
         APPS_EXTERNAL_WEBSITE_user = new AppsExternalUser(res);
         
-        const amount = new Decimal("1.0"); // amount to swap
+        const amount = new Decimal("2.5"); // amount to swap
         const amountWeiBigInt = BigInt(amount.mul(10**18).toString());
 
-        console.log("Swapping:\nAmount:", amount.toString(), "\nAmount (wei):", amountWeiBigInt.toString());
         const tonomyAccountName = await APPS_EXTERNAL_WEBSITE_user.getAccountName()
             
         const balanceBeforeBase = await getBaseTokenContract().balanceOf(userBaseAddress);            
         const balanceBeforeTonomy = await getTokenContract().getBalanceDecimal(tonomyAccountName);
-
-        console.log("Before:\nBase balance:", balanceBeforeBase.toString(), "\nTonomy balance:", balanceBeforeTonomy.toString());
 
         const proof = await createSignedProofMessage(userBaseSigner)
 
@@ -187,9 +182,18 @@ describe('Login to external website', () => {
         const balanceAfterBase = await getBaseTokenContract().balanceOf(userBaseAddress);
         const balanceAfterTonomy = await getTokenContract().getBalanceDecimal(tonomyAccountName);
 
-        console.log("After:\nBase balance:", balanceAfterBase.toString(), "\nTonomy balance:", balanceAfterTonomy.toString());
         expect(balanceAfterBase).toEqual(balanceBeforeBase + amountWeiBigInt);
         expect(balanceAfterTonomy).toEqual(balanceBeforeTonomy.sub(amount));
+
+        const proof2 = await createSignedProofMessage(userBaseSigner)
+
+        await APPS_EXTERNAL_WEBSITE_user.swapToken(amount, proof2, 'tonomy', tonomyAppsWebsiteUsername);
+
+        const balanceAfter2Base = await getBaseTokenContract().balanceOf(userBaseAddress);
+        const balanceAfter2Tonomy = await getTokenContract().getBalanceDecimal(tonomyAccountName);
+
+        expect(balanceAfter2Base).toEqual(balanceBeforeBase);
+        expect(balanceAfter2Tonomy).toEqual(balanceBeforeTonomy);
     }
 
     async function disconnectCommunications(communications: Communication[]) {
