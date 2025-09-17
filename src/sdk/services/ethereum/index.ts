@@ -97,6 +97,33 @@ export function getSigner(): ethers.Signer | undefined {
 }
 
 const EXPIRATION_TIME = 5 * 60 * 1000; // 5 minutes
+const seenNonces: Map<string, Date> = new Map(); // Map<nonce, Date>
+
+/**
+ * Checks if a nonce has been seen before
+ *
+ * @param {string} nonce - the nonce to check
+ * @returns {boolean} true if the nonce has been seen before
+ */
+function checkSeenNonce(nonce: string): boolean {
+    const res = seenNonces.has(nonce);
+
+    addSeenNonce(nonce);
+    trimSeenNonces();
+    return res;
+}
+
+function trimSeenNonces(): void {
+    seenNonces.forEach((date, nonce) => {
+        if (date.getTime() + EXPIRATION_TIME < Date.now()) {
+            seenNonces.delete(nonce);
+        }
+    });
+}
+
+function addSeenNonce(nonce: string): void {
+    seenNonces.set(nonce, new Date());
+}
 
 /**
  * Verifies that a signature was created by the expected signer.
@@ -105,37 +132,43 @@ const EXPIRATION_TIME = 5 * 60 * 1000; // 5 minutes
  * @param {string} expectedSigner - The address that should have signed the message
  * @returns {boolean} boolean indicating if the signature is valid and from the expected signer
  */
-export function verifySignature(message: string, signature: string, expectedSigner: string): boolean {
-    const { address, network, timestamp } = extractProofMessage(message);
+export function verifySignature(
+    message: string,
+    signature: string,
+    expectedSigner: string
+): { result: boolean; reason?: string } {
+    const { address, network, timestamp, nonce } = extractProofMessage(message);
+
+    if (checkSeenNonce(nonce)) {
+        return { result: false, reason: `Nonce ${nonce} has been seen before` };
+    }
 
     if (address.toLowerCase() !== expectedSigner.toLowerCase()) {
-        console.error(`Signature verification failed: Expected ${expectedSigner} but got ${address} from the message`);
-        return false;
+        return { result: false, reason: `Expected address ${expectedSigner} but got ${address} from the message` };
     }
 
     if (network.toLowerCase() !== getSettings().baseNetwork.toLowerCase()) {
-        console.error(
-            `Signature verification failed: Expected ${getSettings().baseNetwork} but got ${network} from the message`
-        );
-        return false;
+        return {
+            result: false,
+            reason: `Expected network ${getSettings().baseNetwork} but got ${network} from the message`,
+        };
     }
 
     const now = new Date();
     const timestampDiff = now.getTime() - new Date(timestamp).getTime();
 
     if (timestampDiff > EXPIRATION_TIME) {
-        console.error(`Signature verification failed: Timestamp is too old`);
-        return false;
+        return { result: false, reason: `Timestamp ${timestamp} is too old` };
     }
 
     const recoveredAddress = ethers.verifyMessage(message, signature);
     const isValid = recoveredAddress.toLowerCase() === expectedSigner.toLowerCase();
 
     if (!isValid) {
-        console.error(`Signature verification failed: Expected ${expectedSigner} but got ${recoveredAddress}`);
+        return { result: false, reason: `Expected ${expectedSigner} but got ${recoveredAddress}` };
     }
 
-    return isValid;
+    return { result: true };
 }
 
 export function createProofMessage(address: string, network: string): string {

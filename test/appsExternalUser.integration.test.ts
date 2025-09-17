@@ -15,7 +15,6 @@ import {
     getBaseTokenContract,
     createSignedProofMessage,
     ensureBaseTokenDeployed,
-    verifySignature,
     getProvider,
 } from '../src/sdk/index';
 import { JsKeyManager } from '../src/sdk/storage/jsKeyManager';
@@ -66,7 +65,7 @@ describe('Login to external website', () => {
     let EXTERNAL_WEBSITE_storage_factory: StorageFactory;
     let APPS_EXTERNAL_WEBSITE_user: AppsExternalUser;
     const communicationsToCleanup: Communication[] = [];
-    const userBasePrivateKey = '0xde9be858da4a475276426320d5e9262ecfc3ba460bfac56360bfa6c4c28b4ee0'; // Hardhat account #18
+    const userBasePrivateKey = '0xde9be858da4a475276426320d5e9262ecfc3ba460bfac56360bfa6c4c28b4ee0'; // Hardhat account #18. TODO: change this to a random address (need to send ETH to it in tests)
     const userBaseSigner: ethers.Signer = new ethers.Wallet(userBasePrivateKey, getProvider());
     let userBaseAddress: string;
 
@@ -137,8 +136,10 @@ describe('Login to external website', () => {
     });
 
     describe('SwapToken services are working', () => {
+        const loginToExternalAppAssertions = 27;
+
         test('should swap a token to the Base network and back again', async () => {
-            expect.assertions(27);
+            expect.assertions(loginToExternalAppAssertions + 2);
             await runAppsExternalUserLoginTest();  
             console.log("Test complete");         
         });
@@ -166,16 +167,16 @@ describe('Login to external website', () => {
 
         APPS_EXTERNAL_WEBSITE_user = new AppsExternalUser(res);
         
-        const amount = new Decimal("0.5");
-        const amountEthersBigInt = BigInt(amount.mul(10**18).toString());
+        const amount = new Decimal("1.0"); // amount to swap
+        const amountWeiBigInt = BigInt(amount.mul(10**18).toString());
+
+        console.log("Swapping:\nAmount:", amount.toString(), "\nAmount (wei):", amountWeiBigInt.toString());
         const tonomyAccountName = await APPS_EXTERNAL_WEBSITE_user.getAccountName()
             
         const balanceBeforeBase = await getBaseTokenContract().balanceOf(userBaseAddress);            
         const balanceBeforeTonomy = await getTokenContract().getBalanceDecimal(tonomyAccountName);
 
-        console.log("Before Swap");
-        console.log("Base balance:", balanceBeforeBase.toString());
-        console.log("Tonomy balance:", balanceBeforeTonomy.toString());
+        console.log("Before:\nBase balance:", balanceBeforeBase.toString(), "\nTonomy balance:", balanceBeforeTonomy.toString());
 
         const proof = await createSignedProofMessage(userBaseSigner)
 
@@ -186,10 +187,8 @@ describe('Login to external website', () => {
         const balanceAfterBase = await getBaseTokenContract().balanceOf(userBaseAddress);
         const balanceAfterTonomy = await getTokenContract().getBalanceDecimal(tonomyAccountName);
 
-        console.log("After Swap:");
-        console.log("Base balance:", balanceAfterBase.toString());
-        console.log("Tonomy balance:", balanceAfterTonomy.toString());
-        expect(balanceAfterBase).toEqual(balanceBeforeBase + amountEthersBigInt);
+        console.log("After:\nBase balance:", balanceAfterBase.toString(), "\nTonomy balance:", balanceAfterTonomy.toString());
+        expect(balanceAfterBase).toEqual(balanceBeforeBase + amountWeiBigInt);
         expect(balanceAfterTonomy).toEqual(balanceBeforeTonomy.sub(amount));
     }
 
