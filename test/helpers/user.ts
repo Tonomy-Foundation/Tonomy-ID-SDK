@@ -79,15 +79,14 @@ export async function createRandomID(checkKeys = true) {
     return { user, password, pin, auth, username };
 }
 
-export async function createRandomApp({
-    usernamePrefix = randomString(8),
-}: { usernamePrefix?: string } = {}): Promise<App> {
+export async function createRandomApp(): Promise<App> {
     const port = Math.floor(Math.random() * 65535);
 
     const name = randomString(8);
     const description = randomString(80);
     const origin = `http://localhost:${port}`;
     const logoUrl = `${origin}/logo.png`;
+    const usernamePrefix = randomString(8);
 
     return await App.create({
         usernamePrefix,

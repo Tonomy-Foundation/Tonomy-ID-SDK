@@ -11,10 +11,10 @@ import {
     StorageFactory,
     STORAGE_NAMESPACE,
     ExternalUser,
-    DemoTokenContract,
-    getSettings,
     setSettings,
     Communication,
+    getBaseTokenContract,
+    createSignedProofMessage,
 } from '../src/sdk/index';
 import { JsKeyManager } from '../src/sdk/storage/jsKeyManager';
 import { DataSource } from 'typeorm';
@@ -28,34 +28,22 @@ import {
 } from './helpers/user';
 import { sleep } from '../src/sdk/util/time';
 import {
-    externalWebsiteOnReload,
-    externalWebsiteOnLogout,
-    externalWebsiteSignVc,
-    externalWebsiteSignTransaction,
-    externalWebsiteClientAuth,
     loginToExternalApp,
 } from './helpers/externalUser';
 import { createStorageFactory } from './helpers/storageFactory';
-import { createSigner, getTonomyOperationsKey } from '../src/sdk/services/blockchain';
+import { createSigner, getTokenContract, getTonomyOperationsKey } from '../src/sdk/services/blockchain';
 import { setTestSettings, settings } from './helpers/settings';
-import deployContract from '../src/cli/bootstrap/deploy-contract';
 import Debug from 'debug';
+import Decimal from 'decimal.js';
+import { AppsExternalUser } from '../src/api/appsUser';
 
 const debug = Debug('tonomy-sdk-tests:externalUser.integration.test');
-
-export type ExternalUserLoginTestOptions = {
-    dataRequest?: boolean;
-    dataRequestUsername?: boolean;
-    dataRequestKYC?: boolean;
-    dataRequestKYCDecision?: 'approved' | 'declined';
-    swapToken?: boolean;
-};
 
 setTestSettings();
 
 const signer = createSigner(getTonomyOperationsKey());
 
-describe('ExternalUser: Login to external website', () => {
+describe('Login to external website', () => {
     jest.setTimeout(50000);
 
     /** Object naming convention - indicates the different devices/apps the user is using
@@ -73,8 +61,9 @@ describe('ExternalUser: Login to external website', () => {
     let TONOMY_LOGIN_WEBSITE_storage_factory: StorageFactory;
     let EXTERNAL_WEBSITE_jsKeyManager: KeyManager;
     let EXTERNAL_WEBSITE_storage_factory: StorageFactory;
-    let EXTERNAL_WEBSITE_user: ExternalUser;
+    let APPS_EXTERNAL_WEBSITE_user: AppsExternalUser;
     const communicationsToCleanup: Communication[] = [];
+    const userBaseAddress: string = '0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512'; //default hardhat address[0]
 
     beforeEach(async () => {
         // Initialize typeorm data source
@@ -93,31 +82,6 @@ describe('ExternalUser: Login to external website', () => {
 
         // Create app which will be logged into
         externalApp = await createRandomApp();
-
-        debug('Deploying and configuring demo.tmy contract to ', externalApp.accountName.toString());
-        await deployContract(
-            { account: externalApp.accountName, contractDir: './Tonomy-Contracts/contracts/demo.tmy' },
-            signer,
-            {
-                throughTonomyProxy: true,
-                extraAuthorization: {
-                    actor: 'tonomy',
-                    permission: 'active',
-                },
-            }
-        );
-        const demoTokenContract = await DemoTokenContract.atAccount(externalApp.accountName);
-
-        await demoTokenContract.create(
-            demoTokenContract.contractName,
-            `1000000000.000000 ${getSettings().currencySymbol}`,
-            signer
-        );
-        await demoTokenContract.issue(demoTokenContract.contractName,
-            `10000.000000 ${getSettings().currencySymbol}`, '',
-            signer
-        );
-
         tonomyLoginApp = await createRandomApp();
        
         setSettings({
@@ -151,6 +115,7 @@ describe('ExternalUser: Login to external website', () => {
         // for some reason this is needed to ensure all the code lines execute. Not sure why needed
         // TODO: figure out why this is needed and remove issue
         await sleep(1000);
+        console.log('finished!')
     });
 
     afterAll(async () => {
@@ -159,34 +124,14 @@ describe('ExternalUser: Login to external website', () => {
         }
     });
 
-    describe('SSO login full end-to-end flow with external desktop browser (using communication service)', () => {
-        test('Successful login to external website - no data request', async () => {
-            expect.assertions(56);
-            await runExternalUserLoginTest({});
-        });
-
-        test('Successful login to external website with empty data request', async () => {
-            expect.assertions(57);
-            await runExternalUserLoginTest({ dataRequest: true });
-        });
-
-        test('Successful login to external website with data request for username', async () => {
-            expect.assertions(60);
-            await runExternalUserLoginTest({ dataRequest: true, dataRequestUsername: true });
-        });
-
-        test('Successful login to external website with data request for KYC verification successful', async () => {
-            expect.assertions(88);
-            await runExternalUserLoginTest({ dataRequest: true, dataRequestKYC: true, dataRequestKYCDecision: 'approved' });
-        });
-
-        test('Unsuccessful login to external website with data request for KYC verification failed', async () => {
-            expect.assertions(37);
-            await runExternalUserLoginTest({ dataRequest: true, dataRequestKYC: true, dataRequestKYCDecision: 'declined' });
+    describe('SwapToken services are working', () => {
+        test('should swap a token to the Base network and back again', async () => {
+            expect.assertions(27);
+            await runAppsExternalUserLoginTest();           
         });
     });
 
-    async function runExternalUserLoginTest(testOptions: ExternalUserLoginTestOptions) {
+    async function runAppsExternalUserLoginTest() {
         const res = await loginToExternalApp(
             {
                 externalApp,
@@ -198,7 +143,7 @@ describe('ExternalUser: Login to external website', () => {
                 EXTERNAL_WEBSITE_storage_factory,
                 communicationsToCleanup
             },
-            testOptions
+            {}
         );
 
         if (!res) {
@@ -206,21 +151,30 @@ describe('ExternalUser: Login to external website', () => {
             return;
         }
 
-        EXTERNAL_WEBSITE_user = res;
+        APPS_EXTERNAL_WEBSITE_user = new AppsExternalUser(res);
+        
+        const amount = new Decimal("0.5");
+        const tonomyAccountName = await APPS_EXTERNAL_WEBSITE_user.getAccountName()
+            
+        const balanceBeforeBase = await getBaseTokenContract().balanceOf(userBaseAddress);            
+        const balanceBeforeTonomy = await getTokenContract().getBalanceDecimal(tonomyAccountName);
 
-        await disconnectCommunications([getProtectedCommunication(EXTERNAL_WEBSITE_user)]);
+        console.log("Before Swap");
+        console.log("Base balance:", balanceBeforeBase.toString());
+        console.log("Tonomy balance:", balanceBeforeTonomy.toString());
 
-        EXTERNAL_WEBSITE_user = await externalWebsiteOnReload(
-            EXTERNAL_WEBSITE_jsKeyManager,
-            EXTERNAL_WEBSITE_storage_factory,
-            TONOMY_ID_user
-        );
-        communicationsToCleanup.push(getProtectedCommunication(EXTERNAL_WEBSITE_user));
+        const proof = await createSignedProofMessage()
+        const tonomyAppsWebsiteUsername = await externalApp.username?.getBaseUsername();
 
-        await externalWebsiteSignVc(EXTERNAL_WEBSITE_user);
-        await externalWebsiteSignTransaction(EXTERNAL_WEBSITE_user, externalApp);
-        await externalWebsiteClientAuth(EXTERNAL_WEBSITE_user, externalApp, testOptions);
-        await externalWebsiteOnLogout(EXTERNAL_WEBSITE_jsKeyManager, EXTERNAL_WEBSITE_storage_factory);
+        await APPS_EXTERNAL_WEBSITE_user.swapToken(amount, proof, 'base', tonomyAppsWebsiteUsername);
+
+        const balanceAfterBase = await getBaseTokenContract().balanceOf(userBaseAddress);
+        const balanceAfterTonomy = await getTokenContract().getBalanceDecimal(tonomyAccountName);
+
+        console.log("After Swap:");
+        console.log("Base balance:", balanceAfterBase.toString());
+        console.log("Tonomy balance:", balanceAfterTonomy.toString());
+
     }
 
     async function disconnectCommunications(communications: Communication[]) {

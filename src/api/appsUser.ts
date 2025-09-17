@@ -42,10 +42,11 @@ export class AppsExternalUser extends ExternalUser {
      * @param { { message: string; signature: string } } proof contains message and signature
      * @param { 'base' | 'tonomy' } destination Either "base" or "tonomy"
      */
-    async swapTokenService(
+    async swapToken(
         amount: Decimal,
         proof: { message: string; signature: string },
-        destination: 'base' | 'tonomy'
+        destination: 'base' | 'tonomy',
+        _testOnly_tonomyAppsWebsiteUsername?: string
     ): Promise<void> {
         const { address } = extractProofMessage(proof.message);
 
@@ -54,6 +55,7 @@ export class AppsExternalUser extends ExternalUser {
             baseAddress: address,
             proof: proof,
             destination,
+            _testOnly_tonomyAppsWebsiteUsername: _testOnly_tonomyAppsWebsiteUsername,
         };
 
         const issuer = await this.getIssuer();

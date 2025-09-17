@@ -330,6 +330,10 @@ export class SwapTokenMessagePayload {
         signature: string;
     };
     destination: 'base' | 'tonomy';
+    /**
+     * @internal only used for testing
+     */
+    _testOnly_tonomyAppsWebsiteUsername?: string;
 }
 
 export class SwapTokenMessage extends Message<SwapTokenMessagePayload> {

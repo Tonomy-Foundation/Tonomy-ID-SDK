@@ -1,8 +1,9 @@
 import { ethers } from 'ethers';
 import { getSettings, isProduction } from '../../util/settings';
-import TonomyTokenABI from './abi/TonomyToken.json';
 import Debug from 'debug';
 import { randomString } from '../../util/crypto';
+// eslint-disable-next-line camelcase
+import { TonomyToken, TonomyToken__factory } from './typechain'; // adjust path if different
 
 const debug = Debug('tonomy-sdk:services:ethereum');
 
@@ -14,17 +15,17 @@ function getProvider(): ethers.Provider {
 }
 
 /**
- * Creates and returns an ethers.Contract instance for the TonomyToken contract
- * with the provider and signer configured from settings
+ * Creates and returns a TonomyToken contract instance with the provider and signer configured from settings
  *
- * @returns Configured ethers.Contract instance
+ * @returns {TonomyToken} Configured contract instance
  */
-export function getBaseTokenContract(): ethers.Contract {
+export function getBaseTokenContract(): TonomyToken {
     const settings = getSettings();
-    const provider = getProvider();
     const signer = getSigner();
+    const provider = getProvider();
 
-    return new ethers.Contract(settings.baseTokenAddress, TonomyTokenABI.abi, signer || provider);
+    // eslint-disable-next-line camelcase
+    return TonomyToken__factory.connect(settings.baseTokenAddress, signer || provider);
 }
 
 function getSigner(): ethers.Signer | undefined {

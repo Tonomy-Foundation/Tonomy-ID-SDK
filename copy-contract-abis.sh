@@ -79,5 +79,7 @@ fi
 
 echo "Ethereum Token Contract: Copying ABI"
 cp "./artifacts/contracts/TonomyToken.sol/TonomyToken.json" "${PARENT_PATH}/src/sdk/services/ethereum/abi/TonomyToken.json"
+cd "${PARENT_PATH}"
+npx typechain --target ethers-v6 --out-dir src/sdk/services/ethereum/typechain 'src/sdk/services/ethereum/abi/*.json'
 
 echo "All contract ABIs copied successfully"
