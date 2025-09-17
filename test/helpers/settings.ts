@@ -11,6 +11,9 @@ export const settings: Partial<SettingsType> = {
     loggerLevel: 'info',
     currencySymbol: 'TONO',
     environment: 'test',
+    baseNetwork: 'hardhat',
+    baseRpcUrl: 'http://localhost:8545',
+    baseTokenAddress: process.env.BASE_TOKEN_ADDRESS,
 };
 
 export function setTestSettings() {

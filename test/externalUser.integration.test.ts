@@ -62,7 +62,7 @@ export type ExternalUserLoginTestOptions = {
     dataRequestUsername?: boolean;
     dataRequestKYC?: boolean;
     dataRequestKYCDecision?: 'approved' | 'declined';
-    SwapToken?: boolean;
+    swapToken?: boolean;
 };
 
 setTestSettings();
@@ -90,8 +90,8 @@ describe('Login to external website', () => {
     let EXTERNAL_WEBSITE_user: ExternalUser;
     let TONOMY_ID_dataSource: DataSource;
     const communicationsToCleanup: Communication[] = [];
-    let baseAddress: string;
-    let destination: 'base' | 'tonomy' | 'hardhat' | 'localhost';
+    const userBaseAddress: string = '0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512'; //default hardhat address[0]
+
 
     beforeEach(async () => {
         // Initialize typeorm data source
@@ -137,15 +137,10 @@ describe('Login to external website', () => {
         );
 
         tonomyLoginApp = await createRandomApp();
-        baseAddress = '0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512';
-        destination = 'hardhat';
        
         setSettings({
             ...settings,
             ssoWebsiteOrigin: tonomyLoginApp.origin,
-            baseTokenAddress: baseAddress,
-            baseNetwork: destination,
-
         });
 
         // setup KeyManagers for the external website and tonomy login website
@@ -209,7 +204,7 @@ describe('Login to external website', () => {
         });
         test('should create and send SwapTokenMessage with mocked Ethereum proof', async () => {
             expect.assertions(59);
-            await runExternalUserLoginTest({ dataRequest: false, SwapToken: true });           
+            await runExternalUserLoginTest({ dataRequest: false, swapToken: true });           
         });
     });
 
@@ -380,7 +375,7 @@ describe('Login to external website', () => {
 
         await externalWebsiteSignTransaction(EXTERNAL_WEBSITE_user, externalApp);
 
-        if (testOptions.SwapToken) {
+        if (testOptions.swapToken) {
         
             const amount = new Decimal("0.5");
             const tonoAddress = (await EXTERNAL_WEBSITE_user.getAccountName()).toString();
@@ -388,12 +383,12 @@ describe('Login to external website', () => {
             // 1. Get balances before
             const baseTokenContract = getBaseTokenContract();
             //getting error in balanceOf call needs to be fixed
-            const balanceBeforeBase = await baseTokenContract.balanceOf(baseAddress);
+            const balanceBeforeBase = await baseTokenContract.balanceOf(userBaseAddress);
             const tokenContract = getTokenContract();
             
             const balanceBeforeTonomy = await tokenContract.getBalanceDecimal(tonoAddress);
 
-            console.log("Before Swap:", baseAddress);
+            console.log("Before Swap:", userBaseAddress);
             console.log("Base balance:", balanceBeforeBase.toString());
             console.log("Tonomy balance:", balanceBeforeTonomy.toString());
             // 4. Send via communication
@@ -401,7 +396,7 @@ describe('Login to external website', () => {
             const result = await EXTERNAL_WEBSITE_user.swapTokenService(amount, proof, 'base');
 
             expect(result).toBe(true);
-            const balanceAfterBase = await baseTokenContract.balanceOf(baseAddress);
+            const balanceAfterBase = await baseTokenContract.balanceOf(userBaseAddress);
             const balanceAfterTonomy = await tokenContract.getBalanceDecimal(tonoAddress);
 
             console.log("After Swap:");

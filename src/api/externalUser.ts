@@ -26,7 +26,6 @@ import {
     LinkAuthRequestMessage,
     LinkAuthRequestResponseMessage,
     Message,
-    SwapTokenMessage,
 } from '../sdk';
 import { VCWithTypeType, VerifiableCredential, VerifiableCredentialWithType } from '../sdk/util/ssi/vc';
 import { DIDurl, JWT } from '../sdk/util/ssi/types';
@@ -36,8 +35,6 @@ import { createDidKeyIssuerAndStore } from '../sdk/helpers/didKeyStorage';
 import { verifyKeyExistsForApp } from '../sdk/helpers/user';
 import { ClientAuthorizationData, IOnPressLoginOptions } from '../sdk/types/User';
 import Debug from 'debug';
-import Decimal from 'decimal.js';
-import { SwapService } from '../sdk/util/swap';
 
 const debug = Debug('tonomy-sdk:externalUser');
 
@@ -581,44 +578,13 @@ export class ExternalUser {
         if (!res) throwError('Failed to send message', SdkErrors.MessageSendError);
     }
 
-    /**
-     * Sends a message to another DID
-     *
-     * @param {Message} message - the message to send
-     */
-    async sendSwapMessage(message: SwapTokenMessage): Promise<void> {
-        await this.loginToCommunication();
-        const res = await this.communication.sendSwapMessage(message);
-
-        if (!res) throwError('Failed to send message', SdkErrors.MessageSendError);
-    }
-
-    private async loginToCommunication(): Promise<void> {
+    protected async loginToCommunication(): Promise<void> {
         if (!this.communication.isLoggedIn()) {
             const issuer = await this.getIssuer();
             const authMessage = await AuthenticationMessage.signMessageWithoutRecipient({}, issuer);
 
             await this.communication.login(authMessage);
         }
-    }
-
-    /**
-     * Service to swap $TONO between Base and Tonomy chains.
-     *
-     * @param amount Decimal amount to swap
-     * @param proof contains message and signature
-     * @param destination Either "base" or "tonomy"
-     */
-    async swapTokenService(
-        amount: Decimal,
-        proof: { message: string; signature: string },
-        destination: 'base' | 'tonomy'
-    ) {
-        const user = await ExternalUser.getUser();
-        const swapService = new SwapService(user);
-        const result = await swapService.swapToken(amount, proof, destination);
-
-        return result;
     }
 }
 

@@ -1,10 +1,17 @@
 import { ethers } from 'ethers';
-import { getSettings } from '../../util/settings';
+import { getSettings, isProduction } from '../../util/settings';
 import TonomyTokenABI from './abi/TonomyToken.json';
 import Debug from 'debug';
 import { randomString } from '../../util/crypto';
 
 const debug = Debug('tonomy-sdk:services:ethereum');
+
+function getProvider(): ethers.Provider {
+    const settings = getSettings();
+
+    if (isProduction()) return new ethers.JsonRpcProvider(settings.baseRpcUrl, settings.baseNetwork);
+    return new ethers.JsonRpcProvider(settings.baseRpcUrl, undefined, { staticNetwork: true });
+}
 
 /**
  * Creates and returns an ethers.Contract instance for the TonomyToken contract
@@ -14,9 +21,7 @@ const debug = Debug('tonomy-sdk:services:ethereum');
  */
 export function getBaseTokenContract(): ethers.Contract {
     const settings = getSettings();
-
-    //TODO: added if conditiion for local testing , settings.baseNetwork, { staticNetwork: true }
-    const provider = new ethers.JsonRpcProvider(settings.baseRpcUrl);
+    const provider = getProvider();
     const signer = getSigner();
 
     return new ethers.Contract(settings.baseTokenAddress, TonomyTokenABI.abi, signer || provider);
@@ -24,9 +29,7 @@ export function getBaseTokenContract(): ethers.Contract {
 
 function getSigner(): ethers.Signer | undefined {
     const settings = getSettings();
-
-    //TODO: added if conditiion for local testing , settings.baseNetwork, { staticNetwork: true }
-    const provider = new ethers.JsonRpcProvider(settings.baseRpcUrl);
+    const provider = getProvider();
 
     try {
         const privateKey = settings.basePrivateKey;
