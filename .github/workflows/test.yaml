@@ -155,7 +155,7 @@ jobs:
       - run: npx pm2 logs --lines 50 --nostream hardhat
       - run: |
           cd Ethereum-token
-          DEPLOY_OUTPUT=$(yarn run deploy)
+          DEPLOY_OUTPUT=$(yarn run deploy --network localhost)
           echo "$DEPLOY_OUTPUT"
           BASE_TOKEN_ADDRESS=$(echo "$DEPLOY_OUTPUT" | grep "Proxy contract:" | awk '{print $3}')
           echo "Base Token Address: $BASE_TOKEN_ADDRESS"

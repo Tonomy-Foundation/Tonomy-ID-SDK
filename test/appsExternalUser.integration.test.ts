@@ -15,6 +15,7 @@ import {
     getBaseTokenContract,
     createSignedProofMessage,
     getSigner,
+    ensureBaseTokenDeployed,
 } from '../src/sdk/index';
 import { JsKeyManager } from '../src/sdk/storage/jsKeyManager';
 import { DataSource } from 'typeorm';
@@ -36,6 +37,7 @@ import { setTestSettings, settings } from './helpers/settings';
 import Debug from 'debug';
 import Decimal from 'decimal.js';
 import { AppsExternalUser } from '../src/api/appsExternalUser';
+import { ethers } from 'ethers';
 
 const debug = Debug('tonomy-sdk-tests:externalUser.integration.test');
 
@@ -61,7 +63,8 @@ describe('Login to external website', () => {
     let EXTERNAL_WEBSITE_storage_factory: StorageFactory;
     let APPS_EXTERNAL_WEBSITE_user: AppsExternalUser;
     const communicationsToCleanup: Communication[] = [];
-    let userBaseAddress: string;
+    const userBasePrivateKey = '0xde9be858da4a475276426320d5e9262ecfc3ba460bfac56360bfa6c4c28b4ee0'; // Hardhat account #18
+    const userBaseAddress = new ethers.Wallet(userBasePrivateKey).getAddress();
 
     beforeEach(async () => {
         // Initialize typeorm data source
@@ -95,10 +98,7 @@ describe('Login to external website', () => {
         TONOMY_LOGIN_WEBSITE_storage_factory = createStorageFactory(STORAGE_NAMESPACE + 'login-website.');
         EXTERNAL_WEBSITE_storage_factory = createStorageFactory(STORAGE_NAMESPACE + 'external-website.');
 
-        const userBaseSigner = getSigner();
-
-        if (!userBaseSigner) throw new Error('No signer available');
-        userBaseAddress = await userBaseSigner.getAddress();
+        await ensureBaseTokenDeployed();
     });
 
     afterEach(async () => {
@@ -158,6 +158,7 @@ describe('Login to external website', () => {
         APPS_EXTERNAL_WEBSITE_user = new AppsExternalUser(res);
         
         const amount = new Decimal("0.5");
+        const amountEthersBigInt = BigInt(amount.mul(10**18).toString());
         const tonomyAccountName = await APPS_EXTERNAL_WEBSITE_user.getAccountName()
             
         const balanceBeforeBase = await getBaseTokenContract().balanceOf(userBaseAddress);            
@@ -178,7 +179,8 @@ describe('Login to external website', () => {
         console.log("After Swap:");
         console.log("Base balance:", balanceAfterBase.toString());
         console.log("Tonomy balance:", balanceAfterTonomy.toString());
-
+        expect(balanceAfterBase).toEqual(balanceBeforeBase + amountEthersBigInt);
+        expect(balanceAfterTonomy).toEqual(balanceBeforeTonomy.sub(amount));
     }
 
     async function disconnectCommunications(communications: Communication[]) {

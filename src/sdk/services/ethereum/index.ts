@@ -14,19 +14,29 @@ function getProvider(): ethers.Provider {
     return new ethers.JsonRpcProvider(settings.baseRpcUrl, undefined, { staticNetwork: true });
 }
 
+export async function ensureBaseTokenDeployed(): Promise<void> {
+    const { baseTokenAddress } = getSettings();
+    const provider = getProvider();
+    const code = await provider.getCode(baseTokenAddress);
+
+    if (code === '0x') {
+        throw new Error(`No contract code at baseTokenAddress ${baseTokenAddress}. Did you run deployment?`);
+    }
+}
+
 /**
  * Creates and returns a TonomyToken contract instance with the provider and signer configured from settings
  *
  * @returns {TonomyToken} Configured contract instance
  */
 export function getBaseTokenContract(signer?: ethers.Signer): TonomyToken {
-    const settings = getSettings();
+    const { baseTokenAddress } = getSettings();
 
     signer = signer ?? getSigner();
     const provider = getProvider();
 
     // eslint-disable-next-line camelcase
-    return TonomyToken__factory.connect(settings.baseTokenAddress, signer || provider);
+    return TonomyToken__factory.connect(baseTokenAddress, signer || provider);
 }
 
 let browserInjectedSigner: ethers.Signer | undefined;
