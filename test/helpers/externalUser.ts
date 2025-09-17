@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 import { Name, API } from '@wharfkit/antelope';
 import {
     AccountType,
@@ -24,12 +25,196 @@ import { getAccount, getChainId, getAccountNameFromUsername } from '../../src/sd
 import { getDidKeyIssuerFromStorage } from '../../src/sdk/helpers/didKeyStorage';
 import { onRedirectLogin } from '../../src/sdk/helpers/urls';
 import { ExternalUserLoginTestOptions } from '../externalUser.integration.test';
-import { IUserPublic } from './user';
+import { IUserPublic, scanQrAndAck, setupLoginRequestSubscriber } from './user';
 import Debug from 'debug';
 import { KYCVC, parseAntelopeDid } from '../../src/sdk/util';
 import { mockVeriffApproved, mockVeriffDeclined } from '../services/veriffMock';
+import { setReferrer, setUrl } from './browser';
 
 const debug = Debug('tonomy-sdk-tests:helpers:externalUser');
+
+type LoginTestOptions = {
+    externalApp: App;
+    tonomyLoginApp: App;
+    EXTERNAL_WEBSITE_jsKeyManager: KeyManager;
+    TONOMY_LOGIN_WEBSITE_jsKeyManager: KeyManager;
+    TONOMY_ID_user: IUserPublic;
+    TONOMY_LOGIN_WEBSITE_storage_factory: StorageFactory;
+    EXTERNAL_WEBSITE_storage_factory: StorageFactory;
+    communicationsToCleanup: Communication[];
+};
+
+export async function loginToExternalApp(
+    {
+        externalApp,
+        tonomyLoginApp,
+        EXTERNAL_WEBSITE_jsKeyManager,
+        TONOMY_LOGIN_WEBSITE_jsKeyManager,
+        TONOMY_ID_user,
+        TONOMY_LOGIN_WEBSITE_storage_factory,
+        EXTERNAL_WEBSITE_storage_factory,
+        communicationsToCleanup,
+    }: LoginTestOptions,
+    testOptions: ExternalUserLoginTestOptions
+): Promise<ExternalUser | undefined> {
+    const TONOMY_ID_did = await TONOMY_ID_user.getDid();
+
+    // #####External website user (login page) #####
+    // ################################
+
+    // create request for external website
+    // this would redirect the user to the tonomyLoginApp and send the token via the URL, but we're not doing that here
+    // Instead we take the token as output
+    setUrl(externalApp.origin + '/login');
+
+    const { did: EXTERNAL_WEBSITE_did, redirectUrl: EXTERNAL_WEBSITE_redirectUrl } =
+        await externalWebsiteUserPressLoginToTonomyButton(
+            EXTERNAL_WEBSITE_jsKeyManager,
+            tonomyLoginApp.origin,
+            testOptions
+        );
+
+    // #####Tonomy Login App website user (login page) #####
+    // ########################################
+
+    // catch the externalAppToken in the URL
+    setReferrer(externalApp.origin);
+    setUrl(EXTERNAL_WEBSITE_redirectUrl);
+
+    // Setup a request for the login app
+    const {
+        did: TONOMY_LOGIN_WEBSITE_did,
+        requests: TONOMY_LOGIN_WEBSITE_requests,
+        communication: TONOMY_LOGIN_WEBSITE_communication,
+    } = await loginWebsiteOnRedirect(EXTERNAL_WEBSITE_did, TONOMY_LOGIN_WEBSITE_jsKeyManager);
+
+    communicationsToCleanup.push(TONOMY_LOGIN_WEBSITE_communication);
+
+    // setup subscriber for connection to Tonomy ID acknowledgement
+    const { subscriber: TONOMY_LOGIN_WEBSITE_messageSubscriber, promise: TONOMY_LOGIN_WEBSITE_ackMessagePromise } =
+        await setupTonomyIdIdentifySubscriber(TONOMY_ID_did);
+
+    expect(TONOMY_LOGIN_WEBSITE_communication.socketServer.listeners('v1/message/relay/receive').length).toBe(0);
+    const TONOMY_LOGIN_WEBSITE_subscription = TONOMY_LOGIN_WEBSITE_communication.subscribeMessage(
+        TONOMY_LOGIN_WEBSITE_messageSubscriber,
+        IdentifyMessage.getType()
+    );
+
+    debug(
+        'TONOMY_LOGIN_WEBSITE_communication.socketServer',
+        TONOMY_LOGIN_WEBSITE_communication.socketServer.listenersAny()
+    );
+    expect(TONOMY_LOGIN_WEBSITE_communication.socketServer.listeners('v1/message/relay/receive').length).toBe(1);
+
+    // ##### Tonomy ID user (QR code scanner screen) #####
+    // ##########################
+    await scanQrAndAck(TONOMY_ID_user, TONOMY_LOGIN_WEBSITE_did);
+
+    const TONOMY_ID_requestSubscriber = setupLoginRequestSubscriber(
+        TONOMY_ID_user,
+        TONOMY_LOGIN_WEBSITE_did,
+        testOptions
+    );
+
+    // #####Tonomy Login App website user (login page) #####
+    // ########################################
+
+    // wait for the ack message to confirm Tonomy ID is connected
+    const connectionMessageFromTonomyId = await TONOMY_LOGIN_WEBSITE_ackMessagePromise;
+
+    expect(connectionMessageFromTonomyId.getSender()).toBe(TONOMY_ID_did + '#local');
+
+    await sendLoginRequestsMessage(
+        TONOMY_LOGIN_WEBSITE_requests,
+        TONOMY_LOGIN_WEBSITE_jsKeyManager,
+        TONOMY_LOGIN_WEBSITE_communication,
+        connectionMessageFromTonomyId.getSender()
+    );
+
+    // setup subscriber that waits for the response that the requests are confirmed by Tonomy ID
+    const {
+        subscriber: TONOMY_LOGIN_WEBSITE_messageSubscriber2,
+        promise: TONOMY_LOGIN_WEBSITE_requestsConfirmedMessagePromise,
+    } = await setupTonomyIdRequestConfirmSubscriber(TONOMY_ID_did);
+
+    TONOMY_LOGIN_WEBSITE_communication.unsubscribeMessage(TONOMY_LOGIN_WEBSITE_subscription);
+    const TONOMY_LOGIN_WEBSITE_subscription2 = TONOMY_LOGIN_WEBSITE_communication.subscribeMessage(
+        TONOMY_LOGIN_WEBSITE_messageSubscriber2,
+        LoginRequestResponseMessage.getType()
+    );
+
+    expect(TONOMY_LOGIN_WEBSITE_communication.socketServer.listeners('v1/message/relay/receive').length).toBe(1);
+
+    // ##### Tonomy ID user (SSO screen) #####
+    // ##########################
+
+    // Wait for the subscriber to execute
+    await TONOMY_ID_requestSubscriber;
+
+    if (testOptions.dataRequestKYC && testOptions.dataRequestKYCDecision !== 'approved') {
+        debug('TONOMY_ID/SSO: KYC verification failed, login was never executed by user');
+        return;
+    }
+
+    // #####Tonomy Login App website user (callback page) #####
+    // ########################################
+    setUrl(tonomyLoginApp.origin);
+
+    // Receive the message back, and redirect to the callback
+    const requestConfirmedMessageFromTonomyId = await TONOMY_LOGIN_WEBSITE_requestsConfirmedMessagePromise;
+
+    expect(TONOMY_LOGIN_WEBSITE_communication.socketServer.listeners('v1/message/relay/receive').length).toBe(1);
+    TONOMY_LOGIN_WEBSITE_communication.unsubscribeMessage(TONOMY_LOGIN_WEBSITE_subscription2);
+    expect(TONOMY_LOGIN_WEBSITE_communication.socketServer.listeners('v1/message/relay/receive').length).toBe(0);
+
+    const walletResponse = requestConfirmedMessageFromTonomyId.getPayload();
+
+    expect(walletResponse).toBeDefined();
+    expect(walletResponse.success).toBe(true);
+    expect(walletResponse.external).toBeDefined();
+    expect(walletResponse.sso).toBeDefined();
+
+    expect(walletResponse.external?.getResponses()?.length).toBe(testOptions.dataRequest ? 2 : 1);
+    expect(walletResponse.sso?.getResponses()?.length).toBe(2);
+
+    expect(walletResponse.sso?.getAccountName().toString()).toBe((await TONOMY_ID_user.getAccountName()).toString());
+    const dataRequestResponse = walletResponse.sso?.getDataSharingResponse();
+
+    if (testOptions.dataRequest) {
+        expect(dataRequestResponse).toBeDefined();
+
+        if (testOptions.dataRequestUsername) {
+            expect(dataRequestResponse?.data.username?.toString()).toBe(
+                (await TONOMY_ID_user.getUsername()).username.toString()
+            );
+        }
+    }
+
+    debug('TONOMY_LOGIN_WEBSITE/login: sending to callback page');
+    setUrl(walletResponse.getRedirectUrl(false));
+
+    const { responses: TONOMY_LOGIN_WEBSITE_responses } = await loginWebsiteOnCallback(
+        TONOMY_LOGIN_WEBSITE_jsKeyManager,
+        TONOMY_LOGIN_WEBSITE_storage_factory
+    );
+
+    if (!TONOMY_LOGIN_WEBSITE_responses.external)
+        throw new Error('TONOMY_LOGIN_WEBSITE_responses.external is undefined');
+    const EXTERNAL_WEBSITE_response = DualWalletResponse.fromResponses(TONOMY_LOGIN_WEBSITE_responses.external);
+    const EXTERNAL_WEBSITE_redirectBackUrl = EXTERNAL_WEBSITE_response.getRedirectUrl();
+
+    // #####External website user (callback page) #####
+    // ################################
+
+    setUrl(EXTERNAL_WEBSITE_redirectBackUrl);
+
+    return await externalWebsiteOnCallback(
+        EXTERNAL_WEBSITE_jsKeyManager,
+        EXTERNAL_WEBSITE_storage_factory,
+        await TONOMY_ID_user.getAccountName(),
+        testOptions
+    );
+}
 
 export async function externalWebsiteUserPressLoginToTonomyButton(
     keyManager: KeyManager,
