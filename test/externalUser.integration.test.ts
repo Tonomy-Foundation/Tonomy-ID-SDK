@@ -387,6 +387,7 @@ describe('Login to external website', () => {
             
             // 1. Get balances before
             const baseTokenContract = getBaseTokenContract();
+            //getting error in balanceOf call needs to be fixed
             const balanceBeforeBase = await baseTokenContract.balanceOf(baseAddress);
             const tokenContract = getTokenContract();
             

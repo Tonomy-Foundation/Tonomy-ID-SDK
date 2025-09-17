@@ -27,7 +27,6 @@ import {
     LinkAuthRequestResponseMessage,
     Message,
     SwapTokenMessage,
-    SwapTokenMessagePayload,
 } from '../sdk';
 import { VCWithTypeType, VerifiableCredential, VerifiableCredentialWithType } from '../sdk/util/ssi/vc';
 import { DIDurl, JWT } from '../sdk/util/ssi/types';
@@ -38,7 +37,6 @@ import { verifyKeyExistsForApp } from '../sdk/helpers/user';
 import { ClientAuthorizationData, IOnPressLoginOptions } from '../sdk/types/User';
 import Debug from 'debug';
 import Decimal from 'decimal.js';
-import { extractProofMessage } from '../sdk/services/ethereum';
 import { SwapService } from '../sdk/util/swap';
 
 const debug = Debug('tonomy-sdk:externalUser');

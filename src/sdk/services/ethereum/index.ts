@@ -15,7 +15,8 @@ const debug = Debug('tonomy-sdk:services:ethereum');
 export function getBaseTokenContract(): ethers.Contract {
     const settings = getSettings();
 
-    const provider = new ethers.JsonRpcProvider(settings.baseRpcUrl, settings.baseNetwork, { staticNetwork: true });
+    //TODO: added if conditiion for local testing , settings.baseNetwork, { staticNetwork: true }
+    const provider = new ethers.JsonRpcProvider(settings.baseRpcUrl);
     const signer = getSigner();
 
     return new ethers.Contract(settings.baseTokenAddress, TonomyTokenABI.abi, signer || provider);
@@ -24,7 +25,8 @@ export function getBaseTokenContract(): ethers.Contract {
 function getSigner(): ethers.Signer | undefined {
     const settings = getSettings();
 
-    const provider = new ethers.JsonRpcProvider(settings.baseRpcUrl, settings.baseNetwork, { staticNetwork: true });
+    //TODO: added if conditiion for local testing , settings.baseNetwork, { staticNetwork: true }
+    const provider = new ethers.JsonRpcProvider(settings.baseRpcUrl);
 
     try {
         const privateKey = settings.basePrivateKey;
