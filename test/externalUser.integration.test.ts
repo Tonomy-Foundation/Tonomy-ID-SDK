@@ -109,7 +109,7 @@ describe('Login to external website', () => {
 
         await loginToTonomyCommunication(TONOMY_ID_user);
 
-        // Create two apps which will be logged into
+        // Create app which will be logged into
         externalApp = await createRandomApp();
 
         debug('Deploying and configuring demo.tmy contract to ', externalApp.accountName.toString());

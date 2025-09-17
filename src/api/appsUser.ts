@@ -1,8 +1,28 @@
 import Decimal from 'decimal.js';
-import { extractProofMessage, SdkErrors, SwapTokenMessage, SwapTokenMessagePayload, throwError } from '../sdk';
+import {
+    Communication,
+    extractProofMessage,
+    KeyManager,
+    SdkErrors,
+    StorageFactory,
+    SwapTokenMessage,
+    SwapTokenMessagePayload,
+    throwError,
+} from '../sdk';
 import { ExternalUser } from './externalUser';
 
 export class AppsExternalUser extends ExternalUser {
+    constructor(user: ExternalUser) {
+        const exposedUser = user as unknown as {
+            keyManager: KeyManager;
+            storageFactory: StorageFactory;
+            communication: Communication;
+        };
+
+        super(exposedUser.keyManager, exposedUser.storageFactory);
+        this.did = user.did;
+    }
+
     /**
      * Sends a swap message to the communication service
      *
