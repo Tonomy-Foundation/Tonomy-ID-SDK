@@ -67,7 +67,7 @@ export async function getBrowserSigner(): Promise<ethers.Signer | undefined> {
     }
 }
 
-function getSigner(): ethers.Signer | undefined {
+export function getSigner(): ethers.Signer | undefined {
     const settings = getSettings();
     const provider = getProvider();
 

@@ -10,11 +10,11 @@ import {
     KeyManager,
     StorageFactory,
     STORAGE_NAMESPACE,
-    ExternalUser,
     setSettings,
     Communication,
     getBaseTokenContract,
     createSignedProofMessage,
+    getSigner,
 } from '../src/sdk/index';
 import { JsKeyManager } from '../src/sdk/storage/jsKeyManager';
 import { DataSource } from 'typeorm';
@@ -31,7 +31,7 @@ import {
     loginToExternalApp,
 } from './helpers/externalUser';
 import { createStorageFactory } from './helpers/storageFactory';
-import { createSigner, getTokenContract, getTonomyOperationsKey } from '../src/sdk/services/blockchain';
+import { getTokenContract } from '../src/sdk/services/blockchain';
 import { setTestSettings, settings } from './helpers/settings';
 import Debug from 'debug';
 import Decimal from 'decimal.js';
@@ -40,8 +40,6 @@ import { AppsExternalUser } from '../src/api/appsExternalUser';
 const debug = Debug('tonomy-sdk-tests:externalUser.integration.test');
 
 setTestSettings();
-
-const signer = createSigner(getTonomyOperationsKey());
 
 describe('Login to external website', () => {
     jest.setTimeout(50000);
@@ -63,7 +61,7 @@ describe('Login to external website', () => {
     let EXTERNAL_WEBSITE_storage_factory: StorageFactory;
     let APPS_EXTERNAL_WEBSITE_user: AppsExternalUser;
     const communicationsToCleanup: Communication[] = [];
-    const userBaseAddress: string = '0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512'; //default hardhat address[0]
+    let userBaseAddress: string;
 
     beforeEach(async () => {
         // Initialize typeorm data source
@@ -96,6 +94,11 @@ describe('Login to external website', () => {
         // setup storage factories for the external website and tonomy login website
         TONOMY_LOGIN_WEBSITE_storage_factory = createStorageFactory(STORAGE_NAMESPACE + 'login-website.');
         EXTERNAL_WEBSITE_storage_factory = createStorageFactory(STORAGE_NAMESPACE + 'external-website.');
+
+        const userBaseSigner = getSigner();
+
+        if (!userBaseSigner) throw new Error('No signer available');
+        userBaseAddress = await userBaseSigner.getAddress();
     });
 
     afterEach(async () => {
@@ -115,7 +118,7 @@ describe('Login to external website', () => {
         // for some reason this is needed to ensure all the code lines execute. Not sure why needed
         // TODO: figure out why this is needed and remove issue
         await sleep(1000);
-        console.log('finished!')
+        console.log('Finished afterEach()!')
     });
 
     afterAll(async () => {
@@ -127,7 +130,8 @@ describe('Login to external website', () => {
     describe('SwapToken services are working', () => {
         test('should swap a token to the Base network and back again', async () => {
             expect.assertions(27);
-            await runAppsExternalUserLoginTest();           
+            await runAppsExternalUserLoginTest();  
+            console.log("Test complete");         
         });
     });
 

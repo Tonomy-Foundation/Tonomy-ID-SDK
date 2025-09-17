@@ -78,6 +78,9 @@ function start {
     DEPLOY_OUTPUT=$(yarn run deploy)
     echo "$DEPLOY_OUTPUT"
     BASE_TOKEN_ADDRESS=$(echo "$DEPLOY_OUTPUT" | grep "Proxy contract:" | awk '{print $3}')
+    export BASE_TOKEN_ADDRESS
+    cd "$SDK_DIR"
+    echo "BASE_TOKEN_ADDRESS=$BASE_TOKEN_ADDRESS" > .env.test
     echo "Token proxy contract address: $BASE_TOKEN_ADDRESS"
 
     # Run Communication server
@@ -86,7 +89,6 @@ function start {
     npx pm2 delete micro || true
     unset TONOMY_OPS_PRIVATE_KEY
     unset HCAPTCHA_SECRET
-    export BASE_TOKEN_ADDRESS
     npx pm2 start --interpreter /bin/bash yarn --name "micro" -- run start
 }
 

@@ -37,7 +37,9 @@ export class Communication {
     private readonly seemMessageTTL = 60 * 60; // 1 hour
 
     /**
-     * Checks if a message has been seen before (only in CI and test environment)
+     * Checks if a message has been seen before
+     * Run duplicate check only in CI or local test environment; skip elsewhere (e.g. production)
+     *
      * @description Fixes an issue where subscriber were triggered twice
      * @link https://chatgpt.com/share/e/6866b6e9-96a4-8013-b25d-381a3518567e
      * TODO: figure out the root cause and solve
@@ -46,7 +48,7 @@ export class Communication {
      * @returns {boolean} true if the message has been seen before
      */
     private checkSeenMessage(message: string): boolean {
-        if (!process.env.CI || process.env.NODE_ENV !== 'test') return false;
+        if (!process.env.CI && process.env.NODE_ENV !== 'test') return false;
         const res = this.seenMessages.has(sha256(message));
 
         this.addSeenMessage(message);
