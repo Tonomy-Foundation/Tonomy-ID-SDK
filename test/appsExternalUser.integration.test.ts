@@ -33,7 +33,7 @@ import {
     loginToExternalApp,
 } from './helpers/externalUser';
 import { createStorageFactory } from './helpers/storageFactory';
-import { getTokenContract } from '../src/sdk/services/blockchain';
+import { createSigner, getTokenContract, getTonomyOperationsKey } from '../src/sdk/services/blockchain';
 import { setTestSettings, settings } from './helpers/settings';
 import Debug from 'debug';
 import Decimal from 'decimal.js';
@@ -43,6 +43,8 @@ import { ethers } from 'ethers';
 const debug = Debug('tonomy-sdk-tests:externalUser.integration.test');
 
 setTestSettings();
+
+const tonomySigner = createSigner(getTonomyOperationsKey());
 
 describe('Login to external website', () => {
     jest.setTimeout(50000);
@@ -99,8 +101,13 @@ describe('Login to external website', () => {
         // setup storage factories for the external website and tonomy login website
         TONOMY_LOGIN_WEBSITE_storage_factory = createStorageFactory(STORAGE_NAMESPACE + 'login-website.');
         EXTERNAL_WEBSITE_storage_factory = createStorageFactory(STORAGE_NAMESPACE + 'external-website.');
+
+        // assign user Base address and check contract
         userBaseAddress = await userBaseSigner.getAddress();
         await ensureBaseTokenDeployed();
+
+        // send $TONO to user on Tonomy chain
+        await getTokenContract().transfer('ops.tmy', await TONOMY_ID_user.getAccountName(), '10.000000 TONO', "", tonomySigner);
     });
 
     afterEach(async () => {
@@ -172,7 +179,6 @@ describe('Login to external website', () => {
 
         const proof = await createSignedProofMessage(userBaseSigner)
 
-        console.log('Verified proof', verifySignature(proof.message, proof.signature, userBaseAddress));
         const tonomyAppsWebsiteUsername = await externalApp.username?.getBaseUsername();
 
         await APPS_EXTERNAL_WEBSITE_user.swapToken(amount, proof, 'base', tonomyAppsWebsiteUsername);
