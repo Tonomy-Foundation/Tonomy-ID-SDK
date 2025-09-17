@@ -83,6 +83,7 @@ export class ExternalUser {
     protected keyManager: KeyManager;
     protected storage: ExternalUserStorage & PersistentStorageClean;
     protected communication: Communication;
+    protected storageFactory: StorageFactory;
     public did: string;
 
     /**
@@ -94,6 +95,7 @@ export class ExternalUser {
 
     constructor(_keyManager: KeyManager, _storageFactory: StorageFactory) {
         this.keyManager = _keyManager;
+        this.storageFactory = _storageFactory;
         this.storage = createStorage<ExternalUserStorage>(STORAGE_NAMESPACE + 'external.user.', _storageFactory);
         this.communication = new Communication(false);
     }

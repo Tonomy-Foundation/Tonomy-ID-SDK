@@ -35,7 +35,7 @@ import { createSigner, getTokenContract, getTonomyOperationsKey } from '../src/s
 import { setTestSettings, settings } from './helpers/settings';
 import Debug from 'debug';
 import Decimal from 'decimal.js';
-import { AppsExternalUser } from '../src/api/appsUser';
+import { AppsExternalUser } from '../src/api/appsExternalUser';
 
 const debug = Debug('tonomy-sdk-tests:externalUser.integration.test');
 
@@ -185,7 +185,3 @@ describe('Login to external website', () => {
         debug('finished disconnecting all communications');
     }
 });
-
-function getProtectedCommunication(user: ExternalUser): Communication {
-    return (user as unknown as { communication: Communication }).communication;
-}

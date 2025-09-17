@@ -19,13 +19,52 @@ function getProvider(): ethers.Provider {
  *
  * @returns {TonomyToken} Configured contract instance
  */
-export function getBaseTokenContract(): TonomyToken {
+export function getBaseTokenContract(signer?: ethers.Signer): TonomyToken {
     const settings = getSettings();
-    const signer = getSigner();
+
+    signer = signer ?? getSigner();
     const provider = getProvider();
 
     // eslint-disable-next-line camelcase
     return TonomyToken__factory.connect(settings.baseTokenAddress, signer || provider);
+}
+
+let browserInjectedSigner: ethers.Signer | undefined;
+
+export async function getBrowserSigner(): Promise<ethers.Signer | undefined> {
+    if (browserInjectedSigner) return browserInjectedSigner;
+    if (typeof window === 'undefined') return;
+    const anyWindow = window as any;
+    const injected = anyWindow.ethereum;
+
+    if (!injected) {
+        debug('No injected EVM provider (window.ethereum) found');
+        return;
+    }
+
+    try {
+        const browserProvider = new ethers.BrowserProvider(injected);
+
+        // Request accounts (prompts user)
+        await browserProvider.send('eth_requestAccounts', []);
+        const signer = await browserProvider.getSigner();
+
+        // (Optional) network check
+        try {
+            const net = await browserProvider.getNetwork();
+
+            debug(`Injected provider chainId: ${net.chainId.toString()}`);
+        } catch (e) {
+            debug('Failed to read injected network:', e);
+        }
+
+        browserInjectedSigner = signer;
+        debug(`Using injected browser signer: ${await signer.getAddress()}`);
+        return browserInjectedSigner;
+    } catch (err) {
+        console.error('Failed to initialize browser signer:', err);
+        return;
+    }
 }
 
 function getSigner(): ethers.Signer | undefined {
@@ -36,7 +75,8 @@ function getSigner(): ethers.Signer | undefined {
         const privateKey = settings.basePrivateKey;
 
         if (!privateKey) {
-            throw new Error('Private key not found');
+            debug('No private key configured and no injected signer available');
+            return undefined;
         }
 
         return new ethers.Wallet(privateKey, provider);
