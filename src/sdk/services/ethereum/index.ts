@@ -7,7 +7,7 @@ import { TonomyToken, TonomyToken__factory } from './typechain'; // adjust path 
 
 const debug = Debug('tonomy-sdk:services:ethereum');
 
-function getProvider(): ethers.Provider {
+export function getProvider(): ethers.Provider {
     const settings = getSettings();
 
     if (isProduction()) return new ethers.JsonRpcProvider(settings.baseRpcUrl, settings.baseNetwork);
@@ -109,12 +109,12 @@ export function verifySignature(message: string, signature: string, expectedSign
     const { address, network, timestamp } = extractProofMessage(message);
 
     if (address.toLowerCase() !== expectedSigner.toLowerCase()) {
-        debug(`Signature verification failed: Expected ${expectedSigner} but got ${address} from the message`);
+        console.error(`Signature verification failed: Expected ${expectedSigner} but got ${address} from the message`);
         return false;
     }
 
     if (network.toLowerCase() !== getSettings().baseNetwork.toLowerCase()) {
-        debug(
+        console.error(
             `Signature verification failed: Expected ${getSettings().baseNetwork} but got ${network} from the message`
         );
         return false;
@@ -124,7 +124,7 @@ export function verifySignature(message: string, signature: string, expectedSign
     const timestampDiff = now.getTime() - new Date(timestamp).getTime();
 
     if (timestampDiff > EXPIRATION_TIME) {
-        debug(`Signature verification failed: Timestamp is too old`);
+        console.error(`Signature verification failed: Timestamp is too old`);
         return false;
     }
 
@@ -132,7 +132,7 @@ export function verifySignature(message: string, signature: string, expectedSign
     const isValid = recoveredAddress.toLowerCase() === expectedSigner.toLowerCase();
 
     if (!isValid) {
-        debug(`Signature verification failed: Expected ${expectedSigner} but got ${recoveredAddress}`);
+        console.error(`Signature verification failed: Expected ${expectedSigner} but got ${recoveredAddress}`);
     }
 
     return isValid;
@@ -183,15 +183,14 @@ export function extractProofMessage(message: string): {
  *
  * @returns {Promise<{ message: string; signature: string }>} The message and signature
  */
-export async function createSignedProofMessage(): Promise<{ message: string; signature: string }> {
-    const signer = getSigner();
+export async function createSignedProofMessage(
+    signer?: ethers.Signer
+): Promise<{ message: string; signature: string }> {
+    signer = signer ?? (await getBrowserSigner());
+    if (!signer) throw new Error('No signer available to sign proof message');
 
-    if (!signer) {
-        throw new Error('Failed to create signer');
-    }
-
-    const message = createProofMessage(getSettings().baseTokenAddress, getSettings().baseNetwork);
-
+    const address = await signer.getAddress();
+    const message = createProofMessage(address, getSettings().baseNetwork);
     const signature = await signer.signMessage(message);
 
     return { message, signature };

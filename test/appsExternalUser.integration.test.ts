@@ -14,8 +14,9 @@ import {
     Communication,
     getBaseTokenContract,
     createSignedProofMessage,
-    getSigner,
     ensureBaseTokenDeployed,
+    verifySignature,
+    getProvider,
 } from '../src/sdk/index';
 import { JsKeyManager } from '../src/sdk/storage/jsKeyManager';
 import { DataSource } from 'typeorm';
@@ -64,7 +65,8 @@ describe('Login to external website', () => {
     let APPS_EXTERNAL_WEBSITE_user: AppsExternalUser;
     const communicationsToCleanup: Communication[] = [];
     const userBasePrivateKey = '0xde9be858da4a475276426320d5e9262ecfc3ba460bfac56360bfa6c4c28b4ee0'; // Hardhat account #18
-    const userBaseAddress = new ethers.Wallet(userBasePrivateKey).getAddress();
+    const userBaseSigner: ethers.Signer = new ethers.Wallet(userBasePrivateKey, getProvider());
+    let userBaseAddress: string;
 
     beforeEach(async () => {
         // Initialize typeorm data source
@@ -97,7 +99,7 @@ describe('Login to external website', () => {
         // setup storage factories for the external website and tonomy login website
         TONOMY_LOGIN_WEBSITE_storage_factory = createStorageFactory(STORAGE_NAMESPACE + 'login-website.');
         EXTERNAL_WEBSITE_storage_factory = createStorageFactory(STORAGE_NAMESPACE + 'external-website.');
-
+        userBaseAddress = await userBaseSigner.getAddress();
         await ensureBaseTokenDeployed();
     });
 
@@ -168,7 +170,9 @@ describe('Login to external website', () => {
         console.log("Base balance:", balanceBeforeBase.toString());
         console.log("Tonomy balance:", balanceBeforeTonomy.toString());
 
-        const proof = await createSignedProofMessage()
+        const proof = await createSignedProofMessage(userBaseSigner)
+
+        console.log('Verified proof', verifySignature(proof.message, proof.signature, userBaseAddress));
         const tonomyAppsWebsiteUsername = await externalApp.username?.getBaseUsername();
 
         await APPS_EXTERNAL_WEBSITE_user.swapToken(amount, proof, 'base', tonomyAppsWebsiteUsername);

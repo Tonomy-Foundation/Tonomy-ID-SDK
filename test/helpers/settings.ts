@@ -17,7 +17,7 @@ export const settings: Partial<SettingsType> = {
     loggerLevel: 'info',
     currencySymbol: 'TONO',
     environment: 'test',
-    baseNetwork: 'hardhat',
+    baseNetwork: 'localhost',
     baseRpcUrl: 'http://localhost:8545',
     baseTokenAddress: process.env.BASE_TOKEN_ADDRESS,
     basePrivateKey: '0xdf57089febbacf7ba0bc227dafbffa9fc08a93fdc68e1e42411a14efcf23656e', // Hardhat account #19
