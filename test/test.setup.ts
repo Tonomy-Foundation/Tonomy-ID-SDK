@@ -23,7 +23,7 @@ const activateTestRuntimeGuard = () => {
     if (!process.env.CI) return;
     const logLines: string[] = [];
 
-    const timeoutMinutes = 0.1; // 1 hour
+    const timeoutMinutes = 40;
 
     const timer: NodeJS.Timeout = setTimeout(
         () => {
@@ -150,6 +150,6 @@ function printableHandleDetails(h: unknown, i: number): string {
     }
 
     return (
-        `[TestRuntimeGuard] Handle[${i}]: ${name}` + (detailLines.length ? `\n > ${detailLines.join('\n > ')})` : '')
+        `[TestRuntimeGuard] Handle[${i}]: ${name}` + (detailLines.length ? `\n   > ${detailLines.join('\n   > ')}` : '')
     );
 }
