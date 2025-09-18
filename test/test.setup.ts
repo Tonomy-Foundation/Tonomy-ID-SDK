@@ -19,7 +19,7 @@ setTestSettings();
 
 // Global hard cap on total test runtime to avoid indefinite hangs.
 // Activated in CI environment only.
-const activateTestRuntimeGuard = () => {
+(() => {
     if (!process.env.CI) return;
     const logLines: string[] = [];
 
@@ -49,9 +49,7 @@ const activateTestRuntimeGuard = () => {
     // Do not keep process alive solely for this timer
     // (unref may be undefined in some environments)
     (timer as unknown as { unref?: () => void }).unref?.();
-};
-
-activateTestRuntimeGuard();
+})();
 
 // Extracts and formats some details about a handle for logging purposes
 // (best-effort, ignores any errors)
@@ -97,6 +95,17 @@ function printableHandleDetails(h: unknown, i: number): string {
                 if ('bytesRead' in anyH) detailLines.push(`bytesRead=${anyH.bytesRead}`);
                 if ('bytesWritten' in anyH) detailLines.push(`bytesWritten=${anyH.bytesWritten}`);
                 if ('pending' in anyH) detailLines.push(`pending=${anyH.pending}`);
+                if ('connecting' in anyH) detailLines.push(`connecting=${anyH.connecting}`);
+                if ('destroyed' in anyH) detailLines.push(`destroyed=${anyH.destroyed}`);
+                if ('remoteFamily' in anyH) detailLines.push(`remoteFamily=${anyH.remoteFamily}`);
+                if ('localFamily' in anyH) detailLines.push(`localFamily=${anyH.localFamily}`);
+                if ('bufferSize' in anyH) detailLines.push(`bufferSize=${anyH.bufferSize}`);
+                if ('writableLength' in anyH) detailLines.push(`writableLength=${anyH.writableLength}`);
+                if ('readableLength' in anyH) detailLines.push(`readableLength=${anyH.readableLength}`);
+                if ('writableFinished' in anyH) detailLines.push(`writableFinished=${anyH.writableFinished}`);
+                if ('writableEnded' in anyH) detailLines.push(`writableEnded=${anyH.writableEnded}`);
+                if ('readable' in anyH) detailLines.push(`readable=${anyH.readable}`);
+                if ('writable' in anyH) detailLines.push(`writable=${anyH.writable}`);
             }
 
             // ChildProcess
