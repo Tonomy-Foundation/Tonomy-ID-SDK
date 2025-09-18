@@ -18,15 +18,15 @@ import {
     DualWalletRequests,
 } from '../sdk/util/request';
 import { checkChainId, getAccountNameFromDid, KYCPayload, KYCVC, parseDid, verifyOpsTmyDid } from '../sdk/util';
+import { App } from '../sdk/controllers/App';
 import {
-    App,
     AuthenticationMessage,
-    checkOriginMatchesApp,
-    Communication,
     LinkAuthRequestMessage,
     LinkAuthRequestResponseMessage,
     Message,
-} from '../sdk';
+} from '../sdk/services/communication/message';
+import { checkOriginMatchesApp } from '../sdk/controllers/App';
+import { Communication } from '../sdk/services/communication/communication';
 import { VCWithTypeType, VerifiableCredential, VerifiableCredentialWithType } from '../sdk/util/ssi/vc';
 import { DIDurl, JWT } from '../sdk/util/ssi/types';
 import { Signer, createKeyManagerSigner, transact } from '../sdk/services/blockchain/eosio/transaction';
