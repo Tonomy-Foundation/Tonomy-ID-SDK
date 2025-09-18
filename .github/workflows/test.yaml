@@ -121,23 +121,6 @@ jobs:
           cache: yarn
       - run: yarn install --immutable
       - run: yarn run build
-      
-      - name: Run communication service
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: yarn
-      - run: git submodule update --init Tonomy-Communication
-      - run: |
-          cd Tonomy-Communication
-          git checkout $GIT_BRANCH_COMMUNICATION
-          git pull
-          yarn install --immutable
-          yarn link ../
-          yarn run build
-          BLOCKCHAIN_URL=http://localhost:8888 npx pm2 start yarn --name "communication" -- run start:prod
-      - run: sleep 2
-      - run: npx pm2 logs --lines 50 --nostream communication
 
       - name: Run hardhat node and Deploy Ethereum contracts
         uses: actions/setup-node@v4
@@ -161,6 +144,23 @@ jobs:
           echo "Base Token Address: $BASE_TOKEN_ADDRESS"
           echo "BASE_TOKEN_ADDRESS=$BASE_TOKEN_ADDRESS" >> $GITHUB_ENV
 
+      - name: Run communication service
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: yarn
+      - run: git submodule update --init Tonomy-Communication
+      - run: |
+          cd Tonomy-Communication
+          git checkout $GIT_BRANCH_COMMUNICATION
+          git pull
+          yarn install --immutable
+          yarn link ../
+          yarn run build
+          BLOCKCHAIN_URL=http://localhost:8888 npx pm2 start yarn --name "communication" -- run start:prod
+      - run: sleep 2
+      - run: npx pm2 logs --lines 50 --nostream communication
+      
       - name: Bootstrap blockchain
         uses: actions/setup-node@v4
         with:
