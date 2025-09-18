@@ -333,6 +333,7 @@ export class SwapTokenMessagePayload {
     /**
      * @internal only used for testing
      */
+    // eslint-disable-next-line camelcase
     _testOnly_tonomyAppsWebsiteUsername?: string;
 }
 

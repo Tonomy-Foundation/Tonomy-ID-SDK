@@ -1,14 +1,10 @@
 import Decimal from 'decimal.js';
-import {
-    Communication,
-    extractProofMessage,
-    KeyManager,
-    SdkErrors,
-    StorageFactory,
-    SwapTokenMessage,
-    SwapTokenMessagePayload,
-    throwError,
-} from '../sdk';
+import { Communication } from '../sdk/services/communication/communication';
+import { extractProofMessage } from '../sdk/services/ethereum';
+import { KeyManager } from '../sdk/storage/keymanager';
+import { StorageFactory } from '../sdk/storage/storage';
+import { SwapTokenMessage, SwapTokenMessagePayload } from '../sdk/services/communication/message';
+import { SdkErrors, throwError } from '../sdk/util/errors';
 import { ExternalUser } from './externalUser';
 
 export class AppsExternalUser extends ExternalUser {
@@ -46,6 +42,7 @@ export class AppsExternalUser extends ExternalUser {
         amount: Decimal,
         proof: { message: string; signature: string },
         destination: 'base' | 'tonomy',
+        // eslint-disable-next-line camelcase
         _testOnly_tonomyAppsWebsiteUsername?: string
     ): Promise<void> {
         const { address } = extractProofMessage(proof.message);
@@ -55,6 +52,7 @@ export class AppsExternalUser extends ExternalUser {
             baseAddress: address,
             proof: proof,
             destination,
+            // eslint-disable-next-line camelcase
             _testOnly_tonomyAppsWebsiteUsername: _testOnly_tonomyAppsWebsiteUsername,
         };
 

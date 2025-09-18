@@ -1,11 +1,10 @@
-import { config as loadEnv } from 'dotenv';
+import { config } from 'dotenv';
 import { existsSync } from 'fs';
-import { SettingsType } from '../../src/sdk/index';
-import { setFetch, setSettings } from '../../src/sdk/util/settings';
+import { setFetch, setSettings, SettingsType } from '../../src/sdk/util/settings';
 import fetch from 'cross-fetch';
 
 if (existsSync('.env.test')) {
-    loadEnv({ path: '.env.test' });
+    config({ path: '.env.test', quiet: true });
 }
 
 export const settings: Partial<SettingsType> = {
