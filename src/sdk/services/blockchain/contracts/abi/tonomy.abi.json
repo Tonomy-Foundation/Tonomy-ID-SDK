@@ -1,0 +1,938 @@
+{
+    "____comment": "This file was generated with eosio-abigen. DO NOT EDIT ",
+    "version": "eosio::abi/1.2",
+    "types": [
+        {
+            "new_type_name": "account_status",
+            "type": "uint8"
+        },
+        {
+            "new_type_name": "account_type",
+            "type": "uint8"
+        },
+        {
+            "new_type_name": "block_signing_authority",
+            "type": "variant_block_signing_authority_v0"
+        },
+        {
+            "new_type_name": "permission_level_name",
+            "type": "uint8"
+        }
+    ],
+    "structs": [
+        {
+            "name": "account_type_struct",
+            "base": "",
+            "fields": [
+                {
+                    "name": "account_name",
+                    "type": "name"
+                },
+                {
+                    "name": "acc_type",
+                    "type": "account_type"
+                },
+                {
+                    "name": "version",
+                    "type": "uint16"
+                }
+            ]
+        },
+        {
+            "name": "activate",
+            "base": "",
+            "fields": [
+                {
+                    "name": "feature_digest",
+                    "type": "checksum256"
+                }
+            ]
+        },
+        {
+            "name": "adminsetapp",
+            "base": "",
+            "fields": [
+                {
+                    "name": "account_name",
+                    "type": "name"
+                },
+                {
+                    "name": "json_data",
+                    "type": "string"
+                },
+                {
+                    "name": "username_hash",
+                    "type": "checksum256"
+                },
+                {
+                    "name": "origin",
+                    "type": "string"
+                }
+            ]
+        },
+        {
+            "name": "app",
+            "base": "",
+            "fields": [
+                {
+                    "name": "account_name",
+                    "type": "name"
+                },
+                {
+                    "name": "app_name",
+                    "type": "string"
+                },
+                {
+                    "name": "username_hash",
+                    "type": "checksum256"
+                },
+                {
+                    "name": "description",
+                    "type": "string"
+                },
+                {
+                    "name": "logo_url",
+                    "type": "string"
+                },
+                {
+                    "name": "origin",
+                    "type": "string"
+                }
+            ]
+        },
+        {
+            "name": "appv2",
+            "base": "",
+            "fields": [
+                {
+                    "name": "account_name",
+                    "type": "name"
+                },
+                {
+                    "name": "json_data",
+                    "type": "string"
+                },
+                {
+                    "name": "version",
+                    "type": "uint16"
+                },
+                {
+                    "name": "username_hash",
+                    "type": "checksum256"
+                },
+                {
+                    "name": "origin",
+                    "type": "string"
+                }
+            ]
+        },
+        {
+            "name": "authority",
+            "base": "",
+            "fields": [
+                {
+                    "name": "threshold",
+                    "type": "uint32"
+                },
+                {
+                    "name": "keys",
+                    "type": "key_weight[]"
+                },
+                {
+                    "name": "accounts",
+                    "type": "permission_level_weight[]"
+                },
+                {
+                    "name": "waits",
+                    "type": "wait_weight[]"
+                }
+            ]
+        },
+        {
+            "name": "block_signing_authority_v0",
+            "base": "",
+            "fields": [
+                {
+                    "name": "threshold",
+                    "type": "uint32"
+                },
+                {
+                    "name": "keys",
+                    "type": "key_weight[]"
+                }
+            ]
+        },
+        {
+            "name": "blockchain_parameters",
+            "base": "",
+            "fields": [
+                {
+                    "name": "max_block_net_usage",
+                    "type": "uint64"
+                },
+                {
+                    "name": "target_block_net_usage_pct",
+                    "type": "uint32"
+                },
+                {
+                    "name": "max_transaction_net_usage",
+                    "type": "uint32"
+                },
+                {
+                    "name": "base_per_transaction_net_usage",
+                    "type": "uint32"
+                },
+                {
+                    "name": "net_usage_leeway",
+                    "type": "uint32"
+                },
+                {
+                    "name": "context_free_discount_net_usage_num",
+                    "type": "uint32"
+                },
+                {
+                    "name": "context_free_discount_net_usage_den",
+                    "type": "uint32"
+                },
+                {
+                    "name": "max_block_cpu_usage",
+                    "type": "uint32"
+                },
+                {
+                    "name": "target_block_cpu_usage_pct",
+                    "type": "uint32"
+                },
+                {
+                    "name": "max_transaction_cpu_usage",
+                    "type": "uint32"
+                },
+                {
+                    "name": "min_transaction_cpu_usage",
+                    "type": "uint32"
+                },
+                {
+                    "name": "max_transaction_lifetime",
+                    "type": "uint32"
+                },
+                {
+                    "name": "deferred_trx_expiration_window",
+                    "type": "uint32"
+                },
+                {
+                    "name": "max_transaction_delay",
+                    "type": "uint32"
+                },
+                {
+                    "name": "max_inline_action_size",
+                    "type": "uint32"
+                },
+                {
+                    "name": "max_inline_action_depth",
+                    "type": "uint16"
+                },
+                {
+                    "name": "max_authority_depth",
+                    "type": "uint16"
+                }
+            ]
+        },
+        {
+            "name": "buyram",
+            "base": "",
+            "fields": [
+                {
+                    "name": "dao_owner",
+                    "type": "name"
+                },
+                {
+                    "name": "app",
+                    "type": "name"
+                },
+                {
+                    "name": "quant",
+                    "type": "asset"
+                }
+            ]
+        },
+        {
+            "name": "canceldelay",
+            "base": "",
+            "fields": [
+                {
+                    "name": "canceling_auth",
+                    "type": "permission_level"
+                },
+                {
+                    "name": "trx_id",
+                    "type": "checksum256"
+                }
+            ]
+        },
+        {
+            "name": "deleteauth",
+            "base": "",
+            "fields": [
+                {
+                    "name": "account",
+                    "type": "name"
+                },
+                {
+                    "name": "permission",
+                    "type": "name"
+                }
+            ]
+        },
+        {
+            "name": "eraseoldapps",
+            "base": "",
+            "fields": []
+        },
+        {
+            "name": "key_weight",
+            "base": "",
+            "fields": [
+                {
+                    "name": "key",
+                    "type": "public_key"
+                },
+                {
+                    "name": "weight",
+                    "type": "uint16"
+                }
+            ]
+        },
+        {
+            "name": "linkauth",
+            "base": "",
+            "fields": [
+                {
+                    "name": "account",
+                    "type": "name"
+                },
+                {
+                    "name": "code",
+                    "type": "name"
+                },
+                {
+                    "name": "type",
+                    "type": "name"
+                },
+                {
+                    "name": "requirement",
+                    "type": "name"
+                }
+            ]
+        },
+        {
+            "name": "loginwithapp",
+            "base": "",
+            "fields": [
+                {
+                    "name": "account",
+                    "type": "name"
+                },
+                {
+                    "name": "app",
+                    "type": "name"
+                },
+                {
+                    "name": "parent",
+                    "type": "name"
+                },
+                {
+                    "name": "key",
+                    "type": "public_key"
+                }
+            ]
+        },
+        {
+            "name": "newaccount",
+            "base": "",
+            "fields": [
+                {
+                    "name": "creator",
+                    "type": "name"
+                },
+                {
+                    "name": "name",
+                    "type": "name"
+                },
+                {
+                    "name": "owner",
+                    "type": "authority"
+                },
+                {
+                    "name": "active",
+                    "type": "authority"
+                }
+            ]
+        },
+        {
+            "name": "newapp",
+            "base": "",
+            "fields": [
+                {
+                    "name": "json_data",
+                    "type": "string"
+                },
+                {
+                    "name": "username_hash",
+                    "type": "checksum256"
+                },
+                {
+                    "name": "origin",
+                    "type": "string"
+                },
+                {
+                    "name": "key",
+                    "type": "public_key"
+                }
+            ]
+        },
+        {
+            "name": "newperson",
+            "base": "",
+            "fields": [
+                {
+                    "name": "username_hash",
+                    "type": "checksum256"
+                },
+                {
+                    "name": "password_key",
+                    "type": "public_key"
+                },
+                {
+                    "name": "password_salt",
+                    "type": "checksum256"
+                }
+            ]
+        },
+        {
+            "name": "onerror",
+            "base": "",
+            "fields": [
+                {
+                    "name": "sender_id",
+                    "type": "uint128"
+                },
+                {
+                    "name": "sent_trx",
+                    "type": "bytes"
+                }
+            ]
+        },
+        {
+            "name": "permission_level",
+            "base": "",
+            "fields": [
+                {
+                    "name": "actor",
+                    "type": "name"
+                },
+                {
+                    "name": "permission",
+                    "type": "name"
+                }
+            ]
+        },
+        {
+            "name": "permission_level_weight",
+            "base": "",
+            "fields": [
+                {
+                    "name": "permission",
+                    "type": "permission_level"
+                },
+                {
+                    "name": "weight",
+                    "type": "uint16"
+                }
+            ]
+        },
+        {
+            "name": "person",
+            "base": "",
+            "fields": [
+                {
+                    "name": "account_name",
+                    "type": "name"
+                },
+                {
+                    "name": "status",
+                    "type": "account_status"
+                },
+                {
+                    "name": "username_hash",
+                    "type": "checksum256"
+                },
+                {
+                    "name": "password_salt",
+                    "type": "checksum256"
+                }
+            ]
+        },
+        {
+            "name": "producer_authority",
+            "base": "",
+            "fields": [
+                {
+                    "name": "producer_name",
+                    "type": "name"
+                },
+                {
+                    "name": "authority",
+                    "type": "block_signing_authority"
+                }
+            ]
+        },
+        {
+            "name": "reqactivated",
+            "base": "",
+            "fields": [
+                {
+                    "name": "feature_digest",
+                    "type": "checksum256"
+                }
+            ]
+        },
+        {
+            "name": "reqauth",
+            "base": "",
+            "fields": [
+                {
+                    "name": "from",
+                    "type": "name"
+                }
+            ]
+        },
+        {
+            "name": "resource_config",
+            "base": "",
+            "fields": [
+                {
+                    "name": "ram_fee",
+                    "type": "float64"
+                },
+                {
+                    "name": "ram_price",
+                    "type": "float64"
+                },
+                {
+                    "name": "total_ram_available",
+                    "type": "uint64"
+                },
+                {
+                    "name": "total_ram_used",
+                    "type": "uint64"
+                },
+                {
+                    "name": "total_cpu_weight_allocated",
+                    "type": "uint64"
+                },
+                {
+                    "name": "total_net_weight_allocated",
+                    "type": "uint64"
+                }
+            ]
+        },
+        {
+            "name": "sellram",
+            "base": "",
+            "fields": [
+                {
+                    "name": "dao_owner",
+                    "type": "name"
+                },
+                {
+                    "name": "app",
+                    "type": "name"
+                },
+                {
+                    "name": "quant",
+                    "type": "asset"
+                }
+            ]
+        },
+        {
+            "name": "setabi",
+            "base": "",
+            "fields": [
+                {
+                    "name": "account",
+                    "type": "name"
+                },
+                {
+                    "name": "abi",
+                    "type": "bytes"
+                }
+            ]
+        },
+        {
+            "name": "setalimits",
+            "base": "",
+            "fields": [
+                {
+                    "name": "account",
+                    "type": "name"
+                },
+                {
+                    "name": "ram_bytes",
+                    "type": "int64"
+                },
+                {
+                    "name": "net_weight",
+                    "type": "int64"
+                },
+                {
+                    "name": "cpu_weight",
+                    "type": "int64"
+                }
+            ]
+        },
+        {
+            "name": "setcode",
+            "base": "",
+            "fields": [
+                {
+                    "name": "account",
+                    "type": "name"
+                },
+                {
+                    "name": "vmtype",
+                    "type": "uint8"
+                },
+                {
+                    "name": "vmversion",
+                    "type": "uint8"
+                },
+                {
+                    "name": "code",
+                    "type": "bytes"
+                }
+            ]
+        },
+        {
+            "name": "setparams",
+            "base": "",
+            "fields": [
+                {
+                    "name": "params",
+                    "type": "blockchain_parameters"
+                }
+            ]
+        },
+        {
+            "name": "setpriv",
+            "base": "",
+            "fields": [
+                {
+                    "name": "account",
+                    "type": "name"
+                },
+                {
+                    "name": "is_priv",
+                    "type": "uint8"
+                }
+            ]
+        },
+        {
+            "name": "setprods",
+            "base": "",
+            "fields": [
+                {
+                    "name": "schedule",
+                    "type": "producer_authority[]"
+                }
+            ]
+        },
+        {
+            "name": "setresparams",
+            "base": "",
+            "fields": [
+                {
+                    "name": "ram_price",
+                    "type": "float64"
+                },
+                {
+                    "name": "total_ram_available",
+                    "type": "uint64"
+                },
+                {
+                    "name": "ram_fee",
+                    "type": "float64"
+                }
+            ]
+        },
+        {
+            "name": "unlinkauth",
+            "base": "",
+            "fields": [
+                {
+                    "name": "account",
+                    "type": "name"
+                },
+                {
+                    "name": "code",
+                    "type": "name"
+                },
+                {
+                    "name": "type",
+                    "type": "name"
+                }
+            ]
+        },
+        {
+            "name": "updateactive",
+            "base": "",
+            "fields": [
+                {
+                    "name": "account",
+                    "type": "name"
+                },
+                {
+                    "name": "active",
+                    "type": "authority"
+                }
+            ]
+        },
+        {
+            "name": "updateauth",
+            "base": "",
+            "fields": [
+                {
+                    "name": "account",
+                    "type": "name"
+                },
+                {
+                    "name": "permission",
+                    "type": "name"
+                },
+                {
+                    "name": "parent",
+                    "type": "name"
+                },
+                {
+                    "name": "auth",
+                    "type": "authority"
+                },
+                {
+                    "name": "auth_parent",
+                    "type": "bool"
+                }
+            ]
+        },
+        {
+            "name": "updatekeyper",
+            "base": "",
+            "fields": [
+                {
+                    "name": "account",
+                    "type": "name"
+                },
+                {
+                    "name": "permission",
+                    "type": "permission_level_name"
+                },
+                {
+                    "name": "key",
+                    "type": "public_key"
+                },
+                {
+                    "name": "link_auth",
+                    "type": "bool"
+                }
+            ]
+        },
+        {
+            "name": "wait_weight",
+            "base": "",
+            "fields": [
+                {
+                    "name": "wait_sec",
+                    "type": "uint32"
+                },
+                {
+                    "name": "weight",
+                    "type": "uint16"
+                }
+            ]
+        }
+    ],
+    "actions": [
+        {
+            "name": "activate",
+            "type": "activate",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "adminsetapp",
+            "type": "adminsetapp",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "buyram",
+            "type": "buyram",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "canceldelay",
+            "type": "canceldelay",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "deleteauth",
+            "type": "deleteauth",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "eraseoldapps",
+            "type": "eraseoldapps",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "linkauth",
+            "type": "linkauth",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "loginwithapp",
+            "type": "loginwithapp",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "newaccount",
+            "type": "newaccount",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "newapp",
+            "type": "newapp",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "newperson",
+            "type": "newperson",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "onerror",
+            "type": "onerror",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "reqactivated",
+            "type": "reqactivated",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "reqauth",
+            "type": "reqauth",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "sellram",
+            "type": "sellram",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "setabi",
+            "type": "setabi",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "setalimits",
+            "type": "setalimits",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "setcode",
+            "type": "setcode",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "setparams",
+            "type": "setparams",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "setpriv",
+            "type": "setpriv",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "setprods",
+            "type": "setprods",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "setresparams",
+            "type": "setresparams",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "unlinkauth",
+            "type": "unlinkauth",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "updateactive",
+            "type": "updateactive",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "updateauth",
+            "type": "updateauth",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "updatekeyper",
+            "type": "updatekeyper",
+            "ricardian_contract": ""
+        }
+    ],
+    "tables": [
+        {
+            "name": "acctypes",
+            "type": "account_type_struct",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "apps",
+            "type": "app",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "appsv2",
+            "type": "appv2",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "people",
+            "type": "person",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "resconfig",
+            "type": "resource_config",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        }
+    ],
+    "ricardian_clauses": [],
+    "variants": [
+        {
+            "name": "variant_block_signing_authority_v0",
+            "types": ["block_signing_authority_v0"]
+        }
+    ],
+    "action_results": []
+}

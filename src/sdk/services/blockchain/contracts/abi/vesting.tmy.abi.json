@@ -1,0 +1,197 @@
+{
+    "____comment": "This file was generated with eosio-abigen. DO NOT EDIT ",
+    "version": "eosio::abi/1.2",
+    "types": [],
+    "structs": [
+        {
+            "name": "assigntokens",
+            "base": "",
+            "fields": [
+                {
+                    "name": "sender",
+                    "type": "name"
+                },
+                {
+                    "name": "holder",
+                    "type": "name"
+                },
+                {
+                    "name": "amount",
+                    "type": "asset"
+                },
+                {
+                    "name": "category",
+                    "type": "int32"
+                }
+            ]
+        },
+        {
+            "name": "microseconds",
+            "base": "",
+            "fields": [
+                {
+                    "name": "_count",
+                    "type": "int64"
+                }
+            ]
+        },
+        {
+            "name": "migrateacc",
+            "base": "",
+            "fields": [
+                {
+                    "name": "account",
+                    "type": "name"
+                }
+            ]
+        },
+        {
+            "name": "migratealloc",
+            "base": "",
+            "fields": [
+                {
+                    "name": "sender",
+                    "type": "name"
+                },
+                {
+                    "name": "holder",
+                    "type": "name"
+                },
+                {
+                    "name": "allocation_id",
+                    "type": "uint64"
+                },
+                {
+                    "name": "old_amount",
+                    "type": "asset"
+                },
+                {
+                    "name": "new_amount",
+                    "type": "asset"
+                },
+                {
+                    "name": "old_category_id",
+                    "type": "int32"
+                },
+                {
+                    "name": "new_category_id",
+                    "type": "int32"
+                }
+            ]
+        },
+        {
+            "name": "setsettings",
+            "base": "",
+            "fields": [
+                {
+                    "name": "sales_start_date",
+                    "type": "string"
+                },
+                {
+                    "name": "launch_date",
+                    "type": "string"
+                }
+            ]
+        },
+        {
+            "name": "vested_allocation",
+            "base": "",
+            "fields": [
+                {
+                    "name": "id",
+                    "type": "uint64"
+                },
+                {
+                    "name": "holder",
+                    "type": "name"
+                },
+                {
+                    "name": "tokens_allocated",
+                    "type": "asset"
+                },
+                {
+                    "name": "tokens_claimed",
+                    "type": "asset"
+                },
+                {
+                    "name": "time_since_sale_start",
+                    "type": "microseconds"
+                },
+                {
+                    "name": "vesting_category_type",
+                    "type": "int32"
+                }
+            ]
+        },
+        {
+            "name": "vesting_settings",
+            "base": "",
+            "fields": [
+                {
+                    "name": "sales_start_date",
+                    "type": "time_point"
+                },
+                {
+                    "name": "launch_date",
+                    "type": "time_point"
+                }
+            ]
+        },
+        {
+            "name": "withdraw",
+            "base": "",
+            "fields": [
+                {
+                    "name": "holder",
+                    "type": "name"
+                }
+            ]
+        }
+    ],
+    "actions": [
+        {
+            "name": "assigntokens",
+            "type": "assigntokens",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "migrateacc",
+            "type": "migrateacc",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "migratealloc",
+            "type": "migratealloc",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "setsettings",
+            "type": "setsettings",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "withdraw",
+            "type": "withdraw",
+            "ricardian_contract": ""
+        }
+    ],
+    "tables": [
+        {
+            "name": "allocation",
+            "type": "vested_allocation",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "settings",
+            "type": "vesting_settings",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        }
+    ],
+    "ricardian_clauses": [],
+    "variants": [],
+    "action_results": []
+}

@@ -103,7 +103,7 @@
   },
   "publishConfig": {
     "access": "public",
-    "tag": "development"
+    "tag": "rc"
   },
   "repository": {
     "type": "git",
