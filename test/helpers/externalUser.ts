@@ -208,12 +208,20 @@ export async function loginToExternalApp(
 
     setUrl(EXTERNAL_WEBSITE_redirectBackUrl);
 
-    return await externalWebsiteOnCallback(
+    const externalUser = await externalWebsiteOnCallback(
         EXTERNAL_WEBSITE_jsKeyManager,
         EXTERNAL_WEBSITE_storage_factory,
         await TONOMY_ID_user.getAccountName(),
         testOptions
     );
+
+    communicationsToCleanup.push(getProtectedCommunication(externalUser));
+
+    return externalUser;
+}
+
+export function getProtectedCommunication(user: ExternalUser): Communication {
+    return (user as unknown as { communication: Communication }).communication;
 }
 
 export async function externalWebsiteUserPressLoginToTonomyButton(

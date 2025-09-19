@@ -34,6 +34,7 @@ import {
     externalWebsiteSignTransaction,
     externalWebsiteClientAuth,
     loginToExternalApp,
+    getProtectedCommunication,
 } from './helpers/externalUser';
 import { createStorageFactory } from './helpers/storageFactory';
 import { createSigner, getTonomyOperationsKey } from '../src/sdk/services/blockchain';
@@ -231,7 +232,3 @@ describe('ExternalUser: Login to external website', () => {
         debug('finished disconnecting all communications');
     }
 });
-
-function getProtectedCommunication(user: ExternalUser): Communication {
-    return (user as unknown as { communication: Communication }).communication;
-}
