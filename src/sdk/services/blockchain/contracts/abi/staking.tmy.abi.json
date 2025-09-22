@@ -1,0 +1,214 @@
+{
+    "____comment": "This file was generated with eosio-abigen. DO NOT EDIT ",
+    "version": "eosio::abi/1.2",
+    "types": [],
+    "structs": [
+        {
+            "name": "addyield",
+            "base": "",
+            "fields": [
+                {
+                    "name": "sender",
+                    "type": "name"
+                },
+                {
+                    "name": "quantity",
+                    "type": "asset"
+                }
+            ]
+        },
+        {
+            "name": "cron",
+            "base": "",
+            "fields": []
+        },
+        {
+            "name": "releasetoken",
+            "base": "",
+            "fields": [
+                {
+                    "name": "account_name",
+                    "type": "name"
+                },
+                {
+                    "name": "allocation_id",
+                    "type": "uint64"
+                }
+            ]
+        },
+        {
+            "name": "requnstake",
+            "base": "",
+            "fields": [
+                {
+                    "name": "account_name",
+                    "type": "name"
+                },
+                {
+                    "name": "allocation_id",
+                    "type": "uint64"
+                }
+            ]
+        },
+        {
+            "name": "setsettings",
+            "base": "",
+            "fields": [
+                {
+                    "name": "yearly_stake_pool",
+                    "type": "asset"
+                }
+            ]
+        },
+        {
+            "name": "staketokens",
+            "base": "",
+            "fields": [
+                {
+                    "name": "account_name",
+                    "type": "name"
+                },
+                {
+                    "name": "quantity",
+                    "type": "asset"
+                }
+            ]
+        },
+        {
+            "name": "staking_account",
+            "base": "",
+            "fields": [
+                {
+                    "name": "staker",
+                    "type": "name"
+                },
+                {
+                    "name": "total_yield",
+                    "type": "asset"
+                },
+                {
+                    "name": "last_payout",
+                    "type": "time_point"
+                },
+                {
+                    "name": "payments",
+                    "type": "uint32"
+                },
+                {
+                    "name": "version",
+                    "type": "int32"
+                }
+            ]
+        },
+        {
+            "name": "staking_allocation",
+            "base": "",
+            "fields": [
+                {
+                    "name": "id",
+                    "type": "uint64"
+                },
+                {
+                    "name": "initial_stake",
+                    "type": "asset"
+                },
+                {
+                    "name": "tokens_staked",
+                    "type": "asset"
+                },
+                {
+                    "name": "stake_time",
+                    "type": "time_point"
+                },
+                {
+                    "name": "unstake_time",
+                    "type": "time_point"
+                },
+                {
+                    "name": "unstake_requested",
+                    "type": "bool"
+                }
+            ]
+        },
+        {
+            "name": "staking_settings",
+            "base": "",
+            "fields": [
+                {
+                    "name": "current_yield_pool",
+                    "type": "asset"
+                },
+                {
+                    "name": "yearly_stake_pool",
+                    "type": "asset"
+                },
+                {
+                    "name": "total_staked",
+                    "type": "asset"
+                },
+                {
+                    "name": "total_releasing",
+                    "type": "asset"
+                }
+            ]
+        }
+    ],
+    "actions": [
+        {
+            "name": "addyield",
+            "type": "addyield",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "cron",
+            "type": "cron",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "releasetoken",
+            "type": "releasetoken",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "requnstake",
+            "type": "requnstake",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "setsettings",
+            "type": "setsettings",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "staketokens",
+            "type": "staketokens",
+            "ricardian_contract": ""
+        }
+    ],
+    "tables": [
+        {
+            "name": "settings",
+            "type": "staking_settings",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "stakingaccou",
+            "type": "staking_account",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "stakingalloc",
+            "type": "staking_allocation",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        }
+    ],
+    "ricardian_clauses": [],
+    "variants": [],
+    "action_results": []
+}
