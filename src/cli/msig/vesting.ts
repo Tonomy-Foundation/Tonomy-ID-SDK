@@ -8,6 +8,9 @@ import {
     getTonomyContract,
     getVestingContract,
     getTokenContract,
+    getStakingContract,
+    StakingContract,
+    amountToAsset,
 } from '../../sdk/services/blockchain';
 import { AccountType, isErrorCode, SdkErrors, TonomyUsername } from '../../sdk';
 import {
@@ -424,12 +427,45 @@ export async function vestingMigrationBulk(options: StandardProposalOptions) {
     await vestingBulk({ ...options, proposalName });
 }
 
+async function setupStaking(options: StandardProposalOptions) {
+    const yearlyStakePool = StakingContract.yearlyStakePool;
+    const monthsToFund = 1;
+    const setupAction = getStakingContract().actions.setSettings({
+        yearlyStakePool: amountToAsset(yearlyStakePool, 'TONO'),
+    });
+    const addYieldAction = getStakingContract().actions.addYield({
+        sender: 'infra.tmy',
+        quantity: amountToAsset((yearlyStakePool * monthsToFund) / 12, 'TONO'), // one month of yield
+    });
+    const actions = [setupAction, addYieldAction];
+
+    console.log(
+        `Setting up staking with a yearly stake pool of ${amountToAsset(yearlyStakePool, 'TONO')} with:\n
+        - target of ${(StakingContract.STAKING_APY_TARGET * 100).toFixed(2)}% APY\n
+        - and ${monthsToFund} month(s) of yield ${amountToAsset((yearlyStakePool * monthsToFund) / 12, 'TONO')} from infra.tmy`
+    );
+    const proposalName = Name.from(options.proposalName.toString() + 'stake');
+
+    const proposalHash = await createProposal(
+        options.proposer,
+        proposalName,
+        actions,
+        options.privateKey,
+        options.requested,
+        options.dryRun
+    );
+
+    if (!options.dryRun && options.autoExecute)
+        await executeProposal(options.proposer, options.proposalName, proposalHash);
+}
+
 export async function vestingMigrate4(options: StandardProposalOptions) {
     await vestingMigrate4Vesting(options);
     await vestingMigrate4Tokenomics(options);
     await vestingMigrate4TokenFixes(options);
     await vestingMigrationBulk(options); // pre TGE allocations
     await burnBaseTokens(options);
+    await setupStaking(options);
     await vestAllTreasuries(options); // should only be called once all above proposals are executed
 }
 

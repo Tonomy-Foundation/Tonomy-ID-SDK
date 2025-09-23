@@ -35,8 +35,9 @@ export function assetToDecimal(asset: string, symbol?: string): Decimal {
     return new Decimal(assetToNumberString(asset, symbol));
 }
 
-/**
- * @deprecated
+/** Convert a number to an EOSIO asset string
+ *
+ * @deprecated remove use of number to represent tokens. Use Decimal/BigInt instead
  * see FIXME above
  */
 export function amountToAsset(amount: number, symbol: string, precision = 6): string {
