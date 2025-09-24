@@ -372,7 +372,6 @@ describe('StakingContract Staking Tests', () => {
 
                 allocation = allocations[0];
                 allocationId = allocation.id;
-                stakeSettings = await stakeContract.getSettings();
             });
       
             test('Successfully request unstake after lockup period and update tables', async () => {
@@ -381,6 +380,7 @@ describe('StakingContract Staking Tests', () => {
                 await sleepUntil(addSeconds(allocation.unstakeableTime, 1));
                 const now = new Date();
 
+                stakeSettings = await stakeContract.getSettings();
                 const unstakeTrx = await stakeContract.requestUnstake(accountName, allocationId, accountSigner);
 
                 expect(unstakeTrx.processed.receipt.status).toBe('executed');
@@ -477,12 +477,12 @@ describe('StakingContract Staking Tests', () => {
 
                 allocation = allocations[0];
                 allocationId = allocation.id;
-                stakeSettings = await stakeContract.getSettings();
             });
 
             test('Successfully finalize unstake after release period and update tables', async () => {
                 expect.assertions(12);
                 await sleepUntil(addSeconds(allocation.releaseTime, 1));
+                stakeSettings = await stakeContract.getSettings();
                 const releaseTrx = await stakeContract.releaseToken(accountName, allocationId, accountSigner);
 
                 debug("releaseTrxr eleaseTrx", releaseTrx)
@@ -561,7 +561,7 @@ describe('StakingContract Staking Tests', () => {
     });
     
     describe('cron()', () => {
-        async function getStakingState() {
+        async function getStakingState(): Promise<StakingState> {
             const accountAndAllocations = await stakeContract.getAccountState(accountName);
 
             const settings = accountAndAllocations.settings;
@@ -595,6 +595,88 @@ describe('StakingContract Staking Tests', () => {
             }
         }
 
+        type StakingState = {
+            allocation: {
+                stakedTime: Date;
+                staked: number;
+                yieldSoFar: number;
+                monthlyYield: number;
+                cycleYieldMax: number;
+            };
+            account: {
+                lastPayoutTime: Date;
+                payments: number;
+                totalYield: number;
+            };
+            settings: {
+                totalStaked: number;
+                totalReleasing: number;
+                yieldPool: number;
+                yearlyStakePool: number;
+                maxCyclePercentageYield: number;
+                apy: number;
+            };
+        }
+
+        type StakingAllocationLog = {
+            now: Date;
+            state?: StakingState;
+            unstaked?: boolean;
+        };
+        const WATCH_INTERVAL_MS = 500;
+
+        async function watchAllocation(options: { watching: boolean, stakingAllocationLog: StakingAllocationLog[], watchInternalMs: number}) {
+            while (options.watching) {
+                const now = new Date();
+
+                try{
+                    const state = await getStakingState();
+
+                    options.stakingAllocationLog.push({ now, state })
+                    await sleep(options.watchInternalMs);
+
+                } catch(e){
+                    if(e.message === "No allocation found") {
+                        options.watching = false
+                    }       
+                }
+
+                
+            }
+        }
+
+        function printAllocationStateLog(startTime: Date, stakingAllocationLog: StakingAllocationLog[]) {
+            const columns = ['Seconds', 'Staked', 'Yield', 'Last Payment', 'Payments', 'Total Staked', 'Total Yield', 'Max Yield'];
+            const columnWidths = [7, 14, 8, 24, 8, 14, 8, 9];
+            let printString = '\n' + columns.map((c, i) => c.padEnd(columnWidths[i])).join(' | ');
+
+            for (const row of stakingAllocationLog) {
+                const seconds = ((row.now.getTime() - startTime.getTime()) / 1000).toFixed(1);
+                let printValues = "\n";
+
+                if (row.unstaked) printValues += seconds.padEnd(columnWidths[0]) + ' | UNSTAKED';
+                else {
+                    if (!row.state) throw new Error("No state found");
+                    const values = [
+                        seconds,
+                        row.state.allocation.staked.toFixed(6),
+                        row.state.allocation.yieldSoFar.toFixed(6),
+                        row.state.account.lastPayoutTime.toISOString(),
+                        row.state.account.payments,
+                        row.state.settings.totalStaked.toFixed(6),
+                        row.state.account.totalYield.toFixed(6),
+                        row.state.allocation.cycleYieldMax.toFixed(6),
+                    ];
+
+                    printValues += values.map((v, i) => v.toString().padEnd(columnWidths[i])).join(' | ');
+                }
+
+                printString += printValues;
+            }
+
+            debug(printString);
+        }
+
         test('can be called successfully with contract authority', async () => {
             const cronTrx = await stakeContract.cron(signer);
 
@@ -626,61 +708,13 @@ describe('StakingContract Staking Tests', () => {
             await stakeContract.stakeTokens(accountName, largeStake, accountSigner);
             
             const startTime = new Date();
-            let watching = true;
-            const stakingAllocationLog: any[] = [];
+            const watchAllocationOptions = {
+                watching: true,
+                stakingAllocationLog: [] as StakingAllocationLog[],
+                watchInternalMs: WATCH_INTERVAL_MS
+            };
 
-            async function watchAllocation() {
-                while (watching) {
-                    const now = new Date();
-
-                    try{
-                        const state = await getStakingState();
-
-                        stakingAllocationLog.push({ now, state })
-                        await sleep(5000);
-
-                    } catch(e){
-                        if(e.message === "No allocation found") {
-                            watching = false
-                        }       
-                    }
-
-                    
-                }
-            }
-
-            function printAllocationStateLog() {
-                const columns = ['Seconds', 'Staked', 'Yield', 'Last Payment', 'Payments', 'Total Staked', 'Total Yield', 'Max Yield'];
-                const columnWidths = [7, 14, 8, 24, 8, 14, 8, 9];
-                let printString = '\n' + columns.map((c, i) => c.padEnd(columnWidths[i])).join(' | ');
-
-                for (const row of stakingAllocationLog) {
-                    const seconds = ((row.now.getTime() - startTime.getTime()) / 1000).toFixed(1);
-                    let printValues = "\n";
-
-                    if (row.unstaked) printValues += seconds.padEnd(columnWidths[0]) + ' | UNSTAKED';
-                    else {
-                        const values = [
-                            seconds,
-                            row.state.allocation.staked.toFixed(6),
-                            row.state.allocation.yieldSoFar.toFixed(6),
-                            row.state.account.lastPayoutTime.toISOString(),
-                            row.state.account.payments,
-                            row.state.settings.totalStaked.toFixed(6),
-                            row.state.account.totalYield.toFixed(6),
-                            row.state.allocation.cycleYieldMax.toFixed(6),
-                        ];
-
-                        printValues += values.map((v, i) => v.toString().padEnd(columnWidths[i])).join(' | ');
-                    }
-
-                    printString += printValues;
-                }
-
-                debug(printString);
-            }
-
-            watchAllocation();
+            watchAllocation(watchAllocationOptions);
             const allocations = await stakeContract.getAllocations(accountName, stakeSettings);
 
             debug(`Waiting for till end of 2nd staking cycle: (${2*cycleSeconds} seconds)`);
@@ -688,13 +722,13 @@ describe('StakingContract Staking Tests', () => {
 
             debug('Unstaking');
             await stakeContract.requestUnstake(accountName, allocations[0].id, accountSigner);
-            stakingAllocationLog.push({ now: new Date(), unstaked: true });
+            watchAllocationOptions.stakingAllocationLog.push({ now: new Date(), unstaked: true });
 
             // Wait for one full staking cycles
             debug(`Waiting for till end of 3nd staking cycle: (${cycleSeconds} seconds)`);
             await sleepUntil(addSeconds(startTime, 3*cycleSeconds));
-            watching = false;
-            printAllocationStateLog();  
+            watchAllocationOptions.watching = false;
+            printAllocationStateLog(startTime, watchAllocationOptions.stakingAllocationLog);  
             
         }, 3 * cycleSeconds * 1000 + 10000);
 
@@ -707,7 +741,14 @@ describe('StakingContract Staking Tests', () => {
             const yearlyStakePool = largeStake; // To make APY 1.0
 
             await stakeContract.setSettings(yearlyStakePool, signer); // APY 1.0
+            const startTime = new Date();
+            const watchAllocationOptions = {
+                watching: true,
+                stakingAllocationLog: [] as StakingAllocationLog[],
+                watchInternalMs: WATCH_INTERVAL_MS
+            };
 
+            watchAllocation(watchAllocationOptions);
             await eosioTokenContract.transfer("coinsale.tmy", accountName, largeStake, "testing TONO", signer);
             await stakeContract.stakeTokens(accountName, largeStake, accountSigner);
       
@@ -780,6 +821,8 @@ describe('StakingContract Staking Tests', () => {
             debug('afterUnstake', afterUnstake);
 
             expect(afterUnstake.allocations.length).toBe(0);
+            watchAllocationOptions.watching = false;
+            printAllocationStateLog(startTime, watchAllocationOptions.stakingAllocationLog);  
         }, 3 * cycleSeconds * 1000 + 10000);
       
         test('does not change settings if no staking accounts exist while cron runs', async () => {
