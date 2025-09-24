@@ -103,7 +103,7 @@
   },
   "publishConfig": {
     "access": "public",
-    "tag": "latest"
+    "tag": "rc"
   },
   "repository": {
     "type": "git",
