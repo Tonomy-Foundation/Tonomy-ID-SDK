@@ -1,5 +1,10 @@
 import { PrivateKey, Name, Checksum256, NameType, ActionType } from '@wharfkit/antelope';
-import { activePermissionLevel, createSigner, getEosioMsigContract } from '../../sdk/services/blockchain';
+import {
+    activePermissionLevel,
+    createSigner,
+    getEosioMsigContract,
+    toPrintableActions,
+} from '../../sdk/services/blockchain';
 import settings from '../settings';
 import { newAccount } from './accounts';
 import { transfer } from './token';
@@ -267,7 +272,7 @@ export async function createProposal(
                 proposer,
                 proposalName,
                 requestedPermissions,
-                actions,
+                actions: await toPrintableActions(actions),
                 signer: privateKey.toPublic(),
             },
             null,

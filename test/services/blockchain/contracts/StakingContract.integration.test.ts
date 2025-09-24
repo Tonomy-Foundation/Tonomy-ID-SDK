@@ -676,6 +676,55 @@ describe('StakingContract Staking Tests', () => {
             debug(printString);
         }
 
+        async function waitForPaymentCycles(initialStakeTime: Date, expectedPayments: number, checkState = true): Promise<StakingState | void> {
+            const baseWaitTime = (expectedPayments + 0.05) * cycleSeconds;
+
+            debug(`Waiting for ${expectedPayments} payment cycle(s) for ${baseWaitTime.toFixed(0)} seconds...`);
+            await sleepUntil(addSeconds(initialStakeTime, baseWaitTime));
+            // return await getStakingState(); // original logic
+            if (!checkState) return;
+
+            // Then poll until we see the expected number of payments
+            let currentState;
+            let retryCount = 0;
+            const maxRetries = 10;
+            const pollIntervalMs = 2000;
+            
+            do {
+                try {
+                    currentState = await getStakingState();
+                    
+                    if (currentState.account.payments >= expectedPayments) {
+                        return currentState;
+                    }
+                    
+                    debug(`Current payments: ${currentState.account.payments}, expected: ${expectedPayments}, retrying...`);
+                } catch(e) {
+                    if (e.message !== "No allocation found") throw e;
+                    debug('No allocations found. Retrying...', e);
+                }
+
+                retryCount++;
+
+                if (retryCount < maxRetries) {
+                    await sleep(pollIntervalMs);
+                }
+            } while (retryCount < maxRetries);
+            
+            // If we get here, we didn't receive the expected payments in time
+            const finalPayments = currentState?.account.payments || 0;
+
+            throw new Error(`Expected ${expectedPayments} payments but only received ${finalPayments} after ${maxRetries} retries`);
+        }
+
+        async function waitForPaymentCyclesWithState(initialStakeTime: Date, expectedPayments: number): Promise<StakingState> {
+            const state = await waitForPaymentCycles(initialStakeTime, expectedPayments, true);
+
+            if (!state) throw new Error("No staking state found after waiting for payment cycles");
+
+            return state;
+        }
+
         test('can be called successfully with contract authority', async () => {
             const cronTrx = await getStakingContract().cron(signer);
 
@@ -697,7 +746,7 @@ describe('StakingContract Staking Tests', () => {
             // only run on local machine to understand the staking yield. No tests are run.
             if (process.env.CI) return;
             await resetContract();
-
+            
             // Use a large stake to minimize rounding issues.
             const largeStake = "1000000.000000 TONO"; // 1M TONO
             const yearlyStakePool = largeStake; // To make APY 1.0
@@ -716,18 +765,15 @@ describe('StakingContract Staking Tests', () => {
             watchAllocation(watchAllocationOptions);
             const allocations = await getStakingContract().getAllocations(accountName, stakeSettings);
 
-            debug(`Waiting for till end of 2nd staking cycle: (${2*cycleSeconds} seconds)`);
-            await sleepUntil(addSeconds(startTime, 2*cycleSeconds));
+            await waitForPaymentCycles(startTime, 2);
 
             debug('Unstaking');
             await getStakingContract().requestUnstake(accountName, allocations[0].id, accountSigner);
             watchAllocationOptions.stakingAllocationLog.push({ now: new Date(), unstaked: true });
 
-            // Wait for one full staking cycles
-            debug(`Waiting for till end of 3nd staking cycle: (${cycleSeconds} seconds)`);
-            await sleepUntil(addSeconds(startTime, 3*cycleSeconds));
+            await waitForPaymentCycles(startTime, 3, false)
             watchAllocationOptions.watching = false;
-            printAllocationStateLog(startTime, watchAllocationOptions.stakingAllocationLog);  
+            printAllocationStateLog(startTime, watchAllocationOptions.stakingAllocationLog);
             
         }, 3 * cycleSeconds * 1000 + 10000);
 
@@ -765,11 +811,8 @@ describe('StakingContract Staking Tests', () => {
             expect(initial.settings.totalStaked).toBe(initial.allocation.staked);
             expect(initial.settings.apy).toBeCloseTo(initial.settings.yearlyStakePool / initial.settings.totalStaked, 6);
       
-            // Wait for one full staking cycles
-            debug(`Waiting for till end of 1st staking cycle: (${cycleSeconds} seconds)`);
-            await sleepUntil(addSeconds(initialStakedTime, cycleSeconds+cycleSeconds*0.05));
-
-            const afterOneCycle = await getStakingState();
+            // Wait for first payment cycle
+            const afterOneCycle = await waitForPaymentCyclesWithState(initialStakedTime, 1);
 
             debug('afterOneCycle', afterOneCycle);
             
@@ -785,11 +828,8 @@ describe('StakingContract Staking Tests', () => {
             expect(afterOneCycle.settings.totalStaked).toBe(initial.settings.totalStaked + afterOneCycle.allocation.yieldSoFar);
             expect(afterOneCycle.settings.yieldPool).toBe(initial.settings.yieldPool - afterOneCycle.allocation.yieldSoFar);
 
-            // Wait for one full staking cycles
-            debug(`Waiting for till end of 2nd staking cycle: (${cycleSeconds} seconds)`);
-            await sleepUntil(addSeconds(initialStakedTime, 2*cycleSeconds+cycleSeconds*0.05));
-
-            const afterTwoCycles = await getStakingState();
+            // Wait for second payment cycle
+            const afterTwoCycles = await waitForPaymentCyclesWithState(initialStakedTime, 2);
 
             debug('afterTwoCycles', afterTwoCycles);
 
@@ -811,9 +851,8 @@ describe('StakingContract Staking Tests', () => {
             await sleepUntil(addSeconds(allocations[0].unstakeableTime, 1)); // Not needed. Just to show that it should be done.
             await getStakingContract().requestUnstake(accountName, allocations[0].id, accountSigner);
 
-            // Wait for one full staking cycles
-            debug(`Waiting for till end of 3rd staking cycle: (${cycleSeconds} seconds)`);
-            await sleepUntil(addSeconds(initialStakedTime, 3*cycleSeconds+cycleSeconds*0.05));
+            // Wait for third staking cycle (should not receive yield since unstaked)
+            await waitForPaymentCycles(initialStakedTime, 3, false);
 
             const afterUnstake = await getStakingContract().getAccountState(accountName);
 
@@ -830,8 +869,7 @@ describe('StakingContract Staking Tests', () => {
             const settingsBefore = await getStakingContract().getSettings();
 
             // Wait for staking cycle, then compare settings to before
-            debug(`Waiting for one staking cycle: (${cycleSeconds} seconds)`);
-            await sleep(cycleSeconds * 1000);
+            await waitForPaymentCycles(new Date(), 1, false);
             const settingsAfter = await getStakingContract().getSettings();
 
             // Expect no changes in yield-related values.

@@ -3,9 +3,6 @@ import { DIDurl } from './types';
 import { ParsedDID, parse } from 'did-resolver';
 import { getChainId } from '../../services/blockchain';
 import { SdkErrors, throwError } from '../errors';
-import Debug from 'debug';
-
-const debug = Debug('tonomy-sdk:util:ssi:did');
 
 export function getAccountNameFromDid(did: DIDurl): Name {
     const parsed = parseAntelopeDid(did);
@@ -35,10 +32,9 @@ export function parseAntelopeDid(did: DIDurl): ParsedDID & {
 }
 
 export function parseDid(did: DIDurl): ParsedDID {
-    debug('did', did);
     const parsed = parse(did);
 
-    if (!parsed) throw new Error('Invalid DID');
+    if (!parsed) throw new Error(`Invalid DID: ${did}`);
 
     return parsed;
 }
