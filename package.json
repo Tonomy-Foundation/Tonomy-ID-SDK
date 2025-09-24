@@ -1,5 +1,5 @@
 {
-  "version": "0.33.0-development.3",
+  "version": "0.34.1",
   "license": "Apache-2.0",
   "type": "module",
   "source": "src/sdk/index.ts",
@@ -67,7 +67,7 @@
     "reflect-metadata": "^0.2.2",
     "socket.io-client": "^4.7.5",
     "sqlite3": "^5.1.7",
-    "typeorm": "^0.3.20",
+    "typeorm": "0.3.22",
     "universal-base64url": "^1.1.0",
     "web-did-resolver": "^2.0.27"
   },
@@ -105,7 +105,7 @@
   },
   "publishConfig": {
     "access": "public",
-    "tag": "development"
+    "tag": "latest"
   },
   "repository": {
     "type": "git",
