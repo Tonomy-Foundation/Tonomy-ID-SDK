@@ -1,5 +1,5 @@
 {
-  "version": "0.33.0-development.5",
+  "version": "0.34.1",
   "license": "Apache-2.0",
   "type": "module",
   "source": "src/sdk/index.ts",
@@ -24,9 +24,10 @@
   },
   "scripts": {
     "start": "microbundle watch  -i ./src/sdk/index.ts -o build/sdk/index.js",
+    "build:setup": "./copy-contract-abis.sh",
     "build:sdk": "microbundle --compress=false -i ./src/sdk/index.ts -o build/sdk/index.js",
     "build:cli": "microbundle --compress=false --target=node -f esm -i ./src/cli/index.ts -o build/cli/index.js",
-    "build": "yarn run build:sdk && yarn run build:cli",
+    "build": "yarn run build:setup && yarn run build:sdk && yarn run build:cli",
     "test:setup": "./test/build-and-run-services.sh start",
     "test:setup-down": "./test/build-and-run-services.sh stop",
     "test:unit": "yarn run test --selectProjects \"Unit tests\"",
@@ -103,7 +104,7 @@
   },
   "publishConfig": {
     "access": "public",
-    "tag": "development"
+    "tag": "latest"
   },
   "repository": {
     "type": "git",
