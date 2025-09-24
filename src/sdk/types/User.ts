@@ -24,7 +24,7 @@ import { VeriffStatusEnum } from './VeriffStatusEnum';
  */
 export type ClientAuthorizationData = Record<string, any> &
     object & {
-        username?: string;
+        username?: TonomyUsername | string;
     };
 
 type KeyFromPasswordFn = (

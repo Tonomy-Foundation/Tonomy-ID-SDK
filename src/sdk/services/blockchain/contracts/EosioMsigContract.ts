@@ -9,7 +9,7 @@ import {
     UInt16Type,
 } from '@wharfkit/antelope';
 import { Contract, loadContract } from './Contract';
-import { AnyActionType, Signer, transact, createActionWithAbi } from '../eosio/transaction';
+import { AnyActionType, Signer, transact, createActionWithAbi, toPrintableActions } from '../eosio/transaction';
 import { Contract as AntelopeContract } from '@wharfkit/contract';
 import { getApi, getChainInfo } from '../eosio/eosio';
 import { ActionOptions } from '@wharfkit/contract';
@@ -128,7 +128,7 @@ export class EosioMsigContract extends Contract {
         const proposalTrx = Transaction.from(trx);
         const proposalHash = proposalTrx.id;
 
-        debug('Propose transaction', { ...trx, actions: actionsArray.map((action) => action.decoded) });
+        debug('Propose transaction', { ...trx, actions: await toPrintableActions(actionsArray) });
         const action = this.actions.propose({ proposer, proposalName, requested, trx });
         const transaction = await transact(action, signer);
 

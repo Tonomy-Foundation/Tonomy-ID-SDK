@@ -361,7 +361,7 @@ export async function externalWebsiteClientAuth(
         const username = await externalUser.getUsername();
 
         if (!username) throw new Error('Username not found');
-        data.username = username.toString();
+        data.username = username;
     }
 
     debug('EXTERNAL_WEBSITE/client-auth: creating client auth', options, data);
