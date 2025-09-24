@@ -4,10 +4,20 @@ on: push
 
 jobs:
   test:
+    needs: compile-contracts
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Delete Tonomy-Contracts directory
+        run: rm -rf ./Tonomy-Contracts
+
+      - name: Get Tonomy-Contracts directory from artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: Tonomy-Contracts
+          path: ./Tonomy-Contracts
 
       - name: Enable Corepack before setting up Node
         run: corepack enable
@@ -34,7 +44,7 @@ jobs:
         with:
           repository: Tonomy-Foundation/Tonomy-Contracts
           # update ref to change contract branch, if needed for temporary CI testing
-          ref: development
+          ref: feature/bridge-functions
           path: Tonomy-Contracts
 
       - name: Build demo.tmy contract
@@ -68,22 +78,35 @@ jobs:
           path: ./Tonomy-Contracts
 
   build-communication-container:
+    needs: compile-contracts
     name: Build Communication Container
     runs-on: ubuntu-latest
     env:
       # update ref to change communication branch, if needed for temporary CI testing
-      GIT_BRANCH: development
+      GIT_BRANCH: feature/contracts-refactor
     steps:
       - uses: actions/checkout@v4
 
+      - name: Delete Tonomy-Contracts directory
+        run: rm -rf ./Tonomy-Contracts
+
+      - name: Get Tonomy-Contracts directory from artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: Tonomy-Contracts
+          path: ./Tonomy-Contracts
+
+      - name: Enable Corepack before setting up Node
+        run: corepack enable
+
       - name: Build container
-        run: |
-          git submodule update --init --recursive
-          cd Tonomy-Communication
-          git checkout $GIT_BRANCH
-          git pull
-          cd ../
-          docker build -t tonomy/communication:local -f test/Dockerfile.communication .
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.3.0
+          cache: yarn
+      - run: ./copy-contract-abis.sh
+      - run: cd Tonomy-Communication && git checkout $GIT_BRANCH && git pull && cd ../
+      - run: docker build -t tonomy/communication:local -f test/Dockerfile.communication .
 
       - name: Save Communication service Docker image as artifact
         run: |
