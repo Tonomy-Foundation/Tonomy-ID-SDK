@@ -3532,6 +3532,7 @@ __metadata:
     ts-mixer: "npm:^6.0.4"
     ts-node: "npm:^10.9.2"
     tslib: "npm:^2.6.3"
+    typechain: "npm:^8.3.2"
     typeorm: "npm:0.3.22"
     typescript: "npm:^5.5.2"
     typescript-eslint: "npm:^7.13.1"
@@ -6680,6 +6681,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"dotenv@npm:^16.4.7":
+  version: 16.6.1
+  resolution: "dotenv@npm:16.6.1"
+  checksum: 10c0/15ce56608326ea0d1d9414a5c8ee6dcf0fffc79d2c16422b4ac2268e7e2d76ff5a572d37ffe747c377de12005f14b3cc22361e79fc7f1061cce81f77d2c973dc
+  languageName: node
+  linkType: hard
+
 "dotenv@npm:^17.2.2":
   version: 17.2.2
   resolution: "dotenv@npm:17.2.2"
@@ -8142,7 +8150,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"glob@npm:^10.2.2, glob@npm:^10.3.10, glob@npm:^10.4.2":
+"glob@npm:^10.2.2, glob@npm:^10.3.10, glob@npm:^10.4.2, glob@npm:^10.4.5":
   version: 10.4.5
   resolution: "glob@npm:10.4.5"
   dependencies:
