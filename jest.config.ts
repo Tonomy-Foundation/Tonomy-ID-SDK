@@ -3,8 +3,9 @@ import type { Config } from 'jest';
 // https://www.jenchan.biz/blog/dissecting-the-hell-jest-setup-esm-typescript-setup
 // https://kulshekhar.github.io/ts-jest/docs/guides/esm-support/
 const baseConfig: Config = {
-    testEnvironment: 'node',
-    setupFilesAfterEnv: ['<rootDir>/test/test.setup.ts'],
+    preset: 'ts-jest',
+    testEnvironment: './custom-test-env.js',
+    setupFilesAfterEnv: ['<rootDir>/test/jest.setup.ts'],
     transform: {
         '^.+\\.m?tsx?$': [
             'ts-jest',
