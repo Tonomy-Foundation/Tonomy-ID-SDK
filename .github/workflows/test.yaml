@@ -5,7 +5,7 @@ on: push
 env:
   NODE_VERSION: 22.3.0
   # change git branches, if needed for temporary CI testing
-  GIT_BRANCH_COMMUNICATION: development
+  GIT_BRANCH_COMMUNICATION: feature/swap-service
   GIT_BRANCH_ETHEREUM: development
 
 jobs:
