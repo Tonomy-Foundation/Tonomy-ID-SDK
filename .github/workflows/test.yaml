@@ -5,11 +5,13 @@ on: push
 env:
   NODE_VERSION: 22.3.0
   # change git branches, if needed for temporary CI testing
-  GIT_BRANCH_COMMUNICATION: feature/swap-service
-  GIT_BRANCH_ETHEREUM: feature/anti-sniping-functions
-  GIT_BRANCH_CONTRACTS: feature/bridge-functions
+  GIT_BRANCH_COMMUNICATION: development
+  GIT_BRANCH_ETHEREUM: development
 
 jobs:
+  compile-contracts:
+    uses: ./.github/workflows/compile-contracts.yml
+    
   test:
     name: Run lint and unit tests
     needs: compile-contracts
@@ -41,48 +43,47 @@ jobs:
       - run: yarn run lint
       - run: yarn run test:unit
 
-  compile-contracts:
-    name: Compiles contracts
-    runs-on: ubuntu-24.04
-    container: tonomy/antelope
+  build-communication-container:
+    needs: compile-contracts
+    name: Build Communication Container
+    runs-on: ubuntu-latest
     env:
-      BUILD_TEST: true
+      # update ref to change communication branch, if needed for temporary CI testing
+      GIT_BRANCH: development
     steps:
       - uses: actions/checkout@v4
-        with:
-          repository: Tonomy-Foundation/Tonomy-Contracts
-          ref: ${{ env.GIT_BRANCH_CONTRACTS }}
-          path: Tonomy-Contracts
 
-      - name: Build demo.tmy contract
-        run: ./Tonomy-Contracts/contracts/demo.tmy/build.sh local
+      - name: Delete Tonomy-Contracts directory
+        run: rm -rf ./Tonomy-Contracts
 
-      - name: Compile eosio.bios
-        run: ./Tonomy-Contracts/contracts/eosio.bios/build.sh local
-
-      - name: Compile eosio.msig
-        run: ./Tonomy-Contracts/contracts/eosio.msig/build.sh local
-
-      - name: Build eosio.token contract
-        run: ./Tonomy-Contracts/contracts/eosio.token/build.sh local
-
-      - name: Build eosio.tonomy contract
-        run: ./Tonomy-Contracts/contracts/eosio.tonomy/build.sh local
-
-      - name: Build tonomy contract
-        run: ./Tonomy-Contracts/contracts/tonomy/build.sh local
-
-      - name: Build vesting.tmy contract
-        run: ./Tonomy-Contracts/contracts/vesting.tmy/build.sh local
-
-      - name: Build staking.tmy contract
-        run: ./Tonomy-Contracts/contracts/staking.tmy/build.sh local
-
-      - name: Add Tonomy-Contracts dir to artifacts
-        uses: actions/upload-artifact@v4
+      - name: Get Tonomy-Contracts directory from artifacts
+        uses: actions/download-artifact@v4
         with:
           name: Tonomy-Contracts
           path: ./Tonomy-Contracts
+
+      - name: Enable Corepack before setting up Node
+        run: corepack enable
+
+      - name: Build container
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.3.0
+          cache: yarn
+      - run: ./copy-contract-abis.sh
+      - run: cd Tonomy-Communication && git checkout $GIT_BRANCH && git pull && cd ../
+      - run: docker build -t tonomy/communication:local -f test/Dockerfile.communication .
+
+      - name: Save Communication service Docker image as artifact
+        run: |
+          docker save tonomy/communication:local -o communication-image.tar
+          gzip communication-image.tar
+
+      - name: Upload Communication service Docker image artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: communication-docker-image
+          path: communication-image.tar.gz
 
   integration-test:
     name: Run integration and governance tests
