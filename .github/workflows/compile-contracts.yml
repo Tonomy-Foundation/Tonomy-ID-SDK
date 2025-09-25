@@ -1,0 +1,53 @@
+# .github/workflows/compile-contracts.yml
+name: Compile Contracts Reusable
+
+on:
+  workflow_call:
+    outputs:
+      contracts-artifact:
+        description: "The compiled contracts artifact"
+        value: ${{ jobs.compile-contracts.outputs.artifacts-uploaded }}
+
+jobs:
+  compile-contracts:
+    name: Compile Tonomy Contracts
+    runs-on: ubuntu-24.04
+    container: tonomy/antelope
+    env:
+      BUILD_TEST: true
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: Tonomy-Foundation/Tonomy-Contracts
+          ref: development
+          path: Tonomy-Contracts
+
+      - name: Build demo.tmy contract
+        run: ./Tonomy-Contracts/contracts/demo.tmy/build.sh local
+
+      - name: Compile eosio.bios
+        run: ./Tonomy-Contracts/contracts/eosio.bios/build.sh local
+
+      - name: Compile eosio.msig
+        run: ./Tonomy-Contracts/contracts/eosio.msig/build.sh local
+
+      - name: Build eosio.token contract
+        run: ./Tonomy-Contracts/contracts/eosio.token/build.sh local
+
+      - name: Build eosio.tonomy contract
+        run: ./Tonomy-Contracts/contracts/eosio.tonomy/build.sh local
+
+      - name: Build tonomy contract
+        run: ./Tonomy-Contracts/contracts/tonomy/build.sh local
+
+      - name: Build vesting.tmy contract
+        run: ./Tonomy-Contracts/contracts/vesting.tmy/build.sh local
+
+      - name: Build staking.tmy contract
+        run: ./Tonomy-Contracts/contracts/staking.tmy/build.sh local
+
+      - name: Add Tonomy-Contracts dir to artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: Tonomy-Contracts
+          path: ./Tonomy-Contracts
