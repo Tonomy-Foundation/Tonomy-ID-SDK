@@ -448,6 +448,18 @@ async function createTonomyApps(newPublicKey: PublicKey, newSigner: Signer): Pro
         publicKey: newPublicKey,
         signer,
     });
+
+    await createApp({
+        appName: 'Tonomy',
+        usernamePrefix: 'tonomy-apps',
+        description: `Access all your Tonomy apps in one hub. Manage tokens, explore the blockchain, create, collaborate, and build — it’s all at your fingertips`,
+        origin: settings.config.tonomyAppsOrigin,
+        logoUrl: settings.config.tonomyAppsOrigin + '/market.com.png',
+        backgroundColor: '#F9FAFB',
+        accentColor: '#5833BC',
+        publicKey: newPublicKey,
+        signer,
+    });
 }
 
 async function updateAccountControllers(govKeys: string[], newPublicKey: PublicKey) {

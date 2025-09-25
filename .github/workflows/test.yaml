@@ -2,11 +2,18 @@ name: Run Tonomy-ID-SDK Tests
 
 on: push
 
+env:
+  NODE_VERSION: 22.3.0
+  # change git branches, if needed for temporary CI testing
+  GIT_BRANCH_COMMUNICATION: development
+  GIT_BRANCH_ETHEREUM: development
+
 jobs:
   compile-contracts:
     uses: ./.github/workflows/compile-contracts.yml
     
   test:
+    name: Run lint and unit tests
     needs: compile-contracts
     runs-on: ubuntu-latest
 
@@ -28,7 +35,7 @@ jobs:
       - name: Run lint and test
         uses: actions/setup-node@v4
         with:
-          node-version: 22.3.0
+          node-version: ${{ env.NODE_VERSION }}
           cache: yarn
       - run: yarn install --immutable
       - run: yarn run build
@@ -79,12 +86,14 @@ jobs:
           path: communication-image.tar.gz
 
   integration-test:
-    needs: [compile-contracts, build-communication-container]
-    runs-on: ubuntu-24.04
+    name: Run integration and governance tests
+    needs: compile-contracts
+    runs-on: ubuntu-latest
     env:
       TONOMY_OPS_PRIVATE_KEY: PVT_K1_24kG9VcMk3VkkgY4hh42X262AWV18YcPjBTd2Hox4YWoP8vRTU
       TONOMY_BOARD_PUBLIC_KEYS: '{"keys":["PUB_K1_81aU18Y3RdyFf2WY4Wy7g7fvG9M9d7hmY4rhNFeXouYYPjExua","PUB_K1_5HWprCobEy8LiYUpfVmh8BdGDb8ANPc8rhBhtNqhvXnuxpyCaq","PUB_K1_5VLYVhqfe7oh8TW2i6Nw251wbpoZ4p15DV7udqDjiaKnryx9YU"]}'
       TONOMY_TEST_ACCOUNTS_PASSPHRASE: "above day fever lemon piano sport"
+      ETHEREUM_PRIVATE_KEY: "0xdf57089febbacf7ba0bc227dafbffa9fc08a93fdc68e1e42411a14efcf23656e"
     services:
       blockchain:
         image: tonomy/blockchain:initialized-development
@@ -93,25 +102,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-
-      - name: Download Communication service Docker image artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: communication-docker-image
-          path: ./
-
-      - name: Load Communication service Docker image
-        run: |
-          gunzip communication-image.tar.gz
-          docker load -i communication-image.tar
-
-      - name: Start communication service
-        run: |
-          docker run -d \
-            --name communication \
-            --network host \
-            -e BLOCKCHAIN_URL=http://localhost:8888 \
-            tonomy/communication:local
 
       - name: Delete Tonomy-Contracts directory
         run: rm -rf ./Tonomy-Contracts
@@ -124,20 +114,65 @@ jobs:
 
       - name: Enable Corepack before setting up Node
         run: corepack enable
-
-      - name: Install SDK and Bootstrap blockchain
+      
+      - name: Install and build SDK
         uses: actions/setup-node@v4
         with:
-          node-version: 22.3.0
+          node-version: ${{ env.NODE_VERSION }}
           cache: yarn
       - run: yarn install --immutable
       - run: yarn run build
+      
+      - name: Run communication service
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: yarn
+      - run: git submodule update --init Tonomy-Communication
+      - run: |
+          cd Tonomy-Communication
+          git checkout $GIT_BRANCH_COMMUNICATION
+          git pull
+          yarn install --immutable
+          yarn link ../
+          yarn run build
+          BLOCKCHAIN_URL=http://localhost:8888 npx pm2 start yarn --name "communication" -- run start:prod
+      - run: sleep 2
+      - run: npx pm2 logs --lines 50 --nostream communication
+
+      - name: Run hardhat node and Deploy Ethereum contracts
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: yarn
+      - run: git submodule update --init Ethereum-token
+      - run: |
+          cd Ethereum-token
+          git checkout $GIT_BRANCH_ETHEREUM
+          git pull
+          yarn install --immutable
+          npx pm2 start yarn --name "hardhat" -- run node
+      - run: sleep 2
+      - run: npx pm2 logs --lines 50 --nostream hardhat
+      - run: |
+          cd Ethereum-token
+          DEPLOY_OUTPUT=$(yarn run deploy)
+          echo "$DEPLOY_OUTPUT"
+          BASE_TOKEN_ADDRESS=$(echo "$DEPLOY_OUTPUT" | grep "Proxy contract:" | awk '{print $3}')
+          echo "Base Token Address: $BASE_TOKEN_ADDRESS"
+          echo "BASE_TOKEN_ADDRESS=$BASE_TOKEN_ADDRESS" >> $GITHUB_ENV
+
+      - name: Bootstrap blockchain
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: yarn
       - run: yarn run cli bootstrap
 
       - name: Run integration and governance tests
         uses: actions/setup-node@v4
         with:
-          node-version: 22.3.0
+          node-version: ${{ env.NODE_VERSION }}
           cache: yarn
       - run: yarn run test:integration
       - run: yarn run test:governance
