@@ -1,7 +1,7 @@
 /* eslint-disable camelcase */
 import { Name } from '@wharfkit/antelope';
 import { createProposal, executeProposal, StandardProposalOptions } from '.';
-import { getStakingContract, getTonomyContract, getVestingContract } from '../../sdk';
+import { getStakingContract, getTokenContract, getTonomyContract, getVestingContract } from '../../sdk';
 import { getSettings } from '../../sdk';
 import {
     foundAccount,
@@ -11,7 +11,6 @@ import {
     systemAccount,
 } from '../bootstrap';
 import settings from '../settings';
-import { getAllUniqueHolders } from '../vesting';
 import { deployContract } from './contract';
 
 export async function symbolMigrate(options: StandardProposalOptions) {
@@ -66,34 +65,14 @@ async function migrateEosioToken(options: StandardProposalOptions) {
 
     const actions: any = Array.from(bootstrappedAccounts).map((account) => {
         console.log(`eosio.token::migrateacc(${account})`);
-        return {
-            account: 'eosio.token',
-            name: 'migrateacc',
-            authorization: [
-                {
-                    actor: 'eosio.token',
-                    permission: 'active',
-                },
-            ],
-            data: {
-                account,
-            },
-        };
+        return getTokenContract().actions.migrateAcc({
+            account,
+        });
     });
 
     console.log(`Total accounts to migrate: ${actions.length}`);
     console.log(`eosio.token::migratestats()`);
-    actions.push({
-        account: 'eosio.token',
-        name: 'migratestats',
-        authorization: [
-            {
-                actor: 'eosio.token',
-                permission: 'active',
-            },
-        ],
-        data: {},
-    });
+    actions.push(getTokenContract().actions.migrateStats({}));
 
     const proposalName = Name.from(options.proposalName.toString() + '2');
     const proposalHash = await createProposal(
@@ -114,7 +93,7 @@ async function migrateVesting(options: StandardProposalOptions) {
     const vestingHolders =
         getSettings().environment === 'development'
             ? new Set<string>(['team.tmy', 'found.tmy'])
-            : await getAllUniqueHolders();
+            : await getVestingContract().getAllUniqueHolders();
 
     const actions = Array.from(vestingHolders).map((holder) => {
         console.log(`vesting.tmy::migrateacc(${holder})`);
