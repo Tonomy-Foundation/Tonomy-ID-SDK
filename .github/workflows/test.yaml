@@ -70,6 +70,8 @@ jobs:
         with:
           node-version: 22.3.0
           cache: yarn
+      - name: Install deps before copying ABIs
+        run: yarn install --immutable
       - run: ./copy-contract-abis.sh
       - run: cd Tonomy-Communication && git checkout $GIT_BRANCH && git pull && cd ../
       - run: docker build -t tonomy/communication:local -f test/Dockerfile.communication .

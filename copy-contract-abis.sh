@@ -84,9 +84,6 @@ echo "Ethereum Token Contract: Copying ABI"
 mkdir -p "${PARENT_PATH}/src/sdk/services/ethereum/abi"
 cp "./artifacts/contracts/TonomyToken.sol/TonomyToken.json" "${PARENT_PATH}/src/sdk/services/ethereum/abi/TonomyToken.json"
 
-echo "Installing root project dependencies"
-yarn install
-
 echo "Generating Typechain types for Ethereum ABIs"
 cd "${PARENT_PATH}"
 mkdir -p "src/sdk/services/ethereum/typechain"
