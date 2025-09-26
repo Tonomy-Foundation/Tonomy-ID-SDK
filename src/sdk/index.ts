@@ -52,8 +52,8 @@ export * from './storage/keymanager';
 export * from './storage/storage';
 export * from './storage/browserStorage';
 export * from './storage/jsKeyManager';
+export * from '../sdk/storage/entities/identityVerificationStorage';
 
 // API
 export * from '../api/externalUser';
-
-export * from '../sdk/storage/entities/identityVerificationStorage';
+export * from '../api/appsExternalUser';

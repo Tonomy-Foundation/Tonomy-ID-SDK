@@ -18,15 +18,15 @@ import {
     DualWalletRequests,
 } from '../sdk/util/request';
 import { checkChainId, getAccountNameFromDid, KYCPayload, KYCVC, parseDid, verifyOpsTmyDid } from '../sdk/util';
+import { App } from '../sdk/controllers/App';
 import {
-    App,
     AuthenticationMessage,
-    checkOriginMatchesApp,
-    Communication,
     LinkAuthRequestMessage,
     LinkAuthRequestResponseMessage,
     Message,
-} from '../sdk';
+} from '../sdk/services/communication/message';
+import { checkOriginMatchesApp } from '../sdk/controllers/App';
+import { Communication } from '../sdk/services/communication/communication';
 import { VCWithTypeType, VerifiableCredential, VerifiableCredentialWithType } from '../sdk/util/ssi/vc';
 import { DIDurl, JWT } from '../sdk/util/ssi/types';
 import { Signer, createKeyManagerSigner, transact } from '../sdk/services/blockchain/eosio/transaction';
@@ -80,10 +80,11 @@ export type LoginWithTonomyMessages = {
  *
  */
 export class ExternalUser {
-    keyManager: KeyManager;
-    storage: ExternalUserStorage & PersistentStorageClean;
-    did: string;
-    communication: Communication;
+    protected keyManager: KeyManager;
+    protected storage: ExternalUserStorage & PersistentStorageClean;
+    protected communication: Communication;
+    protected storageFactory: StorageFactory;
+    public did: string;
 
     /**
      * Creates a new external user
@@ -94,6 +95,7 @@ export class ExternalUser {
 
     constructor(_keyManager: KeyManager, _storageFactory: StorageFactory) {
         this.keyManager = _keyManager;
+        this.storageFactory = _storageFactory;
         this.storage = createStorage<ExternalUserStorage>(STORAGE_NAMESPACE + 'external.user.', _storageFactory);
         this.communication = new Communication(false);
     }
@@ -578,7 +580,7 @@ export class ExternalUser {
         if (!res) throwError('Failed to send message', SdkErrors.MessageSendError);
     }
 
-    private async loginToCommunication(): Promise<void> {
+    protected async loginToCommunication(): Promise<void> {
         if (!this.communication.isLoggedIn()) {
             const issuer = await this.getIssuer();
             const authMessage = await AuthenticationMessage.signMessageWithoutRecipient({}, issuer);

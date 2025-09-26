@@ -60,6 +60,9 @@ CONTRACTS=(
     "staking.tmy"
 )
 
+# Ensure destination directory for EOSIO contract ABIs exists
+mkdir -p "${PARENT_PATH}/src/sdk/services/blockchain/contracts/abi"
+
 for CONTRACT in "${CONTRACTS[@]}"
 do
     echo "Tonomy Contracts: Copying ${CONTRACT} ABI"
@@ -78,6 +81,12 @@ if [ ! -d "artifacts" ]; then
 fi
 
 echo "Ethereum Token Contract: Copying ABI"
+mkdir -p "${PARENT_PATH}/src/sdk/services/ethereum/abi"
 cp "./artifacts/contracts/TonomyToken.sol/TonomyToken.json" "${PARENT_PATH}/src/sdk/services/ethereum/abi/TonomyToken.json"
+
+echo "Generating Typechain types for Ethereum ABIs"
+cd "${PARENT_PATH}"
+mkdir -p "src/sdk/services/ethereum/typechain"
+npx typechain --target ethers-v6 --out-dir src/sdk/services/ethereum/typechain 'src/sdk/services/ethereum/abi/*.json'
 
 echo "All contract ABIs copied successfully"

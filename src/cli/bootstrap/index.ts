@@ -9,6 +9,7 @@ import {
     AccountType,
     getSettings,
     VestingContract,
+    ensureBaseTokenDeployed,
 } from '../../sdk/index';
 import { getSigner, updateAccountKey, updateControlByAccount } from './keys';
 import settings from '../settings';
@@ -71,6 +72,7 @@ export default async function bootstrap() {
         await setupVestingAndStaking(newSigner);
         await deployEosioTonomy(newSigner);
         await updateMsigControl(tonomyGovKeys, newSigner);
+        await ensureBaseTokenDeployed();
 
         console.log('Bootstrap complete');
     } catch (e) {
