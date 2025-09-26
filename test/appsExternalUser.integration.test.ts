@@ -120,7 +120,8 @@ describe('Login to external website', () => {
             TONOMY_ID_dataSource = await setupTestDatabase();
         }
 
-        await disconnectCommunications(communicationsToCleanup);        debug('finished cleanup');
+        await disconnectCommunications(communicationsToCleanup);        
+        debug('finished cleanup');
 
         // for some reason this is needed to ensure all the code lines execute. Not sure why needed
         // TODO: figure out why this is needed and remove issue
@@ -227,7 +228,7 @@ describe('Login to external website', () => {
 
         APPS_EXTERNAL_WEBSITE_user = new AppsExternalUser(res);    
         await disconnectCommunications([getProtectedCommunication(APPS_EXTERNAL_WEBSITE_user)]);
-    
+        communicationsToCleanup.push(getProtectedCommunication(APPS_EXTERNAL_WEBSITE_user));
     }
 
     async function disconnectCommunications(communications: Communication[]) {
