@@ -119,7 +119,9 @@ describe('Login to external website', () => {
             TONOMY_ID_dataSource = await setupTestDatabase();
         }
 
-        await disconnectCommunications(communicationsToCleanup);
+        await disconnectCommunications([TONOMY_ID_user.communication]);
+
+        communicationsToCleanup.push(TONOMY_ID_user.communication);
 
         debug('finished cleanup');
 

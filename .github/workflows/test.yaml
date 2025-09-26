@@ -177,6 +177,5 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: yarn
-      - run: |
-          yarn run test:integration --runInBand --detectOpenHandles 
-          yarn run test:governance --runInBand --detectOpenHandles
+      - run: yarn run test:integration
+      - run: yarn run test:governance
