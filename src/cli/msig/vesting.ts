@@ -540,12 +540,22 @@ function createMigrateAction(
     });
 }
 
+async function fetchAccountNameFromUsername(accountName: string): Promise<string> {
+    const usernameInstance = TonomyUsername.fromUsername(
+        accountName,
+        AccountType.PERSON,
+        settings.config.accountSuffix
+    );
+
+    return (await getAccountNameFromUsername(usernameInstance)).toString();
+}
+
 export async function vestingBulk(options: StandardProposalOptions) {
     const csvFilePath = '/home/dev/Downloads/allocate.csv';
 
     console.log('Reading file: ', csvFilePath);
 
-    const records = parse(fs.readFileSync(csvFilePath, 'utf8'), {
+    const records: any[] = parse(fs.readFileSync(csvFilePath, 'utf8'), {
         columns: true,
         // eslint-disable-next-line camelcase
         skip_empty_lines: true,
@@ -554,55 +564,82 @@ export async function vestingBulk(options: StandardProposalOptions) {
 
     const unfoundAccounts: string[] = [];
 
-    await Promise.all(
-        records.map(async (data: any) => {
-            // accountName, usdQuantity
-            if (!data.sender || !data.accountName || !data.usdQuantity) {
-                throw new Error(`Invalid CSV format on line ${results.length + 1}: ${data}`);
-            }
+    console.log('Processing ', records.length, ' records');
 
-            try {
-                let accountName = data.accountName as string;
+    // split the record array into batches of 100
+    const recordBatches = [];
 
-                if (accountName.startsWith('@')) {
-                    const usernameInstance = TonomyUsername.fromUsername(
-                        accountName.split('@')[1],
-                        AccountType.PERSON,
-                        settings.config.accountSuffix
-                    );
+    for (let i = 0; i < records.length; i += 100) {
+        recordBatches.push(records.slice(i, i + 100));
+    }
 
-                    accountName = (await getAccountNameFromUsername(usernameInstance)).toString();
-                } else {
-                    await getAccount(accountName);
+    for (let i = 0; i < recordBatches.length; i++) {
+        const batch = recordBatches[i];
+
+        console.log(`Processing batch ${i + 1} / ${recordBatches.length} with ${batch.length} records`);
+        await Promise.all(
+            batch.map(async (data: any) => {
+                // accountName, usdQuantity, categoryId, sender
+                if (!data.sender || !data.accountName || !data.usdQuantity || !data.categoryId) {
+                    throw new Error(`Invalid CSV format on line ${results.length + 1}: ${JSON.stringify(data)}`);
                 }
 
-                data.accountName = accountName;
+                try {
+                    let accountName = data.accountName as string;
 
-                data.usdQuantity = Number(data.usdQuantity);
+                    // First assume that @... is a username and without @ is an account name, but if this fails try the other way around
+                    if (accountName.startsWith('@')) {
+                        accountName = accountName.split('@')[1];
 
-                if (isNaN(data.usdQuantity)) {
-                    throw new Error(`Invalid quantity type on line ${results.length + 1}: ${data}`);
+                        try {
+                            accountName = await fetchAccountNameFromUsername(accountName);
+                        } catch (e) {
+                            if (isErrorCode(e, [SdkErrors.AccountDoesntExist, SdkErrors.UsernameNotFound])) {
+                                await getAccount(accountName);
+                            } else {
+                                throw e;
+                            }
+                        }
+                    } else {
+                        try {
+                            await getAccount(accountName);
+                        } catch (e) {
+                            if (isErrorCode(e, [SdkErrors.AccountDoesntExist, SdkErrors.UsernameNotFound])) {
+                                accountName = await fetchAccountNameFromUsername(accountName);
+                            } else {
+                                throw e;
+                            }
+                        }
+                    }
+
+                    data.accountName = accountName;
+
+                    data.usdQuantity = Number(data.usdQuantity);
+
+                    if (isNaN(data.usdQuantity)) {
+                        throw new Error(`Invalid quantity type on line ${results.length + 1}: ${data}`);
+                    }
+
+                    if (data.usdQuantity <= 0 || data.usdQuantity > 100000) {
+                        throw new Error(`Invalid quantity on line ${results.length + 1}: ${data}`);
+                    }
+
+                    results.push(data);
+                } catch (e) {
+                    if (isErrorCode(e, [SdkErrors.AccountDoesntExist, SdkErrors.UsernameNotFound])) {
+                        unfoundAccounts.push(data.accountName);
+                    } else {
+                        console.error(`Error processing line ${results.length + 1}: ${JSON.stringify(data)}`, e);
+                        throw e;
+                    }
                 }
-
-                if (data.usdQuantity <= 0 || data.usdQuantity > 100000) {
-                    throw new Error(`Invalid quantity on line ${results.length + 1}: ${data}`);
-                }
-
-                results.push(data);
-            } catch (e) {
-                if (isErrorCode(e, [SdkErrors.AccountDoesntExist, SdkErrors.UsernameNotFound])) {
-                    unfoundAccounts.push(data.accountName);
-                } else {
-                    throw e;
-                }
-            }
-        })
-    );
+            })
+        );
+    }
 
     if (unfoundAccounts.length > 0) {
         console.error(
-            `${unfoundAccounts.length} accounts were not found in environment ${settings.env}:`,
-            unfoundAccounts
+            `${unfoundAccounts.length} accounts were not found in environment ${settings.env}: ${unfoundAccounts.join(', ')}`
         );
         process.exit(1);
     }
