@@ -178,9 +178,5 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: yarn
       - run: |
-          yarn run test:integration --runInBand --detectOpenHandles --forceExit
-          yarn run test:governance --runInBand --detectOpenHandles --forceExit
-
-      - name: Stop pm2 processes
-        if: always()
-        run: npx pm2 kill
+          yarn run test:integration --runInBand --detectOpenHandles 
+          yarn run test:governance --runInBand --detectOpenHandles
