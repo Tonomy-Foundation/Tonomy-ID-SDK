@@ -176,7 +176,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: yar
+          cache: yarn
       - run: |
           yarn run test:integration --runInBand --detectOpenHandles --forceExit
           yarn run test:governance --runInBand --detectOpenHandles --forceExit
