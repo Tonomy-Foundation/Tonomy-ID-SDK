@@ -153,6 +153,7 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: yarn
       - run: git submodule update --init Tonomy-Communication
+      - run: npm install -g pm2
       - run: |
           cd Tonomy-Communication
           git checkout $GIT_BRANCH_COMMUNICATION
