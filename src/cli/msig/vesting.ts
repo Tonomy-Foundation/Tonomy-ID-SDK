@@ -644,6 +644,11 @@ export async function vestingBulk(options: StandardProposalOptions) {
         process.exit(1);
     }
 
+    const totalTonomyUsd = results.reduce((sum, record) => sum + record.usdQuantity, 0);
+
+    console.log(`Total USD to be vested: $${totalTonomyUsd.toFixed(2)} USD`);
+    console.log(`Using TONO price of $${TONO_CURRENT_PRICE} USD`);
+    console.log(`Total TONO to be vested: ${(totalTonomyUsd / TONO_CURRENT_PRICE).toFixed(0)} TONO`);
     const actions = results.map((data) => {
         const tonoNumber = data.usdQuantity / TONO_CURRENT_PRICE;
 
@@ -662,15 +667,38 @@ export async function vestingBulk(options: StandardProposalOptions) {
 
     console.log(`Total ${actions.length} accounts to be paid`);
 
-    const proposalHash = await createProposal(
-        options.proposer,
-        options.proposalName,
-        actions,
-        options.privateKey,
-        options.requested,
-        options.dryRun
-    );
+    // Approximately each `assignToken()` action is 159 us CPU. See https://explorer.tonomy.io/transaction/58f74568c9657f6b9c6b71995a4a24f97d33b051f8bc758b8593bee79fb1c71e?tab=raw
+    // Each block is 0.5s and can be filled with 200000 us CPU
+    // Therefore we can fit approximately 1260 actions in a single block
+    // But to be safe we will use 1000 actions per proposal
+    const actionsPerProposal = 1000;
+    const actionBatches = [];
 
-    if (!options.dryRun && options.autoExecute)
-        await executeProposal(options.proposer, options.proposalName, proposalHash);
+    for (let i = 0; i < actions.length; i += actionsPerProposal) {
+        actionBatches.push(actions.slice(i, i + actionsPerProposal));
+    }
+
+    console.log(`Creating ${actionBatches.length} proposals with up to ${actionsPerProposal} actions each`);
+
+    for (let i = 0; i < actionBatches.length; i++) {
+        const batch = actionBatches[i];
+        const batchProposalName =
+            actionBatches.length === 1
+                ? options.proposalName
+                : Name.from(options.proposalName.toString() + toBase6Plus1(i));
+
+        console.log(`Creating proposal ${i + 1} / ${actionBatches.length} with ${batch.length} actions`);
+
+        const proposalHash = await createProposal(
+            options.proposer,
+            batchProposalName,
+            batch,
+            options.privateKey,
+            options.requested,
+            options.dryRun
+        );
+
+        if (!options.dryRun && options.autoExecute)
+            await executeProposal(options.proposer, batchProposalName, proposalHash);
+    }
 }
