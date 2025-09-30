@@ -13,4 +13,5 @@ export TONOMY_BOARD_PRIVATE_KEYS='{"keys":["PVT_K1_YUpMM1hPec78763ADBMK3gJ4N3yUF
 export SIGNING_KEY="PVT_K1_YUpMM1hPec78763ADBMK3gJ4N3yUFi3N8dKRQ3nyYcxqoDnmL"
 
 # Base (Ethereum) network
+### Hardhat account #19
 export ETHEREUM_PRIVATE_KEY=0xdf57089febbacf7ba0bc227dafbffa9fc08a93fdc68e1e42411a14efcf23656e

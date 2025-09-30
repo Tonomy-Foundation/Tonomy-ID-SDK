@@ -35,7 +35,17 @@ let initialized = false;
 
 export function setSettings(newSettings: Partial<SettingsType>): void {
     debug('Settings initialized', newSettings);
-    settings = newSettings as SettingsType;
+
+    if (!settings) {
+        settings = {} as SettingsType;
+    }
+
+    for (const [key, value] of Object.entries(newSettings)) {
+        if (value !== undefined && value !== null) {
+            (settings as any)[key] = value;
+        }
+    }
+
     initialized = true;
 }
 

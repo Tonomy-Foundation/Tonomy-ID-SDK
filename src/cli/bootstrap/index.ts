@@ -9,6 +9,7 @@ import {
     AccountType,
     getSettings,
     VestingContract,
+    ensureBaseTokenDeployed,
 } from '../../sdk/index';
 import { getSigner, updateAccountKey, updateControlByAccount } from './keys';
 import settings from '../settings';
@@ -71,6 +72,7 @@ export default async function bootstrap() {
         await setupVestingAndStaking(newSigner);
         await deployEosioTonomy(newSigner);
         await updateMsigControl(tonomyGovKeys, newSigner);
+        await ensureBaseTokenDeployed();
 
         console.log('Bootstrap complete');
     } catch (e) {
@@ -431,6 +433,18 @@ async function createTonomyApps(newPublicKey: PublicKey, newSigner: Signer): Pro
         description: `${settings.config.ecosystemName} website to manager your ID and Data`,
         origin: settings.config.ssoWebsiteOrigin,
         logoUrl: settings.config.ssoWebsiteOrigin + '/tonomy-logo1024.png',
+        backgroundColor: '#251950',
+        accentColor: '#BA54D3',
+        publicKey: newPublicKey,
+        signer,
+    });
+
+    await createApp({
+        appName: 'Developers Console',
+        usernamePrefix: 'developer-console',
+        description: `Developer console to manage ${settings.config.ecosystemName} applications and infrastucture`,
+        origin: settings.config.consoleWebsiteOrigin,
+        logoUrl: settings.config.consoleWebsiteOrigin + '/tonomy-logo1024.png',
         backgroundColor: '#251950',
         accentColor: '#BA54D3',
         publicKey: newPublicKey,
