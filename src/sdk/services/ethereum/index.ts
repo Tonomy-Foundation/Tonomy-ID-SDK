@@ -216,10 +216,7 @@ export function extractProofMessage(message: string): {
  *
  * @returns {Promise<{ message: string; signature: string }>} The message and signature
  */
-export async function createSignedProofMessage(
-    signer?: ethers.Signer
-): Promise<{ message: string; signature: string }> {
-    signer = signer ?? (await getBrowserSigner());
+export async function createSignedProofMessage(signer: ethers.Signer): Promise<{ message: string; signature: string }> {
     if (!signer) throw new Error('No signer available to sign proof message');
 
     const address = await signer.getAddress();
