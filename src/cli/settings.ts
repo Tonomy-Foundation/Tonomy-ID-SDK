@@ -18,7 +18,7 @@ type ConfigType = {
     loggerLevel: LoggerLevel;
     ecosystemName: string;
     currencySymbol: string;
-    baseNetwork: 'base' | 'base_testnet' | 'hardhat' | 'localhost';
+    baseNetwork: 'base' | 'base-sepolia' | 'hardhat' | 'localhost';
     baseRpcUrl: string;
     basePrivateKey?: string;
     baseTokenAddress: string;
@@ -72,9 +72,9 @@ const stagingConfig = {
     loggerLevel: 'info' as LoggerLevel,
     ecosystemName: 'Tonomy - Staging',
     currencySymbol: 'TONO',
-    baseNetwork: 'base_testnet' as const,
+    baseNetwork: 'base-sepolia' as const,
     baseRpcUrl: 'https://base-sepolia.infura.io/v3/' + process.env.INFURA_API_KEY,
-    baseTokenAddress: 'TODO:',
+    baseTokenAddress: '0x791f703116a5197D3c0dD41855bC0e715b6A2Df9',
 };
 
 const testnetConfig = {
@@ -91,9 +91,9 @@ const testnetConfig = {
     loggerLevel: 'info' as LoggerLevel,
     ecosystemName: 'Tonomy Testnet',
     currencySymbol: 'TONO',
-    baseNetwork: 'base_testnet' as const,
+    baseNetwork: 'base-sepolia' as const,
     baseRpcUrl: 'https://base-sepolia.infura.io/v3/' + process.env.INFURA_API_KEY,
-    baseTokenAddress: 'TODO:',
+    baseTokenAddress: '0x791f703116a5197D3c0dD41855bC0e715b6A2Df9',
 };
 
 const productionConfig = {
@@ -110,7 +110,7 @@ const productionConfig = {
     loggerLevel: 'info' as LoggerLevel,
     ecosystemName: 'Tonomy',
     currencySymbol: 'TONO',
-    baseNetwork: 'base_testnet' as const,
+    baseNetwork: 'base' as const,
     baseRpcUrl: 'https://base.infura.io/v3/' + process.env.INFURA_API_KEY,
     baseTokenAddress: 'TODO:',
 };

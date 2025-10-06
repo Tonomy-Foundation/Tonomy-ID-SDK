@@ -24,7 +24,7 @@ export type SettingsType = {
     baseTokenAddress: string;
     baseRpcUrl: string;
     basePrivateKey: string;
-    baseNetwork: 'base' | 'base_testnet' | 'hardhat' | 'localhost';
+    baseNetwork: 'base' | 'base-sepolia' | 'hardhat' | 'localhost';
 };
 
 type FetchType = (input: RequestInfo, init?: RequestInit) => Promise<Response>;
