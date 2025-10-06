@@ -507,6 +507,57 @@ export async function vestingMigrate5(options: StandardProposalOptions) {
         await executeProposal(options.proposer, options.proposalName, proposalHash);
 }
 
+async function createAccountActions(account: NameType): Promise<Action[]> {
+    const allocations = await getVestingContract().getAllocations(account);
+
+    const actions: Action[] = [];
+
+    for (const allocation of allocations) {
+        const oldCategory = allocation.vestingCategoryType;
+
+        let newCategory = 8;
+        let newAmount = 0;
+
+        if (oldCategory === 1 || oldCategory === 2) {
+            if (oldCategory === 1) {
+                const oldTokenPrice = 0.002;
+                const newTokenPrice = TONO_SEED_ROUND_PRICE;
+                const amount = assetToAmount(allocation.tokensAllocated);
+
+                newAmount = (amount * oldTokenPrice) / newTokenPrice;
+            } else {
+                const oldTokenPrice = 0.004;
+                const newTokenPrice = TONO_SEED_LATE_ROUND_PRICE;
+                const amount = assetToAmount(allocation.tokensAllocated);
+
+                newAmount = (amount * oldTokenPrice) / newTokenPrice;
+
+                newCategory = 9;
+            }
+
+            const oldAmount = allocation.tokensAllocated;
+            const newAsset = `${newAmount.toFixed(6)} TONO`;
+
+            console.log(
+                `Migrating account ${account.toString()} allocation ${allocation.id} from ${oldAmount} to ${newAsset}`
+            );
+            actions.push(
+                createMigrateAction(
+                    'coinsale.tmy',
+                    account.toString(),
+                    allocation.id,
+                    oldAmount,
+                    newAsset,
+                    oldCategory,
+                    newCategory
+                )
+            );
+        }
+    }
+
+    return actions;
+}
+
 function createMigrateAction(
     sender: string,
     holder: NameType,

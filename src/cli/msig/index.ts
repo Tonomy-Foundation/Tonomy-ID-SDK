@@ -16,7 +16,14 @@ import { setBlockchainConfig } from './setBlockchainConfig';
 import { addProd, changeProds, removeProd, updateProd } from './producers';
 import { hyphaAccountsCreate, hyphaContractSet, hyphaAddAccountPermissions } from './hypha';
 import { sleep } from '../../sdk/util';
-import { vestingMigrate, vestingMigrate2, vestingMigrate3, vestingBulk, vestingMigrate4 } from './vesting';
+import {
+    vestingMigrate,
+    vestingMigrate2,
+    vestingMigrate3,
+    vestingBulk,
+    vestingMigrate4,
+    vestingMigrate5,
+} from './vesting';
 import {
     createStakingTmyAccount,
     deployStakingContract,
@@ -142,6 +149,8 @@ export default async function msig(args: string[]) {
                 await vestingMigrate3(options);
             } else if (proposalSubtype === 'migrate4') {
                 await vestingMigrate4(options);
+            } else if (proposalSubtype === 'migrate5') {
+                await vestingMigrate5(options);
             } else if (proposalSubtype === 'bulk') {
                 await vestingBulk(options);
             } else printMsigHelp();
@@ -400,6 +409,7 @@ function printMsigHelp() {
                 propose vesting migrate2 <proposalName>
                 propose vesting migrate3 <proposalName>
                 propose vesting migrate4 <proposalName>
+                propose vesting migrate5 <proposalName>
         Options:
                 --help
                 --dry-run          Create the proposal but do not send the transaction
