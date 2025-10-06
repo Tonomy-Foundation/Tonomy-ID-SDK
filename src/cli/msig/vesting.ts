@@ -469,55 +469,42 @@ export async function vestingMigrate4(options: StandardProposalOptions) {
     await vestAllTreasuries(options); // should only be called once all above proposals are executed
 }
 
-async function createAccountActions(account: NameType): Promise<Action[]> {
-    const allocations = await getVestingContract().getAllocations(account);
+export async function vestingMigrate5(options: StandardProposalOptions) {
+    const account = 'pegcnjcnnaqd';
+    const allocationsIds = [6, 7, 8];
 
-    const actions: Action[] = [];
+    const allocationData = await getVestingContract().getAllocations(account);
 
-    for (const allocation of allocations) {
-        const oldCategory = allocation.vestingCategoryType;
+    const actions = allocationsIds.map((id) => {
+        const allocation = allocationData.find((a) => a.id === id);
 
-        let newCategory = 8;
-        let newAmount = 0;
+        if (!allocation) throw new Error(`Allocation ID ${id} not found for account ${account}`);
 
-        if (oldCategory === 1 || oldCategory === 2) {
-            if (oldCategory === 1) {
-                const oldTokenPrice = 0.002;
-                const newTokenPrice = TONO_SEED_ROUND_PRICE;
-                const amount = assetToAmount(allocation.tokensAllocated);
+        console.log(
+            `Migrating account ${allocation.holder} allocation ${allocation.id} in category ${allocation.vestingCategoryType} from ${allocation.tokensAllocated} to 62,500,000.000000 TONO in category 16`
+        );
+        return createMigrateAction(
+            'coinsale.tmy',
+            account,
+            id,
+            allocation.tokensAllocated,
+            '1.000000 TONO',
+            allocation.vestingCategoryType,
+            allocation.vestingCategoryType
+        );
+    });
 
-                newAmount = (amount * oldTokenPrice) / newTokenPrice;
-            } else {
-                const oldTokenPrice = 0.004;
-                const newTokenPrice = TONO_SEED_LATE_ROUND_PRICE;
-                const amount = assetToAmount(allocation.tokensAllocated);
+    const proposalHash = await createProposal(
+        options.proposer,
+        options.proposalName,
+        actions,
+        options.privateKey,
+        options.requested,
+        options.dryRun
+    );
 
-                newAmount = (amount * oldTokenPrice) / newTokenPrice;
-
-                newCategory = 9;
-            }
-
-            const oldAmount = allocation.tokensAllocated;
-            const newAsset = `${newAmount.toFixed(6)} TONO`;
-
-            console.log(
-                `Migrating account ${account.toString()} allocation ${allocation.id} from ${oldAmount} to ${newAsset}`
-            );
-            actions.push(
-                createMigrateAction(
-                    'coinsale.tmy',
-                    account.toString(),
-                    allocation.id,
-                    oldAmount,
-                    newAsset,
-                    oldCategory,
-                    newCategory
-                )
-            );
-        }
-    }
-
-    return actions;
+    if (!options.dryRun && options.autoExecute)
+        await executeProposal(options.proposer, options.proposalName, proposalHash);
 }
 
 function createMigrateAction(
