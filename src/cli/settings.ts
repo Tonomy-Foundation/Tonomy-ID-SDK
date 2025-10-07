@@ -74,7 +74,7 @@ const stagingConfig = {
     currencySymbol: 'TONO',
     baseNetwork: 'base-sepolia' as const,
     baseRpcUrl: 'https://base-sepolia.infura.io/v3/' + process.env.INFURA_API_KEY,
-    baseTokenAddress: '0x791f703116a5197D3c0dD41855bC0e715b6A2Df9',
+    baseTokenAddress: '0x7d52931e8123D3f6efCacD83d59A0E5E0c58273f',
 };
 
 const testnetConfig = {
@@ -93,7 +93,7 @@ const testnetConfig = {
     currencySymbol: 'TONO',
     baseNetwork: 'base-sepolia' as const,
     baseRpcUrl: 'https://base-sepolia.infura.io/v3/' + process.env.INFURA_API_KEY,
-    baseTokenAddress: '0x791f703116a5197D3c0dD41855bC0e715b6A2Df9',
+    baseTokenAddress: '0x7d52931e8123D3f6efCacD83d59A0E5E0c58273f',
 };
 
 const productionConfig = {
