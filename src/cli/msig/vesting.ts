@@ -470,29 +470,39 @@ export async function vestingMigrate4(options: StandardProposalOptions) {
 }
 
 export async function vestingMigrate5(options: StandardProposalOptions) {
-    const account = 'pegcnjcnnaqd';
-    const allocationsIds = [6, 7, 8];
+    const allocations: [string, number[]][] = [
+        ['pz2tvm24opny', [0, 1, 2]],
+        ['pegcnjcnnaqd', [6, 7, 8]],
+    ];
+    // const account = 'pegcnjcnnaqd';
+    // const allocationsIds = [6, 7, 8];
 
-    const allocationData = await getVestingContract().getAllocations(account);
+    const actions: Action[] = [];
 
-    const actions = allocationsIds.map((id) => {
-        const allocation = allocationData.find((a) => a.id === id);
+    for (const [account, allocationsIds] of allocations) {
+        const allocationData = await getVestingContract().getAllocations(account);
 
-        if (!allocation) throw new Error(`Allocation ID ${id} not found for account ${account}`);
+        for (const id of allocationsIds) {
+            const allocation = allocationData.find((a) => a.id === id);
 
-        console.log(
-            `Migrating account ${allocation.holder} allocation ${allocation.id} in category ${allocation.vestingCategoryType} from ${allocation.tokensAllocated} to 1.000000 TONO in category 16`
-        );
-        return createMigrateAction(
-            'coinsale.tmy',
-            account,
-            id,
-            allocation.tokensAllocated,
-            '1.000000 TONO',
-            allocation.vestingCategoryType,
-            allocation.vestingCategoryType
-        );
-    });
+            if (!allocation) throw new Error(`Allocation ID ${id} not found for account ${account}`);
+
+            console.log(
+                `Migrating account ${allocation.holder} allocation ${allocation.id} from ${allocation.tokensAllocated} to 1.000000 TONO`
+            );
+            actions.push(
+                createMigrateAction(
+                    'coinsale.tmy',
+                    account,
+                    id,
+                    allocation.tokensAllocated,
+                    '1.000000 TONO',
+                    allocation.vestingCategoryType,
+                    allocation.vestingCategoryType
+                )
+            );
+        }
+    }
 
     const proposalHash = await createProposal(
         options.proposer,
