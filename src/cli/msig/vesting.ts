@@ -481,7 +481,7 @@ export async function vestingMigrate5(options: StandardProposalOptions) {
         if (!allocation) throw new Error(`Allocation ID ${id} not found for account ${account}`);
 
         console.log(
-            `Migrating account ${allocation.holder} allocation ${allocation.id} in category ${allocation.vestingCategoryType} from ${allocation.tokensAllocated} to 62,500,000.000000 TONO in category 16`
+            `Migrating account ${allocation.holder} allocation ${allocation.id} in category ${allocation.vestingCategoryType} from ${allocation.tokensAllocated} to 1.000000 TONO in category 16`
         );
         return createMigrateAction(
             'coinsale.tmy',
