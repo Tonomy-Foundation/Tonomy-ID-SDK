@@ -15,6 +15,7 @@ import {
     PersonData,
     getAccountNameFromUsername,
     AppData2,
+    getVestingContract,
 } from '../../sdk/services/blockchain';
 import settings from '../settings';
 import {
@@ -25,7 +26,6 @@ import {
     systemAccount,
 } from '../bootstrap';
 import Decimal from 'decimal.js';
-import { getAllAllocations } from '../vesting';
 
 export async function transfer(args: string[]) {
     const privateKey = PrivateKey.from(process.env.SIGNING_KEY || '');
@@ -213,7 +213,7 @@ export async function audit() {
         previous.add(person.accountName.toString());
         return previous;
     }, new Set<string>());
-    const vestingAllocations = await getAllAllocations(vestingHolders, false);
+    const vestingAllocations = await getVestingContract().getAllAllocations(vestingHolders, false);
     const vestingCategories = vestingAllocations.reduce<number[]>((previous, allocation) => {
         if (previous.includes(allocation.vestingCategoryType)) return previous;
         else return [...previous, allocation.vestingCategoryType];
@@ -273,7 +273,10 @@ async function checkMissedVestingAllocations(
         }
     }
 
-    const peopleNotInVestingHoldersAllocations = await getAllAllocations(peopleNotInVestingHolders, true);
+    const peopleNotInVestingHoldersAllocations = await getVestingContract().getAllAllocations(
+        peopleNotInVestingHolders,
+        true
+    );
     const totalPeopleNotInVestingHolders = peopleNotInVestingHoldersAllocations.reduce(
         (previous, allocation) => assetToDecimal(allocation.tokensAllocated).add(previous),
         ZERO_DECIMAL
@@ -305,7 +308,10 @@ async function checkMissedVestingAllocations(
         }
     }
 
-    const appsNotInVestingHoldersAllocations = await getAllAllocations(appsNotInVestingHolders, true);
+    const appsNotInVestingHoldersAllocations = await getVestingContract().getAllAllocations(
+        appsNotInVestingHolders,
+        true
+    );
     const totalAppsNotInVestingHolders = appsNotInVestingHoldersAllocations.reduce(
         (previous, allocation) => assetToDecimal(allocation.tokensAllocated).add(previous),
         ZERO_DECIMAL
@@ -337,7 +343,10 @@ async function checkMissedVestingAllocations(
         }
     }
 
-    const bootstrappedNotInVestingHoldersAllocations = await getAllAllocations(bootstrappedNotInVestingHolders, true);
+    const bootstrappedNotInVestingHoldersAllocations = await getVestingContract().getAllAllocations(
+        bootstrappedNotInVestingHolders,
+        true
+    );
     const totalBootstrappedNotInVestingHolders = bootstrappedNotInVestingHoldersAllocations.reduce(
         (previous, allocation) => assetToDecimal(allocation.tokensAllocated).add(previous),
         ZERO_DECIMAL
