@@ -1,3 +1,4 @@
+import settings from './settings';
 import apps from './apps';
 import keys from './keys';
 import auth from './auth';
@@ -7,12 +8,9 @@ import msig from './msig';
 import accounts from './accounts';
 import vesting from './vesting';
 import { audit, transfer } from './token';
-import { setSettings } from '../sdk';
-import settings from './settings';
 
 const args: string[] = process.argv.slice(2);
 
-setSettings(settings.config);
 console.log('Using environment', settings.env);
 
 async function main() {

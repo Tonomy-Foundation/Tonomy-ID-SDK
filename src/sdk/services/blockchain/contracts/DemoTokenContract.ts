@@ -1,110 +1,84 @@
 /* eslint-disable camelcase */
-import { API, Name, NameType } from '@wharfkit/antelope';
+import { API, NameType, AssetType } from '@wharfkit/antelope';
 import { Signer, transact } from '../eosio/transaction';
 import { getApi } from '../eosio/eosio';
-import { AccountType, TonomyUsername, getSettings } from '../../../util';
+import { getSettings } from '../../../util/settings';
+import { AccountType, TonomyUsername } from '../../../util/username';
+import { Contract, loadContract } from './Contract';
+import { ActionOptions } from '@wharfkit/contract';
 import { getTonomyContract } from './TonomyContract';
+import { activeAuthority } from '../eosio/authority';
+import Debug from 'debug';
 
-class DemoTokenContract {
-    static singletonInstande: DemoTokenContract;
-    contractName: string;
+const debug = Debug('tonomy-sdk:blockchain:contracts:DemoTokenContract');
 
-    public static get Instance() {
-        return this.singletonInstande || (this.singletonInstande = new this());
+export class DemoTokenContract extends Contract {
+    static async atAccount(account?: NameType): Promise<DemoTokenContract> {
+        return new this(await loadContract(await this.getContractName(account)));
     }
 
-    static atAccount(account: Name): DemoTokenContract {
-        const instance = new this();
+    static async getContractName(account?: NameType): Promise<NameType> {
+        if (account) return account;
 
-        instance.contractName = account.toString();
-        return instance;
+        const username = TonomyUsername.fromUsername('demo', AccountType.APP, getSettings().accountSuffix);
+        const app = await getTonomyContract().getApp(username);
+
+        debug('demo contract found', app.accountName.toString());
+
+        return app.accountName;
     }
 
-    async getContractName(): Promise<string> {
-        if (!this.contractName) {
-            const username = TonomyUsername.fromUsername('demo', AccountType.APP, getSettings().accountSuffix);
-            const app = await getTonomyContract().getApp(username);
+    // action getters. add default authorization and values, use camelCase for variables and action names
+    actions = {
+        create: (data: { issuer: NameType; maximumSupply: AssetType }, authorization?: ActionOptions) =>
+            this.action('create', { issuer: data.issuer, maximum_supply: data.maximumSupply }, authorization),
+        issue: (
+            { to, quantity, memo = '' }: { to: NameType; quantity: AssetType; memo?: string },
+            authorization?: ActionOptions
+        ) => this.action('issue', { to, quantity, memo }, authorization),
+        selfIssue: (
+            { to, quantity, memo = '' }: { to: NameType; quantity: AssetType; memo?: string },
+            authorization: ActionOptions = activeAuthority(to)
+        ) => this.action('selfissue', { to, quantity, memo }, authorization),
+    };
 
-            this.contractName = app.account_name.toString();
-        }
+    async create(issuer: NameType, maximumSupply: AssetType, signer: Signer): Promise<API.v1.PushTransactionResponse> {
+        const action = this.actions.create({ issuer, maximumSupply });
 
-        return this.contractName;
+        return await transact(action, signer);
     }
 
-    async create(supply: string, signer: Signer): Promise<API.v1.PushTransactionResponse> {
-        const actions = [
-            {
-                account: await this.getContractName(),
-                name: 'create',
-                authorization: [
-                    {
-                        actor: await this.getContractName(),
-                        permission: 'active',
-                    },
-                ],
-                data: {
-                    issuer: await this.getContractName(),
-                    maximum_supply: supply,
-                },
-            },
-        ];
+    async issue(
+        to: NameType,
+        quantity: AssetType,
+        memo: string,
+        signer: Signer
+    ): Promise<API.v1.PushTransactionResponse> {
+        const action = this.actions.issue({ to, quantity, memo });
 
-        return await transact(Name.from(await this.getContractName()), actions, signer);
+        return await transact(action, signer);
     }
 
-    async issue(quantity: string, signer: Signer): Promise<API.v1.PushTransactionResponse> {
-        const actions = [
-            {
-                account: await this.getContractName(),
-                name: 'issue',
-                authorization: [
-                    {
-                        actor: await this.getContractName(),
-                        permission: 'active',
-                    },
-                ],
-                data: {
-                    to: await this.getContractName(),
-                    quantity,
-                    memo: 'issued',
-                },
-            },
-        ];
+    async selfIssue(
+        to: NameType,
+        quantity: AssetType,
+        memo: string,
+        signer: Signer
+    ): Promise<API.v1.PushTransactionResponse> {
+        const action = this.actions.selfIssue({ to, quantity, memo });
 
-        return await transact(Name.from(await this.getContractName()), actions, signer);
-    }
-
-    async selfIssue(to: Name, quantity: string, signer: Signer): Promise<API.v1.PushTransactionResponse> {
-        const actions = [
-            {
-                account: await this.getContractName(),
-                name: 'issue',
-                authorization: [
-                    {
-                        actor: await this.getContractName(),
-                        permission: 'active',
-                    },
-                ],
-                data: {
-                    to,
-                    quantity,
-                    memo: 'self issued',
-                },
-            },
-        ];
-
-        return await transact(Name.from(await this.getContractName()), actions, signer);
+        return await transact(action, signer);
     }
 
     async getBalance(account: NameType): Promise<number> {
-        const assets = await (
-            await getApi()
-        ).v1.chain.get_currency_balance(await this.getContractName(), account, getSettings().currencySymbol);
+        const assets = await getApi().v1.chain.get_currency_balance(
+            this.contractName,
+            account,
+            getSettings().currencySymbol
+        );
 
         if (assets.length === 0) return 0;
 
         return assets[0].value;
     }
 }
-
-export { DemoTokenContract };

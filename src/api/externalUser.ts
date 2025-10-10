@@ -5,7 +5,7 @@ import { getSettings } from '../sdk/util/settings';
 import { isErrorCode, SdkErrors, createSdkError, throwError } from '../sdk/util/errors';
 import { createStorage, PersistentStorageClean, StorageFactory, STORAGE_NAMESPACE } from '../sdk/storage/storage';
 import { Name, API, NameType } from '@wharfkit/antelope';
-import { TonomyUsername } from '../sdk/util/username';
+import { checkUsername, TonomyUsername } from '../sdk/util/username';
 import { browserStorageFactory } from '../sdk/storage/browserStorage';
 import { getAccount, getChainId } from '../sdk/services/blockchain/eosio/eosio';
 import { JsKeyManager } from '../sdk/storage/jsKeyManager';
@@ -17,23 +17,20 @@ import {
     DualWalletResponse,
     DualWalletRequests,
 } from '../sdk/util/request';
-import { KYCPayload, KYCVC, verifyOpsTmyDid } from '../sdk/util';
+import { checkChainId, getAccountNameFromDid, KYCPayload, KYCVC, parseDid, verifyOpsTmyDid } from '../sdk/util';
+import { App } from '../sdk/controllers/App';
 import {
     AuthenticationMessage,
-    Communication,
-    getTonomyContract,
     LinkAuthRequestMessage,
     LinkAuthRequestResponseMessage,
     Message,
-} from '../sdk';
-import {
-    defaultVerifyTonomyVcOptions,
-    VerifiableCredential,
-    verifyTonomyVc,
-    VerifyTonomyVcOptions,
-} from '../sdk/util/ssi/vc';
+} from '../sdk/services/communication/message';
+import { checkOriginMatchesApp } from '../sdk/controllers/App';
+import { Communication } from '../sdk/services/communication/communication';
+import { VCWithTypeType, VerifiableCredential, VerifiableCredentialWithType } from '../sdk/util/ssi/vc';
 import { DIDurl, JWT } from '../sdk/util/ssi/types';
 import { Signer, createKeyManagerSigner, transact } from '../sdk/services/blockchain/eosio/transaction';
+import { getTonomyContract } from '../sdk/services/blockchain/contracts/TonomyContract';
 import { createDidKeyIssuerAndStore } from '../sdk/helpers/didKeyStorage';
 import { verifyKeyExistsForApp } from '../sdk/helpers/user';
 import { ClientAuthorizationData, IOnPressLoginOptions } from '../sdk/types/User';
@@ -83,10 +80,11 @@ export type LoginWithTonomyMessages = {
  *
  */
 export class ExternalUser {
-    keyManager: KeyManager;
-    storage: ExternalUserStorage & PersistentStorageClean;
-    did: string;
-    communication: Communication;
+    protected keyManager: KeyManager;
+    protected storage: ExternalUserStorage & PersistentStorageClean;
+    protected communication: Communication;
+    protected storageFactory: StorageFactory;
+    public did: string;
 
     /**
      * Creates a new external user
@@ -97,6 +95,7 @@ export class ExternalUser {
 
     constructor(_keyManager: KeyManager, _storageFactory: StorageFactory) {
         this.keyManager = _keyManager;
+        this.storageFactory = _storageFactory;
         this.storage = createStorage<ExternalUserStorage>(STORAGE_NAMESPACE + 'external.user.', _storageFactory);
         this.communication = new Communication(false);
     }
@@ -148,7 +147,7 @@ export class ExternalUser {
             if (username) {
                 const personData = await getTonomyContract().getPerson(username);
 
-                if (accountName.toString() !== personData.account_name.toString())
+                if (accountName.toString() !== personData.accountName.toString())
                     throwError('Username has changed', SdkErrors.InvalidData);
             }
 
@@ -477,7 +476,7 @@ export class ExternalUser {
         if (contract instanceof TonomyUsername) {
             const app = await getTonomyContract().getApp(contract);
 
-            contractAccount = app.account_name;
+            contractAccount = app.accountName;
         } else {
             contractAccount = Name.from(contract);
         }
@@ -489,14 +488,15 @@ export class ExternalUser {
 
         // Setup the action to sign
         const newAction = {
-            name: action.toString(),
+            account: contractAccount,
+            name: action,
             authorization: [
                 {
                     actor: account.toString(),
                     permission: permission.toString(),
                 },
             ],
-            data: data,
+            data,
         };
         const signer = this.getTransactionSigner();
 
@@ -505,7 +505,7 @@ export class ExternalUser {
             JSON.stringify(newAction, null, 2)
         );
 
-        return await transact(Name.from(contractAccount), [newAction], signer);
+        return await transact(newAction, signer);
     }
 
     private async checkLinkAuthRequirements(
@@ -580,7 +580,7 @@ export class ExternalUser {
         if (!res) throwError('Failed to send message', SdkErrors.MessageSendError);
     }
 
-    private async loginToCommunication(): Promise<void> {
+    protected async loginToCommunication(): Promise<void> {
         if (!this.communication.isLoggedIn()) {
             const issuer = await this.getIssuer();
             const authMessage = await AuthenticationMessage.signMessageWithoutRecipient({}, issuer);
@@ -654,5 +654,67 @@ export async function verifyClientAuthorization<T extends ClientAuthorizationDat
         account: verifiedVc.account.toString(),
         data: vc.getCredentialSubject() as T,
         username: verifiedVc.username ? verifiedVc.username.toString() : undefined,
+    };
+}
+
+type VerifyTonomyVcOptions = {
+    verifyChainId?: boolean;
+    verifyUsername?: boolean;
+    verifyOrigin?: boolean;
+};
+
+const defaultVerifyTonomyVcOptions: VerifyTonomyVcOptions = {
+    verifyChainId: true,
+    verifyUsername: true,
+    verifyOrigin: true,
+};
+
+async function verifyTonomyVc<T extends object>(
+    vcJwt: VCWithTypeType<T>,
+    {
+        verifyChainId = true,
+        verifyUsername = true,
+        verifyOrigin = true,
+    }: VerifyTonomyVcOptions = defaultVerifyTonomyVcOptions
+): Promise<{
+    account: Name;
+    chainId?: string;
+    did: string;
+    username?: TonomyUsername;
+    origin?: string;
+    app?: App;
+}> {
+    let vc: VerifiableCredential;
+
+    if (typeof vcJwt === 'string') vc = new VerifiableCredential(vcJwt);
+    else if (vcJwt instanceof VerifiableCredential) vc = vcJwt;
+    else if (vcJwt instanceof VerifiableCredentialWithType) vc = vcJwt.getVc();
+    else throw Error('Invalid VC type, expected string or VerifiableCredential');
+
+    const vcId = vc.getId();
+    const did = vc.getIssuer();
+    const data: T = vc.getCredentialSubject() as T;
+    const account = await getAccountNameFromDid(did);
+
+    const { method } = parseDid(did);
+
+    if (method !== 'antelope') {
+        throwError(`Invalid DID method: ${method}`, SdkErrors.InvalidData);
+    }
+
+    const [, chainId, username, originAndApp] = await Promise.all([
+        vc.verify(),
+        checkChainId(did, verifyChainId),
+        checkUsername(account, (data as { username?: string })?.username, verifyUsername),
+        checkOriginMatchesApp(vcId ? vcId : '', did, verifyOrigin),
+    ]);
+
+    return {
+        account,
+        chainId,
+        did,
+        username,
+        origin: originAndApp?.origin,
+        app: originAndApp?.app,
     };
 }

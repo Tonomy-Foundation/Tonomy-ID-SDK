@@ -15,5 +15,4 @@ jest.mock('ws', () => {
         }),
     };
 });
-
 setTestSettings();

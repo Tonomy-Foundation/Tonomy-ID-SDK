@@ -1,6 +1,7 @@
 import { PublicKey } from '@wharfkit/antelope';
 import { App, AppCreateOptions } from '../../sdk/controllers/App';
-import { createSigner, getTonomyOperationsKey } from '../../sdk/services/blockchain';
+import { getTonomyOperationsKey } from '../../sdk/services/blockchain/eosio/eosio';
+import { createSigner } from '../../sdk/services/blockchain/eosio/transaction';
 
 export default async function apps(args: string[]) {
     if (args[0] === 'create') {

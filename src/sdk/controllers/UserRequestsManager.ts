@@ -13,7 +13,8 @@ import { URL as URLtype } from '../util/ssi/types';
 import { App } from './App';
 import { AppStatusEnum } from '../types/AppStatusEnum';
 import { getAccountInfo } from '../helpers/user';
-import { DualWalletRequests, sleep } from '../util';
+import { DualWalletRequests } from '../util/request';
+import { sleep } from '../util/time';
 import Debug from 'debug';
 import { UserDataVault } from './UserDataVault';
 
@@ -46,9 +47,9 @@ export class UserRequestsManager extends UserDataVault implements IUserRequestsM
             const signer = createKeyManagerSigner(this.keyManager, KeyManagerLevel.ACTIVE);
 
             await getTonomyEosioProxyContract().linkAuth(
-                (await this.getAccountName()).toString(),
-                contract.toString(),
-                action.toString(),
+                await this.getAccountName(),
+                contract,
+                action,
                 permission,
                 signer
             );
@@ -106,13 +107,7 @@ export class UserRequestsManager extends UserDataVault implements IUserRequestsM
 
         debug('loginWithApp key', key.toString(), linkAuth);
 
-        await getTonomyContract().loginwithapp(
-            myAccount.toString(),
-            app.accountName.toString(),
-            'local',
-            key,
-            localSigner
-        );
+        await getTonomyContract().loginWithApp(myAccount, app.accountName, 'local', key, localSigner);
 
         // If the permission was only just created, we link it to the app (using its account name)
         // so that this permission can be used to sign transactions in the app immediately
@@ -122,13 +117,7 @@ export class UserRequestsManager extends UserDataVault implements IUserRequestsM
             await sleep(1000); // wait for the blockchain to catch up
             const activeSigner = createKeyManagerSigner(this.keyManager, KeyManagerLevel.ACTIVE);
 
-            await getTonomyEosioProxyContract().linkAuth(
-                myAccount.toString(),
-                app.accountName.toString(),
-                '',
-                app.accountName.toString(),
-                activeSigner
-            );
+            await getTonomyEosioProxyContract().linkAuth(myAccount, app.accountName, '', app.accountName, activeSigner);
         }
 
         appRecord.status = AppStatusEnum.READY;

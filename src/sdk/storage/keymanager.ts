@@ -1,5 +1,5 @@
 import { Checksum256, PrivateKey, PublicKey, Signature } from '@wharfkit/antelope';
-import { SdkErrors, throwError } from '../util';
+import { SdkErrors, throwError } from '../util/errors';
 
 enum KeyManagerLevel {
     PASSWORD = 'PASSWORD',
@@ -177,4 +177,5 @@ interface KeyManager {
     removeKey(options: GetKeyOptions): Promise<void>;
 }
 
-export { KeyManager, KeyManagerLevel, StoreKeyOptions, SignDataOptions, GetKeyOptions, CheckKeyOptions };
+export { KeyManagerLevel, StoreKeyOptions, SignDataOptions, GetKeyOptions, CheckKeyOptions };
+export type { KeyManager };
