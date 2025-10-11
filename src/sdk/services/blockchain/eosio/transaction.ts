@@ -189,12 +189,16 @@ export async function waitForTonomyTrxFinalization(
 
     const result = await api.v1.history.get_transaction(transactionId);
 
+    debug(`Transaction ${transactionId} found in block ${result.block_num}, waiting for finalization...`);
+
     // Wait till the transaction is confirmed in an irreversible block
     while (Date.now() - start < timeout) {
         try {
             const info = await getChainInfo();
 
-            if (result.block_num.gte(info.last_irreversible_block_num)) {
+            debug(`Last irreversible block: ${info.last_irreversible_block_num}`);
+
+            if (result.block_num.lt(info.last_irreversible_block_num)) {
                 return result;
             }
         } catch (e) {
