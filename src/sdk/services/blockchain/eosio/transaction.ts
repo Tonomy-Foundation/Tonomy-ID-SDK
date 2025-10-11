@@ -179,7 +179,7 @@ export async function createActionWithAbi(action: AnyActionType): Promise<Action
     return Action.from(action, abi) as ActionWithABI;
 }
 
-export async function waitForTransactionFinalization(
+export async function waitForTonomyTrxFinalization(
     transactionId: Checksum256Type,
     timeout: number = 30000,
     interval: number = 1000

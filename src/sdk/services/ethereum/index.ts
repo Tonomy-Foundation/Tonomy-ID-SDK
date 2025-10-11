@@ -229,7 +229,7 @@ export async function createSignedProofMessage(signer: ethers.Signer): Promise<{
 // Suggested 3 blocks for Base network, 1 block for testnets
 const RECOMMENDED_CONFIRMATIONS = isProduction() ? 3 : 1;
 
-export async function waitForTransactionFinalization(
+export async function waitForEvmTrxFinalization(
     txHash: string,
     confirmations: number = RECOMMENDED_CONFIRMATIONS,
     timeout: number = 60000
