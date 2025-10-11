@@ -226,15 +226,15 @@ export async function createSignedProofMessage(signer: ethers.Signer): Promise<{
     return { message, signature };
 }
 
-// Suggested 3 blocks for Base network, 1 block for testnets
-const RECOMMENDED_CONFIRMATIONS = isProduction() ? 3 : 1;
-
 export async function waitForEvmTrxFinalization(
     txHash: string,
-    confirmations: number = RECOMMENDED_CONFIRMATIONS,
+    confirmations?: number,
     timeout: number = 60000
 ): Promise<ethers.TransactionReceipt> {
     const provider = getProvider();
+
+    // Recommended 3 blocks for Base mainnet, 1 block for testnets and local
+    if (!confirmations) confirmations = isProduction() ? 3 : 1;
 
     debug(`Waiting for ${confirmations} confirmations for transaction ${txHash}`);
 
