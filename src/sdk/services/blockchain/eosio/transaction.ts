@@ -16,7 +16,7 @@ import { KeyManager, KeyManagerLevel } from '../../../storage/keymanager';
 import { HttpError } from '../../../util/errors';
 import { fetchAbi, getApi, getChainInfo } from './eosio';
 import Debug from 'debug';
-import { sleep } from '../../../util';
+import { sleep } from '../../../util/time';
 
 const debug = Debug('tonomy-sdk:services:blockchain:eosio:transaction');
 
