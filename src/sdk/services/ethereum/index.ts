@@ -225,3 +225,29 @@ export async function createSignedProofMessage(signer: ethers.Signer): Promise<{
 
     return { message, signature };
 }
+
+// Suggested 3 blocks for Base network, 1 block for testnets
+const RECOMMENDED_CONFIRMATIONS = isProduction() ? 3 : 1;
+
+export async function waitForTransactionFinalization(
+    txHash: string,
+    confirmations: number = RECOMMENDED_CONFIRMATIONS,
+    timeout: number = 60000
+): Promise<ethers.TransactionReceipt> {
+    const provider = getProvider();
+
+    debug(`Waiting for ${confirmations} confirmations for transaction ${txHash}`);
+
+    // Wait for the transaction with specified confirmations
+    const receipt = await provider.waitForTransaction(txHash, confirmations, timeout);
+
+    if (!receipt) {
+        throw new Error(`Transaction ${txHash} was not confirmed within ${timeout} ms`);
+    }
+
+    if (receipt.status !== 1) {
+        throw new Error(`Transaction ${txHash} failed with status ${receipt.status}`);
+    }
+
+    return receipt;
+}
