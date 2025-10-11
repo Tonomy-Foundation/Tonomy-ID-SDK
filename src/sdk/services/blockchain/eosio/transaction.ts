@@ -10,11 +10,13 @@ import {
     AnyAction,
     Action,
     ABI,
+    Checksum256Type,
 } from '@wharfkit/antelope';
 import { KeyManager, KeyManagerLevel } from '../../../storage/keymanager';
 import { HttpError } from '../../../util/errors';
 import { fetchAbi, getApi, getChainInfo } from './eosio';
 import Debug from 'debug';
+import { sleep } from '../../../util/time';
 
 const debug = Debug('tonomy-sdk:services:blockchain:eosio:transaction');
 
@@ -175,4 +177,36 @@ export async function createActionWithAbi(action: AnyActionType): Promise<Action
     const abi = await fetchAbi(action.account);
 
     return Action.from(action, abi) as ActionWithABI;
+}
+
+export async function waitForTonomyTrxFinalization(
+    transactionId: Checksum256Type,
+    timeout: number = 30000,
+    interval: number = 1000
+): Promise<API.v1.GetTransactionResponse> {
+    const api = getApi();
+    const start = Date.now();
+
+    const result = await api.v1.history.get_transaction(transactionId);
+
+    debug(`Transaction ${transactionId} found in block ${result.block_num}, waiting for finalization...`);
+
+    // Wait till the transaction is confirmed in an irreversible block
+    while (Date.now() - start < timeout) {
+        try {
+            const info = await getChainInfo();
+
+            debug(`Last irreversible block: ${info.last_irreversible_block_num}`);
+
+            if (result.block_num.lt(info.last_irreversible_block_num)) {
+                return result;
+            }
+        } catch (e) {
+            // Ignore errors, as the transaction might not be found yet
+        }
+
+        await sleep(interval);
+    }
+
+    throw new Error(`Transaction ${transactionId} was not finalized within ${timeout} ms`);
 }
