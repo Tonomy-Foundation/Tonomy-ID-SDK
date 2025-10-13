@@ -24,7 +24,7 @@ export type SettingsType = {
     baseTokenAddress: string;
     baseRpcUrl: string;
     basePrivateKey: string;
-    baseNetwork: 'base' | 'base_testnet' | 'hardhat' | 'localhost';
+    baseNetwork: 'base' | 'base-sepolia' | 'hardhat' | 'localhost';
 };
 
 type FetchType = (input: RequestInfo, init?: RequestInit) => Promise<Response>;
@@ -78,11 +78,11 @@ export function getSettings(): SettingsType {
 }
 
 export function isProduction(): boolean {
-    debug('Checking if production for environment:', settings.environment);
-
     if (!initialized) {
         throwError('Settings not yet initialized', SdkErrors.SettingsNotInitialized);
     }
+
+    debug('Checking if production for environment:', settings.environment);
 
     return ['production', 'staging', 'testnet'].includes(settings.environment);
 }

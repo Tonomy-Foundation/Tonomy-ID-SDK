@@ -216,10 +216,7 @@ export function extractProofMessage(message: string): {
  *
  * @returns {Promise<{ message: string; signature: string }>} The message and signature
  */
-export async function createSignedProofMessage(
-    signer?: ethers.Signer
-): Promise<{ message: string; signature: string }> {
-    signer = signer ?? (await getBrowserSigner());
+export async function createSignedProofMessage(signer: ethers.Signer): Promise<{ message: string; signature: string }> {
     if (!signer) throw new Error('No signer available to sign proof message');
 
     const address = await signer.getAddress();
@@ -227,4 +224,30 @@ export async function createSignedProofMessage(
     const signature = await signer.signMessage(message);
 
     return { message, signature };
+}
+
+export async function waitForEvmTrxFinalization(
+    txHash: string,
+    confirmations?: number,
+    timeout: number = 60000
+): Promise<ethers.TransactionReceipt> {
+    const provider = getProvider();
+
+    // Recommended 3 blocks for Base mainnet, 1 block for testnets and local
+    if (!confirmations) confirmations = isProduction() ? 3 : 1;
+
+    debug(`Waiting for ${confirmations} confirmations for transaction ${txHash}`);
+
+    // Wait for the transaction with specified confirmations
+    const receipt = await provider.waitForTransaction(txHash, confirmations, timeout);
+
+    if (!receipt) {
+        throw new Error(`Transaction ${txHash} was not confirmed within ${timeout} ms`);
+    }
+
+    if (receipt.status !== 1) {
+        throw new Error(`Transaction ${txHash} failed with status ${receipt.status}`);
+    }
+
+    return receipt;
 }

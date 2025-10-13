@@ -147,7 +147,7 @@ export class ExternalUser {
             if (username) {
                 const personData = await getTonomyContract().getPerson(username);
 
-                if (!accountName.equals(personData.accountName))
+                if (accountName.toString() !== personData.accountName.toString())
                     throwError('Username has changed', SdkErrors.InvalidData);
             }
 

@@ -1,6 +1,10 @@
 # .github/workflows/compile-contracts.yml
 name: Compile Contracts Reusable
 
+env:
+  # change git branches, if needed for temporary CI testing
+  GIT_BRANCH_CONTRACTS: development
+
 on:
   workflow_call:
     outputs:
@@ -19,7 +23,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: Tonomy-Foundation/Tonomy-Contracts
-          ref: development
+          ref: ${{ env.GIT_BRANCH_CONTRACTS }}
           path: Tonomy-Contracts
 
       - name: Build demo.tmy contract

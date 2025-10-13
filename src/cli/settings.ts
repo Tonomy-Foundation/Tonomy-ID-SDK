@@ -18,7 +18,7 @@ type ConfigType = {
     loggerLevel: LoggerLevel;
     ecosystemName: string;
     currencySymbol: string;
-    baseNetwork: 'base' | 'base_testnet' | 'hardhat' | 'localhost';
+    baseNetwork: 'base' | 'base-sepolia' | 'hardhat' | 'localhost';
     baseRpcUrl: string;
     basePrivateKey?: string;
     baseTokenAddress: string;
@@ -51,7 +51,7 @@ const stagingConfig = {
     ssoWebsiteOrigin: `https://accounts.staging.tonomy.foundation`,
     demoWebsiteOrigin: `https://demo.staging.tonomy.foundation`,
     consoleWebsiteOrigin: `https://console.developers.staging.tonomy.foundation`,
-    tonomyAppsOrigin: `http://${ipAddress}:3003`,
+    tonomyAppsOrigin: `https://apps.staging.tonomy.foundation`,
     blockchainUrl: `https://blockchain-api-staging.tonomy.foundation`,
     accountSuffix: '.stag.tonomy.id',
     communicationUrl: 'wss://communication.staging.tonomy.foundation',
@@ -60,9 +60,9 @@ const stagingConfig = {
     loggerLevel: 'info' as LoggerLevel,
     ecosystemName: 'Tonomy - Staging',
     currencySymbol: 'TONO',
-    baseNetwork: 'base_testnet' as const,
+    baseNetwork: 'base-sepolia' as const,
     baseRpcUrl: 'https://base-sepolia.infura.io/v3/' + process.env.INFURA_API_KEY,
-    baseTokenAddress: 'TODO:',
+    baseTokenAddress: '0xC71Ae7EBa91037Ff145671D0d25Ba415BB69450c',
 };
 
 const testnetConfig = {
@@ -70,8 +70,8 @@ const testnetConfig = {
     ssoWebsiteOrigin: `https://accounts.testnet.tonomy.io`,
     demoWebsiteOrigin: `https://demo.testnet.tonomy.io`,
     consoleWebsiteOrigin: `https://console.developers.testnet.tonomy.io`,
-    tonomyAppsOrigin: `http://${ipAddress}:3003`,
-    blockchainUrl: `https://blockchain-api-testnet.tonomy.io`,
+    tonomyAppsOrigin: `https://apps.testnet.tonomy.io`,
+    blockchainUrl: `https://test.pangea.eosusa.io`,
     accountSuffix: '.testnet.pangea',
     communicationUrl: 'wss://communication.testnet.tonomy.io',
     accountsServiceUrl: 'http://communication.testnet.tonomy.io',
@@ -79,9 +79,9 @@ const testnetConfig = {
     loggerLevel: 'info' as LoggerLevel,
     ecosystemName: 'Tonomy Testnet',
     currencySymbol: 'TONO',
-    baseNetwork: 'base_testnet' as const,
+    baseNetwork: 'base-sepolia' as const,
     baseRpcUrl: 'https://base-sepolia.infura.io/v3/' + process.env.INFURA_API_KEY,
-    baseTokenAddress: 'TODO:',
+    baseTokenAddress: '0x56aD9925f417358640746266eF44a701622c54Ba',
 };
 
 const productionConfig = {
@@ -89,8 +89,8 @@ const productionConfig = {
     ssoWebsiteOrigin: `https://accounts.tonomy.io`,
     demoWebsiteOrigin: `https://demo.tonomy.io`,
     consoleWebsiteOrigin: `https://console.developers.tonomy.io`,
-    tonomyAppsOrigin: `http://${ipAddress}:3003`,
-    blockchainUrl: `https://blockchain-api.tonomy.io`,
+    tonomyAppsOrigin: `https://apps.tonomy.io`,
+    blockchainUrl: `https://pangea.eosusa.io`,
     accountSuffix: '.pangea.id',
     communicationUrl: 'wss://communication.tonomy.io',
     accountsServiceUrl: 'http://communication.tonomy.io',
@@ -98,7 +98,7 @@ const productionConfig = {
     loggerLevel: 'info' as LoggerLevel,
     ecosystemName: 'Tonomy',
     currencySymbol: 'TONO',
-    baseNetwork: 'base_testnet' as const,
+    baseNetwork: 'base' as const,
     baseRpcUrl: 'https://base.infura.io/v3/' + process.env.INFURA_API_KEY,
     baseTokenAddress: 'TODO:',
 };

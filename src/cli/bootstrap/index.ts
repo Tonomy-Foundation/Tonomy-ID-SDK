@@ -457,7 +457,7 @@ async function createTonomyApps(newPublicKey: PublicKey, newSigner: Signer): Pro
         description: `Access all your Tonomy apps in one hub. Manage tokens, explore the blockchain, create, collaborate, and build — it’s all at your fingertips`,
         origin: settings.config.tonomyAppsOrigin,
         logoUrl: settings.config.tonomyAppsOrigin + '/market.com.png',
-        backgroundColor: '#F9FAFB',
+        backgroundColor: '#ffffff',
         accentColor: '#5833BC',
         publicKey: newPublicKey,
         signer,
