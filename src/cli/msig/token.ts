@@ -78,3 +78,19 @@ export async function bulkTransfer(options: StandardProposalOptions & { transfer
     if (!options.dryRun && options.autoExecute)
         await executeProposal(options.proposer, options.proposalName, proposalHash);
 }
+
+export async function setStats(options: StandardProposalOptions) {
+    const action = getTokenContract().actions.setStats({});
+
+    const proposalHash = await createProposal(
+        options.proposer,
+        options.proposalName,
+        [action],
+        options.privateKey,
+        options.requested,
+        options.dryRun
+    );
+
+    if (!options.dryRun && options.autoExecute)
+        await executeProposal(options.proposer, options.proposalName, proposalHash);
+}

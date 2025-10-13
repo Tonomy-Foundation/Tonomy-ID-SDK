@@ -81,12 +81,8 @@ export class EosioTokenContract extends Contract {
             { from, to, quantity, memo = '' }: { from: NameType; to: NameType; quantity: AssetType; memo?: string },
             authorization: ActionOptions = activeAuthority(from)
         ) => this.action('transfer', { from, to, quantity, memo }, authorization),
-        migrateAcc: (
-            { account }: { account: NameType },
-            authorization: ActionOptions = activeAuthority(this.contractName)
-        ) => this.action('migrateacc', { account }, authorization),
-        migrateStats: (data: object, authorization: ActionOptions = activeAuthority(this.contractName)) =>
-            this.action('migratestats', data, authorization),
+        setStats: (data: object, authorization: ActionOptions = activeAuthority(this.contractName)) =>
+            this.action('setstats', data, authorization),
         bridgeIssue: (
             { to, quantity, memo = '' }: { to: NameType; quantity: AssetType; memo: string },
             authorization: ActionOptions = activeAuthority(this.contractName)

@@ -7,7 +7,7 @@ import {
 } from '../../sdk/services/blockchain';
 import settings from '../settings';
 import { newAccount } from './accounts';
-import { transfer } from './token';
+import { setStats, transfer } from './token';
 import { updateAuth, govMigrate, addEosioCode } from './auth';
 import { deployContract } from './contract';
 import { printCliHelp } from '..';
@@ -33,7 +33,6 @@ import {
     stakingContractSetup,
     stakingSettings,
 } from './staking';
-import { symbolMigrate, migrateRebrandApps } from './symbolMigrate';
 import { createAccounts, deployContracts, setAppsAndRam, newApp, migrateApps } from './apps';
 
 const governanceAccounts = ['1.found.tmy', '2.found.tmy', '3.found.tmy'];
@@ -119,6 +118,8 @@ export default async function msig(args: string[]) {
         } else if (proposalType === 'tokens') {
             if (proposalSubtype === 'transfer') {
                 await transfer(options);
+            } else if (proposalSubtype === 'setstats') {
+                await setStats(options);
             } else printMsigHelp();
         } else if (proposalType === 'contract') {
             if (proposalSubtype === 'deploy') {
@@ -203,12 +204,6 @@ export default async function msig(args: string[]) {
                 await reDeployTonomyContract(options);
             } else if (proposalSubtype === 'setSettings') {
                 await stakingSettings(options);
-            } else printMsigHelp();
-        } else if (proposalType === 'symbol') {
-            if (proposalSubtype === 'migrate') {
-                await symbolMigrate(options);
-            } else if (proposalSubtype === 'migrate-app') {
-                await migrateRebrandApps(options);
             } else printMsigHelp();
         } else {
             throw new Error(`Invalid msig proposal type ${proposalType}`);
@@ -402,8 +397,8 @@ function printMsigHelp() {
                 propose staking redeploy-eosio-contract <proposalName>
                 propose staking redeploy-tonomy-contract <proposalName>
                 propose staking setSettings <proposalName>
-                propose symbol migrate <proposalName>
                 propose tokens transfer <proposalName>
+                propose tokens setstats <proposalName>
                 propose vesting bulk <proposalName>
                 propose vesting migrate <proposalName>
                 propose vesting migrate2 <proposalName>
