@@ -323,7 +323,7 @@ export const vestingCategories: Map<
             startDelay: 0,
             cliffPeriod: 0,
             vestingPeriod: 6 * MICROSECONDS_IN_MONTH,
-            tgeUnlock: 0.25,
+            tgeUnlock: 1.0 / 3.0,
             name: 'Liquidity',
         },
     ],
