@@ -7,7 +7,6 @@ import { getApi } from '../eosio/eosio';
 import { getSettings, isProduction } from '../../../util/settings';
 import {
     addMicroseconds,
-    MICROSECONDS_IN_DAY,
     MICROSECONDS_IN_MONTH,
     MICROSECONDS_IN_SECOND,
     MICROSECONDS_IN_YEAR,
@@ -252,7 +251,7 @@ export const vestingCategories: Map<
         {
             startDelay: 0,
             cliffPeriod: 0,
-            vestingPeriod: 6 * MICROSECONDS_IN_DAY,
+            vestingPeriod: 6 * MICROSECONDS_IN_MONTH,
             tgeUnlock: 0.25,
             name: 'Liquidity',
         },
@@ -265,6 +264,137 @@ export const vestingCategories: Map<
             vestingPeriod: 1 * MICROSECONDS_IN_MONTH,
             tgeUnlock: 1.0,
             name: 'Special Token Round',
+        },
+    ],
+    // New categories (replacing deprecated):
+    [
+        16, // Seed
+        {
+            startDelay: 4 * MICROSECONDS_IN_MONTH,
+            cliffPeriod: 0,
+            vestingPeriod: 9 * MICROSECONDS_IN_MONTH,
+            tgeUnlock: 0.05,
+            name: 'Seed',
+        },
+    ],
+    [
+        17, // Pre-sale
+        {
+            startDelay: 4 * MICROSECONDS_IN_MONTH,
+            cliffPeriod: 0,
+            vestingPeriod: 9 * MICROSECONDS_IN_MONTH,
+            tgeUnlock: 0.05,
+            name: 'Pre-sale',
+        },
+    ],
+    [
+        18, // Special Token Round
+        {
+            startDelay: 2 * MICROSECONDS_IN_MONTH,
+            cliffPeriod: 0,
+            vestingPeriod: 0,
+            tgeUnlock: 0.5,
+            name: 'Special Token Round',
+        },
+    ],
+    [
+        19, // Private
+        {
+            startDelay: 0,
+            cliffPeriod: 0,
+            vestingPeriod: 3 * MICROSECONDS_IN_MONTH,
+            tgeUnlock: 0.4,
+            name: 'Private',
+        },
+    ],
+    [
+        20, // Public (TGE)
+        {
+            startDelay: 1 * MICROSECONDS_IN_MONTH,
+            cliffPeriod: 0,
+            vestingPeriod: 3 * MICROSECONDS_IN_MONTH,
+            tgeUnlock: 0.4,
+            name: 'Public (TGE)',
+        },
+    ],
+    [
+        21, // Liquidity
+        {
+            startDelay: 0,
+            cliffPeriod: 0,
+            vestingPeriod: 6 * MICROSECONDS_IN_MONTH,
+            tgeUnlock: 0.25,
+            name: 'Liquidity',
+        },
+    ],
+    [
+        22, // Team
+        {
+            startDelay: 1 * MICROSECONDS_IN_YEAR,
+            cliffPeriod: 0,
+            vestingPeriod: 5 * MICROSECONDS_IN_YEAR,
+            tgeUnlock: 0.0,
+            name: 'Team',
+        },
+    ],
+    [
+        23, // Reserves
+        {
+            startDelay: 0,
+            cliffPeriod: 0,
+            vestingPeriod: 2 * MICROSECONDS_IN_YEAR,
+            tgeUnlock: 0.0,
+            name: 'Reserves',
+        },
+    ],
+    [
+        24, // Partnerships
+        {
+            startDelay: 0,
+            cliffPeriod: 0,
+            vestingPeriod: 2 * MICROSECONDS_IN_YEAR,
+            tgeUnlock: 0.0,
+            name: 'Partnerships',
+        },
+    ],
+    [
+        25, // Community & Marketing
+        {
+            startDelay: 0,
+            cliffPeriod: 0,
+            vestingPeriod: 5 * MICROSECONDS_IN_YEAR,
+            tgeUnlock: 0.0,
+            name: 'Community & Marketing',
+        },
+    ],
+    [
+        26, // Platform Dev
+        {
+            startDelay: 0,
+            cliffPeriod: 0,
+            vestingPeriod: 5 * MICROSECONDS_IN_YEAR,
+            tgeUnlock: 0.0,
+            name: 'Platform Dev',
+        },
+    ],
+    [
+        27, // Staking & Infra Rewards
+        {
+            startDelay: 0,
+            cliffPeriod: 0,
+            vestingPeriod: 5 * MICROSECONDS_IN_YEAR,
+            tgeUnlock: 0.0,
+            name: 'Staking & Infra Rewards',
+        },
+    ],
+    [
+        28, // Ecosystem
+        {
+            startDelay: 0,
+            cliffPeriod: 0,
+            vestingPeriod: 5 * MICROSECONDS_IN_YEAR,
+            tgeUnlock: 0.0,
+            name: 'Ecosystem',
         },
     ],
 ]);
@@ -285,8 +415,9 @@ export class VestingContract extends Contract {
     static getMaxAllocations(): number {
         return this.isTestEnv() ? 5 : 150;
     }
-    static SALE_START_DATE = '2024-04-30T12:00:00';
-    static VESTING_START_DATE = '2025-11-01T10:00:00';
+    // ISO format strings (UTC timezone)
+    static SALE_START_DATE = '2024-04-30T12:00:00.000Z';
+    static VESTING_START_DATE = '2025-11-01T10:00:00.000Z';
 
     static calculateVestingPeriod(settings: VestingSettings, allocation: VestingAllocation) {
         const category = vestingCategories.get(allocation.vestingCategoryType);
