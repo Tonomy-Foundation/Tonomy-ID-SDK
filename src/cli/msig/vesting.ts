@@ -196,34 +196,34 @@ async function vestingMigrate4Vesting(options: StandardProposalOptions) {
     let proposals = 0;
     // categoryId -> multiplier, newCategoryId
     const multipliers = new Map<number, { multiplier: number; newCategoryId: number }>([
-        [7, { multiplier: 6.0, newCategoryId: 7 }], // Community and Marketing, Platform Dev, Infra Rewards
+        [7, { multiplier: 6.0, newCategoryId: 25 }], // Community and Marketing, Platform Dev, Infra Rewards
         [8, { multiplier: 1.5, newCategoryId: 16 }], // Seed
         [9, { multiplier: 3.0, newCategoryId: 17 }], // Pre-sale
-        [11, { multiplier: 6.0, newCategoryId: 18 }], // Private Sale
-        [15, { multiplier: 1.5, newCategoryId: 19 }], // Special
+        [11, { multiplier: 6.0, newCategoryId: 19 }], // Private Sale
+        [15, { multiplier: 1.5, newCategoryId: 20 }], // Special
     ]);
-    // map username > allocation ID > multiplier
-    const multiplierOverrides = new Map<string, Map<number, number>>([
+    // map username > allocation ID > { multiplier: number; newCategoryId: number }
+    const multiplierOverrides = new Map<string, Map<number, { multiplier: number; newCategoryId: number }>>([
         // Team allocation in category 7 should only be multiplied by 1.5
-        ['pegcnjcnnaqd', new Map([[2, 1.5]])],
-        ['pdbma2o2zalz', new Map([[0, 1.5]])],
-        ['pxofpde2rzz3', new Map([[0, 1.5]])],
-        ['pnkhrwvpnjne', new Map([[0, 1.5]])],
-        ['pczkpas1xwgy', new Map([[0, 1.5]])],
-        ['pdwxshjdhapd', new Map([[0, 1.5]])],
-        ['p3quckancxou', new Map([[0, 1.5]])],
-        ['pydft3snil3d', new Map([[0, 1.5]])],
-        ['putzvkbtugyc', new Map([[0, 1.5]])],
-        ['p1wrsvrvhd1', new Map([[0, 1.5]])],
-        ['pb1wegfo2rsk', new Map([[0, 1.5]])],
+        ['pegcnjcnnaqd', new Map([[2, { multiplier: 1.5, newCategoryId: 24 }]])],
+        ['pdbma2o2zalz', new Map([[0, { multiplier: 1.5, newCategoryId: 24 }]])],
+        ['pxofpde2rzz3', new Map([[0, { multiplier: 1.5, newCategoryId: 24 }]])],
+        ['pnkhrwvpnjne', new Map([[0, { multiplier: 1.5, newCategoryId: 24 }]])],
+        ['pczkpas1xwgy', new Map([[0, { multiplier: 1.5, newCategoryId: 24 }]])],
+        ['pdwxshjdhapd', new Map([[0, { multiplier: 1.5, newCategoryId: 24 }]])],
+        ['p3quckancxou', new Map([[0, { multiplier: 1.5, newCategoryId: 24 }]])],
+        ['pydft3snil3d', new Map([[0, { multiplier: 1.5, newCategoryId: 24 }]])],
+        ['putzvkbtugyc', new Map([[0, { multiplier: 1.5, newCategoryId: 24 }]])],
+        ['p1wrsvrvhd1', new Map([[0, { multiplier: 1.5, newCategoryId: 24 }]])],
+        ['pb1wegfo2rsk', new Map([[0, { multiplier: 1.5, newCategoryId: 24 }]])],
         // Network operators in category 7 should only be multiplied by 1.5
-        ['pzqi3jdfewjf', new Map([[0, 1.5]])],
-        ['pjoqns2tjrao', new Map([[0, 1.5]])],
-        ['pvijs1a5fwjp', new Map([[1, 1.5]])],
-        ['p4lojkytrjql', new Map([[0, 1.5]])],
-        ['team.tmy', new Map([[0, 1.5]])],
+        ['pzqi3jdfewjf', new Map([[0, { multiplier: 1.5, newCategoryId: 27 }]])],
+        ['pjoqns2tjrao', new Map([[0, { multiplier: 1.5, newCategoryId: 27 }]])],
+        ['pvijs1a5fwjp', new Map([[1, { multiplier: 1.5, newCategoryId: 27 }]])],
+        ['p4lojkytrjql', new Map([[0, { multiplier: 1.5, newCategoryId: 27 }]])],
+        ['team.tmy', new Map([[0, { multiplier: 1.5, newCategoryId: 25 }]])],
         // Fiddl.art grant in category 7 should only be multiplied by 3.0
-        ['p44yuopaawi3', new Map([[0, 3.0]])],
+        ['p44yuopaawi3', new Map([[0, { multiplier: 3.0, newCategoryId: 24 }]])],
     ]);
     const uniqueHolders = await getVestingContract().getAllUniqueHolders();
     const allAllocations = await getVestingContract().getAllAllocations(uniqueHolders);
@@ -241,9 +241,9 @@ async function vestingMigrate4Vesting(options: StandardProposalOptions) {
 
         if (override) {
             return {
-                multiplier: override,
-                message: `(override multiplier from ${res.multiplier.toFixed(1)}x to ${override.toFixed(1)}x)`,
-                newCategoryId: res.newCategoryId,
+                multiplier: override.multiplier,
+                message: `(override multiplier ${res.multiplier.toFixed(1)}x>>${override.multiplier.toFixed(1)}x and category ${res.newCategoryId}>>${override.newCategoryId})`,
+                newCategoryId: override.newCategoryId,
             };
         }
 
@@ -377,14 +377,14 @@ async function burnBaseTokens(options: StandardProposalOptions) {
 
 async function vestAllTreasuries(options: StandardProposalOptions) {
     const vestingCategories = new Map<string, number>([
-        ['ecosystm.tmy', 7],
-        ['infra.tmy', 7],
-        ['liquidty.tmy', 14],
-        ['marketng.tmy', 7],
-        ['ops.tmy', 7],
-        ['partners.tmy', 6],
-        ['reserves.tmy', 6],
-        ['team.tmy', 4],
+        ['ecosystm.tmy', 28],
+        ['infra.tmy', 27],
+        ['liquidty.tmy', 21],
+        ['marketng.tmy', 25],
+        ['ops.tmy', 26],
+        ['partners.tmy', 24],
+        ['reserves.tmy', 23],
+        ['team.tmy', 22],
     ]);
 
     const actions: Action[] = [];
@@ -443,16 +443,17 @@ async function setupStaking(options: StandardProposalOptions) {
     const setupAction = getStakingContract().actions.setSettings({
         yearlyStakePool: amountToAsset(yearlyStakePool, 'TONO'),
     });
+    const yieldPoolQuantity = amountToAsset((yearlyStakePool * monthsToFund) / 12, 'TONO'); // one month of yield
     const addYieldAction = getStakingContract().actions.addYield({
         sender: 'infra.tmy',
-        quantity: amountToAsset((yearlyStakePool * monthsToFund) / 12, 'TONO'), // one month of yield
+        quantity: yieldPoolQuantity,
     });
     const actions = [setupAction, addYieldAction];
 
     console.log(
         `Setting up staking with a yearly stake pool of ${amountToAsset(yearlyStakePool, 'TONO')} with:\n
         - target of ${(StakingContract.STAKING_APY_TARGET * 100).toFixed(2)}% APY\n
-        - and ${monthsToFund} month(s) of yield ${amountToAsset((yearlyStakePool * monthsToFund) / 12, 'TONO')} from infra.tmy`
+        - and ${monthsToFund} month(s) of yield ${yieldPoolQuantity} from infra.tmy`
     );
     const proposalName = Name.from(options.proposalName.toString() + 'stake');
 
