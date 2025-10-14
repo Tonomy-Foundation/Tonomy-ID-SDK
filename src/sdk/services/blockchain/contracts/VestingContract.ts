@@ -286,7 +286,7 @@ export class VestingContract extends Contract {
         return this.isTestEnv() ? 5 : 150;
     }
     static SALE_START_DATE = '2024-04-30T12:00:00';
-    static VESTING_START_DATE = '2030-01-01T00:00:00';
+    static VESTING_START_DATE = '2025-11-01T10:00:00';
 
     static calculateVestingPeriod(settings: VestingSettings, allocation: VestingAllocation) {
         const category = vestingCategories.get(allocation.vestingCategoryType);

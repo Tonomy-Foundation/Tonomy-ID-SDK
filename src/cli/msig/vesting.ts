@@ -11,6 +11,7 @@ import {
     getStakingContract,
     StakingContract,
     amountToAsset,
+    VestingContract,
 } from '../../sdk/services/blockchain';
 import { AccountType, isErrorCode, SdkErrors, TonomyUsername } from '../../sdk';
 import {
@@ -341,21 +342,29 @@ async function vestingMigrate4TokenFixes(options: StandardProposalOptions) {
 }
 
 async function burnBaseTokens(options: StandardProposalOptions) {
-    const burnAction = getTokenContract().actions.bridgeRetire({
+    const burnAction1 = getTokenContract().actions.bridgeRetire({
         from: 'coinsale.tmy',
         quantity: '3000000000.000000 TONO',
+        memo: 'Burn tokens that will be minted on Base blockchain',
+    });
+    const burnAction2 = getTokenContract().actions.bridgeRetire({
+        from: 'liquidty.tmy',
+        quantity: '300000000.000000 TONO',
         memo: 'Burn tokens that will be minted on Base blockchain',
     });
 
     console.log(
         'Burning 3,000,000,000.000000 TONO from the coinsale.tmy account, that will be minted on Base blockchain'
     );
+    console.log(
+        `Burning 300,000,000.000000 TONO from the liquidty.tmy account, that will be minted on Base blockchain`
+    );
     const proposalName = Name.from(options.proposalName.toString() + 'burn');
 
     const proposalHash = await createProposal(
         options.proposer,
         proposalName,
-        [burnAction],
+        [burnAction1, burnAction2],
         options.privateKey,
         options.requested,
         options.dryRun
@@ -459,14 +468,50 @@ async function setupStaking(options: StandardProposalOptions) {
         await executeProposal(options.proposer, options.proposalName, proposalHash);
 }
 
+async function vestingSetDates(options: StandardProposalOptions) {
+    const setDatesAction = getVestingContract().actions.setSettings({
+        salesStartDate: VestingContract.SALE_START_DATE,
+        launchDate: VestingContract.VESTING_START_DATE,
+    });
+
+    console.log(
+        `Setting vesting dates with:\n
+        - sales start date: ${VestingContract.SALE_START_DATE}\n
+        - vesting launch date: ${VestingContract.VESTING_START_DATE}`
+    );
+    const proposalName = Name.from(options.proposalName.toString() + 'dates');
+
+    const proposalHash = await createProposal(
+        options.proposer,
+        proposalName,
+        [setDatesAction],
+        options.privateKey,
+        options.requested,
+        options.dryRun
+    );
+
+    if (!options.dryRun && options.autoExecute)
+        await executeProposal(options.proposer, options.proposalName, proposalHash);
+}
+
 export async function vestingMigrate4(options: StandardProposalOptions) {
+    // Migrate existing vesting allocations applying new multipliers and category changes
     await vestingMigrate4Vesting(options);
+    // Rebalance treasury accounts according to the new tokenomics (initial transfers)
     await vestingMigrate4Tokenomics(options);
+    // Apply correction transfers to fix tokenomics deviations and rounding
     await vestingMigrate4TokenFixes(options);
-    await vestingMigrationBulk(options); // pre TGE allocations
+    // Bulk create pre-TGE vesting allocations from CSV input
+    await vestingMigrationBulk(options);
+    // Burn tokens on Tonomy to be re-minted on Base (bridge supply alignment)
     await burnBaseTokens(options);
+    // Configure staking parameters and fund the first month of yield
     await setupStaking(options);
-    await vestAllTreasuries(options); // should only be called once all above proposals are executed
+    // Vest all treasury balances under their respective vesting categories (run after all above proposals)
+    // NOTE: should only be called once all above proposals are executed
+    await vestAllTreasuries(options);
+    // Set the vesting dates for when unlocks start
+    await vestingSetDates(options);
 }
 
 export async function vestingMigrate5(options: StandardProposalOptions) {
