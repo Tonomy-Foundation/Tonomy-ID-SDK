@@ -25,6 +25,7 @@ import fs from 'fs';
 import settings from '../settings';
 import Decimal from 'decimal.js';
 import { bulkTransfer } from './token';
+import { deployContract } from './contract';
 
 export async function vestingMigrate(options: StandardProposalOptions) {
     // Testnet list
@@ -494,7 +495,21 @@ async function vestingSetDates(options: StandardProposalOptions) {
         await executeProposal(options.proposer, options.proposalName, proposalHash);
 }
 
+async function deployVestingContract(options: StandardProposalOptions) {
+    const proposalName = Name.from(options.proposalName.toString() + 'deploy');
+
+    console.log('Deploying vesting.tmy contract');
+    await deployContract({
+        contract: 'vesting.tmy',
+        ...options,
+        proposalName,
+    });
+}
+
 export async function vestingMigrate4(options: StandardProposalOptions) {
+    // Deploy the new vesting contract
+    // NOTE: should only be called once and before all other proposals below
+    await deployVestingContract(options);
     // Migrate existing vesting allocations applying new multipliers and category changes
     await vestingMigrate4Vesting(options);
     // Rebalance treasury accounts according to the new tokenomics (initial transfers)
@@ -503,6 +518,8 @@ export async function vestingMigrate4(options: StandardProposalOptions) {
     await vestingMigrate4TokenFixes(options);
     // Bulk create pre-TGE vesting allocations from CSV input
     await vestingMigrationBulk(options);
+    // Set the vesting dates for when unlocks start
+    await vestingSetDates(options);
     // Burn tokens on Tonomy to be re-minted on Base (bridge supply alignment)
     await burnBaseTokens(options);
     // Configure staking parameters and fund the first month of yield
@@ -510,8 +527,6 @@ export async function vestingMigrate4(options: StandardProposalOptions) {
     // Vest all treasury balances under their respective vesting categories (run after all above proposals)
     // NOTE: should only be called once all above proposals are executed
     await vestAllTreasuries(options);
-    // Set the vesting dates for when unlocks start
-    await vestingSetDates(options);
 }
 
 export async function vestingMigrate5(options: StandardProposalOptions) {
