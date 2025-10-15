@@ -33,7 +33,7 @@ import {
     stakingContractSetup,
     stakingSettings,
 } from './staking';
-import { createAccounts, deployContracts, setAppsAndRam, newApp, migrateApps } from './apps';
+import { createAccounts, deployContracts, setAppsAndRam, newApp, migrateApps, adminSetApps } from './apps';
 
 const governanceAccounts = ['1.found.tmy', '2.found.tmy', '3.found.tmy'];
 let newGovernanceAccounts = ['14.found.tmy', '5.found.tmy', '11.found.tmy', '12.found.tmy', '13.found.tmy'];
@@ -184,6 +184,8 @@ export default async function msig(args: string[]) {
                 await deployContracts(options);
             } else if (proposalSubtype === 'migrate') {
                 await migrateApps(options);
+            } else if (proposalSubtype === 'admin-set-apps') {
+                await adminSetApps(options);
             } else printMsigHelp();
         } else if (proposalType === 'res-config-set') {
             await setResourceConfig({}, options);
