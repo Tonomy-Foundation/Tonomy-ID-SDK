@@ -373,3 +373,25 @@ export async function adminSetApps(options: StandardProposalOptions) {
     if (!options.dryRun && options.autoExecute)
         await executeProposal(options.proposer, options.proposalName, proposalHash);
 }
+
+export async function adminDeleteApps(options: StandardProposalOptions) {
+    const appsToDelete: NameType[] = ['.onomy'];
+
+    const actions = appsToDelete.map((accountName) =>
+        getTonomyContract().actions.deleteApp({
+            accountName,
+        })
+    );
+
+    const proposalHash = await createProposal(
+        options.proposer,
+        options.proposalName,
+        actions,
+        options.privateKey,
+        options.requested,
+        options.dryRun
+    );
+
+    if (!options.dryRun && options.autoExecute)
+        await executeProposal(options.proposer, options.proposalName, proposalHash);
+}

@@ -3,7 +3,7 @@ name: Compile Contracts Reusable
 
 env:
   # change git branches, if needed for temporary CI testing
-  GIT_BRANCH_CONTRACTS: development
+  GIT_BRANCH_CONTRACTS: feature/updated-vesting-categories
 
 on:
   workflow_call:
