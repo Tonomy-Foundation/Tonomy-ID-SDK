@@ -376,7 +376,7 @@ async function burnBaseTokens(options: StandardProposalOptions) {
     );
 
     if (!options.dryRun && options.autoExecute)
-        await executeProposal(options.proposer, options.proposalName, proposalHash);
+        await executeProposal(options.proposer, proposalName, proposalHash);
 }
 
 async function vestAllTreasuries(options: StandardProposalOptions) {
@@ -429,8 +429,7 @@ async function vestAllTreasuries(options: StandardProposalOptions) {
         options.dryRun
     );
 
-    if (!options.dryRun && options.autoExecute)
-        await executeProposal(options.proposer, options.proposalName, proposalHash);
+    if (!options.dryRun && options.autoExecute) await executeProposal(options.proposer, proposalName, proposalHash);
 }
 
 export async function vestingMigrationBulk(options: StandardProposalOptions) {
@@ -470,8 +469,7 @@ async function setupStaking(options: StandardProposalOptions) {
         options.dryRun
     );
 
-    if (!options.dryRun && options.autoExecute)
-        await executeProposal(options.proposer, options.proposalName, proposalHash);
+    if (!options.dryRun && options.autoExecute) await executeProposal(options.proposer, proposalName, proposalHash);
 }
 
 async function vestingSetDates(options: StandardProposalOptions) {
@@ -496,8 +494,7 @@ async function vestingSetDates(options: StandardProposalOptions) {
         options.dryRun
     );
 
-    if (!options.dryRun && options.autoExecute)
-        await executeProposal(options.proposer, options.proposalName, proposalHash);
+    if (!options.dryRun && options.autoExecute) await executeProposal(options.proposer, proposalName, proposalHash);
 }
 
 export async function vestingMigrate4(options: StandardProposalOptions) {
