@@ -33,7 +33,15 @@ import {
     stakingContractSetup,
     stakingSettings,
 } from './staking';
-import { createAccounts, deployContracts, setAppsAndRam, newApp, migrateApps, adminSetApps } from './apps';
+import {
+    createAccounts,
+    deployContracts,
+    setAppsAndRam,
+    newApp,
+    migrateApps,
+    adminSetApps,
+    adminDeleteApps,
+} from './apps';
 
 const governanceAccounts = ['1.found.tmy', '2.found.tmy', '3.found.tmy'];
 let newGovernanceAccounts = ['14.found.tmy', '5.found.tmy', '11.found.tmy', '12.found.tmy', '13.found.tmy'];
@@ -72,7 +80,7 @@ export default async function msig(args: string[]) {
 
     const proposer = newGovernanceAccounts[0];
     let signingKey: string | undefined = process.env.SIGNING_KEY;
-    const signingAccount = '14.found.tmy';
+    let signingAccount = '14.found.tmy';
 
     if (!signingKey) {
         if (!process.env.TONOMY_BOARD_PRIVATE_KEYS)
@@ -80,6 +88,7 @@ export default async function msig(args: string[]) {
         const tonomyGovKeys: string[] = JSON.parse(process.env.TONOMY_BOARD_PRIVATE_KEYS).keys;
 
         signingKey = tonomyGovKeys[0];
+        signingAccount = '1.found.tmy';
     }
 
     const privateKey = PrivateKey.from(signingKey);
@@ -186,6 +195,8 @@ export default async function msig(args: string[]) {
                 await migrateApps(options);
             } else if (proposalSubtype === 'admin-set-apps') {
                 await adminSetApps(options);
+            } else if (proposalSubtype === 'admin-delete-apps') {
+                await adminDeleteApps(options);
             } else printMsigHelp();
         } else if (proposalType === 'res-config-set') {
             await setResourceConfig({}, options);
@@ -379,6 +390,8 @@ function printMsigHelp() {
                 propose apps set-apps-and-ram <proposalName>
                 propose apps deploy-contracts <proposalName>
                 propose apps migrate <proposalName>
+                propose apps admin-set-apps <proposalName>
+                propose apps admin-delete-apps <proposalName>
                 propose auth add-eosiocode <proposalName>
                 propose auth gov-migrate <proposalName>
                 propose auth update <proposalName>

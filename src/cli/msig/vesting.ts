@@ -25,7 +25,6 @@ import fs from 'fs';
 import settings from '../settings';
 import Decimal from 'decimal.js';
 import { bulkTransfer } from './token';
-import { deployContract } from './contract';
 
 export async function vestingMigrate(options: StandardProposalOptions) {
     // Testnet list
@@ -199,8 +198,13 @@ async function vestingMigrate4Vesting(options: StandardProposalOptions) {
         [7, { multiplier: 6.0, newCategoryId: 25 }], // Community and Marketing, Platform Dev, Infra Rewards
         [8, { multiplier: 1.5, newCategoryId: 16 }], // Seed
         [9, { multiplier: 3.0, newCategoryId: 17 }], // Pre-sale
-        [11, { multiplier: 6.0, newCategoryId: 19 }], // Private Sale
+        [9, { multiplier: 3.0, newCategoryId: 17 }], // Pre-sale
+        [10, { multiplier: 1, newCategoryId: 20 }], // Public (TGE)
+        [11, { multiplier: 1, newCategoryId: 19 }], // Private
+        [14, { multiplier: 1, newCategoryId: 21 }], // Liquidity
         [15, { multiplier: 1.5, newCategoryId: 20 }], // Special
+        [998, { multiplier: 1, newCategoryId: 998 }], // Testing
+        [999, { multiplier: 1, newCategoryId: 999 }], // Testing
     ]);
     // map username > allocation ID > { multiplier: number; newCategoryId: number }
     const multiplierOverrides = new Map<string, Map<number, { multiplier: number; newCategoryId: number }>>([
@@ -496,21 +500,7 @@ async function vestingSetDates(options: StandardProposalOptions) {
         await executeProposal(options.proposer, options.proposalName, proposalHash);
 }
 
-async function deployVestingContract(options: StandardProposalOptions) {
-    const proposalName = Name.from(options.proposalName.toString() + 'deploy');
-
-    console.log('Deploying vesting.tmy contract');
-    await deployContract({
-        contract: 'vesting.tmy',
-        ...options,
-        proposalName,
-    });
-}
-
 export async function vestingMigrate4(options: StandardProposalOptions) {
-    // Deploy the new vesting contract
-    // NOTE: should only be called once and before all other proposals below
-    await deployVestingContract(options);
     // Migrate existing vesting allocations applying new multipliers and category changes
     await vestingMigrate4Vesting(options);
     // Rebalance treasury accounts according to the new tokenomics (initial transfers)
@@ -518,7 +508,7 @@ export async function vestingMigrate4(options: StandardProposalOptions) {
     // Apply correction transfers to fix tokenomics deviations and rounding
     await vestingMigrate4TokenFixes(options);
     // Bulk create pre-TGE vesting allocations from CSV input
-    await vestingMigrationBulk(options);
+    // await vestingMigrationBulk(options);
     // Set the vesting dates for when unlocks start
     await vestingSetDates(options);
     // Burn tokens on Tonomy to be re-minted on Base (bridge supply alignment)

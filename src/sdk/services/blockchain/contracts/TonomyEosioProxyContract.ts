@@ -148,8 +148,8 @@ export class TonomyEosioProxyContract extends Contract {
             auth.authorization!.push(extraAuthorization);
         }
 
-        const setCode = this.actions.setCode({ account, vmtype: 0, vmversion: 0, code: wasmHex }, auth);
-        const setAbi = this.actions.setAbi({ account, abi: abiHex }, auth);
+        const setCode = this.actions.setCode({ account, vmtype: 0, vmversion: 0, code: wasmHex });
+        const setAbi = this.actions.setAbi({ account, abi: abiHex });
 
         return [setCode, setAbi];
     }
