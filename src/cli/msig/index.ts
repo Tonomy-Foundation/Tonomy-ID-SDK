@@ -14,7 +14,6 @@ import { printCliHelp } from '..';
 import { setResourceConfig } from './setResourceConfig';
 import { setBlockchainConfig } from './setBlockchainConfig';
 import { addProd, changeProds, removeProd, updateProd } from './producers';
-import { hyphaAccountsCreate, hyphaContractSet, hyphaAddAccountPermissions } from './hypha';
 import { sleep } from '../../sdk/util';
 import {
     vestingMigrate,
@@ -173,14 +172,6 @@ export default async function msig(args: string[]) {
                 await updateProd({}, options);
             } else if (proposalSubtype === 'change') {
                 await changeProds({}, options);
-            } else printMsigHelp();
-        } else if (proposalType === 'hypha') {
-            if (proposalSubtype === 'accounts-create') {
-                await hyphaAccountsCreate({}, options);
-            } else if (proposalSubtype === 'add-permissions') {
-                await hyphaAddAccountPermissions({}, options);
-            } else if (proposalSubtype === 'contract-set') {
-                await hyphaContractSet({}, options);
             } else printMsigHelp();
         } else if (proposalType === 'apps') {
             if (proposalSubtype === 'create') {
@@ -396,9 +387,6 @@ function printMsigHelp() {
                 propose auth gov-migrate <proposalName>
                 propose auth update <proposalName>
                 propose contract deploy <proposalName> <contractName>
-                propose hypha accounts-create <proposalName>
-                propose hypha add-permissions <proposalName>
-                propose hypha contract-set <proposalName>
                 propose producers add <proposalName>
                 propose producers change <proposalName>
                 propose producers remove <proposalName>
