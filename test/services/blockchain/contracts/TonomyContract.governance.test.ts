@@ -12,8 +12,7 @@ import {
     activePermissionLevel,
     ownerPermissionLevel,
 } from '../../../../src/sdk/services/blockchain';
-import { getDeployableFilesFromDir } from '../../../../src/cli/bootstrap/deploy-contract';
-import fs from 'fs';
+import { getDeployableFiles } from '../../../../src/cli/bootstrap/deploy-contract';
 import { sleep } from '../../../../src/sdk/util';
 import {
     createRandomAccount,
@@ -536,9 +535,7 @@ describe('TonomyContract class', () => {
         let newAccount: string;
         let actions: Action[];
 
-        const { wasmPath, abiPath } = getDeployableFilesFromDir('./Tonomy-Contracts/contracts/eosio.bios');
-        const wasmFile = fs.readFileSync(wasmPath);
-        const abiFile = fs.readFileSync(abiPath, 'utf8');
+        const { wasmFile, abiFile } = getDeployableFiles('eosio.bios');
 
         beforeEach(async () => {
             key = PrivateKey.generate(KeyType.K1);
@@ -741,9 +738,7 @@ describe('TonomyContract class', () => {
 
         async function restoreEosioTonomyContract() {
             // Deploy eosio.tonomy contract back in place
-            const { wasmPath, abiPath } = getDeployableFilesFromDir('./Tonomy-Contracts/contracts/eosio.tonomy');
-            const wasmFile = fs.readFileSync(wasmPath);
-            const abiFile = fs.readFileSync(abiPath, 'utf8');
+            const { wasmFile, abiFile } = getDeployableFiles('eosio.tonomy');
 
             await getTonomyEosioProxyContract().deployContract('eosio', wasmFile, abiFile, [
                 ...tonomyBoardSigners.slice(0, 2),
@@ -753,9 +748,7 @@ describe('TonomyContract class', () => {
 
         async function restoreTonomyContract() {
             // Deploy tonomy contract back in place
-            const { wasmPath, abiPath } = getDeployableFilesFromDir('./Tonomy-Contracts/contracts/tonomy');
-            const wasmFile = fs.readFileSync(wasmPath);
-            const abiFile = fs.readFileSync(abiPath, 'utf8');
+            const { wasmFile, abiFile } = getDeployableFiles('tonomy');
 
             const transaction = await getEosioContract().deployContract('tonomy', wasmFile, abiFile, [
                 ...tonomyBoardSigners.slice(0, 2),
