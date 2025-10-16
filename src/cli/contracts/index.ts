@@ -1,10 +1,6 @@
 import { PrivateKey } from '@wharfkit/antelope';
 import { EosioUtil } from '../../sdk';
 import deployContract from '../bootstrap/deploy-contract';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export default async function contracts(args: string[]) {
     if (args[0] === 'deploy') {
@@ -18,15 +14,10 @@ export default async function contracts(args: string[]) {
         await deployContract(
             {
                 account,
-                contractDir: path.join(__dirname, `../../Tonomy-Contracts/contracts/${account}`),
             },
             signer,
             {
                 throughTonomyProxy: true,
-                extraAuthorization: {
-                    actor: 'tonomy',
-                    permission: 'owner',
-                },
             }
         );
     } else {

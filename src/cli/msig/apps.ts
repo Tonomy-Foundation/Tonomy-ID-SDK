@@ -9,7 +9,7 @@ import {
 import { StandardProposalOptions, createProposal, executeProposal } from '.';
 import { deployContract } from './contract';
 import { AccountType, getSettings, TonomyUsername } from '../../sdk';
-import { Name } from '@wharfkit/antelope';
+import { Checksum256Type, Name, NameType } from '@wharfkit/antelope';
 
 const logoUrl = 'https://ipfs.hivebp.io/ipfs/Qmexh5r5zJ7Us4Wm3tgedDSHss5t7DrDD8bDRLhz9eQi46';
 const ownerKey = 'EOS5SdLniuD3aBn4pXpKchefT8kdFvkSBoGP91iMPhQEzwKBexobn';
@@ -119,8 +119,7 @@ export async function createAccounts(options: StandardProposalOptions) {
         options.dryRun
     );
 
-    if (options.dryRun) return;
-    if (options.autoExecute) await executeProposal(options.proposer, proposalName, proposalHash);
+    if (!options.dryRun && options.autoExecute) await executeProposal(options.proposer, proposalName, proposalHash);
 }
 
 // MSIG 2: Set accounts as apps, transfer TONO, buy RAM
@@ -158,8 +157,7 @@ export async function setAppsAndRam(options: StandardProposalOptions) {
         options.dryRun
     );
 
-    if (options.dryRun) return;
-    if (options.autoExecute) await executeProposal(options.proposer, proposalName, proposalHash);
+    if (!options.dryRun && options.autoExecute) await executeProposal(options.proposer, proposalName, proposalHash);
 }
 
 // MSIG 3: Deploy contracts for apps
@@ -217,8 +215,8 @@ export async function newApp(options: StandardProposalOptions) {
         options.dryRun
     );
 
-    if (options.dryRun) return;
-    if (options.autoExecute) await executeProposal(options.proposer, options.proposalName, proposalHash);
+    if (!options.dryRun && options.autoExecute)
+        await executeProposal(options.proposer, options.proposalName, proposalHash);
 }
 
 const CONTRACT_NAME = 'tonomy';
@@ -281,6 +279,119 @@ export async function migrateApps(options: StandardProposalOptions) {
         options.dryRun
     );
 
-    if (options.dryRun) return;
-    if (options.autoExecute) await executeProposal(options.proposer, options.proposalName, proposalHash);
+    if (!options.dryRun && options.autoExecute)
+        await executeProposal(options.proposer, options.proposalName, proposalHash);
+}
+
+export async function adminSetApps(options: StandardProposalOptions) {
+    const appsToSet: {
+        accountName: NameType;
+        jsonData: string;
+        usernameHash: Checksum256Type;
+        origin: string;
+    }[] = [
+        {
+            accountName: 'login.hypha',
+            jsonData: createAppJsonDataString(
+                'Hypha LOGIN',
+                'Hypha login contract',
+                'https://hypha.earth/wp-content/themes/hypha2023/img/logos/logo-white.svg',
+                '#251950',
+                '#BA54D3'
+            ),
+            usernameHash: '87c0b673703d9b4c8f7466898da956f256f242694de0a646544e5ccec2a2702b',
+            origin: 'https://login.pangea-test.hypha.earth',
+        },
+        {
+            accountName: 'staking.tmy',
+            jsonData: createAppJsonDataString(
+                'TONO Staking',
+                'TONO Staking contract',
+                'https://staking.accounts.testnet.tonomy.io/tonomy-logo1024.png',
+                '#251950',
+                '#BA54D3'
+            ),
+            usernameHash: 'cf2759aeeaa06d48d83f484cfdcc7a6291fb1edc1e099c09a4e7b7299a6fb66c',
+            origin: 'https://staking.accounts.testnet.tonomy.io',
+        },
+        {
+            accountName: 'tonomy',
+            jsonData: createAppJsonDataString(
+                'Tonomy System',
+                'Tonomy system contract',
+                'https://tonomy.accounts.testnet.tonomy.io/tonomy-logo1024.png',
+                '#251950',
+                '#BA54D3'
+            ),
+            usernameHash: 'e4df80a04452a582641a7a8ac274bd75558548b2c763e2bf31daade9b50b3726',
+            origin: 'https://tonomy.accounts.testnet.tonomy.io',
+        },
+        {
+            accountName: 'vesting.tmy',
+            jsonData: createAppJsonDataString(
+                'TONO Vesting',
+                'TONO Vesting contract',
+                'https://vesting.accounts.testnet.tonomy.io/tonomy-logo1024.png',
+                '#251950',
+                '#BA54D3'
+            ),
+            usernameHash: 'c6627d00b6f9b8e1fc57b27cb5234f0688b421ebff9901f882f922cf4c0df4ab',
+            origin: 'https://vesting.accounts.testnet.tonomy.io',
+        },
+        {
+            accountName: 'voice.hypha',
+            jsonData: createAppJsonDataString(
+                'Hypha VOICE',
+                'Hypha voice contract',
+                'https://hypha.earth/wp-content/themes/hypha2023/img/logos/logo-white.svg',
+                '#251950',
+                '#BA54D3'
+            ),
+            usernameHash: 'c642063d72beb6f074dfabc4c4e76e0fa9dd7cd6a8a1bfc257c4b3dcd8cd6d53',
+            origin: 'https://voice.pangea-test.hypha.earth',
+        },
+    ];
+
+    const actions = appsToSet.map((app) =>
+        getTonomyContract().actions.adminSetApp({
+            accountName: app.accountName,
+            jsonData: app.jsonData,
+            usernameHash: app.usernameHash,
+            origin: app.origin,
+        })
+    );
+
+    const proposalHash = await createProposal(
+        options.proposer,
+        options.proposalName,
+        actions,
+        options.privateKey,
+        options.requested,
+        options.dryRun
+    );
+
+    if (!options.dryRun && options.autoExecute)
+        await executeProposal(options.proposer, options.proposalName, proposalHash);
+}
+
+export async function adminDeleteApps(options: StandardProposalOptions) {
+    const appsToDelete: NameType[] = ['.onomy'];
+
+    const actions = appsToDelete.map((accountName) =>
+        getTonomyContract().actions.deleteApp({
+            accountName,
+        })
+    );
+
+    const proposalHash = await createProposal(
+        options.proposer,
+        options.proposalName,
+        actions,
+        options.privateKey,
+        options.requested,
+        options.dryRun
+    );
+
+    if (!options.dryRun && options.autoExecute)
+        await executeProposal(options.proposer, options.proposalName, proposalHash);
 }

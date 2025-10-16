@@ -18,6 +18,6 @@ export async function setResourceConfig(args, options: StandardProposalOptions) 
         options.dryRun
     );
 
-    if (options.dryRun) return;
-    if (options.autoExecute) await executeProposal(options.proposer, options.proposalName, proposalHash);
+    if (!options.dryRun && options.autoExecute)
+        await executeProposal(options.proposer, options.proposalName, proposalHash);
 }

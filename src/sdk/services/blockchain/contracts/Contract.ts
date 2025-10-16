@@ -1,7 +1,7 @@
 import { Name, NameType, Action } from '@wharfkit/antelope';
 import { ContractKit, Contract as AntelopeContract, ActionOptions } from '@wharfkit/contract';
 import { getApi } from '../eosio/eosio';
-import { activeAuthority } from '../eosio/authority';
+import { activeAuthority, removeDuplicateAuthorizations } from '../eosio/authority';
 
 export async function loadContract(account: NameType): Promise<AntelopeContract> {
     const kit = new ContractKit({ client: getApi() });
@@ -51,17 +51,8 @@ export abstract class Contract {
         data: any,
         authorization: ActionOptions = activeAuthority(this.contractName)
     ): Action {
-        return this.contract.action(name, data, removeDuplicatePermissions(authorization));
+        return this.contract.action(name, data, removeDuplicateAuthorizations(authorization));
     }
 
     actions: ActionGetters;
-}
-
-function removeDuplicatePermissions(auth: ActionOptions): ActionOptions {
-    if (!auth.authorization) throw new Error('Authorization is undefined');
-
-    // @ts-expect-error authorization is not undefined
-    auth.authorization = auth.authorization.filter((perm, index) => auth.authorization.indexOf(perm) === index);
-
-    return auth;
 }

@@ -90,9 +90,9 @@ export class StakingContract extends Contract {
     static getMaxAllocations: () => number = () => (this.isTestEnv() ? 5 : 20); // 100 allocations or 5 allocations
     static getStakingCycleHours: () => number = () => (this.isTestEnv() ? 1 / 60 : 24); // 24 hours or 1 minute
     static MAX_APY = 1.0;
-    static STAKING_APY_TARGET = 0.5; // 50% annual yield target
-    // Use the TGE unlock: https://docs.google.com/spreadsheets/d/1uyvpgXC0th3Z1_bz4m18dJKy2yyVfYFmcaEyS9fveeA/edit?gid=1074294213#gid=1074294213&range=Q34
-    static STAKING_ESTIMATED_STAKED_PERCENT = 0.151; // 15.1% of total supply staked
+    static STAKING_APY_TARGET = 1.0; // 100% annual yield target
+    // Use the TGE unlock: https://docs.google.com/spreadsheets/d/1WZSg48FGhXMT5vrDVG2lxgwu-INyA6Jn/edit?pli=1&gid=520538956#gid=520538956&range=R70
+    static STAKING_ESTIMATED_STAKED_PERCENT = 0.021; // 2.1% of total supply staked (10% of the TGE + 72 hour unlock)
     static yearlyStakePool =
         StakingContract.STAKING_APY_TARGET *
         StakingContract.STAKING_ESTIMATED_STAKED_PERCENT *

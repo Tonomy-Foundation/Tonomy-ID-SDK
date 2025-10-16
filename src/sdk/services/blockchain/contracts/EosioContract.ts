@@ -7,6 +7,7 @@ import { getApi } from '../eosio/eosio';
 import { Contract as AntelopeContract, ActionOptions } from '@wharfkit/contract';
 import abi from './abi/eosio.bios.abi.json';
 import { isProduction } from '../../../util/settings';
+import { mergeAuthorities } from './../eosio/authority';
 
 const CONTRACT_NAME: NameType = 'eosio';
 
@@ -24,11 +25,11 @@ export class EosioContract extends Contract {
     actions = {
         setCode: (
             data: { account: NameType; vmtype: number; vmversion: number; code: string },
-            authorization: ActionOptions = activeAuthority(data.account)
+            authorization: ActionOptions = mergeAuthorities([activeAuthority('tonomy'), activeAuthority(data.account)])
         ) => this.action('setcode', data, authorization),
         setAbi: (
             data: { account: NameType; abi: string },
-            authorization: ActionOptions = activeAuthority(data.account)
+            authorization: ActionOptions = mergeAuthorities([activeAuthority('tonomy'), activeAuthority(data.account)])
         ) => this.action('setabi', data, authorization),
         updateAuth: (
             data: { account: NameType; permission: NameType; parent: NameType; auth: AuthorityType },
@@ -63,16 +64,18 @@ export class EosioContract extends Contract {
         account: NameType,
         wasmFileContent: string | Buffer,
         abiFileContent: string | Buffer,
-        extraAuthorization?: PermissionLevelType
+        authOverride?: PermissionLevelType | PermissionLevelType[]
     ): Promise<Action[]> {
         const wasmHex = wasmFileContent.toString('hex');
         const abiJson = JSON.parse(abiFileContent.toString());
         const abiDef = ABI.from(abiJson);
         const abiHex = Serializer.encode({ object: abiDef }).hexString;
 
-        const auth = activeAuthority(account);
+        let auth: ActionOptions | undefined;
 
-        if (extraAuthorization) auth.authorization.push(extraAuthorization);
+        if (authOverride) {
+            auth = { authorization: Array.isArray(authOverride) ? authOverride : [authOverride] };
+        }
 
         const setCode = this.actions.setCode({ account, vmtype: 0, vmversion: 0, code: wasmHex }, auth);
         const setAbi = this.actions.setAbi({ account, abi: abiHex }, auth);
@@ -86,9 +89,9 @@ export class EosioContract extends Contract {
         wasmFileContent: string | Buffer,
         abiFileContent: string | Buffer,
         signer: Signer | Signer[],
-        extraAuthorization?: PermissionLevelType
+        authOverride?: PermissionLevelType | PermissionLevelType[]
     ): Promise<API.v1.PushTransactionResponse> {
-        const actions = await this.deployContractActions(account, wasmFileContent, abiFileContent, extraAuthorization);
+        const actions = await this.deployContractActions(account, wasmFileContent, abiFileContent, authOverride);
 
         return transact(actions, signer);
     }
