@@ -375,8 +375,7 @@ async function burnBaseTokens(options: StandardProposalOptions) {
         options.dryRun
     );
 
-    if (!options.dryRun && options.autoExecute)
-        await executeProposal(options.proposer, proposalName, proposalHash);
+    if (!options.dryRun && options.autoExecute) await executeProposal(options.proposer, proposalName, proposalHash);
 }
 
 async function vestAllTreasuries(options: StandardProposalOptions) {
