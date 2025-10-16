@@ -22,7 +22,7 @@ export default async function contracts(args: string[]) {
             },
             signer,
             {
-                throughTonomyProxy: true
+                throughTonomyProxy: true,
             }
         );
     } else {
