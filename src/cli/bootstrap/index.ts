@@ -424,7 +424,7 @@ async function createTonomyApps(newPublicKey: PublicKey, newSigner: Signer): Pro
             account: demo.accountName,
             contractDir: path.join(__dirname, '../../Tonomy-Contracts/contracts/demo.tmy'),
         },
-        newSigner
+        [newSigner, signer]
     );
 
     await createApp({
@@ -520,13 +520,7 @@ async function deployEosioTonomy(signer: Signer) {
             account: 'eosio',
             contractDir: path.join(__dirname, '../../Tonomy-Contracts/contracts/eosio.tonomy'),
         },
-        signer,
-        {
-            extraAuthorization: {
-                actor: 'tonomy',
-                permission: 'active',
-            },
-        }
+        signer
     );
 }
 

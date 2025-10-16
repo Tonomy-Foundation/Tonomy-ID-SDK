@@ -22,11 +22,7 @@ export default async function contracts(args: string[]) {
             },
             signer,
             {
-                throughTonomyProxy: true,
-                extraAuthorization: {
-                    actor: 'tonomy',
-                    permission: 'owner',
-                },
+                throughTonomyProxy: true
             }
         );
     } else {

@@ -2,7 +2,7 @@
 import { ABI, API, NameType, Serializer, Action, PermissionLevelType, AuthorityType } from '@wharfkit/antelope';
 import { Contract, loadContract } from './Contract';
 import { Contract as AntelopeContract, ActionOptions } from '@wharfkit/contract';
-import { activeAuthority } from '../eosio/authority';
+import { activeAuthority, mergeAuthorities } from '../eosio/authority';
 import { Signer, transact } from '../eosio/transaction';
 import { GOVERNANCE_ACCOUNT_NAME } from './TonomyContract';
 import { getApi } from '../eosio/eosio';
@@ -15,23 +15,11 @@ const CONTRACT_NAME: NameType = 'tonomy';
 const specialAccounts = ['eosio', 'eosio.token', 'tonomy', 'vesting.tmy', 'staking.tmy', 'tonomy'];
 
 export function addGovernanceOwner(auth: ActionOptions): ActionOptions {
-    if (!auth.authorization) {
-        auth.authorization = [];
-    }
-
-    auth.authorization.push({ actor: GOVERNANCE_ACCOUNT_NAME, permission: 'owner' });
-
-    return auth;
+    return mergeAuthorities([auth, { authorization: [{ actor: GOVERNANCE_ACCOUNT_NAME, permission: 'owner' }] }]);
 }
 
 export function addGovernanceActive(auth: ActionOptions): ActionOptions {
-    if (!auth.authorization) {
-        auth.authorization = [];
-    }
-
-    auth.authorization.push({ actor: GOVERNANCE_ACCOUNT_NAME, permission: 'active' });
-
-    return auth;
+    return mergeAuthorities([auth, { authorization: [{ actor: GOVERNANCE_ACCOUNT_NAME, permission: 'active' }] }]);
 }
 
 // Add special governance permission to the action authorization
@@ -134,7 +122,7 @@ export class TonomyEosioProxyContract extends Contract {
         account: NameType,
         wasmFileContent: string | Buffer,
         abiFileContent: string | Buffer,
-        extraAuthorization?: PermissionLevelType
+        authOverride?: PermissionLevelType | PermissionLevelType[]
     ): Promise<Action[]> {
         const wasmHex = wasmFileContent.toString('hex');
         const abiJson = JSON.parse(abiFileContent.toString());
@@ -143,13 +131,12 @@ export class TonomyEosioProxyContract extends Contract {
 
         let auth: ActionOptions | undefined;
 
-        if (extraAuthorization) {
-            auth = activeAuthority(account);
-            auth.authorization!.push(extraAuthorization);
+        if (authOverride) {
+            auth = { authorization: Array.isArray(authOverride) ? authOverride : [authOverride] };
         }
 
-        const setCode = this.actions.setCode({ account, vmtype: 0, vmversion: 0, code: wasmHex });
-        const setAbi = this.actions.setAbi({ account, abi: abiHex });
+        const setCode = this.actions.setCode({ account, vmtype: 0, vmversion: 0, code: wasmHex }, auth);
+        const setAbi = this.actions.setAbi({ account, abi: abiHex }, auth);
 
         return [setCode, setAbi];
     }
@@ -160,9 +147,9 @@ export class TonomyEosioProxyContract extends Contract {
         wasmFileContent: string | Buffer,
         abiFileContent: string | Buffer,
         signer: Signer | Signer[],
-        extraAuthorization?: PermissionLevelType
+        authOverride?: PermissionLevelType | PermissionLevelType[]
     ): Promise<API.v1.PushTransactionResponse> {
-        const actions = await this.deployContractActions(account, wasmFileContent, abiFileContent, extraAuthorization);
+        const actions = await this.deployContractActions(account, wasmFileContent, abiFileContent, authOverride);
 
         return transact(actions, signer);
     }

@@ -2,7 +2,7 @@
 
 import fs from 'fs';
 import path from 'path';
-import { Name, NameType, PermissionLevelType } from '@wharfkit/antelope';
+import { Name, NameType } from '@wharfkit/antelope';
 import { Signer } from '../../sdk/services/blockchain/eosio/transaction';
 import { getEosioContract, getTonomyEosioProxyContract } from '../../sdk';
 
@@ -25,7 +25,6 @@ export default async function deployContract(
     { account, contractDir }: { account: NameType; contractDir: string },
     signer: Signer | Signer[],
     options?: {
-        extraAuthorization?: PermissionLevelType;
         throughTonomyProxy?: boolean;
     }
 ) {
@@ -37,5 +36,5 @@ export default async function deployContract(
     const contract = options?.throughTonomyProxy ? getTonomyEosioProxyContract() : getEosioContract();
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await contract.deployContract(Name.from(account) as any, wasmFile, abiFile, signer, options?.extraAuthorization);
+    await contract.deployContract(Name.from(account) as any, wasmFile, abiFile, signer);
 }

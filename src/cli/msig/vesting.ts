@@ -504,7 +504,7 @@ export async function vestingMigrate4(options: StandardProposalOptions) {
     // Apply correction transfers to fix tokenomics deviations and rounding
     await vestingMigrate4TokenFixes(options);
     // Bulk create pre-TGE vesting allocations from CSV input
-    // await vestingMigrationBulk(options);
+    await vestingMigrationBulk(options);
     // Set the vesting dates for when unlocks start
     await vestingSetDates(options);
     // Burn tokens on Tonomy to be re-minted on Base (bridge supply alignment)
