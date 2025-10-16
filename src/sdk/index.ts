@@ -20,7 +20,7 @@ export * from './types/VeriffStatusEnum';
 export * as EosioUtil from './services/blockchain';
 
 export type { Signer } from './services/blockchain/eosio/transaction';
-export { AntelopePushTransactionError } from './services/blockchain/eosio/transaction';
+export { AntelopePushTransactionError, waitForTonomyTrxFinalization } from './services/blockchain/eosio/transaction';
 
 export * from './services/blockchain/eosio/authority';
 export * from './services/blockchain/contracts/DemoTokenContract';

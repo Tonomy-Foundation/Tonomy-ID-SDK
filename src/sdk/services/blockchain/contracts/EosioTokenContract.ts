@@ -35,8 +35,9 @@ export function assetToDecimal(asset: string, symbol?: string): Decimal {
     return new Decimal(assetToNumberString(asset, symbol));
 }
 
-/**
- * @deprecated
+/** Convert a number to an EOSIO asset string
+ *
+ * @deprecated remove use of number to represent tokens. Use Decimal/BigInt instead
  * see FIXME above
  */
 export function amountToAsset(amount: number, symbol: string, precision = 6): string {
@@ -80,6 +81,8 @@ export class EosioTokenContract extends Contract {
             { from, to, quantity, memo = '' }: { from: NameType; to: NameType; quantity: AssetType; memo?: string },
             authorization: ActionOptions = activeAuthority(from)
         ) => this.action('transfer', { from, to, quantity, memo }, authorization),
+        setStats: (data: object, authorization: ActionOptions = activeAuthority(this.contractName)) =>
+            this.action('setstats', data, authorization),
         bridgeIssue: (
             { to, quantity, memo = '' }: { to: NameType; quantity: AssetType; memo: string },
             authorization: ActionOptions = activeAuthority(this.contractName)

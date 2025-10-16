@@ -26,18 +26,6 @@ type ConfigType = {
 
 const ipAddress = ip();
 
-if (env === 'development') {
-    if (!process.env.BASE_TOKEN_ADDRESS) {
-        throw new Error('BASE_TOKEN_ADDRESS is not set in the environment variables');
-    }
-
-    console.log('Using BASE_TOKEN_ADDRESS:', process.env.BASE_TOKEN_ADDRESS);
-} else {
-    if (!process.env.INFURA_API_KEY) {
-        throw new Error('INFURA_API_KEY is not set in the environment variables');
-    }
-}
-
 const defaultConfig = {
     environment: 'development',
     ssoWebsiteOrigin: `http://${ipAddress}:3000`,
@@ -83,7 +71,7 @@ const testnetConfig = {
     demoWebsiteOrigin: `https://demo.testnet.tonomy.io`,
     consoleWebsiteOrigin: `https://console.developers.testnet.tonomy.io`,
     tonomyAppsOrigin: `https://apps.testnet.tonomy.io`,
-    blockchainUrl: `https://blockchain-api-testnet.tonomy.io`,
+    blockchainUrl: `https://test.pangea.eosusa.io`,
     accountSuffix: '.testnet.pangea',
     communicationUrl: 'wss://communication.testnet.tonomy.io',
     accountsServiceUrl: 'http://communication.testnet.tonomy.io',
@@ -102,7 +90,7 @@ const productionConfig = {
     demoWebsiteOrigin: `https://demo.tonomy.io`,
     consoleWebsiteOrigin: `https://console.developers.tonomy.io`,
     tonomyAppsOrigin: `https://apps.tonomy.io`,
-    blockchainUrl: `https://blockchain-api.tonomy.io`,
+    blockchainUrl: `https://pangea.eosusa.io`,
     accountSuffix: '.pangea.id',
     communicationUrl: 'wss://communication.tonomy.io',
     accountsServiceUrl: 'http://communication.tonomy.io',

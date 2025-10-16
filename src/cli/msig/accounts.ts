@@ -32,6 +32,6 @@ export async function newAccount(args: { governanceAccounts: string[] }, options
         options.dryRun
     );
 
-    if (options.dryRun) return;
-    if (options.autoExecute) await executeProposal(options.proposer, options.proposalName, proposalHash);
+    if (!options.dryRun && options.autoExecute)
+        await executeProposal(options.proposer, options.proposalName, proposalHash);
 }

@@ -156,7 +156,6 @@ async function deployEosioMsig() {
     await deployContract(
         {
             account: 'eosio.msig',
-            contractDir: path.join(__dirname, '../../Tonomy-Contracts/contracts/eosio.msig'),
         },
         signer
     );
@@ -174,7 +173,6 @@ async function deployVesting() {
     await deployContract(
         {
             account: 'vesting.tmy',
-            contractDir: path.join(__dirname, '../../Tonomy-Contracts/contracts/vesting.tmy'),
         },
         signer
     );
@@ -185,7 +183,6 @@ async function deployStaking() {
     await deployContract(
         {
             account: 'staking.tmy',
-            contractDir: path.join(__dirname, '../../Tonomy-Contracts/contracts/staking.tmy'),
         },
         signer
     );
@@ -213,7 +210,6 @@ async function createNativeToken() {
     await deployContract(
         {
             account: 'eosio.token',
-            contractDir: path.join(__dirname, '../../Tonomy-Contracts/contracts/eosio.token'),
         },
         signer
     );
@@ -275,7 +271,6 @@ async function createTonomyContractAndSetResources() {
     await deployContract(
         {
             account: 'tonomy',
-            contractDir: path.join(__dirname, '../../Tonomy-Contracts/contracts/tonomy'),
         },
         signer
     );
@@ -424,7 +419,7 @@ async function createTonomyApps(newPublicKey: PublicKey, newSigner: Signer): Pro
             account: demo.accountName,
             contractDir: path.join(__dirname, '../../Tonomy-Contracts/contracts/demo.tmy'),
         },
-        newSigner
+        [newSigner, signer]
     );
 
     await createApp({
@@ -520,13 +515,7 @@ async function deployEosioTonomy(signer: Signer) {
             account: 'eosio',
             contractDir: path.join(__dirname, '../../Tonomy-Contracts/contracts/eosio.tonomy'),
         },
-        signer,
-        {
-            extraAuthorization: {
-                actor: 'tonomy',
-                permission: 'active',
-            },
-        }
+        signer
     );
 }
 

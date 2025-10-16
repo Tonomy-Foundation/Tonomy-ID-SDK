@@ -78,11 +78,11 @@ export function getSettings(): SettingsType {
 }
 
 export function isProduction(): boolean {
-    debug('Checking if production for environment:', settings.environment);
-
     if (!initialized) {
         throwError('Settings not yet initialized', SdkErrors.SettingsNotInitialized);
     }
+
+    debug('Checking if production for environment:', settings.environment);
 
     return ['production', 'staging', 'testnet'].includes(settings.environment);
 }

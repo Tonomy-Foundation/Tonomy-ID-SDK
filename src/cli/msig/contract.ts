@@ -1,17 +1,6 @@
 import { getTonomyEosioProxyContract } from '../../sdk/services/blockchain';
 import { StandardProposalOptions, createProposal, executeProposal } from '.';
-import { Name } from '@wharfkit/antelope';
-import fs from 'fs';
-import { getDeployableFilesFromDir } from '../bootstrap/deploy-contract';
-import path, { dirname } from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-const thisFileDirectory = __dirname;
-const defaultContractDirectory = path.join(thisFileDirectory, '..', '..', 'Tonomy-Contracts', 'contracts');
-
-console.log('defaultContractDirectory', defaultContractDirectory);
+import { getDeployableFiles } from '../bootstrap/deploy-contract';
 
 export async function deployContract(
     options: {
@@ -20,17 +9,9 @@ export async function deployContract(
         returnActions?: boolean;
     } & StandardProposalOptions
 ) {
-    const contractName = Name.from(options.contract);
-    const contractDir = `${options.directory ?? defaultContractDirectory}/${contractName.toString()}`;
+    const { wasmFile, abiFile } = getDeployableFiles(options.contract, options.directory);
 
-    console.log(`Deploying contract ${options.contract} from ${contractDir}`);
-
-    const { wasmPath, abiPath } = getDeployableFilesFromDir(contractDir);
-
-    const wasmFile = fs.readFileSync(wasmPath);
-    const abiFile = fs.readFileSync(abiPath, 'utf8');
-
-    const actions = await getTonomyEosioProxyContract().deployContractActions(contractName, wasmFile, abiFile, {
+    const actions = await getTonomyEosioProxyContract().deployContractActions(options.contract, wasmFile, abiFile, {
         actor: 'tonomy',
         permission: 'active',
     });
@@ -42,7 +23,7 @@ export async function deployContract(
         options.proposalName,
         actions,
         options.privateKey,
-        [...options.requested, contractName.toString()],
+        [...options.requested, options.contract],
         options.dryRun
     );
 

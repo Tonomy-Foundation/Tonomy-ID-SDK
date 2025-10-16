@@ -37,8 +37,8 @@ export async function updateAuth(options: StandardProposalOptions) {
         options.dryRun
     );
 
-    if (options.dryRun) return;
-    if (options.autoExecute) await executeProposal(options.proposer, options.proposalName, proposalHash);
+    if (!options.dryRun && options.autoExecute)
+        await executeProposal(options.proposer, options.proposalName, proposalHash);
 }
 
 export async function addEosioCode(options: StandardProposalOptions) {
@@ -90,8 +90,8 @@ export async function addEosioCode(options: StandardProposalOptions) {
         options.dryRun
     );
 
-    if (options.dryRun) return;
-    if (options.autoExecute) await executeProposal(options.proposer, options.proposalName, proposalHash);
+    if (!options.dryRun && options.autoExecute)
+        await executeProposal(options.proposer, options.proposalName, proposalHash);
 }
 
 export async function govMigrate(args: { newGovernanceAccounts: string[] }, options: StandardProposalOptions) {
@@ -113,6 +113,6 @@ export async function govMigrate(args: { newGovernanceAccounts: string[] }, opti
         options.dryRun
     );
 
-    if (options.dryRun) return;
-    if (options.autoExecute) await executeProposal(options.proposer, options.proposalName, proposalHash);
+    if (!options.dryRun && options.autoExecute)
+        await executeProposal(options.proposer, options.proposalName, proposalHash);
 }

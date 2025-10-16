@@ -100,11 +100,7 @@ describe('ExternalUser: Login to external website', () => {
             { account: externalApp.accountName, contractDir: './Tonomy-Contracts/contracts/demo.tmy' },
             signer,
             {
-                throughTonomyProxy: true,
-                extraAuthorization: {
-                    actor: 'tonomy',
-                    permission: 'active',
-                },
+                throughTonomyProxy: true
             }
         );
         const demoTokenContract = await DemoTokenContract.atAccount(externalApp.accountName);
