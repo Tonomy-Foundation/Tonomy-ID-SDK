@@ -1,17 +1,6 @@
-import { ActionData } from '../../sdk/services/blockchain';
+import { getTonomyEosioProxyContract } from '../../sdk/services/blockchain';
 import { StandardProposalOptions, createProposal, executeProposal } from '.';
-import { Name, ABI, Serializer } from '@wharfkit/antelope';
-import fs from 'fs';
-import { getDeployableFilesFromDir } from '../bootstrap/deploy-contract';
-import path, { dirname } from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-const thisFileDirectory = __dirname;
-const defaultContractDirectory = path.join(thisFileDirectory, '..', '..', 'Tonomy-Contracts', 'contracts');
-
-console.log('defaultContractDirectory', defaultContractDirectory);
+import { getDeployableFiles } from '../bootstrap/deploy-contract';
 
 export async function deployContract(
     options: {
@@ -20,62 +9,12 @@ export async function deployContract(
         returnActions?: boolean;
     } & StandardProposalOptions
 ) {
-    const contractName = Name.from(options.contract);
-    const contractDir = `${options.directory ?? defaultContractDirectory}/${contractName.toString()}`;
+    const { wasmFile, abiFile } = getDeployableFiles(options.contract, options.directory);
 
-    console.log(`Deploying contract ${options.contract} from ${contractDir}`);
-
-    const { wasmPath, abiPath } = getDeployableFilesFromDir(contractDir);
-
-    const wasmFile = fs.readFileSync(wasmPath);
-    const abiFile = fs.readFileSync(abiPath, 'utf8');
-    const wasm = wasmFile.toString(`hex`);
-
-    // 2. Prepare SETABI
-    const abi = JSON.parse(abiFile);
-    const abiDef = ABI.from(abi);
-    const abiSerializedHex = Serializer.encode({ object: abiDef }).hexString;
-
-    const authorization = [
-        {
-            actor: contractName.toString(),
-            permission: 'active',
-        },
-        {
-            actor: 'tonomy',
-            permission: 'active',
-        },
-        // {
-        //     actor: 'tonomy',
-        //     permission: 'owner',
-        // },
-    ];
-
-    // Prepare SETCODE action
-    const setCodeAction: ActionData = {
-        account: 'tonomy',
-        name: 'setcode',
-        authorization,
-        data: {
-            account: contractName.toString(),
-            vmtype: 0,
-            vmversion: 0,
-            code: wasm,
-        },
-    };
-
-    // Prepare SETABI action
-    const setAbiAction: ActionData = {
-        account: 'tonomy',
-        name: 'setabi',
-        authorization,
-        data: {
-            account: contractName.toString(),
-            abi: abiSerializedHex,
-        },
-    };
-
-    const actions = [setCodeAction, setAbiAction];
+    const actions = await getTonomyEosioProxyContract().deployContractActions(options.contract, wasmFile, abiFile, {
+        actor: 'tonomy',
+        permission: 'active',
+    });
 
     if (options.returnActions ?? false) return actions;
 
@@ -84,7 +23,7 @@ export async function deployContract(
         options.proposalName,
         actions,
         options.privateKey,
-        [...options.requested, contractName.toString()],
+        [...options.requested, options.contract],
         options.dryRun
     );
 

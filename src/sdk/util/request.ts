@@ -11,7 +11,7 @@ import { verifyKeyExistsForApp } from '../helpers/user';
 import { getAccountNameFromDid } from './ssi/did';
 import Debug from 'debug';
 import { getSettings } from './settings';
-import { isSameOrigin } from '../helpers/urls';
+import { createUrl, isSameOrigin, parseCallbackPath } from '../helpers/urls';
 import { KYCVC } from './veriff';
 import { VerificationTypeEnum } from '../types/VerificationTypeEnum';
 
@@ -241,7 +241,7 @@ export class WalletRequest implements Serializable {
                 if (checkSsoDomain) {
                     if (!isSameOrigin(app.origin, getSettings().ssoWebsiteOrigin))
                         throw new Error(
-                            `Invalid origin for SSO login request. Received ${app.origin}, expected ${getSettings().accountsServiceUrl}`
+                            `Invalid origin for SSO login request. Received ${app.origin}, expected ${getSettings().ssoWebsiteOrigin}`
                         );
                 }
 
@@ -509,29 +509,29 @@ export class DualWalletResponse implements Serializable {
     }
 
     getRedirectUrl(external = true): string {
+        let origin: string;
+        let callback: string;
+        const payload = this.toString();
+
         if (this.isSuccess()) {
             const response = external ? this.external : this.sso;
 
             if (!response) throw new Error('response not found in getRedirectUrl');
 
-            return (
-                response.getLoginResponse().login.origin +
-                response.getLoginResponse().login.callbackPath +
-                '?payload=' +
-                this.toString()
-            );
+            origin = response.getLoginResponse().login.origin;
+            callback = response.getLoginResponse().login.callbackPath;
         } else {
             if (!this.requests) throw new Error('requests not found in getRedirectUrl');
             const request = external ? this.requests.external : this.requests.sso;
 
             if (!request) throw new Error('request not found in getRedirectUrl');
 
-            return (
-                request.getLoginRequest().login.origin +
-                request.getLoginRequest().login.callbackPath +
-                '?payload=' +
-                this.toString()
-            );
+            origin = request.getLoginRequest().login.origin;
+            callback = request.getLoginRequest().login.callbackPath;
         }
+
+        const { path, params, fragment } = parseCallbackPath(callback);
+
+        return createUrl(origin, path, { ...params, payload }, fragment);
     }
 }

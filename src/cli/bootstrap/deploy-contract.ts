@@ -1,15 +1,29 @@
 // https://medium.com/coinmonks/setcode-and-setabi-with-eos-js-dd83480ba234
 
 import fs from 'fs';
-import path from 'path';
 import { Name, NameType } from '@wharfkit/antelope';
-import { EosioContract, TonomyEosioProxyContract } from '../../sdk/index';
 import { Signer } from '../../sdk/services/blockchain/eosio/transaction';
+import { getEosioContract, getTonomyEosioProxyContract } from '../../sdk';
+import path, { dirname } from 'path';
+import { fileURLToPath } from 'url';
 
-const eosioContract = EosioContract.Instance;
-const tonomyContract = TonomyEosioProxyContract.Instance;
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const thisFileDirectory = __dirname;
+const defaultContractDirectory = path.join(thisFileDirectory, '..', '..', 'Tonomy-Contracts', 'contracts');
 
-export function getDeployableFilesFromDir(dir: string) {
+export function getDeployableFiles(contract: string, directory?: string): { wasmFile: Buffer; abiFile: string } {
+    const contractDir = directory ?? `${defaultContractDirectory}/${contract.toString()}`;
+
+    const { wasmPath, abiPath } = getDeployableFilePathsFromDir(contractDir);
+
+    const wasmFile = fs.readFileSync(wasmPath);
+    const abiFile = fs.readFileSync(abiPath, 'utf8');
+
+    return { wasmFile, abiFile };
+}
+
+function getDeployableFilePathsFromDir(dir: string): { wasmPath: string; abiPath: string } {
     const dirCont = fs.readdirSync(dir);
 
     const wasmFileName = dirCont.find((filePath) => filePath.match(/.*\.(wasm)$/gi));
@@ -25,20 +39,16 @@ export function getDeployableFilesFromDir(dir: string) {
 }
 
 export default async function deployContract(
-    { account, contractDir }: { account: NameType; contractDir: string },
+    { account, contractDir }: { account: NameType; contractDir?: string },
     signer: Signer | Signer[],
     options?: {
-        extraAuthorization?: { actor: string; permission: string };
         throughTonomyProxy?: boolean;
     }
 ) {
-    const { wasmPath, abiPath } = getDeployableFilesFromDir(contractDir);
+    const { wasmFile, abiFile } = getDeployableFiles(account.toString(), contractDir);
 
-    const wasmFile = fs.readFileSync(wasmPath);
-    const abiFile = fs.readFileSync(abiPath, 'utf8');
-
-    const contract = options?.throughTonomyProxy ? tonomyContract : eosioContract;
+    const contract = options?.throughTonomyProxy ? getTonomyEosioProxyContract() : getEosioContract();
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await contract.deployContract(Name.from(account) as any, wasmFile, abiFile, signer, options);
+    await contract.deployContract(Name.from(account) as any, wasmFile, abiFile, signer);
 }

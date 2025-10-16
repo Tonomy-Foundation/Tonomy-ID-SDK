@@ -1,5 +1,4 @@
 import {
-    Action,
     API,
     Transaction,
     SignedTransaction,
@@ -7,34 +6,19 @@ import {
     Checksum256,
     Name,
     PrivateKey,
+    ActionType,
+    AnyAction,
+    Action,
+    ABI,
+    Checksum256Type,
 } from '@wharfkit/antelope';
 import { KeyManager, KeyManagerLevel } from '../../../storage/keymanager';
 import { HttpError } from '../../../util/errors';
-import { getApi } from './eosio';
+import { fetchAbi, getApi, getChainInfo } from './eosio';
 import Debug from 'debug';
+import { sleep } from '../../../util/time';
 
 const debug = Debug('tonomy-sdk:services:blockchain:eosio:transaction');
-
-interface MapObject {
-    [key: string]: any;
-}
-
-/**
- * Action data for a transaction
- * @property {string} account - The smart contract account name
- * @property {string} name - The name of the action (function in the smart contract)
- * @property {object} data - The data for the action (arguments for the function)
- * @property {MapObject} authorization - The authorization for the action
- */
-export type ActionData = {
-    authorization: {
-        actor: string;
-        permission: string;
-    }[];
-    account?: string;
-    name: string;
-    data: MapObject;
-};
 
 export interface Signer {
     sign(digest: Checksum256 | string): Promise<Signature>;
@@ -56,7 +40,7 @@ interface AntelopePushTransactionErrorConstructor {
             },
         ];
     };
-    actions?: ActionData[];
+    actions?: ActionType[];
     contract?: Name;
 }
 
@@ -96,7 +80,7 @@ export class AntelopePushTransactionError extends Error {
             },
         ];
     };
-    actions?: ActionData[];
+    actions?: ActionType[];
     contract?: Name;
 
     constructor(err: AntelopePushTransactionErrorConstructor) {
@@ -111,7 +95,9 @@ export class AntelopePushTransactionError extends Error {
 
         this.error = err.error;
         this.contract = err.contract;
-        this.actions = err.actions;
+        this.actions = err.actions
+            ? err.actions.map((action) => (action instanceof Action ? action.decoded : action))
+            : undefined;
         this.stack = new Error().stack;
         // Ensure the name of this error is the same as the class name
         this.name = this.constructor.name;
@@ -129,56 +115,52 @@ export class AntelopePushTransactionError extends Error {
     }
 
     hasTonomyErrorCode(code: string): boolean {
-        // TODO: iterate over deatils array instead of only looking at first element
+        // TODO: iterate over details array instead of only looking at first element
         return this.error.details[0].message.search(code) > 0;
     }
 }
 
+export type AnyActionType = ActionType | AnyAction;
+
+export async function toPrintableActions(actions: AnyActionType | AnyActionType[]): Promise<any[]> {
+    const actionsArray = await Promise.all((Array.isArray(actions) ? actions : [actions]).map(createActionWithAbi));
+
+    return actionsArray.map((action) => action.decoded);
+}
+
 export async function transact(
-    contract: Name,
-    actions: ActionData[],
+    actions: AnyActionType | AnyActionType[],
     signer: Signer | Signer[]
 ): Promise<API.v1.PushTransactionResponse> {
     // Get the ABI
-    const api = await getApi();
-    const abi = await api.v1.chain.get_abi(contract);
-
-    // Create the action data
-    const actionData: Action[] = [];
-
-    actions.forEach((data) => {
-        actionData.push(Action.from({ account: contract, ...data }, abi.abi));
-    });
+    const actionsArray = await Promise.all((Array.isArray(actions) ? actions : [actions]).map(createActionWithAbi));
 
     // Construct the transaction
-    const info = await api.v1.chain.get_info();
+    const info = await getChainInfo();
     const header = info.getTransactionHeader();
     const transaction = Transaction.from({
         ...header,
-        actions: actionData,
+        actions: actionsArray,
     });
 
     // Create signature
-    if (!Array.isArray(signer)) signer = [signer];
+    const signersArray = Array.isArray(signer) ? signer : [signer];
     const signDigest = transaction.signingDigest(info.chain_id);
-    const signatures = await Promise.all(signer.map((s) => s.sign(signDigest)));
+    const signatures = await Promise.all(signersArray.map((s) => s.sign(signDigest)));
     const signedTransaction = SignedTransaction.from({
         ...transaction,
         signatures,
     });
 
-    // Send to the node
-    let res;
-
     try {
-        debug('Pushing transaction', JSON.stringify(actions, null, 2));
-        res = await api.v1.chain.push_transaction(signedTransaction);
+        debug('Pushing transaction', JSON.stringify(await toPrintableActions(actionsArray), null, 2));
+        return await getApi().v1.chain.push_transaction(signedTransaction);
     } catch (e) {
         debug('Error pushing transaction', e);
 
         if (e.response?.headers) {
             if (e.response?.json) {
-                throw new AntelopePushTransactionError({ ...e.response.json, contract, actions });
+                throw new AntelopePushTransactionError({ ...e.response.json, actions: actionsArray });
             }
 
             throw new HttpError(e);
@@ -186,6 +168,45 @@ export async function transact(
 
         throw e;
     }
+}
 
-    return res;
+type ActionWithABI = Action & { abi: ABI };
+
+export async function createActionWithAbi(action: AnyActionType): Promise<ActionWithABI> {
+    if (action instanceof Action && action.abi) return action as ActionWithABI;
+    const abi = await fetchAbi(action.account);
+
+    return Action.from(action, abi) as ActionWithABI;
+}
+
+export async function waitForTonomyTrxFinalization(
+    transactionId: Checksum256Type,
+    timeout: number = 30000,
+    interval: number = 1000
+): Promise<API.v1.GetTransactionResponse> {
+    const api = getApi();
+    const start = Date.now();
+
+    const result = await api.v1.history.get_transaction(transactionId);
+
+    debug(`Transaction ${transactionId} found in block ${result.block_num}, waiting for finalization...`);
+
+    // Wait till the transaction is confirmed in an irreversible block
+    while (Date.now() - start < timeout) {
+        try {
+            const info = await getChainInfo();
+
+            debug(`Last irreversible block: ${info.last_irreversible_block_num}`);
+
+            if (result.block_num.lt(info.last_irreversible_block_num)) {
+                return result;
+            }
+        } catch (e) {
+            // Ignore errors, as the transaction might not be found yet
+        }
+
+        await sleep(interval);
+    }
+
+    throw new Error(`Transaction ${transactionId} was not finalized within ${timeout} ms`);
 }

@@ -1,12 +1,14 @@
 import { Name, PrivateKey, Checksum256, NameType } from '@wharfkit/antelope';
-import { GetPersonResponse } from '../services/blockchain/contracts/TonomyContract';
+import { PersonData } from '../services/blockchain/contracts/TonomyContract';
 import { TonomyUsername } from '../util/username';
 import { Issuer } from 'did-jwt-vc';
 import { AuthenticationMessage, Message } from '../services/communication/message';
 import { UserStatusEnum } from './UserStatusEnum';
 import { Subscriber } from '../services/communication/communication';
 import { App } from '../controllers/App';
-import { URL as URLtype, DataRequest, DualWalletRequests, KYCPayload, PersonCredentialType, JWT } from '../util';
+import { URL as URLtype, JWT } from '../util/ssi/types';
+import { DataRequest, DualWalletRequests } from '../util/request';
+import { KYCPayload, PersonCredentialType } from '../util/veriff';
 import { PublicKey } from '@wharfkit/antelope';
 import { AppStatusEnum } from './AppStatusEnum';
 import { Signer } from '../services/blockchain';
@@ -22,7 +24,7 @@ import { VeriffStatusEnum } from './VeriffStatusEnum';
  */
 export type ClientAuthorizationData = Record<string, any> &
     object & {
-        username?: string;
+        username?: TonomyUsername | string;
     };
 
 type KeyFromPasswordFn = (
@@ -108,7 +110,7 @@ export interface IUserCommunication extends IUserAuthentication {
 }
 
 export interface IUserOnboarding extends IUserCommunication {
-    login(username: TonomyUsername, password: string, options: ILoginOptions): Promise<GetPersonResponse>;
+    login(username: TonomyUsername, password: string, options: ILoginOptions): Promise<PersonData>;
     isLoggedIn(): Promise<boolean>;
     createPerson(): Promise<void>;
     saveUsername(username: string): Promise<void>;

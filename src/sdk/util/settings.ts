@@ -21,6 +21,10 @@ export type SettingsType = {
     tonomyIdSchema: string;
     loggerLevel: LoggerLevel;
     currencySymbol: string;
+    baseTokenAddress: string;
+    baseRpcUrl: string;
+    basePrivateKey: string;
+    baseNetwork: 'base' | 'base-sepolia' | 'hardhat' | 'localhost';
 };
 
 type FetchType = (input: RequestInfo, init?: RequestInit) => Promise<Response>;
@@ -31,7 +35,17 @@ let initialized = false;
 
 export function setSettings(newSettings: Partial<SettingsType>): void {
     debug('Settings initialized', newSettings);
-    settings = newSettings as SettingsType;
+
+    if (!settings) {
+        settings = {} as SettingsType;
+    }
+
+    for (const [key, value] of Object.entries(newSettings)) {
+        if (value !== undefined && value !== null) {
+            (settings as any)[key] = value;
+        }
+    }
+
     initialized = true;
 }
 
@@ -64,11 +78,11 @@ export function getSettings(): SettingsType {
 }
 
 export function isProduction(): boolean {
-    debug('Checking if production for environment:', settings.environment);
-
     if (!initialized) {
         throwError('Settings not yet initialized', SdkErrors.SettingsNotInitialized);
     }
+
+    debug('Checking if production for environment:', settings.environment);
 
     return ['production', 'staging', 'testnet'].includes(settings.environment);
 }

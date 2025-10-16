@@ -1,173 +1,215 @@
 /* eslint-disable camelcase */
-import { ABI, API, Name, Serializer } from '@wharfkit/antelope';
-import { Authority } from '../eosio/authority';
+import { ABI, API, NameType, Serializer, Action, PermissionLevelType, AuthorityType } from '@wharfkit/antelope';
+import { Contract, loadContract } from './Contract';
+import { Contract as AntelopeContract, ActionOptions } from '@wharfkit/contract';
+import { activeAuthority, mergeAuthorities } from '../eosio/authority';
 import { Signer, transact } from '../eosio/transaction';
 import { GOVERNANCE_ACCOUNT_NAME } from './TonomyContract';
+import { getApi } from '../eosio/eosio';
+import abi from './abi/tonomy.abi.json';
+import { BlockchainParams } from './EosioContract';
+import { isProduction } from '../../../util/settings';
 
-const CONTRACT_NAME = 'tonomy';
+const CONTRACT_NAME: NameType = 'tonomy';
 
-export class TonomyEosioProxyContract {
-    static singletonInstance: TonomyEosioProxyContract;
+const specialAccounts = ['eosio', 'eosio.token', 'tonomy', 'vesting.tmy', 'staking.tmy', 'tonomy'];
 
-    public static get Instance() {
-        return this.singletonInstance || (this.singletonInstance = new this());
+export function addGovernanceOwner(auth: ActionOptions): ActionOptions {
+    return mergeAuthorities([auth, { authorization: [{ actor: GOVERNANCE_ACCOUNT_NAME, permission: 'owner' }] }]);
+}
+
+export function addGovernanceActive(auth: ActionOptions): ActionOptions {
+    return mergeAuthorities([auth, { authorization: [{ actor: GOVERNANCE_ACCOUNT_NAME, permission: 'active' }] }]);
+}
+
+// Add special governance permission to the action authorization
+export function addSpecialGovernancePermission(auth: ActionOptions, account: NameType): ActionOptions {
+    if (specialAccounts.includes(account.toString())) {
+        return addGovernanceOwner(auth);
     }
 
-    /**
-     * Deploys a contract at the specified address
-     *
-     * @param account - Account where the contract will be deployed
-     * @param wasmFileContents - wasmFile after reading with fs.readFileSync(path) or equivalent
-     * @param abiFileContents - abiFile after reading with fs.readFileSync(path, `utf8`) or equivalent
-     * @param signer - Signer or Signer[] to sign the transaction
-     * @param extraAuthorization - Extra authorization to be added to the transaction
-     */
+    return addGovernanceActive(auth);
+}
+
+export class TonomyEosioProxyContract extends Contract {
+    static async atAccount(account: NameType = CONTRACT_NAME): Promise<TonomyEosioProxyContract> {
+        return new this(await loadContract(account));
+    }
+
+    static fromAbi(abi: any, account: NameType = CONTRACT_NAME): TonomyEosioProxyContract {
+        const contract = new AntelopeContract({ abi, client: getApi(), account });
+
+        return new this(contract, isProduction());
+    }
+
+    actions = {
+        newAccount: (
+            data: {
+                creator: NameType;
+                name: NameType;
+                owner: AuthorityType;
+                active: AuthorityType;
+            },
+            auth: ActionOptions = addGovernanceOwner(activeAuthority(data.creator))
+        ): Action => this.action('newaccount', data, auth),
+        setCode: (
+            data: { account: NameType; vmtype: number; vmversion: number; code: string },
+            auth: ActionOptions = addSpecialGovernancePermission(activeAuthority(data.account), data.account)
+        ): Action => this.action('setcode', data, auth),
+        setAbi: (
+            data: { account: NameType; abi: string },
+            auth: ActionOptions = addSpecialGovernancePermission(activeAuthority(data.account), data.account)
+        ): Action => this.action('setabi', data, auth),
+        updateAuth: (
+            data: {
+                account: NameType;
+                permission: NameType;
+                parent: NameType;
+                auth: AuthorityType;
+                authParent?: boolean;
+            },
+            auth: ActionOptions = addSpecialGovernancePermission(
+                {
+                    authorization: [
+                        { actor: data.account, permission: data.authParent ? data.parent : data.permission },
+                    ],
+                },
+                data.account
+            )
+        ): Action =>
+            this.action(
+                'updateauth',
+                {
+                    account: data.account,
+                    permission: data.permission,
+                    parent: data.permission === 'owner' ? '' : data.parent,
+                    auth: data.auth,
+                    auth_parent: data.authParent ?? false,
+                },
+                auth
+            ),
+        linkAuth: (
+            data: { account: NameType; code: NameType; type: NameType; requirement: NameType },
+            auth: ActionOptions = activeAuthority(data.account)
+        ): Action =>
+            this.action(
+                'linkauth',
+                {
+                    account: data.account,
+                    code: data.code,
+                    type: data.type,
+                    requirement: data.requirement,
+                },
+                auth
+            ),
+        setPriv: (
+            data: { account: NameType; isPriv: number },
+            auth: ActionOptions = addGovernanceOwner(activeAuthority(this.contractName))
+        ): Action => this.action('setpriv', { account: data.account, is_priv: data.isPriv }, auth),
+        setProds: (
+            // TODO: use ProducerSchedule type
+            data: { schedule: any[] },
+            auth: ActionOptions = addGovernanceOwner(activeAuthority(this.contractName))
+        ): Action => this.action('setprods', data, auth),
+        setParams: (
+            data: { params: BlockchainParams },
+            auth: ActionOptions = addGovernanceOwner(activeAuthority(this.contractName))
+        ): Action => this.action('setparams', data, auth),
+    };
+
+    /** prepare setcode & setabi actions */
+    async deployContractActions(
+        account: NameType,
+        wasmFileContent: string | Buffer,
+        abiFileContent: string | Buffer,
+        authOverride?: PermissionLevelType | PermissionLevelType[]
+    ): Promise<Action[]> {
+        const wasmHex = wasmFileContent.toString('hex');
+        const abiJson = JSON.parse(abiFileContent.toString());
+        const abiDef = ABI.from(abiJson);
+        const abiHex = Serializer.encode({ object: abiDef }).hexString;
+
+        let auth: ActionOptions | undefined;
+
+        if (authOverride) {
+            auth = { authorization: Array.isArray(authOverride) ? authOverride : [authOverride] };
+        }
+
+        const setCode = this.actions.setCode({ account, vmtype: 0, vmversion: 0, code: wasmHex }, auth);
+        const setAbi = this.actions.setAbi({ account, abi: abiHex }, auth);
+
+        return [setCode, setAbi];
+    }
+
+    /** deploy via transact */
     async deployContract(
-        account: Name,
-        wasmFileContent: any,
-        abiFileContent: any,
+        account: NameType,
+        wasmFileContent: string | Buffer,
+        abiFileContent: string | Buffer,
         signer: Signer | Signer[],
-        options: { extraAuthorization?: { actor: string; permission: string } } = {}
+        authOverride?: PermissionLevelType | PermissionLevelType[]
     ): Promise<API.v1.PushTransactionResponse> {
-        // 1. Prepare SETCODE
-        // read the file and make a hex string out of it
-        const wasm = wasmFileContent.toString(`hex`);
+        const actions = await this.deployContractActions(account, wasmFileContent, abiFileContent, authOverride);
 
-        // 2. Prepare SETABI
-        const abi = JSON.parse(abiFileContent);
-        const abiDef = ABI.from(abi);
-        const abiSerializedHex = Serializer.encode({ object: abiDef }).hexString;
-
-        // 3. Send transaction with both setcode and setabi actions
-        const setCodeAction = {
-            account: CONTRACT_NAME,
-            name: 'setcode',
-            authorization: [
-                {
-                    actor: account.toString(),
-                    permission: 'active',
-                },
-            ],
-            data: {
-                account: account.toString(),
-                vmtype: 0,
-                vmversion: 0,
-                code: wasm,
-            },
-        };
-
-        if (options.extraAuthorization) setCodeAction.authorization.push(options.extraAuthorization);
-        const setAbiAction = {
-            account: CONTRACT_NAME,
-            name: 'setabi',
-            authorization: [
-                {
-                    actor: account.toString(),
-                    permission: 'active',
-                },
-            ],
-            data: {
-                account,
-                abi: abiSerializedHex,
-            },
-        };
-
-        if (options.extraAuthorization) setAbiAction.authorization.push(options.extraAuthorization);
-        const actions = [setCodeAction, setAbiAction];
-
-        return await transact(Name.from(CONTRACT_NAME), actions, signer);
+        return transact(actions, signer);
     }
 
-    async updateauth(
-        account: string,
-        permission: string,
-        parent: string,
-        auth: Authority,
+    async newAccount(
+        creator: NameType,
+        name: NameType,
+        owner: AuthorityType,
+        active: AuthorityType,
+        signer: Signer | Signer[]
+    ): Promise<API.v1.PushTransactionResponse> {
+        const action = this.actions.newAccount({ creator, name, owner, active });
+
+        return transact(action, signer);
+    }
+
+    async updateAuth(
+        account: NameType,
+        permission: NameType,
+        parent: NameType,
+        auth: AuthorityType,
         signer: Signer,
         options: { authParent?: boolean } = {}
     ): Promise<API.v1.PushTransactionResponse> {
-        const action = {
-            authorization: [
-                {
-                    actor: GOVERNANCE_ACCOUNT_NAME,
-                    permission: 'active',
-                },
-                {
-                    actor: account,
-                    permission: parent, // all higher parents, and permission, work as authorization. though permission is supposed to be the authorization that works
-                },
-            ],
-            account: CONTRACT_NAME,
-            name: 'updateauth',
-            data: {
-                account,
-                permission,
-                parent: permission === 'owner' ? '' : parent,
-                auth,
-                auth_parent: options.authParent ?? false, // should be true when a new permission is being created, otherwise false
-            },
-        };
+        const action = this.actions.updateAuth({
+            account,
+            permission,
+            parent,
+            auth,
+            authParent: options.authParent,
+        });
 
-        return await transact(Name.from(CONTRACT_NAME), [action], signer);
+        return transact(action, signer);
     }
 
-    /**
-     * @param account - the permission's owner to be linked and the payer of the RAM needed to store this link,
-     * @param code - the owner of the action to be linked,
-     * @param type - the action to be linked,
-     * @param requirement - the permission to be linked.
-     */
     async linkAuth(
-        account: string,
-        code: string,
-        type: string,
-        requirement: string,
+        account: NameType,
+        code: NameType,
+        type: NameType,
+        requirement: NameType,
         signer: Signer
     ): Promise<API.v1.PushTransactionResponse> {
-        const action = {
-            authorization: [
-                {
-                    actor: account,
-                    permission: 'active',
-                },
-            ],
-            account: CONTRACT_NAME,
-            name: 'linkauth',
-            data: {
-                account,
-                code,
-                type,
-                requirement,
-            },
-        };
+        const action = this.actions.linkAuth({ account, code, type, requirement });
 
-        return await transact(Name.from(CONTRACT_NAME), [action], signer);
+        return transact(action, signer);
     }
 
-    async setpriv(account: string, isPriv: number, signer: Signer): Promise<API.v1.PushTransactionResponse> {
-        const action = {
-            authorization: [
-                {
-                    actor: GOVERNANCE_ACCOUNT_NAME,
-                    permission: 'active',
-                },
-                {
-                    actor: account,
-                    permission: 'active',
-                },
-            ],
-            account: CONTRACT_NAME,
-            name: 'setpriv',
-            data: {
-                account,
-                is_priv: isPriv,
-            },
-        };
+    async setPriv(account: NameType, isPriv: number, signer: Signer): Promise<API.v1.PushTransactionResponse> {
+        const action = this.actions.setPriv({ account, isPriv });
 
-        return await transact(Name.from(CONTRACT_NAME), [action], signer);
+        return transact(action, signer);
     }
 }
 
-export function getTonomyEosioProxyContract(): TonomyEosioProxyContract {
-    return TonomyEosioProxyContract.Instance;
-}
+let tonomyEosioProxyContract: TonomyEosioProxyContract | undefined;
+
+export const getTonomyEosioProxyContract = () => {
+    if (!tonomyEosioProxyContract) {
+        tonomyEosioProxyContract = TonomyEosioProxyContract.fromAbi(abi);
+    }
+
+    return tonomyEosioProxyContract;
+};

@@ -2,7 +2,7 @@ import { IdentityVerificationStorageRepository } from './identityVerificationSto
 import { VeriffStatusEnum } from '../types/VeriffStatusEnum';
 import { VerificationTypeEnum } from '../types/VerificationTypeEnum';
 import { DataSource } from 'typeorm';
-import { castStringToCredential, PersonCredentialType } from '../util';
+import { castStringToCredential, PersonCredentialType } from '../util/veriff';
 
 export class IdentityVerificationStorageManager {
     protected repository: IdentityVerificationStorageRepository;

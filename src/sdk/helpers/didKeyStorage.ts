@@ -1,6 +1,7 @@
 import { KeyManager, KeyManagerLevel } from '../storage/keymanager';
 import { Issuer } from 'did-jwt-vc';
-import { JsKeyManager, createVCSigner, generateRandomKeyPair } from '..';
+import { JsKeyManager } from '../storage/jsKeyManager';
+import { createVCSigner, generateRandomKeyPair } from '../util/crypto';
 import { toDidKey, toDidKeyIssuer } from '../util/ssi/did-key';
 
 export async function createDidKeyIssuerAndStore(keyManager: KeyManager = new JsKeyManager()): Promise<Issuer> {

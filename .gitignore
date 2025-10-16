@@ -3,6 +3,7 @@
 node_modules
 build
 site
+.env.test
 .yarn
 .pnp.*
 database.sqlite
