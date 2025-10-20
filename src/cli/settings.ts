@@ -100,7 +100,7 @@ const productionConfig = {
     currencySymbol: 'TONO',
     baseNetwork: 'base' as const,
     baseRpcUrl: 'https://base.infura.io/v3/' + process.env.INFURA_API_KEY,
-    baseTokenAddress: 'TODO:',
+    baseTokenAddress: '0x36a0E9d5bb7322b26185D76Fb3fce46a40007e90',
 };
 
 type SettingsType = {
