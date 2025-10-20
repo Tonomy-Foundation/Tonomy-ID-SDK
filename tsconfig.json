@@ -18,7 +18,7 @@
         "declarationDir": "./build/sdk/types",
         "strict": true,
         "noImplicitReturns": true,
-        // "isolatedModules": true, // TODO: Enable this and fix errors
+        "isolatedModules": true,
         "allowSyntheticDefaultImports": true,
         "moduleResolution": "bundler",
         "paths": {
@@ -29,6 +29,7 @@
         "types": [
             "jest"
         ],
+        "resolveJsonModule": true,
         "noFallthroughCasesInSwitch": true,
         "noUnusedLocals": true,
         "noUnusedParameters": true,
@@ -36,7 +37,8 @@
         "esModuleInterop": true,
         "skipLibCheck": true,
         "forceConsistentCasingInFileNames": true,
-        "strictPropertyInitialization": false
+        "strictPropertyInitialization": false,
+        "resolveJsonModule": true,
     },
     "include": ["src", "test"],
     "exclude": [

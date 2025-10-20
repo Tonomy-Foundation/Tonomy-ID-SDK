@@ -39,14 +39,49 @@ function setup {
     if [ ! -d "node_modules" ]; then
         yarn install
     fi
+
+
+    # Install dependencies Ethereum-token
+    cd "${SDK_DIR}/Ethereum-token"
+    if [ ! -d "node_modules" ]; then
+        yarn install
+    fi
+    if [ ! -d "artifacts" ]; then
+        yarn run compile
+    fi
+}
+
+function export_variables {
+    # For development environment use set keys, otherwise these should be set in the environment
+    cd  "$SDK_DIR"
+    if [[ "${NODE_ENV:-development}" == "development" ]]
+    then
+        echo "Using development environment: setting keys"
+        source ./test/export_test_keys.sh
+    fi
 }
 
 function start {
+    export_variables
+    
     # Run blockchain node
     cd "${SDK_DIR}"
     docker run -p 8888:8888 --name tonomy_blockchain_integration -d tonomy_blockchain_initialized
     echo "Waiting 8 seconds for blockchain node to start"
     sleep 8
+
+    # Run Ethereum node and deploy contract
+    cd  "$SDK_DIR/Ethereum-token"
+    npx pm2 stop hardhat || true
+    npx pm2 delete hardhat || true
+    npx pm2 start --interpreter /bin/bash yarn --name "hardhat" -- run node
+    DEPLOY_OUTPUT=$(yarn run deploy --network localhost)
+    echo "$DEPLOY_OUTPUT"
+    BASE_TOKEN_ADDRESS=$(echo "$DEPLOY_OUTPUT" | grep "Proxy contract:" | awk '{print $3}')
+    export BASE_TOKEN_ADDRESS
+    cd "$SDK_DIR"
+    echo "BASE_TOKEN_ADDRESS=$BASE_TOKEN_ADDRESS" > .env.test
+    echo "Token proxy contract address: $BASE_TOKEN_ADDRESS"
 
     # Run Communication server
     cd  "$SDK_DIR/Tonomy-Communication"
@@ -58,6 +93,8 @@ function start {
 }
 
 function bootstrap {
+    export_variables
+    
     echo "WARNING: Make sure you have built the smart contract with:"
     echo "export BUILD_TEST=true"
     echo "./Tonomy-Contracts/delete-built-contracts.sh"
@@ -66,14 +103,6 @@ function bootstrap {
 
     # Run bootstrap script
     cd "$SDK_DIR"
-
-    # For development environment use set keys, otherwise these should be set in the environment
-    NODE_ENV="${NODE_ENV:-development}"
-    if [[ "${NODE_ENV}" == "development" ]]
-    then
-        echo "Using development environment: setting keys"
-        source ./test/export_test_keys.sh
-    fi
     yarn run cli bootstrap
 }
 
@@ -85,6 +114,11 @@ function stop {
     # Stop Communication server
     npx pm2 stop micro || true
     npx pm2 delete micro || true
+
+
+    # Stop Ethereum node
+    npx pm2 stop hardhat || true
+    npx pm2 delete hardhat || true
 }
 
 function help {

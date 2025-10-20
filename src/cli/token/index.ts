@@ -1,20 +1,22 @@
 /* eslint-disable no-console */
-/* eslint-disable camelcase */
-import { Name, PrivateKey } from '@wharfkit/antelope';
-import { AccountType, TonomyUsername, EosioTokenContract, setSettings } from '../../sdk';
+
+import { PrivateKey } from '@wharfkit/antelope';
+import { AccountType, TonomyUsername, setSettings } from '../../sdk';
 import {
     amountToSupplyPercentage,
-    AppTableRecord,
     assetToAmount,
     assetToDecimal,
     createSigner,
     getAccount,
-    getAccountNameFromUsername,
-    GetPersonResponse,
     vestingCategories as vestingCategoriesList,
+    getTokenContract,
     getTonomyContract,
+    EosioTokenContract,
+    PersonData,
+    getAccountNameFromUsername,
+    AppData2,
+    getVestingContract,
 } from '../../sdk/services/blockchain';
-import { getApi } from '../../sdk/services/blockchain/eosio/eosio';
 import settings from '../settings';
 import {
     foundAccount,
@@ -24,9 +26,6 @@ import {
     systemAccount,
 } from '../bootstrap';
 import Decimal from 'decimal.js';
-import { getAllAllocations } from '../vesting';
-
-const tokenContract = EosioTokenContract.Instance;
 
 export async function transfer(args: string[]) {
     const privateKey = PrivateKey.from(process.env.SIGNING_KEY || '');
@@ -60,7 +59,7 @@ export async function transfer(args: string[]) {
         memo,
     });
 
-    const res = await tokenContract.transfer(sender, recipient, quantity, memo, signer);
+    const res = await getTokenContract().transfer(sender, recipient, quantity, memo, signer);
 
     console.log('Transaction ID: ', JSON.stringify(res, null, 2));
 }
@@ -97,7 +96,7 @@ export async function audit() {
     const bootstrappedData = (
         await Promise.all(
             Array.from(bootstrappedAccounts).map(async (account) => {
-                const balance = await tokenContract.getBalanceDecimal(account);
+                const balance = await getTokenContract().getBalanceDecimal(account);
 
                 return {
                     account,
@@ -127,16 +126,16 @@ export async function audit() {
     console.log('');
     console.log('Fetching apps tokens');
 
-    const apps = await getTonomyContract().getApps();
+    const apps = await getTonomyContract().getAllApps();
 
     const appAccounts: AccountBalance[] = (
         await Promise.all(
             apps.map(async (app) => {
-                const balance = await tokenContract.getBalanceDecimal(app.account_name);
-                const account = await getAccount(app.account_name);
+                const balance = await getTokenContract().getBalanceDecimal(app.accountName);
+                const account = await getAccount(app.accountName);
 
                 return {
-                    account: app.account_name.toString(),
+                    account: app.accountName.toString(),
                     description: app.description,
                     tokens: balance,
                     vested: ZERO_DECIMAL,
@@ -165,7 +164,7 @@ export async function audit() {
 
     console.log('');
     console.log('Fetching people tokens');
-    const people = await getAllPeople();
+    const people = await getTonomyContract().getAllPeople();
 
     const peopleAccounts: AccountBalance[] = [];
     const batchSize = 100;
@@ -175,10 +174,10 @@ export async function audit() {
 
         const batchResults: AccountBalance[] = await Promise.all(
             batch.map(async (person) => {
-                const balance = await tokenContract.getBalanceDecimal(person.account_name);
+                const balance = await getTokenContract().getBalanceDecimal(person.accountName);
 
                 return {
-                    account: person.account_name.toString(),
+                    account: person.accountName.toString(),
                     description: person.status,
                     tokens: balance,
                     vested: ZERO_DECIMAL,
@@ -211,13 +210,13 @@ export async function audit() {
     console.log('Fetching vested tokens');
     // const vestingHolders = await getAllUniqueHolders();
     const vestingHolders = people.reduce<Set<string>>((previous, person) => {
-        previous.add(person.account_name.toString());
+        previous.add(person.accountName.toString());
         return previous;
     }, new Set<string>());
-    const vestingAllocations = await getAllAllocations(vestingHolders, false);
+    const vestingAllocations = await getVestingContract().getAllAllocations(vestingHolders, false);
     const vestingCategories = vestingAllocations.reduce<number[]>((previous, allocation) => {
-        if (previous.includes(allocation.vesting_category_type)) return previous;
-        else return [...previous, allocation.vesting_category_type];
+        if (previous.includes(allocation.vestingCategoryType)) return previous;
+        else return [...previous, allocation.vestingCategoryType];
     }, []);
     const vestedTokensPerCategory = vestingCategories.reduce<Map<number, Decimal>>(
         (map, category) => map.set(category, new Decimal(0)),
@@ -225,16 +224,16 @@ export async function audit() {
     );
 
     for (const allocation of vestingAllocations) {
-        const categoryTokens = vestedTokensPerCategory.get(allocation.vesting_category_type);
+        const categoryTokens = vestedTokensPerCategory.get(allocation.vestingCategoryType);
 
         if (!categoryTokens) throw new Error('categoryTokens undefined');
-        const allocationTokens = assetToDecimal(allocation.tokens_allocated);
+        const allocationTokens = assetToDecimal(allocation.tokensAllocated);
 
-        vestedTokensPerCategory.set(allocation.vesting_category_type, categoryTokens.add(allocationTokens));
+        vestedTokensPerCategory.set(allocation.vestingCategoryType, categoryTokens.add(allocationTokens));
     }
 
     const totalVested = vestingAllocations.reduce(
-        (previous, allocation) => (previous += assetToAmount(allocation.tokens_allocated)),
+        (previous, allocation) => (previous += assetToAmount(allocation.tokensAllocated)),
         0
     );
 
@@ -261,22 +260,25 @@ export async function audit() {
 async function checkMissedVestingAllocations(
     bootstrappedAccounts: Set<string>,
     vestingHolders: Set<string>,
-    apps: AppTableRecord[],
-    people: GetPersonResponse[]
+    apps: AppData2[],
+    people: PersonData[]
 ) {
     console.log('');
     console.log('Checking if any people have allocations that were not considered above');
     const peopleNotInVestingHolders: Set<string> = new Set();
 
     for (const person of people) {
-        if (!vestingHolders.has(person.account_name.toString())) {
-            peopleNotInVestingHolders.add(person.account_name.toString());
+        if (!vestingHolders.has(person.accountName.toString())) {
+            peopleNotInVestingHolders.add(person.accountName.toString());
         }
     }
 
-    const peopleNotInVestingHoldersAllocations = await getAllAllocations(peopleNotInVestingHolders, true);
+    const peopleNotInVestingHoldersAllocations = await getVestingContract().getAllAllocations(
+        peopleNotInVestingHolders,
+        true
+    );
     const totalPeopleNotInVestingHolders = peopleNotInVestingHoldersAllocations.reduce(
-        (previous, allocation) => assetToDecimal(allocation.tokens_allocated).add(previous),
+        (previous, allocation) => assetToDecimal(allocation.tokensAllocated).add(previous),
         ZERO_DECIMAL
     );
     const uniquePeopleNotInVestingHolders = peopleNotInVestingHoldersAllocations.reduce((previous, allocation) => {
@@ -301,14 +303,17 @@ async function checkMissedVestingAllocations(
     const appsNotInVestingHolders: Set<string> = new Set();
 
     for (const app of apps) {
-        if (!vestingHolders.has(app.account_name.toString())) {
-            appsNotInVestingHolders.add(app.account_name.toString());
+        if (!vestingHolders.has(app.accountName.toString())) {
+            appsNotInVestingHolders.add(app.accountName.toString());
         }
     }
 
-    const appsNotInVestingHoldersAllocations = await getAllAllocations(appsNotInVestingHolders, true);
+    const appsNotInVestingHoldersAllocations = await getVestingContract().getAllAllocations(
+        appsNotInVestingHolders,
+        true
+    );
     const totalAppsNotInVestingHolders = appsNotInVestingHoldersAllocations.reduce(
-        (previous, allocation) => assetToDecimal(allocation.tokens_allocated).add(previous),
+        (previous, allocation) => assetToDecimal(allocation.tokensAllocated).add(previous),
         ZERO_DECIMAL
     );
     const uniqueAppsNotInVestingHolders = appsNotInVestingHoldersAllocations.reduce((previous, allocation) => {
@@ -338,9 +343,12 @@ async function checkMissedVestingAllocations(
         }
     }
 
-    const bootstrappedNotInVestingHoldersAllocations = await getAllAllocations(bootstrappedNotInVestingHolders, true);
+    const bootstrappedNotInVestingHoldersAllocations = await getVestingContract().getAllAllocations(
+        bootstrappedNotInVestingHolders,
+        true
+    );
     const totalBootstrappedNotInVestingHolders = bootstrappedNotInVestingHoldersAllocations.reduce(
-        (previous, allocation) => assetToDecimal(allocation.tokens_allocated).add(previous),
+        (previous, allocation) => assetToDecimal(allocation.tokensAllocated).add(previous),
         ZERO_DECIMAL
     );
     const uniqueBootstrappedNotInVestingHolders = bootstrappedNotInVestingHoldersAllocations.reduce(
@@ -362,45 +370,4 @@ async function checkMissedVestingAllocations(
         ).padStart(10)})`
     );
     console.log('Unique bootstrapped accounts not in vesting holders: ', uniqueBootstrappedNotInVestingHolders.length);
-}
-
-export async function getAllPeople(print = false): Promise<GetPersonResponse[]> {
-    const api = await getApi();
-
-    const limit = 100;
-    let lowerBound = Name.from('1');
-    let peopleFound = 0;
-
-    const people: GetPersonResponse[] = [];
-
-    do {
-        if (print) console.log(`get_table_rows: people, ${limit}, ${lowerBound.toString()}`);
-        const data = await api.v1.chain.get_table_rows({
-            code: 'tonomy',
-            scope: 'tonomy',
-            table: 'people',
-            limit,
-            lower_bound: lowerBound,
-        });
-
-        const rows = data.rows;
-
-        peopleFound = rows.length;
-
-        people.push(
-            ...rows.map((row) => {
-                return {
-                    account_name: row.account_name,
-                    status: row.status,
-                    username_hash: row.username_hash,
-                    password_salt: row.password_salt,
-                    version: row.version,
-                };
-            })
-        );
-
-        lowerBound = Name.from(rows[rows.length - 1].account_name);
-    } while (peopleFound === limit);
-
-    return people;
 }

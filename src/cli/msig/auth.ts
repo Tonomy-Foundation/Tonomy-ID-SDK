@@ -1,4 +1,4 @@
-import { ActionData, Authority } from '../../sdk/services/blockchain';
+import { Authority, getTonomyEosioProxyContract } from '../../sdk/services/blockchain';
 import { StandardProposalOptions, createProposal, executeProposal } from '.';
 import { Name } from '@wharfkit/antelope';
 import { getAccountInfo } from '../../sdk';
@@ -18,34 +18,13 @@ export async function updateAuth(options: StandardProposalOptions) {
     newAuthority.addAccount({ actor: newDelegate, permission: 'active' });
     // const newAuthority = Authority.fromAccount({ actor: 'found.tmy', permission: 'active' });
 
-    const authPermission = (useParentAuth ?? false) ? perm.parent.toString() : permission;
-
-    const action: ActionData = {
-        account: 'tonomy',
-        name: 'updateauth',
-        authorization: [
-            {
-                actor: account,
-                permission: authPermission,
-            },
-            {
-                actor: 'tonomy',
-                permission: 'active',
-            },
-            // {
-            //     actor: 'tonomy',
-            //     permission: 'owner',
-            // },
-        ],
-        data: {
-            account,
-            permission,
-            parent: perm.parent,
-            auth: newAuthority,
-            // eslint-disable-next-line camelcase
-            auth_parent: useParentAuth ?? false,
-        },
-    };
+    const action = getTonomyEosioProxyContract().actions.updateAuth({
+        account,
+        permission,
+        parent: perm.parent,
+        auth: newAuthority,
+        authParent: useParentAuth ?? false,
+    });
 
     // const requested = [...options.requested, { actor: account, permission: authPermission }];
     const requested = options.requested;
@@ -58,8 +37,8 @@ export async function updateAuth(options: StandardProposalOptions) {
         options.dryRun
     );
 
-    if (options.dryRun) return;
-    if (options.autoExecute) await executeProposal(options.proposer, options.proposalName, proposalHash);
+    if (!options.dryRun && options.autoExecute)
+        await executeProposal(options.proposer, options.proposalName, proposalHash);
 }
 
 export async function addEosioCode(options: StandardProposalOptions) {
@@ -81,59 +60,25 @@ export async function addEosioCode(options: StandardProposalOptions) {
         ownerAuthority.addCodePermission('vesting.tmy');
         ownerAuthority.addCodePermission('staking.tmy');
 
-        actions.push({
-            account: 'tonomy',
-            name: 'updateauth',
-            authorization: [
-                {
-                    actor: account,
-                    permission: 'owner',
-                },
-                {
-                    actor: 'tonomy',
-                    permission: 'active',
-                },
-                {
-                    actor: 'tonomy',
-                    permission: 'owner',
-                },
-            ],
-            data: {
-                account: account,
+        actions.push(
+            getTonomyEosioProxyContract().actions.updateAuth({
+                account,
                 permission: 'owner',
                 parent: '',
                 auth: ownerAuthority,
-                // eslint-disable-next-line camelcase
-                auth_parent: false,
-            },
-        });
+                authParent: false,
+            })
+        );
 
-        actions.push({
-            account: 'tonomy',
-            name: 'updateauth',
-            authorization: [
-                {
-                    actor: account,
-                    permission: 'active',
-                },
-                {
-                    actor: 'tonomy',
-                    permission: 'active',
-                },
-                {
-                    actor: 'tonomy',
-                    permission: 'owner',
-                },
-            ],
-            data: {
-                account: account,
+        actions.push(
+            getTonomyEosioProxyContract().actions.updateAuth({
+                account,
                 permission: 'active',
                 parent: 'owner',
                 auth: activeAuthority,
-                // eslint-disable-next-line camelcase
-                auth_parent: false,
-            },
-        });
+                authParent: false,
+            })
+        );
     }
 
     const proposalHash = await createProposal(
@@ -145,34 +90,19 @@ export async function addEosioCode(options: StandardProposalOptions) {
         options.dryRun
     );
 
-    if (options.dryRun) return;
-    if (options.autoExecute) await executeProposal(options.proposer, options.proposalName, proposalHash);
+    if (!options.dryRun && options.autoExecute)
+        await executeProposal(options.proposer, options.proposalName, proposalHash);
 }
 
 export async function govMigrate(args: { newGovernanceAccounts: string[] }, options: StandardProposalOptions) {
     const threshold = settings.isProduction() ? 3 : 2;
-    const action = {
-        account: 'tonomy',
-        name: 'updateauth',
-        authorization: [
-            {
-                actor: 'tonomy',
-                permission: 'active',
-            },
-            {
-                actor: 'tonomy',
-                permission: 'owner',
-            },
-        ],
-        data: {
-            account: 'found.tmy',
-            permission: 'owner',
-            parent: '',
-            auth: Authority.fromAccountArray(args.newGovernanceAccounts, 'active', threshold),
-            // eslint-disable-next-line camelcase
-            auth_parent: false, // should be true when a new permission is being created, otherwise false
-        },
-    };
+    const action = getTonomyEosioProxyContract().actions.updateAuth({
+        account: 'found.tmy',
+        permission: 'owner',
+        parent: '',
+        auth: Authority.fromAccountArray(args.newGovernanceAccounts, 'active', threshold),
+        authParent: false,
+    });
 
     const proposalHash = await createProposal(
         options.proposer,
@@ -183,6 +113,6 @@ export async function govMigrate(args: { newGovernanceAccounts: string[] }, opti
         options.dryRun
     );
 
-    if (options.dryRun) return;
-    if (options.autoExecute) await executeProposal(options.proposer, options.proposalName, proposalHash);
+    if (!options.dryRun && options.autoExecute)
+        await executeProposal(options.proposer, options.proposalName, proposalHash);
 }

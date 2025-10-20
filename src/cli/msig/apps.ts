@@ -1,9 +1,15 @@
-/* eslint-disable camelcase */
-import { ActionData, Authority, bytesToTokens, getApi } from '../../sdk/services/blockchain';
+import {
+    Authority,
+    bytesToTokens,
+    createAppJsonDataString,
+    getApi,
+    getTonomyContract,
+    getTonomyEosioProxyContract,
+} from '../../sdk/services/blockchain';
 import { StandardProposalOptions, createProposal, executeProposal } from '.';
 import { deployContract } from './contract';
 import { AccountType, getSettings, TonomyUsername } from '../../sdk';
-import { Name } from '@wharfkit/antelope';
+import { Checksum256Type, Name, NameType } from '@wharfkit/antelope';
 
 const logoUrl = 'https://ipfs.hivebp.io/ipfs/Qmexh5r5zJ7Us4Wm3tgedDSHss5t7DrDD8bDRLhz9eQi46';
 const ownerKey = 'EOS5SdLniuD3aBn4pXpKchefT8kdFvkSBoGP91iMPhQEzwKBexobn';
@@ -89,23 +95,15 @@ function createProposalName(proposalName: Name, suffix: string, index?: number):
 // MSIG 1: Create accounts for apps
 export async function createAccounts(options: StandardProposalOptions) {
     function createNewAccountAction(name: string, active: Authority, owner: Authority) {
-        return {
-            account: 'tonomy',
-            name: 'newaccount',
-            authorization: [
-                { actor: 'tonomy', permission: 'owner' },
-                { actor: 'tonomy', permission: 'active' },
-            ],
-            data: {
-                creator: 'tonomy',
-                name,
-                owner,
-                active,
-            },
-        };
+        return getTonomyEosioProxyContract().actions.newAccount({
+            creator: 'tonomy',
+            name,
+            owner,
+            active,
+        });
     }
 
-    const actions: ActionData[] = apps.map((app) => {
+    const actions = apps.map((app) => {
         const active = Authority.fromKey(app.activeKey).addAccount({ actor: 'gov.tmy', permission: 'active' });
         const owner = Authority.fromKey(app.ownerKey).addAccount({ actor: 'gov.tmy', permission: 'active' });
 
@@ -121,45 +119,31 @@ export async function createAccounts(options: StandardProposalOptions) {
         options.dryRun
     );
 
-    if (options.dryRun) return;
-    if (options.autoExecute) await executeProposal(options.proposer, proposalName, proposalHash);
+    if (!options.dryRun && options.autoExecute) await executeProposal(options.proposer, proposalName, proposalHash);
 }
 
 // MSIG 2: Set accounts as apps, transfer TONO, buy RAM
 export async function setAppsAndRam(options: StandardProposalOptions) {
-    const actions: ActionData[] = apps.flatMap((app) => {
+    const actions = apps.flatMap((app) => {
         const tonomyUsername = TonomyUsername.fromUsername(app.username, AccountType.APP, getSettings().accountSuffix);
         const tokens = bytesToTokens(app.ramKb * 1000);
-        const adminSetAppAction = {
-            authorization: [{ actor: 'tonomy', permission: 'active' }],
-            account: 'tonomy',
-            name: 'adminsetapp',
-            data: {
-                account_name: Name.from(app.account),
-                json_data: JSON.stringify({
-                    app_name: app.appName,
-                    description: app.description,
-                    logo_url: app.logoUrl,
-                    background_color: app.backgroundColor,
-                    accent_color: app.accentColor,
-                }),
-                username_hash: tonomyUsername.usernameHash,
-                origin: app.origin,
-            },
-        };
-        const buyRamAction = {
-            account: 'tonomy',
-            name: 'buyram',
-            authorization: [
-                { actor: app.account, permission: 'active' },
-                { actor: 'partners.tmy', permission: 'active' },
-            ],
-            data: {
-                dao_owner: 'partners.tmy',
-                app: app.account,
-                quant: tokens,
-            },
-        };
+        const adminSetAppAction = getTonomyContract().actions.adminSetApp({
+            accountName: app.account,
+            jsonData: createAppJsonDataString(
+                app.appName,
+                app.description,
+                app.logoUrl,
+                app.backgroundColor,
+                app.accentColor
+            ),
+            usernameHash: tonomyUsername.usernameHash,
+            origin: app.origin,
+        });
+        const buyRamAction = getTonomyContract().actions.buyRam({
+            daoOwner: 'partners.tmy',
+            app: app.account,
+            quant: tokens,
+        });
 
         return [adminSetAppAction, buyRamAction];
     });
@@ -173,8 +157,7 @@ export async function setAppsAndRam(options: StandardProposalOptions) {
         options.dryRun
     );
 
-    if (options.dryRun) return;
-    if (options.autoExecute) await executeProposal(options.proposer, proposalName, proposalHash);
+    if (!options.dryRun && options.autoExecute) await executeProposal(options.proposer, proposalName, proposalHash);
 }
 
 // MSIG 3: Deploy contracts for apps
@@ -216,30 +199,12 @@ export async function newApp(options: StandardProposalOptions) {
     const username = TonomyUsername.fromUsername(usernameShort, AccountType.APP, getSettings().accountSuffix);
     const key = 'EOS4xnrCGUT688wFvinQoCuiu7E3Qpn8Phq76TRKNTb87XFMjzsJu';
 
-    const action = {
-        account: 'tonomy',
-        name: 'newapp',
-        authorization: [
-            {
-                actor: 'tonomy',
-                permission: 'owner',
-            },
-            {
-                actor: 'tonomy',
-                permission: 'active',
-            },
-        ],
-        data: {
-            app_name: appName,
-            description,
-
-            logo_url: logoUrl,
-            origin: origin,
-
-            username_hash: username.usernameHash,
-            key,
-        },
-    };
+    const action = getTonomyContract().actions.newApp({
+        jsonData: createAppJsonDataString(appName, description, logoUrl, '#444444', '#D19836'),
+        usernameHash: username.usernameHash,
+        origin,
+        key,
+    });
 
     const proposalHash = await createProposal(
         options.proposer,
@@ -250,8 +215,8 @@ export async function newApp(options: StandardProposalOptions) {
         options.dryRun
     );
 
-    if (options.dryRun) return;
-    if (options.autoExecute) await executeProposal(options.proposer, options.proposalName, proposalHash);
+    if (!options.dryRun && options.autoExecute)
+        await executeProposal(options.proposer, options.proposalName, proposalHash);
 }
 
 const CONTRACT_NAME = 'tonomy';
@@ -292,44 +257,18 @@ export async function migrateApps(options: StandardProposalOptions) {
 
         console.log(`Migrating app: ${row.app_name}`);
 
-        const json_data = JSON.stringify({
-            app_name: row.app_name,
-            description: row.description,
-            logo_url: row.logo_url,
-            background_color: background,
-            accent_color: branding,
-        });
-
-        actions.push({
-            authorization: [
-                {
-                    actor: CONTRACT_NAME,
-                    permission: 'active',
-                },
-            ],
-            account: CONTRACT_NAME,
-            name: 'adminsetapp',
-            data: {
-                account_name: row.account_name,
-                json_data,
-                username_hash: row.username_hash,
+        actions.push(
+            getTonomyContract().actions.adminSetApp({
+                accountName: row.account_name,
+                jsonData: createAppJsonDataString(row.app_name, row.description, row.logo_url, background, branding),
+                usernameHash: row.username_hash,
                 origin: row.origin,
-            },
-        });
+            })
+        );
     }
 
     // Step 3: Optionally, clear the old table entries
-    const eraseAppAction = {
-        account: CONTRACT_NAME,
-        name: 'eraseoldapps',
-        authorization: [
-            {
-                actor: CONTRACT_NAME,
-                permission: 'owner',
-            },
-        ],
-        data: {},
-    };
+    const eraseAppAction = getTonomyContract().actions.eraseOldApps();
 
     const proposalHash = await createProposal(
         options.proposer,
@@ -340,6 +279,119 @@ export async function migrateApps(options: StandardProposalOptions) {
         options.dryRun
     );
 
-    if (options.dryRun) return;
-    if (options.autoExecute) await executeProposal(options.proposer, options.proposalName, proposalHash);
+    if (!options.dryRun && options.autoExecute)
+        await executeProposal(options.proposer, options.proposalName, proposalHash);
+}
+
+export async function adminSetApps(options: StandardProposalOptions) {
+    const appsToSet: {
+        accountName: NameType;
+        jsonData: string;
+        usernameHash: Checksum256Type;
+        origin: string;
+    }[] = [
+        {
+            accountName: 'login.hypha',
+            jsonData: createAppJsonDataString(
+                'Hypha LOGIN',
+                'Hypha login contract',
+                'https://hypha.earth/wp-content/themes/hypha2023/img/logos/logo-white.svg',
+                '#251950',
+                '#BA54D3'
+            ),
+            usernameHash: '87c0b673703d9b4c8f7466898da956f256f242694de0a646544e5ccec2a2702b',
+            origin: 'https://login.pangea-test.hypha.earth',
+        },
+        {
+            accountName: 'staking.tmy',
+            jsonData: createAppJsonDataString(
+                'TONO Staking',
+                'TONO Staking contract',
+                'https://staking.accounts.testnet.tonomy.io/tonomy-logo1024.png',
+                '#251950',
+                '#BA54D3'
+            ),
+            usernameHash: 'cf2759aeeaa06d48d83f484cfdcc7a6291fb1edc1e099c09a4e7b7299a6fb66c',
+            origin: 'https://staking.accounts.testnet.tonomy.io',
+        },
+        {
+            accountName: 'tonomy',
+            jsonData: createAppJsonDataString(
+                'Tonomy System',
+                'Tonomy system contract',
+                'https://tonomy.accounts.testnet.tonomy.io/tonomy-logo1024.png',
+                '#251950',
+                '#BA54D3'
+            ),
+            usernameHash: 'e4df80a04452a582641a7a8ac274bd75558548b2c763e2bf31daade9b50b3726',
+            origin: 'https://tonomy.accounts.testnet.tonomy.io',
+        },
+        {
+            accountName: 'vesting.tmy',
+            jsonData: createAppJsonDataString(
+                'TONO Vesting',
+                'TONO Vesting contract',
+                'https://vesting.accounts.testnet.tonomy.io/tonomy-logo1024.png',
+                '#251950',
+                '#BA54D3'
+            ),
+            usernameHash: 'c6627d00b6f9b8e1fc57b27cb5234f0688b421ebff9901f882f922cf4c0df4ab',
+            origin: 'https://vesting.accounts.testnet.tonomy.io',
+        },
+        {
+            accountName: 'voice.hypha',
+            jsonData: createAppJsonDataString(
+                'Hypha VOICE',
+                'Hypha voice contract',
+                'https://hypha.earth/wp-content/themes/hypha2023/img/logos/logo-white.svg',
+                '#251950',
+                '#BA54D3'
+            ),
+            usernameHash: 'c642063d72beb6f074dfabc4c4e76e0fa9dd7cd6a8a1bfc257c4b3dcd8cd6d53',
+            origin: 'https://voice.pangea-test.hypha.earth',
+        },
+    ];
+
+    const actions = appsToSet.map((app) =>
+        getTonomyContract().actions.adminSetApp({
+            accountName: app.accountName,
+            jsonData: app.jsonData,
+            usernameHash: app.usernameHash,
+            origin: app.origin,
+        })
+    );
+
+    const proposalHash = await createProposal(
+        options.proposer,
+        options.proposalName,
+        actions,
+        options.privateKey,
+        options.requested,
+        options.dryRun
+    );
+
+    if (!options.dryRun && options.autoExecute)
+        await executeProposal(options.proposer, options.proposalName, proposalHash);
+}
+
+export async function adminDeleteApps(options: StandardProposalOptions) {
+    const appsToDelete: NameType[] = ['.onomy'];
+
+    const actions = appsToDelete.map((accountName) =>
+        getTonomyContract().actions.deleteApp({
+            accountName,
+        })
+    );
+
+    const proposalHash = await createProposal(
+        options.proposer,
+        options.proposalName,
+        actions,
+        options.privateKey,
+        options.requested,
+        options.dryRun
+    );
+
+    if (!options.dryRun && options.autoExecute)
+        await executeProposal(options.proposer, options.proposalName, proposalHash);
 }

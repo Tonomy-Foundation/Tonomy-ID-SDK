@@ -1,18 +1,28 @@
-import { PrivateKey, Name, Checksum256, NameType } from '@wharfkit/antelope';
-import { EosioMsigContract } from '../../sdk';
-import { ActionData, createSigner } from '../../sdk/services/blockchain';
+import { PrivateKey, Name, Checksum256, NameType, ActionType } from '@wharfkit/antelope';
+import {
+    activePermissionLevel,
+    createSigner,
+    getEosioMsigContract,
+    toPrintableActions,
+} from '../../sdk/services/blockchain';
 import settings from '../settings';
 import { newAccount } from './accounts';
-import { transfer } from './token';
+import { setStats, transfer } from './token';
 import { updateAuth, govMigrate, addEosioCode } from './auth';
 import { deployContract } from './contract';
 import { printCliHelp } from '..';
 import { setResourceConfig } from './setResourceConfig';
 import { setBlockchainConfig } from './setBlockchainConfig';
 import { addProd, changeProds, removeProd, updateProd } from './producers';
-import { hyphaAccountsCreate, hyphaContractSet, hyphaAddAccountPermissions } from './hypha';
 import { sleep } from '../../sdk/util';
-import { vestingMigrate, vestingMigrate2, vestingMigrate3, vestingBulk } from './vesting';
+import {
+    vestingMigrate,
+    vestingMigrate2,
+    vestingMigrate3,
+    vestingBulk,
+    vestingMigrate4,
+    vestingMigrate5,
+} from './vesting';
 import {
     createStakingTmyAccount,
     deployStakingContract,
@@ -22,10 +32,15 @@ import {
     stakingContractSetup,
     stakingSettings,
 } from './staking';
-import { symbolMigrate, migrateRebrandApps } from './symbolMigrate';
-import { createAccounts, deployContracts, setAppsAndRam, newApp, migrateApps } from './apps';
-
-const eosioMsigContract = EosioMsigContract.Instance;
+import {
+    createAccounts,
+    deployContracts,
+    setAppsAndRam,
+    newApp,
+    migrateApps,
+    adminSetApps,
+    adminDeleteApps,
+} from './apps';
 
 const governanceAccounts = ['1.found.tmy', '2.found.tmy', '3.found.tmy'];
 let newGovernanceAccounts = ['14.found.tmy', '5.found.tmy', '11.found.tmy', '12.found.tmy', '13.found.tmy'];
@@ -64,7 +79,7 @@ export default async function msig(args: string[]) {
 
     const proposer = newGovernanceAccounts[0];
     let signingKey: string | undefined = process.env.SIGNING_KEY;
-    const signingAccount = '14.found.tmy';
+    let signingAccount = '14.found.tmy';
 
     if (!signingKey) {
         if (!process.env.TONOMY_BOARD_PRIVATE_KEYS)
@@ -72,6 +87,7 @@ export default async function msig(args: string[]) {
         const tonomyGovKeys: string[] = JSON.parse(process.env.TONOMY_BOARD_PRIVATE_KEYS).keys;
 
         signingKey = tonomyGovKeys[0];
+        signingAccount = '1.found.tmy';
     }
 
     const privateKey = PrivateKey.from(signingKey);
@@ -81,7 +97,7 @@ export default async function msig(args: string[]) {
         const proposalName = Name.from(args[1]);
 
         try {
-            const transaction = await eosioMsigContract.cancel(proposer, proposalName, signingAccount, signer);
+            const transaction = await getEosioMsigContract().cancel(proposer, proposalName, signingAccount, signer);
 
             console.log('Transaction: ', JSON.stringify(transaction, null, 2));
             console.error('Transaction succeeded');
@@ -110,6 +126,8 @@ export default async function msig(args: string[]) {
         } else if (proposalType === 'tokens') {
             if (proposalSubtype === 'transfer') {
                 await transfer(options);
+            } else if (proposalSubtype === 'setstats') {
+                await setStats(options);
             } else printMsigHelp();
         } else if (proposalType === 'contract') {
             if (proposalSubtype === 'deploy') {
@@ -138,8 +156,12 @@ export default async function msig(args: string[]) {
                 await vestingMigrate2(options);
             } else if (proposalSubtype === 'migrate3') {
                 await vestingMigrate3(options);
+            } else if (proposalSubtype === 'migrate4') {
+                await vestingMigrate4(options);
+            } else if (proposalSubtype === 'migrate5') {
+                await vestingMigrate5(options);
             } else if (proposalSubtype === 'bulk') {
-                await vestingBulk({ governanceAccounts }, options);
+                await vestingBulk(options);
             } else printMsigHelp();
         } else if (proposalType === 'producers') {
             if (proposalSubtype === 'add') {
@@ -150,14 +172,6 @@ export default async function msig(args: string[]) {
                 await updateProd({}, options);
             } else if (proposalSubtype === 'change') {
                 await changeProds({}, options);
-            } else printMsigHelp();
-        } else if (proposalType === 'hypha') {
-            if (proposalSubtype === 'accounts-create') {
-                await hyphaAccountsCreate({}, options);
-            } else if (proposalSubtype === 'add-permissions') {
-                await hyphaAddAccountPermissions({}, options);
-            } else if (proposalSubtype === 'contract-set') {
-                await hyphaContractSet({}, options);
             } else printMsigHelp();
         } else if (proposalType === 'apps') {
             if (proposalSubtype === 'create') {
@@ -170,6 +184,10 @@ export default async function msig(args: string[]) {
                 await deployContracts(options);
             } else if (proposalSubtype === 'migrate') {
                 await migrateApps(options);
+            } else if (proposalSubtype === 'admin-set-apps') {
+                await adminSetApps(options);
+            } else if (proposalSubtype === 'admin-delete-apps') {
+                await adminDeleteApps(options);
             } else printMsigHelp();
         } else if (proposalType === 'res-config-set') {
             await setResourceConfig({}, options);
@@ -191,12 +209,6 @@ export default async function msig(args: string[]) {
             } else if (proposalSubtype === 'setSettings') {
                 await stakingSettings(options);
             } else printMsigHelp();
-        } else if (proposalType === 'symbol') {
-            if (proposalSubtype === 'migrate') {
-                await symbolMigrate(options);
-            } else if (proposalSubtype === 'migrate-app') {
-                await migrateRebrandApps(options);
-            } else printMsigHelp();
         } else {
             throw new Error(`Invalid msig proposal type ${proposalType}`);
         }
@@ -204,10 +216,10 @@ export default async function msig(args: string[]) {
         const proposalName = Name.from(args[1]);
 
         try {
-            const transaction = await eosioMsigContract.approve(
+            const transaction = await getEosioMsigContract().approve(
                 proposer,
                 proposalName,
-                signingAccount,
+                activePermissionLevel(signingAccount),
                 undefined,
                 signer
             );
@@ -222,7 +234,7 @@ export default async function msig(args: string[]) {
         const proposalName = Name.from(args[1]);
 
         try {
-            const transaction = await eosioMsigContract.exec(proposer, proposalName, signingAccount, signer);
+            const transaction = await getEosioMsigContract().exec(proposer, proposalName, signingAccount, signer);
 
             console.log('Transaction: ', JSON.stringify(transaction, null, 2));
             console.error('Transaction succeeded');
@@ -244,7 +256,7 @@ type PermissionLevelType = {
 export async function createProposal(
     proposer: string,
     proposalName: Name,
-    actions: ActionData[],
+    actions: ActionType[],
     privateKey: PrivateKey,
     requested: (string | PermissionLevelType)[],
     dryRun?: boolean
@@ -270,7 +282,7 @@ export async function createProposal(
                 proposer,
                 proposalName,
                 requestedPermissions,
-                actions,
+                actions: await toPrintableActions(actions),
                 signer: privateKey.toPublic(),
             },
             null,
@@ -285,7 +297,7 @@ export async function createProposal(
     }
 
     try {
-        const { transaction, proposalHash } = await eosioMsigContract.propose(
+        const { transaction, proposalHash } = await getEosioMsigContract().propose(
             proposer,
             proposalName,
             requestedPermissions,
@@ -324,10 +336,10 @@ export async function executeProposal(
     try {
         for (let i = 0; i < 2; i++) {
             await sleep(1000);
-            await eosioMsigContract.approve(
+            await getEosioMsigContract().approve(
                 proposer,
                 proposalName,
-                governanceAccounts[i],
+                activePermissionLevel(governanceAccounts[i]),
                 proposalHash,
                 tonomyGovSigners[i]
             );
@@ -336,7 +348,7 @@ export async function executeProposal(
         console.log('Proposal approved succeeded');
 
         await sleep(1000);
-        await eosioMsigContract.exec(proposer, proposalName, signingAccount ?? proposer, tonomyGovSigners[0]);
+        await getEosioMsigContract().exec(proposer, proposalName, signingAccount ?? proposer, tonomyGovSigners[0]);
 
         console.log('Proposal executed succeeded');
     } catch (e) {
@@ -357,7 +369,7 @@ export type StandardProposalOptions = {
 function printMsigHelp() {
     console.log(`
         Usage:
-            yarn run cli msig [commands]
+            yarn run cli msig [commands] [options]
             
             Commands:
                 approve stakeacc
@@ -369,13 +381,12 @@ function printMsigHelp() {
                 propose apps set-apps-and-ram <proposalName>
                 propose apps deploy-contracts <proposalName>
                 propose apps migrate <proposalName>
+                propose apps admin-set-apps <proposalName>
+                propose apps admin-delete-apps <proposalName>
                 propose auth add-eosiocode <proposalName>
                 propose auth gov-migrate <proposalName>
                 propose auth update <proposalName>
                 propose contract deploy <proposalName> <contractName>
-                propose hypha accounts-create <proposalName>
-                propose hypha add-permissions <proposalName>
-                propose hypha contract-set <proposalName>
                 propose producers add <proposalName>
                 propose producers change <proposalName>
                 propose producers remove <proposalName>
@@ -389,13 +400,24 @@ function printMsigHelp() {
                 propose staking redeploy-eosio-contract <proposalName>
                 propose staking redeploy-tonomy-contract <proposalName>
                 propose staking setSettings <proposalName>
-                propose symbol migrate <proposalName>
                 propose tokens transfer <proposalName>
+                propose tokens setstats <proposalName>
                 propose vesting bulk <proposalName>
                 propose vesting migrate <proposalName>
                 propose vesting migrate2 <proposalName>
                 propose vesting migrate3 <proposalName>
-                propose ... --auto-execute
-                propose ... --dry-run
+                propose vesting migrate4 <proposalName>
+                propose vesting migrate5 <proposalName>
+        Options:
+                --help
+                --dry-run          Create the proposal but do not send the transaction
+                --auto-execute     Automatically approve and execute the proposal (for testing only)
+        Examples:
+                approve stakeacc
+                cancel myproposal
+                exec myproposal
+                propose accounts create myproposal
+                propose apps create myproposal --dry-run
+                propose apps auth update myproposal --auto-execute
         `);
 }

@@ -11,7 +11,11 @@ on:
       - master
 
 jobs:
+  compile-contracts:
+    uses: ./.github/workflows/compile-contracts.yml
+
   publish-npm:
+    needs: compile-contracts
     runs-on: ubuntu-24.04
     steps:
       - name: Install jq
@@ -24,6 +28,15 @@ jobs:
 
       - name: Enable Corepack before setting up Node
         run: corepack enable
+
+      - name: Delete Tonomy-Contracts directory
+        run: rm -rf ./Tonomy-Contracts
+
+      - name: Get Tonomy-Contracts directory from artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: Tonomy-Contracts
+          path: ./Tonomy-Contracts
 
       - name: 📦 Install
         uses: actions/setup-node@v4

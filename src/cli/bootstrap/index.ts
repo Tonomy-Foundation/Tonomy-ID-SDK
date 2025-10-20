@@ -3,15 +3,13 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { createAntelopeAccount, createApp } from './create-account';
 import {
-    DemoTokenContract,
     EosioTokenContract,
-    EosioContract,
-    getTonomyContract,
     EosioUtil,
     TonomyUsername,
     AccountType,
     getSettings,
     VestingContract,
+    ensureBaseTokenDeployed,
 } from '../../sdk/index';
 import { getSigner, updateAccountKey, updateControlByAccount } from './keys';
 import settings from '../settings';
@@ -19,7 +17,6 @@ import { Checksum256, PrivateKey, PublicKey } from '@wharfkit/antelope';
 import {
     Authority,
     Signer,
-    TonomyEosioProxyContract,
     bytesToTokens,
     defaultBlockchainParams,
     TOTAL_RAM_AVAILABLE,
@@ -27,15 +24,16 @@ import {
     RAM_PRICE,
     StakingContract,
     amountToAsset,
+    getTokenContract,
+    getEosioContract,
+    getVestingContract,
+    getStakingContract,
+    getTonomyContract,
+    getTonomyEosioProxyContract,
 } from '../../sdk/services/blockchain';
 import { createUser, mockCreateAccount, restoreCreateAccountFromMock } from './user';
 import { sleep } from '../../sdk/util';
-
-const demoTokenContract = DemoTokenContract.Instance;
-const tokenContract = EosioTokenContract.Instance;
-const eosioContract = EosioContract.Instance;
-const vestingContract = VestingContract.Instance;
-const stakeContract = StakingContract.Instance;
+import { DemoTokenContract } from '../../sdk/services/blockchain/contracts/DemoTokenContract';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -74,10 +72,11 @@ export default async function bootstrap() {
         await setupVestingAndStaking(newSigner);
         await deployEosioTonomy(newSigner);
         await updateMsigControl(tonomyGovKeys, newSigner);
+        await ensureBaseTokenDeployed();
 
         console.log('Bootstrap complete');
-    } catch (e: any) {
-        console.error('Bootstrap error', e.message, JSON.stringify(e, null, 2));
+    } catch (e) {
+        console.error('Bootstrap error', e, JSON.stringify(e, null, 2));
         process.exit(1);
     }
 }
@@ -143,13 +142,13 @@ function indexToAccountName(index: number): string {
 
 async function setPrivilegedAccounts() {
     console.log('Set privileged accounts');
-    await eosioContract.setPriv('tonomy', 1, signer);
-    await eosioContract.setPriv('eosio.msig', 1, signer);
+    await getEosioContract().setPriv('tonomy', 1, signer);
+    await getEosioContract().setPriv('eosio.msig', 1, signer);
 }
 
 async function setBlockchainParameters() {
     console.log('Set blockchain parameters');
-    await eosioContract.setParams(defaultBlockchainParams, signer);
+    await getEosioContract().setParams(defaultBlockchainParams, signer);
 }
 
 async function deployEosioMsig() {
@@ -157,15 +156,16 @@ async function deployEosioMsig() {
     await deployContract(
         {
             account: 'eosio.msig',
-            contractDir: path.join(__dirname, '../../Tonomy-Contracts/contracts/eosio.msig'),
         },
         signer
     );
 }
 
 async function configureDemoToken(newSigner: Signer) {
-    await demoTokenContract.create(`1000000000 DEMO`, newSigner);
-    await demoTokenContract.issue(`10000 DEMO`, newSigner);
+    const demoTokenContract = await DemoTokenContract.atAccount();
+
+    await demoTokenContract.create(demoTokenContract.contractName, `1000000000 DEMO`, newSigner);
+    await demoTokenContract.issue(demoTokenContract.contractName, `10000 DEMO`, '', newSigner);
 }
 
 async function deployVesting() {
@@ -173,7 +173,6 @@ async function deployVesting() {
     await deployContract(
         {
             account: 'vesting.tmy',
-            contractDir: path.join(__dirname, '../../Tonomy-Contracts/contracts/vesting.tmy'),
         },
         signer
     );
@@ -184,19 +183,26 @@ async function deployStaking() {
     await deployContract(
         {
             account: 'staking.tmy',
-            contractDir: path.join(__dirname, '../../Tonomy-Contracts/contracts/staking.tmy'),
         },
         signer
     );
 }
 
 async function setupVestingAndStaking(newSigner: Signer) {
-    await vestingContract.setSettings(VestingContract.SALE_START_DATE, VestingContract.VESTING_START_DATE, newSigner);
+    await getVestingContract().setSettings(
+        VestingContract.SALE_START_DATE,
+        VestingContract.VESTING_START_DATE,
+        newSigner
+    );
 
-    await stakeContract.setSettings(amountToAsset(StakingContract.yearlyStakePool, 'TONO'), newSigner);
+    await getStakingContract().setSettings(amountToAsset(StakingContract.yearlyStakePool, 'TONO'), newSigner);
     await sleep(1000);
-    await stakeContract.addYield('infra.tmy', amountToAsset(StakingContract.yearlyStakePool / 2, 'TONO'), newSigner); // 6 months budget in the account
-    console.log('Staking settings', await stakeContract.getSettings());
+    await getStakingContract().addYield(
+        'infra.tmy',
+        amountToAsset(StakingContract.yearlyStakePool / 2, 'TONO'),
+        newSigner
+    ); // 6 months budget in the account
+    console.log('Staking settings', await getStakingContract().getSettings());
 }
 
 async function createNativeToken() {
@@ -204,14 +210,13 @@ async function createNativeToken() {
     await deployContract(
         {
             account: 'eosio.token',
-            contractDir: path.join(__dirname, '../../Tonomy-Contracts/contracts/eosio.token'),
         },
         signer
     );
     console.log('Create and issue native token');
-    await tokenContract.create(`50000000000.000000 ${getSettings().currencySymbol}`, signer);
+    await getTokenContract().create('eosio.token', `50000000000.000000 ${getSettings().currencySymbol}`, signer);
     console.log('Issue native token');
-    await tokenContract.issue('eosio.token', `50000000000.000000 ${getSettings().currencySymbol}`, signer);
+    await getTokenContract().issue('eosio.token', `50000000000.000000 ${getSettings().currencySymbol}`, '', signer);
 }
 
 const allocations: [string, number][] = [
@@ -247,7 +252,7 @@ async function createTokenDistribution() {
             account.padEnd(13),
             (percentage * EosioTokenContract.TOTAL_SUPPLY).toFixed(0) + `.000000 ${getSettings().currencySymbol}`
         );
-        await tokenContract.transfer(
+        await getTokenContract().transfer(
             'eosio.token',
             account,
             (percentage * EosioTokenContract.TOTAL_SUPPLY).toFixed(0) + `.000000 ${getSettings().currencySymbol}`,
@@ -266,7 +271,6 @@ async function createTonomyContractAndSetResources() {
     await deployContract(
         {
             account: 'tonomy',
-            contractDir: path.join(__dirname, '../../Tonomy-Contracts/contracts/tonomy'),
         },
         signer
     );
@@ -350,7 +354,7 @@ async function createTonomyContractAndSetResources() {
     await getTonomyContract().setResourceParams(RAM_PRICE, TOTAL_RAM_AVAILABLE, RAM_FEE, signer);
 
     console.log('Allocate operational tokens to accounts');
-    await tokenContract.transfer('ops.tmy', 'tonomy', bytesToTokens(3750000), 'Initial allocation', signer);
+    await getTokenContract().transfer('ops.tmy', 'tonomy', bytesToTokens(3750000), 'Initial allocation', signer);
 
     console.log('Allocate RAM to system accounts');
 
@@ -361,7 +365,7 @@ async function createTonomyContractAndSetResources() {
 
         console.log(`Buying ${app.ramAllocation / 1000}KB of RAM for ${account} for ${tokens}`);
 
-        await tokenContract.transfer('ops.tmy', account, tokens, 'Initial allocation', signer);
+        await getTokenContract().transfer('ops.tmy', account, tokens, 'Initial allocation', signer);
         await getTonomyContract().buyRam('ops.tmy', account, tokens, signer);
     }
 }
@@ -380,18 +384,18 @@ export function createSubdomainOnOrigin(origin: string, subdomain: string): stri
 
 async function createUsers(passphrase: string) {
     mockCreateAccount();
-    // Google and Apple app store managers needs to have a test user for their review. That is this user.
-    await createUser('testuser', passphrase);
-
-    // Create users for the demo website
-    await createUser('lovesboost', passphrase);
-    await createUser('sweetkristy', passphrase);
-    await createUser('cheesecakeophobia', passphrase);
-    await createUser('ultimateBeast', passphrase);
-    await createUser('tomtom', passphrase);
-    await createUser('readingpro', passphrase);
-
-    restoreCreateAccountFromMock();
+    await Promise.all([
+        // Google and Apple app store managers needs to have a test user for their review. That is this user.
+        createUser('testuser', passphrase),
+        // Create users for the demo website
+        createUser('lovesboost', passphrase),
+        createUser('sweetkristy', passphrase),
+        createUser('cheesecakeophobia', passphrase),
+        createUser('ultimateBeast', passphrase),
+        createUser('tomtom', passphrase),
+        createUser('readingpro', passphrase),
+    ]);
+    await restoreCreateAccountFromMock();
 }
 
 async function createTonomyApps(newPublicKey: PublicKey, newSigner: Signer): Promise<void> {
@@ -415,7 +419,7 @@ async function createTonomyApps(newPublicKey: PublicKey, newSigner: Signer): Pro
             account: demo.accountName,
             contractDir: path.join(__dirname, '../../Tonomy-Contracts/contracts/demo.tmy'),
         },
-        newSigner
+        [newSigner, signer]
     );
 
     await createApp({
@@ -441,6 +445,18 @@ async function createTonomyApps(newPublicKey: PublicKey, newSigner: Signer): Pro
         publicKey: newPublicKey,
         signer,
     });
+
+    await createApp({
+        appName: 'Tonomy',
+        usernamePrefix: 'tonomy-apps',
+        description: `Access all your Tonomy apps in one hub. Manage tokens, explore the blockchain, create, collaborate, and build — it’s all at your fingertips`,
+        origin: settings.config.tonomyAppsOrigin,
+        logoUrl: settings.config.tonomyAppsOrigin + '/market.com.png',
+        backgroundColor: '#ffffff',
+        accentColor: '#5833BC',
+        publicKey: newPublicKey,
+        signer,
+    });
 }
 
 async function updateAccountControllers(govKeys: string[], newPublicKey: PublicKey) {
@@ -462,8 +478,8 @@ async function updateAccountControllers(govKeys: string[], newPublicKey: PublicK
 
     activeAuthority.addKey(newPublicKey.toString(), 1);
     activeAuthority.addCodePermission('vesting.tmy');
-    await eosioContract.updateauth(operationsAccount, 'active', 'owner', activeAuthority, signer);
-    await eosioContract.updateauth(operationsAccount, 'owner', 'owner', ownerAuthority, signer);
+    await getEosioContract().updateAuth(operationsAccount, 'active', 'owner', activeAuthority, signer);
+    await getEosioContract().updateAuth(operationsAccount, 'owner', 'owner', ownerAuthority, signer, true);
 
     // accounts controlled by ops.tmy
     for (const account of opsControlledAccounts.filter(
@@ -499,17 +515,9 @@ async function deployEosioTonomy(signer: Signer) {
             account: 'eosio',
             contractDir: path.join(__dirname, '../../Tonomy-Contracts/contracts/eosio.tonomy'),
         },
-        signer,
-        {
-            extraAuthorization: {
-                actor: 'tonomy',
-                permission: 'active',
-            },
-        }
+        signer
     );
 }
-
-const tonomyEosioProxyContract = TonomyEosioProxyContract.Instance;
 
 async function updateMsigControl(govKeys: string[], signer: Signer) {
     console.log('Update found.tmy msig control');
@@ -520,7 +528,7 @@ async function updateMsigControl(govKeys: string[], signer: Signer) {
     const threshold = Math.ceil((govAccounts.length * 2) / 3);
     const ownerAuthority = Authority.fromAccountArray(govAccounts, 'active', threshold);
 
-    await tonomyEosioProxyContract.updateauth('found.tmy', 'active', 'owner', activeAuthority, signer);
+    await getTonomyEosioProxyContract().updateAuth('found.tmy', 'active', 'owner', activeAuthority, signer);
 
-    await tonomyEosioProxyContract.updateauth('found.tmy', 'owner', 'owner', ownerAuthority, signer);
+    await getTonomyEosioProxyContract().updateAuth('found.tmy', 'owner', 'owner', ownerAuthority, signer);
 }

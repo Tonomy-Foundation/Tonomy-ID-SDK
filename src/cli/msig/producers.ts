@@ -1,4 +1,4 @@
-import { getProducers } from '../../sdk/services/blockchain';
+import { getProducers, getTonomyEosioProxyContract } from '../../sdk/services/blockchain';
 import { StandardProposalOptions, createProposal, executeProposal } from '.';
 import { Name, PublicKey, Weight } from '@wharfkit/antelope';
 
@@ -39,8 +39,8 @@ export async function addProd(args: any, options: StandardProposalOptions) {
         options.dryRun
     );
 
-    if (options.dryRun) return;
-    if (options.autoExecute) await executeProposal(options.proposer, options.proposalName, proposalHash);
+    if (!options.dryRun && options.autoExecute)
+        await executeProposal(options.proposer, options.proposalName, proposalHash);
 }
 
 // @ts-expect-error any not used
@@ -82,8 +82,8 @@ export async function updateProd(args: any, options: StandardProposalOptions) {
         options.dryRun
     );
 
-    if (options.dryRun) return;
-    if (options.autoExecute) await executeProposal(options.proposer, options.proposalName, proposalHash);
+    if (!options.dryRun && options.autoExecute)
+        await executeProposal(options.proposer, options.proposalName, proposalHash);
 }
 
 // @ts-expect-error any not used
@@ -108,8 +108,8 @@ export async function removeProd(args: any, options: StandardProposalOptions) {
         options.dryRun
     );
 
-    if (options.dryRun) return;
-    if (options.autoExecute) await executeProposal(options.proposer, options.proposalName, proposalHash);
+    if (!options.dryRun && options.autoExecute)
+        await executeProposal(options.proposer, options.proposalName, proposalHash);
 }
 
 // @ts-expect-error any not used
@@ -166,8 +166,8 @@ export async function changeProds(args: any, options: StandardProposalOptions) {
         options.dryRun
     );
 
-    if (options.dryRun) return;
-    if (options.autoExecute) await executeProposal(options.proposer, options.proposalName, proposalHash);
+    if (!options.dryRun && options.autoExecute)
+        await executeProposal(options.proposer, options.proposalName, proposalHash);
 }
 
 type Authority = {
@@ -225,21 +225,7 @@ function createSetProdsAction(schedule: ProducerSchedule[]) {
         );
     }
 
-    return {
-        account: 'tonomy',
-        name: 'setprods',
-        authorization: [
-            {
-                actor: 'tonomy',
-                permission: 'owner',
-            },
-            {
-                actor: 'tonomy',
-                permission: 'active',
-            },
-        ],
-        data: {
-            schedule,
-        },
-    };
+    return getTonomyEosioProxyContract().actions.setProds({
+        schedule,
+    });
 }

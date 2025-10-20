@@ -1,12 +1,13 @@
 import { PrivateKey, Checksum256 } from '@wharfkit/antelope';
 import { KeyManagerLevel } from '../storage/keymanager';
-import { getTonomyContract } from '../services/blockchain/contracts/TonomyContract';
 import { SdkErrors, throwError } from '../util/errors';
 import { generateRandomKeyPair, randomString } from '../util/crypto';
 import { ClientAuthorizationData, ICreateAccountOptions, ILoginOptions, IUserAuthentication } from '../types/User';
 import { getAccountInfo } from '../helpers/user';
 import { UserBase } from './UserBase';
-import { JWT, VerifiableCredential } from '../util';
+import { getTonomyContract } from '../services/blockchain';
+import { VerifiableCredential } from '../util/ssi/vc';
+import { JWT } from '../util/ssi/types';
 
 export class UserAuthorization extends UserBase implements IUserAuthentication {
     async savePassword(masterPassword: string, options: ICreateAccountOptions): Promise<void> {
@@ -46,14 +47,14 @@ export class UserAuthorization extends UserBase implements IUserAuthentication {
         const username = await this.getAccountName();
 
         const idData = await getTonomyContract().getPerson(username);
-        const salt = idData.password_salt;
+        const salt = idData.passwordSalt;
 
         await this.savePassword(password, { ...options, salt });
         const passwordKey = await this.keyManager.getKey({
             level: KeyManagerLevel.PASSWORD,
         });
 
-        const accountData = await getAccountInfo(idData.account_name);
+        const accountData = await getAccountInfo(idData.accountName);
         const onchainKey = accountData.getPermission('owner').required_auth.keys[0].key; // TODO: change to active/other permissions when we make the change
 
         if (passwordKey.toString() !== onchainKey.toString())

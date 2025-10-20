@@ -19,7 +19,8 @@ export * from './types/VeriffStatusEnum';
 // Services
 export * as EosioUtil from './services/blockchain';
 
-export { Signer, AntelopePushTransactionError } from './services/blockchain/eosio/transaction';
+export type { Signer } from './services/blockchain/eosio/transaction';
+export { AntelopePushTransactionError, waitForTonomyTrxFinalization } from './services/blockchain/eosio/transaction';
 
 export * from './services/blockchain/eosio/authority';
 export * from './services/blockchain/contracts/DemoTokenContract';
@@ -32,6 +33,7 @@ export * from './services/blockchain/contracts/StakingContract';
 export * from './services/blockchain/contracts/TonomyEosioProxyContract';
 export * from './services/communication/communication';
 export * from './services/communication/message';
+export * from './services/ethereum';
 
 // Utilities
 export * from './util/settings';
@@ -50,8 +52,8 @@ export * from './storage/keymanager';
 export * from './storage/storage';
 export * from './storage/browserStorage';
 export * from './storage/jsKeyManager';
+export * from '../sdk/storage/entities/identityVerificationStorage';
 
 // API
 export * from '../api/externalUser';
-
-export * from '../sdk/storage/entities/identityVerificationStorage';
+export * from '../api/appsExternalUser';

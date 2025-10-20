@@ -1,6 +1,61 @@
-import { Name, NameType } from '@wharfkit/antelope';
+import { Name, NameType, PermissionLevel } from '@wharfkit/antelope';
 import BN from 'bn.js';
 import { API } from '@wharfkit/antelope';
+import { ActionOptions } from '@wharfkit/contract';
+
+export function activePermissionLevel(account: NameType): PermissionLevel {
+    return PermissionLevel.from({ actor: account, permission: 'active' });
+}
+
+export function ownerPermissionLevel(account: NameType): PermissionLevel {
+    return PermissionLevel.from({ actor: account, permission: 'owner' });
+}
+
+export function activeAuthority(account: NameType): ActionOptions {
+    return {
+        authorization: [activePermissionLevel(account)],
+    };
+}
+
+export function ownerAuthority(account: NameType): ActionOptions {
+    return {
+        authorization: [ownerPermissionLevel(account)],
+    };
+}
+
+export function mergeAuthorities(auth: ActionOptions[]): ActionOptions {
+    const merged: ActionOptions = { authorization: [] };
+
+    auth.forEach((option) => {
+        if (option.authorization) {
+            option.authorization.forEach((perm) => {
+                merged.authorization?.push(perm);
+            });
+        }
+    });
+
+    return removeDuplicateAuthorizations(merged);
+}
+
+export function removeDuplicateAuthorizations(auth: ActionOptions): ActionOptions {
+    if (!auth.authorization) throw new Error('Authorization is undefined');
+
+    const uniqueAuth: ActionOptions = { authorization: [] };
+
+    auth.authorization.forEach((perm) => {
+        if (
+            !uniqueAuth.authorization?.find(
+                (p) =>
+                    p.actor.toString() === perm.actor.toString() &&
+                    p.permission.toString() === perm.permission.toString()
+            )
+        ) {
+            uniqueAuth.authorization?.push(perm);
+        }
+    });
+
+    return uniqueAuth;
+}
 
 type KeyWeight = { key: string; weight: number };
 type PermissionWeight = {
