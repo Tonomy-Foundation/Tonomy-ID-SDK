@@ -181,19 +181,18 @@ export async function createActionWithAbi(action: AnyActionType): Promise<Action
 
 export async function waitForTonomyTrxFinalization(
     transactionId: Checksum256Type,
-    timeout: number = 30000,
+    timeout: number = 60000,
     interval: number = 1000
 ): Promise<API.v1.GetTransactionResponse> {
     const api = getApi();
     const start = Date.now();
 
-    const result = await api.v1.history.get_transaction(transactionId);
-
-    debug(`Transaction ${transactionId} found in block ${result.block_num}, waiting for finalization...`);
-
     // Wait till the transaction is confirmed in an irreversible block
     while (Date.now() - start < timeout) {
         try {
+            const result = await api.v1.history.get_transaction(transactionId);
+
+            debug(`Transaction ${transactionId} found in block ${result.block_num}, waiting for finalization...`);
             const info = await getChainInfo();
 
             debug(`Last irreversible block: ${info.last_irreversible_block_num}`);
