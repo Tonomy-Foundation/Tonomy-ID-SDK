@@ -109,11 +109,7 @@
   },
   "publishConfig": {
     "access": "public",
-<<<<<<< HEAD
     "tag": "development"
-=======
-    "tag": "latest"
->>>>>>> master
   },
   "repository": {
     "type": "git",
