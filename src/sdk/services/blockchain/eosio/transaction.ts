@@ -186,11 +186,12 @@ export async function waitForTonomyTrxFinalization(
 ): Promise<API.v1.GetTransactionResponse> {
     const api = getApi();
     const start = Date.now();
+    let result: API.v1.GetTransactionResponse | undefined;
 
     // Wait till the transaction is confirmed in an irreversible block
     while (Date.now() - start < timeout) {
         try {
-            const result = await api.v1.history.get_transaction(transactionId);
+            if (!result) result = await api.v1.history.get_transaction(transactionId);
 
             debug(`Transaction ${transactionId} found in block ${result.block_num}, waiting for finalization...`);
             const info = await getChainInfo();
