@@ -349,12 +349,15 @@ async function vestingMigrate4TokenFixes(options: StandardProposalOptions) {
 async function burnBaseTokens(options: StandardProposalOptions) {
     const burnAction1 = getTokenContract().actions.bridgeRetire({
         from: 'coinsale.tmy',
-        quantity: '3000000000.000000 TONO',
+        quantity: '3000000000.000000 TONO', // Launchpad funds
         memo: 'Burn tokens that will be minted on Base blockchain',
     });
+    const liquidityBurn1 = new Decimal('300000000.000000'); // MEXC liquidity
+    const liquidityBurn2 = new Decimal('300000000.000000'); // MEXC fees
+    const liquidityBurn3 = new Decimal('50000000.000000'); // Aerodome liquidity
     const burnAction2 = getTokenContract().actions.bridgeRetire({
         from: 'liquidty.tmy',
-        quantity: '300000000.000000 TONO',
+        quantity: `${liquidityBurn1.add(liquidityBurn2).add(liquidityBurn3).toFixed(6)} TONO`,
         memo: 'Burn tokens that will be minted on Base blockchain',
     });
 
@@ -402,7 +405,7 @@ async function vestAllTreasuries(options: StandardProposalOptions) {
 
             if (!vesting) throw new Error(`No vesting schedule for category ${category}`);
 
-            balance = balance.mul(1 - 0.25); // 25% TGE unlocked
+            balance = new Decimal('10428191100.000000'); // 75% of the liquidity treasury (leaves the 25% at TGE for use in distributions as needed)
         }
 
         console.log(`Vesting ${balance.toFixed(6)} TONO for ${account} in category ${category}`);
