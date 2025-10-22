@@ -5,6 +5,8 @@ import Decimal from 'decimal.js';
 import { Action } from '@wharfkit/antelope';
 import { getSettings } from '../../sdk';
 import { ethers } from 'ethers';
+import { exec } from 'child_process';
+import { sleep } from '../../sdk/util/time';
 
 export async function transfer(options: StandardProposalOptions) {
     const from = 'ecosystm.tmy';
@@ -114,6 +116,22 @@ export async function crossChainSwap(options: StandardProposalOptions) {
 
     if (!options.dryRun && options.autoExecute)
         await executeProposal(options.proposer, options.proposalName, proposalHash);
+
+    exec(`cd Ethereum-token && yarn run bridge --network base`, (error, stdout, stderr) => {
+        if (error) {
+            console.error(`Error executing bridge script:`, error);
+            return;
+        }
+
+        if (stderr) {
+            console.error(`Bridge script stderr:\n${stderr}`);
+            return;
+        }
+
+        console.log(`Bridge script output:\n${stdout}`);
+    });
+
+    await sleep(10000);
 
     const baseTokenAddress = getSettings().baseTokenAddress;
     const governaceDAOAddress = `0x8951e9D016Cc0Cf86b4f6819c794dD64e4C3a1A1`;
