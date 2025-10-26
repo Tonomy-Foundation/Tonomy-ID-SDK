@@ -22,6 +22,29 @@ const debug = Debug('tonomy-sdk:services:blockchain:contracts:EosioMsigContract'
 
 const CONTRACT_NAME: NameType = 'eosio.msig';
 
+/**
+ * Returns a number with digits 1...5 only,
+ * @param {number} num - The number to convert.
+ * @returns {string} The converted number
+ */
+export function toBase6Plus1(num: number): string {
+    if (num < 0) {
+        throw new Error('Negative numbers are not supported');
+    }
+
+    let result = '';
+    let n = num;
+
+    do {
+        const remainder = n % 5;
+
+        result = (remainder + 1).toString() + result;
+        n = Math.floor(n / 5);
+    } while (n > 0);
+
+    return result;
+}
+
 export class EosioMsigContract extends Contract {
     static async atAccount(account: NameType = CONTRACT_NAME): Promise<EosioMsigContract> {
         return new this(await loadContract(account));
