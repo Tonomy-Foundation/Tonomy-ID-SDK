@@ -15,12 +15,7 @@ import {
     toBase6Plus1,
 } from '../../sdk/services/blockchain';
 import { AccountType, isErrorCode, SdkErrors, TonomyUsername } from '../../sdk';
-import {
-    getAccount,
-    getAccountNameFromUsername,
-    TONO_CURRENT_PRICE,
-    vestingCategories as vestingSchedules,
-} from '../../sdk/services/blockchain';
+import { getAccount, getAccountNameFromUsername, TONO_CURRENT_PRICE } from '../../sdk/services/blockchain';
 import { parse } from 'csv-parse/sync';
 import fs from 'fs';
 import settings from '../settings';
@@ -399,17 +394,7 @@ async function vestAllTreasuries(options: StandardProposalOptions) {
     const actions: Action[] = [];
 
     for (const [account, category] of vestingCategories) {
-        let balance = await getTokenContract().getBalanceDecimal(account);
-
-        if (account === 'liquidty.tmy') {
-            // liquidity treasury has to distribute tokens to some partners (e.g. market maker before TGE so we vest only the vesting part
-            // The vested part has the %TGE unlocked removed in the vesting schedule at accommodate for this
-            const vesting = vestingSchedules.get(category);
-
-            if (!vesting) throw new Error(`No vesting schedule for category ${category}`);
-
-            balance = new Decimal('10428191100.000000'); // 75% of the liquidity treasury (leaves the 25% at TGE for use in distributions as needed)
-        }
+        const balance = await getTokenContract().getBalanceDecimal(account);
 
         console.log(`Vesting ${balance.toFixed(6)} TONO for ${account} in category ${category}`);
 
@@ -566,8 +551,6 @@ async function vestingSetDates(options: StandardProposalOptions) {
 }
 
 export async function vestingMigrate4(options: StandardProposalOptions) {
-    await vestingMigrationBulk(options);
-    return;
     // Rebalance treasury accounts according to the new tokenomics (initial transfers)
     await vestingMigrate4Tokenomics(options);
     // Apply correction transfers to fix tokenomics deviations and rounding
@@ -584,9 +567,46 @@ export async function vestingMigrate4(options: StandardProposalOptions) {
     await setupStaking(options);
     // Fix the statistics table in the token contract
     await setStats(options);
+    // final preparations before TGE
+    await finalPreTgePreparations(options);
     // Vest all treasury balances under their respective vesting categories (run after all above proposals)
     // NOTE: should only be called once all above proposals are executed
     await vestAllTreasuries(options);
+}
+
+export async function finalPreTgePreparations(options: StandardProposalOptions) {
+    const actions: Action[] = [];
+
+    // reset the vesting start date
+    actions.push(
+        getVestingContract().actions.setSettings({
+            salesStartDate: VestingContract.SALE_START_DATE,
+            launchDate: VestingContract.VESTING_START_DATE,
+        })
+    );
+
+    // burn final tokens so that 25% of liquidity treasury and all of public IDO are removed from supply (they were minted on Base chain)
+    actions.push(
+        getTokenContract().actions.bridgeRetire({
+            from: 'liquidty.tmy',
+            quantity: '2596063700.000000 TONO', // Rest of the 25% of liquidity treasury
+            memo: 'Final burn of tokens that will be minted on Base blockchain',
+        })
+    );
+
+    const proposalName = Name.from(options.proposalName.toString() + 'final1');
+
+    const proposalHash = await createProposal(
+        options.proposer,
+        proposalName,
+        actions,
+        options.privateKey,
+        options.requested,
+        options.dryRun
+    );
+
+    if (!options.dryRun && options.autoExecute)
+        await executeProposal(options.proposer, options.proposalName, proposalHash);
 }
 
 export async function vestingMigrate5(options: StandardProposalOptions) {

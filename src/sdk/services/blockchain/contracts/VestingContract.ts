@@ -22,7 +22,7 @@ const CONTRACT_NAME: NameType = 'vesting.tmy';
 export const TONO_SEED_ROUND_PRICE = 0.00006666666666666666;
 export const TONO_SEED_LATE_ROUND_PRICE = 0.00006666666666666666;
 export const TONO_PUBLIC_SALE_PRICE = 0.0001;
-export const TONO_CURRENT_PRICE = TONO_SEED_ROUND_PRICE;
+export const TONO_CURRENT_PRICE = TONO_PUBLIC_SALE_PRICE;
 
 const MICROSECONDS_PER_SECOND = 1_000_000;
 const SECONDS_PER_HOUR = 3_600;
@@ -417,7 +417,7 @@ export class VestingContract extends Contract {
     }
     // ISO format strings (UTC timezone)
     static SALE_START_DATE = '2024-04-30T12:00:00.000Z';
-    static VESTING_START_DATE = '2025-10-31T10:00:00.000Z'; // NOTE: 72 hours added after the Base TGE date to delay according to tokenomics
+    static VESTING_START_DATE = '2025-11-02T12:00:00.000Z'; // NOTE: 72 hours added after the Base TGE date to delay according to tokenomics
 
     static calculateVestingPeriod(settings: VestingSettings, allocation: VestingAllocation) {
         const category = vestingCategories.get(allocation.vestingCategoryType);
