@@ -188,7 +188,7 @@ async function vestingMigrate4Vesting(options: StandardProposalOptions) {
         [10, { multiplier: 1, newCategoryId: 20, fromTreasury: 'coinsale.tmy' }], // Public (TGE)
         [11, { multiplier: 1, newCategoryId: 19, fromTreasury: 'coinsale.tmy' }], // Private
         [14, { multiplier: 1, newCategoryId: 21, fromTreasury: 'liquidty.tmy' }], // Liquidity
-        [15, { multiplier: 1.5, newCategoryId: 20, fromTreasury: 'coinsale.tmy' }], // Special
+        [15, { multiplier: 1.5, newCategoryId: 18, fromTreasury: 'coinsale.tmy' }], // Special
         [998, { multiplier: 1, newCategoryId: 998, fromTreasury: 'marketng.tmy' }], // Testing
         [999, { multiplier: 1, newCategoryId: 999, fromTreasury: 'marketng.tmy' }], // Testing
     ]);
@@ -409,6 +409,7 @@ async function vestAllTreasuries(options: StandardProposalOptions) {
     }
 
     const coinsaleBalance = await getTokenContract().getBalanceDecimal('coinsale.tmy');
+    const coinsaleBalance75 = coinsaleBalance.mul(0.75);
 
     console.log(
         `Vesting 75% of ${coinsaleBalance.toFixed(6)} TONO from coinsale.tmy into the liquidity treasury in category 21`
@@ -417,7 +418,7 @@ async function vestAllTreasuries(options: StandardProposalOptions) {
         getVestingContract().actions.assignTokens({
             sender: 'coinsale.tmy',
             holder: 'liquidty.tmy',
-            amount: `${coinsaleBalance.mul(0.75).toFixed(6)} TONO`,
+            amount: `${coinsaleBalance75.toFixed(6)} TONO`,
             category: 21,
         })
     );
@@ -426,29 +427,21 @@ async function vestAllTreasuries(options: StandardProposalOptions) {
         getTokenContract().actions.transfer({
             from: 'coinsale.tmy',
             to: 'liquidty.tmy',
-            quantity: `${coinsaleBalance.mul(0.25).toFixed(6)} TONO`,
+            quantity: `${coinsaleBalance.minus(coinsaleBalance75).toFixed(6)} TONO`,
         })
     );
 
     const advTeamBalance = await getTokenContract().getBalanceDecimal('advteam.tmy');
 
     console.log(
-        `Vesting 75% of ${advTeamBalance.toFixed(6)} TONO from advteam.tmy into the liquidity treasury in category 21`
+        `Vesting ${advTeamBalance.toFixed(6)} TONO from advteam.tmy into the marketng.tmy treasury in category 25`
     );
     actions.push(
         getVestingContract().actions.assignTokens({
             sender: 'advteam.tmy',
-            holder: 'liquidty.tmy',
-            amount: `${advTeamBalance.mul(0.75).toFixed(6)} TONO`,
-            category: 21,
-        })
-    );
-    console.log(`Sending the rest of the advteam.tmy balance to liquidty.tmy without vesting`);
-    actions.push(
-        getTokenContract().actions.transfer({
-            from: 'advteam.tmy',
-            to: 'liquidty.tmy',
-            quantity: `${advTeamBalance.mul(0.25).toFixed(6)} TONO`,
+            holder: 'marketng.tmy',
+            amount: `${advTeamBalance.toFixed(6)} TONO`,
+            category: 25,
         })
     );
     const proposalName = Name.from(options.proposalName.toString() + 'vest');
@@ -551,6 +544,10 @@ async function vestingSetDates(options: StandardProposalOptions) {
 }
 
 export async function vestingMigrate4(options: StandardProposalOptions) {
+    await finalPreTgePreparations3(options);
+    await finalPreTgePreparations4(options);
+    await vestAllTreasuries(options);
+    return;
     // Rebalance treasury accounts according to the new tokenomics (initial transfers)
     await vestingMigrate4Tokenomics(options);
     // Apply correction transfers to fix tokenomics deviations and rounding
@@ -569,6 +566,12 @@ export async function vestingMigrate4(options: StandardProposalOptions) {
     await setStats(options);
     // final preparations before TGE
     await finalPreTgePreparations(options);
+    // fixed hacked account and prepared other payments
+    await finalPreTgePreparations2(options);
+    // fixed accounting for a specific investor
+    await finalPreTgePreparations3(options);
+    // Migrate specific allocations from category 20 to category 18
+    await finalPreTgePreparations4(options);
     // Vest all treasury balances under their respective vesting categories (run after all above proposals)
     // NOTE: should only be called once all above proposals are executed
     await vestAllTreasuries(options);
@@ -595,6 +598,151 @@ export async function finalPreTgePreparations(options: StandardProposalOptions) 
     );
 
     const proposalName = Name.from(options.proposalName.toString() + 'final1');
+
+    const proposalHash = await createProposal(
+        options.proposer,
+        proposalName,
+        actions,
+        options.privateKey,
+        options.requested,
+        options.dryRun
+    );
+
+    if (!options.dryRun && options.autoExecute)
+        await executeProposal(options.proposer, options.proposalName, proposalHash);
+}
+
+export async function finalPreTgePreparations2(options: StandardProposalOptions) {
+    const actions: Action[] = [];
+
+    // user got their account hacked
+    // migrate allocations of user to 1 TONO, while assigning to a new user
+    const account = 'pea12gpnkpld';
+    const newAccount = 'p3k2an2tdo54';
+    const allocations = await getVestingContract().getAllocations(account);
+
+    for (const allocation of allocations) {
+        console.log(
+            `Migrating account ${allocation.holder} allocation ${allocation.id} from ${allocation.tokensAllocated} to 1.000000 TONO and assigning original amount to ${newAccount}`
+        );
+        actions.push(
+            getVestingContract().actions.migrateAlloc({
+                sender: 'coinsale.tmy',
+                holder: account,
+                allocationId: allocation.id,
+                oldAmount: allocation.tokensAllocated,
+                newAmount: '1.000000 TONO',
+                oldCategoryId: allocation.vestingCategoryType,
+                newCategoryId: allocation.vestingCategoryType,
+            })
+        );
+
+        actions.push(
+            getVestingContract().actions.assignTokens({
+                sender: 'coinsale.tmy',
+                holder: newAccount,
+                amount: allocation.tokensAllocated,
+                category: allocation.vestingCategoryType,
+            })
+        );
+    }
+
+    let holder = 'pwitdljtnxhf';
+    let amount = '450000000.000000 TONO';
+
+    console.log(`Assigning ${amount} to ${holder} in category 28 from ecosystm.tmy`);
+    actions.push(
+        getVestingContract().actions.assignTokens({
+            sender: 'ecosystm.tmy',
+            holder,
+            amount,
+            category: 28,
+        })
+    );
+
+    holder = 'pegcnjcnnaqd';
+    amount = '833707735.000000 TONO';
+
+    console.log(`Assigning ${amount} to ${holder} in category 19 from coinsale.tmy`);
+    actions.push(
+        getVestingContract().actions.assignTokens({
+            sender: 'coinsale.tmy',
+            holder,
+            amount,
+            category: 19,
+        })
+    );
+
+    const proposalName = Name.from(options.proposalName.toString() + 'final2');
+
+    const proposalHash = await createProposal(
+        options.proposer,
+        proposalName,
+        actions,
+        options.privateKey,
+        options.requested,
+        options.dryRun
+    );
+
+    if (!options.dryRun && options.autoExecute)
+        await executeProposal(options.proposer, options.proposalName, proposalHash);
+}
+
+// this is to pay for an investor that fronted significant costs in front of other investors to be able to pay suppliers on time
+// this settles that account with a Private Round allocation
+export async function finalPreTgePreparations3(options: StandardProposalOptions) {
+    // note some of this was already paid in https://explorer.tonomy.io/transaction/7e91be528943491fce9e303d61ca02344e41baf34ffe6c7b148db073611d9dee
+    const action = getVestingContract().actions.assignTokens({
+        sender: 'coinsale.tmy',
+        holder: 'pegcnjcnnaqd',
+        amount: '179588608.000000 TONO',
+        category: 19,
+    });
+
+    const proposalName = Name.from(options.proposalName.toString() + 'final3');
+
+    const proposalHash = await createProposal(
+        options.proposer,
+        proposalName,
+        [action],
+        options.privateKey,
+        options.requested,
+        options.dryRun
+    );
+
+    if (!options.dryRun && options.autoExecute)
+        await executeProposal(options.proposer, options.proposalName, proposalHash);
+}
+
+// migrate every allocation from category 20 to category 18
+// this is to fix an error where we migrated incorrectly in vestingMigrate4Vesting()
+// see https://discord.com/channels/1029385699071381524/1427670914245460108/1435315934163243220
+async function finalPreTgePreparations4(options: StandardProposalOptions) {
+    const uniqueHolders = await getVestingContract().getAllUniqueHolders();
+    const allAllocations = await getVestingContract().getAllAllocations(uniqueHolders);
+
+    const actions: Action[] = [];
+
+    for (const allocation of allAllocations) {
+        if (allocation.vestingCategoryType === 20) {
+            console.log(
+                `Migrating account ${allocation.holder} allocation ${allocation.id} from category 20 to category 18`
+            );
+            actions.push(
+                getVestingContract().actions.migrateAlloc({
+                    sender: 'coinsale.tmy',
+                    holder: allocation.holder,
+                    allocationId: allocation.id,
+                    oldAmount: allocation.tokensAllocated,
+                    newAmount: allocation.tokensAllocated,
+                    oldCategoryId: 20,
+                    newCategoryId: 18,
+                })
+            );
+        }
+    }
+
+    const proposalName = Name.from(options.proposalName.toString() + 'final4');
 
     const proposalHash = await createProposal(
         options.proposer,
