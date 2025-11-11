@@ -417,7 +417,7 @@ export class VestingContract extends Contract {
     }
     // ISO format strings (UTC timezone)
     static SALE_START_DATE = '2024-04-30T12:00:00.000Z';
-    static VESTING_START_DATE = '2025-11-07T12:00:00.000Z'; // NOTE: 72 hours added after the Base TGE date to delay according to tokenomics
+    static VESTING_START_DATE = '2025-11-12T23:00:00.000Z'; // NOTE: 72 hours added after the Base TGE date to delay according to tokenomics
 
     static calculateVestingPeriod(settings: VestingSettings, allocation: VestingAllocation) {
         const category = vestingCategories.get(allocation.vestingCategoryType);

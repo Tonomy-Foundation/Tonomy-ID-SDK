@@ -412,7 +412,7 @@ async function vestAllTreasuries(options: StandardProposalOptions) {
     const coinsaleBalance75 = coinsaleBalance.mul(0.75);
 
     console.log(
-        `Vesting 75% of ${coinsaleBalance.toFixed(6)} TONO from coinsale.tmy into the liquidity treasury in category 21`
+        `Vesting 75% of coinsale.tmy ${coinsaleBalance75.toFixed(6)} TONO into the liquidity treasury in category 21`
     );
     actions.push(
         getVestingContract().actions.assignTokens({
@@ -422,7 +422,9 @@ async function vestAllTreasuries(options: StandardProposalOptions) {
             category: 21,
         })
     );
-    console.log(`Sending the rest of the coinsale.tmy balance to liquidty.tmy without vesting`);
+    console.log(
+        `Sending 25% coinsale.tmy ${coinsaleBalance.minus(coinsaleBalance75).toFixed(6)} TONO to liquidty.tmy without vesting`
+    );
     actions.push(
         getTokenContract().actions.transfer({
             from: 'coinsale.tmy',
@@ -544,8 +546,6 @@ async function vestingSetDates(options: StandardProposalOptions) {
 }
 
 export async function vestingMigrate4(options: StandardProposalOptions) {
-    await finalPreTgePreparations3(options);
-    await finalPreTgePreparations4(options);
     await vestAllTreasuries(options);
     return;
     // Rebalance treasury accounts according to the new tokenomics (initial transfers)
