@@ -635,7 +635,7 @@ function createMigrateAction(
     });
 }
 
-async function fetchAccountNameFromUsername(accountName: string): Promise<string> {
+export async function fetchAccountNameFromUsername(accountName: string): Promise<string> {
     const usernameInstance = TonomyUsername.fromUsername(
         accountName,
         AccountType.PERSON,
