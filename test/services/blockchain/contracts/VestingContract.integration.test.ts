@@ -784,11 +784,13 @@ describe('VestingContract class', () => {
             const tgeUnlock = (vestingCategories as any).get(category).tgeUnlock
 
             await getVestingContract().assignTokens('coinsale.tmy', accountName, amountToAsset(amount, 'TONO'), category, signer);
-            const balances = await getVestingContract().getVestingAllocations(accountName);
+            let balances = await getVestingContract().getVestingAllocations(accountName);
 
             expect(balances.totalAllocation).toBe(amount);
 
             await sleepUntil(addSeconds(launchStartDate, 1));
+            balances = await getVestingContract().getVestingAllocations(accountName);
+            expect(balances.unlockable).toBe(amount * tgeUnlock);
             await getVestingContract().withdraw(accountName, accountSigner);
 
             tonoBalance = await getTokenContract().getBalanceDecimal(accountName);
