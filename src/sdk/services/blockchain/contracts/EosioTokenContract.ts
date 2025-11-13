@@ -44,6 +44,10 @@ export function amountToAsset(amount: number, symbol: string, precision = 6): st
     return amount.toFixed(precision) + ' ' + symbol;
 }
 
+export function decimalToAsset(amount: Decimal, symbol = getSettings().currencySymbol, precision = 6): string {
+    return amount.toFixed(precision) + ' ' + symbol;
+}
+
 export function amountToSupplyPercentage(amount: Decimal): string {
     return amount.mul(100).div(EosioTokenContract.TOTAL_SUPPLY).toFixed(8) + '%';
 }
