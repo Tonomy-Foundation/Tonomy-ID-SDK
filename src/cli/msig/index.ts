@@ -7,7 +7,7 @@ import {
 } from '../../sdk/services/blockchain';
 import settings from '../settings';
 import { newAccount } from './accounts';
-import { setStats, transfer } from './token';
+import { bulkTransfer, setStats, transfer } from './token';
 import { updateAuth, govMigrate, addEosioCode } from './auth';
 import { deployContract } from './contract';
 import { printCliHelp } from '..';
@@ -128,6 +128,8 @@ export default async function msig(args: string[]) {
                 await transfer(options);
             } else if (proposalSubtype === 'setstats') {
                 await setStats(options);
+            } else if (proposalSubtype === 'bulk') {
+                await bulkTransfer(options);
             } else printMsigHelp();
         } else if (proposalType === 'contract') {
             if (proposalSubtype === 'deploy') {
@@ -395,13 +397,10 @@ function printMsigHelp() {
                 propose set-chain-config <proposalName>
                 propose staking account <proposalName>
                 propose staking contract <proposalName>
-                propose staking deploy-staking-contract <proposalName>
-                propose staking redeploy-vesting-contract <proposalName>
-                propose staking redeploy-eosio-contract <proposalName>
-                propose staking redeploy-tonomy-contract <proposalName>
                 propose staking setSettings <proposalName>
                 propose tokens transfer <proposalName>
                 propose tokens setstats <proposalName>
+                propose tokens bulk <proposalName>
                 propose vesting bulk <proposalName>
                 propose vesting migrate <proposalName>
                 propose vesting migrate2 <proposalName>
