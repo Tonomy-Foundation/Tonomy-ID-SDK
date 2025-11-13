@@ -229,7 +229,7 @@ export async function createSignedProofMessage(signer: ethers.Signer): Promise<{
 export async function waitForEvmTrxFinalization(
     txHash: string,
     confirmations?: number,
-    timeout: number = 60000
+    timeout: number = 100000
 ): Promise<ethers.TransactionReceipt> {
     const provider = getProvider();
 

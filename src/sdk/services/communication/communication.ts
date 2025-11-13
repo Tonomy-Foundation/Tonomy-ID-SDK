@@ -15,7 +15,7 @@ const debug = Debug('tonomy-sdk:services:communication:communication');
 export type Subscriber = (message: Message) => void;
 export type VeriffSubscriber = (message: VerificationMessage) => Promise<void>;
 
-export const SOCKET_TIMEOUT = 5000;
+export const SOCKET_TIMEOUT = 100000;
 export const SESSION_TIMEOUT = 40000;
 
 export type WebsocketReturnType = {

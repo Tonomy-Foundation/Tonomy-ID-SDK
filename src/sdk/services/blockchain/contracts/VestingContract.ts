@@ -637,17 +637,32 @@ export class VestingContract extends Contract {
         for (const allocation of allocations) {
             const allocated = assetToAmount(allocation.tokensAllocated);
             const claimed = assetToAmount(allocation.tokensClaimed);
-            const { vestingStart, cliffEnd, vestingEnd } = VestingContract.calculateVestingPeriod(settings, allocation);
+            const { launchDate, vestingStart, cliffEnd, vestingEnd } = VestingContract.calculateVestingPeriod(
+                settings,
+                allocation
+            );
             const cat = this.getVestingCategory(allocation.vestingCategoryType);
 
             let claimable = 0;
 
-            if (now >= cliffEnd) {
-                const elapsed = (now.getTime() - vestingStart.getTime()) / 1000;
-                const duration = (vestingEnd.getTime() - vestingStart.getTime()) / 1000;
-                const progress = Math.min(elapsed / duration, 1.0);
+            // Replicate on-chain logic: TGE portion becomes claimable at launch date regardless of cliff
+            if (now >= launchDate) {
+                const tgeAmount = allocated * cat.tgeUnlock;
 
-                claimable = allocated * ((1.0 - cat.tgeUnlock) * progress + cat.tgeUnlock);
+                claimable = tgeAmount;
+
+                if (now >= vestingEnd) {
+                    // Entire allocation vested by end
+                    claimable = allocated;
+                } else if (now >= cliffEnd) {
+                    // Linear vesting for remaining portion after cliff
+                    const elapsed = (now.getTime() - vestingStart.getTime()) / 1000; // seconds
+                    const duration = (vestingEnd.getTime() - vestingStart.getTime()) / 1000; // seconds
+                    const progress = Math.min(elapsed / Math.max(duration, 1), 1.0);
+                    const remainingAfterTge = allocated - tgeAmount;
+
+                    claimable = Math.min(allocated, tgeAmount + remainingAfterTge * progress);
+                }
             }
 
             const unlockable = claimable - claimed;
