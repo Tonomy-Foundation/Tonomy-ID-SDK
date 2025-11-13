@@ -12,14 +12,10 @@ import {
     StakingContract,
     amountToAsset,
     VestingContract,
+    toBase6Plus1,
 } from '../../sdk/services/blockchain';
 import { AccountType, isErrorCode, SdkErrors, TonomyUsername } from '../../sdk';
-import {
-    getAccount,
-    getAccountNameFromUsername,
-    TONO_CURRENT_PRICE,
-    vestingCategories as vestingSchedules,
-} from '../../sdk/services/blockchain';
+import { getAccount, getAccountNameFromUsername, TONO_CURRENT_PRICE } from '../../sdk/services/blockchain';
 import { parse } from 'csv-parse/sync';
 import fs from 'fs';
 import settings from '../settings';
@@ -53,15 +49,6 @@ export async function vestingMigrate(options: StandardProposalOptions) {
 
     if (!options.dryRun && options.autoExecute)
         await executeProposal(options.proposer, options.proposalName, proposalHash);
-}
-
-function toBase6Plus1(num: number): string {
-    const base6 = num.toString(6);
-
-    return base6
-        .split('')
-        .map((digit) => (parseInt(digit, 6) + 1).toString())
-        .join('');
 }
 
 export async function vestingMigrate2(options: StandardProposalOptions) {
@@ -194,40 +181,42 @@ async function vestingMigrate4Vesting(options: StandardProposalOptions) {
     let count = 0;
     let proposals = 0;
     // categoryId -> multiplier, newCategoryId
-    const multipliers = new Map<number, { multiplier: number; newCategoryId: number }>([
-        [7, { multiplier: 6.0, newCategoryId: 25 }], // Community and Marketing, Platform Dev, Infra Rewards
-        [8, { multiplier: 1.5, newCategoryId: 16 }], // Seed
-        [9, { multiplier: 3.0, newCategoryId: 17 }], // Pre-sale
-        [9, { multiplier: 3.0, newCategoryId: 17 }], // Pre-sale
-        [10, { multiplier: 1, newCategoryId: 20 }], // Public (TGE)
-        [11, { multiplier: 1, newCategoryId: 19 }], // Private
-        [14, { multiplier: 1, newCategoryId: 21 }], // Liquidity
-        [15, { multiplier: 1.5, newCategoryId: 20 }], // Special
-        [998, { multiplier: 1, newCategoryId: 998 }], // Testing
-        [999, { multiplier: 1, newCategoryId: 999 }], // Testing
+    const migrationInfo = new Map<number, { multiplier: number; newCategoryId: number; fromTreasury: string }>([
+        [7, { multiplier: 6.0, newCategoryId: 25, fromTreasury: 'marketng.tmy' }], // Community and Marketing, Platform Dev, Infra Rewards
+        [8, { multiplier: 1.5, newCategoryId: 16, fromTreasury: 'coinsale.tmy' }], // Seed
+        [9, { multiplier: 3.0, newCategoryId: 17, fromTreasury: 'coinsale.tmy' }], // Pre-sale
+        [10, { multiplier: 1, newCategoryId: 20, fromTreasury: 'coinsale.tmy' }], // Public (TGE)
+        [11, { multiplier: 1, newCategoryId: 19, fromTreasury: 'coinsale.tmy' }], // Private
+        [14, { multiplier: 1, newCategoryId: 21, fromTreasury: 'liquidty.tmy' }], // Liquidity
+        [15, { multiplier: 1.5, newCategoryId: 18, fromTreasury: 'coinsale.tmy' }], // Special
+        [998, { multiplier: 1, newCategoryId: 998, fromTreasury: 'marketng.tmy' }], // Testing
+        [999, { multiplier: 1, newCategoryId: 999, fromTreasury: 'marketng.tmy' }], // Testing
     ]);
     // map username > allocation ID > { multiplier: number; newCategoryId: number }
-    const multiplierOverrides = new Map<string, Map<number, { multiplier: number; newCategoryId: number }>>([
+    const multiplierOverrides = new Map<
+        string,
+        Map<number, { multiplier: number; newCategoryId: number; fromTreasury: string }>
+    >([
         // Team allocation in category 7 should only be multiplied by 1.5
-        ['pegcnjcnnaqd', new Map([[2, { multiplier: 1.5, newCategoryId: 24 }]])],
-        ['pdbma2o2zalz', new Map([[0, { multiplier: 1.5, newCategoryId: 24 }]])],
-        ['pxofpde2rzz3', new Map([[0, { multiplier: 1.5, newCategoryId: 24 }]])],
-        ['pnkhrwvpnjne', new Map([[0, { multiplier: 1.5, newCategoryId: 24 }]])],
-        ['pczkpas1xwgy', new Map([[0, { multiplier: 1.5, newCategoryId: 24 }]])],
-        ['pdwxshjdhapd', new Map([[0, { multiplier: 1.5, newCategoryId: 24 }]])],
-        ['p3quckancxou', new Map([[0, { multiplier: 1.5, newCategoryId: 24 }]])],
-        ['pydft3snil3d', new Map([[0, { multiplier: 1.5, newCategoryId: 24 }]])],
-        ['putzvkbtugyc', new Map([[0, { multiplier: 1.5, newCategoryId: 24 }]])],
-        ['p1wrsvrvhd1', new Map([[0, { multiplier: 1.5, newCategoryId: 24 }]])],
-        ['pb1wegfo2rsk', new Map([[0, { multiplier: 1.5, newCategoryId: 24 }]])],
+        ['pegcnjcnnaqd', new Map([[2, { multiplier: 1.5, newCategoryId: 24, fromTreasury: 'team.tmy' }]])],
+        ['pdbma2o2zalz', new Map([[0, { multiplier: 1.5, newCategoryId: 24, fromTreasury: 'team.tmy' }]])],
+        ['pxofpde2rzz3', new Map([[0, { multiplier: 1.5, newCategoryId: 24, fromTreasury: 'team.tmy' }]])],
+        ['pnkhrwvpnjne', new Map([[0, { multiplier: 1.5, newCategoryId: 24, fromTreasury: 'team.tmy' }]])],
+        ['pczkpas1xwgy', new Map([[0, { multiplier: 1.5, newCategoryId: 24, fromTreasury: 'team.tmy' }]])],
+        ['pdwxshjdhapd', new Map([[0, { multiplier: 1.5, newCategoryId: 24, fromTreasury: 'team.tmy' }]])],
+        ['p3quckancxou', new Map([[0, { multiplier: 1.5, newCategoryId: 24, fromTreasury: 'team.tmy' }]])],
+        ['pydft3snil3d', new Map([[0, { multiplier: 1.5, newCategoryId: 24, fromTreasury: 'team.tmy' }]])],
+        ['putzvkbtugyc', new Map([[0, { multiplier: 1.5, newCategoryId: 24, fromTreasury: 'team.tmy' }]])],
+        ['p1wrsvrvhd1', new Map([[0, { multiplier: 1.5, newCategoryId: 24, fromTreasury: 'team.tmy' }]])],
+        ['pb1wegfo2rsk', new Map([[0, { multiplier: 1.5, newCategoryId: 24, fromTreasury: 'team.tmy' }]])],
         // Network operators in category 7 should only be multiplied by 1.5
-        ['pzqi3jdfewjf', new Map([[0, { multiplier: 1.5, newCategoryId: 27 }]])],
-        ['pjoqns2tjrao', new Map([[0, { multiplier: 1.5, newCategoryId: 27 }]])],
-        ['pvijs1a5fwjp', new Map([[1, { multiplier: 1.5, newCategoryId: 27 }]])],
-        ['p4lojkytrjql', new Map([[0, { multiplier: 1.5, newCategoryId: 27 }]])],
-        ['team.tmy', new Map([[0, { multiplier: 1.5, newCategoryId: 25 }]])],
+        ['pzqi3jdfewjf', new Map([[0, { multiplier: 1.5, newCategoryId: 27, fromTreasury: 'infra.tmy' }]])],
+        ['pjoqns2tjrao', new Map([[0, { multiplier: 1.5, newCategoryId: 27, fromTreasury: 'infra.tmy' }]])],
+        ['pvijs1a5fwjp', new Map([[1, { multiplier: 1.5, newCategoryId: 27, fromTreasury: 'infra.tmy' }]])],
+        ['p4lojkytrjql', new Map([[0, { multiplier: 1.5, newCategoryId: 27, fromTreasury: 'infra.tmy' }]])],
+        ['team.tmy', new Map([[0, { multiplier: 1.5, newCategoryId: 25, fromTreasury: 'infra.tmy' }]])],
         // Fiddl.art grant in category 7 should only be multiplied by 3.0
-        ['p44yuopaawi3', new Map([[0, { multiplier: 3.0, newCategoryId: 24 }]])],
+        ['p44yuopaawi3', new Map([[0, { multiplier: 3.0, newCategoryId: 24, fromTreasury: 'partners.tmy' }]])],
     ]);
     const uniqueHolders = await getVestingContract().getAllUniqueHolders();
     const allAllocations = await getVestingContract().getAllAllocations(uniqueHolders);
@@ -236,8 +225,8 @@ async function vestingMigrate4Vesting(options: StandardProposalOptions) {
         categoryId: number,
         account: string,
         allocationId: number
-    ): { multiplier: number; message: string; newCategoryId: number } {
-        const res = multipliers.get(categoryId);
+    ): { multiplier: number; message: string; newCategoryId: number; fromTreasury: string } {
+        const res = migrationInfo.get(categoryId);
 
         if (!res) throw new Error(`No multiplier for category ${categoryId}`);
 
@@ -248,19 +237,25 @@ async function vestingMigrate4Vesting(options: StandardProposalOptions) {
                 multiplier: override.multiplier,
                 message: `(override multiplier ${res.multiplier.toFixed(1)}x>>${override.multiplier.toFixed(1)}x and category ${res.newCategoryId}>>${override.newCategoryId})`,
                 newCategoryId: override.newCategoryId,
+                fromTreasury: override.fromTreasury,
             };
         }
 
-        return { multiplier: res.multiplier, message: ``, newCategoryId: res.newCategoryId };
+        return {
+            multiplier: res.multiplier,
+            message: ``,
+            newCategoryId: res.newCategoryId,
+            fromTreasury: res.fromTreasury,
+        };
     }
 
-    const batchSize = 100;
+    const batchSize = 500;
 
     for (let i = 0; i < allAllocations.length; i += batchSize) {
         const batch = allAllocations.slice(i, i + batchSize);
 
         const actions: ActionType[] = batch.map((allocation) => {
-            const { multiplier, message, newCategoryId } = getMultiplier(
+            const { multiplier, message, newCategoryId, fromTreasury } = getMultiplier(
                 allocation.vestingCategoryType,
                 allocation.account,
                 allocation.id
@@ -270,12 +265,12 @@ async function vestingMigrate4Vesting(options: StandardProposalOptions) {
             const newAsset = `${newAmount.toFixed(6)} TONO`;
 
             console.log(
-                `Migrating account ${allocation.holder} allocation ${allocation.id} with ${multiplier}x in category ${allocation.vestingCategoryType} from ${allocation.tokensAllocated} to ${newAsset} in category ${newCategoryId}${message ? ': ' + message : ''}`
+                `Migrating account ${allocation.holder} allocation ${allocation.id} with ${multiplier}x in category ${allocation.vestingCategoryType} from ${allocation.tokensAllocated} to ${newAsset} in category ${newCategoryId} from ${fromTreasury}${message ? ': ' + message : ''}`
             );
             count++;
 
             return createMigrateAction(
-                'coinsale.tmy',
+                fromTreasury,
                 allocation.holder,
                 allocation.id,
                 allocation.tokensAllocated,
@@ -285,7 +280,7 @@ async function vestingMigrate4Vesting(options: StandardProposalOptions) {
             );
         });
 
-        const proposalName = Name.from(`${options.proposalName}v${toBase6Plus1(Math.floor(i / batchSize))}`);
+        const proposalName = Name.from(`${options.proposalName}v${toBase6Plus1(i)}`);
 
         console.log(
             `Creating proposal ${proposalName.toString()} with ${actions.length} actions: ${i} - ${i + batchSize}`
@@ -349,12 +344,18 @@ async function vestingMigrate4TokenFixes(options: StandardProposalOptions) {
 async function burnBaseTokens(options: StandardProposalOptions) {
     const burnAction1 = getTokenContract().actions.bridgeRetire({
         from: 'coinsale.tmy',
-        quantity: '3000000000.000000 TONO',
+        quantity: '3000000000.000000 TONO', // Launchpad funds
         memo: 'Burn tokens that will be minted on Base blockchain',
     });
+    const liquidityBurn1 = new Decimal('300000000.000000'); // MEXC liquidity
+    const liquidityBurn2 = new Decimal('300000000.000000'); // MEXC fees
+    const liquidityBurn3 = new Decimal('100000000.000000'); // Aerodome liquidity
+    const liquidityBurn5 = new Decimal('150000000.000000'); // Eesee launchdrop
+    const liquidityBurn6 = new Decimal('30000000.000000'); // Spores marketing
+
     const burnAction2 = getTokenContract().actions.bridgeRetire({
         from: 'liquidty.tmy',
-        quantity: '300000000.000000 TONO',
+        quantity: `${liquidityBurn1.add(liquidityBurn2).add(liquidityBurn3).add(liquidityBurn5).add(liquidityBurn6).toFixed(6)} TONO`,
         memo: 'Burn tokens that will be minted on Base blockchain',
     });
 
@@ -393,17 +394,7 @@ async function vestAllTreasuries(options: StandardProposalOptions) {
     const actions: Action[] = [];
 
     for (const [account, category] of vestingCategories) {
-        let balance = await getTokenContract().getBalanceDecimal(account);
-
-        if (account === 'liquidty.tmy') {
-            // liquidity treasury has to distribute tokens to some partners (e.g. market maker before TGE so we vest only the vesting part
-            // The vested part has the %TGE unlocked removed in the vesting schedule at accommodate for this
-            const vesting = vestingSchedules.get(category);
-
-            if (!vesting) throw new Error(`No vesting schedule for category ${category}`);
-
-            balance = balance.mul(1 - 0.25); // 25% TGE unlocked
-        }
+        const balance = await getTokenContract().getBalanceDecimal(account);
 
         console.log(`Vesting ${balance.toFixed(6)} TONO for ${account} in category ${category}`);
 
@@ -417,6 +408,44 @@ async function vestAllTreasuries(options: StandardProposalOptions) {
         );
     }
 
+    const coinsaleBalance = await getTokenContract().getBalanceDecimal('coinsale.tmy');
+    const coinsaleBalance75 = coinsaleBalance.mul(0.75);
+
+    console.log(
+        `Vesting 75% of coinsale.tmy ${coinsaleBalance75.toFixed(6)} TONO into the liquidity treasury in category 21`
+    );
+    actions.push(
+        getVestingContract().actions.assignTokens({
+            sender: 'coinsale.tmy',
+            holder: 'liquidty.tmy',
+            amount: `${coinsaleBalance75.toFixed(6)} TONO`,
+            category: 21,
+        })
+    );
+    console.log(
+        `Sending 25% coinsale.tmy ${coinsaleBalance.minus(coinsaleBalance75).toFixed(6)} TONO to liquidty.tmy without vesting`
+    );
+    actions.push(
+        getTokenContract().actions.transfer({
+            from: 'coinsale.tmy',
+            to: 'liquidty.tmy',
+            quantity: `${coinsaleBalance.minus(coinsaleBalance75).toFixed(6)} TONO`,
+        })
+    );
+
+    const advTeamBalance = await getTokenContract().getBalanceDecimal('advteam.tmy');
+
+    console.log(
+        `Vesting ${advTeamBalance.toFixed(6)} TONO from advteam.tmy into the marketng.tmy treasury in category 25`
+    );
+    actions.push(
+        getVestingContract().actions.assignTokens({
+            sender: 'advteam.tmy',
+            holder: 'marketng.tmy',
+            amount: `${advTeamBalance.toFixed(6)} TONO`,
+            category: 25,
+        })
+    );
     const proposalName = Name.from(options.proposalName.toString() + 'vest');
 
     const proposalHash = await createProposal(
@@ -429,6 +458,26 @@ async function vestAllTreasuries(options: StandardProposalOptions) {
     );
 
     if (!options.dryRun && options.autoExecute) await executeProposal(options.proposer, proposalName, proposalHash);
+}
+
+async function setStats(options: StandardProposalOptions) {
+    const action = getTokenContract().actions.setStats({});
+
+    console.log(`Setting token stats`);
+
+    const proposalName = Name.from(options.proposalName.toString() + 'stats');
+
+    const proposalHash = await createProposal(
+        options.proposer,
+        proposalName,
+        [action],
+        options.privateKey,
+        options.requested,
+        options.dryRun
+    );
+
+    if (!options.dryRun && options.autoExecute)
+        await executeProposal(options.proposer, options.proposalName, proposalHash);
 }
 
 export async function vestingMigrationBulk(options: StandardProposalOptions) {
@@ -497,12 +546,14 @@ async function vestingSetDates(options: StandardProposalOptions) {
 }
 
 export async function vestingMigrate4(options: StandardProposalOptions) {
-    // Migrate existing vesting allocations applying new multipliers and category changes
-    await vestingMigrate4Vesting(options);
+    await vestAllTreasuries(options);
+    return;
     // Rebalance treasury accounts according to the new tokenomics (initial transfers)
     await vestingMigrate4Tokenomics(options);
     // Apply correction transfers to fix tokenomics deviations and rounding
     await vestingMigrate4TokenFixes(options);
+    // Migrate existing vesting allocations applying new multipliers and category changes
+    await vestingMigrate4Vesting(options);
     // Bulk create pre-TGE vesting allocations from CSV input
     await vestingMigrationBulk(options);
     // Set the vesting dates for when unlocks start
@@ -511,9 +562,199 @@ export async function vestingMigrate4(options: StandardProposalOptions) {
     await burnBaseTokens(options);
     // Configure staking parameters and fund the first month of yield
     await setupStaking(options);
+    // Fix the statistics table in the token contract
+    await setStats(options);
+    // final preparations before TGE
+    await finalPreTgePreparations(options);
+    // fixed hacked account and prepared other payments
+    await finalPreTgePreparations2(options);
+    // fixed accounting for a specific investor
+    await finalPreTgePreparations3(options);
+    // Migrate specific allocations from category 20 to category 18
+    await finalPreTgePreparations4(options);
     // Vest all treasury balances under their respective vesting categories (run after all above proposals)
     // NOTE: should only be called once all above proposals are executed
     await vestAllTreasuries(options);
+}
+
+export async function finalPreTgePreparations(options: StandardProposalOptions) {
+    const actions: Action[] = [];
+
+    // reset the vesting start date
+    actions.push(
+        getVestingContract().actions.setSettings({
+            salesStartDate: VestingContract.SALE_START_DATE,
+            launchDate: VestingContract.VESTING_START_DATE,
+        })
+    );
+
+    // burn final tokens so that 25% of liquidity treasury and all of public IDO are removed from supply (they were minted on Base chain)
+    actions.push(
+        getTokenContract().actions.bridgeRetire({
+            from: 'liquidty.tmy',
+            quantity: '2596063700.000000 TONO', // Rest of the 25% of liquidity treasury
+            memo: 'Final burn of tokens that will be minted on Base blockchain',
+        })
+    );
+
+    const proposalName = Name.from(options.proposalName.toString() + 'final1');
+
+    const proposalHash = await createProposal(
+        options.proposer,
+        proposalName,
+        actions,
+        options.privateKey,
+        options.requested,
+        options.dryRun
+    );
+
+    if (!options.dryRun && options.autoExecute)
+        await executeProposal(options.proposer, options.proposalName, proposalHash);
+}
+
+export async function finalPreTgePreparations2(options: StandardProposalOptions) {
+    const actions: Action[] = [];
+
+    // user got their account hacked
+    // migrate allocations of user to 1 TONO, while assigning to a new user
+    const account = 'pea12gpnkpld';
+    const newAccount = 'p3k2an2tdo54';
+    const allocations = await getVestingContract().getAllocations(account);
+
+    for (const allocation of allocations) {
+        console.log(
+            `Migrating account ${allocation.holder} allocation ${allocation.id} from ${allocation.tokensAllocated} to 1.000000 TONO and assigning original amount to ${newAccount}`
+        );
+        actions.push(
+            getVestingContract().actions.migrateAlloc({
+                sender: 'coinsale.tmy',
+                holder: account,
+                allocationId: allocation.id,
+                oldAmount: allocation.tokensAllocated,
+                newAmount: '1.000000 TONO',
+                oldCategoryId: allocation.vestingCategoryType,
+                newCategoryId: allocation.vestingCategoryType,
+            })
+        );
+
+        actions.push(
+            getVestingContract().actions.assignTokens({
+                sender: 'coinsale.tmy',
+                holder: newAccount,
+                amount: allocation.tokensAllocated,
+                category: allocation.vestingCategoryType,
+            })
+        );
+    }
+
+    let holder = 'pwitdljtnxhf';
+    let amount = '450000000.000000 TONO';
+
+    console.log(`Assigning ${amount} to ${holder} in category 28 from ecosystm.tmy`);
+    actions.push(
+        getVestingContract().actions.assignTokens({
+            sender: 'ecosystm.tmy',
+            holder,
+            amount,
+            category: 28,
+        })
+    );
+
+    holder = 'pegcnjcnnaqd';
+    amount = '833707735.000000 TONO';
+
+    console.log(`Assigning ${amount} to ${holder} in category 19 from coinsale.tmy`);
+    actions.push(
+        getVestingContract().actions.assignTokens({
+            sender: 'coinsale.tmy',
+            holder,
+            amount,
+            category: 19,
+        })
+    );
+
+    const proposalName = Name.from(options.proposalName.toString() + 'final2');
+
+    const proposalHash = await createProposal(
+        options.proposer,
+        proposalName,
+        actions,
+        options.privateKey,
+        options.requested,
+        options.dryRun
+    );
+
+    if (!options.dryRun && options.autoExecute)
+        await executeProposal(options.proposer, options.proposalName, proposalHash);
+}
+
+// this is to pay for an investor that fronted significant costs in front of other investors to be able to pay suppliers on time
+// this settles that account with a Private Round allocation
+export async function finalPreTgePreparations3(options: StandardProposalOptions) {
+    // note some of this was already paid in https://explorer.tonomy.io/transaction/7e91be528943491fce9e303d61ca02344e41baf34ffe6c7b148db073611d9dee
+    const action = getVestingContract().actions.assignTokens({
+        sender: 'coinsale.tmy',
+        holder: 'pegcnjcnnaqd',
+        amount: '179588608.000000 TONO',
+        category: 19,
+    });
+
+    const proposalName = Name.from(options.proposalName.toString() + 'final3');
+
+    const proposalHash = await createProposal(
+        options.proposer,
+        proposalName,
+        [action],
+        options.privateKey,
+        options.requested,
+        options.dryRun
+    );
+
+    if (!options.dryRun && options.autoExecute)
+        await executeProposal(options.proposer, options.proposalName, proposalHash);
+}
+
+// migrate every allocation from category 20 to category 18
+// this is to fix an error where we migrated incorrectly in vestingMigrate4Vesting()
+// see https://discord.com/channels/1029385699071381524/1427670914245460108/1435315934163243220
+async function finalPreTgePreparations4(options: StandardProposalOptions) {
+    const uniqueHolders = await getVestingContract().getAllUniqueHolders();
+    const allAllocations = await getVestingContract().getAllAllocations(uniqueHolders);
+
+    const actions: Action[] = [];
+
+    for (const allocation of allAllocations) {
+        if (allocation.vestingCategoryType === 20) {
+            console.log(
+                `Migrating account ${allocation.holder} allocation ${allocation.id} from category 20 to category 18`
+            );
+            actions.push(
+                getVestingContract().actions.migrateAlloc({
+                    sender: 'coinsale.tmy',
+                    holder: allocation.holder,
+                    allocationId: allocation.id,
+                    oldAmount: allocation.tokensAllocated,
+                    newAmount: allocation.tokensAllocated,
+                    oldCategoryId: 20,
+                    newCategoryId: 18,
+                })
+            );
+        }
+    }
+
+    const proposalName = Name.from(options.proposalName.toString() + 'final4');
+
+    const proposalHash = await createProposal(
+        options.proposer,
+        proposalName,
+        actions,
+        options.privateKey,
+        options.requested,
+        options.dryRun
+    );
+
+    if (!options.dryRun && options.autoExecute)
+        await executeProposal(options.proposer, options.proposalName, proposalHash);
 }
 
 export async function vestingMigrate5(options: StandardProposalOptions) {
@@ -740,6 +981,26 @@ export async function vestingBulk(options: StandardProposalOptions) {
     }
 
     const totalTonomyUsd = results.reduce((sum, record) => sum + record.usdQuantity, 0);
+
+    const totalSenderTeam = results
+        .filter((r) => r.sender === 'team.tmy')
+        .reduce((sum, record) => sum + record.usdQuantity, 0);
+    const totalSenderInfra = results
+        .filter((r) => r.sender === 'infra.tmy')
+        .reduce((sum, record) => sum + record.usdQuantity, 0);
+    const totalSenderEcosystem = results
+        .filter((r) => r.sender === 'ecosystm.tmy')
+        .reduce((sum, record) => sum + record.usdQuantity, 0);
+
+    console.log(
+        `Total USD from team.tmy: $${totalSenderTeam.toFixed(2)} USD / ${(totalSenderTeam / TONO_CURRENT_PRICE).toFixed(0)} TONO (${((totalSenderTeam / 5000000) * 100).toFixed(2)}%)`
+    );
+    console.log(
+        `Total USD from infra.tmy: $${totalSenderInfra.toFixed(2)} USD / ${(totalSenderInfra / TONO_CURRENT_PRICE).toFixed(0)} TONO (${((totalSenderInfra / 5000000) * 100).toFixed(2)}%)`
+    );
+    console.log(
+        `Total USD from ecosystm.tmy: $${totalSenderEcosystem.toFixed(2)} USD / ${(totalSenderEcosystem / TONO_CURRENT_PRICE).toFixed(0)} TONO (${((totalSenderEcosystem / 5000000) * 100).toFixed(2)}%)`
+    );
 
     console.log(`Total USD to be vested: $${totalTonomyUsd.toFixed(2)} USD`);
     console.log(`Using TONO price of $${TONO_CURRENT_PRICE} USD`);
