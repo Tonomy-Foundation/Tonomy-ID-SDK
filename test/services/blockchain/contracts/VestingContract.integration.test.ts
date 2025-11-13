@@ -772,7 +772,7 @@ describe('VestingContract class', () => {
         });
 
         test('Different TONO sales vesting categories', async () => {
-            // expect.assertions(6);
+            expect.assertions(5);
 
             let tonoBalance = await getTokenContract().getBalanceDecimal(accountName);
 
@@ -784,11 +784,14 @@ describe('VestingContract class', () => {
             const tgeUnlock = (vestingCategories as any).get(category).tgeUnlock
 
             await getVestingContract().assignTokens('coinsale.tmy', accountName, amountToAsset(amount, 'TONO'), category, signer);
-            const balances = await getVestingContract().getVestingAllocations(accountName);
+            let balances = await getVestingContract().getVestingAllocations(accountName);
 
             expect(balances.totalAllocation).toBe(amount);
+            expect(balances.unlockable).toBe(0);
 
             await sleepUntil(addSeconds(launchStartDate, 1));
+            balances = await getVestingContract().getVestingAllocations(accountName);
+            expect(balances.unlockable).toBe(amount * tgeUnlock);
             await getVestingContract().withdraw(accountName, accountSigner);
 
             tonoBalance = await getTokenContract().getBalanceDecimal(accountName);
