@@ -51,13 +51,13 @@ export async function transfer(options: StandardProposalOptions) {
 export async function bulkTransfer(options: StandardProposalOptions & { transfers?: [string, string, Decimal][] }) {
     const actions: Action[] = [];
 
-    const price = 0.00005492; // https://www.coingecko.com/en/coins/tonomy
+    const priceOverride = 0.0000233268; // https://www.coingecko.com/en/coins/tonomy
 
     if (!options.transfers || options.transfers.length === 0) {
-        options.transfers = (await getTransfersFromFile()).map(({ sender, accountName, usdQuantity }) => [
+        options.transfers = (await getTransfersFromFile()).map(({ sender, accountName, usdQuantity, price }) => [
             sender,
             accountName,
-            new Decimal(usdQuantity).div(price),
+            new Decimal(usdQuantity).div(price ?? priceOverride),
         ]);
     }
 
@@ -76,7 +76,7 @@ export async function bulkTransfer(options: StandardProposalOptions & { transfer
             from,
             to,
             quantity: amount.toFixed(6) + ' TONO',
-            memo: 'Migrating tokenomics to v30',
+            memo: '',
         });
 
         actions.push(action);
@@ -95,7 +95,9 @@ export async function bulkTransfer(options: StandardProposalOptions & { transfer
         await executeProposal(options.proposer, options.proposalName, proposalHash);
 }
 
-async function getTransfersFromFile(): Promise<{ sender: string; accountName: string; usdQuantity: number }[]> {
+async function getTransfersFromFile(): Promise<
+    { sender: string; accountName: string; usdQuantity: number; price: number }[]
+> {
     const csvFilePath = '/home/dev/Downloads/transfers.csv';
 
     console.log('Reading file: ', csvFilePath);
@@ -105,7 +107,7 @@ async function getTransfersFromFile(): Promise<{ sender: string; accountName: st
         // eslint-disable-next-line camelcase
         skip_empty_lines: true,
     });
-    const results: { sender: string; accountName: string; usdQuantity: number }[] = [];
+    const results: { sender: string; accountName: string; usdQuantity: number; price: number }[] = [];
 
     const unfoundAccounts: string[] = [];
 
@@ -160,6 +162,7 @@ async function getTransfersFromFile(): Promise<{ sender: string; accountName: st
                     data.accountName = accountName;
 
                     data.usdQuantity = Number(data.usdQuantity);
+                    data.price = Number(data.price);
 
                     if (isNaN(data.usdQuantity)) {
                         throw new Error(`Invalid quantity type on line ${results.length + 1}: ${data}`);
@@ -169,6 +172,9 @@ async function getTransfersFromFile(): Promise<{ sender: string; accountName: st
                         throw new Error(`Invalid quantity on line ${results.length + 1}: ${data}`);
                     }
 
+                    console.log(
+                        `${results.length + 1}: ${data.accountName}, $${data.usdQuantity} / ${data.price} = ${(data.usdQuantity / data.price).toFixed(6)} TONO from ${data.sender}`
+                    );
                     results.push(data);
                 } catch (e) {
                     if (isErrorCode(e, [SdkErrors.AccountDoesntExist, SdkErrors.UsernameNotFound])) {
