@@ -39,7 +39,7 @@
     "lint:fix": "yarn run lint -- --fix",
     "release": "semantic-release  --debug",
     "prepare": "yarn run build",
-    "typeCheck": "tsc --noEmit --skipLibCheck"
+    "typeCheck": "tsc --noEmit --skipLibCheck --project tsconfig.all.json"
   },
   "name": "@tonomy/tonomy-id-sdk",
   "author": "Jack Tanner",
