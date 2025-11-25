@@ -95,9 +95,9 @@ export async function bulkTransfer(options: StandardProposalOptions & { transfer
         await executeProposal(options.proposer, options.proposalName, proposalHash);
 }
 
-async function getTransfersFromFile(): Promise<
-    { sender: string; accountName: string; usdQuantity: number; price: number }[]
-> {
+type TransferRecord = { sender: string; accountName: string; usdQuantity: number; price: number };
+
+async function getTransfersFromFile(): Promise<TransferRecord[]> {
     const csvFilePath = '/home/dev/Downloads/transfers.csv';
 
     console.log('Reading file: ', csvFilePath);

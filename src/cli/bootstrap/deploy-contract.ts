@@ -10,7 +10,7 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const thisFileDirectory = __dirname;
-const defaultContractDirectory = path.join(thisFileDirectory, '..', '..', 'Tonomy-Contracts', 'contracts');
+const defaultContractDirectory = path.join(thisFileDirectory, '..', '..', '..', 'Tonomy-Contracts', 'contracts');
 
 export function getDeployableFiles(contract: string, directory?: string): { wasmFile: Buffer; abiFile: string } {
     const contractDir = directory ?? `${defaultContractDirectory}/${contract.toString()}`;
