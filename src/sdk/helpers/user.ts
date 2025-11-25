@@ -11,7 +11,7 @@ import { StorageFactory } from '../storage/storage';
 import { TonomyUsername } from '../util/username';
 import { User } from '../controllers/User';
 import { getTonomyContract } from '../services/blockchain/contracts/TonomyContract';
-import { DataSource } from 'typeorm';
+import type { DataSource } from 'typeorm';
 
 export async function getAccountInfo(account: TonomyUsername | Name): Promise<API.v1.AccountObject> {
     let accountName: Name;

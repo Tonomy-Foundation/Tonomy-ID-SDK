@@ -35,6 +35,32 @@ export function assetToDecimal(asset: string, symbol?: string): Decimal {
     return new Decimal(assetToNumberString(asset, symbol));
 }
 
+export function formatAssetString(
+    asset: string | number | Decimal,
+    symbol = getSettings().currencySymbol,
+    precision = 0,
+    padding = 12
+): string {
+    let assetDecimal: Decimal;
+
+    if (typeof asset === 'string') {
+        assetDecimal = new Decimal(asset);
+    } else if (typeof asset === 'number') {
+        assetDecimal = new Decimal(asset);
+    } else {
+        assetDecimal = asset;
+    }
+
+    return (
+        assetDecimal
+            .toFixed(precision)
+            .replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+            .padStart(padding) +
+        ' ' +
+        symbol
+    );
+}
+
 /** Convert a number to an EOSIO asset string
  *
  * @deprecated remove use of number to represent tokens. Use Decimal/BigInt instead

@@ -20,7 +20,7 @@ import { Resolver } from 'did-resolver';
 import { getResolver as ethrDidResolver } from 'ethr-did-resolver';
 import { getResolver as webDidResolver } from 'web-did-resolver';
 import { Entities, KeyStore, DIDStore, PrivateKeyStore, migrations } from '@veramo/data-store';
-import { DataSource } from 'typeorm';
+import type { DataSource } from 'typeorm';
 import { Wallet } from 'ethers';
 import Debug from 'debug';
 
