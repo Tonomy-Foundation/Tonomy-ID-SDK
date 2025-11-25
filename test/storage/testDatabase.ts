@@ -1,6 +1,7 @@
 import { DataSource } from 'typeorm';
 import { IdentityVerificationStorage } from '../../src/sdk/storage/entities/identityVerificationStorage';
 import { IdentityVerificationStorageManager } from '../../src/sdk/storage/identityVerificationStorageManager';
+import { IdentityVerificationStorageRepository } from '../../src/sdk/storage/identityVerificationStorageRepository';
 
 let dataSource: DataSource;
 
@@ -19,7 +20,10 @@ export const setupTestDatabase = async () => {
 
 export const resetTestDatabase = async () => {
     if (dataSource) {
-        const identityVerificationStorageManager = new IdentityVerificationStorageManager(dataSource);
+        const identityVerificationStorageRepository = new IdentityVerificationStorageRepository(dataSource);
+        const identityVerificationStorageManager = new IdentityVerificationStorageManager(
+            identityVerificationStorageRepository
+        );
 
         await identityVerificationStorageManager.deleteAll();
     }
