@@ -4,13 +4,24 @@ import fs from 'fs';
 import { Name, NameType } from '@wharfkit/antelope';
 import { Signer } from '../../sdk/services/blockchain/eosio/transaction';
 import { getEosioContract, getTonomyEosioProxyContract } from '../../sdk';
-import path, { dirname } from 'path';
+import path from 'path';
 import { fileURLToPath } from 'url';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-const thisFileDirectory = __dirname;
-const defaultContractDirectory = path.join(thisFileDirectory, '..', '..', 'Tonomy-Contracts', 'contracts');
+// Find package root by looking for package.json (works from both src/ and bundled build/)
+function findPackageRoot(startPath: string): string {
+    let dir = startPath;
+
+    while (dir !== path.parse(dir).root) {
+        if (fs.existsSync(path.join(dir, 'package.json'))) return dir;
+        dir = path.dirname(dir);
+    }
+
+    throw new Error('Could not find package root');
+}
+
+const currentDir = path.dirname(fileURLToPath(import.meta.url));
+const packageRoot = findPackageRoot(currentDir);
+const defaultContractDirectory = path.join(packageRoot, 'Tonomy-Contracts', 'contracts');
 
 export function getDeployableFiles(contract: string, directory?: string): { wasmFile: Buffer; abiFile: string } {
     const contractDir = directory ?? `${defaultContractDirectory}/${contract.toString()}`;

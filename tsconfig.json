@@ -2,7 +2,7 @@
     "compilerOptions": {
         "target": "ES2022",
         "experimentalDecorators": true,
-        "emitDecoratorMetadata": true, 
+        "emitDecoratorMetadata": true,
         "module": "ES2022",
         "lib": [
             "dom",
@@ -38,13 +38,15 @@
         "skipLibCheck": true,
         "forceConsistentCasingInFileNames": true,
         "strictPropertyInitialization": false,
-        "resolveJsonModule": true,
     },
-    "include": ["src", "test"],
+    "include": [
+        "src"
+    ],
     "exclude": [
         "node_modules",
         "build",
         "Tonomy-Communication",
-        "Tonomy-Contracts"
+        "Tonomy-Contracts",
+        "test"
     ]
 }

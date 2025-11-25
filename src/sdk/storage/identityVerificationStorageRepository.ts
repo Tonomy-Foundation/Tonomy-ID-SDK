@@ -1,4 +1,4 @@
-import { Repository, DataSource } from 'typeorm';
+import type { Repository, DataSource } from 'typeorm';
 import { IdentityVerificationStorage } from './entities/identityVerificationStorage';
 import { VerificationTypeEnum } from '../types/VerificationTypeEnum';
 import { VeriffStatusEnum } from '../types/VeriffStatusEnum';
