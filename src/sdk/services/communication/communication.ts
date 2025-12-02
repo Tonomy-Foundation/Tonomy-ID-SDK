@@ -14,6 +14,7 @@ const debug = Debug('tonomy-sdk:services:communication:communication');
 
 export type Subscriber = (message: Message) => void;
 export type VeriffSubscriber = (message: VerificationMessage) => Promise<void>;
+export type SwapSubscriber = (memo: string) => Promise<void>;
 
 export const SOCKET_TIMEOUT = 100000;
 export const SESSION_TIMEOUT = 40000;
@@ -317,5 +318,35 @@ export class Communication {
             this.socketServer.off('v1/verification/veriff/receive', subscriber);
             this.subscribers.delete(id);
         }
+    }
+
+    subscribeSwapBaseToTonomy(subscriber: SwapSubscriber): number {
+        Communication.identifier++;
+
+        const messageHandler = (data: any) => {
+            try {
+                // Extract memo from the received data
+                let memo: string;
+
+                if (typeof data === 'string') {
+                    memo = data;
+                } else {
+                    throwError('Invalid swap data received:', data);
+                }
+
+                debug('Received swap from base to tonomy:', memo);
+
+                // Call the subscriber with just the memo string
+                subscriber(memo).catch((err) => {
+                    throwError('Error in swap subscriber:', err);
+                });
+            } catch (err) {
+                throwError('Error processing swap message:', err);
+            }
+        };
+
+        this.socketServer.on('v1/swap/base/token', messageHandler);
+        this.subscribers.set(Communication.identifier, messageHandler);
+        return Communication.identifier;
     }
 }

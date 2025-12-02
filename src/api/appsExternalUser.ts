@@ -1,5 +1,5 @@
 import Decimal from 'decimal.js';
-import { Communication } from '../sdk/services/communication/communication';
+import { Communication, SwapSubscriber } from '../sdk/services/communication/communication';
 import { extractProofMessage, TonomyToBaseTransfer } from '../sdk/services/ethereum';
 import { KeyManager } from '../sdk/storage/keymanager';
 import { StorageFactory } from '../sdk/storage/storage';
@@ -71,7 +71,7 @@ export class AppsExternalUser extends ExternalUser {
      * @param {Signer} signer - Signer object for transaction authorization
      */
 
-    async swapBaseToTonomyToken(amount: Decimal, baseAddress: string, signer: Signer): Promise<void> {
+    async swapBaseToTonomyToken(amount: Decimal, baseAddress: string, signer: Signer): Promise<boolean> {
         const issuer = await this.getIssuer();
         const tonomyAccount = getAccountNameFromDid(issuer.did);
 
@@ -79,7 +79,21 @@ export class AppsExternalUser extends ExternalUser {
         const memo = `swap:${swapId}:${tonomyAccount}`;
         const antelopeAsset = `${amount.toFixed(6)} ${getSettings().currencySymbol}`;
 
-        const transaction = await TonomyToBaseTransfer(tonomyAccount, baseAddress, antelopeAsset, memo, signer);
-        //add subscriber here
+        await TonomyToBaseTransfer(tonomyAccount, baseAddress, antelopeAsset, memo, signer);
+
+        let id: number | undefined;
+
+        return await new Promise<boolean>((resolve, reject) => {
+            const newHandler: SwapSubscriber = async (memo: string): Promise<void> => {
+                try {
+                    console.log('wait for swap to tonomy', memo);
+                    resolve(true);
+                } catch (error) {
+                    reject(error);
+                }
+            };
+
+            id = this.communication.subscribeSwapBaseToTonomy(newHandler);
+        });
     }
 }
