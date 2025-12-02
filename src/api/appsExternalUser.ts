@@ -1,17 +1,12 @@
 import Decimal from 'decimal.js';
 import { Communication } from '../sdk/services/communication/communication';
-import { extractProofMessage } from '../sdk/services/ethereum';
+import { extractProofMessage, TonomyToBaseTransfer } from '../sdk/services/ethereum';
 import { KeyManager } from '../sdk/storage/keymanager';
 import { StorageFactory } from '../sdk/storage/storage';
-import {
-    SwapBaseTokenMessage,
-    SwapBaseTokenMessagePayload,
-    SwapTokenMessage,
-    SwapTokenMessagePayload,
-} from '../sdk/services/communication/message';
+import { SwapTokenMessage, SwapTokenMessagePayload } from '../sdk/services/communication/message';
 import { SdkErrors, throwError } from '../sdk/util/errors';
 import { ExternalUser } from './externalUser';
-import { Signer } from 'ethers';
+import { getAccountNameFromDid, getSettings, Signer } from '../sdk';
 
 export class AppsExternalUser extends ExternalUser {
     constructor(user: ExternalUser) {
@@ -72,22 +67,19 @@ export class AppsExternalUser extends ExternalUser {
      * Swaps $TONO tokens from Tonomy chain to Base chain.
      *
      * @param {Decimal} amount - Amount of $TONO tokens to swap
-     * @param {string} memo - Optional memo/note for the swap transaction
      * @param {string} baseAddress - Recipient address on Base chain
      * @param {Signer} signer - Signer object for transaction authorization
      */
 
-    async swapBaseToken(amount: Decimal, memo: string, baseAddress: string, signer: Signer): Promise<void> {
-        const payload: SwapBaseTokenMessagePayload = {
-            amount,
-            baseAddress,
-            memo,
-            signer: signer,
-        };
-
+    async swapBaseToTonomyToken(amount: Decimal, baseAddress: string, signer: Signer): Promise<void> {
         const issuer = await this.getIssuer();
-        const swapMessage = await SwapBaseTokenMessage.signMessage(payload, issuer, baseAddress);
+        const tonomyAccount = getAccountNameFromDid(issuer.did);
 
-        return await this.sendSwapMessage(swapMessage);
+        const swapId = 'swap_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        const memo = `swap:${swapId}:${tonomyAccount}`;
+        const antelopeAsset = `${amount.toFixed(6)} ${getSettings().currencySymbol}`;
+
+        const transaction = await TonomyToBaseTransfer(tonomyAccount, baseAddress, antelopeAsset, memo, signer);
+        //add subscriber here
     }
 }
