@@ -4,6 +4,9 @@ import Debug from 'debug';
 import { randomString } from '../../util/crypto';
 // eslint-disable-next-line camelcase
 import { TonomyToken, TonomyToken__factory } from './typechain'; // adjust path if different
+import { Signer } from '../blockchain/eosio/transaction';
+import { API, AssetType, NameType } from '@wharfkit/antelope';
+import { getTokenContract } from '../blockchain';
 
 const debug = Debug('tonomy-sdk:services:ethereum');
 
@@ -37,6 +40,18 @@ export function getBaseTokenContract(signer?: ethers.Signer): TonomyToken {
 
     // eslint-disable-next-line camelcase
     return TonomyToken__factory.connect(baseTokenAddress, signer || provider);
+}
+
+export async function TonomyToBaseTransfer(
+    from: NameType,
+    to: NameType,
+    quantity: AssetType,
+    memo: string,
+    signer: Signer
+): Promise<API.v1.PushTransactionResponse> {
+    const tokenContract = getTokenContract();
+
+    return await tokenContract.transfer(from, to, quantity, memo, signer);
 }
 
 let browserInjectedSigner: ethers.Signer | undefined;

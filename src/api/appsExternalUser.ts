@@ -3,9 +3,15 @@ import { Communication } from '../sdk/services/communication/communication';
 import { extractProofMessage } from '../sdk/services/ethereum';
 import { KeyManager } from '../sdk/storage/keymanager';
 import { StorageFactory } from '../sdk/storage/storage';
-import { SwapTokenMessage, SwapTokenMessagePayload } from '../sdk/services/communication/message';
+import {
+    SwapBaseTokenMessage,
+    SwapBaseTokenMessagePayload,
+    SwapTokenMessage,
+    SwapTokenMessagePayload,
+} from '../sdk/services/communication/message';
 import { SdkErrors, throwError } from '../sdk/util/errors';
 import { ExternalUser } from './externalUser';
+import { Signer } from 'ethers';
 
 export class AppsExternalUser extends ExternalUser {
     constructor(user: ExternalUser) {
@@ -58,6 +64,29 @@ export class AppsExternalUser extends ExternalUser {
 
         const issuer = await this.getIssuer();
         const swapMessage = await SwapTokenMessage.signMessage(payload, issuer, address);
+
+        return await this.sendSwapMessage(swapMessage);
+    }
+
+    /**
+     * Swaps $TONO tokens from Tonomy chain to Base chain.
+     *
+     * @param {Decimal} amount - Amount of $TONO tokens to swap
+     * @param {string} memo - Optional memo/note for the swap transaction
+     * @param {string} baseAddress - Recipient address on Base chain
+     * @param {Signer} signer - Signer object for transaction authorization
+     */
+
+    async swapBaseToken(amount: Decimal, memo: string, baseAddress: string, signer: Signer): Promise<void> {
+        const payload: SwapBaseTokenMessagePayload = {
+            amount,
+            baseAddress,
+            memo,
+            signer: signer,
+        };
+
+        const issuer = await this.getIssuer();
+        const swapMessage = await SwapBaseTokenMessage.signMessage(payload, issuer, baseAddress);
 
         return await this.sendSwapMessage(swapMessage);
     }

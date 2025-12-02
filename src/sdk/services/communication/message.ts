@@ -14,6 +14,7 @@ import {
     NationalityVC,
 } from '../../util/veriff';
 import Decimal from 'decimal.js';
+import { Signer } from 'ethers';
 
 const debug = Debug('tonomy-sdk:services:communication:message');
 
@@ -337,6 +338,13 @@ export class SwapTokenMessagePayload {
     _testOnly_tonomyAppsWebsiteUsername?: string;
 }
 
+export class SwapBaseTokenMessagePayload {
+    amount: Decimal;
+    baseAddress: string;
+    memo: string;
+    signer: Signer;
+}
+
 export class SwapTokenMessage extends Message<SwapTokenMessagePayload> {
     protected static type = 'SwapTokenMessage';
 
@@ -358,6 +366,39 @@ export class SwapTokenMessage extends Message<SwapTokenMessagePayload> {
         options: { subject?: URL } = {}
     ) {
         const vc = await super.signMessageWithRecipient<SwapTokenMessagePayload>(message, issuer, recipient, options);
+
+        return new SwapTokenMessage(vc);
+    }
+}
+
+export class SwapBaseTokenMessage extends Message<SwapBaseTokenMessagePayload> {
+    protected static type = 'SwapBaseTokenMessage';
+
+    constructor(
+        vc: SwapBaseTokenMessage | Message<SwapBaseTokenMessagePayload> | VCWithTypeType<SwapBaseTokenMessagePayload>
+    ) {
+        super(vc);
+        this.decodedPayload = {
+            ...this.decodedPayload,
+            amount: new Decimal(this.decodedPayload.amount),
+        };
+    }
+
+    /**
+     * Alternative constructor that returns type SwapTokenMessage
+     */
+    static async signMessage(
+        message: SwapBaseTokenMessagePayload,
+        issuer: Issuer,
+        recipient: DIDurl,
+        options: { subject?: URL } = {}
+    ) {
+        const vc = await super.signMessageWithRecipient<SwapTokenMessagePayload | SwapBaseTokenMessagePayload>(
+            message,
+            issuer,
+            recipient,
+            options
+        );
 
         return new SwapTokenMessage(vc);
     }
