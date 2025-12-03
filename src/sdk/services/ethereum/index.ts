@@ -1,4 +1,4 @@
-import { ethers, parseUnits } from 'ethers';
+import { ethers, formatUnits, parseUnits } from 'ethers';
 import { getSettings, isProduction } from '../../util/settings';
 import Debug from 'debug';
 import { randomString } from '../../util/crypto';
@@ -61,6 +61,40 @@ export async function tonomyToBaseTransfer(
     };
 
     return await signer.sendTransaction(tx);
+}
+
+export async function decodeTransferTransaction(txHash: string): Promise<{
+    from: string;
+    to: string;
+    amount: Decimal;
+    memo: string;
+}> {
+    const provider = getProvider();
+
+    const tx = await provider.getTransaction(txHash);
+
+    if (!tx) throw new Error('Transaction not found');
+    const token = getBaseTokenContract();
+    // ABI-decode the transfer function call
+    // transfer(address to, uint256 amount)
+    const decoded = token.interface.decodeFunctionData('transfer', tx.data);
+    const transferTo = decoded[0] as string;
+    const rawAmount = decoded[1] as bigint;
+    const amount = new Decimal(formatUnits(rawAmount, 18));
+    // Extract memo from leftover bytes
+    // transfer data ends exactly where ABI says it should.
+    const transferDataHex = token.interface.encodeFunctionData('transfer', [transferTo, rawAmount]);
+
+    const memoHex = tx.data.substring(transferDataHex.length);
+    const memoBytes = memoHex ? ethers.getBytes('0x' + memoHex) : new Uint8Array();
+    const memo = memoBytes.length ? ethers.toUtf8String(memoBytes) : '';
+
+    return {
+        from: tx.from!,
+        to: transferTo,
+        amount,
+        memo,
+    };
 }
 
 let browserInjectedSigner: ethers.Signer | undefined;
