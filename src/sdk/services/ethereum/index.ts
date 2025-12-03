@@ -4,8 +4,6 @@ import Debug from 'debug';
 import { randomString } from '../../util/crypto';
 // eslint-disable-next-line camelcase
 import { TonomyToken, TonomyToken__factory } from './typechain'; // adjust path if different
-import { AssetType, NameType } from '@wharfkit/antelope';
-import { RegExpOrString } from 'typeorm/browser';
 import Decimal from 'decimal.js';
 
 const debug = Debug('tonomy-sdk:services:ethereum');
