@@ -349,4 +349,13 @@ export class Communication {
         this.subscribers.set(Communication.identifier, messageHandler);
         return Communication.identifier;
     }
+
+    unsubscribeSwapBaseToTonomy(id: number): void {
+        const subscriber = this.subscribers.get(id);
+
+        if (subscriber) {
+            this.socketServer.off('v1/swap/base/token', subscriber);
+            this.subscribers.delete(id);
+        }
+    }
 }

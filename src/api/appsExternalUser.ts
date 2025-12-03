@@ -1,12 +1,13 @@
 import Decimal from 'decimal.js';
 import { Communication, SwapSubscriber } from '../sdk/services/communication/communication';
-import { extractProofMessage, TonomyToBaseTransfer } from '../sdk/services/ethereum';
+import { extractProofMessage, tonomyToBaseTransfer } from '../sdk/services/ethereum';
 import { KeyManager } from '../sdk/storage/keymanager';
 import { StorageFactory } from '../sdk/storage/storage';
 import { SwapTokenMessage, SwapTokenMessagePayload } from '../sdk/services/communication/message';
 import { SdkErrors, throwError } from '../sdk/util/errors';
 import { ExternalUser } from './externalUser';
-import { getAccountNameFromDid, getSettings, Signer } from '../sdk';
+import { getAccountNameFromDid, getSettings, randomString, Signer } from '../sdk';
+import { ethers } from 'ethers';
 
 export class AppsExternalUser extends ExternalUser {
     constructor(user: ExternalUser) {
@@ -39,10 +40,10 @@ export class AppsExternalUser extends ExternalUser {
      * @param { { message: string; signature: string } } proof contains message and signature
      * @param { 'base' | 'tonomy' } destination Either "base" or "tonomy"
      */
-    async swapToken(
+    async swapTonomyToBaseToken(
         amount: Decimal,
         proof: { message: string; signature: string },
-        destination: 'base' | 'tonomy',
+        destination: 'tonomy',
         // eslint-disable-next-line camelcase
         _testOnly_tonomyAppsWebsiteUsername?: string
     ): Promise<void> {
@@ -71,29 +72,47 @@ export class AppsExternalUser extends ExternalUser {
      * @param {Signer} signer - Signer object for transaction authorization
      */
 
-    async swapBaseToTonomyToken(amount: Decimal, baseAddress: string, signer: Signer): Promise<boolean> {
+    async swapBaseToTonomyToken(amount: Decimal, baseAddress: string, signer: ethers.Signer): Promise<boolean> {
         const issuer = await this.getIssuer();
         const tonomyAccount = getAccountNameFromDid(issuer.did);
 
-        const swapId = 'swap_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        const swapId = 'swap_' + Date.now() + '_' + randomString(8);
         const memo = `swap:${swapId}:${tonomyAccount}`;
-        const antelopeAsset = `${amount.toFixed(6)} ${getSettings().currencySymbol}`;
 
-        await TonomyToBaseTransfer(tonomyAccount, baseAddress, antelopeAsset, memo, signer);
-
+        const TIMEOUT_MS = 2 * 60 * 1000;
         let id: number | undefined;
 
-        return await new Promise<boolean>((resolve, reject) => {
+        const waitForSwap = new Promise<boolean>((resolve, reject) => {
+            const timeoutId = setTimeout(() => {
+                if (id !== undefined) {
+                    this.communication.unsubscribeSwapBaseToTonomy(id);
+                }
+
+                reject(new Error('Swap subscriber timed out after 2 minutes'));
+            }, TIMEOUT_MS);
+
             const newHandler: SwapSubscriber = async (memo: string): Promise<void> => {
                 try {
                     console.log('wait for swap to tonomy', memo);
                     resolve(true);
                 } catch (error) {
                     reject(error);
+                } finally {
+                    clearTimeout(timeoutId);
+
+                    if (id !== undefined) {
+                        this.communication.unsubscribeSwapBaseToTonomy(id);
+                    }
                 }
             };
 
             id = this.communication.subscribeSwapBaseToTonomy(newHandler);
         });
+
+        // 2. Send the transaction
+        await tonomyToBaseTransfer(baseAddress, amount, memo, signer);
+
+        // 3. Now wait for the event
+        return await waitForSwap;
     }
 }

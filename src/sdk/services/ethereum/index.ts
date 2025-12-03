@@ -1,12 +1,12 @@
-import { ethers } from 'ethers';
+import { ethers, parseUnits } from 'ethers';
 import { getSettings, isProduction } from '../../util/settings';
 import Debug from 'debug';
 import { randomString } from '../../util/crypto';
 // eslint-disable-next-line camelcase
 import { TonomyToken, TonomyToken__factory } from './typechain'; // adjust path if different
-import { Signer } from '../blockchain/eosio/transaction';
-import { API, AssetType, NameType } from '@wharfkit/antelope';
-import { getTokenContract } from '../blockchain';
+import { AssetType, NameType } from '@wharfkit/antelope';
+import { RegExpOrString } from 'typeorm/browser';
+import Decimal from 'decimal.js';
 
 const debug = Debug('tonomy-sdk:services:ethereum');
 
@@ -42,16 +42,25 @@ export function getBaseTokenContract(signer?: ethers.Signer): TonomyToken {
     return TonomyToken__factory.connect(baseTokenAddress, signer || provider);
 }
 
-export async function TonomyToBaseTransfer(
-    from: NameType,
-    to: NameType,
-    quantity: AssetType,
+export async function tonomyToBaseTransfer(
+    to: ethers.AddressLike,
+    quantity: Decimal,
     memo: string,
-    signer: Signer
-): Promise<API.v1.PushTransactionResponse> {
-    const tokenContract = getTokenContract();
+    signer: ethers.Signer
+): Promise<ethers.TransactionResponse> {
+    const { baseTokenAddress } = getSettings();
 
-    return await tokenContract.transfer(from, to, quantity, memo, signer);
+    const token = getBaseTokenContract(signer);
+    const weiAmount = parseUnits(quantity.toString(), 18);
+    const transferData = token.interface.encodeFunctionData('transfer', [to, weiAmount]);
+    const memoHex = ethers.hexlify(ethers.toUtf8Bytes(memo)).substring(2);
+
+    const tx = {
+        to: baseTokenAddress,
+        data: transferData + memoHex,
+    };
+
+    return await signer.sendTransaction(tx);
 }
 
 let browserInjectedSigner: ethers.Signer | undefined;
