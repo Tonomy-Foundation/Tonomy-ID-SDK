@@ -6,7 +6,7 @@ import { StorageFactory } from '../sdk/storage/storage';
 import { SwapTokenMessage, SwapTokenMessagePayload } from '../sdk/services/communication/message';
 import { SdkErrors, throwError } from '../sdk/util/errors';
 import { ExternalUser } from './externalUser';
-import { getAccountNameFromDid, getSettings, randomString, Signer } from '../sdk';
+import { getAccountNameFromDid, randomString } from '../sdk';
 import { ethers } from 'ethers';
 
 export class AppsExternalUser extends ExternalUser {
