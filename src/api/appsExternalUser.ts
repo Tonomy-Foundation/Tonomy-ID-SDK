@@ -76,7 +76,7 @@ export class AppsExternalUser extends ExternalUser {
         const issuer = await this.getIssuer();
         const tonomyAccount = getAccountNameFromDid(issuer.did);
 
-        const swapId = 'swap_' + Date.now() + '_' + randomString(8);
+        const swapId = randomString(8);
         const memo = `swap:${swapId}:${tonomyAccount}`;
 
         const TIMEOUT_MS = 2 * 60 * 1000;
