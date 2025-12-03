@@ -9,7 +9,6 @@ type ConfigType = {
     blockchainUrl: string;
     ssoWebsiteOrigin: string;
     demoWebsiteOrigin: string;
-    consoleWebsiteOrigin: string;
     tonomyAppsOrigin: string;
     accountSuffix: string;
     communicationUrl: string;
@@ -30,7 +29,6 @@ const defaultConfig = {
     environment: 'development',
     ssoWebsiteOrigin: `http://${ipAddress}:3000`,
     demoWebsiteOrigin: `http://${ipAddress}:3001`,
-    consoleWebsiteOrigin: `http://${ipAddress}:3002`,
     tonomyAppsOrigin: `http://${ipAddress}:3003`,
     blockchainUrl: `http://${ipAddress}:8888`,
     accountSuffix: '.stag.tonomy.id',
@@ -50,7 +48,6 @@ const stagingConfig = {
     environment: 'staging',
     ssoWebsiteOrigin: `https://accounts.staging.tonomy.foundation`,
     demoWebsiteOrigin: `https://demo.staging.tonomy.foundation`,
-    consoleWebsiteOrigin: `https://console.developers.staging.tonomy.foundation`,
     tonomyAppsOrigin: `https://apps.staging.tonomy.foundation`,
     blockchainUrl: `https://blockchain-api-staging.tonomy.foundation`,
     accountSuffix: '.stag.tonomy.id',
@@ -69,7 +66,6 @@ const testnetConfig = {
     environment: 'testnet',
     ssoWebsiteOrigin: `https://accounts.testnet.tonomy.io`,
     demoWebsiteOrigin: `https://demo.testnet.tonomy.io`,
-    consoleWebsiteOrigin: `https://console.developers.testnet.tonomy.io`,
     tonomyAppsOrigin: `https://apps.testnet.tonomy.io`,
     blockchainUrl: `https://test.pangea.eosusa.io`,
     accountSuffix: '.testnet.pangea',
@@ -88,7 +84,6 @@ const productionConfig = {
     environment: 'production',
     ssoWebsiteOrigin: `https://accounts.tonomy.io`,
     demoWebsiteOrigin: `https://demo.tonomy.io`,
-    consoleWebsiteOrigin: `https://console.developers.tonomy.io`,
     tonomyAppsOrigin: `https://apps.tonomy.io`,
     blockchainUrl: `https://pangea.eosusa.io`,
     accountSuffix: '.pangea.id',
