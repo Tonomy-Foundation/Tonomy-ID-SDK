@@ -48,7 +48,7 @@ export class Communication {
      * @returns {boolean} true if the message has been seen before
      */
     private checkSeenMessage(message: string): boolean {
-        if (!process.env.CI && process.env.NODE_ENV !== 'test') return false;
+        if (typeof process !== 'undefined' && !process.env.CI && process.env.NODE_ENV !== 'test') return false;
         const res = this.seenMessages.has(sha256(message));
 
         this.addSeenMessage(message);
