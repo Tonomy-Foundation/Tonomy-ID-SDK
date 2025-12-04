@@ -50,6 +50,17 @@ export async function tonomyToBaseTransfer(
 
     const token = getBaseTokenContract(signer);
     const weiAmount = parseUnits(quantity.toString(), 18);
+
+    // Check balance first
+    const signerAddress = await signer.getAddress();
+    const balance = await token.balanceOf(signerAddress);
+
+    if (balance < weiAmount) {
+        throw new Error(
+            `Insufficient balance. Available: ${formatUnits(balance, 18)}, Required: ${quantity.toString()}, Address: ${to}`
+        );
+    }
+
     const transferData = token.interface.encodeFunctionData('transfer', [to, weiAmount]);
     const memoHex = ethers.hexlify(ethers.toUtf8Bytes(memo)).substring(2);
 

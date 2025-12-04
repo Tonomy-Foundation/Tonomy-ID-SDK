@@ -153,7 +153,11 @@ describe('Login to external website', () => {
             await APPS_EXTERNAL_WEBSITE_user.swapBaseToTonomyToken(amount, userBaseAddress, userBaseSigner);
 
             const balanceAfterBase = await getBaseTokenContract().balanceOf(userBaseAddress);
+
+            debug("balanceAfterBase", balanceAfterBase)
             const balanceAfterTonomy = await getTokenContract().getBalanceDecimal(tonomyAccountName);
+
+            debug("balanceAfterTonomy", balanceAfterTonomy)
 
             expect(balanceAfterBase).toEqual(balanceBeforeBase + amountWeiBigInt);
             expect(balanceAfterTonomy).toEqual(balanceBeforeTonomy.sub(amount));
