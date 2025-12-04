@@ -62,10 +62,9 @@ export async function tonomyToBaseTransfer(
 
     const transferData = token.interface.encodeFunctionData('transfer', [to, weiAmount]);
     const memoHex = ethers.hexlify(ethers.toUtf8Bytes(memo)).substring(2);
-    const fromAddress: ethers.AddressLike = ethers.getAddress(from);
 
     const tx = {
-        from: fromAddress,
+        from: from,
         to: baseTokenAddress,
         data: transferData + memoHex,
     };
