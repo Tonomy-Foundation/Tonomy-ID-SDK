@@ -110,7 +110,7 @@ export class AppsExternalUser extends ExternalUser {
         });
 
         // 2. Send the transaction
-        await tonomyToBaseTransfer(baseAddress, amount, memo, signer);
+        await tonomyToBaseTransfer(tonomyAccount.toString(), baseAddress, amount, memo, signer);
 
         // 3. Now wait for the event
         return await waitForSwap;
