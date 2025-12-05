@@ -12,12 +12,12 @@ import {
     StakingContract,
     amountToAsset,
     VestingContract,
+    getTokenPrice,
 } from '../../sdk/services/blockchain';
 import { AccountType, isErrorCode, SdkErrors, TonomyUsername } from '../../sdk';
 import {
     getAccount,
     getAccountNameFromUsername,
-    TONO_CURRENT_PRICE,
     vestingCategories as vestingSchedules,
 } from '../../sdk/services/blockchain';
 import { parse } from 'csv-parse/sync';
@@ -566,7 +566,7 @@ export async function vestingMigrate5(options: StandardProposalOptions) {
 
 export async function vestingMigrate6(options: StandardProposalOptions) {
     // Example data only
-    const accountsToRemoveAllAllocations: string[] = ['pwwk3y1x1bza', 'p2mbvozcqp2l', 'p42pwxofd1vy', 'pwgvt1xn4ce5'];
+    const accountsToRemoveAllAllocations: string[] = ['pmwwevl1zkio', 'pwitdljtnxhf'];
 
     const actions: Action[] = [];
 
@@ -594,9 +594,9 @@ export async function vestingMigrate6(options: StandardProposalOptions) {
 
     // Add new allocations as per the new vesting schedule. Example data only
     const newAllocations: { account: string; amount: string; categoryId: number }[] = [
-        { account: 'p42pwxofd1vy', amount: '1000.000000 TONO', categoryId: 8 },
-        { account: 'pwgvt1xn4ce5', amount: '500.000000 TONO', categoryId: 9 },
-        { account: 'p2mbvozcqp2l', amount: '250.000000 TONO', categoryId: 8 },
+        { account: 'pu5qwwpovhh1', amount: '5083135000.000000 TONO', categoryId: 30 },
+        { account: 'ptnufutnsbod', amount: '29195000.000000 TONO', categoryId: 29 },
+        { account: 'py4n15psuw2z', amount: '150000000.000000 TONO', categoryId: 29 },
     ];
 
     for (const newAllocation of newAllocations) {
@@ -611,6 +611,76 @@ export async function vestingMigrate6(options: StandardProposalOptions) {
                 category: newAllocation.categoryId,
             })
         );
+    }
+
+    const proposalHash = await createProposal(
+        options.proposer,
+        options.proposalName,
+        actions,
+        options.privateKey,
+        options.requested,
+        options.dryRun
+    );
+
+    if (!options.dryRun && options.autoExecute)
+        await executeProposal(options.proposer, options.proposalName, proposalHash);
+}
+
+export async function withdrawBootstrapVested(options: StandardProposalOptions) {
+    const tonoPrice = await getTokenPrice();
+
+    console.log(`Current TONO price: $${tonoPrice.toFixed(10)} USD`);
+    const tokenDestination = 'found.tmy';
+    const accountsToWithdraw = [
+        'ecosystm.tmy',
+        'coinsale.tmy',
+        'legal.tmy',
+        'reserves.tmy',
+        'partners.tmy',
+        'liquidty.tmy',
+        'marketng.tmy',
+        'infra.tmy',
+        'ops.tmy',
+    ];
+
+    const actions: Action[] = [];
+
+    for (const account of accountsToWithdraw) {
+        const { unlockable } = await getVestingContract().getVestingAllocations(account);
+        const unlockedBalance = await getTokenContract().getBalanceDecimal(account);
+
+        if (unlockable > 0) {
+            console.log(
+                `Withdrawing vested tokens for account ${account}, unlockable: ${unlockable.toFixed(6)} TONO ($${(unlockable * tonoPrice).toFixed(2)} USD)`
+            );
+            actions.push(
+                getVestingContract().actions.withdraw({
+                    holder: account,
+                })
+            );
+        }
+
+        if (unlockable > 0 || unlockedBalance.gt(0)) {
+            if (unlockedBalance.gt(0)) {
+                console.log(
+                    `Existing unlocked balance for account ${account}: ${unlockedBalance.toFixed(6)} TONO ($${unlockedBalance.mul(tonoPrice).toFixed(2)} USD)`
+                );
+            }
+
+            const totalToSend = unlockedBalance.add(new Decimal(unlockable));
+
+            console.log(
+                `Transferring total of ${totalToSend.toFixed(6)} TONO ($${(totalToSend.toNumber() * tonoPrice).toFixed(2)} USD) from account ${account} to ${tokenDestination} account`
+            );
+            actions.push(
+                getTokenContract().actions.transfer({
+                    from: account,
+                    to: tokenDestination,
+                    quantity: `${totalToSend.toFixed(6)} TONO`,
+                    memo: 'Withdrawing unlockable and unlocked vested tokens to foundation account',
+                })
+            );
+        }
     }
 
     const proposalHash = await createProposal(
@@ -802,17 +872,18 @@ export async function vestingBulk(options: StandardProposalOptions) {
     }
 
     const totalTonomyUsd = results.reduce((sum, record) => sum + record.usdQuantity, 0);
+    const tonoPrice = await getTokenPrice();
 
     console.log(`Total USD to be vested: $${totalTonomyUsd.toFixed(2)} USD`);
-    console.log(`Using TONO price of $${TONO_CURRENT_PRICE} USD`);
-    console.log(`Total TONO to be vested: ${(totalTonomyUsd / TONO_CURRENT_PRICE).toFixed(0)} TONO`);
+    console.log(`Using TONO price of $${tonoPrice} USD`);
+    console.log(`Total TONO to be vested: ${(totalTonomyUsd / tonoPrice).toFixed(0)} TONO`);
     const actions = results.map((data) => {
-        const tonoNumber = data.usdQuantity / TONO_CURRENT_PRICE;
+        const tonoNumber = data.usdQuantity / tonoPrice;
 
         const tonoQuantity = tonoNumber.toFixed(0) + '.000000 TONO';
 
         console.log(
-            `Assigning: ${tonoQuantity} ($${data.usdQuantity} USD) vested in category ${data.categoryId} from ${data.sender} to ${data.accountName} at rate of $${TONO_CURRENT_PRICE}/TONO`
+            `Assigning: ${tonoQuantity} ($${data.usdQuantity} USD) vested in category ${data.categoryId} from ${data.sender} to ${data.accountName} at rate of $${tonoPrice}/TONO`
         );
         return getVestingContract().actions.assignTokens({
             sender: data.sender,

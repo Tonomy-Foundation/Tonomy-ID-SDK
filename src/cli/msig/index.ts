@@ -23,6 +23,7 @@ import {
     vestingMigrate4,
     vestingMigrate5,
     vestingMigrate6,
+    withdrawBootstrapVested,
 } from './vesting';
 import {
     createStakingTmyAccount,
@@ -165,6 +166,8 @@ export default async function msig(args: string[]) {
                 await vestingMigrate6(options);
             } else if (proposalSubtype === 'bulk') {
                 await vestingBulk(options);
+            } else if (proposalSubtype === 'unlock') {
+                await withdrawBootstrapVested(options);
             } else printMsigHelp();
         } else if (proposalType === 'producers') {
             if (proposalSubtype === 'add') {

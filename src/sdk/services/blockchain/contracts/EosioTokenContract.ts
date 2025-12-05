@@ -48,6 +48,28 @@ export function amountToSupplyPercentage(amount: Decimal): string {
     return amount.mul(100).div(EosioTokenContract.TOTAL_SUPPLY).toFixed(8) + '%';
 }
 
+export async function getTokenPrice(): Promise<number> {
+    return await getPriceCoinGecko('tonomy', 'usd');
+}
+
+async function getPriceCoinGecko(token: string, currency: string): Promise<number> {
+    const res = await fetch(
+        `https://api.coingecko.com/api/v3/simple/price?ids=${token}&vs_currencies=${currency}`
+    ).then((res) => res.json());
+
+    if (!res || res === null) {
+        throw new Error('Failed to fetch price from CoinGecko');
+    }
+
+    const price = res[token.toLowerCase()]?.[currency.toLowerCase()];
+
+    if (typeof price !== 'number') {
+        throw new Error(`Invalid price data from CoinGecko for ${token} in ${currency}: ${price}`);
+    }
+
+    return price;
+}
+
 export class EosioTokenContract extends Contract {
     // TODO: should move this out of the class, as this only applies to the TONO token
     static TOTAL_SUPPLY = 50000000000.0;
