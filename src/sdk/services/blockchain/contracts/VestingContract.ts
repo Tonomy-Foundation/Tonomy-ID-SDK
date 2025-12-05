@@ -7,6 +7,7 @@ import { getApi } from '../eosio/eosio';
 import { getSettings, isProduction } from '../../../util/settings';
 import {
     addMicroseconds,
+    MICROSECONDS_IN_DAY,
     MICROSECONDS_IN_MONTH,
     MICROSECONDS_IN_SECOND,
     MICROSECONDS_IN_YEAR,
@@ -395,6 +396,36 @@ export const vestingCategories: Map<
             vestingPeriod: 5 * MICROSECONDS_IN_YEAR,
             tgeUnlock: 0.0,
             name: 'Ecosystem',
+        },
+    ],
+    [
+        29, // Double Special Round - Full
+        {
+            startDelay: 42 * MICROSECONDS_IN_DAY,
+            cliffPeriod: 0,
+            vestingPeriod: 3 * MICROSECONDS_IN_MONTH,
+            tgeUnlock: 0.3,
+            name: 'Double Special Round - Part 1',
+        },
+    ],
+    [
+        30, // Double Special Round - Part 1
+        {
+            startDelay: 42 * MICROSECONDS_IN_DAY,
+            cliffPeriod: 0,
+            vestingPeriod: 3 * MICROSECONDS_IN_MONTH,
+            tgeUnlock: 0.3,
+            name: 'Double Special Round - Part 1',
+        },
+    ],
+    [
+        31, // Double Special Round - Part 2
+        {
+            startDelay: 0,
+            cliffPeriod: (42 + 3 * 30) * MICROSECONDS_IN_DAY,
+            vestingPeriod: 3 * MICROSECONDS_IN_MONTH,
+            tgeUnlock: 0.0,
+            name: 'Double Special Round - Part 2',
         },
     ],
 ]);
