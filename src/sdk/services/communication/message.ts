@@ -14,7 +14,6 @@ import {
     NationalityVC,
 } from '../../util/veriff';
 import Decimal from 'decimal.js';
-import { Signer } from 'ethers';
 
 const debug = Debug('tonomy-sdk:services:communication:message');
 
