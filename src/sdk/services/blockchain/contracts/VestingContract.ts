@@ -401,17 +401,17 @@ export const vestingCategories: Map<
     [
         29, // Double Special Round - Full
         {
-            startDelay: 42 * MICROSECONDS_IN_DAY,
+            startDelay: 26 * MICROSECONDS_IN_DAY,
             cliffPeriod: 0,
-            vestingPeriod: 3 * MICROSECONDS_IN_MONTH,
-            tgeUnlock: 0.3,
-            name: 'Double Special Round - Part 1',
+            vestingPeriod: 6 * MICROSECONDS_IN_MONTH,
+            tgeUnlock: 0.15,
+            name: 'Double Special Round - Full',
         },
     ],
     [
         30, // Double Special Round - Part 1
         {
-            startDelay: 42 * MICROSECONDS_IN_DAY,
+            startDelay: 26 * MICROSECONDS_IN_DAY,
             cliffPeriod: 0,
             vestingPeriod: 3 * MICROSECONDS_IN_MONTH,
             tgeUnlock: 0.3,
@@ -422,7 +422,7 @@ export const vestingCategories: Map<
         31, // Double Special Round - Part 2
         {
             startDelay: 0,
-            cliffPeriod: (42 + 3 * 30) * MICROSECONDS_IN_DAY,
+            cliffPeriod: (26 + 3 * 30) * MICROSECONDS_IN_DAY,
             vestingPeriod: 3 * MICROSECONDS_IN_MONTH,
             tgeUnlock: 0.0,
             name: 'Double Special Round - Part 2',
