@@ -564,6 +564,68 @@ export async function vestingMigrate5(options: StandardProposalOptions) {
         await executeProposal(options.proposer, options.proposalName, proposalHash);
 }
 
+export async function vestingMigrate6(options: StandardProposalOptions) {
+    // Example data only
+    const accountsToRemoveAllAllocations: string[] = ['pwwk3y1x1bza', 'p2mbvozcqp2l', 'p42pwxofd1vy', 'pwgvt1xn4ce5'];
+
+    const actions: Action[] = [];
+
+    // Remove all existing allocations for specified accounts
+    for (const account of accountsToRemoveAllAllocations) {
+        const allocations = await getVestingContract().getAllocations(account);
+
+        for (const allocation of allocations) {
+            console.log(
+                `Removing account ${allocation.holder} allocation ${allocation.id} with ${allocation.tokensAllocated}`
+            );
+            actions.push(
+                getVestingContract().actions.migrateAlloc({
+                    sender: 'liquidty.tmy',
+                    holder: account,
+                    allocationId: allocation.id,
+                    oldAmount: allocation.tokensAllocated,
+                    newAmount: '1.000000 TONO',
+                    oldCategoryId: allocation.vestingCategoryType,
+                    newCategoryId: allocation.vestingCategoryType,
+                })
+            );
+        }
+    }
+
+    // Add new allocations as per the new vesting schedule. Example data only
+    const newAllocations: { account: string; amount: string; categoryId: number }[] = [
+        { account: 'p42pwxofd1vy', amount: '1000.000000 TONO', categoryId: 8 },
+        { account: 'pwgvt1xn4ce5', amount: '500.000000 TONO', categoryId: 9 },
+        { account: 'p2mbvozcqp2l', amount: '250.000000 TONO', categoryId: 8 },
+    ];
+
+    for (const newAllocation of newAllocations) {
+        console.log(
+            `Creating new allocation for account ${newAllocation.account} with ${newAllocation.amount} in category ${newAllocation.categoryId}`
+        );
+        actions.push(
+            getVestingContract().actions.assignTokens({
+                sender: 'liquidty.tmy',
+                holder: newAllocation.account,
+                amount: newAllocation.amount,
+                category: newAllocation.categoryId,
+            })
+        );
+    }
+
+    const proposalHash = await createProposal(
+        options.proposer,
+        options.proposalName,
+        actions,
+        options.privateKey,
+        options.requested,
+        options.dryRun
+    );
+
+    if (!options.dryRun && options.autoExecute)
+        await executeProposal(options.proposer, options.proposalName, proposalHash);
+}
+
 async function createAccountActions(account: NameType): Promise<Action[]> {
     const allocations = await getVestingContract().getAllocations(account);
 

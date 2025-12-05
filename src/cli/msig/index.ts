@@ -22,6 +22,7 @@ import {
     vestingBulk,
     vestingMigrate4,
     vestingMigrate5,
+    vestingMigrate6,
 } from './vesting';
 import {
     createStakingTmyAccount,
@@ -160,6 +161,8 @@ export default async function msig(args: string[]) {
                 await vestingMigrate4(options);
             } else if (proposalSubtype === 'migrate5') {
                 await vestingMigrate5(options);
+            } else if (proposalSubtype === 'migrate6') {
+                await vestingMigrate6(options);
             } else if (proposalSubtype === 'bulk') {
                 await vestingBulk(options);
             } else printMsigHelp();
@@ -403,11 +406,7 @@ function printMsigHelp() {
                 propose tokens transfer <proposalName>
                 propose tokens setstats <proposalName>
                 propose vesting bulk <proposalName>
-                propose vesting migrate <proposalName>
-                propose vesting migrate2 <proposalName>
-                propose vesting migrate3 <proposalName>
-                propose vesting migrate4 <proposalName>
-                propose vesting migrate5 <proposalName>
+                propose vesting migrateX <proposalName> (where X is 1-6)
         Options:
                 --help
                 --dry-run          Create the proposal but do not send the transaction
