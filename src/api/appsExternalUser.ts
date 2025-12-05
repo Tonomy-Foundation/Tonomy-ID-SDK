@@ -34,7 +34,7 @@ export class AppsExternalUser extends ExternalUser {
     }
 
     /**
-     * Service to swap $TONO between Base and Tonomy chains.
+     * Service to swap $TONO from Base and Tonomy blockchain.
      *
      * @param {Decimal} amount amount to swap
      * @param { { message: string; signature: string } } proof contains message and signature
@@ -43,7 +43,6 @@ export class AppsExternalUser extends ExternalUser {
     async swapTonomyToBaseToken(
         amount: Decimal,
         proof: { message: string; signature: string },
-        destination: 'tonomy',
         // eslint-disable-next-line camelcase
         _testOnly_tonomyAppsWebsiteUsername?: string
     ): Promise<void> {
@@ -52,8 +51,7 @@ export class AppsExternalUser extends ExternalUser {
         const payload: SwapTokenMessagePayload = {
             amount,
             baseAddress: address,
-            proof: proof,
-            destination,
+            proof,
             // eslint-disable-next-line camelcase
             _testOnly_tonomyAppsWebsiteUsername: _testOnly_tonomyAppsWebsiteUsername,
         };
@@ -71,13 +69,11 @@ export class AppsExternalUser extends ExternalUser {
      * @param {string} baseAddress - Recipient address on Base chain
      * @param {Signer} signer - Signer object for transaction authorization
      */
-
     async swapBaseToTonomyToken(amount: Decimal, baseAddress: string, signer: ethers.Signer): Promise<boolean> {
         const issuer = await this.getIssuer();
         const tonomyAccount = getAccountNameFromDid(issuer.did);
 
-        const swapId = 'swap_' + Date.now() + '_' + randomString(8);
-        const memo = `swap:${swapId}:${tonomyAccount}`;
+        const memo = createSwapMemo(tonomyAccount.toString());
 
         const TIMEOUT_MS = 2 * 60 * 1000;
         let id: number | undefined;
@@ -115,4 +111,23 @@ export class AppsExternalUser extends ExternalUser {
         // 3. Now wait for the event
         return await waitForSwap;
     }
+}
+
+export function createSwapMemo(tonomyAccount: string): string {
+    const swapId = randomString(8);
+
+    return `swap:${swapId}:${tonomyAccount}`;
+}
+
+export function parseSwapMemo(memo: string): { swapId: string; tonomyAccount: string } {
+    const parts = memo.split(':');
+
+    if (parts.length !== 3 || parts[0] !== 'swap') {
+        throw new Error(`Invalid swap memo format: ${memo}`);
+    }
+
+    return {
+        swapId: parts[1],
+        tonomyAccount: parts[2],
+    };
 }

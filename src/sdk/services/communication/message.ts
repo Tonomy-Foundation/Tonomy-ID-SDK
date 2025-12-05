@@ -329,7 +329,6 @@ export class SwapTokenMessagePayload {
         message: string;
         signature: string;
     };
-    destination: 'tonomy';
     /**
      * @internal only used for testing
      */

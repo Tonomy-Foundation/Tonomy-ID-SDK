@@ -218,7 +218,7 @@ export class Communication {
             throwError('You need to login before sending a messages', SdkErrors.CommunicationNotLoggedIn);
         }
 
-        return await this.emitMessage('v1/swap/token/tono', message);
+        return await this.emitMessage('v2/swap/token/tono', message);
     }
 
     /**

@@ -88,7 +88,7 @@ describe('Login to external website', () => {
         // Create app which will be logged into
         externalApp = await createRandomApp();
         tonomyLoginApp = await createRandomApp();
-       
+
         setSettings({
             ...settings,
             ssoWebsiteOrigin: tonomyLoginApp.origin,
@@ -120,7 +120,7 @@ describe('Login to external website', () => {
             TONOMY_ID_dataSource = await setupTestDatabase();
         }
 
-        await disconnectCommunications(communicationsToCleanup);        
+        await disconnectCommunications(communicationsToCleanup);
         debug('finished cleanup');
 
         // for some reason this is needed to ensure all the code lines execute. Not sure why needed
@@ -141,11 +141,11 @@ describe('Login to external website', () => {
             expect.assertions(loginToExternalAppAssertions + 4);
             await setAppsExternalUser();
             const amount = new Decimal("2.5"); // amount to swap
-            const amountWeiBigInt = BigInt(amount.mul(10**18).toString());
+            const amountWeiBigInt = BigInt(amount.mul(10 ** 18).toString());
 
             const tonomyAccountName = await APPS_EXTERNAL_WEBSITE_user.getAccountName()
-            
-            const balanceBeforeBase = await getBaseTokenContract().balanceOf(userBaseAddress);            
+
+            const balanceBeforeBase = await getBaseTokenContract().balanceOf(userBaseAddress);
             const balanceBeforeTonomy = await getTokenContract().getBalanceDecimal(tonomyAccountName);
 
             const proof = await createSignedProofMessage(userBaseSigner)
@@ -175,7 +175,7 @@ describe('Login to external website', () => {
             expect.assertions(loginToExternalAppAssertions + 1);
             await setAppsExternalUser();
             const amount = new Decimal("2000"); // amount to swap
-            
+
             const proof = await createSignedProofMessage(userBaseSigner)
             const tonomyAppsWebsiteUsername = await externalApp.username?.getBaseUsername();
 
@@ -190,7 +190,7 @@ describe('Login to external website', () => {
             expect.assertions(loginToExternalAppAssertions + 1);
             await setAppsExternalUser();
             const amount = new Decimal("2"); // amount to swap
-            
+
             const proof = await createSignedProofMessage(userBaseSigner)
             const tonomyAppsWebsiteUsername = await externalApp.username?.getBaseUsername();
 
@@ -226,7 +226,7 @@ describe('Login to external website', () => {
             return;
         }
 
-        APPS_EXTERNAL_WEBSITE_user = new AppsExternalUser(res);    
+        APPS_EXTERNAL_WEBSITE_user = new AppsExternalUser(res);
         await disconnectCommunications([getProtectedCommunication(APPS_EXTERNAL_WEBSITE_user)]);
         communicationsToCleanup.push(getProtectedCommunication(APPS_EXTERNAL_WEBSITE_user));
     }
