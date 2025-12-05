@@ -345,7 +345,7 @@ export class Communication {
             }
         };
 
-        this.socketServer.on('v1/swap/base/token', messageHandler);
+        this.socketServer.on('v1/swap/token/confirm', messageHandler);
         this.subscribers.set(Communication.identifier, messageHandler);
         return Communication.identifier;
     }
@@ -354,7 +354,7 @@ export class Communication {
         const subscriber = this.subscribers.get(id);
 
         if (subscriber) {
-            this.socketServer.off('v1/swap/base/token', subscriber);
+            this.socketServer.off('v1/swap/token/confirm', subscriber);
             this.subscribers.delete(id);
         }
     }

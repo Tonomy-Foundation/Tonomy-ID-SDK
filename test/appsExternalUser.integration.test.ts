@@ -148,21 +148,22 @@ describe('Login to external website', () => {
             const balanceBeforeBase = await getBaseTokenContract().balanceOf(userBaseAddress);
             const balanceBeforeTonomy = await getTokenContract().getBalanceDecimal(tonomyAccountName);
 
-            const proof = await createSignedProofMessage(userBaseSigner)
-
             const tonomyAppsWebsiteUsername = await externalApp.username?.getBaseUsername();
+            const proof = await createSignedProofMessage(userBaseSigner)
 
             await APPS_EXTERNAL_WEBSITE_user.swapTonomyToBaseToken(amount, proof, tonomyAppsWebsiteUsername);
 
             const balanceAfterBase = await getBaseTokenContract().balanceOf(userBaseAddress);
+
+            debug("balanceAfterBase", balanceAfterBase)
             const balanceAfterTonomy = await getTokenContract().getBalanceDecimal(tonomyAccountName);
+
+            debug("balanceAfterTonomy", balanceAfterTonomy)
 
             expect(balanceAfterBase).toEqual(balanceBeforeBase + amountWeiBigInt);
             expect(balanceAfterTonomy).toEqual(balanceBeforeTonomy.sub(amount));
 
-            const proof2 = await createSignedProofMessage(userBaseSigner)
-
-            await APPS_EXTERNAL_WEBSITE_user.swapBaseToTonomyToken(amount, proof2, 'tonomy', tonomyAppsWebsiteUsername);
+            await APPS_EXTERNAL_WEBSITE_user.swapBaseToTonomyToken(amount, userBaseSigner);
 
             const balanceAfter2Base = await getBaseTokenContract().balanceOf(userBaseAddress);
             const balanceAfter2Tonomy = await getTokenContract().getBalanceDecimal(tonomyAccountName);
@@ -182,7 +183,11 @@ describe('Login to external website', () => {
             try {
                 await APPS_EXTERNAL_WEBSITE_user.swapTonomyToBaseToken(amount, proof, tonomyAppsWebsiteUsername);
             } catch (error) {
-                expect(error.message).toContain('assertion failure with message: overdrawn balance')
+                if (error instanceof Error) {
+                    expect(error.message).toContain('assertion failure with message: overdrawn balance');
+                } else {
+                    throw error; // rethrow if it's something unexpected
+                }
             }
         });
 
@@ -196,12 +201,15 @@ describe('Login to external website', () => {
 
             await APPS_EXTERNAL_WEBSITE_user.swapTonomyToBaseToken(amount, proof, tonomyAppsWebsiteUsername);
             const amount2 = new Decimal("2000"); // amount to swap
-            const proof2 = await createSignedProofMessage(userBaseSigner)
 
             try {
-                await APPS_EXTERNAL_WEBSITE_user.swapBaseToTonomyToken(amount2, proof2, tonomyAppsWebsiteUsername);
+                await APPS_EXTERNAL_WEBSITE_user.swapBaseToTonomyToken(amount2, userBaseSigner);
             } catch (error) {
-                expect(error.message).toContain('ERC20: burn amount exceeds balance')
+                if (error instanceof Error) {
+                    expect(error.message).toContain('ERC20: burn amount exceeds balance')
+                } else {
+                    throw error; // rethrow if it's something unexpected
+                }
             }
         });
     });
