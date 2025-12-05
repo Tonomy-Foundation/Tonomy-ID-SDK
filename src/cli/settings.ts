@@ -44,6 +44,7 @@ const defaultConfig = {
     baseRpcUrl: 'http://localhost:8545',
     basePrivateKey: '0xdf57089febbacf7ba0bc227dafbffa9fc08a93fdc68e1e42411a14efcf23656e', // Hardhat account #19
     baseTokenAddress: process.env.BASE_TOKEN_ADDRESS!,
+    baseMintBurnAddress: '0x8626f6940E2eb28930eFb4CeF49B2d1F2C9C1199',
 };
 
 const stagingConfig = {
@@ -63,6 +64,7 @@ const stagingConfig = {
     baseNetwork: 'base-sepolia' as const,
     baseRpcUrl: 'https://base-sepolia.infura.io/v3/' + process.env.INFURA_API_KEY,
     baseTokenAddress: '0xC71Ae7EBa91037Ff145671D0d25Ba415BB69450c',
+    baseMintBurnAddress: '0x8DE48baf638e4Cd8Dab07Ef12375369Cb9b841dB',
 };
 
 const testnetConfig = {
@@ -82,6 +84,7 @@ const testnetConfig = {
     baseNetwork: 'base-sepolia' as const,
     baseRpcUrl: 'https://base-sepolia.infura.io/v3/' + process.env.INFURA_API_KEY,
     baseTokenAddress: '0x56aD9925f417358640746266eF44a701622c54Ba',
+    baseMintBurnAddress: '0x8de48baf638e4cd8dab07ef12375369cb9b841db',
 };
 
 const productionConfig = {
@@ -101,6 +104,7 @@ const productionConfig = {
     baseNetwork: 'base' as const,
     baseRpcUrl: 'https://base.infura.io/v3/' + process.env.INFURA_API_KEY,
     baseTokenAddress: '0x36a0E9d5bb7322b26185D76Fb3fce46a40007e90',
+    baseMintBurnAddress: '0x86d1Df3473651265AA88E48dE9B420debCa6e676',
 };
 
 type SettingsType = {

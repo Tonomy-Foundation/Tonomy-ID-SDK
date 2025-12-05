@@ -6,7 +6,7 @@ import { StorageFactory } from '../sdk/storage/storage';
 import { SwapTokenMessage, SwapTokenMessagePayload } from '../sdk/services/communication/message';
 import { SdkErrors, throwError } from '../sdk/util/errors';
 import { ExternalUser } from './externalUser';
-import { getAccountNameFromDid, randomString } from '../sdk';
+import { getAccountNameFromDid, getSettings, randomString } from '../sdk';
 import { ethers } from 'ethers';
 
 export class AppsExternalUser extends ExternalUser {
@@ -26,7 +26,7 @@ export class AppsExternalUser extends ExternalUser {
      *
      * @param {SwapTokenMessage} message - the message to send
      */
-    async sendSwapMessage(message: SwapTokenMessage): Promise<void> {
+    private async sendSwapMessage(message: SwapTokenMessage): Promise<void> {
         await this.loginToCommunication();
         const res = await this.communication.sendSwapMessage(message);
 
@@ -66,10 +66,9 @@ export class AppsExternalUser extends ExternalUser {
      * Swaps $TONO tokens from Tonomy chain to Base chain.
      *
      * @param {Decimal} amount - Amount of $TONO tokens to swap
-     * @param {string} baseAddress - Recipient address on Base chain
      * @param {Signer} signer - Signer object for transaction authorization
      */
-    async swapBaseToTonomyToken(amount: Decimal, baseAddress: string, signer: ethers.Signer): Promise<boolean> {
+    async swapBaseToTonomyToken(amount: Decimal, signer: ethers.Signer): Promise<boolean> {
         const issuer = await this.getIssuer();
         const tonomyAccount = getAccountNameFromDid(issuer.did);
 
@@ -105,8 +104,10 @@ export class AppsExternalUser extends ExternalUser {
             id = this.communication.subscribeSwapBaseToTonomy(newHandler);
         });
 
+        const { baseMintBurnAddress } = getSettings();
+
         // 2. Send the transaction
-        await tonomyToBaseTransfer(baseAddress, amount, memo, signer);
+        await tonomyToBaseTransfer(baseMintBurnAddress, amount, memo, signer);
 
         // 3. Now wait for the event
         return await waitForSwap;
