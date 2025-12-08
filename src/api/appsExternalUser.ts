@@ -74,7 +74,7 @@ export class AppsExternalUser extends ExternalUser {
 
         const memo = createSwapMemo(tonomyAccount.toString());
 
-        const TIMEOUT_MS = 2 * 60 * 1000;
+        const TIMEOUT_MS = 2 * 60 * 1000; // 2 minutes
         let id: number | undefined;
 
         const waitForSwap = new Promise<boolean>((resolve, reject) => {

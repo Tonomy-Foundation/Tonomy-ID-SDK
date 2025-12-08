@@ -288,7 +288,7 @@ export class Communication {
         Communication.identifier++;
         debug('subscribeVeriffVerification() called');
 
-        const messageHandler = (message: any) => {
+        const messageHandler = async (message: any) => {
             debug('message', message);
             const msg = new VerificationMessage(message);
 
@@ -300,7 +300,7 @@ export class Communication {
             debug('receiveVeriffVerification', msg.getType(), msg.getSender(), msg.getRecipient());
 
             if (msg.getType() === VerificationMessage.getType()) {
-                subscriber(msg);
+                await subscriber(msg);
             }
 
             return this;
@@ -323,26 +323,15 @@ export class Communication {
     subscribeSwapBaseToTonomy(subscriber: SwapSubscriber): number {
         Communication.identifier++;
 
-        const messageHandler = (data: any) => {
-            try {
-                // Extract memo from the received data
-                let memo: string;
-
-                if (typeof data === 'string') {
-                    memo = data;
-                } else {
-                    throwError('Invalid swap data received:', data);
-                }
-
-                debug('Received swap from base to tonomy:', memo);
-
-                // Call the subscriber with just the memo string
-                subscriber(memo).catch((err) => {
-                    throwError('Error in swap subscriber:', err);
-                });
-            } catch (err) {
-                throwError('Error processing swap message:', err);
+        const messageHandler = async (memo: any) => {
+            if (typeof memo !== 'string') {
+                throwError('Invalid swap data received:', memo);
             }
+
+            debug('Received swap from base to tonomy:', memo);
+
+            // Call the subscriber with just the memo string
+            await subscriber(memo);
         };
 
         this.socketServer.on('v1/swap/token/confirm', messageHandler);

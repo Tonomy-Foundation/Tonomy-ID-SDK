@@ -67,8 +67,8 @@ function start {
     # Run blockchain node
     cd "${SDK_DIR}"
     docker run -p 8888:8888 --name tonomy_blockchain_integration -d tonomy_blockchain_initialized
-    echo "Waiting 8 seconds for blockchain node to start"
-    sleep 8
+    echo "Waiting 12 seconds for blockchain node to start"
+    sleep 12
     curl localhost:8888 > /dev/null || {
         echo "Blockchain node not responding"
         exit 1
@@ -78,7 +78,7 @@ function start {
     cd  "$SDK_DIR/Ethereum-token"
     npx pm2 stop hardhat || true
     npx pm2 delete hardhat || true
-    npx pm2 start --interpreter /bin/bash yarn --name "hardhat" -- run node
+    npx pm2 start yarn --name "hardhat" -- run node
     echo "Waiting 5 seconds for Ethereum node to start"
     sleep 5
     curl localhost:8545 > /dev/null || {
@@ -99,7 +99,7 @@ function start {
     npx pm2 delete micro || true
     unset TONOMY_OPS_PRIVATE_KEY
     unset HCAPTCHA_SECRET
-    npx pm2 start --interpreter /bin/bash yarn --name "micro" -- run start
+    npx pm2 start yarn --name "micro" -- run start
 }
 
 function bootstrap {

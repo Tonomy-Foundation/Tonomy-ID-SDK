@@ -68,7 +68,7 @@ export async function tonomyToBaseTransfer(
         data: transferData + memoHex,
     };
 
-    debug(`tx obj, ${tx}`);
+    debug(`Sending transaction`, JSON.stringify(tx, null, 2));
 
     return await signer.sendTransaction(tx);
 }
