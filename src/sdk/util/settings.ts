@@ -26,6 +26,7 @@ export type SettingsType = {
     basePrivateKey: string;
     baseNetwork: 'base' | 'base-sepolia' | 'hardhat' | 'localhost';
     baseMintBurnAddress: string; // by default should be the token contract `mintTo` aka the `owner`, unless a more secure address/DAO is used
+    safeApiKey: string;
 };
 
 type FetchType = (input: RequestInfo, init?: RequestInit) => Promise<Response>;

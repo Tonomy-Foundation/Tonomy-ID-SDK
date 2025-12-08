@@ -319,3 +319,28 @@ export async function waitForEvmTrxFinalization(
 
     return receipt;
 }
+
+import { createSafeClient, SafeClientResult } from '@safe-global/sdk-starter-kit';
+
+export async function sendSafeWalletTransfer(recipient: string, amount: bigint): Promise<SafeClientResult> {
+    const settings = getSettings();
+
+    const safeClient = await createSafeClient({
+        provider: settings.baseRpcUrl,
+        signer: settings.basePrivateKey,
+        safeAddress: '0x86d1Df3473651265AA88E48dE9B420debCa6e676',
+        apiKey: settings.safeApiKey,
+    });
+
+    const transferTransaction = getBaseTokenContract().interface.encodeFunctionData('transfer', [recipient, amount]);
+
+    const transactions = [
+        {
+            to: settings.baseTokenAddress,
+            data: transferTransaction,
+            value: '0',
+        },
+    ];
+
+    return await safeClient.send({ transactions });
+}
