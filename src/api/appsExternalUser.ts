@@ -8,6 +8,9 @@ import { SdkErrors, throwError } from '../sdk/util/errors';
 import { ExternalUser } from './externalUser';
 import { getAccountNameFromDid, getSettings, randomString } from '../sdk';
 import { ethers } from 'ethers';
+import Debug from 'debug';
+
+const debug = Debug('tonomy-sdk:AppsExternalUser');
 
 export class AppsExternalUser extends ExternalUser {
     constructor(user: ExternalUser) {
@@ -88,7 +91,7 @@ export class AppsExternalUser extends ExternalUser {
 
             const newHandler: SwapSubscriber = async (memo: string): Promise<void> => {
                 try {
-                    console.log('wait for swap to tonomy', memo);
+                    debug('subscribeSwapBaseToTonomy() event', memo);
                     resolve(true);
                 } catch (error) {
                     reject(error);
@@ -101,15 +104,18 @@ export class AppsExternalUser extends ExternalUser {
                 }
             };
 
+            debug('subscribeSwapBaseToTonomy() - subscribing to swap confirmation   ');
             id = this.communication.subscribeSwapBaseToTonomy(newHandler);
         });
 
         const { baseMintBurnAddress } = getSettings();
 
         // 2. Send the transaction
+        debug('swapBaseToTonomyToken() - sending transaction');
         await tonomyToBaseTransfer(baseMintBurnAddress, amount, memo, signer);
 
         // 3. Now wait for the event
+        debug('subscribeSwapBaseToTonomy() - waiting for swap confirmation');
         return await waitForSwap;
     }
 }
