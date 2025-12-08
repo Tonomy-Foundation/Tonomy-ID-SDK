@@ -343,4 +343,14 @@ export async function sendSafeWalletTransfer(recipient: string, amount: bigint):
     ];
 
     return await safeClient.send({ transactions });
+    /**
+        {
+        "safeAddress": "0x86d1Df3473651265AA88E48dE9B420debCa6e676",
+        "description": "The transaction has been executed, check the ethereumTxHash in the transactions property to view it on the corresponding blockchain explorer",
+        "status": "EXECUTED",
+        "transactions": {
+            "ethereumTxHash": "0xa81ea3984a7b5a7cc20888a868b13c14b2137574680037e389446a534eaad301"
+            }
+        }
+    */
 }
