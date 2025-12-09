@@ -17,7 +17,7 @@ export async function createAntelopeAccount({ account, key }: { account: string;
 export async function createApp(options: AppCreateOptions): Promise<App> {
     const res = await App.create(options);
 
-    console.log('New app created with username: ', res.username?.username);
+    console.log('New app created with username: ', res.username?.username, options.origin);
 
     return res;
 }
