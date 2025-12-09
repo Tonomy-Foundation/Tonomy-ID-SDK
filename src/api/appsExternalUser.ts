@@ -127,13 +127,15 @@ export class AppsExternalUser extends ExternalUser {
         return await waitForSwap;
     }
 }
-
+// eslint-disable-next-line camelcase
 export function createSwapMemo(tonomyAccount: string, _testOnly_tonomyAppsWebsiteUsername?: string): string {
     const swapId = randomString(8);
 
     if (getSettings().environment === 'test') {
+        // eslint-disable-next-line camelcase
         return `swap:${swapId}:${tonomyAccount}${_testOnly_tonomyAppsWebsiteUsername ? `:${_testOnly_tonomyAppsWebsiteUsername}` : ''}`;
     } else {
+        // eslint-disable-next-line camelcase
         if (_testOnly_tonomyAppsWebsiteUsername)
             throw Error('_testOnly_tonomyAppsWebsiteUsername should not be provided in non-test environment');
     }
@@ -157,6 +159,7 @@ export function parseSwapMemo(memo: string): {
     return {
         swapId: parts[1],
         tonomyAccount: parts[2],
+        // eslint-disable-next-line camelcase
         _testOnly_tonomyAppsWebsiteUsername: testEnv ? parts[3] : undefined,
     };
 }
