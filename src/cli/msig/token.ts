@@ -260,3 +260,32 @@ export async function crossChainSwap(options: StandardProposalOptions) {
     console.log(`6. Click "Continue"`);
     console.log(`7. Click "Sign"`);
 }
+
+export async function multiMint(options: StandardProposalOptions) {
+    const accountsToMint: { account: string; amount: string }[] = [
+        { account: 'pafuwexz1fza', amount: '1000000.000000 TONO' },
+        { account: 'pafuwexz1fza', amount: '500000.000000 TONO' },
+        { account: 'pafuwexz1fza', amount: '250000.000000 TONO' },
+    ];
+
+    const actions: Action[] = [];
+
+    for (const mint of accountsToMint) {
+        console.log(`Preparing mint of ${mint.amount} to ${mint.account}`);
+        const action = getTokenContract().actions.bridgeIssue({ to: mint.account, quantity: mint.amount, memo: '' });
+
+        actions.push(action);
+    }
+
+    const proposalHash = await createProposal(
+        options.proposer,
+        options.proposalName,
+        actions,
+        options.privateKey,
+        options.requested,
+        options.dryRun
+    );
+
+    if (!options.dryRun && options.autoExecute)
+        await executeProposal(options.proposer, options.proposalName, proposalHash);
+}

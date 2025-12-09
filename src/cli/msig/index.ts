@@ -7,7 +7,7 @@ import {
 } from '../../sdk/services/blockchain';
 import settings from '../settings';
 import { newAccount } from './accounts';
-import { crossChainSwap, bulkTransfer, setStats, transfer } from './token';
+import { crossChainSwap, bulkTransfer, setStats, transfer, multiMint } from './token';
 import { updateAuth, govMigrate, addEosioCode } from './auth';
 import { deployContract } from './contract';
 import { printCliHelp } from '..';
@@ -45,7 +45,14 @@ import {
 } from './apps';
 
 const governanceAccounts = ['1.found.tmy', '2.found.tmy', '3.found.tmy'];
-let newGovernanceAccounts = ['14.found.tmy', '5.found.tmy', '11.found.tmy', '12.found.tmy', '13.found.tmy'];
+let newGovernanceAccounts = [
+    '14.found.tmy',
+    '5.found.tmy',
+    '11.found.tmy',
+    '12.found.tmy',
+    '13.found.tmy',
+    '15.found.tmy',
+];
 
 if (!settings.isProduction()) {
     newGovernanceAccounts = governanceAccounts;
@@ -134,6 +141,8 @@ export default async function msig(args: string[]) {
                 await crossChainSwap(options);
             } else if (proposalSubtype === 'bulk') {
                 await bulkTransfer(options);
+            } else if (proposalSubtype === 'mint') {
+                await multiMint(options);
             } else printMsigHelp();
         } else if (proposalType === 'contract') {
             if (proposalSubtype === 'deploy') {
@@ -410,6 +419,7 @@ function printMsigHelp() {
                 propose tokens setstats <proposalName>
                 propose tokens swap <proposalName>
                 propose tokens bulk <proposalName>
+                propose tokens mint <proposalName>
                 propose vesting bulk <proposalName>
                 propose vesting migrateX <proposalName> (where X is 1-6)
         Options:
