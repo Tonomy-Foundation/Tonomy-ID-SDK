@@ -4,10 +4,10 @@ Tonomy ID allows **users to log in securely without passwords**, eliminating cre
 
 ### Before You Start
 
-Ensure your app is registered with the Tonomynetwork (See [Register Your Web4 App](../register-app.md))
+Ensure your app is registered with the Tonomynetwork (See [Create Your App](../register-app.md))
 
-{% hint style="info" %}
-For local testing, run your app on [http://localhost:3000](http://localhost:3000) and connect to the testnet
+{% hint style="success" %}
+For local testing, run your app on [http://localhost:3000](http://localhost:3000) and connect to the **testnet**
 {% endhint %}
 
 ## 1. Configure network
@@ -17,14 +17,6 @@ Set your network at the start of your app (e.g., in `App.tsx` for React):
 ```typescript
 import { setSettings } from '@tonomy/tonomy-id-sdk';
 
-//Testnet Configuration
-setSettings({
-    ssoWebsiteOrigin: "https://accounts.testnet.tonomy.io",
-    blockchainUrl: "https://test.pangea.eosusa.io",
-    communicationUrl: "wss://communication.testnet.tonomy.io",
-    currencySymbol: "TONO",
-});
-
 //Mainnet Configuration
 setSettings({
     ssoWebsiteOrigin: "https://accounts.testnet.tonomy.io",
@@ -32,6 +24,16 @@ setSettings({
     communicationUrl: "wss://communication.tonomy.io",
     currencySymbol: "TONO",
 });
+
+// Or use the Testnet Configuration
+/*
+setSettings({
+    ssoWebsiteOrigin: "https://accounts.testnet.tonomy.io",
+    blockchainUrl: "https://test.pangea.eosusa.io",
+    communicationUrl: "wss://communication.testnet.tonomy.io",
+    currencySymbol: "TONO",
+});
+*/
 ```
 
 ## 2. Open Login Flow

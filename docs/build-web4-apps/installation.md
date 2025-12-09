@@ -2,11 +2,21 @@
 
 The Tonomy SDK is a TypeScript-enabled JavaScript library
 
+{% tabs %}
+{% tab title="npm" %}
 ```bash
 npm install @tonomy/tonomy-id-sdk
-# or
+```
+{% endtab %}
+
+{% tab title="yarn" %}
+```bash
 yarn add @tonomy/tonomy-id-sdk
 ```
+{% endtab %}
+{% endtabs %}
+
+
 
 {% hint style="warning" %}
 The Tonomy SDK is ESM-only. Set your package.json to "type": "module".
@@ -14,16 +24,6 @@ The Tonomy SDK is ESM-only. Set your package.json to "type": "module".
 **See** [**ESM Migration Guide**](troubleshooting/#pure-esm-compile-commonjs-not-supported)**.**
 {% endhint %}
 
-{% hint style="info" %}
-See [Troubleshooting](../run-tonomy-infrastructure/troubleshooting.md) for other issues while compiling or executing the SDK.
+{% hint style="warning" %}
+See [Troubleshooting](troubleshooting/) for **other issues** while installing, compiling or executing the SDK.
 {% endhint %}
-
-### Using the Command Line Interface
-
-```bash
-git clone https://github.com/Tonomy-Foundation/Tonomy-ID-SDK.git
-cd Tonomy-ID-SDK
-yarn
-# you can now run CLI commands, for example:
-yarn run cli keys create
-```
