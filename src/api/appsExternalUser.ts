@@ -148,15 +148,15 @@ export function parseSwapMemo(memo: string): {
 } {
     const parts = memo.split(':');
 
-    const partsCount = getSettings().environment === 'development' ? 4 : 3;
+    const testEnv = getSettings().environment === 'development' || getSettings().environment === 'test';
 
-    if (parts.length !== partsCount || parts[0] !== 'swap') {
+    if ((!testEnv && parts.length !== 3) || parts[0] !== 'swap') {
         throw new Error(`Invalid swap memo format: ${memo} on environment ${getSettings().environment}`);
     }
 
     return {
         swapId: parts[1],
         tonomyAccount: parts[2],
-        _testOnly_tonomyAppsWebsiteUsername: getSettings().environment === 'development' ? parts[3] : undefined,
+        _testOnly_tonomyAppsWebsiteUsername: testEnv ? parts[3] : undefined,
     };
 }

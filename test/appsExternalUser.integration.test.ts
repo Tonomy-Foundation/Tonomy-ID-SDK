@@ -46,7 +46,7 @@ setTestSettings();
 
 const tonomySigner = createSigner(getTonomyOperationsKey());
 
-describe('Login to external website', () => {
+describe('Login to external apps website', () => {
     jest.setTimeout(50000);
 
     /** Object naming convention - indicates the different devices/apps the user is using
@@ -202,7 +202,7 @@ describe('Login to external website', () => {
                 await APPS_EXTERNAL_WEBSITE_user.swapBaseToTonomyToken(amount2, userBaseSigner);
             } catch (error) {
                 if (error instanceof Error) {
-                    expect(error.message).toContain('ERC20: burn amount exceeds balance')
+                    expect(error.message).toContain('ERC20: transfer amount exceeds balance')
                 } else {
                     throw error; // rethrow if it's something unexpected
                 }
