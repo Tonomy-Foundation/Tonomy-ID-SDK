@@ -91,7 +91,7 @@ export class AppsExternalUser extends ExternalUser {
 
             const newHandler: SwapSubscriber = async (memo: string): Promise<void> => {
                 try {
-                    debug('subscribeSwapBaseToTonomy() event', memo);
+                    debug(`subscribeSwapBaseToTonomy() ${issuer.did} event`, memo);
                     resolve(true);
                 } catch (error) {
                     reject(error);
@@ -104,18 +104,18 @@ export class AppsExternalUser extends ExternalUser {
                 }
             };
 
-            debug('subscribeSwapBaseToTonomy() - subscribing to swap confirmation   ');
+            debug(`subscribeSwapBaseToTonomy() ${issuer.did} - subscribing to swap confirmation   `);
             id = this.communication.subscribeSwapBaseToTonomy(newHandler);
         });
 
         const { baseMintBurnAddress } = getSettings();
 
         // 2. Send the transaction
-        debug('swapBaseToTonomyToken() - sending transaction');
+        debug(`swapBaseToTonomyToken() ${issuer.did} - sending transaction`);
         await tonomyToBaseTransfer(baseMintBurnAddress, amount, memo, signer);
 
         // 3. Now wait for the event
-        debug('subscribeSwapBaseToTonomy() - waiting for swap confirmation');
+        debug(`subscribeSwapBaseToTonomy() ${issuer.did} - waiting for swap confirmation`);
         return await waitForSwap;
     }
 }

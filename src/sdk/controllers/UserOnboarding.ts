@@ -12,6 +12,7 @@ import { ILoginOptions, IUserOnboarding } from '../types/User';
 import { getAccountInfo } from '../helpers/user';
 import { UserDataVault } from './UserDataVault';
 import Debug from 'debug';
+import { createAntelopeDid } from '../util';
 
 const debug = Debug('tonomy-sdk:controllers:UserOnboarding');
 
@@ -34,7 +35,7 @@ export class UserOnboarding extends UserDataVault implements IUserOnboarding {
 
         const accountName = await this.getAccountName();
 
-        this.storage.did = `did:antelope:${this.chainID}:${accountName.toString()}`;
+        this.storage.did = await createAntelopeDid(accountName.toString());
         await this.storage.did;
         return this.storage.did;
     }
