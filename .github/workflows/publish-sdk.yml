@@ -10,7 +10,6 @@ on:
       - development
       - testnet
       - master`
-      - feature/update-swap-flow
 
 jobs:
   compile-contracts:
@@ -53,7 +52,7 @@ jobs:
       - name: Check branch name
         run: echo ${GITHUB_REF#refs/*/}
       - run: |
-          if [[ ${GITHUB_REF#refs/*/} == "feature/update-swap-flow" ]]; then
+          if [[ ${GITHUB_REF#refs/*/} == "development" ]]; then
             echo "Variable BRANCH_NAME is set to 'development'"
             jq --arg tag "development" '.publishConfig.tag = $tag' package.json > package.tmp.json && mv package.tmp.json package.json
           fi
