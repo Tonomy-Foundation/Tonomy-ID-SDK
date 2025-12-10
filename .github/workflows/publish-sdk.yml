@@ -9,7 +9,7 @@ on:
     branches:
       - development
       - testnet
-      - master`
+      - master
 
 jobs:
   compile-contracts:
