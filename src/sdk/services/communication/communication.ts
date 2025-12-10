@@ -14,6 +14,7 @@ const debug = Debug('tonomy-sdk:services:communication:communication');
 
 export type Subscriber = (message: Message) => void;
 export type VeriffSubscriber = (message: VerificationMessage) => Promise<void>;
+export type SwapSubscriber = (memo: string) => Promise<void>;
 
 export const SOCKET_TIMEOUT = 100000;
 export const SESSION_TIMEOUT = 40000;
@@ -217,7 +218,7 @@ export class Communication {
             throwError('You need to login before sending a messages', SdkErrors.CommunicationNotLoggedIn);
         }
 
-        return await this.emitMessage('v1/swap/token/tono', message);
+        return await this.emitMessage('v2/swap/token/tono', message);
     }
 
     /**
@@ -287,7 +288,7 @@ export class Communication {
         Communication.identifier++;
         debug('subscribeVeriffVerification() called');
 
-        const messageHandler = (message: any) => {
+        const messageHandler = async (message: any) => {
             debug('message', message);
             const msg = new VerificationMessage(message);
 
@@ -299,7 +300,7 @@ export class Communication {
             debug('receiveVeriffVerification', msg.getType(), msg.getSender(), msg.getRecipient());
 
             if (msg.getType() === VerificationMessage.getType()) {
-                subscriber(msg);
+                await subscriber(msg);
             }
 
             return this;
@@ -315,6 +316,34 @@ export class Communication {
 
         if (subscriber) {
             this.socketServer.off('v1/verification/veriff/receive', subscriber);
+            this.subscribers.delete(id);
+        }
+    }
+
+    subscribeSwapBaseToTonomy(subscriber: SwapSubscriber): number {
+        Communication.identifier++;
+
+        const messageHandler = async (memo: any) => {
+            if (typeof memo !== 'string') {
+                throwError('Invalid swap data received:', memo);
+            }
+
+            debug('Received swap from base to tonomy:', memo);
+
+            // Call the subscriber with just the memo string
+            await subscriber(memo);
+        };
+
+        this.socketServer.on('v1/swap/token/confirm', messageHandler);
+        this.subscribers.set(Communication.identifier, messageHandler);
+        return Communication.identifier;
+    }
+
+    unsubscribeSwapBaseToTonomy(id: number): void {
+        const subscriber = this.subscribers.get(id);
+
+        if (subscriber) {
+            this.socketServer.off('v1/swap/token/confirm', subscriber);
             this.subscribers.delete(id);
         }
     }

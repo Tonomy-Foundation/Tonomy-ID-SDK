@@ -66,7 +66,6 @@ jobs:
             jq --arg tag "latest" '.publishConfig.tag = $tag' package.json > package.tmp.json && mv package.tmp.json package.json
           fi
       - run: yarn install --immutable
-      - run: yarn run build
       - run: yarn run release
         env:
           GITHUB_TOKEN: ${{secrets.MY_GITHUB_PERSONAL_ACCESS_TOKEN}}

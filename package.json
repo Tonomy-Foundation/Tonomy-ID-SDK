@@ -45,6 +45,7 @@
   "author": "Jack Tanner",
   "dependencies": {
     "@consento/sync-randombytes": "^1.0.5",
+    "@safe-global/sdk-starter-kit": "^3.0.2",
     "@tonomy/antelope-did-resolver": "^0.10.0",
     "@veramo/core": "^6.0.0",
     "@veramo/credential-w3c": "^6.0.0",
