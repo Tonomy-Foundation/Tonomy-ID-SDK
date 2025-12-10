@@ -885,6 +885,7 @@ export async function withdrawBootstrapVested(options: StandardProposalOptions) 
     ];
 
     const actions: Action[] = [];
+    let totalUnlockedAll = new Decimal(0);
 
     for (const account of accountsToWithdraw) {
         const { unlockable } = await getVestingContract().getVestingAllocations(account);
@@ -910,6 +911,8 @@ export async function withdrawBootstrapVested(options: StandardProposalOptions) 
 
             const totalToSend = unlockedBalance.add(new Decimal(unlockable));
 
+            totalUnlockedAll = totalUnlockedAll.add(totalToSend);
+
             console.log(
                 `Transferring total of ${totalToSend.toFixed(6)} TONO ($${(totalToSend.toNumber() * tonoPrice).toFixed(2)} USD) from account ${account} to ${tokenDestination} account`
             );
@@ -923,6 +926,10 @@ export async function withdrawBootstrapVested(options: StandardProposalOptions) 
             );
         }
     }
+
+    console.log(
+        `Total tokens withdrawn and transferred to ${tokenDestination}: ${totalUnlockedAll.toFixed(6)} TONO ($${(totalUnlockedAll.toNumber() * tonoPrice).toFixed(2)} USD)`
+    );
 
     const proposalHash = await createProposal(
         options.proposer,

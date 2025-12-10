@@ -5,6 +5,7 @@ import { randomString } from '../../util/crypto';
 // eslint-disable-next-line camelcase
 import { TonomyToken, TonomyToken__factory } from './typechain'; // adjust path if different
 import Decimal from 'decimal.js';
+import { createSafeClient, SafeClientResult } from '@safe-global/sdk-starter-kit';
 
 const debug = Debug('tonomy-sdk:services:ethereum');
 
@@ -320,15 +321,15 @@ export async function waitForEvmTrxFinalization(
     return receipt;
 }
 
-import { createSafeClient, SafeClientResult } from '@safe-global/sdk-starter-kit';
-
 export async function sendSafeWalletTransfer(recipient: string, amount: bigint): Promise<SafeClientResult> {
     const settings = getSettings();
+    // const governanceDAOAddress = `0x8951e9D016Cc0Cf86b4f6819c794dD64e4C3a1A1`;
+    const safeNestedBridgeAddress = '0x86d1Df3473651265AA88E48dE9B420debCa6e676';
 
     const safeClient = await createSafeClient({
         provider: settings.baseRpcUrl,
         signer: settings.basePrivateKey,
-        safeAddress: '0x86d1Df3473651265AA88E48dE9B420debCa6e676',
+        safeAddress: safeNestedBridgeAddress,
         apiKey: settings.safeApiKey,
     });
 

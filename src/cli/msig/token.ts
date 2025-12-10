@@ -1,14 +1,13 @@
 import { amountToSupplyPercentage, assetToDecimal, getAccount, getTokenContract } from '../../sdk/services/blockchain';
-// import { TONO_PUBLIC_SALE_PRICE } from '../../sdk/services/blockchain';
 import { StandardProposalOptions, createProposal, executeProposal } from '.';
 import Decimal from 'decimal.js';
 import { Action } from '@wharfkit/antelope';
 import { ethers } from 'ethers';
-import { execSync } from 'child_process';
 import { parse } from 'csv-parse/sync';
 import fs from 'fs';
-import { getSettings, isErrorCode, SdkErrors } from '../../sdk';
+import { getBaseTokenContract, getSettings, isErrorCode, SdkErrors } from '../../sdk';
 import { fetchAccountNameFromUsername } from './vesting';
+import { createSafeClient } from '@safe-global/sdk-starter-kit';
 
 export async function transfer(options: StandardProposalOptions) {
     const from = 'ecosystm.tmy';
@@ -215,10 +214,22 @@ export async function setStats(options: StandardProposalOptions) {
 }
 
 export async function crossChainSwap(options: StandardProposalOptions) {
+    if (!process.env.BASE_PRIVATE_KEY || !process.env.SAFE_API_KEY) {
+        throw new Error('BASE_PRIVATE_KEY and SAFE_API_KEY must be set in environment variables');
+    }
+
+    const governanceDAOAddress = `0x8951e9D016Cc0Cf86b4f6819c794dD64e4C3a1A1`;
+    const safeNestedBridgeAddress = '0x86d1Df3473651265AA88E48dE9B420debCa6e676';
     const from = 'liquidty.tmy';
-    const to = '0x8951e9D016Cc0Cf86b4f6819c794dD64e4C3a1A1'; // Governance DAO address on Base
+    const to = governanceDAOAddress;
     const quantity = new Decimal(100);
     const memo = 'cross chain swap by Governance Council';
+    const amountUint256 = ethers.parseEther(quantity.toFixed(6)).toString();
+    const settings = getSettings();
+
+    console.log(
+        `Creating Tonomy DAO multi-sig to call eosio.token::bridgeRetire() to burn ${quantity.toFixed(6)} TONO from ${from}`
+    );
     const action = getTokenContract().actions.bridgeRetire({ from, quantity: quantity.toFixed(6) + ' TONO', memo });
 
     const proposalHash = await createProposal(
@@ -233,32 +244,30 @@ export async function crossChainSwap(options: StandardProposalOptions) {
     if (!options.dryRun && options.autoExecute)
         await executeProposal(options.proposer, options.proposalName, proposalHash);
 
-    const stdout = await execSync(
-        `cd Ethereum-token && BRIDGE_ACTION=mint BRIDGE_TO=${to} BRIDGE_AMOUNT=${quantity.toFixed(6)} yarn run bridge --network base`
-    );
+    const safeClient = await createSafeClient({
+        provider: settings.baseRpcUrl,
+        signer: settings.basePrivateKey,
+        safeAddress: safeNestedBridgeAddress,
+        apiKey: settings.safeApiKey,
+    });
 
-    console.log(stdout.toString());
+    const transferTransaction = getBaseTokenContract().interface.encodeFunctionData('transfer', [to, amountUint256]);
 
-    const baseTokenAddress = getSettings().baseTokenAddress;
-    const governaceDAOAddress = `0x8951e9D016Cc0Cf86b4f6819c794dD64e4C3a1A1`;
-    const amountUint256 = ethers.parseEther(quantity.toFixed(6)).toString();
+    const transactions = [
+        {
+            to: settings.baseTokenAddress,
+            data: transferTransaction,
+            value: '0',
+        },
+    ];
 
-    console.log('');
-    console.log('Now you also need to create the equivalent `bridgeMint()` transaction via the Base DAO:');
     console.log(
-        `1. go to https://app.safe.global/apps/open?safe=base:${baseTokenAddress}&appUrl=https%3A%2F%2Fapps-portal.safe.global%2Ftx-builder`
+        `Creating Base Safe {Nested} Bridge DAO multi-sig TonomyToken.transfer() to transfer ${quantity.toFixed(6)} TONO from Base Safe to ${to}`
     );
-    console.log(
-        `2. Copy to the "Enter ABI" field: the [] array found on the "abi" property in ./Ethereum-token/artifacts/contracts/TonomyToken.sol/TonomyToken.json`
-    );
-    console.log(`3. enter the details:`);
-    console.log(`  Contract Method: bridgeMint()`);
-    console.log(`  to (address): ${governaceDAOAddress}(which is the Governance DAO address)`);
-    console.log(`  amount (uint256): ${amountUint256}`);
-    console.log(`4. Click "Add new transaction"`);
-    console.log(`5. Click "Send batch"`);
-    console.log(`6. Click "Continue"`);
-    console.log(`7. Click "Sign"`);
+
+    if (!options.dryRun) {
+        await safeClient.send({ transactions });
+    }
 }
 
 export async function multiMint(options: StandardProposalOptions) {
