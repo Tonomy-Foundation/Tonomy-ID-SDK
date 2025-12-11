@@ -7,7 +7,7 @@ import contracts from './contracts';
 import msig from './msig';
 import accounts from './accounts';
 import vesting from './vesting';
-import { audit, transfer } from './token';
+import { audit, sendSafeWalletTransferCommand, transfer } from './token';
 
 const args: string[] = process.argv.slice(2);
 
@@ -37,6 +37,8 @@ async function main() {
             await transfer(args.slice(1));
         } else if (args[1] === 'audit') {
             await audit();
+        } else if (args[1] === 'safe-transfer') {
+            await sendSafeWalletTransferCommand();
         } else {
             printCliHelp();
         }

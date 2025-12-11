@@ -81,3 +81,15 @@ export async function checkChainId(did: string, verifyChainId: boolean = true): 
 
     return;
 }
+
+let chainId: string | undefined;
+
+export async function createAntelopeDid(accountName: string, appPermission?: string): Promise<DIDurl> {
+    if (!chainId) {
+        chainId = await getChainId();
+    }
+
+    const fragment = appPermission ? `#${appPermission}` : '';
+
+    return `did:antelope:${chainId}:${accountName}${fragment}`;
+}

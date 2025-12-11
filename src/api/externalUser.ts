@@ -7,7 +7,7 @@ import { createStorage, PersistentStorageClean, StorageFactory, STORAGE_NAMESPAC
 import { Name, API, NameType } from '@wharfkit/antelope';
 import { checkUsername, TonomyUsername } from '../sdk/util/username';
 import { browserStorageFactory } from '../sdk/storage/browserStorage';
-import { getAccount, getChainId } from '../sdk/services/blockchain/eosio/eosio';
+import { getAccount } from '../sdk/services/blockchain/eosio/eosio';
 import { JsKeyManager } from '../sdk/storage/jsKeyManager';
 import {
     LoginRequestPayload,
@@ -17,7 +17,15 @@ import {
     DualWalletResponse,
     DualWalletRequests,
 } from '../sdk/util/request';
-import { checkChainId, getAccountNameFromDid, KYCPayload, KYCVC, parseDid, verifyOpsTmyDid } from '../sdk/util';
+import {
+    checkChainId,
+    createAntelopeDid,
+    getAccountNameFromDid,
+    KYCPayload,
+    KYCVC,
+    parseDid,
+    verifyOpsTmyDid,
+} from '../sdk/util';
 import { App } from '../sdk/controllers/App';
 import {
     AuthenticationMessage,
@@ -170,10 +178,9 @@ export class ExternalUser {
 
         if (!did) {
             const accountName = await (await this.getAccountName()).toString();
-            const chainID = await getChainId();
             const appPermission = await this.getAppPermission();
 
-            did = `did:antelope:${chainID}:${accountName}#${appPermission}`;
+            did = await createAntelopeDid(accountName, appPermission.toString());
             this.did = did;
             await this.did;
         }

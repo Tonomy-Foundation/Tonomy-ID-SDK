@@ -35,6 +35,32 @@ export function assetToDecimal(asset: string, symbol?: string): Decimal {
     return new Decimal(assetToNumberString(asset, symbol));
 }
 
+export function formatAssetString(
+    asset: string | number | Decimal,
+    symbol = getSettings().currencySymbol,
+    precision = 0,
+    padding = 12
+): string {
+    let assetDecimal: Decimal;
+
+    if (typeof asset === 'string') {
+        assetDecimal = new Decimal(asset);
+    } else if (typeof asset === 'number') {
+        assetDecimal = new Decimal(asset);
+    } else {
+        assetDecimal = asset;
+    }
+
+    return (
+        assetDecimal
+            .toFixed(precision)
+            .replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+            .padStart(padding) +
+        ' ' +
+        symbol
+    );
+}
+
 /** Convert a number to an EOSIO asset string
  *
  * @deprecated remove use of number to represent tokens. Use Decimal/BigInt instead
@@ -44,8 +70,34 @@ export function amountToAsset(amount: number, symbol: string, precision = 6): st
     return amount.toFixed(precision) + ' ' + symbol;
 }
 
+export function decimalToAsset(amount: Decimal, symbol = getSettings().currencySymbol, precision = 6): string {
+    return amount.toFixed(precision) + ' ' + symbol;
+}
+
 export function amountToSupplyPercentage(amount: Decimal): string {
     return amount.mul(100).div(EosioTokenContract.TOTAL_SUPPLY).toFixed(8) + '%';
+}
+
+export async function getTokenPrice(): Promise<number> {
+    return await getPriceCoinGecko('tonomy', 'usd');
+}
+
+async function getPriceCoinGecko(token: string, currency: string): Promise<number> {
+    const res = await fetch(
+        `https://api.coingecko.com/api/v3/simple/price?ids=${token}&vs_currencies=${currency}`
+    ).then((res) => res.json());
+
+    if (!res || res === null) {
+        throw new Error('Failed to fetch price from CoinGecko');
+    }
+
+    const price = res[token.toLowerCase()]?.[currency.toLowerCase()];
+
+    if (typeof price !== 'number') {
+        throw new Error(`Invalid price data from CoinGecko for ${token} in ${currency}: ${price}`);
+    }
+
+    return price;
 }
 
 export class EosioTokenContract extends Contract {

@@ -46,7 +46,7 @@ setTestSettings();
 
 const tonomySigner = createSigner(getTonomyOperationsKey());
 
-describe('Login to external website', () => {
+describe('Login to external apps website', () => {
     jest.setTimeout(50000);
 
     /** Object naming convention - indicates the different devices/apps the user is using
@@ -88,7 +88,7 @@ describe('Login to external website', () => {
         // Create app which will be logged into
         externalApp = await createRandomApp();
         tonomyLoginApp = await createRandomApp();
-       
+
         setSettings({
             ...settings,
             ssoWebsiteOrigin: tonomyLoginApp.origin,
@@ -120,7 +120,7 @@ describe('Login to external website', () => {
             TONOMY_ID_dataSource = await setupTestDatabase();
         }
 
-        await disconnectCommunications(communicationsToCleanup);        
+        await disconnectCommunications(communicationsToCleanup);
         debug('finished cleanup');
 
         // for some reason this is needed to ensure all the code lines execute. Not sure why needed
@@ -141,18 +141,17 @@ describe('Login to external website', () => {
             expect.assertions(loginToExternalAppAssertions + 4);
             await setAppsExternalUser();
             const amount = new Decimal("2.5"); // amount to swap
-            const amountWeiBigInt = BigInt(amount.mul(10**18).toString());
+            const amountWeiBigInt = BigInt(amount.mul(10 ** 18).toString());
 
             const tonomyAccountName = await APPS_EXTERNAL_WEBSITE_user.getAccountName()
-            
-            const balanceBeforeBase = await getBaseTokenContract().balanceOf(userBaseAddress);            
+
+            const balanceBeforeBase = await getBaseTokenContract().balanceOf(userBaseAddress);
             const balanceBeforeTonomy = await getTokenContract().getBalanceDecimal(tonomyAccountName);
 
+            const tonomyAppsWebsiteUsername = await externalApp.username?.getBaseUsername();
             const proof = await createSignedProofMessage(userBaseSigner)
 
-            const tonomyAppsWebsiteUsername = await externalApp.username?.getBaseUsername();
-
-            await APPS_EXTERNAL_WEBSITE_user.swapToken(amount, proof, 'base', tonomyAppsWebsiteUsername);
+            await APPS_EXTERNAL_WEBSITE_user.swapTonomyToBaseToken(amount, proof, tonomyAppsWebsiteUsername);
 
             const balanceAfterBase = await getBaseTokenContract().balanceOf(userBaseAddress);
             const balanceAfterTonomy = await getTokenContract().getBalanceDecimal(tonomyAccountName);
@@ -160,9 +159,7 @@ describe('Login to external website', () => {
             expect(balanceAfterBase).toEqual(balanceBeforeBase + amountWeiBigInt);
             expect(balanceAfterTonomy).toEqual(balanceBeforeTonomy.sub(amount));
 
-            const proof2 = await createSignedProofMessage(userBaseSigner)
-
-            await APPS_EXTERNAL_WEBSITE_user.swapToken(amount, proof2, 'tonomy', tonomyAppsWebsiteUsername);
+            await APPS_EXTERNAL_WEBSITE_user.swapBaseToTonomyToken(amount, userBaseSigner, tonomyAppsWebsiteUsername);
 
             const balanceAfter2Base = await getBaseTokenContract().balanceOf(userBaseAddress);
             const balanceAfter2Tonomy = await getTokenContract().getBalanceDecimal(tonomyAccountName);
@@ -175,14 +172,18 @@ describe('Login to external website', () => {
             expect.assertions(loginToExternalAppAssertions + 1);
             await setAppsExternalUser();
             const amount = new Decimal("2000"); // amount to swap
-            
+
             const proof = await createSignedProofMessage(userBaseSigner)
             const tonomyAppsWebsiteUsername = await externalApp.username?.getBaseUsername();
 
             try {
-                await APPS_EXTERNAL_WEBSITE_user.swapToken(amount, proof, 'base', tonomyAppsWebsiteUsername);
+                await APPS_EXTERNAL_WEBSITE_user.swapTonomyToBaseToken(amount, proof, tonomyAppsWebsiteUsername);
             } catch (error) {
-                expect(error.message).toContain('assertion failure with message: overdrawn balance')
+                if (error instanceof Error) {
+                    expect(error.message).toContain('assertion failure with message: overdrawn balance');
+                } else {
+                    throw error; // rethrow if it's something unexpected
+                }
             }
         });
 
@@ -190,18 +191,21 @@ describe('Login to external website', () => {
             expect.assertions(loginToExternalAppAssertions + 1);
             await setAppsExternalUser();
             const amount = new Decimal("2"); // amount to swap
-            
+
             const proof = await createSignedProofMessage(userBaseSigner)
             const tonomyAppsWebsiteUsername = await externalApp.username?.getBaseUsername();
 
-            await APPS_EXTERNAL_WEBSITE_user.swapToken(amount, proof, 'base', tonomyAppsWebsiteUsername);
+            await APPS_EXTERNAL_WEBSITE_user.swapTonomyToBaseToken(amount, proof, tonomyAppsWebsiteUsername);
             const amount2 = new Decimal("2000"); // amount to swap
-            const proof2 = await createSignedProofMessage(userBaseSigner)
 
             try {
-                await APPS_EXTERNAL_WEBSITE_user.swapToken(amount2, proof2, 'tonomy', tonomyAppsWebsiteUsername);
+                await APPS_EXTERNAL_WEBSITE_user.swapBaseToTonomyToken(amount2, userBaseSigner);
             } catch (error) {
-                expect(error.message).toContain('ERC20: burn amount exceeds balance')
+                if (error instanceof Error) {
+                    expect(error.message).toContain('ERC20: transfer amount exceeds balance')
+                } else {
+                    throw error; // rethrow if it's something unexpected
+                }
             }
         });
     });
@@ -226,7 +230,7 @@ describe('Login to external website', () => {
             return;
         }
 
-        APPS_EXTERNAL_WEBSITE_user = new AppsExternalUser(res);    
+        APPS_EXTERNAL_WEBSITE_user = new AppsExternalUser(res);
         await disconnectCommunications([getProtectedCommunication(APPS_EXTERNAL_WEBSITE_user)]);
         communicationsToCleanup.push(getProtectedCommunication(APPS_EXTERNAL_WEBSITE_user));
     }

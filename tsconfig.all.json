@@ -1,0 +1,13 @@
+{
+    "extends": "./tsconfig.json",
+    "include": [
+        "src",
+        "test"
+    ],
+    "exclude": [
+        "node_modules",
+        "build",
+        "Tonomy-Communication",
+        "Tonomy-Contracts",
+    ]
+}

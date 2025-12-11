@@ -47,6 +47,7 @@ fi
 cd "${PARENT_PATH}/Tonomy-Contracts"
 if [ ! -f "contracts/eosio.token/eosio.token.wasm" ]; then
     echo "Tonomy Contracts: Building smart contracts"
+    ./blockchain/build-docker.sh
     ./build-contracts.sh
 fi
 
