@@ -36,7 +36,7 @@ export class Communication {
     private url: string;
     private seenMessages: Map<string, Date> = new Map(); // Map<hash, Date>
     private readonly seemMessageTTL = 60 * 60; // 1 hour
-
+    declare process: any;
     /**
      * Checks if a message has been seen before
      * Run duplicate check only in CI or local test environment; skip elsewhere (e.g. production)
@@ -49,7 +49,10 @@ export class Communication {
      * @returns {boolean} true if the message has been seen before
      */
     private checkSeenMessage(message: string): boolean {
-        if (typeof process !== 'undefined' && !process.env.CI && process.env.NODE_ENV !== 'test') return false;
+        if (typeof process !== 'undefined' && process?.env && !process.env.CI && process.env.NODE_ENV !== 'test') {
+            return false;
+        }
+
         const res = this.seenMessages.has(sha256(message));
 
         this.addSeenMessage(message);
@@ -234,10 +237,10 @@ export class Communication {
         const messageHandler = (message: any) => {
             const msg = new Message(message);
 
-            if (this.checkSeenMessage(msg.toString())) {
-                debug('receiveMessage duplicate', msg.getType(), msg.getSender(), msg.getRecipient());
-                return;
-            }
+            // if (this.checkSeenMessage(msg.toString())) {
+            //     debug('receiveMessage duplicate', msg.getType(), msg.getSender(), msg.getRecipient());
+            //     return;
+            // }
 
             debug('receiveMessage', msg.getType(), msg.getSender(), msg.getRecipient());
 
