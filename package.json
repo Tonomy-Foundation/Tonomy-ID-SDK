@@ -1,5 +1,5 @@
 {
-  "version": "0.35.1-rc.1",
+  "version": "0.36.0-rc.1",
   "license": "Apache-2.0",
   "type": "module",
   "source": "src/sdk/index.ts",
@@ -23,9 +23,9 @@
     "node": ">=20.0.0"
   },
   "scripts": {
-    "start": "microbundle watch  -i ./src/sdk/index.ts -o build/sdk/index.js",
+    "start": "microbundle watch --compress=false -i ./src/sdk/index.ts -o build/sdk/index.js",
     "build:setup": "./copy-contract-abis.sh",
-    "build:sdk": "microbundle --compress=false -i ./src/sdk/index.ts -o build/sdk/index.js",
+    "build:sdk": "microbundle -i ./src/sdk/index.ts -o build/sdk/index.js",
     "build:cli": "microbundle --compress=false --target=node -f esm -i ./src/cli/index.ts -o build/cli/index.js",
     "build": "yarn run build:setup && yarn run build:sdk && yarn run build:cli",
     "test:setup": "./test/build-and-run-services.sh start",
@@ -39,12 +39,13 @@
     "lint:fix": "yarn run lint -- --fix",
     "release": "semantic-release  --debug",
     "prepare": "yarn run build",
-    "typeCheck": "tsc --noEmit --skipLibCheck"
+    "typeCheck": "tsc --noEmit --skipLibCheck --project tsconfig.all.json"
   },
   "name": "@tonomy/tonomy-id-sdk",
   "author": "Jack Tanner",
   "dependencies": {
     "@consento/sync-randombytes": "^1.0.5",
+    "@safe-global/sdk-starter-kit": "^3.0.2",
     "@tonomy/antelope-did-resolver": "^0.10.0",
     "@veramo/core": "^6.0.0",
     "@veramo/credential-w3c": "^6.0.0",
@@ -78,6 +79,8 @@
     "@babel/preset-typescript": "^7.24.7",
     "@semantic-release/changelog": "^6.0.2",
     "@semantic-release/git": "^10.0.1",
+    "@semantic-release/github": "^10.0.0",
+    "@semantic-release/npm": "^13.1.0",
     "@typechain/ethers-v6": "^0.5.1",
     "@types/debug": "^4.1.12",
     "@types/elliptic": "^6.4.18",
@@ -97,7 +100,7 @@
     "microbundle": "^0.15.1",
     "pm2": "^5.4.1",
     "prettier": "^3.3.2",
-    "semantic-release": "^24.0.0",
+    "semantic-release": "^25.0.0",
     "ts-jest": "^29.1.5",
     "ts-mixer": "^6.0.4",
     "ts-node": "^10.9.2",

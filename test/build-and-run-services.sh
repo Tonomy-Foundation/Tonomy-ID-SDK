@@ -67,15 +67,25 @@ function start {
     # Run blockchain node
     cd "${SDK_DIR}"
     docker run -p 8888:8888 --name tonomy_blockchain_integration -d tonomy_blockchain_initialized
-    echo "Waiting 8 seconds for blockchain node to start"
-    sleep 8
+    echo "Waiting 12 seconds for blockchain node to start"
+    sleep 12
+    curl localhost:8888 > /dev/null || {
+        echo "Blockchain node not responding"
+        exit 1
+    }
 
     # Run Ethereum node and deploy contract
     cd  "$SDK_DIR/Ethereum-token"
     npx pm2 stop hardhat || true
     npx pm2 delete hardhat || true
-    npx pm2 start --interpreter /bin/bash yarn --name "hardhat" -- run node
-    DEPLOY_OUTPUT=$(yarn run deploy --network localhost)
+    npx pm2 start yarn --name "hardhat" -- run node
+    echo "Waiting 5 seconds for Ethereum node to start"
+    sleep 5
+    curl localhost:8545 > /dev/null || {
+        echo "Ethereum node not responding"
+        exit 1
+    }
+    DEPLOY_OUTPUT=$(ETHEREUM_PRIVATE_KEY=0xdf57089febbacf7ba0bc227dafbffa9fc08a93fdc68e1e42411a14efcf23656e yarn run deploy --network localhost)
     echo "$DEPLOY_OUTPUT"
     BASE_TOKEN_ADDRESS=$(echo "$DEPLOY_OUTPUT" | grep "Proxy contract:" | awk '{print $3}')
     export BASE_TOKEN_ADDRESS
@@ -89,7 +99,7 @@ function start {
     npx pm2 delete micro || true
     unset TONOMY_OPS_PRIVATE_KEY
     unset HCAPTCHA_SECRET
-    npx pm2 start --interpreter /bin/bash yarn --name "micro" -- run start
+    npx pm2 start yarn --name "micro" -- run start
 }
 
 function bootstrap {

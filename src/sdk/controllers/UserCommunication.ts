@@ -1,4 +1,4 @@
-import { Communication, Subscriber, VeriffSubscriber } from '../services/communication/communication';
+import { Communication, Subscriber, SwapSubscriber, VeriffSubscriber } from '../services/communication/communication';
 import { AuthenticationMessage, Message } from '../services/communication/message';
 import { KeyManager } from '../storage/keymanager';
 import { StorageFactory } from '../storage/storage';
@@ -31,6 +31,10 @@ export abstract class UserCommunication extends UserAuthorization implements IUs
 
     unsubscribeVeriffVerification(id: number): void {
         this.communication.unsubscribeVeriffVerification(id);
+    }
+
+    subscribeSwapBaseToTonomy(subscriber: SwapSubscriber): number {
+        return this.communication.subscribeSwapBaseToTonomy(subscriber);
     }
 
     async sendMessage(message: Message): Promise<boolean> {

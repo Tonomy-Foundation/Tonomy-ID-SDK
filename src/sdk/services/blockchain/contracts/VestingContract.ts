@@ -7,6 +7,7 @@ import { getApi } from '../eosio/eosio';
 import { getSettings, isProduction } from '../../../util/settings';
 import {
     addMicroseconds,
+    MICROSECONDS_IN_DAY,
     MICROSECONDS_IN_MONTH,
     MICROSECONDS_IN_SECOND,
     MICROSECONDS_IN_YEAR,
@@ -22,7 +23,6 @@ const CONTRACT_NAME: NameType = 'vesting.tmy';
 export const TONO_SEED_ROUND_PRICE = 0.00006666666666666666;
 export const TONO_SEED_LATE_ROUND_PRICE = 0.00006666666666666666;
 export const TONO_PUBLIC_SALE_PRICE = 0.0001;
-export const TONO_CURRENT_PRICE = TONO_SEED_ROUND_PRICE;
 
 const MICROSECONDS_PER_SECOND = 1_000_000;
 const SECONDS_PER_HOUR = 3_600;
@@ -397,6 +397,36 @@ export const vestingCategories: Map<
             name: 'Ecosystem',
         },
     ],
+    [
+        29, // Double Special Round - Full
+        {
+            startDelay: 26 * MICROSECONDS_IN_DAY,
+            cliffPeriod: 0,
+            vestingPeriod: 6 * MICROSECONDS_IN_MONTH,
+            tgeUnlock: 0.15,
+            name: 'Double Special Round - Full',
+        },
+    ],
+    [
+        30, // Double Special Round - Part 1
+        {
+            startDelay: 26 * MICROSECONDS_IN_DAY,
+            cliffPeriod: 0,
+            vestingPeriod: 3 * MICROSECONDS_IN_MONTH,
+            tgeUnlock: 0.3,
+            name: 'Double Special Round - Part 1',
+        },
+    ],
+    [
+        31, // Double Special Round - Part 2
+        {
+            startDelay: 0,
+            cliffPeriod: (26 + 3 * 30) * MICROSECONDS_IN_DAY,
+            vestingPeriod: 3 * MICROSECONDS_IN_MONTH,
+            tgeUnlock: 0.0,
+            name: 'Double Special Round - Part 2',
+        },
+    ],
 ]);
 
 export class VestingContract extends Contract {
@@ -417,7 +447,7 @@ export class VestingContract extends Contract {
     }
     // ISO format strings (UTC timezone)
     static SALE_START_DATE = '2024-04-30T12:00:00.000Z';
-    static VESTING_START_DATE = '2025-11-01T10:00:00.000Z'; // NOTE: 72 hours added after the Base TGE date to delay according to tokenomics
+    static VESTING_START_DATE = '2025-11-12T23:00:00.000Z'; // NOTE: 72 hours added after the Base TGE date to delay according to tokenomics
 
     static calculateVestingPeriod(settings: VestingSettings, allocation: VestingAllocation) {
         const category = vestingCategories.get(allocation.vestingCategoryType);
@@ -637,17 +667,32 @@ export class VestingContract extends Contract {
         for (const allocation of allocations) {
             const allocated = assetToAmount(allocation.tokensAllocated);
             const claimed = assetToAmount(allocation.tokensClaimed);
-            const { vestingStart, cliffEnd, vestingEnd } = VestingContract.calculateVestingPeriod(settings, allocation);
+            const { launchDate, vestingStart, cliffEnd, vestingEnd } = VestingContract.calculateVestingPeriod(
+                settings,
+                allocation
+            );
             const cat = this.getVestingCategory(allocation.vestingCategoryType);
 
             let claimable = 0;
 
-            if (now >= cliffEnd) {
-                const elapsed = (now.getTime() - vestingStart.getTime()) / 1000;
-                const duration = (vestingEnd.getTime() - vestingStart.getTime()) / 1000;
-                const progress = Math.min(elapsed / duration, 1.0);
+            // Replicate on-chain logic: TGE portion becomes claimable at launch date regardless of cliff
+            if (now >= launchDate) {
+                const tgeAmount = allocated * cat.tgeUnlock;
 
-                claimable = allocated * ((1.0 - cat.tgeUnlock) * progress + cat.tgeUnlock);
+                claimable = tgeAmount;
+
+                if (now >= vestingEnd) {
+                    // Entire allocation vested by end
+                    claimable = allocated;
+                } else if (now >= cliffEnd) {
+                    // Linear vesting for remaining portion after cliff
+                    const elapsed = (now.getTime() - vestingStart.getTime()) / 1000; // seconds
+                    const duration = (vestingEnd.getTime() - vestingStart.getTime()) / 1000; // seconds
+                    const progress = Math.min(elapsed / Math.max(duration, 1), 1.0);
+                    const remainingAfterTge = allocated - tgeAmount;
+
+                    claimable = Math.min(allocated, tgeAmount + remainingAfterTge * progress);
+                }
             }
 
             const unlockable = claimable - claimed;

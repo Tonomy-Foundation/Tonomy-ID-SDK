@@ -11,10 +11,7 @@ export async function deployContract(
 ) {
     const { wasmFile, abiFile } = getDeployableFiles(options.contract, options.directory);
 
-    const actions = await getTonomyEosioProxyContract().deployContractActions(options.contract, wasmFile, abiFile, {
-        actor: 'tonomy',
-        permission: 'active',
-    });
+    const actions = await getTonomyEosioProxyContract().deployContractActions(options.contract, wasmFile, abiFile);
 
     if (options.returnActions ?? false) return actions;
 
