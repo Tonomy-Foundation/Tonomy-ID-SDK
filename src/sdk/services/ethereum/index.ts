@@ -61,7 +61,7 @@ export async function tonomyToBaseTransfer(
 
     debug(`Available: ${formatUnits(balance, 18)},`);
 
-    const transferData = token.interface.encodeFunctionData('transfer', [to, weiAmount]);
+    const transferData = getBaseTokenContract(signer).interface.encodeFunctionData('transfer', [to, weiAmount]);
     const memoHex = ethers.hexlify(ethers.toUtf8Bytes(memo)).substring(2);
 
     const tx = {
