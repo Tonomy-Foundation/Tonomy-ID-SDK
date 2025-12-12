@@ -48,7 +48,7 @@ export async function tonomyToBaseTransfer(
 ): Promise<ethers.TransactionResponse> {
     const { baseTokenAddress } = getSettings();
 
-    const token = getBaseTokenContract(signer);
+    const token = getBaseTokenContract();
     const weiAmount = parseUnits(quantity.toString(), 18);
 
     // Check balance first
@@ -59,9 +59,7 @@ export async function tonomyToBaseTransfer(
     );
     const balance = await token.balanceOf(signerAddress);
 
-    debug(
-        `Available: ${formatUnits(balance, 18)}, Required: ${quantity.toString()}, Address: ${to}, signerAddress, ${signerAddress} `
-    );
+    debug(`Available: ${formatUnits(balance, 18)},`);
 
     const transferData = token.interface.encodeFunctionData('transfer', [to, weiAmount]);
     const memoHex = ethers.hexlify(ethers.toUtf8Bytes(memo)).substring(2);
