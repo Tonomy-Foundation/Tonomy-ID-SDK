@@ -53,6 +53,10 @@ export async function tonomyToBaseTransfer(
 
     // Check balance first
     const signerAddress = await signer.getAddress();
+
+    debug(
+        `signer: ${signer}, Address: ${to}, signerAddress, ${signerAddress}, baseTokenAddress: ${baseTokenAddress} token: ${token} `
+    );
     const balance = await token.balanceOf(signerAddress);
 
     debug(
