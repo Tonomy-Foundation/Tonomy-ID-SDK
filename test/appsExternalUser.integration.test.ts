@@ -208,6 +208,23 @@ describe('Login to external apps website', () => {
                 }
             }
         });
+
+        test('should request faucet tokens and update balance', async () => {
+            expect.assertions(loginToExternalAppAssertions + 1);
+            await setAppsExternalUser();
+            const faucetAmount = new Decimal("5.0"); // amount to request from faucet
+
+            const tonomyAccountName = await APPS_EXTERNAL_WEBSITE_user.getAccountName();
+            const balanceBeforeFaucet = await getTokenContract().getBalanceDecimal(tonomyAccountName);
+
+            const tonomyAppsWebsiteUsername = await externalApp.username?.getBaseUsername();
+
+            await APPS_EXTERNAL_WEBSITE_user.requestFaucetTokens(faucetAmount, tonomyAppsWebsiteUsername);
+
+            const balanceAfterFaucet = await getTokenContract().getBalanceDecimal(tonomyAccountName);
+
+            expect(balanceAfterFaucet).toEqual(balanceBeforeFaucet.add(faucetAmount));
+        });
     });
 
     async function setAppsExternalUser() {

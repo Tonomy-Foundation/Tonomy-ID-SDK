@@ -5,6 +5,7 @@ import {
     AuthenticationMessage,
     Message,
     SwapTokenMessage,
+    FaucetTokenMessage,
     VerificationMessage,
 } from '../../services/communication/message';
 import Debug from 'debug';
@@ -222,6 +223,14 @@ export class Communication {
         }
 
         return await this.emitMessage('v2/swap/token/tono', message);
+    }
+
+    async sendFaucetTokenMessage(message: FaucetTokenMessage): Promise<boolean> {
+        if (!this.isLoggedIn()) {
+            throwError('You need to login before sending a messages', SdkErrors.CommunicationNotLoggedIn);
+        }
+
+        return await this.emitMessage('v1/faucet/token/tono', message);
     }
 
     /**
