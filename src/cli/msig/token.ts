@@ -220,9 +220,9 @@ export async function crossChainSwap(options: StandardProposalOptions) {
 
     const governanceDAOAddress = `0x8951e9D016Cc0Cf86b4f6819c794dD64e4C3a1A1`;
     const safeNestedBridgeAddress = '0x86d1Df3473651265AA88E48dE9B420debCa6e676';
-    const from = 'liquidty.tmy';
+    const from = 'found.tmy';
     const to = governanceDAOAddress;
-    const quantity = new Decimal(100);
+    const quantity = new Decimal('1525000000');
     const memo = 'cross chain swap by Governance Council';
     const amountUint256 = ethers.parseEther(quantity.toFixed(6)).toString();
     const settings = getSettings();
@@ -243,7 +243,6 @@ export async function crossChainSwap(options: StandardProposalOptions) {
 
     if (!options.dryRun && options.autoExecute)
         await executeProposal(options.proposer, options.proposalName, proposalHash);
-
     const safeClient = await createSafeClient({
         provider: settings.baseRpcUrl,
         signer: settings.basePrivateKey,
@@ -282,6 +281,35 @@ export async function multiMint(options: StandardProposalOptions) {
     for (const mint of accountsToMint) {
         console.log(`Preparing mint of ${mint.amount} to ${mint.account}`);
         const action = getTokenContract().actions.bridgeIssue({ to: mint.account, quantity: mint.amount, memo: '' });
+
+        actions.push(action);
+    }
+
+    const proposalHash = await createProposal(
+        options.proposer,
+        options.proposalName,
+        actions,
+        options.privateKey,
+        options.requested,
+        options.dryRun
+    );
+
+    if (!options.dryRun && options.autoExecute)
+        await executeProposal(options.proposer, options.proposalName, proposalHash);
+}
+
+export async function multiBurn(options: StandardProposalOptions) {
+    const accountsToBurn: { account: string; amount: string }[] = [
+        { account: 'found.tmy', amount: '1525000000.000000 TONO' },
+        { account: 'pafuwexz1fza', amount: '500000.000000 TONO' },
+        { account: 'pafuwexz1fza', amount: '250000.000000 TONO' },
+    ];
+
+    const actions: Action[] = [];
+
+    for (const burn of accountsToBurn) {
+        console.log(`Preparing burn of ${burn.amount} from ${burn.account}`);
+        const action = getTokenContract().actions.bridgeRetire({ from: burn.account, quantity: burn.amount, memo: '' });
 
         actions.push(action);
     }
