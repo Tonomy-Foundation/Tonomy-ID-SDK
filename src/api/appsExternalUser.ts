@@ -11,7 +11,7 @@ import {
 } from '../sdk/services/communication/message';
 import { SdkErrors, throwError } from '../sdk/util/errors';
 import { ExternalUser } from './externalUser';
-import { decimalToAsset, getAccountNameFromDid, getSettings, randomString } from '../sdk';
+import { getAccountNameFromDid, getSettings, randomString } from '../sdk';
 import { ethers } from 'ethers';
 import Debug from 'debug';
 
