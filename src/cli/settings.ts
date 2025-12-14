@@ -9,7 +9,6 @@ type ConfigType = {
     blockchainUrl: string;
     ssoWebsiteOrigin: string;
     demoWebsiteOrigin: string;
-    consoleWebsiteOrigin: string;
     tonomyAppsOrigin: string;
     accountSuffix: string;
     communicationUrl: string;
@@ -30,7 +29,6 @@ const defaultConfig = {
     environment: 'development',
     ssoWebsiteOrigin: `http://${ipAddress}:3000`,
     demoWebsiteOrigin: `http://${ipAddress}:3001`,
-    consoleWebsiteOrigin: `http://${ipAddress}:3002`,
     tonomyAppsOrigin: `http://${ipAddress}:3003`,
     blockchainUrl: `http://${ipAddress}:8888`,
     accountSuffix: '.stag.tonomy.id',
@@ -44,13 +42,13 @@ const defaultConfig = {
     baseRpcUrl: 'http://localhost:8545',
     basePrivateKey: '0xdf57089febbacf7ba0bc227dafbffa9fc08a93fdc68e1e42411a14efcf23656e', // Hardhat account #19
     baseTokenAddress: process.env.BASE_TOKEN_ADDRESS!,
+    baseMintBurnAddress: '0x8626f6940E2eb28930eFb4CeF49B2d1F2C9C1199',
 };
 
 const stagingConfig = {
     environment: 'staging',
     ssoWebsiteOrigin: `https://accounts.staging.tonomy.foundation`,
     demoWebsiteOrigin: `https://demo.staging.tonomy.foundation`,
-    consoleWebsiteOrigin: `https://console.developers.staging.tonomy.foundation`,
     tonomyAppsOrigin: `https://apps.staging.tonomy.foundation`,
     blockchainUrl: `https://blockchain-api-staging.tonomy.foundation`,
     accountSuffix: '.stag.tonomy.id',
@@ -63,13 +61,13 @@ const stagingConfig = {
     baseNetwork: 'base-sepolia' as const,
     baseRpcUrl: 'https://base-sepolia.infura.io/v3/' + process.env.INFURA_API_KEY,
     baseTokenAddress: '0xC71Ae7EBa91037Ff145671D0d25Ba415BB69450c',
+    baseMintBurnAddress: '0x8DE48baf638e4Cd8Dab07Ef12375369Cb9b841dB',
 };
 
 const testnetConfig = {
     environment: 'testnet',
     ssoWebsiteOrigin: `https://accounts.testnet.tonomy.io`,
     demoWebsiteOrigin: `https://demo.testnet.tonomy.io`,
-    consoleWebsiteOrigin: `https://console.developers.testnet.tonomy.io`,
     tonomyAppsOrigin: `https://apps.testnet.tonomy.io`,
     blockchainUrl: `https://test.pangea.eosusa.io`,
     accountSuffix: '.testnet.pangea',
@@ -82,13 +80,13 @@ const testnetConfig = {
     baseNetwork: 'base-sepolia' as const,
     baseRpcUrl: 'https://base-sepolia.infura.io/v3/' + process.env.INFURA_API_KEY,
     baseTokenAddress: '0x56aD9925f417358640746266eF44a701622c54Ba',
+    baseMintBurnAddress: '0x8de48baf638e4cd8dab07ef12375369cb9b841db',
 };
 
 const productionConfig = {
     environment: 'production',
     ssoWebsiteOrigin: `https://accounts.tonomy.io`,
     demoWebsiteOrigin: `https://demo.tonomy.io`,
-    consoleWebsiteOrigin: `https://console.developers.tonomy.io`,
     tonomyAppsOrigin: `https://apps.tonomy.io`,
     blockchainUrl: `https://pangea.eosusa.io`,
     accountSuffix: '.pangea.id',
@@ -99,8 +97,11 @@ const productionConfig = {
     ecosystemName: 'Tonomy',
     currencySymbol: 'TONO',
     baseNetwork: 'base' as const,
-    baseRpcUrl: 'https://base.infura.io/v3/' + process.env.INFURA_API_KEY,
+    baseRpcUrl: 'https://base-mainnet.infura.io/v3/' + process.env.INFURA_API_KEY,
     baseTokenAddress: '0x36a0E9d5bb7322b26185D76Fb3fce46a40007e90',
+    baseMintBurnAddress: '0x86d1Df3473651265AA88E48dE9B420debCa6e676',
+    basePrivateKey: process.env.BASE_PRIVATE_KEY,
+    safeApiKey: process.env.SAFE_API_KEY,
 };
 
 type SettingsType = {

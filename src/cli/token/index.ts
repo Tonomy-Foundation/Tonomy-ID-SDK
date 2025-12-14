@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 
 import { PrivateKey } from '@wharfkit/antelope';
-import { AccountType, TonomyUsername, setSettings } from '../../sdk';
+import { AccountType, TonomyUsername, getSettings, sendSafeWalletTransfer, setSettings } from '../../sdk';
 import {
     amountToSupplyPercentage,
     assetToAmount,
@@ -26,6 +26,7 @@ import {
     systemAccount,
 } from '../bootstrap';
 import Decimal from 'decimal.js';
+import { ethers } from 'ethers';
 
 export async function transfer(args: string[]) {
     const privateKey = PrivateKey.from(process.env.SIGNING_KEY || '');
@@ -62,6 +63,23 @@ export async function transfer(args: string[]) {
     const res = await getTokenContract().transfer(sender, recipient, quantity, memo, signer);
 
     console.log('Transaction ID: ', JSON.stringify(res, null, 2));
+}
+
+export async function sendSafeWalletTransferCommand() {
+    const recipient = '0x8951e9D016Cc0Cf86b4f6819c794dD64e4C3a1A1';
+    const amount = ethers.parseEther('1.0');
+
+    if (getSettings().environment !== 'production') {
+        throw new Error(`sendSafeWalletTransfer is only supported in production environment`);
+    }
+
+    // Need to do a more complicated DAO transaction...
+    const safeClientResult = await sendSafeWalletTransfer(recipient, amount);
+
+    console.log(
+        `Safe wallet transfer to ${recipient} completed with safe transaction hash ${safeClientResult.transactions?.safeTxHash}`,
+        JSON.stringify(safeClientResult, null, 2)
+    );
 }
 
 const ZERO_DECIMAL = new Decimal(0);

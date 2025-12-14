@@ -7,7 +7,7 @@ import {
 } from '../../sdk/services/blockchain';
 import settings from '../settings';
 import { newAccount } from './accounts';
-import { crossChainSwap, bulkTransfer, setStats, transfer } from './token';
+import { crossChainSwap, bulkTransfer, setStats, transfer, multiMint } from './token';
 import { updateAuth, govMigrate, addEosioCode } from './auth';
 import { deployContract } from './contract';
 import { printCliHelp } from '..';
@@ -22,6 +22,8 @@ import {
     vestingBulk,
     vestingMigrate4,
     vestingMigrate5,
+    vestingMigrate6,
+    withdrawBootstrapVested,
 } from './vesting';
 import {
     createStakingTmyAccount,
@@ -43,7 +45,14 @@ import {
 } from './apps';
 
 const governanceAccounts = ['1.found.tmy', '2.found.tmy', '3.found.tmy'];
-let newGovernanceAccounts = ['14.found.tmy', '5.found.tmy', '11.found.tmy', '12.found.tmy', '13.found.tmy'];
+let newGovernanceAccounts = [
+    '14.found.tmy',
+    '5.found.tmy',
+    '11.found.tmy',
+    '12.found.tmy',
+    '13.found.tmy',
+    '15.found.tmy',
+];
 
 if (!settings.isProduction()) {
     newGovernanceAccounts = governanceAccounts;
@@ -132,6 +141,8 @@ export default async function msig(args: string[]) {
                 await crossChainSwap(options);
             } else if (proposalSubtype === 'bulk') {
                 await bulkTransfer(options);
+            } else if (proposalSubtype === 'mint') {
+                await multiMint(options);
             } else printMsigHelp();
         } else if (proposalType === 'contract') {
             if (proposalSubtype === 'deploy') {
@@ -164,8 +175,12 @@ export default async function msig(args: string[]) {
                 await vestingMigrate4(options);
             } else if (proposalSubtype === 'migrate5') {
                 await vestingMigrate5(options);
+            } else if (proposalSubtype === 'migrate6') {
+                await vestingMigrate6(options);
             } else if (proposalSubtype === 'bulk') {
                 await vestingBulk(options);
+            } else if (proposalSubtype === 'unlock') {
+                await withdrawBootstrapVested(options);
             } else printMsigHelp();
         } else if (proposalType === 'producers') {
             if (proposalSubtype === 'add') {
@@ -313,6 +328,7 @@ export async function createProposal(
         console.error('Transaction succeeded');
 
         console.log('Proposal name: ', proposalName.toString());
+        console.log(`Proposal link: https://explorer.tonomy.io/proposal/${proposalName.toString()}`);
         console.log('You have 7 days to approve and execute the proposal.');
         return proposalHash;
     } catch (e) {
@@ -404,12 +420,9 @@ function printMsigHelp() {
                 propose tokens setstats <proposalName>
                 propose tokens swap <proposalName>
                 propose tokens bulk <proposalName>
+                propose tokens mint <proposalName>
                 propose vesting bulk <proposalName>
-                propose vesting migrate <proposalName>
-                propose vesting migrate2 <proposalName>
-                propose vesting migrate3 <proposalName>
-                propose vesting migrate4 <proposalName>
-                propose vesting migrate5 <proposalName>
+                propose vesting migrateX <proposalName> (where X is 1-6)
         Options:
                 --help
                 --dry-run          Create the proposal but do not send the transaction
