@@ -147,18 +147,18 @@ export class AppsExternalUser extends ExternalUser {
     /**
      * Requests testnet tokens from the faucet service
      *
-     * @param {Decimal} amount - Amount of $TONO tokens to request
+     * @param {string} asset - Amount of $TONO tokens to request e.g. "1.000000 TONO"
      * @param { string } _testOnly_tonomyAppsWebsiteUsername - Test only parameter for specifying the apps website username
      */
     async requestFaucetTokens(
-        amount: Decimal,
+        asset: string,
         // eslint-disable-next-line camelcase
         _testOnly_tonomyAppsWebsiteUsername?: string
     ): Promise<void> {
         const issuer = await this.getIssuer();
 
         const payload: FaucetTokenMessagePayload = {
-            asset: decimalToAsset(amount, 'TONO'),
+            asset,
             // eslint-disable-next-line camelcase
             _testOnly_tonomyAppsWebsiteUsername: _testOnly_tonomyAppsWebsiteUsername,
         };
