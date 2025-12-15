@@ -91,6 +91,8 @@ async function getPriceCoinGecko(token: string, currency: string): Promise<numbe
         throw new Error('Failed to fetch price from CoinGecko');
     }
 
+    console.log('CoinGecko price response:', res);
+
     const price = res[token.toLowerCase()]?.[currency.toLowerCase()];
 
     if (typeof price !== 'number') {
