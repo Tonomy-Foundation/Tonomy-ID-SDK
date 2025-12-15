@@ -14,7 +14,7 @@ import { printCliHelp } from '..';
 import { setResourceConfig } from './setResourceConfig';
 import { setBlockchainConfig } from './setBlockchainConfig';
 import { addProd, changeProds, removeProd, updateProd } from './producers';
-import { sleep } from '../../sdk/util';
+import { getSettings, sleep } from '../../sdk/util';
 import {
     vestingMigrate,
     vestingMigrate2,
@@ -328,7 +328,9 @@ export async function createProposal(
         console.error('Transaction succeeded');
 
         console.log('Proposal name: ', proposalName.toString());
-        console.log(`Proposal link: https://explorer.tonomy.io/proposal/${proposalName.toString()}`);
+        console.log(
+            `Proposal link: https://explorer.${getSettings().environment === 'testnet' ? 'testnet.' : ''}tonomy.io/proposal/${proposalName.toString()}`
+        );
         console.log('You have 7 days to approve and execute the proposal.');
         return proposalHash;
     } catch (e) {
