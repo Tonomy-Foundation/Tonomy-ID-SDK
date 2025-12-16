@@ -21,7 +21,7 @@ import { getSettings, isProduction } from '../../../util/settings';
 import { sha256 } from '../../../util/crypto';
 import { getAccount, getApi } from '../eosio/eosio';
 import abi from './abi/tonomy.abi.json';
-import { activeAuthority } from '../eosio/authority';
+import { activeAuthority, ownerAuthority } from '../eosio/authority';
 import Debug from 'debug';
 import { getTokenPrice } from './EosioTokenContract';
 
@@ -136,9 +136,6 @@ export type AppData = {
     accentColor: string;
 };
 
-// Alias retained for callers that still import AppData2
-export type AppData2 = AppData;
-
 function parseAppJsonData(jsonString: string): AppJsonDataRaw {
     return JSON.parse(jsonString);
 }
@@ -159,12 +156,34 @@ export function createAppJsonDataString(
     });
 }
 
-function addPrefixIfMissing(str: string, prefix: string): string {
-    if (!str.startsWith(prefix)) {
-        return prefix + str;
+/**
+ * Strip @ prefix and .app/.person/.org suffix from username to get raw part
+ * Examples: "@coolapp.app" → "coolapp", "coolapp" → "coolapp"
+ */
+function stripUsernameFormatting(username: string): string {
+    let clean = username;
+
+    if (clean.startsWith('@')) {
+        clean = clean.substring(1);
     }
 
-    return str;
+    // Remove .app, .person, .org, etc. suffix
+    const dotIndex = clean.indexOf('.');
+
+    if (dotIndex !== -1) {
+        clean = clean.substring(0, dotIndex);
+    }
+
+    return clean;
+}
+
+/**
+ * Format raw username to display format: "coolapp" → "@coolapp.app"
+ * Also handles already formatted usernames: "@coolapp" → "@coolapp.app", "@coolapp.app" → "@coolapp.app"
+ */
+function formatUsername(rawUsername: string): string {
+    const stripped = stripUsernameFormatting(rawUsername);
+    return '@' + stripped + '.app';
 }
 
 function planFromUInt8(plan: UInt8 | number): AppPlan {
@@ -180,6 +199,22 @@ function planFromUInt8(plan: UInt8 | number): AppPlan {
     }
 }
 
+/**
+ * Convert AppPlan enum to uint8 for contract
+ */
+function planToUInt8(plan: AppPlan | number): number {
+    if (typeof plan === 'number') return plan;
+
+    switch (plan) {
+        case AppPlan.BASIC:
+            return 0;
+        case AppPlan.PRO:
+            return 1;
+        default:
+            throwError(`Unknown app plan: ${plan}`, SdkErrors.InvalidData);
+    }
+}
+
 function castAppDataRaw(app: AppDataRaw): AppData {
     const json = parseAppJsonData(app.json_data);
 
@@ -191,7 +226,7 @@ function castAppDataRaw(app: AppDataRaw): AppData {
         origin: app.origin,
         backgroundColor: json.background_color,
         accentColor: json.accent_color,
-        username: addPrefixIfMissing(app.username, '@') + '.app',
+        username: formatUsername(app.username),
         plan: planFromUInt8(app.plan),
         version: app.version.toNumber(),
         jsonData: app.json_data,
@@ -271,7 +306,7 @@ export class TonomyContract extends Contract {
         ): Action => this.action('updateactive', data, authorization),
         updateKeyPer: (
             data: { account: NameType; permission_level: number; key: PublicKeyType; link_auth?: boolean },
-            authorization: ActionOptions = { authorization: [{ actor: data.account, permission: 'owner' }] }
+            authorization: ActionOptions = ownerAuthority(data.account)
         ): Action =>
             this.action(
                 'updatekeyper',
@@ -289,35 +324,36 @@ export class TonomyContract extends Contract {
         ): Action => this.action('loginwithapp', data, authorization),
         appCreate: (
             data: { creator: NameType; jsonData: string; username: string; origin: string },
-            authorization: ActionOptions = { authorization: [{ actor: data.creator, permission: 'active' }] }
+            authorization: ActionOptions = activeAuthority(data.creator)
         ): Action =>
             this.action(
                 'appcreate',
                 {
                     creator: data.creator,
                     json_data: data.jsonData,
-                    username: data.username,
+                    username: stripUsernameFormatting(data.username),
                     origin: data.origin,
                 },
                 authorization
             ),
         appUpdate: (
             data: { accountName: NameType; jsonData: string; username: string },
-            authorization: ActionOptions = { authorization: [{ actor: data.accountName, permission: 'active' }] }
+            authorization: ActionOptions = activeAuthority(data.accountName)
         ): Action =>
             this.action(
                 'appupdate',
                 {
                     account_name: data.accountName,
                     json_data: data.jsonData,
-                    username: data.username,
+                    username: stripUsernameFormatting(data.username),
                 },
                 authorization
             ),
         appUpdatePlan: (
-            data: { accountName: NameType; plan: number },
+            data: { accountName: NameType; plan: AppPlan | number },
             authorization: ActionOptions = activeAuthority(this.contractName)
-        ): Action => this.action('appupdplan', { account_name: data.accountName, plan: data.plan }, authorization),
+        ): Action =>
+            this.action('appupdplan', { account_name: data.accountName, plan: planToUInt8(data.plan) }, authorization),
         scDeploy: (
             data: {
                 accountName: NameType;
@@ -366,11 +402,11 @@ export class TonomyContract extends Contract {
             ),
         scBuyRam: (
             data: { accountName: NameType; quant: AssetType },
-            authorization: ActionOptions = { authorization: [{ actor: data.accountName, permission: 'active' }] }
+            authorization: ActionOptions = activeAuthority(data.accountName)
         ): Action => this.action('scbuyram', { account_name: data.accountName, quant: data.quant }, authorization),
         scSellRam: (
             data: { accountName: NameType; quant: AssetType },
-            authorization: ActionOptions = { authorization: [{ actor: data.accountName, permission: 'active' }] }
+            authorization: ActionOptions = activeAuthority(data.accountName)
         ): Action => this.action('scsellram', { account_name: data.accountName, quant: data.quant }, authorization),
         appAddKey: (
             data: { accountName: NameType; key: PublicKeyType },
@@ -388,13 +424,13 @@ export class TonomyContract extends Contract {
                 'admncrtapp',
                 {
                     json_data: data.jsonData,
-                    username: data.username,
+                    username: stripUsernameFormatting(data.username),
                     origin: data.origin,
                 },
                 authorization
             ),
         adminUpdateApp: (
-            data: { accountName: NameType; jsonData: string; username: string; origin: string; plan: number },
+            data: { accountName: NameType; jsonData: string; username: string; origin: string; plan: AppPlan | number },
             authorization: ActionOptions = activeAuthority(this.contractName)
         ): Action =>
             this.action(
@@ -402,9 +438,9 @@ export class TonomyContract extends Contract {
                 {
                     account_name: data.accountName,
                     json_data: data.jsonData,
-                    username: data.username,
+                    username: stripUsernameFormatting(data.username),
                     origin: data.origin,
-                    plan: data.plan,
+                    plan: planToUInt8(data.plan),
                 },
                 authorization
             ),
@@ -413,15 +449,15 @@ export class TonomyContract extends Contract {
             authorization: ActionOptions = activeAuthority(this.contractName)
         ): Action => this.action('admndelapp', { account_name: data.accountName }, authorization),
         adminMigrateApp: (
-            data: { accountName: NameType; username: string; plan: number; key: PublicKeyType },
+            data: { accountName: NameType; username: string; plan: AppPlan | number; key: PublicKeyType },
             authorization: ActionOptions = activeAuthority(this.contractName)
         ): Action =>
             this.action(
                 'admnmigapp',
                 {
                     account_name: data.accountName,
-                    username: data.username,
-                    plan: data.plan,
+                    username: stripUsernameFormatting(data.username),
+                    plan: planToUInt8(data.plan),
                     key: data.key,
                 },
                 authorization
@@ -562,7 +598,11 @@ export class TonomyContract extends Contract {
         return transact(action, signer);
     }
 
-    async appUpdatePlan(accountName: NameType, plan: number, signer: Signer): Promise<API.v1.PushTransactionResponse> {
+    async appUpdatePlan(
+        accountName: NameType,
+        plan: AppPlan | number,
+        signer: Signer
+    ): Promise<API.v1.PushTransactionResponse> {
         const action = this.actions.appUpdatePlan({ accountName, plan });
 
         return transact(action, signer);
@@ -684,7 +724,10 @@ export class TonomyContract extends Contract {
         return res;
     }
     async getAppDataByUsername(username: TonomyUsername): Promise<AppDataRaw> {
-        const hash = Checksum256.from(username.usernameHash);
+        // Hash only the raw username part (e.g., "coolapp" not "@coolapp.app")
+        const rawUsername = stripUsernameFormatting(username.toString());
+        const usernameHash = sha256(rawUsername);
+        const hash = Checksum256.from(usernameHash);
         const res = await this.contract
             .table<AppDataRaw>('appsv3', this.contractName)
             .get(hash, { index_position: 'secondary' });
@@ -782,7 +825,7 @@ export class TonomyContract extends Contract {
         origin: string,
         backgroundColor: string,
         accentColor: string,
-        plan: number,
+        plan: AppPlan | number,
         signer: Signer
     ): Promise<API.v1.PushTransactionResponse> {
         const jsonData = createAppJsonDataString(appName, description, logoUrl, backgroundColor, accentColor);
@@ -806,7 +849,7 @@ export class TonomyContract extends Contract {
     async adminMigrateApp(
         accountName: NameType,
         username: string,
-        plan: number,
+        plan: AppPlan | number,
         key: PublicKeyType,
         signer: Signer
     ): Promise<API.v1.PushTransactionResponse> {

@@ -14,7 +14,7 @@ import {
     EosioTokenContract,
     PersonData,
     getAccountNameFromUsername,
-    AppData2,
+    AppData,
     getVestingContract,
 } from '../../sdk/services/blockchain';
 import settings from '../settings';
@@ -278,7 +278,7 @@ export async function audit() {
 async function checkMissedVestingAllocations(
     bootstrappedAccounts: Set<string>,
     vestingHolders: Set<string>,
-    apps: AppData2[],
+    apps: AppData[],
     people: PersonData[]
 ) {
     console.log('');

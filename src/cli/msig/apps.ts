@@ -5,6 +5,7 @@ import {
     getApi,
     getTonomyContract,
     getTonomyEosioProxyContract,
+    AppPlan,
 } from '../../sdk/services/blockchain';
 import { StandardProposalOptions, createProposal, executeProposal } from '.';
 import { deployContract } from './contract';
@@ -127,7 +128,7 @@ export async function setAppsAndRam(options: StandardProposalOptions) {
     const actions = apps.flatMap((app) => {
         const tonomyUsername = TonomyUsername.fromUsername(app.username, AccountType.APP, getSettings().accountSuffix);
         const tokens = await bytesToTokens(app.ramKb * 1000);
-        const adminSetAppAction = getTonomyContract().actions.adminSetApp({
+        const adminUpdateAppAction = getTonomyContract().actions.adminUpdateApp({
             accountName: app.account,
             jsonData: createAppJsonDataString(
                 app.appName,
@@ -136,16 +137,16 @@ export async function setAppsAndRam(options: StandardProposalOptions) {
                 app.backgroundColor,
                 app.accentColor
             ),
-            usernameHash: tonomyUsername.usernameHash,
+            username: tonomyUsername.toString(),
             origin: app.origin,
+            plan: AppPlan.BASIC,
         });
-        const buyRamAction = getTonomyContract().actions.buyRam({
-            daoOwner: 'partners.tmy',
-            app: app.account,
+        const buyRamAction = getTonomyContract().actions.scBuyRam({
+            accountName: app.account,
             quant: tokens,
         });
 
-        return [adminSetAppAction, buyRamAction];
+        return [adminUpdateAppAction, buyRamAction];
     });
     const proposalName = createProposalName(options.proposalName, 'set');
     const proposalHash = await createProposal(
@@ -199,11 +200,11 @@ export async function newApp(options: StandardProposalOptions) {
     const username = TonomyUsername.fromUsername(usernameShort, AccountType.APP, getSettings().accountSuffix);
     const key = 'EOS4xnrCGUT688wFvinQoCuiu7E3Qpn8Phq76TRKNTb87XFMjzsJu';
 
-    const action = getTonomyContract().actions.newApp({
+    const action = getTonomyContract().actions.appCreate({
+        creator: options.proposer,
         jsonData: createAppJsonDataString(appName, description, logoUrl, '#444444', '#D19836'),
-        usernameHash: username.usernameHash,
+        username: username.toString(),
         origin,
-        key,
     });
 
     const proposalHash = await createProposal(

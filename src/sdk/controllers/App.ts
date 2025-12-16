@@ -1,26 +1,18 @@
-import { Checksum256, Name, PublicKey } from '@wharfkit/antelope';
+import { Name, PublicKey } from '@wharfkit/antelope';
 import { Signer } from '../services/blockchain/eosio/transaction';
 import { getSettings } from '../util/settings';
 import { AccountType, TonomyUsername } from '../util/username';
 import { AppStatusEnum } from '../types/AppStatusEnum';
-import { getTonomyContract } from '../services/blockchain';
+import { getTonomyContract, AppData, AppPlan } from '../services/blockchain';
 import { parseDid } from '../util/ssi/did';
 import { SdkErrors, throwError } from '../util/errors';
 
-export interface AppData {
-    accountName: Name;
-    appName: string;
-    usernameHash: Checksum256;
-    description: string;
-    logoUrl: string;
-    origin: string;
-    version: number;
+// Extended AppData with status field for controller use
+export interface AppDataExtended extends AppData {
     status: AppStatusEnum;
-    accentColor: string;
-    backgroundColor: string;
 }
 
-type AppConstructor = Omit<AppData, 'usernameHash'> & { username?: TonomyUsername; usernameHash?: Checksum256 };
+type AppConstructor = Omit<AppDataExtended, 'username'> & { username?: TonomyUsername };
 
 export type AppCreateOptions = {
     usernamePrefix: string;
@@ -34,11 +26,11 @@ export type AppCreateOptions = {
     signer: Signer;
 };
 
-export class App implements AppData {
+export class App implements AppDataExtended {
     accountName: Name;
     appName: string;
-    username?: TonomyUsername;
-    usernameHash: Checksum256;
+    username: string;
+    tonomyUsername?: TonomyUsername;
     description: string;
     logoUrl: string;
     origin: string;
@@ -46,11 +38,14 @@ export class App implements AppData {
     status: AppStatusEnum;
     accentColor: string;
     backgroundColor: string;
+    plan: AppPlan;
+    jsonData: string;
 
     constructor(options: AppConstructor) {
         this.accountName = options.accountName;
         this.appName = options.appName;
-        this.username = options.username;
+        this.tonomyUsername = options.username;
+        this.username = options.username ? options.username.toString() : options.username;
         this.description = options.description;
         this.logoUrl = options.logoUrl;
         this.origin = options.origin;
@@ -58,14 +53,8 @@ export class App implements AppData {
         this.status = options.status;
         this.accentColor = options.accentColor;
         this.backgroundColor = options.backgroundColor;
-
-        if (options.usernameHash) {
-            this.usernameHash = options.usernameHash;
-        } else if (options.username) {
-            this.usernameHash = Checksum256.from(options.username.usernameHash);
-        } else {
-            throw new Error('Either username or usernameHash must be provided');
-        }
+        this.plan = options.plan;
+        this.jsonData = options.jsonData;
     }
 
     static async create(options: AppCreateOptions): Promise<App> {
@@ -75,15 +64,15 @@ export class App implements AppData {
             getSettings().accountSuffix
         );
 
-        const res = await getTonomyContract().newApp(
+        const res = await getTonomyContract().appCreate(
+            username.getBaseUsername(),
             options.appName,
             options.description,
-            username.usernameHash,
+            username.toString(),
             options.logoUrl,
             options.origin,
             options.backgroundColor,
             options.accentColor,
-            options.publicKey,
             options.signer
         );
 
@@ -93,8 +82,10 @@ export class App implements AppData {
             ...options,
             accountName: Name.from(newAccountAction.data.name),
             username,
-            version: newAccountAction.data.version,
+            version: 3,
             status: AppStatusEnum.READY,
+            plan: AppPlan.BASIC,
+            jsonData: '',
         });
     }
 
@@ -104,7 +95,7 @@ export class App implements AppData {
         return new App({
             accountName: contractAppData.accountName,
             appName: contractAppData.appName,
-            usernameHash: contractAppData.usernameHash,
+            username: undefined,
             description: contractAppData.description,
             logoUrl: contractAppData.logoUrl,
             origin: contractAppData.origin,
@@ -112,6 +103,8 @@ export class App implements AppData {
             status: AppStatusEnum.READY,
             accentColor: contractAppData.accentColor,
             backgroundColor: contractAppData.backgroundColor,
+            plan: contractAppData.plan,
+            jsonData: contractAppData.jsonData,
         });
     }
 }
