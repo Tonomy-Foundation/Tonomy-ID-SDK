@@ -1,18 +1,13 @@
 import { IdentityVerificationStorageRepository } from './identityVerificationStorageRepository';
 import { VeriffStatusEnum } from '../types/VeriffStatusEnum';
 import { VerificationTypeEnum } from '../types/VerificationTypeEnum';
-import { DataSource } from 'typeorm';
 import { castStringToCredential, PersonCredentialType } from '../util/veriff';
 
 export class IdentityVerificationStorageManager {
     protected repository: IdentityVerificationStorageRepository;
 
-    constructor(repository: IdentityVerificationStorageRepository | DataSource) {
-        if (repository instanceof DataSource) {
-            this.repository = new IdentityVerificationStorageRepository(repository);
-        } else {
-            this.repository = repository;
-        }
+    constructor(repository: IdentityVerificationStorageRepository) {
+        this.repository = repository;
     }
 
     async create(

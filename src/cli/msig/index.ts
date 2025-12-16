@@ -7,7 +7,7 @@ import {
 } from '../../sdk/services/blockchain';
 import settings from '../settings';
 import { newAccount } from './accounts';
-import { setStats, transfer } from './token';
+import { crossChainSwap, bulkTransfer, setStats, transfer } from './token';
 import { updateAuth, govMigrate, addEosioCode } from './auth';
 import { deployContract } from './contract';
 import { printCliHelp } from '..';
@@ -23,6 +23,7 @@ import {
     vestingMigrate4,
     vestingMigrate5,
     vestingMigrate6,
+    withdrawBootstrapVested,
 } from './vesting';
 import {
     createStakingTmyAccount,
@@ -129,6 +130,10 @@ export default async function msig(args: string[]) {
                 await transfer(options);
             } else if (proposalSubtype === 'setstats') {
                 await setStats(options);
+            } else if (proposalSubtype === 'swap') {
+                await crossChainSwap(options);
+            } else if (proposalSubtype === 'bulk') {
+                await bulkTransfer(options);
             } else printMsigHelp();
         } else if (proposalType === 'contract') {
             if (proposalSubtype === 'deploy') {
@@ -165,6 +170,8 @@ export default async function msig(args: string[]) {
                 await vestingMigrate6(options);
             } else if (proposalSubtype === 'bulk') {
                 await vestingBulk(options);
+            } else if (proposalSubtype === 'unlock') {
+                await withdrawBootstrapVested(options);
             } else printMsigHelp();
         } else if (proposalType === 'producers') {
             if (proposalSubtype === 'add') {
@@ -398,13 +405,11 @@ function printMsigHelp() {
                 propose set-chain-config <proposalName>
                 propose staking account <proposalName>
                 propose staking contract <proposalName>
-                propose staking deploy-staking-contract <proposalName>
-                propose staking redeploy-vesting-contract <proposalName>
-                propose staking redeploy-eosio-contract <proposalName>
-                propose staking redeploy-tonomy-contract <proposalName>
                 propose staking setSettings <proposalName>
                 propose tokens transfer <proposalName>
                 propose tokens setstats <proposalName>
+                propose tokens swap <proposalName>
+                propose tokens bulk <proposalName>
                 propose vesting bulk <proposalName>
                 propose vesting migrateX <proposalName> (where X is 1-6)
         Options:
