@@ -1,7 +1,5 @@
-import { Name, PublicKey } from '@wharfkit/antelope';
+import { Name, NameType, PublicKey } from '@wharfkit/antelope';
 import { Signer } from '../services/blockchain/eosio/transaction';
-import { getSettings } from '../util/settings';
-import { AccountType, TonomyUsername } from '../util/username';
 import { AppStatusEnum } from '../types/AppStatusEnum';
 import { getTonomyContract, AppData, AppPlan } from '../services/blockchain';
 import { parseDid } from '../util/ssi/did';
@@ -12,10 +10,9 @@ export interface AppDataExtended extends AppData {
     status: AppStatusEnum;
 }
 
-type AppConstructor = Omit<AppDataExtended, 'username'> & { username?: TonomyUsername };
-
 export type AppCreateOptions = {
-    usernamePrefix: string;
+    creator: NameType;
+    username: string;
     appName: string;
     description: string;
     logoUrl: string;
@@ -30,7 +27,6 @@ export class App implements AppDataExtended {
     accountName: Name;
     appName: string;
     username: string;
-    tonomyUsername?: TonomyUsername;
     description: string;
     logoUrl: string;
     origin: string;
@@ -41,11 +37,10 @@ export class App implements AppDataExtended {
     plan: AppPlan;
     jsonData: string;
 
-    constructor(options: AppConstructor) {
+    constructor(options: AppDataExtended) {
+        this.username = options.username;
         this.accountName = options.accountName;
         this.appName = options.appName;
-        this.tonomyUsername = options.username;
-        this.username = options.username ? options.username.toString() : options.username;
         this.description = options.description;
         this.logoUrl = options.logoUrl;
         this.origin = options.origin;
@@ -58,17 +53,11 @@ export class App implements AppDataExtended {
     }
 
     static async create(options: AppCreateOptions): Promise<App> {
-        const username = TonomyUsername.fromUsername(
-            options.usernamePrefix,
-            AccountType.APP,
-            getSettings().accountSuffix
-        );
-
         const res = await getTonomyContract().appCreate(
-            username.getBaseUsername(),
+            options.creator,
             options.appName,
             options.description,
-            username.toString(),
+            options.username,
             options.logoUrl,
             options.origin,
             options.backgroundColor,
@@ -81,7 +70,7 @@ export class App implements AppDataExtended {
         return new App({
             ...options,
             accountName: Name.from(newAccountAction.data.name),
-            username,
+            username: options.username,
             version: 3,
             status: AppStatusEnum.READY,
             plan: AppPlan.BASIC,
@@ -95,7 +84,7 @@ export class App implements AppDataExtended {
         return new App({
             accountName: contractAppData.accountName,
             appName: contractAppData.appName,
-            username: undefined,
+            username: contractAppData.username,
             description: contractAppData.description,
             logoUrl: contractAppData.logoUrl,
             origin: contractAppData.origin,

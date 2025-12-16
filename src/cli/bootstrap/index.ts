@@ -2,18 +2,10 @@ import deployContract from './deploy-contract';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { createAntelopeAccount, createApp } from './create-account';
-import {
-    EosioTokenContract,
-    EosioUtil,
-    TonomyUsername,
-    AccountType,
-    getSettings,
-    VestingContract,
-    ensureBaseTokenDeployed,
-} from '../../sdk/index';
+import { EosioTokenContract, EosioUtil, getSettings, VestingContract, ensureBaseTokenDeployed } from '../../sdk/index';
 import { getSigner, updateAccountKey, updateControlByAccount } from './keys';
 import settings from '../settings';
-import { Checksum256, PrivateKey, PublicKey } from '@wharfkit/antelope';
+import { PrivateKey, PublicKey } from '@wharfkit/antelope';
 import {
     Authority,
     Signer,
@@ -21,7 +13,6 @@ import {
     defaultBlockchainParams,
     TOTAL_RAM_AVAILABLE,
     RAM_FEE,
-    RAM_PRICE,
     StakingContract,
     amountToAsset,
     getTokenContract,
@@ -30,6 +21,7 @@ import {
     getStakingContract,
     getTonomyContract,
     getTonomyEosioProxyContract,
+    AppPlan,
 } from '../../sdk/services/blockchain';
 import { createUser, mockCreateAccount, restoreCreateAccountFromMock } from './user';
 import { sleep } from '../../sdk/util';
@@ -236,6 +228,19 @@ const allocations: [string, number][] = [
 
 export const addCodePermissionTo = allocations.map((allocation) => allocation[0]);
 
+async function calculateRamPrice(): Promise<number> {
+    const ramPricePerGb = 7;
+    const numberOfNodes = 29;
+    const costOverhead = 1;
+    const totalRamPrice = ramPricePerGb * numberOfNodes * (1 + costOverhead);
+    const totalRamPriceBytes = totalRamPrice / (1024 * 1024 * 1024);
+
+    const { getTokenPrice } = await import('../../sdk/services/blockchain/contracts/EosioTokenContract');
+    const price = await getTokenPrice();
+
+    return price / totalRamPriceBytes;
+}
+
 async function createTokenDistribution() {
     console.log('Create token distribution');
 
@@ -282,7 +287,7 @@ async function createTonomyContractAndSetResources() {
             accountName: systemAccount,
             appName: 'System Contract',
             description: 'Antelope blockchain system governance contract',
-            usernameHash: getAppUsernameHash('system'),
+            username: 'system',
             logoUrl: createSubdomainOnOrigin(getSettings().ssoWebsiteOrigin, 'eosio') + '/tonomy-logo1024.png',
             origin: createSubdomainOnOrigin(getSettings().ssoWebsiteOrigin, 'eosio'),
             backgroundColor: '#251950',
@@ -293,7 +298,7 @@ async function createTonomyContractAndSetResources() {
             accountName: 'eosio.token',
             appName: 'Native Currency',
             description: 'Ecosystem native currency',
-            usernameHash: getAppUsernameHash('currency'),
+            username: 'token',
             logoUrl: createSubdomainOnOrigin(getSettings().ssoWebsiteOrigin, 'eosio.token') + '/tonomy-logo1024.png',
             origin: createSubdomainOnOrigin(getSettings().ssoWebsiteOrigin, 'eosio.token'),
             backgroundColor: '#251950',
@@ -304,7 +309,7 @@ async function createTonomyContractAndSetResources() {
             accountName: 'tonomy',
             appName: 'Tonomy System',
             description: 'Tonomy system contract',
-            usernameHash: getAppUsernameHash('tonomy'),
+            username: 'tonomy',
             logoUrl: createSubdomainOnOrigin(getSettings().ssoWebsiteOrigin, 'tonomy') + '/tonomy-logo1024.png',
             origin: createSubdomainOnOrigin(getSettings().ssoWebsiteOrigin, 'tonomy'),
             backgroundColor: '#251950',
@@ -315,7 +320,7 @@ async function createTonomyContractAndSetResources() {
             accountName: 'vesting.tmy',
             appName: 'TONO Vesting',
             description: 'TONO Vesting contract',
-            usernameHash: getAppUsernameHash('vesting'),
+            username: 'vesting',
             logoUrl: createSubdomainOnOrigin(getSettings().ssoWebsiteOrigin, 'vesting') + '/tonomy-logo1024.png',
             origin: createSubdomainOnOrigin(getSettings().ssoWebsiteOrigin, 'vesting'),
             backgroundColor: '#251950',
@@ -326,7 +331,7 @@ async function createTonomyContractAndSetResources() {
             accountName: 'staking.tmy',
             appName: 'TONO Staking',
             description: 'TONO Staking contract',
-            usernameHash: getAppUsernameHash('staking'),
+            username: 'staking',
             logoUrl: createSubdomainOnOrigin(getSettings().ssoWebsiteOrigin, 'staking') + '/tonomy-logo1024.png',
             origin: createSubdomainOnOrigin(getSettings().ssoWebsiteOrigin, 'staking'),
             backgroundColor: '#251950',
@@ -336,20 +341,23 @@ async function createTonomyContractAndSetResources() {
     ];
 
     for (const app of apps) {
-        await getTonomyContract().adminSetApp(
+        await getTonomyContract().adminUpdateApp(
             app.accountName,
             app.appName,
             app.description,
-            app.usernameHash,
+            app.username,
             app.logoUrl,
             app.origin,
             app.backgroundColor,
             app.accentColor,
+            AppPlan.PRO,
             signer
         );
     }
 
     console.log('Set Tonomy system contract params and allocate RAM');
+    const RAM_PRICE = await calculateRamPrice();
+
     console.log('Set resource params', RAM_PRICE, TOTAL_RAM_AVAILABLE, RAM_FEE);
     await getTonomyContract().setResourceParams(RAM_PRICE, TOTAL_RAM_AVAILABLE, RAM_FEE, signer);
 
@@ -366,14 +374,8 @@ async function createTonomyContractAndSetResources() {
         console.log(`Buying ${app.ramAllocation / 1000}KB of RAM for ${account} for ${tokens}`);
 
         await getTokenContract().transfer('ops.tmy', account, tokens, 'Initial allocation', signer);
-        await getTonomyContract().buyRam('ops.tmy', account, tokens, signer);
+        await getTonomyContract().scBuyRam(account, tokens, signer);
     }
-}
-
-export function getAppUsernameHash(username: string): Checksum256 {
-    const fullUername = TonomyUsername.fromUsername(username, AccountType.APP, getSettings().accountSuffix);
-
-    return Checksum256.from(fullUername.usernameHash);
 }
 
 export function createSubdomainOnOrigin(origin: string, subdomain: string): string {
@@ -402,8 +404,9 @@ async function createTonomyApps(newPublicKey: PublicKey, newSigner: Signer): Pro
     console.log('Create Tonomy apps');
 
     const demo = await createApp({
+        creator: 'gov.tmy',
         appName: `${settings.config.ecosystemName} Demo`,
-        usernamePrefix: 'demo',
+        username: 'demo',
         description: `Demo of ${settings.config.ecosystemName} login and features`,
         origin: settings.config.demoWebsiteOrigin,
         logoUrl: settings.config.demoWebsiteOrigin + '/market.com.png',
@@ -423,8 +426,9 @@ async function createTonomyApps(newPublicKey: PublicKey, newSigner: Signer): Pro
     );
 
     await createApp({
+        creator: 'gov.tmy',
         appName: `${settings.config.ecosystemName} Website`,
-        usernamePrefix: 'tonomy-sso',
+        username: 'tonomy-sso',
         description: `${settings.config.ecosystemName} website to manager your ID and Data`,
         origin: settings.config.ssoWebsiteOrigin,
         logoUrl: settings.config.ssoWebsiteOrigin + '/tonomy-logo1024.png',
@@ -435,9 +439,10 @@ async function createTonomyApps(newPublicKey: PublicKey, newSigner: Signer): Pro
     });
 
     await createApp({
+        creator: 'gov.tmy',
         appName: 'Tonomy Apps',
-        usernamePrefix: 'tonomy-apps',
-        description: `Access all your Tonomy apps in one hub. Manage tokens, explore the blockchain, create, collaborate, and build — it’s all at your fingertips`,
+        username: 'tonomy-apps',
+        description: `Access all your Tonomy apps in one hub. Manage tokens, explore the blockchain, create, collaborate, and build — it's all at your fingertips`,
         origin: settings.config.tonomyAppsOrigin,
         logoUrl: settings.config.tonomyAppsOrigin + '/market.com.png',
         backgroundColor: '#ffffff',

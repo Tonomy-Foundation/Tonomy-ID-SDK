@@ -148,7 +148,7 @@ describe('Login to external apps website', () => {
             const balanceBeforeBase = await getBaseTokenContract().balanceOf(userBaseAddress);
             const balanceBeforeTonomy = await getTokenContract().getBalanceDecimal(tonomyAccountName);
 
-            const tonomyAppsWebsiteUsername = await externalApp.username?.getBaseUsername();
+            const tonomyAppsWebsiteUsername = externalApp.username;
             const proof = await createSignedProofMessage(userBaseSigner)
 
             await APPS_EXTERNAL_WEBSITE_user.swapTonomyToBaseToken(amount, proof, tonomyAppsWebsiteUsername);
@@ -174,7 +174,7 @@ describe('Login to external apps website', () => {
             const amount = new Decimal("2000"); // amount to swap
 
             const proof = await createSignedProofMessage(userBaseSigner)
-            const tonomyAppsWebsiteUsername = await externalApp.username?.getBaseUsername();
+            const tonomyAppsWebsiteUsername = externalApp.username;
 
             try {
                 await APPS_EXTERNAL_WEBSITE_user.swapTonomyToBaseToken(amount, proof, tonomyAppsWebsiteUsername);
@@ -193,7 +193,7 @@ describe('Login to external apps website', () => {
             const amount = new Decimal("2"); // amount to swap
 
             const proof = await createSignedProofMessage(userBaseSigner)
-            const tonomyAppsWebsiteUsername = await externalApp.username?.getBaseUsername();
+            const tonomyAppsWebsiteUsername = externalApp.username;
 
             await APPS_EXTERNAL_WEBSITE_user.swapTonomyToBaseToken(amount, proof, tonomyAppsWebsiteUsername);
             const amount2 = new Decimal("2000"); // amount to swap
@@ -222,7 +222,7 @@ describe('Login to external apps website', () => {
             const tonomyAccountName = await APPS_EXTERNAL_WEBSITE_user.getAccountName();
             const balanceBeforeFaucet = await getTokenContract().getBalanceDecimal(tonomyAccountName);
 
-            const tonomyAppsWebsiteUsername = await externalApp.username?.getBaseUsername();
+            const tonomyAppsWebsiteUsername = externalApp.username;
 
             await APPS_EXTERNAL_WEBSITE_user.requestFaucetTokens(asset, tonomyAppsWebsiteUsername);
 
@@ -237,7 +237,7 @@ describe('Login to external apps website', () => {
             const faucetAmount = new Decimal("0");
             const asset = decimalToAsset(faucetAmount, 'TONO')
 
-            const tonomyAppsWebsiteUsername = await externalApp.username?.getBaseUsername();
+            const tonomyAppsWebsiteUsername = externalApp.username;
 
             try {
                 await APPS_EXTERNAL_WEBSITE_user.requestFaucetTokens(asset, tonomyAppsWebsiteUsername);
@@ -256,7 +256,7 @@ describe('Login to external apps website', () => {
             const faucetAmount = new Decimal("-5.0");
             const asset = decimalToAsset(faucetAmount, 'TONO')
 
-            const tonomyAppsWebsiteUsername = await externalApp.username?.getBaseUsername();
+            const tonomyAppsWebsiteUsername = externalApp.username;
 
             try {
                 await APPS_EXTERNAL_WEBSITE_user.requestFaucetTokens(asset, tonomyAppsWebsiteUsername);
@@ -275,7 +275,7 @@ describe('Login to external apps website', () => {
             const faucetAmount = new Decimal("2000"); // exceeds 1000 limit
             const asset = decimalToAsset(faucetAmount, 'TONO')
 
-            const tonomyAppsWebsiteUsername = await externalApp.username?.getBaseUsername();
+            const tonomyAppsWebsiteUsername = externalApp.username;
 
             try {
                 await APPS_EXTERNAL_WEBSITE_user.requestFaucetTokens(asset, tonomyAppsWebsiteUsername);
@@ -295,7 +295,7 @@ describe('Login to external apps website', () => {
             // Requesting with wrong symbol (ETH instead of TONO)
             const asset = decimalToAsset(faucetAmount, 'ETH')
 
-            const tonomyAppsWebsiteUsername = await externalApp.username?.getBaseUsername();
+            const tonomyAppsWebsiteUsername = externalApp.username;
 
             try {
                 await APPS_EXTERNAL_WEBSITE_user.requestFaucetTokens(asset, tonomyAppsWebsiteUsername);
@@ -312,7 +312,7 @@ describe('Login to external apps website', () => {
             expect.assertions(loginToExternalAppAssertions + 2);
             await setAppsExternalUser();
             
-            const tonomyAppsWebsiteUsername = await externalApp.username?.getBaseUsername();
+            const tonomyAppsWebsiteUsername = externalApp.username;
 
             // First request: 20,000 TONO (should succeed)
             const firstAmount = new Decimal("1000");

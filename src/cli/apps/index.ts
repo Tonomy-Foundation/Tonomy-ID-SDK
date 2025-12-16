@@ -8,8 +8,9 @@ export default async function apps(args: string[]) {
         console.log('Creating new app');
 
         const options: AppCreateOptions = {
+            creator: 'gov.tmy',
             appName: args[1],
-            usernamePrefix: args[2],
+            username: args[2],
             description: args[3],
             logoUrl: args[4],
             origin: args[5],
@@ -21,7 +22,7 @@ export default async function apps(args: string[]) {
 
         const res = await App.create(options);
 
-        console.log('New app created with username: ', res.username?.username);
+        console.log('New app created with username: ', res.username);
         console.log('and account name: ', res.accountName.toString());
     } else {
         throw new Error(`Unknown command ${args[0]}`);

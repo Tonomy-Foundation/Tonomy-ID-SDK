@@ -183,6 +183,7 @@ function stripUsernameFormatting(username: string): string {
  */
 function formatUsername(rawUsername: string): string {
     const stripped = stripUsernameFormatting(rawUsername);
+
     return '@' + stripped + '.app';
 }
 
@@ -233,7 +234,7 @@ function castAppDataRaw(app: AppDataRaw): AppData {
     };
 }
 
-async function calculateRamPrice(): Promise<number> {
+export async function calculateRamPrice(): Promise<number> {
     // See https://docs.google.com/spreadsheets/d/1_S0S7Gu-PHzt-IzCqNl3CaWnniAt1KwaXDB50roTZUQ/edit?gid=1773951365#gid=1773951365&range=C84
 
     const ramPricePerGb = 7; // $7.00 per GB of RAM taken from standard AWS EC2 pricing
@@ -417,12 +418,13 @@ export class TonomyContract extends Contract {
             authorization: ActionOptions = activeAuthority(this.contractName)
         ): Action => this.action('appremkey', { account_name: data.accountName, key: data.key }, authorization),
         adminCreateApp: (
-            data: { jsonData: string; username: string; origin: string },
+            data: { creator: NameType; jsonData: string; username: string; origin: string },
             authorization: ActionOptions = activeAuthority(this.contractName)
         ): Action =>
             this.action(
                 'admncrtapp',
                 {
+                    creator: data.creator,
                     json_data: data.jsonData,
                     username: stripUsernameFormatting(data.username),
                     origin: data.origin,
@@ -808,10 +810,11 @@ export class TonomyContract extends Contract {
         origin: string,
         backgroundColor: string,
         accentColor: string,
+        creator: NameType,
         signer: Signer
     ): Promise<API.v1.PushTransactionResponse> {
         const jsonData = createAppJsonDataString(appName, description, logoUrl, backgroundColor, accentColor);
-        const action = this.actions.adminCreateApp({ jsonData, username, origin });
+        const action = this.actions.adminCreateApp({ creator, jsonData, username, origin });
 
         return transact([action], signer);
     }

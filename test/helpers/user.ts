@@ -89,7 +89,8 @@ export async function createRandomApp(): Promise<App> {
     const usernamePrefix = randomString(8);
 
     return await App.create({
-        usernamePrefix,
+        creator: 'ops.tmy',
+        username: usernamePrefix,
         appName: name,
         description: description,
         logoUrl,

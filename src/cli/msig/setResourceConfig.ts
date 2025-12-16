@@ -1,10 +1,11 @@
-import { TOTAL_RAM_AVAILABLE, RAM_FEE, RAM_PRICE, getTonomyContract } from '../../sdk/services/blockchain';
+import { TOTAL_RAM_AVAILABLE, RAM_FEE, getTonomyContract, calculateRamPrice } from '../../sdk/services/blockchain';
 import { StandardProposalOptions, createProposal, executeProposal } from '.';
 
 // @ts-expect-error args not used
 export async function setResourceConfig(args, options: StandardProposalOptions) {
+    const ramPrice = await calculateRamPrice();
     const action = getTonomyContract().actions.setResParams({
-        ramPrice: RAM_PRICE,
+        ramPrice,
         totalRamAvailable: TOTAL_RAM_AVAILABLE,
         ramFee: RAM_FEE,
     });

@@ -46,7 +46,7 @@ describe('TonomyContract class', () => {
 
         expect(appInfo.appName).toEqual(appName);
         expect(appInfo.description).toEqual(description);
-        expect(appInfo.usernameHash.toString()).toEqual(username.usernameHash);
+        expect(appInfo.username).toEqual(username.toString());
         expect(appInfo.logoUrl).toEqual(logoUrl);
         expect(appInfo.origin).toEqual(origin);
         expect(appInfo.accountName.toString()).toEqual(accountName.toString());
@@ -55,7 +55,7 @@ describe('TonomyContract class', () => {
 
         expect(appInfo.appName).toEqual(appName);
         expect(appInfo.description).toEqual(description);
-        expect(appInfo.usernameHash.toString()).toEqual(username.usernameHash);
+        expect(appInfo.username).toEqual(username.toString());
         expect(appInfo.logoUrl).toEqual(logoUrl);
         expect(appInfo.origin).toEqual(origin);
         expect(appInfo.accountName.toString()).toEqual(accountName.toString());
@@ -64,7 +64,7 @@ describe('TonomyContract class', () => {
 
         expect(appInfo.appName).toEqual(appName);
         expect(appInfo.description).toEqual(description);
-        expect(appInfo.usernameHash.toString()).toEqual(username.usernameHash);
+        expect(appInfo.username).toEqual(username.toString());
         expect(appInfo.logoUrl).toEqual(logoUrl);
         expect(appInfo.origin).toEqual(origin);
         expect(appInfo.accountName.toString()).toEqual(accountName.toString());

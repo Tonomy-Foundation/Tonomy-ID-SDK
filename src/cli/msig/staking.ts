@@ -7,12 +7,15 @@ import {
     StakingContract,
     getTonomyContract,
     getTonomyEosioProxyContract,
+    TOTAL_RAM_AVAILABLE,
+    RAM_FEE,
+    calculateRamPrice,
+    AppPlan,
 } from '../../sdk/services/blockchain';
 import { StandardProposalOptions, createProposal, executeProposal } from '.';
-import { createSubdomainOnOrigin, getAppUsernameHash } from '../bootstrap';
+import { createSubdomainOnOrigin } from '../bootstrap';
 import { getAccountInfo } from '../../sdk';
 import { Name } from '@wharfkit/antelope';
-import { TOTAL_RAM_AVAILABLE, RAM_FEE, RAM_PRICE } from '../../sdk/services/blockchain';
 import { deployContract } from './contract';
 
 //create staking.tmy account controlled by ops.tmy
@@ -89,7 +92,6 @@ export async function stakingContractSetup(options: StandardProposalOptions) {
 
     const contract = 'staking.tmy';
 
-    const tonomyUsername = getAppUsernameHash('staking');
     const tokens = await bytesToTokens(ramKb * 1000);
 
     console.log(`Setting up hypha contract "${contract}" with ${tokens} tokens to buy ${ramKb}KB of RAM`);
@@ -102,26 +104,28 @@ export async function stakingContractSetup(options: StandardProposalOptions) {
         '#FFFFFF'
     );
 
-    const adminSetAppAction = getTonomyContract().actions.adminSetApp({
+    const adminUpdateAppAction = getTonomyContract().actions.adminUpdateApp({
         accountName: 'staking.tmy',
-        usernameHash: tonomyUsername,
+        username: 'staking',
         origin: createSubdomainOnOrigin('https://accounts.testnet.tonomy.io', 'staking'),
         jsonData,
+        plan: AppPlan.BASIC,
     });
 
-    // const buyRamAction = tonomyContract.actions.buyRam({
-    //     daoOwner: 'ops.tmy',
-    //     app: contract,
+    // const buyRamAction = getTonomyContract().actions.scBuyRam({
+    //     accountName: contract,
     //     quant: tokens,
     // });
 
+    const ramPrice = await calculateRamPrice();
+
     const setres = getTonomyContract().actions.setResParams({
         ramFee: RAM_FEE,
-        ramPrice: RAM_PRICE,
+        ramPrice,
         totalRamAvailable: TOTAL_RAM_AVAILABLE,
     });
 
-    const actions = [adminSetAppAction, setres];
+    const actions = [adminUpdateAppAction, setres];
 
     const proposalHash = await createProposal(
         options.proposer,
@@ -139,15 +143,14 @@ export async function stakingContractSetup(options: StandardProposalOptions) {
 export async function buyRam(options: StandardProposalOptions) {
     const ramKb = 4680000;
 
-    const contract = 'staking.tmy';
+    const accountName = 'staking.tmy';
 
     const tokens = await bytesToTokens(ramKb * 1000);
 
-    console.log(`Setting up hypha contract "${contract}" with ${tokens} tokens to buy ${ramKb}KB of RAM`);
+    console.log(`Setting up hypha contract "${accountName}" with ${tokens} tokens to buy ${ramKb}KB of RAM`);
 
-    const buyRamAction = getTonomyContract().actions.buyRam({
-        daoOwner: 'ops.tmy',
-        app: contract,
+    const buyRamAction = getTonomyContract().actions.scBuyRam({
+        accountName,
         quant: tokens,
     });
 
@@ -158,7 +161,7 @@ export async function buyRam(options: StandardProposalOptions) {
         options.proposalName,
         actions,
         options.privateKey,
-        [...options.requested, contract],
+        [...options.requested, accountName],
         options.dryRun
     );
 
