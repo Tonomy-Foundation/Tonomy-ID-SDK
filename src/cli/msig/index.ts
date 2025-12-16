@@ -424,6 +424,7 @@ function printMsigHelp() {
                 propose tokens bulk <proposalName>
                 propose tokens mint <proposalName>
                 propose vesting bulk <proposalName>
+                propose vesting unlock <proposalName>
                 propose vesting migrateX <proposalName> (where X is 1-6)
         Options:
                 --help
