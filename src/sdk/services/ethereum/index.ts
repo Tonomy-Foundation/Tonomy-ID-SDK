@@ -30,14 +30,18 @@ export async function ensureBaseTokenDeployed(): Promise<void> {
  *
  * @returns {TonomyToken} Configured contract instance
  */
-export function getBaseTokenContract(signer?: ethers.Signer): TonomyToken {
+export function getBaseTokenContract(signer?: ethers.Signer, provider?: boolean): TonomyToken {
     const { baseTokenAddress } = getSettings();
+    let tokenContract;
 
-    signer = signer ?? getSigner();
-    const provider = getProvider();
+    if (provider) {
+        tokenContract = getProvider();
+    } else {
+        tokenContract = signer ?? getSigner();
+    }
 
     // eslint-disable-next-line camelcase
-    return TonomyToken__factory.connect(baseTokenAddress, signer || provider);
+    return TonomyToken__factory.connect(baseTokenAddress, tokenContract);
 }
 
 export async function tonomyToBaseTransfer(
@@ -53,15 +57,13 @@ export async function tonomyToBaseTransfer(
 
     // Check balance first
     const signerAddress = await signer.getAddress();
-
-    debug(
-        `signer: ${signer}, Address: ${to}, signerAddress, ${signerAddress}, baseTokenAddress: ${baseTokenAddress} token: ${token} `
-    );
     const balance = await token.balanceOf(signerAddress);
 
-    debug(`Available: ${formatUnits(balance, 18)},`);
+    debug(
+        `Available: ${formatUnits(balance, 18)}, Required: ${quantity.toString()}, Address: ${to}, signerAddress, ${signerAddress} `
+    );
 
-    const transferData = getBaseTokenContract(signer).interface.encodeFunctionData('transfer', [to, weiAmount]);
+    const transferData = token.interface.encodeFunctionData('transfer', [to, weiAmount]);
     const memoHex = ethers.hexlify(ethers.toUtf8Bytes(memo)).substring(2);
 
     const tx = {
