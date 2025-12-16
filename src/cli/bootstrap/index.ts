@@ -354,14 +354,14 @@ async function createTonomyContractAndSetResources() {
     await getTonomyContract().setResourceParams(RAM_PRICE, TOTAL_RAM_AVAILABLE, RAM_FEE, signer);
 
     console.log('Allocate operational tokens to accounts');
-    await getTokenContract().transfer('ops.tmy', 'tonomy', bytesToTokens(3750000), 'Initial allocation', signer);
+    await getTokenContract().transfer('ops.tmy', 'tonomy', await bytesToTokens(3750000), 'Initial allocation', signer);
 
     console.log('Allocate RAM to system accounts');
 
     // See calculation: https://docs.google.com/spreadsheets/d/17cd4wt3oDHp6p7hty9njKsuukTTn9BYJ5z3Ab0N6pMM/edit?pli=1#gid=0&range=D30
     for (const app of apps) {
         const account = app.accountName;
-        const tokens = bytesToTokens(app.ramAllocation);
+        const tokens = await bytesToTokens(app.ramAllocation);
 
         console.log(`Buying ${app.ramAllocation / 1000}KB of RAM for ${account} for ${tokens}`);
 

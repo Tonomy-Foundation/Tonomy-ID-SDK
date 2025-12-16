@@ -21,9 +21,9 @@ import { getSettings, isProduction } from '../../../util/settings';
 import { sha256 } from '../../../util/crypto';
 import { getAccount, getApi } from '../eosio/eosio';
 import abi from './abi/tonomy.abi.json';
-import { activeAuthority, ownerAuthority } from '../eosio/authority';
-import { TONO_PUBLIC_SALE_PRICE } from './VestingContract';
+import { activeAuthority } from '../eosio/authority';
 import Debug from 'debug';
+import { getTokenPrice } from './EosioTokenContract';
 
 const debug = Debug('tonomy-sdk:blockchain:contracts:TonomyContract');
 
@@ -100,13 +100,19 @@ export type PersonData = {
     passwordSalt: Checksum256;
 };
 
-type AppData2Raw = {
+type AppDataRaw = {
     account_name: Name;
     json_data: string;
-    username_hash: Checksum256;
+    username: string;
     origin: string;
+    plan: UInt8;
     version: UInt16;
 };
+
+export enum AppPlan {
+    BASIC = 'BASIC',
+    PRO = 'PRO',
+}
 
 type AppJsonDataRaw = {
     app_name: string;
@@ -116,10 +122,11 @@ type AppJsonDataRaw = {
     accent_color: string; // hex string starting with #
 };
 
-export type AppData2 = {
+export type AppData = {
     accountName: Name;
-    usernameHash: Checksum256;
+    username: string;
     origin: string;
+    plan: AppPlan;
     version: number;
     jsonData: string;
     appName: string;
@@ -128,6 +135,9 @@ export type AppData2 = {
     backgroundColor: string;
     accentColor: string;
 };
+
+// Alias retained for callers that still import AppData2
+export type AppData2 = AppData;
 
 function parseAppJsonData(jsonString: string): AppJsonDataRaw {
     return JSON.parse(jsonString);
@@ -149,7 +159,28 @@ export function createAppJsonDataString(
     });
 }
 
-function castAppData2Raw(app: AppData2Raw): AppData2 {
+function addPrefixIfMissing(str: string, prefix: string): string {
+    if (!str.startsWith(prefix)) {
+        return prefix + str;
+    }
+
+    return str;
+}
+
+function planFromUInt8(plan: UInt8 | number): AppPlan {
+    const value = typeof plan === 'number' ? plan : plan.toNumber();
+
+    switch (value) {
+        case 0:
+            return AppPlan.BASIC;
+        case 1:
+            return AppPlan.PRO;
+        default:
+            throwError(`Unknown app plan value: ${value}`, SdkErrors.InvalidData);
+    }
+}
+
+function castAppDataRaw(app: AppDataRaw): AppData {
     const json = parseAppJsonData(app.json_data);
 
     return {
@@ -160,13 +191,14 @@ function castAppData2Raw(app: AppData2Raw): AppData2 {
         origin: app.origin,
         backgroundColor: json.background_color,
         accentColor: json.accent_color,
-        usernameHash: app.username_hash,
+        username: addPrefixIfMissing(app.username, '@') + '.app',
+        plan: planFromUInt8(app.plan),
         version: app.version.toNumber(),
         jsonData: app.json_data,
     };
 }
 
-function calculateRamPrice(): number {
+async function calculateRamPrice(): Promise<number> {
     // See https://docs.google.com/spreadsheets/d/1_S0S7Gu-PHzt-IzCqNl3CaWnniAt1KwaXDB50roTZUQ/edit?gid=1773951365#gid=1773951365&range=C84
 
     const ramPricePerGb = 7; // $7.00 per GB of RAM taken from standard AWS EC2 pricing
@@ -175,10 +207,11 @@ function calculateRamPrice(): number {
     const totalRamPrice = ramPricePerGb * numberOfNodes * (1 + costOverhead); // $ / Gb
     const totalRamPriceBytes = totalRamPrice / (1024 * 1024 * 1024); // $ / byte
 
-    return TONO_PUBLIC_SALE_PRICE / totalRamPriceBytes; // bytes / TONO
+    const price = await getTokenPrice();
+
+    return price / totalRamPriceBytes; // bytes / TONO
 }
 
-export const RAM_PRICE = calculateRamPrice(); // bytes / token
 export const RAM_FEE = 0.25 / 100; // 0.25%
 export const TOTAL_RAM_AVAILABLE = 8 * 1024 * 1024 * 1024; // 8 GB
 
@@ -188,8 +221,10 @@ export const TOTAL_RAM_AVAILABLE = 8 * 1024 * 1024 * 1024; // 8 GB
  * @param bytes The number of bytes to convert.
  * @returns The converted value in tokens.
  */
-export function bytesToTokens(bytes: number): string {
-    return ((bytes * (1 + RAM_FEE)) / RAM_PRICE).toFixed(6) + ` ${getSettings().currencySymbol}`;
+export async function bytesToTokens(bytes: number): Promise<string> {
+    const ramPrice = await calculateRamPrice();
+
+    return ((bytes * (1 + RAM_FEE)) / ramPrice).toFixed(6) + ` ${getSettings().currencySymbol}`;
 }
 
 export class TonomyContract extends Contract {
@@ -204,17 +239,6 @@ export class TonomyContract extends Contract {
     }
 
     actions = {
-        buyRam: (
-            data: { daoOwner: NameType; app: NameType; quant: AssetType },
-            authorization: ActionOptions = {
-                authorization: [
-                    { actor: data.daoOwner, permission: 'active' },
-                    // TODO: remove this when the app is not required to buy RAM (change the contract first)
-                    { actor: data.app, permission: 'active' },
-                ],
-            }
-        ): Action =>
-            this.action('buyram', { dao_owner: data.daoOwner, app: data.app, quant: data.quant }, authorization),
         setResParams: (
             data: { ramPrice: number; totalRamAvailable: number; ramFee: number },
             authorization: ActionOptions = activeAuthority(GOVERNANCE_ACCOUNT_NAME)
@@ -263,69 +287,158 @@ export class TonomyContract extends Contract {
             data: { account: NameType; app: NameType; parent: NameType; key: PublicKeyType },
             authorization: ActionOptions = { authorization: [{ actor: data.account, permission: data.parent }] }
         ): Action => this.action('loginwithapp', data, authorization),
-        newApp: (
-            data: {
-                jsonData: string;
-                usernameHash: Checksum256Type;
-                origin: string;
-                key: PublicKeyType;
-            },
-            authorization?: ActionOptions
+        appCreate: (
+            data: { creator: NameType; jsonData: string; username: string; origin: string },
+            authorization: ActionOptions = { authorization: [{ actor: data.creator, permission: 'active' }] }
         ): Action =>
             this.action(
-                'newapp',
+                'appcreate',
+                {
+                    creator: data.creator,
+                    json_data: data.jsonData,
+                    username: data.username,
+                    origin: data.origin,
+                },
+                authorization
+            ),
+        appUpdate: (
+            data: { accountName: NameType; jsonData: string; username: string },
+            authorization: ActionOptions = { authorization: [{ actor: data.accountName, permission: 'active' }] }
+        ): Action =>
+            this.action(
+                'appupdate',
+                {
+                    account_name: data.accountName,
+                    json_data: data.jsonData,
+                    username: data.username,
+                },
+                authorization
+            ),
+        appUpdatePlan: (
+            data: { accountName: NameType; plan: number },
+            authorization: ActionOptions = activeAuthority(this.contractName)
+        ): Action => this.action('appupdplan', { account_name: data.accountName, plan: data.plan }, authorization),
+        scDeploy: (
+            data: {
+                accountName: NameType;
+                vmtype: number;
+                vmversion: number;
+                code: Array<number>;
+                abi: Array<number>;
+                sourceCodeUrl: string;
+            },
+            authorization: ActionOptions = activeAuthority(this.contractName)
+        ): Action =>
+            this.action(
+                'scdeploy',
+                {
+                    account_name: data.accountName,
+                    vmtype: data.vmtype,
+                    vmversion: data.vmversion,
+                    code: data.code,
+                    abi: data.abi,
+                    source_code_url: data.sourceCodeUrl,
+                },
+                authorization
+            ),
+        scUpdate: (
+            data: {
+                accountName: NameType;
+                vmtype: number;
+                vmversion: number;
+                code: Array<number>;
+                abi: Array<number>;
+                sourceCodeUrl: string;
+            },
+            authorization: ActionOptions = activeAuthority(this.contractName)
+        ): Action =>
+            this.action(
+                'scupdate',
+                {
+                    account_name: data.accountName,
+                    vmtype: data.vmtype,
+                    vmversion: data.vmversion,
+                    code: data.code,
+                    abi: data.abi,
+                    source_code_url: data.sourceCodeUrl,
+                },
+                authorization
+            ),
+        scBuyRam: (
+            data: { accountName: NameType; quant: AssetType },
+            authorization: ActionOptions = { authorization: [{ actor: data.accountName, permission: 'active' }] }
+        ): Action => this.action('scbuyram', { account_name: data.accountName, quant: data.quant }, authorization),
+        scSellRam: (
+            data: { accountName: NameType; quant: AssetType },
+            authorization: ActionOptions = { authorization: [{ actor: data.accountName, permission: 'active' }] }
+        ): Action => this.action('scsellram', { account_name: data.accountName, quant: data.quant }, authorization),
+        appAddKey: (
+            data: { accountName: NameType; key: PublicKeyType },
+            authorization: ActionOptions = activeAuthority(this.contractName)
+        ): Action => this.action('appaddkey', { account_name: data.accountName, key: data.key }, authorization),
+        appRemoveKey: (
+            data: { accountName: NameType; key: PublicKeyType },
+            authorization: ActionOptions = activeAuthority(this.contractName)
+        ): Action => this.action('appremkey', { account_name: data.accountName, key: data.key }, authorization),
+        adminCreateApp: (
+            data: { jsonData: string; username: string; origin: string },
+            authorization: ActionOptions = activeAuthority(this.contractName)
+        ): Action =>
+            this.action(
+                'admncrtapp',
                 {
                     json_data: data.jsonData,
-                    username_hash: data.usernameHash,
+                    username: data.username,
                     origin: data.origin,
+                },
+                authorization
+            ),
+        adminUpdateApp: (
+            data: { accountName: NameType; jsonData: string; username: string; origin: string; plan: number },
+            authorization: ActionOptions = activeAuthority(this.contractName)
+        ): Action =>
+            this.action(
+                'admnupdapp',
+                {
+                    account_name: data.accountName,
+                    json_data: data.jsonData,
+                    username: data.username,
+                    origin: data.origin,
+                    plan: data.plan,
+                },
+                authorization
+            ),
+        adminDeleteApp: (
+            data: { accountName: NameType },
+            authorization: ActionOptions = activeAuthority(this.contractName)
+        ): Action => this.action('admndelapp', { account_name: data.accountName }, authorization),
+        adminMigrateApp: (
+            data: { accountName: NameType; username: string; plan: number; key: PublicKeyType },
+            authorization: ActionOptions = activeAuthority(this.contractName)
+        ): Action =>
+            this.action(
+                'admnmigapp',
+                {
+                    account_name: data.accountName,
+                    username: data.username,
+                    plan: data.plan,
                     key: data.key,
                 },
                 authorization
             ),
-        adminSetApp: (
-            data: {
-                accountName: NameType;
-                jsonData: string;
-                usernameHash: Checksum256Type;
-                origin: string;
-            },
-            authorization?: ActionOptions
-        ): Action =>
-            this.action(
-                'adminsetapp',
-                {
-                    account_name: Name.from(data.accountName),
-                    json_data: data.jsonData,
-                    username_hash: data.usernameHash,
-                    origin: data.origin,
-                },
-                authorization
-            ),
-        deleteApp: (
-            data: { accountName: NameType },
+        adminMigrateSc: (
+            data: { accountName: NameType; sourceCodeUrl: string },
             authorization: ActionOptions = activeAuthority(this.contractName)
         ): Action =>
             this.action(
-                'deleteapp',
+                'admnmigsc',
                 {
-                    account_name: Name.from(data.accountName),
+                    account_name: data.accountName,
+                    source_code_url: data.sourceCodeUrl,
                 },
                 authorization
             ),
-        eraseOldApps: (data = {}, authorization: ActionOptions = ownerAuthority(this.contractName)): Action =>
-            this.action('eraseoldapps', data, authorization),
     };
-
-    async buyRam(
-        daoOwner: NameType,
-        app: NameType,
-        quant: AssetType,
-        signer: Signer
-    ): Promise<API.v1.PushTransactionResponse> {
-        const action = this.actions.buyRam({ daoOwner, app, quant });
-
-        return transact(action, signer);
-    }
 
     async setResourceParams(
         ramPrice: number,
@@ -416,24 +529,41 @@ export class TonomyContract extends Contract {
         return transact(action, signer);
     }
 
-    async newApp(
+    async appCreate(
+        creator: NameType,
         appName: string,
         description: string,
-        usernameHash: Checksum256Type,
+        username: string,
         logoUrl: string,
         origin: string,
         backgroundColor: string,
         accentColor: string,
-        key: PublicKeyType,
         signer: Signer
     ): Promise<API.v1.PushTransactionResponse> {
         const jsonData = createAppJsonDataString(appName, description, logoUrl, backgroundColor, accentColor);
-        const action = this.actions.newApp({
-            jsonData,
-            usernameHash,
-            origin,
-            key,
-        });
+        const action = this.actions.appCreate({ creator, jsonData, username, origin });
+
+        return transact(action, signer);
+    }
+
+    async appUpdate(
+        accountName: NameType,
+        appName: string,
+        description: string,
+        username: string,
+        logoUrl: string,
+        backgroundColor: string,
+        accentColor: string,
+        signer: Signer
+    ): Promise<API.v1.PushTransactionResponse> {
+        const jsonData = createAppJsonDataString(appName, description, logoUrl, backgroundColor, accentColor);
+        const action = this.actions.appUpdate({ accountName, jsonData, username });
+
+        return transact(action, signer);
+    }
+
+    async appUpdatePlan(accountName: NameType, plan: number, signer: Signer): Promise<API.v1.PushTransactionResponse> {
+        const action = this.actions.appUpdatePlan({ accountName, plan });
 
         return transact(action, signer);
     }
@@ -446,6 +576,66 @@ export class TonomyContract extends Contract {
         signer: Signer
     ): Promise<API.v1.PushTransactionResponse> {
         const action = this.actions.loginWithApp({ account, app, parent, key });
+
+        return transact(action, signer);
+    }
+
+    async scBuyRam(accountName: NameType, quant: AssetType, signer: Signer): Promise<API.v1.PushTransactionResponse> {
+        const action = this.actions.scBuyRam({ accountName, quant });
+
+        return transact(action, signer);
+    }
+
+    async scSellRam(accountName: NameType, quant: AssetType, signer: Signer): Promise<API.v1.PushTransactionResponse> {
+        const action = this.actions.scSellRam({ accountName, quant });
+
+        return transact(action, signer);
+    }
+
+    async scDeploy(
+        accountName: NameType,
+        vmtype: number,
+        vmversion: number,
+        code: Array<number>,
+        abi: Array<number>,
+        sourceCodeUrl: string,
+        signer: Signer
+    ): Promise<API.v1.PushTransactionResponse> {
+        const action = this.actions.scDeploy({ accountName, vmtype, vmversion, code, abi, sourceCodeUrl });
+
+        return transact(action, signer);
+    }
+
+    async scUpdate(
+        accountName: NameType,
+        vmtype: number,
+        vmversion: number,
+        code: Array<number>,
+        abi: Array<number>,
+        sourceCodeUrl: string,
+        signer: Signer
+    ): Promise<API.v1.PushTransactionResponse> {
+        const action = this.actions.scUpdate({ accountName, vmtype, vmversion, code, abi, sourceCodeUrl });
+
+        return transact(action, signer);
+    }
+
+    async appAddKey(
+        accountName: NameType,
+        key: PublicKeyType,
+        signer: Signer
+    ): Promise<API.v1.PushTransactionResponse> {
+        const action = this.actions.appAddKey({ accountName, key });
+
+        return transact(action, signer);
+    }
+
+    async appRemoveKey(
+        accountName: NameType,
+        key: PublicKeyType,
+        signer: Signer
+    ): Promise<API.v1.PushTransactionResponse> {
+        const action = this.actions.appRemoveKey({ accountName, key });
 
         return transact(action, signer);
     }
@@ -474,8 +664,8 @@ export class TonomyContract extends Contract {
         return res;
     }
 
-    async getAllAppData2(): Promise<AppData2Raw[]> {
-        const res = await this.contract.table<AppData2Raw>('appsv2', this.contractName).all();
+    async getAllAppData(): Promise<AppDataRaw[]> {
+        const res = await this.contract.table<AppDataRaw>('appsv3', this.contractName).all();
 
         if (!res || res.length === 0) {
             throwError(`Apps not found`, SdkErrors.AccountDoesntExist);
@@ -484,8 +674,8 @@ export class TonomyContract extends Contract {
         return res;
     }
 
-    async getAppData2(account: NameType): Promise<AppData2Raw> {
-        const res = await this.contract.table<AppData2Raw>('appsv2', this.contractName).get(account);
+    async getAppData(account: NameType): Promise<AppDataRaw> {
+        const res = await this.contract.table<AppDataRaw>('appsv3', this.contractName).get(account);
 
         if (!res) {
             throwError(`App "${account.toString()}" not found`, SdkErrors.AccountDoesntExist);
@@ -493,10 +683,10 @@ export class TonomyContract extends Contract {
 
         return res;
     }
-    async getAppData2ByUsername(username: TonomyUsername): Promise<AppData2Raw> {
+    async getAppDataByUsername(username: TonomyUsername): Promise<AppDataRaw> {
         const hash = Checksum256.from(username.usernameHash);
         const res = await this.contract
-            .table<AppData2Raw>('appsv2', this.contractName)
+            .table<AppDataRaw>('appsv3', this.contractName)
             .get(hash, { index_position: 'secondary' });
 
         if (!res) {
@@ -506,10 +696,10 @@ export class TonomyContract extends Contract {
         return res;
     }
 
-    async getAppDataByOrigin(origin: string): Promise<AppData2Raw> {
+    async getAppDataByOrigin(origin: string): Promise<AppDataRaw> {
         const originHash = sha256(origin);
         const res = await this.contract
-            .table<AppData2Raw>('appsv2', this.contractName)
+            .table<AppDataRaw>('appsv3', this.contractName)
             .get(Checksum256.from(originHash), { index_position: 'tertiary' });
 
         if (!res) {
@@ -547,31 +737,30 @@ export class TonomyContract extends Contract {
         return (await cursor.all()).map(castPersonDataRaw);
     }
 
-    async getApp(account: TonomyUsername | Name | string): Promise<AppData2> {
-        let appData: AppData2Raw;
+    async getApp(account: TonomyUsername | Name | string): Promise<AppData> {
+        let appData: AppDataRaw;
 
         if (account instanceof TonomyUsername) {
-            appData = await this.getAppData2ByUsername(account);
+            appData = await this.getAppDataByUsername(account);
         } else if (account instanceof Name) {
-            appData = await this.getAppData2(account);
+            appData = await this.getAppData(account);
         } else {
             appData = await this.getAppDataByOrigin(account);
         }
 
-        return castAppData2Raw(appData);
+        return castAppDataRaw(appData);
     }
 
-    async getAllApps(): Promise<AppData2[]> {
-        const apps = await this.getAllAppData2();
+    async getAllApps(): Promise<AppData[]> {
+        const apps = await this.getAllAppData();
 
-        return apps.map(castAppData2Raw);
+        return apps.map(castAppDataRaw);
     }
 
-    async adminSetApp(
-        accountName: NameType,
+    async adminCreateApp(
         appName: string,
         description: string,
-        usernameHash: Checksum256Type,
+        username: string,
         logoUrl: string,
         origin: string,
         backgroundColor: string,
@@ -579,12 +768,59 @@ export class TonomyContract extends Contract {
         signer: Signer
     ): Promise<API.v1.PushTransactionResponse> {
         const jsonData = createAppJsonDataString(appName, description, logoUrl, backgroundColor, accentColor);
-        const action = this.actions.adminSetApp({
+        const action = this.actions.adminCreateApp({ jsonData, username, origin });
+
+        return transact([action], signer);
+    }
+
+    async adminUpdateApp(
+        accountName: NameType,
+        appName: string,
+        description: string,
+        username: string,
+        logoUrl: string,
+        origin: string,
+        backgroundColor: string,
+        accentColor: string,
+        plan: number,
+        signer: Signer
+    ): Promise<API.v1.PushTransactionResponse> {
+        const jsonData = createAppJsonDataString(appName, description, logoUrl, backgroundColor, accentColor);
+        const action = this.actions.adminUpdateApp({
             accountName,
             jsonData,
-            usernameHash,
+            username,
             origin,
+            plan,
         });
+
+        return transact([action], signer);
+    }
+
+    async adminDeleteApp(accountName: NameType, signer: Signer): Promise<API.v1.PushTransactionResponse> {
+        const action = this.actions.adminDeleteApp({ accountName });
+
+        return transact([action], signer);
+    }
+
+    async adminMigrateApp(
+        accountName: NameType,
+        username: string,
+        plan: number,
+        key: PublicKeyType,
+        signer: Signer
+    ): Promise<API.v1.PushTransactionResponse> {
+        const action = this.actions.adminMigrateApp({ accountName, username, plan, key });
+
+        return transact([action], signer);
+    }
+
+    async adminMigrateSc(
+        accountName: NameType,
+        sourceCodeUrl: string,
+        signer: Signer
+    ): Promise<API.v1.PushTransactionResponse> {
+        const action = this.actions.adminMigrateSc({ accountName, sourceCodeUrl });
 
         return transact([action], signer);
     }

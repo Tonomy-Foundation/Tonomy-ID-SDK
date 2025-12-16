@@ -126,7 +126,7 @@ export async function createAccounts(options: StandardProposalOptions) {
 export async function setAppsAndRam(options: StandardProposalOptions) {
     const actions = apps.flatMap((app) => {
         const tonomyUsername = TonomyUsername.fromUsername(app.username, AccountType.APP, getSettings().accountSuffix);
-        const tokens = bytesToTokens(app.ramKb * 1000);
+        const tokens = await bytesToTokens(app.ramKb * 1000);
         const adminSetAppAction = getTonomyContract().actions.adminSetApp({
             accountName: app.account,
             jsonData: createAppJsonDataString(

@@ -90,7 +90,7 @@ export async function stakingContractSetup(options: StandardProposalOptions) {
     const contract = 'staking.tmy';
 
     const tonomyUsername = getAppUsernameHash('staking');
-    const tokens = bytesToTokens(ramKb * 1000);
+    const tokens = await bytesToTokens(ramKb * 1000);
 
     console.log(`Setting up hypha contract "${contract}" with ${tokens} tokens to buy ${ramKb}KB of RAM`);
 
@@ -141,7 +141,7 @@ export async function buyRam(options: StandardProposalOptions) {
 
     const contract = 'staking.tmy';
 
-    const tokens = bytesToTokens(ramKb * 1000);
+    const tokens = await bytesToTokens(ramKb * 1000);
 
     console.log(`Setting up hypha contract "${contract}" with ${tokens} tokens to buy ${ramKb}KB of RAM`);
 
