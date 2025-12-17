@@ -352,7 +352,7 @@ export class TonomyContract extends Contract {
             ),
         appUpdatePlan: (
             data: { accountName: NameType; plan: AppPlan | number },
-            authorization: ActionOptions = activeAuthority(this.contractName)
+            authorization: ActionOptions = activeAuthority(data.accountName)
         ): Action =>
             this.action('appupdplan', { account_name: data.accountName, plan: planToUInt8(data.plan) }, authorization),
         scDeploy: (
@@ -364,7 +364,7 @@ export class TonomyContract extends Contract {
                 abi: Array<number>;
                 sourceCodeUrl: string;
             },
-            authorization: ActionOptions = activeAuthority(this.contractName)
+            authorization: ActionOptions = activeAuthority(data.accountName)
         ): Action =>
             this.action(
                 'scdeploy',
@@ -387,7 +387,7 @@ export class TonomyContract extends Contract {
                 abi: Array<number>;
                 sourceCodeUrl: string;
             },
-            authorization: ActionOptions = activeAuthority(this.contractName)
+            authorization: ActionOptions = activeAuthority(data.accountName)
         ): Action =>
             this.action(
                 'scupdate',
@@ -411,19 +411,20 @@ export class TonomyContract extends Contract {
         ): Action => this.action('scsellram', { account_name: data.accountName, quant: data.quant }, authorization),
         appAddKey: (
             data: { accountName: NameType; key: PublicKeyType },
-            authorization: ActionOptions = activeAuthority(this.contractName)
+            authorization: ActionOptions = activeAuthority(data.accountName)
         ): Action => this.action('appaddkey', { account_name: data.accountName, key: data.key }, authorization),
         appRemoveKey: (
             data: { accountName: NameType; key: PublicKeyType },
-            authorization: ActionOptions = activeAuthority(this.contractName)
+            authorization: ActionOptions = activeAuthority(data.accountName)
         ): Action => this.action('appremkey', { account_name: data.accountName, key: data.key }, authorization),
         adminCreateApp: (
-            data: { creator: NameType; jsonData: string; username: string; origin: string },
+            data: { accountName: NameType; creator: NameType; jsonData: string; username: string; origin: string },
             authorization: ActionOptions = activeAuthority(this.contractName)
         ): Action =>
             this.action(
                 'admncrtapp',
                 {
+                    account_name: data.accountName,
                     creator: data.creator,
                     json_data: data.jsonData,
                     username: stripUsernameFormatting(data.username),
@@ -450,6 +451,21 @@ export class TonomyContract extends Contract {
             data: { accountName: NameType },
             authorization: ActionOptions = activeAuthority(this.contractName)
         ): Action => this.action('admndelapp', { account_name: data.accountName }, authorization),
+        adminRegisterApp: (
+            data: { accountName: NameType; creator: NameType; jsonData: string; username: string; origin: string },
+            authorization: ActionOptions = activeAuthority(this.contractName)
+        ): Action =>
+            this.action(
+                'adminregapp',
+                {
+                    account_name: data.accountName,
+                    creator: data.creator,
+                    json_data: data.jsonData,
+                    username: stripUsernameFormatting(data.username),
+                    origin: data.origin,
+                },
+                authorization
+            ),
         adminMigrateApp: (
             data: { accountName: NameType; username: string; plan: AppPlan | number; key: PublicKeyType },
             authorization: ActionOptions = activeAuthority(this.contractName)
@@ -803,6 +819,7 @@ export class TonomyContract extends Contract {
     }
 
     async adminCreateApp(
+        accountName: NameType,
         appName: string,
         description: string,
         username: string,
@@ -814,7 +831,7 @@ export class TonomyContract extends Contract {
         signer: Signer
     ): Promise<API.v1.PushTransactionResponse> {
         const jsonData = createAppJsonDataString(appName, description, logoUrl, backgroundColor, accentColor);
-        const action = this.actions.adminCreateApp({ creator, jsonData, username, origin });
+        const action = this.actions.adminCreateApp({ accountName, creator, jsonData, username, origin });
 
         return transact([action], signer);
     }
@@ -845,6 +862,30 @@ export class TonomyContract extends Contract {
 
     async adminDeleteApp(accountName: NameType, signer: Signer): Promise<API.v1.PushTransactionResponse> {
         const action = this.actions.adminDeleteApp({ accountName });
+
+        return transact([action], signer);
+    }
+
+    async adminRegisterApp(
+        accountName: NameType,
+        appName: string,
+        description: string,
+        username: string,
+        logoUrl: string,
+        origin: string,
+        backgroundColor: string,
+        accentColor: string,
+        creator: NameType,
+        signer: Signer
+    ): Promise<API.v1.PushTransactionResponse> {
+        const jsonData = createAppJsonDataString(appName, description, logoUrl, backgroundColor, accentColor);
+        const action = this.actions.adminRegisterApp({
+            accountName,
+            creator,
+            jsonData,
+            username,
+            origin,
+        });
 
         return transact([action], signer);
     }

@@ -21,7 +21,6 @@ import {
     getStakingContract,
     getTonomyContract,
     getTonomyEosioProxyContract,
-    AppPlan,
 } from '../../sdk/services/blockchain';
 import { createUser, mockCreateAccount, restoreCreateAccountFromMock } from './user';
 import { sleep } from '../../sdk/util';
@@ -341,7 +340,7 @@ async function createTonomyContractAndSetResources() {
     ];
 
     for (const app of apps) {
-        await getTonomyContract().adminUpdateApp(
+        await getTonomyContract().adminRegisterApp(
             app.accountName,
             app.appName,
             app.description,
@@ -350,16 +349,16 @@ async function createTonomyContractAndSetResources() {
             app.origin,
             app.backgroundColor,
             app.accentColor,
-            AppPlan.PRO,
+            'gov.tmy',
             signer
         );
     }
 
     console.log('Set Tonomy system contract params and allocate RAM');
-    const RAM_PRICE = await calculateRamPrice();
+    const ramPrice = await calculateRamPrice();
 
-    console.log('Set resource params', RAM_PRICE, TOTAL_RAM_AVAILABLE, RAM_FEE);
-    await getTonomyContract().setResourceParams(RAM_PRICE, TOTAL_RAM_AVAILABLE, RAM_FEE, signer);
+    console.log('Set resource params', ramPrice, TOTAL_RAM_AVAILABLE, RAM_FEE);
+    await getTonomyContract().setResourceParams(ramPrice, TOTAL_RAM_AVAILABLE, RAM_FEE, signer);
 
     console.log('Allocate operational tokens to accounts');
     await getTokenContract().transfer('ops.tmy', 'tonomy', await bytesToTokens(3750000), 'Initial allocation', signer);
