@@ -51,7 +51,7 @@ let newGovernanceAccounts = [
     '11.found.tmy',
     '12.found.tmy',
     '13.found.tmy',
-    '15.found.tmy',
+    '21.found.tmy',
 ];
 
 if (!settings.isProduction()) {
