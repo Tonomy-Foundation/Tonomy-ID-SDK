@@ -808,29 +808,37 @@ export async function vestingMigrate5(options: StandardProposalOptions) {
 export async function vestingMigrate6(options: StandardProposalOptions) {
     // Example data only
     const accountsToRemoveAllAllocations: string[] = ['pmwwevl1zkio', 'pwitdljtnxhf'];
-
+    let totalReclaimed = new Decimal(0);
     const actions: Action[] = [];
 
     // Remove all existing allocations for specified accounts
     for (const account of accountsToRemoveAllAllocations) {
+        console.log(`Processing account ${account} for allocation removal`);
+        let claimed = new Decimal(0);
         const allocations = await getVestingContract().getAllocations(account);
 
         for (const allocation of allocations) {
-            console.log(
-                `Removing account ${allocation.holder} allocation ${allocation.id} with ${allocation.tokensAllocated}`
-            );
+            console.log(`  Removing allocation ${allocation.id} with ${allocation.tokensAllocated}`);
+            claimed = claimed.add(assetToDecimal(allocation.tokensClaimed));
+            const newAmount =
+                assetToDecimal(allocation.tokensClaimed).add(new Decimal('0.000001')).toFixed(6) + ' TONO';
+
+            totalReclaimed = totalReclaimed.add(assetToDecimal(newAmount));
+            if (claimed.gt(0)) console.log(`    ${claimed} tokens have already been unlocked`);
             actions.push(
                 getVestingContract().actions.migrateAlloc({
                     sender: 'liquidty.tmy',
                     holder: account,
                     allocationId: allocation.id,
                     oldAmount: allocation.tokensAllocated,
-                    newAmount: '1.000000 TONO',
+                    newAmount,
                     oldCategoryId: allocation.vestingCategoryType,
                     newCategoryId: allocation.vestingCategoryType,
                 })
             );
         }
+
+        console.log(`  Total already unlocked tokens: ${claimed.toFixed(6)} TONO`);
     }
 
     // Add new allocations as per the new vesting schedule. Example data only
@@ -840,10 +848,13 @@ export async function vestingMigrate6(options: StandardProposalOptions) {
         { account: 'py4n15psuw2z', amount: '150000000.000000 TONO', categoryId: 29 },
     ];
 
+    let totalReassigned = new Decimal(0);
+
     for (const newAllocation of newAllocations) {
         console.log(
             `Creating new allocation for account ${newAllocation.account} with ${newAllocation.amount} in category ${newAllocation.categoryId}`
         );
+        totalReassigned = totalReassigned.add(assetToDecimal(newAllocation.amount));
         actions.push(
             getVestingContract().actions.assignTokens({
                 sender: 'liquidty.tmy',
@@ -853,6 +864,9 @@ export async function vestingMigrate6(options: StandardProposalOptions) {
             })
         );
     }
+
+    console.log(`Total reclaimed tokens: ${totalReclaimed.toFixed(6)} TONO`);
+    console.log(`Total reassigned tokens: ${totalReassigned.toFixed(6)} TONO`);
 
     const proposalHash = await createProposal(
         options.proposer,
@@ -885,6 +899,7 @@ export async function withdrawBootstrapVested(options: StandardProposalOptions) 
     ];
 
     const actions: Action[] = [];
+    let totalUnlockedAll = new Decimal(0);
 
     for (const account of accountsToWithdraw) {
         const { unlockable } = await getVestingContract().getVestingAllocations(account);
@@ -910,6 +925,8 @@ export async function withdrawBootstrapVested(options: StandardProposalOptions) 
 
             const totalToSend = unlockedBalance.add(new Decimal(unlockable));
 
+            totalUnlockedAll = totalUnlockedAll.add(totalToSend);
+
             console.log(
                 `Transferring total of ${totalToSend.toFixed(6)} TONO ($${(totalToSend.toNumber() * tonoPrice).toFixed(2)} USD) from account ${account} to ${tokenDestination} account`
             );
@@ -923,6 +940,10 @@ export async function withdrawBootstrapVested(options: StandardProposalOptions) 
             );
         }
     }
+
+    console.log(
+        `Total tokens withdrawn and transferred to ${tokenDestination}: ${totalUnlockedAll.toFixed(6)} TONO ($${(totalUnlockedAll.toNumber() * tonoPrice).toFixed(2)} USD)`
+    );
 
     const proposalHash = await createProposal(
         options.proposer,
