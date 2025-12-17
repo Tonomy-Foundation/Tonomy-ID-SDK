@@ -30,18 +30,14 @@ export async function ensureBaseTokenDeployed(): Promise<void> {
  *
  * @returns {TonomyToken} Configured contract instance
  */
-export function getBaseTokenContract(signer?: ethers.Signer, provider?: boolean): TonomyToken {
+export function getBaseTokenContract(signer?: ethers.Signer): TonomyToken {
     const { baseTokenAddress } = getSettings();
-    let tokenContract;
 
-    if (provider) {
-        tokenContract = getProvider();
-    } else {
-        tokenContract = signer ?? getSigner();
-    }
+    signer = signer ?? getSigner();
+    const provider = getProvider();
 
     // eslint-disable-next-line camelcase
-    return TonomyToken__factory.connect(baseTokenAddress, tokenContract);
+    return TonomyToken__factory.connect(baseTokenAddress, signer || provider);
 }
 
 export async function tonomyToBaseTransfer(

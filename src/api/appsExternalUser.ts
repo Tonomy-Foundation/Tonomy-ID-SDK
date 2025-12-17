@@ -80,6 +80,8 @@ export class AppsExternalUser extends ExternalUser {
         const issuer = await this.getIssuer();
         const tonomyAccount = getAccountNameFromDid(issuer.did);
 
+        await this.loginToCommunication();
+        debug(`subscribeSwapBaseToTonomy() did: ${issuer.did} `);
         const memo = createSwapMemo(tonomyAccount.toString(), _testOnly_tonomyAppsWebsiteUsername);
         const { swapId: swapIdOriginal } = parseSwapMemo(memo);
         const TIMEOUT_MS = 2 * 60 * 1000; // 2 minutes
