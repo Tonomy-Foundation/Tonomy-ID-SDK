@@ -33,7 +33,7 @@ import {
     loginToExternalApp,
 } from './helpers/externalUser';
 import { createStorageFactory } from './helpers/storageFactory';
-import { createSigner, getTokenContract, getTonomyOperationsKey } from '../src/sdk/services/blockchain';
+import { createSigner, decimalToAsset, getTokenContract, getTonomyOperationsKey } from '../src/sdk/services/blockchain';
 import { setTestSettings, settings } from './helpers/settings';
 import Debug from 'debug';
 import Decimal from 'decimal.js';
@@ -205,6 +205,142 @@ describe('Login to external apps website', () => {
                     expect(error.message).toContain('ERC20: transfer amount exceeds balance')
                 } else {
                     throw error; // rethrow if it's something unexpected
+                }
+            }
+        });
+    });
+
+    describe('Faucet services are working', () => {
+        const loginToExternalAppAssertions = 27;
+
+        test('should request faucet tokens and update balance', async () => {
+            expect.assertions(loginToExternalAppAssertions + 1);
+            await setAppsExternalUser();
+            const faucetAmount = new Decimal("5.0"); // amount to request from faucet
+            const asset = decimalToAsset(faucetAmount, 'TONO')
+
+            const tonomyAccountName = await APPS_EXTERNAL_WEBSITE_user.getAccountName();
+            const balanceBeforeFaucet = await getTokenContract().getBalanceDecimal(tonomyAccountName);
+
+            const tonomyAppsWebsiteUsername = await externalApp.username?.getBaseUsername();
+
+            await APPS_EXTERNAL_WEBSITE_user.requestFaucetTokens(asset, tonomyAppsWebsiteUsername);
+
+            const balanceAfterFaucet = await getTokenContract().getBalanceDecimal(tonomyAccountName);
+
+            expect(balanceAfterFaucet).toEqual(balanceBeforeFaucet.add(faucetAmount));
+        });
+
+        test('should fail to request faucet tokens with zero amount', async () => {
+            expect.assertions(loginToExternalAppAssertions + 1);
+            await setAppsExternalUser();
+            const faucetAmount = new Decimal("0");
+            const asset = decimalToAsset(faucetAmount, 'TONO')
+
+            const tonomyAppsWebsiteUsername = await externalApp.username?.getBaseUsername();
+
+            try {
+                await APPS_EXTERNAL_WEBSITE_user.requestFaucetTokens(asset, tonomyAppsWebsiteUsername);
+            } catch (error) {
+                if (error instanceof Error) {
+                    expect(error.message).toContain('Invalid asset amount');
+                } else {
+                    throw error;
+                }
+            }
+        });
+
+        test('should fail to request faucet tokens with negative amount', async () => {
+            expect.assertions(loginToExternalAppAssertions + 1);
+            await setAppsExternalUser();
+            const faucetAmount = new Decimal("-5.0");
+            const asset = decimalToAsset(faucetAmount, 'TONO')
+
+            const tonomyAppsWebsiteUsername = await externalApp.username?.getBaseUsername();
+
+            try {
+                await APPS_EXTERNAL_WEBSITE_user.requestFaucetTokens(asset, tonomyAppsWebsiteUsername);
+            } catch (error) {
+                if (error instanceof Error) {
+                    expect(error.message).toContain('Invalid asset amount');
+                } else {
+                    throw error;
+                }
+            }
+        });
+
+        test('should fail to request faucet tokens exceeding limit', async () => {
+            expect.assertions(loginToExternalAppAssertions + 1);
+            await setAppsExternalUser();
+            const faucetAmount = new Decimal("2000"); // exceeds 1000 limit
+            const asset = decimalToAsset(faucetAmount, 'TONO')
+
+            const tonomyAppsWebsiteUsername = await externalApp.username?.getBaseUsername();
+
+            try {
+                await APPS_EXTERNAL_WEBSITE_user.requestFaucetTokens(asset, tonomyAppsWebsiteUsername);
+            } catch (error) {
+                if (error instanceof Error) {
+                    expect(error.message).toContain('exceeds faucet limit');
+                } else {
+                    throw error;
+                }
+            }
+        });
+
+        test('should fail to request faucet tokens with incorrect symbol', async () => {
+            expect.assertions(loginToExternalAppAssertions + 1);
+            await setAppsExternalUser();
+            const faucetAmount = new Decimal("5.0");
+            // Requesting with wrong symbol (ETH instead of TONO)
+            const asset = decimalToAsset(faucetAmount, 'ETH')
+
+            const tonomyAppsWebsiteUsername = await externalApp.username?.getBaseUsername();
+
+            try {
+                await APPS_EXTERNAL_WEBSITE_user.requestFaucetTokens(asset, tonomyAppsWebsiteUsername);
+            } catch (error) {
+                if (error instanceof Error) {
+                    expect(error.message).toContain('Invalid asset format');
+                } else {
+                    throw error;
+                }
+            }
+        });
+
+        test('should fail to request faucet tokens when exceeding 24-hour throttle limit', async () => {
+            expect.assertions(loginToExternalAppAssertions + 2);
+            await setAppsExternalUser();
+            
+            const tonomyAppsWebsiteUsername = await externalApp.username?.getBaseUsername();
+
+            // First request: 20,000 TONO (should succeed)
+            const firstAmount = new Decimal("1000");
+            const firstAsset = decimalToAsset(firstAmount, 'TONO');
+
+            const tonomyAccountName = await APPS_EXTERNAL_WEBSITE_user.getAccountName();
+            const balanceBeforeFirstRequest = await getTokenContract().getBalanceDecimal(tonomyAccountName);
+
+            // Make 20 requests of 1000 TONO each (within limit)
+            for (let i = 0; i < 20; i++) {
+                await APPS_EXTERNAL_WEBSITE_user.requestFaucetTokens(firstAsset, tonomyAppsWebsiteUsername);
+            }
+
+            const balanceAfterMultipleRequests = await getTokenContract().getBalanceDecimal(tonomyAccountName);
+
+            expect(balanceAfterMultipleRequests).toEqual(balanceBeforeFirstRequest.add(firstAmount.mul(20)));
+
+            // Second request: another 1000 TONO (should exceed 20,000 limit)
+            const exceedingAmount = new Decimal("1000");
+            const exceedingAsset = decimalToAsset(exceedingAmount, 'TONO');
+
+            try {
+                await APPS_EXTERNAL_WEBSITE_user.requestFaucetTokens(exceedingAsset, tonomyAppsWebsiteUsername);
+            } catch (error) {
+                if (error instanceof Error) {
+                    expect(error.message).toContain('Daily faucet limit exceeded');
+                } else {
+                    throw error;
                 }
             }
         });

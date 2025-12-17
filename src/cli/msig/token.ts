@@ -1,4 +1,10 @@
-import { amountToSupplyPercentage, assetToDecimal, getAccount, getTokenContract } from '../../sdk/services/blockchain';
+import {
+    amountToSupplyPercentage,
+    assetToDecimal,
+    getAccount,
+    getTokenContract,
+    getTokenPrice,
+} from '../../sdk/services/blockchain';
 import { StandardProposalOptions, createProposal, executeProposal } from '.';
 import Decimal from 'decimal.js';
 import { Action } from '@wharfkit/antelope';
@@ -50,7 +56,9 @@ export async function transfer(options: StandardProposalOptions) {
 export async function bulkTransfer(options: StandardProposalOptions & { transfers?: [string, string, Decimal][] }) {
     const actions: Action[] = [];
 
-    const priceOverride = 0.0000233268; // https://www.coingecko.com/en/coins/tonomy
+    const priceOverride = await getTokenPrice(); // from coingecko
+
+    console.log(`Using TONO price of $${priceOverride} for USD to TONO calculations`);
 
     if (!options.transfers || options.transfers.length === 0) {
         options.transfers = (await getTransfersFromFile()).map(({ sender, accountName, usdQuantity, price }) => [
@@ -94,7 +102,7 @@ export async function bulkTransfer(options: StandardProposalOptions & { transfer
         await executeProposal(options.proposer, options.proposalName, proposalHash);
 }
 
-type TransferRecord = { sender: string; accountName: string; usdQuantity: number; price: number };
+type TransferRecord = { sender: string; accountName: string; usdQuantity: number; price?: number };
 
 async function getTransfersFromFile(): Promise<TransferRecord[]> {
     const csvFilePath = '/home/dev/Downloads/transfers.csv';
@@ -106,7 +114,7 @@ async function getTransfersFromFile(): Promise<TransferRecord[]> {
         // eslint-disable-next-line camelcase
         skip_empty_lines: true,
     });
-    const results: { sender: string; accountName: string; usdQuantity: number; price: number }[] = [];
+    const results: TransferRecord[] = [];
 
     const unfoundAccounts: string[] = [];
 
@@ -161,18 +169,18 @@ async function getTransfersFromFile(): Promise<TransferRecord[]> {
                     data.accountName = accountName;
 
                     data.usdQuantity = Number(data.usdQuantity);
-                    data.price = Number(data.price);
+                    data.price = data.price ? Number(data.price) : undefined;
 
                     if (isNaN(data.usdQuantity)) {
                         throw new Error(`Invalid quantity type on line ${results.length + 1}: ${data}`);
                     }
 
                     if (data.usdQuantity <= 0 || data.usdQuantity > 100000) {
-                        throw new Error(`Invalid quantity on line ${results.length + 1}: ${data}`);
+                        throw new Error(`Invalid quantity on line ${results.length + 1}: ${JSON.stringify(data)}`);
                     }
 
                     console.log(
-                        `${results.length + 1}: ${data.accountName}, $${data.usdQuantity} / ${data.price} = ${(data.usdQuantity / data.price).toFixed(6)} TONO from ${data.sender}`
+                        `${results.length + 1}: ${data.accountName} to receive $${data.usdQuantity} at price ${data.price} from ${data.sender}`
                     );
                     results.push(data);
                 } catch (e) {

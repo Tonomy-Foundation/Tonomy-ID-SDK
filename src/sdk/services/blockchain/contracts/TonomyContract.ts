@@ -112,8 +112,8 @@ type AppJsonDataRaw = {
     app_name: string;
     description: string;
     logo_url: string;
-    background_color: string;
-    accent_color: string;
+    background_color: string; // hex string starting with #
+    accent_color: string; // hex string starting with #
 };
 
 export type AppData2 = {
