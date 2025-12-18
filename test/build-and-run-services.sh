@@ -67,10 +67,16 @@ function start {
     # Run blockchain node
     cd "${SDK_DIR}"
     docker run -p 8888:8888 --name tonomy_blockchain_integration -d tonomy_blockchain_initialized
-    echo "Waiting 12 seconds for blockchain node to start"
-    sleep 12
+    if [ -z "${CI:-}" ]; then
+        SLEEP_SECONDS=15
+    else
+        SLEEP_SECONDS=12
+    fi
+    echo "Waiting $SLEEP_SECONDS seconds for blockchain node to start"
+    sleep $SLEEP_SECONDS
     curl localhost:8888 > /dev/null || {
-        echo "Blockchain node not responding"
+        echo "Blockchain node not responding. Last 50 lines of Docker logs:"
+        docker logs --tail 50 tonomy_blockchain_integration
         exit 1
     }
 
@@ -78,11 +84,17 @@ function start {
     cd  "$SDK_DIR/Ethereum-token"
     npx pm2 stop hardhat || true
     npx pm2 delete hardhat || true
-    npx pm2 start yarn --name "hardhat" -- run node
-    echo "Waiting 5 seconds for Ethereum node to start"
-    sleep 5
+    npx pm2 start --name "hardhat" --interpreter none yarn -- run node
+    if [ -z "${CI:-}" ]; then
+        SLEEP_SECONDS=10
+    else
+        SLEEP_SECONDS=5
+    fi
+    echo "Waiting $SLEEP_SECONDS seconds for Ethereum node to start"
+    sleep $SLEEP_SECONDS
     curl localhost:8545 > /dev/null || {
-        echo "Ethereum node not responding"
+        echo "Ethereum node not responding. Last 50 lines of PM2 logs:"
+        npx pm2 logs hardhat --nostream --lines 50
         exit 1
     }
     DEPLOY_OUTPUT=$(ETHEREUM_PRIVATE_KEY=0xdf57089febbacf7ba0bc227dafbffa9fc08a93fdc68e1e42411a14efcf23656e yarn run deploy --network localhost)
@@ -99,7 +111,21 @@ function start {
     npx pm2 delete micro || true
     unset TONOMY_OPS_PRIVATE_KEY
     unset HCAPTCHA_SECRET
-    npx pm2 start yarn --name "micro" -- run start
+    npx pm2 start --name "micro" --interpreter none yarn -- run start
+
+    if [ -z "${CI:-}" ]; then
+        SLEEP_SECONDS=20
+    else
+        SLEEP_SECONDS=10
+    fi
+    echo "Waiting $SLEEP_SECONDS seconds for Communication node to start"
+    sleep $SLEEP_SECONDS
+    curl localhost:5000 > /dev/null || {
+        echo "Communication server not responding. Last 50 lines of PM2 logs:"
+        npx pm2 logs micro --nostream --lines 50
+        exit 1
+    }
+    
 }
 
 function bootstrap {
