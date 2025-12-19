@@ -27,7 +27,6 @@ import {
 } from '../bootstrap';
 import Decimal from 'decimal.js';
 import { ethers } from 'ethers';
-import { createSafeClient } from '@safe-global/sdk-starter-kit';
 
 export async function transfer(args: string[]) {
     const privateKey = PrivateKey.from(process.env.SIGNING_KEY || '');
@@ -78,6 +77,8 @@ export async function sendSafeWalletTransferCommand() {
     }
 
     const transactions = await prepareSafeWalletTransfer(recipient, amount);
+    const { createSafeClient } = await import('@safe-global/sdk-starter-kit');
+
     const safeClient = await createSafeClient({
         provider: settings.baseRpcUrl,
         signer: settings.basePrivateKey,
