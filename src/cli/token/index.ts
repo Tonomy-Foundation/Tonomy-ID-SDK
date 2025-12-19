@@ -72,7 +72,9 @@ export async function sendSafeWalletTransferCommand() {
     const settings = getSettings();
 
     if (settings.environment !== 'production') {
-        throw new Error('sendSafeWalletTransfer can only be run in production environment, on the Nested {Safe} wallet');
+        throw new Error(
+            'sendSafeWalletTransfer can only be run in production environment, on the Nested {Safe} wallet'
+        );
     }
 
     const transactions = await prepareSafeWalletTransfer(recipient, amount);
@@ -84,22 +86,11 @@ export async function sendSafeWalletTransferCommand() {
     });
 
     const safeClientResult = await safeClient.send({ transactions });
+
     console.log(
         `Safe wallet transfer to ${recipient} completed with safe transaction hash ${safeClientResult.transactions?.safeTxHash}`,
         JSON.stringify(safeClientResult, null, 2)
     );
-
-    /**
-        {
-        "safeAddress": "0x86d1Df3473651265AA88E48dE9B420debCa6e676",
-        "description": "The transaction has been executed, check the ethereumTxHash in the transactions property to view it on the corresponding blockchain explorer",
-        "status": "EXECUTED",
-        "transactions": {
-            "ethereumTxHash": "0xa81ea3984a7b5a7cc20888a868b13c14b2137574680037e389446a534eaad301"
-            }
-        }
-    */
-
 }
 
 const ZERO_DECIMAL = new Decimal(0);
