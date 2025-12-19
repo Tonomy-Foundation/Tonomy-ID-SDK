@@ -326,12 +326,13 @@ type SafeTransaction = {
     data: string;
     value: string;
 };
+
 export async function prepareSafeWalletTransfer(recipient: string, amount: bigint): Promise<SafeTransaction[]> {
     const settings = getSettings();
 
     const transferTransaction = getBaseTokenContract().interface.encodeFunctionData('transfer', [recipient, amount]);
 
-   return [
+    return [
         {
             to: settings.baseTokenAddress,
             data: transferTransaction,
