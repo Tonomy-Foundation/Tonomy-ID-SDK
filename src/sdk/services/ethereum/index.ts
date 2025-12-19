@@ -32,9 +32,10 @@ export async function ensureBaseTokenDeployed(): Promise<void> {
  */
 export function getBaseTokenContract(signer?: ethers.Signer): TonomyToken {
     const { baseTokenAddress } = getSettings();
+    let provider;
 
-    signer = signer ?? getSigner();
-    const provider = getProvider();
+    if (signer) signer = signer ?? getSigner();
+    else provider = getProvider();
 
     // eslint-disable-next-line camelcase
     return TonomyToken__factory.connect(baseTokenAddress, signer || provider);
