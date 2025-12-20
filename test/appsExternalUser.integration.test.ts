@@ -16,6 +16,7 @@ import {
     createSignedProofMessage,
     ensureBaseTokenDeployed,
     getProvider,
+    getSigner,
 } from '../src/sdk/index';
 import { JsKeyManager } from '../src/sdk/storage/jsKeyManager';
 import { DataSource } from 'typeorm';
@@ -144,8 +145,8 @@ describe('Login to external apps website', () => {
             const amountWeiBigInt = BigInt(amount.mul(10 ** 18).toString());
 
             const tonomyAccountName = await APPS_EXTERNAL_WEBSITE_user.getAccountName()
-
-            const balanceBeforeBase = await getBaseTokenContract().balanceOf(userBaseAddress);
+            const signer = getSigner();
+            const balanceBeforeBase = await getBaseTokenContract(signer).balanceOf(userBaseAddress);
             const balanceBeforeTonomy = await getTokenContract().getBalanceDecimal(tonomyAccountName);
 
             const tonomyAppsWebsiteUsername = await externalApp.username?.getBaseUsername();
@@ -153,7 +154,7 @@ describe('Login to external apps website', () => {
 
             await APPS_EXTERNAL_WEBSITE_user.swapTonomyToBaseToken(amount, proof, tonomyAppsWebsiteUsername);
 
-            const balanceAfterBase = await getBaseTokenContract().balanceOf(userBaseAddress);
+            const balanceAfterBase = await getBaseTokenContract(signer).balanceOf(userBaseAddress);
             const balanceAfterTonomy = await getTokenContract().getBalanceDecimal(tonomyAccountName);
 
             expect(balanceAfterBase).toEqual(balanceBeforeBase + amountWeiBigInt);
@@ -161,7 +162,7 @@ describe('Login to external apps website', () => {
 
             await APPS_EXTERNAL_WEBSITE_user.swapBaseToTonomyToken(amount, userBaseSigner, tonomyAppsWebsiteUsername);
 
-            const balanceAfter2Base = await getBaseTokenContract().balanceOf(userBaseAddress);
+            const balanceAfter2Base = await getBaseTokenContract(signer).balanceOf(userBaseAddress);
             const balanceAfter2Tonomy = await getTokenContract().getBalanceDecimal(tonomyAccountName);
 
             expect(balanceAfter2Base).toEqual(balanceBeforeBase);
