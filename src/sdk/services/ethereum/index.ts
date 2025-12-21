@@ -5,7 +5,6 @@ import { randomString } from '../../util/crypto';
 // eslint-disable-next-line camelcase
 import { TonomyToken, TonomyToken__factory } from './typechain'; // adjust path if different
 import Decimal from 'decimal.js';
-import { createSafeClient, SafeClientResult } from '@safe-global/sdk-starter-kit';
 
 const debug = Debug('tonomy-sdk:services:ethereum');
 
