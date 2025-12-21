@@ -5,7 +5,6 @@ import { randomString } from '../../util/crypto';
 // eslint-disable-next-line camelcase
 import { TonomyToken, TonomyToken__factory } from './typechain'; // adjust path if different
 import Decimal from 'decimal.js';
-import { createSafeClient, SafeClientResult } from '@safe-global/sdk-starter-kit';
 
 const debug = Debug('tonomy-sdk:services:ethereum');
 
@@ -33,9 +32,10 @@ export async function ensureBaseTokenDeployed(): Promise<void> {
  */
 export function getBaseTokenContract(signer?: ethers.Signer): TonomyToken {
     const { baseTokenAddress } = getSettings();
+    let provider;
 
-    signer = signer ?? getSigner();
-    const provider = getProvider();
+    if (signer) signer = signer ?? getSigner();
+    else provider = getProvider();
 
     // eslint-disable-next-line camelcase
     return TonomyToken__factory.connect(baseTokenAddress, signer || provider);
@@ -54,15 +54,13 @@ export async function tonomyToBaseTransfer(
 
     // Check balance first
     const signerAddress = await signer.getAddress();
-
-    debug(
-        `signer: ${signer}, Address: ${to}, signerAddress, ${signerAddress}, baseTokenAddress: ${baseTokenAddress} token: ${token} `
-    );
     const balance = await token.balanceOf(signerAddress);
 
-    debug(`Available: ${formatUnits(balance, 18)},`);
+    debug(
+        `Available: ${formatUnits(balance, 18)}, Required: ${quantity.toString()}, Address: ${to}, signerAddress, ${signerAddress} `
+    );
 
-    const transferData = getBaseTokenContract(signer).interface.encodeFunctionData('transfer', [to, weiAmount]);
+    const transferData = token.interface.encodeFunctionData('transfer', [to, weiAmount]);
     const memoHex = ethers.hexlify(ethers.toUtf8Bytes(memo)).substring(2);
 
     const tx = {
@@ -323,37 +321,22 @@ export async function waitForEvmTrxFinalization(
     return receipt;
 }
 
-export async function sendSafeWalletTransfer(recipient: string, amount: bigint): Promise<SafeClientResult> {
-    const settings = getSettings();
-    // const governanceDAOAddress = `0x8951e9D016Cc0Cf86b4f6819c794dD64e4C3a1A1`;
-    const safeNestedBridgeAddress = '0x86d1Df3473651265AA88E48dE9B420debCa6e676';
+type SafeTransaction = {
+    to: string;
+    data: string;
+    value: string;
+};
 
-    const safeClient = await createSafeClient({
-        provider: settings.baseRpcUrl,
-        signer: settings.basePrivateKey,
-        safeAddress: safeNestedBridgeAddress,
-        apiKey: settings.safeApiKey,
-    });
+export async function prepareSafeWalletTransfer(recipient: string, amount: bigint): Promise<SafeTransaction[]> {
+    const settings = getSettings();
 
     const transferTransaction = getBaseTokenContract().interface.encodeFunctionData('transfer', [recipient, amount]);
 
-    const transactions = [
+    return [
         {
             to: settings.baseTokenAddress,
             data: transferTransaction,
             value: '0',
         },
     ];
-
-    return await safeClient.send({ transactions });
-    /**
-        {
-        "safeAddress": "0x86d1Df3473651265AA88E48dE9B420debCa6e676",
-        "description": "The transaction has been executed, check the ethereumTxHash in the transactions property to view it on the corresponding blockchain explorer",
-        "status": "EXECUTED",
-        "transactions": {
-            "ethereumTxHash": "0xa81ea3984a7b5a7cc20888a868b13c14b2137574680037e389446a534eaad301"
-            }
-        }
-    */
 }
