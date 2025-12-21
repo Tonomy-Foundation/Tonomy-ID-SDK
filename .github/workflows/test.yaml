@@ -5,13 +5,13 @@ on: push
 env:
   NODE_VERSION: 22.3.0
   # change git branches, if needed for temporary CI testing
-  GIT_BRANCH_COMMUNICATION: feature/faucet2
+  GIT_BRANCH_COMMUNICATION: development
   GIT_BRANCH_ETHEREUM: development
 
 jobs:
   compile-contracts:
     uses: ./.github/workflows/compile-contracts.yml
-    
+
   test:
     name: Run lint and unit tests
     needs: compile-contracts
@@ -72,7 +72,7 @@ jobs:
 
       - name: Enable Corepack before setting up Node
         run: corepack enable
-      
+
       - name: Install and build SDK
         uses: actions/setup-node@v4
         with:
@@ -120,7 +120,7 @@ jobs:
           BLOCKCHAIN_URL=http://localhost:8888 npx pm2 start yarn --name "communication" -- run start:prod
       - run: sleep 2
       - run: npx pm2 logs --lines 50 --nostream communication
-      
+
       - name: Bootstrap blockchain
         uses: actions/setup-node@v4
         with:
