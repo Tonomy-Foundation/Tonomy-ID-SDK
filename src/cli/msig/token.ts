@@ -13,7 +13,6 @@ import { parse } from 'csv-parse/sync';
 import fs from 'fs';
 import { getBaseTokenContract, getSettings, isErrorCode, SdkErrors } from '../../sdk';
 import { fetchAccountNameFromUsername } from './vesting';
-import { createSafeClient } from '@safe-global/sdk-starter-kit';
 
 export async function transfer(options: StandardProposalOptions) {
     const from = 'ecosystm.tmy';
@@ -251,6 +250,9 @@ export async function crossChainSwap(options: StandardProposalOptions) {
 
     if (!options.dryRun && options.autoExecute)
         await executeProposal(options.proposer, options.proposalName, proposalHash);
+
+    const { createSafeClient } = await import('@safe-global/sdk-starter-kit');
+
     const safeClient = await createSafeClient({
         provider: settings.baseRpcUrl,
         signer: settings.basePrivateKey,
