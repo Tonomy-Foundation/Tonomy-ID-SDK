@@ -1,5 +1,5 @@
 {
-  "version": "0.36.0",
+  "version": "0.37.0-rc.1",
   "license": "Apache-2.0",
   "type": "module",
   "source": "src/sdk/index.ts",
@@ -45,7 +45,6 @@
   "author": "Jack Tanner",
   "dependencies": {
     "@consento/sync-randombytes": "^1.0.5",
-    "@safe-global/sdk-starter-kit": "^3.0.2",
     "@tonomy/antelope-did-resolver": "^0.10.0",
     "@veramo/core": "^6.0.0",
     "@veramo/credential-w3c": "^6.0.0",
@@ -77,6 +76,7 @@
     "@babel/node": "^7.24.7",
     "@babel/preset-env": "^7.24.7",
     "@babel/preset-typescript": "^7.24.7",
+    "@safe-global/sdk-starter-kit": "^3.0.2",
     "@semantic-release/changelog": "^6.0.2",
     "@semantic-release/git": "^10.0.1",
     "@semantic-release/github": "^10.0.0",
@@ -112,7 +112,7 @@
   },
   "publishConfig": {
     "access": "public",
-    "tag": "latest"
+    "tag": "rc"
   },
   "repository": {
     "type": "git",
