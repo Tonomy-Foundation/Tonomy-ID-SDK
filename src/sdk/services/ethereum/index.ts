@@ -47,7 +47,7 @@ export async function tonomyToBaseTransfer(
     memo: string,
     signer: ethers.Signer
 ): Promise<ethers.TransactionResponse> {
-    const { baseTokenAddress } = getSettings();
+    const { baseTokenAddress, baseNetwork } = getSettings();
 
     const token = getBaseTokenContract();
     const weiAmount = parseUnits(quantity.toString(), 18);
@@ -62,11 +62,12 @@ export async function tonomyToBaseTransfer(
 
     const transferData = token.interface.encodeFunctionData('transfer', [to, weiAmount]);
     const memoHex = ethers.hexlify(ethers.toUtf8Bytes(memo)).substring(2);
-
+    const chainId = baseNetwork === 'base' ? 8453 : 84532; // Base or Base sepolia
     const tx = {
         from: signerAddress,
         to: baseTokenAddress,
         data: transferData + memoHex,
+        chainId,
     };
 
     debug(`Sending transaction`, JSON.stringify(tx, null, 2));
