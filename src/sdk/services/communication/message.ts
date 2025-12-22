@@ -361,3 +361,36 @@ export class SwapTokenMessage extends Message<SwapTokenMessagePayload> {
         return new SwapTokenMessage(vc);
     }
 }
+
+export class FaucetTokenMessagePayload {
+    asset: string; // Format: "1.000000 TONO"
+    /**
+     * @internal only used for testing
+     */
+    // eslint-disable-next-line camelcase
+    _testOnly_tonomyAppsWebsiteUsername?: string;
+}
+
+export class FaucetTokenMessage extends Message<FaucetTokenMessagePayload> {
+    protected static type = 'FaucetTokenMessage';
+
+    constructor(
+        vc: FaucetTokenMessage | Message<FaucetTokenMessagePayload> | VCWithTypeType<FaucetTokenMessagePayload>
+    ) {
+        super(vc);
+    }
+
+    /**
+     * Alternative constructor that returns type FaucetTokenMessage
+     */
+    static async signMessage(
+        message: FaucetTokenMessagePayload,
+        issuer: Issuer,
+        recipient: DIDurl,
+        options: { subject?: URL } = {}
+    ) {
+        const vc = await super.signMessageWithRecipient<FaucetTokenMessagePayload>(message, issuer, recipient, options);
+
+        return new FaucetTokenMessage(vc);
+    }
+}

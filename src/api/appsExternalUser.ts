@@ -3,7 +3,12 @@ import { Communication, SwapSubscriber } from '../sdk/services/communication/com
 import { extractProofMessage, tonomyToBaseTransfer } from '../sdk/services/ethereum';
 import { KeyManager } from '../sdk/storage/keymanager';
 import { StorageFactory } from '../sdk/storage/storage';
-import { SwapTokenMessage, SwapTokenMessagePayload } from '../sdk/services/communication/message';
+import {
+    SwapTokenMessage,
+    SwapTokenMessagePayload,
+    FaucetTokenMessage,
+    FaucetTokenMessagePayload,
+} from '../sdk/services/communication/message';
 import { SdkErrors, throwError } from '../sdk/util/errors';
 import { ExternalUser } from './externalUser';
 import { getAccountNameFromDid, getSettings, randomString } from '../sdk';
@@ -128,6 +133,42 @@ export class AppsExternalUser extends ExternalUser {
         // 3. Now wait for the event
         debug(`subscribeSwapBaseToTonomy() ${issuer.did} - waiting for swap confirmation`);
         return await waitForSwap;
+    }
+
+    /**
+     * Sends a faucet token request message to the communication service
+     *
+     * @param {FaucetTokenMessage} message - the message to send
+     */
+    private async sendFaucetTokenMessage(message: FaucetTokenMessage): Promise<void> {
+        await this.loginToCommunication();
+        const res = await this.communication.sendFaucetTokenMessage(message);
+
+        if (!res) throwError('Failed to send message', SdkErrors.MessageSendError);
+    }
+
+    /**
+     * Requests testnet tokens from the faucet service
+     *
+     * @param {string} asset - Amount of $TONO tokens to request e.g. "1.000000 TONO"
+     * @param { string } _testOnly_tonomyAppsWebsiteUsername - Test only parameter for specifying the apps website username
+     */
+    async requestFaucetTokens(
+        asset: string,
+        // eslint-disable-next-line camelcase
+        _testOnly_tonomyAppsWebsiteUsername?: string
+    ): Promise<void> {
+        const issuer = await this.getIssuer();
+
+        const payload: FaucetTokenMessagePayload = {
+            asset,
+            // eslint-disable-next-line camelcase
+            _testOnly_tonomyAppsWebsiteUsername: _testOnly_tonomyAppsWebsiteUsername,
+        };
+
+        const faucetMessage = await FaucetTokenMessage.signMessage(payload, issuer, await this.getDid());
+
+        return await this.sendFaucetTokenMessage(faucetMessage);
     }
 }
 // eslint-disable-next-line camelcase
