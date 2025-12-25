@@ -62,7 +62,7 @@ export async function tonomyToBaseTransfer(
 
     const transferData = token.interface.encodeFunctionData('transfer', [to, weiAmount]);
     const memoHex = ethers.hexlify(ethers.toUtf8Bytes(memo)).substring(2);
-    const chainId = baseNetwork === 'base' ? 8453 : 84532; // Base or Base sepolia
+    const chainId = baseNetwork === 'base' ? '0x2105' : '0x14a34'; // Base or Base sepolia
     const tx = {
         from: signerAddress,
         to: baseTokenAddress,
