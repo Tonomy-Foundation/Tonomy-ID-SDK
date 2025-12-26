@@ -20,7 +20,7 @@ export const settings: Partial<SettingsType> = {
     baseRpcUrl: 'http://localhost:8545',
     baseTokenAddress: process.env.BASE_TOKEN_ADDRESS,
     baseMintBurnAddress: '0x8626f6940E2eb28930eFb4CeF49B2d1F2C9C1199',
-    basePrivateKey: '0xdf57089febbacf7ba0bc227dafbffa9fc08a93fdc68e1e42411a14efcf23656e', // Hardhat account #19
+    basePrivateKey: '0xde9be858da4a475276426320d5e9262ecfc3ba460bfac56360bfa6c4c28b4ee0', // Hardhat account #19
 };
 
 export function setTestSettings() {

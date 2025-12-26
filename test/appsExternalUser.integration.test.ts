@@ -146,7 +146,9 @@ describe('Login to external apps website', () => {
 
             const tonomyAccountName = await APPS_EXTERNAL_WEBSITE_user.getAccountName()
             const signer = getSigner();
-            const balanceBeforeBase = await getBaseTokenContract(signer).balanceOf(userBaseAddress);
+            const balanceBeforeBase = await getBaseTokenContract().balanceOf(userBaseAddress);
+
+            debug("balanceBeforeBase ", balanceBeforeBase)
             const balanceBeforeTonomy = await getTokenContract().getBalanceDecimal(tonomyAccountName);
 
             const tonomyAppsWebsiteUsername = await externalApp.username?.getBaseUsername();
@@ -155,6 +157,8 @@ describe('Login to external apps website', () => {
             await APPS_EXTERNAL_WEBSITE_user.swapTonomyToBaseToken(amount, proof, tonomyAppsWebsiteUsername);
 
             const balanceAfterBase = await getBaseTokenContract(signer).balanceOf(userBaseAddress);
+
+            debug("balanceAfterBase", balanceAfterBase, await getBaseTokenContract().balanceOf(userBaseAddress))
             const balanceAfterTonomy = await getTokenContract().getBalanceDecimal(tonomyAccountName);
 
             expect(balanceAfterBase).toEqual(balanceBeforeBase + amountWeiBigInt);
