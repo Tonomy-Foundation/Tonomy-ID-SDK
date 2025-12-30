@@ -148,7 +148,7 @@ describe('Login to external apps website', () => {
             const signer = getSigner();
             const balanceBeforeBase = await getBaseTokenContract().balanceOf(userBaseAddress);
 
-            debug("balanceBeforeBase ", balanceBeforeBase)
+            console.log("balanceBeforeBase ", balanceBeforeBase)
             const balanceBeforeTonomy = await getTokenContract().getBalanceDecimal(tonomyAccountName);
 
             const tonomyAppsWebsiteUsername = await externalApp.username?.getBaseUsername();
@@ -158,7 +158,7 @@ describe('Login to external apps website', () => {
 
             const balanceAfterBase = await getBaseTokenContract(signer).balanceOf(userBaseAddress);
 
-            debug("balanceAfterBase", balanceAfterBase, await getBaseTokenContract().balanceOf(userBaseAddress))
+            console.log("balanceAfterBase", balanceAfterBase, await getBaseTokenContract().balanceOf(userBaseAddress))
             const balanceAfterTonomy = await getTokenContract().getBalanceDecimal(tonomyAccountName);
 
             expect(balanceAfterBase).toEqual(balanceBeforeBase + amountWeiBigInt);
