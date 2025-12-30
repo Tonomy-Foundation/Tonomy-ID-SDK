@@ -152,7 +152,7 @@ describe('Login to external apps website', () => {
             const balanceBeforeTonomy = await getTokenContract().getBalanceDecimal(tonomyAccountName);
 
             const tonomyAppsWebsiteUsername = await externalApp.username?.getBaseUsername();
-            const proof = await createSignedProofMessage(userBaseSigner)
+            const proof = await createSignedProofMessage(signer ?? userBaseSigner)
 
             await APPS_EXTERNAL_WEBSITE_user.swapTonomyToBaseToken(amount, proof, tonomyAppsWebsiteUsername);
 
