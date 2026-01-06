@@ -37,7 +37,7 @@ import { DataSource } from 'typeorm';
 import Debug from 'debug';
 import { mockVeriffWebhook, mockVeriffApproved, mockVeriffDeclined } from '../services/veriffMock';
 import { VerificationTypeEnum } from '../../src/sdk/types/VerificationTypeEnum';
-import { VeriffStatusEnum } from '../../src/sdk/types/VeriffStatusEnum';
+import { VerificationStatusEnum } from '../../src/sdk/types/VerificationStatusEnum';
 
 const debug = Debug('tonomy-sdk-tests:helpers:user');
 
@@ -193,7 +193,7 @@ export function setupLoginRequestSubscriber(
                         verificationEvent = (
                             (await user.fetchVerificationData(
                                 VerificationTypeEnum.KYC,
-                                VeriffStatusEnum.DECLINED
+                                VerificationStatusEnum.DECLINED
                             )) as KYCVC
                         ).getPayload();
                     } else throw error;
@@ -210,7 +210,7 @@ export function setupLoginRequestSubscriber(
 
                 const kycVc = (await user.fetchVerificationData(
                     VerificationTypeEnum.KYC,
-                    isKycApproved ? VeriffStatusEnum.APPROVED : VeriffStatusEnum.DECLINED
+                    isKycApproved ? VerificationStatusEnum.APPROVED : VerificationStatusEnum.DECLINED
                 )) as KYCVC;
                 const issuer = kycVc.getIssuer();
                 const { fragment, account, chain } = parseAntelopeDid(issuer);

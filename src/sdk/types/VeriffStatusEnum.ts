@@ -1,18 +1,18 @@
-enum VeriffStatusEnum {
+enum VerificationStatusEnum {
     PENDING = 'PENDING',
     APPROVED = 'APPROVED',
     DECLINED = 'DECLINED',
 }
 
 // eslint-disable-next-line @typescript-eslint/no-namespace
-namespace VeriffStatusEnum {
+namespace VerificationStatusEnum {
     /*
      * Returns the index of the enum value
      *
      * @param value The level to get the index of
      */
-    export function indexFor(value: VeriffStatusEnum): number {
-        return Object.keys(VeriffStatusEnum).indexOf(value);
+    export function indexFor(value: VerificationStatusEnum): number {
+        return Object.keys(VerificationStatusEnum).indexOf(value);
     }
 
     /*
@@ -20,20 +20,20 @@ namespace VeriffStatusEnum {
      *
      * @param value The string or index
      */
-    export function from(value: number | string): VeriffStatusEnum {
+    export function from(value: number | string): VerificationStatusEnum {
         let index: number;
 
         if (typeof value !== 'number') {
-            index = VeriffStatusEnum.indexFor(value.toUpperCase() as VeriffStatusEnum);
+            index = VerificationStatusEnum.indexFor(value.toUpperCase() as VerificationStatusEnum);
         } else {
             index = value;
         }
 
-        const val = Object.values(VeriffStatusEnum)[index] as VeriffStatusEnum;
+        const val = Object.values(VerificationStatusEnum)[index] as VerificationStatusEnum;
 
-        if (val === undefined) throw new Error('Invalid VeriffStatusEnum');
+        if (val === undefined) throw new Error('Invalid VerificationStatusEnum');
         return val;
     }
 }
 
-export { VeriffStatusEnum };
+export { VerificationStatusEnum };

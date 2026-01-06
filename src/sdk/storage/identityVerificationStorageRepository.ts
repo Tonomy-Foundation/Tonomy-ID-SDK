@@ -1,7 +1,7 @@
 import type { Repository, DataSource } from 'typeorm';
 import { IdentityVerificationStorage } from './entities/identityVerificationStorage';
 import { VerificationTypeEnum } from '../types/VerificationTypeEnum';
-import { VeriffStatusEnum } from '../types/VeriffStatusEnum';
+import { VerificationStatusEnum } from '../types/VerificationStatusEnum';
 import { ProviderEnum } from '../types/ProviderEnum';
 import { VCTypeEnum } from '../types/VCTypeEnum';
 
@@ -15,7 +15,7 @@ export class IdentityVerificationStorageRepository {
     public async create(
         sessionId: string,
         type: VerificationTypeEnum,
-        status: VeriffStatusEnum,
+        status: VerificationStatusEnum,
         vc: string
     ): Promise<IdentityVerificationStorage> {
         const now = new Date();
@@ -37,7 +37,7 @@ export class IdentityVerificationStorageRepository {
 
     public async findLatestWithStatus(
         type: VerificationTypeEnum,
-        status: VeriffStatusEnum
+        status: VerificationStatusEnum
     ): Promise<IdentityVerificationStorage | null> {
         return await this.ormRepository.findOne({
             where: { status, type },
@@ -70,7 +70,7 @@ export class IdentityVerificationStorageRepository {
 
     public async findLatestWithTypeAndStatus(
         type: VerificationTypeEnum,
-        status: VeriffStatusEnum
+        status: VerificationStatusEnum
     ): Promise<IdentityVerificationStorage | null> {
         return await this.ormRepository.findOne({
             where: {

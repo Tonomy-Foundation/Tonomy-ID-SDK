@@ -1,6 +1,6 @@
 /* eslint-disable indent */
 import { Entity, Column, Index, PrimaryColumn } from 'typeorm';
-import { VeriffStatusEnum } from '../../types/VeriffStatusEnum';
+import { VerificationStatusEnum } from '../../types/VerificationStatusEnum';
 import { VerificationTypeEnum } from '../../types/VerificationTypeEnum';
 import { ProviderEnum } from '../../types/ProviderEnum';
 import { VCTypeEnum } from '../../types/VCTypeEnum';
@@ -16,10 +16,10 @@ export class IdentityVerificationStorage {
 
     @Column({
         type: 'varchar',
-        enum: VeriffStatusEnum,
-        default: VeriffStatusEnum.PENDING,
+        enum: VerificationStatusEnum,
+        default: VerificationStatusEnum.PENDING,
     })
-    status!: VeriffStatusEnum;
+    status!: VerificationStatusEnum;
 
     @Column({
         type: 'varchar',

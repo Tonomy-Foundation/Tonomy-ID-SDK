@@ -1,5 +1,5 @@
 import { VerifiableCredentialOptions, VerifiableCredentialWithType } from './ssi/vc';
-import { VeriffStatusEnum } from '../types/VeriffStatusEnum';
+import { VerificationStatusEnum } from '../types/VerificationStatusEnum';
 import { VerificationTypeEnum } from '../types/VerificationTypeEnum';
 import { KeyValueObject } from './objects';
 import { Issuer } from 'did-jwt-vc';
@@ -182,18 +182,18 @@ export type VeriffWebhookPayload = {
     };
 };
 
-export function castDecisionToStatus(decision: string): VeriffStatusEnum {
+export function castDecisionToStatus(decision: string): VerificationStatusEnum {
     switch (decision) {
         case 'approved':
-            return VeriffStatusEnum.APPROVED;
+            return VerificationStatusEnum.APPROVED;
         case 'declined':
-            return VeriffStatusEnum.DECLINED;
+            return VerificationStatusEnum.DECLINED;
         case 'resubmission_requested':
-            return VeriffStatusEnum.DECLINED;
+            return VerificationStatusEnum.DECLINED;
         case 'expired':
-            return VeriffStatusEnum.DECLINED;
+            return VerificationStatusEnum.DECLINED;
         case 'abandoned':
-            return VeriffStatusEnum.DECLINED;
+            return VerificationStatusEnum.DECLINED;
         default:
             throw new Error(`Unknown decision: ${decision}`);
     }

@@ -14,7 +14,7 @@ export * from './types/AppStatusEnum';
 export * from './types/UserStatusEnum';
 export * from './types/User';
 export * from './types/VerificationTypeEnum';
-export * from './types/VeriffStatusEnum';
+export * from './types/VerificationStatusEnum';
 
 // Services
 export * as EosioUtil from './services/blockchain';

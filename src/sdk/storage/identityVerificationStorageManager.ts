@@ -1,5 +1,5 @@
 import { IdentityVerificationStorageRepository } from './identityVerificationStorageRepository';
-import { VeriffStatusEnum } from '../types/VeriffStatusEnum';
+import { VerificationStatusEnum } from '../types/VerificationStatusEnum';
 import { VerificationTypeEnum } from '../types/VerificationTypeEnum';
 import { castStringToCredential, PersonCredentialType } from '../util/veriff';
 
@@ -13,7 +13,7 @@ export class IdentityVerificationStorageManager {
     async create(
         sessionId: string,
         type: VerificationTypeEnum,
-        status: VeriffStatusEnum,
+        status: VerificationStatusEnum,
         vc: PersonCredentialType
     ): Promise<PersonCredentialType> {
         await this.repository.create(sessionId, type, status, vc.toString());
@@ -21,12 +21,12 @@ export class IdentityVerificationStorageManager {
     }
 
     async findLatestApproved(type: VerificationTypeEnum): Promise<PersonCredentialType | null> {
-        return await this.findLatestWithTypeAndStatus(type, VeriffStatusEnum.APPROVED);
+        return await this.findLatestWithTypeAndStatus(type, VerificationStatusEnum.APPROVED);
     }
 
     async findLatestWithTypeAndStatus(
         type: VerificationTypeEnum,
-        status: VeriffStatusEnum
+        status: VerificationStatusEnum
     ): Promise<PersonCredentialType | null> {
         const doc = await this.repository.findLatestWithStatus(type, status);
 
@@ -38,7 +38,7 @@ export class IdentityVerificationStorageManager {
     async updateRecord(
         sessionId: string,
         type: VerificationTypeEnum,
-        status: VeriffStatusEnum,
+        status: VerificationStatusEnum,
         vc: PersonCredentialType
     ): Promise<PersonCredentialType> {
         const doc = await this.repository.findByIdAndType(sessionId, type);
@@ -61,7 +61,7 @@ export class IdentityVerificationStorageManager {
     async emplaceByVeriffIdAndType(
         sessionId: string,
         type: VerificationTypeEnum,
-        status: VeriffStatusEnum,
+        status: VerificationStatusEnum,
         vc: PersonCredentialType
     ): Promise<PersonCredentialType> {
         const doc = await this.repository.findByIdAndType(sessionId, type);
