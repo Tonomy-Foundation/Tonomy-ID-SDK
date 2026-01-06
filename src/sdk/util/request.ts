@@ -28,9 +28,12 @@ export type LoginRequestPayload = {
     };
 };
 
+export type ProviderEnum = 'id';
+
 export type DataRequest = {
     username?: boolean;
     kyc?: boolean;
+    kycProvidersAllowed?: ProviderEnum[];
     // firstName: boolean;
     // lastName: boolean;
     // address: boolean;

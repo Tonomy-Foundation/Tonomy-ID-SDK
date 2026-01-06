@@ -4,7 +4,7 @@ import { VerificationTypeEnum } from '../types/VerificationTypeEnum';
 import { KeyValueObject } from './objects';
 import { Issuer } from 'did-jwt-vc';
 
-export type KYCPayload = VeriffWebhookPayload;
+export type KYCPayload = VerifiedID;
 
 export class KYCVC extends VerifiableCredentialWithType<KYCPayload> {
     protected static type = 'KYCVC';
@@ -124,6 +124,132 @@ export type DocumentField = {
 
 export type PersonField = DocumentField | null;
 export type AddressField = (DocumentField & { components?: KeyValueObject }) | null;
+
+export type VerifiedID = {
+    session: {
+        id: string;
+        done: boolean;
+        success: boolean;
+        errorCode?: string;
+        created?: number;
+        updated?: number;
+    };
+    identityData: {
+        originatingProviderId: 'veriff' | 'trinsic';
+        originatingSubProviderId?: string;
+        person?: {
+            givenName?: string;
+            familyName?: string;
+            middleName?: string;
+            fullName?: string;
+            suffix?: string;
+            nationality?: string;
+            sex?: 'Male' | 'Female' | 'Unknown';
+            phoneNumber?: string;
+            address?: {
+                line1?: string;
+                line2?: string;
+                line3?: string;
+                city?: string;
+                subdivision?: string;
+                postalCode?: string;
+                country?: string;
+                fullAddress?: string;
+            };
+            dateOfBirth?: string; // ISO date
+        };
+        document?: {
+            type?: string;
+            number?: string;
+            issueDate?: string;
+            expirationDate?: string;
+            issuingCountry?: string;
+            issuingAuthority?: string;
+        };
+    };
+};
+
+const getValue = (f?: DocumentField | null): string | undefined => {
+    const v = f?.value ?? null;
+
+    return v === null ? undefined : v;
+};
+
+const normalizeSex = (raw?: string): 'Male' | 'Female' | 'Unknown' => {
+    if (!raw) return 'Unknown';
+    const s = raw.trim().toLowerCase();
+
+    if (['male', 'm'].includes(s)) return 'Male';
+    if (['female', 'f'].includes(s)) return 'Female';
+    return 'Unknown';
+};
+
+// Optional: map a Veriff decision to a generic error code
+const decisionToErrorCode = (
+    decision: VeriffWebhookPayload['data']['verification']['decision']
+): string | undefined => {
+    switch (decision) {
+        case 'approved':
+            return undefined;
+        case 'declined':
+            return 'VerificationDeclined';
+        case 'resubmission_requested':
+            return 'ResubmissionRequested';
+        case 'expired':
+            return 'VerificationExpired';
+        case 'abandoned':
+            return 'VerificationAbandoned';
+        default:
+            return 'VerificationFailed';
+    }
+};
+
+export const veriffWebhookToVerifiedID = (p: VeriffWebhookPayload): VerifiedID => {
+    const v = p.data.verification;
+
+    const givenName = getValue(v.person.firstName ?? null);
+    const familyName = getValue(v.person.lastName ?? null);
+
+    const fullAddress = getValue(v.person.address ?? null);
+    const addressComponents = (v.person.address as AddressField | undefined | null)?.components;
+
+    return {
+        session: {
+            id: p.sessionId,
+            done: true,
+            success: v.decision === 'approved',
+            errorCode: decisionToErrorCode(v.decision),
+            // If you later have created/updated timestamps, wire them here
+            // created: undefined,
+            // updated: undefined,
+        },
+        identityData: {
+            originatingProviderId: 'veriff',
+            originatingSubProviderId: p.vendorData ?? undefined,
+            person: {
+                givenName,
+                familyName,
+                fullName: givenName && familyName ? `${givenName} ${familyName}` : undefined,
+                nationality: getValue(v.person.nationality ?? null),
+                sex: normalizeSex(getValue(v.person.gender ?? null)),
+                dateOfBirth: getValue(v.person.dateOfBirth ?? null),
+                address: fullAddress
+                    ? {
+                          fullAddress,
+                    }
+                    : undefined,
+            },
+            document: {
+                type: getValue(v.document.type ?? null),
+                number: getValue(v.document.number ?? null),
+                issueDate: getValue(v.document.validFrom ?? null),
+                expirationDate: getValue(v.document.validUntil ?? null),
+                issuingCountry: getValue(v.document.country ?? null),
+                issuingAuthority: getValue(v.document.issuedBy ?? null),
+            },
+        },
+    };
+};
 
 export type VeriffWebhookPayload = {
     status: 'success' | 'fail';
